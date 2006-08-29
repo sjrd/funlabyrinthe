@@ -6,7 +6,7 @@ uses
   Classes,
   Controls,
   Windows,
-  SjrdUsual,
+  ScUtils,
   NouvLabMain in 'NouvLabMain.pas' {FormParamsLab},
   NouvLabAdvance in 'NouvLabAdvance.pas' {FormParamsLabMax};
 
@@ -123,7 +123,7 @@ Debut :
   Actions.Free;
 end;
 
-exports NewLab index 1 name 'Nouveau';
+exports NewLab name 'Nouveau';
 
 begin
 end.

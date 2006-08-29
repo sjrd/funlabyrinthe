@@ -160,6 +160,6 @@
 		<VersionInfoKeys>
 			<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
-		</VersionInfoKeys>  
-  </Delphi.Personality>
+		</VersionInfoKeys>
+	</Delphi.Personality>
 </BorlandProject>

@@ -124,7 +124,7 @@ implementation
 
 {$R *.DFM}
 
-uses SjrdStrUtils, LabMap, ScrewCodes;
+uses ScStrUtils, LabMap, ScrewCodes;
 
 function SynEditSearch(SynEdit : TSynEdit; FindText : string;
                        Down, MatchCase, WholeWord : boolean) : boolean;
