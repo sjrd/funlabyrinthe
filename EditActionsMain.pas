@@ -3,10 +3,9 @@ unit EditActionsMain;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, Menus, LabyrintheUtils, StdCtrls, SynEditHighlighter, ScUtils,
-  SynEdit, ToolWin, ComCtrls, StdActns, ActnList, ImgList, FunLabyOldSyn,
-  SdDialogs, SynEditTypes, ShellAPI;
+  Windows, Forms, SynEditHighlighter, FunLabySyn, SdDialogs, Dialogs, ImgList,
+  Controls, StdActns, ActnList, Classes, Menus, ComCtrls, ToolWin, SynEdit,
+  LabyrintheUtils, SynEditTypes, SysUtils, ScUtils, ShellAPI;
 
 type
   TFormPrincipale = class(TForm)
@@ -73,7 +72,6 @@ type
     BigMenuRechercher: TMenuItem;
     MenuChercher: TMenuItem;
     MenuOccSuivante: TMenuItem;
-    FunLabyOldSyntax: TFunLabyOldSyntax;
     Chercher: TAction;
     OccSuivante: TAction;
     FindDialog: TFindDialog;
@@ -83,6 +81,7 @@ type
     BoutonVoirCodesCases: TToolButton;
     ToolButton3: TToolButton;
     AboutDialog: TSdAboutDialog;
+    FunLabySyntax: TFunLabySyntax;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -124,7 +123,8 @@ implementation
 
 {$R *.DFM}
 
-uses ScStrUtils, LabMap, ScrewCodes;
+uses
+  ScStrUtils, LabMap, ScrewCodes;
 
 function SynEditSearch(SynEdit : TSynEdit; FindText : string;
                        Down, MatchCase, WholeWord : boolean) : boolean;

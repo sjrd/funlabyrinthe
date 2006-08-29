@@ -6,8 +6,7 @@ uses
   WinHelpViewer,
   EditActionsMain in 'EditActionsMain.pas' {FormPrincipale},
   LabMap in 'LabMap.pas' {FormPlan},
-  ScrewCodes in 'ScrewCodes.pas' {FormCodesCases},
-  LabyrintheUtils in 'LabyrintheUtils.pas';
+  ScrewCodes in 'ScrewCodes.pas' {FormCodesCases};
 
 {$R *.RES}
 

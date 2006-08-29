@@ -50,7 +50,7 @@ object FormPrincipale: TFormPrincipale
     Gutter.Font.Name = 'Courier New'
     Gutter.Font.Style = []
     Gutter.ShowLineNumbers = True
-    Highlighter = FunLabyOldSyntax
+    Highlighter = FunLabySyntax
     ScrollHintFormat = shfTopToBottom
     RemovedKeystrokes = <
       item
@@ -206,7 +206,6 @@ object FormPrincipale: TFormPrincipale
     AutoHint = True
     Panels = <>
     SimplePanel = True
-    SimpleText = 'Enregistrer'
   end
   object BigMenu: TMainMenu
     Images = Images
@@ -1122,10 +1121,6 @@ object FormPrincipale: TFormPrincipale
       9E790107BE7DFFFF7EFE03FF7EFEFFFF00000000000000000000000000000000
       000000000000}
   end
-  object FunLabyOldSyntax: TFunLabyOldSyntax
-    Left = 56
-    Top = 88
-  end
   object FindDialog: TFindDialog
     OnClose = FindDialogClose
     OnShow = FindDialogShow
@@ -1147,11 +1142,15 @@ object FormPrincipale: TFormPrincipale
       0000FFFF0000FFFF0000C0030000DFFB0000DFFB0000D8030000DE7B0000DE7B
       0000C01B0000DFFB0000DFFB0000C0030000FFFF0000FFFF0000FFFF0000}
     ProgramName = 'EditActions'
-    ProgramVersion = '4.4'
+    ProgramVersion = '4.5'
     AuthorName = 'S'#233'bastien Jean Robert Doeraene'
     AuthorEMail = 'sjrd@redaction-developpez.com'
     WebSite = 'http://sjrd.developpez.com/programmes/funlaby/'
     Left = 152
     Top = 56
+  end
+  object FunLabySyntax: TFunLabySyntax
+    Left = 56
+    Top = 88
   end
 end

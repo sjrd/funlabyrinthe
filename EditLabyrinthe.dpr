@@ -9,7 +9,6 @@ uses
   ReplacementScrewDialog in 'ReplacementScrewDialog.pas' {FormNewCase},
   NewLiftDialog in 'NewLiftDialog.pas' {FormAscenseur},
   ScrewNumberDialog in 'ScrewNumberDialog.pas' {FormNumeroCase},
-  LabyrintheUtils in 'LabyrintheUtils.pas',
   EditLabyrintheMain in 'EditLabyrintheMain.pas' {FormPrincipale};
 
 {$R *.RES}

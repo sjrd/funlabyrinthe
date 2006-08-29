@@ -167,7 +167,7 @@ object FormPrincipale: TFormPrincipale
       0000FFFF0000FFFF0000C0030000DFFB0000DFFB0000D8030000DE7B0000DE7B
       0000C01B0000DFFB0000DFFB0000C0030000FFFF0000FFFF0000FFFF0000}
     ProgramName = 'FunLabyrinthe'
-    ProgramVersion = '4.4'
+    ProgramVersion = '4.5'
     AuthorName = 'S'#233'bastien Jean Robert Doeraene'
     AuthorEMail = 'sjrd@redaction-developpez.com'
     WebSite = 'http://sjrd.developpez.com/programmes/funlaby/'

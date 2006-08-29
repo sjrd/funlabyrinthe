@@ -5,12 +5,12 @@
 			<Option Name="Personality">Delphi.Personality</Option>
 			<Option Name="ProjectType"></Option>
 			<Option Name="Version">1.0</Option>
-			<Option Name="GUID">{95A2E13F-618C-468F-80B7-DEB04ACD94EF}</Option>
+			<Option Name="GUID">{8F76AFBD-9844-49FB-B6E5-1EAFC106C8CD}</Option>
 		</Option>
 	</PersonalityInfo>
 	<Delphi.Personality>
 		<Source>
-			<Source Name="MainSource">NouvLab.dpr</Source>
+			<Source Name="MainSource">FunLabyCommonR.dpk</Source>
 		</Source>
 		<FileVersion>
 			<FileVersion Name="Version">7.0</FileVersion>
@@ -112,7 +112,7 @@
 			<Linker Name="MinStackSize">16384</Linker>
 			<Linker Name="MaxStackSize">1048576</Linker>
 			<Linker Name="ImageBase">4194304</Linker>
-			<Linker Name="ExeDescription"></Linker>
+			<Linker Name="ExeDescription">Common units for FunLabyrinthe</Linker>
 		</Linker>
 		<Directories>
 			<Directories Name="OutputDir"></Directories>
@@ -120,7 +120,7 @@
 			<Directories Name="PackageDLLOutputDir"></Directories>
 			<Directories Name="PackageDCPOutputDir"></Directories>
 			<Directories Name="SearchPath"></Directories>
-			<Directories Name="Packages">rtl;vcl;dbrtl;vcldb;vclx;adortl;dbxcds;dbexpress;vclib;ibxpress;IntrawebDB_72_90;Intraweb_72_90;xmlrtl;vclie;inet;inetdbbde;inetdbxpress;IndySystem;IndyCore;dclOffice2k;VclSmp;dsnap;soaprtl;IndyProtocols;inetdb;bdertl;vcldbx;webdsnap;websnap;vclactnband;vclshlctrls;dsnapcon;teeui;teedb;tee;Rave60VCL;DJcl;JvStdCtrlsD9R;JvAppFrmD9R;JvCoreD9R;JvBandsD9R;JvBDED9R;JvDBD9R;JvDlgsD9R;JvCmpD9R;JvCryptD9R;JvCtrlsD9R;JvCustomD9R;JvDockingD9R;JvDotNetCtrlsD9R;JvEDID9R;JvGlobusD9R;JvHMID9R;JvInspectorD9R;JvInterpreterD9R;JvJansD9R;JvManagedThreadsD9R;JvMMD9R;JvNetD9R;JvPageCompsD9R;JvPluginD9R;JvPrintPreviewD9R;JvSystemD9R;JvTimeFrameworkD9R;JvUIBD9R;JvValidatorsD9R;JvWizardD9R;JvXPCtrlsD9R;SynEdit_R2005;SJRDCompsR;SJRDUnits;SJRDCompsD;SJRDSynEdit;SepiEditorR;SepiCompilerR;SepiInterpretorR</Directories>
+			<Directories Name="Packages"></Directories>
 			<Directories Name="Conditionals"></Directories>
 			<Directories Name="DebugSourceDirs"></Directories>
 			<Directories Name="UsePackages">False</Directories>
@@ -143,10 +143,10 @@
 			<Language Name="RootDir"></Language>
 		</Language>
 		<VersionInfo>
-			<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+			<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 			<VersionInfo Name="AutoIncBuild">False</VersionInfo>
-			<VersionInfo Name="MajorVer">1</VersionInfo>
-			<VersionInfo Name="MinorVer">0</VersionInfo>
+			<VersionInfo Name="MajorVer">4</VersionInfo>
+			<VersionInfo Name="MinorVer">5</VersionInfo>
 			<VersionInfo Name="Release">0</VersionInfo>
 			<VersionInfo Name="Build">0</VersionInfo>
 			<VersionInfo Name="Debug">False</VersionInfo>
@@ -158,8 +158,15 @@
 			<VersionInfo Name="CodePage">1252</VersionInfo>
 		</VersionInfo>
 		<VersionInfoKeys>
-			<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
-			<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+			<VersionInfoKeys Name="FileVersion">4.5.0.0</VersionInfoKeys>
+			<VersionInfoKeys Name="ProductVersion">4.5</VersionInfoKeys>
+			<VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys>
+			<VersionInfoKeys Name="FileDescription">Common units for FunLabyrinthe</VersionInfoKeys>
+			<VersionInfoKeys Name="InternalName">FunLabyCommonR</VersionInfoKeys>
+			<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2006 (c) Sébastien Doeraene</VersionInfoKeys>
+			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
+			<VersionInfoKeys Name="OriginalFilename">FunLabyCommonR.bpl</VersionInfoKeys>
+			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
 		</VersionInfoKeys>
 	</Delphi.Personality>
 </BorlandProject>

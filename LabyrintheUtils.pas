@@ -202,8 +202,8 @@ type
 const
   clInvisible = clNone;
   maxbord = 15;
-  VersionInterpreteur = 44;
-  VersionEditeur = 'Version: 4.4';
+  VersionInterpreteur = 45;
+  VersionEditeur = 'Version: 4.5';
 
   Herbe       = 48;
   Eau         = 49;
@@ -2706,7 +2706,13 @@ initialization
 {-----Initialisation de Cases-----}
   Cases := TBitmap.Create;
   FNomCases := 'Cases.bmp';
-  Cases.LoadFromFile(Dir+'Cases\'+FNomCases);
+  try
+    Cases.LoadFromFile(Dir+'Cases\'+FNomCases);
+  except
+    ShowDialog('Erreur fatale', 'Impossible de charger le fichier Cases.bmp',
+      dtError);
+    raise;
+  end;
 finalization
 {-----Libération des variables globales-----}
   Cases.Free;

@@ -1,4 +1,4 @@
-unit FunLabyOldSyn;
+unit FunLabySyn;
 
 {$I SynEdit.inc}
 
@@ -28,16 +28,19 @@ type
   TProcTableProc = procedure of object;
 
 type
-  TFunLabyOldSyntax = class(TSynCustomHighlighter)
+  TFunLabySyntax = class(TSynCustomHighlighter)
   private
-    FLine : PChar;                                  // Ligne en cours
-    FLineNumber : Integer;                          // N° de la ligne en cours
+    FLine : PChar;         // Ligne en cours
+    FLineNumber : Integer; // N° de la ligne en cours
+
+    // Tableau de procédures pour gérer les « tokens »
     FProcTable : array[#0..#255] of TProcTableProc;
-      // Tableau de procédures pour gérer les « tokens »
+
     FRange : TFLRangeState;                      // RangeState
     Run : LongInt;                               // Index du caractère courant
     FTokenPos : Integer;                         // Position du dernier token
     FTokenID : TFLTokenKind;                     // Kind du dernier token
+
     FCommandAttri : TSynHighlighterAttributes;      // Attributs 'Command'
     FCommentAttri : TSynHighlighterAttributes;      // Attributs 'Comment'
     FIdentifierAttri : TSynHighlighterAttributes;   // Attributs 'Identifier'
@@ -51,24 +54,26 @@ type
     FSubSectionAttri : TSynHighlighterAttributes;   // Attributs 'SubSection'
     FSymbolAttri : TSynHighlighterAttributes;       // Attributs 'Symbol'
     FUnknownAttri : TSynHighlighterAttributes;      // Attributs 'Unknown'
+
+    // Lit le nom de l'identificateur qui suit
     function ReadIdent : string;
-      // Lit le nom de l'identificateur qui suit
+    // Compare le mot qui suit avec AKey
     function KeyComp(const AKey : string) : boolean;
-      // Compare le mot qui suit avec AKey
+    // Compare le mot qui suit aux mots-clés
     function KeyFunc : TFLTokenKind;
-      // Compare le mot qui suit aux mots-clés
-    procedure MakeMethodTables;                   // Initialize FProcTable
-    procedure NullProc;                           // Procédure pour 'Null'
-    procedure SpaceProc;                          // Procédure pour 'Space'
-    procedure CRProc;                             // Procédure pour 'CR'        (Carbage Return)
-    procedure LFProc;                             // Procédure pour 'LF'        (Line Feed)
-    procedure CommentProc;                        // Procédure pour 'Comment'
-    procedure SectionProc;                        // Procédure pour 'Section'
-    procedure StringProc;                         // Procédure pour 'String'
-    procedure SubSectionProc;                     // Procédure pour 'SubSection'
-    procedure IdentProc;                          // Procédure pour les divers
-    procedure SymbolProc;                         // Procédure pour 'Symbol'
-    procedure UnknownProc;                        // Procédure pour inconnu
+
+    procedure MakeMethodTables; // Initialize FProcTable
+    procedure NullProc;         // Procédure pour 'Null'
+    procedure SpaceProc;        // Procédure pour 'Space'
+    procedure CRProc;           // Procédure pour 'CR'        (Carbage Return)
+    procedure LFProc;           // Procédure pour 'LF'        (Line Feed)
+    procedure CommentProc;      // Procédure pour 'Comment'
+    procedure SectionProc;      // Procédure pour 'Section'
+    procedure StringProc;       // Procédure pour 'String'
+    procedure SubSectionProc;   // Procédure pour 'SubSection'
+    procedure IdentProc;        // Procédure pour les divers
+    procedure SymbolProc;       // Procédure pour 'Symbol'
+    procedure UnknownProc;      // Procédure pour inconnu
   protected
     function GetIdentChars : TSynIdentChars; override; // Caractères Identifiers
     function GetSampleSource : string; override;       // Exemple source
@@ -83,12 +88,12 @@ type
     function GetDefaultAttribute(Index: integer):
       TSynHighlighterAttributes; override;             // Attr par défaut
     function GetEol : boolean; override;               // Fin de la ligne ?
+    // Change la ligne courante
     procedure SetLine(NewValue : string; LineNumber : Integer); override;
-      // Change la ligne courante
     function GetToken : string; override;              // Dernier token
     function GetTokenID : TFLTokenKind;                // Kind du dernier token
+    // Attributs du dernier token
     function GetTokenAttribute : TSynHighlighterAttributes; override;
-      // Attributs du dernier token
     function GetTokenKind : integer; override;        // Kind du dernier token
     function GetTokenPos : integer; override;         // Pos du dernier token
     procedure Next; override;                         // Token suivant
@@ -129,8 +134,8 @@ resourcestring
 {$ELSE}
 const
 {$ENDIF}
-  SYNS_FilterFunLabyOld = 'Labyrinthes (*.lab)|*.lab';
-  SYNS_LangFunLabyOld = 'FunLabyOld';
+  SYNS_FilterFunLaby = 'Labyrinthes (*.lab)|*.lab';
+  SYNS_LangFunLaby = 'FunLaby';
   SYNS_Command = 'Command';
   SYNS_IfThenElse = 'IfThenElse';
   SYNS_Remark = 'Remark';
@@ -144,7 +149,7 @@ const
 {$ENDIF}
   SymbolsChars = ['[', ']', '=', '<', '>'];
 
-constructor TFunLabyOldSyntax.Create(AOwner : TComponent);
+constructor TFunLabySyntax.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
   WordBreakChars := SymbolsChars + [#0..#32];
@@ -201,11 +206,11 @@ begin
 
   SetAttributesOnChange(DefHighlightChange);
   MakeMethodTables;
-  FDefaultFilter := SYNS_FilterFunLabyOld;
+  FDefaultFilter := SYNS_FilterFunLaby;
   FRange := rsUnknown;
 end;
 
-function TFunLabyOldSyntax.ReadIdent : string;
+function TFunLabySyntax.ReadIdent : string;
 var Temp : PChar;
 begin
   Temp := FLine+Run;
@@ -217,7 +222,7 @@ begin
   end;
 end;
 
-function TFunLabyOldSyntax.KeyComp(const AKey: String): Boolean;
+function TFunLabySyntax.KeyComp(const AKey: String): Boolean;
 var I : integer;
     Temp : PChar;
 begin
@@ -228,7 +233,7 @@ begin
   Result := Temp^ in WordBreakChars;
 end;
 
-function TFunLabyOldSyntax.KeyFunc : TFLTokenKind;
+function TFunLabySyntax.KeyFunc : TFLTokenKind;
 begin
   case FLine[Run] of
     'A' : if KeyComp('Aleatoire') then Result := tkSubCommand else
@@ -294,7 +299,7 @@ begin
   end;
 end;
 
-procedure TFunLabyOldSyntax.MakeMethodTables;
+procedure TFunLabySyntax.MakeMethodTables;
 var I : Char;
 begin
   for I := #0 to #255 do
@@ -313,31 +318,31 @@ begin
     end;
 end;
 
-procedure TFunLabyOldSyntax.NullProc;
+procedure TFunLabySyntax.NullProc;
 begin
   FTokenID := tkNull;
 end;
 
-procedure TFunLabyOldSyntax.CRProc;
+procedure TFunLabySyntax.CRProc;
 begin
   inc(Run);
   if FLine[Run] = #10 then inc(Run);
   FTokenID := tkSpace;
 end;
 
-procedure TFunLabyOldSyntax.LFProc;
+procedure TFunLabySyntax.LFProc;
 begin
   inc(Run);
   FTokenID := tkSpace;
 end;
 
-procedure TFunLabyOldSyntax.SpaceProc;
+procedure TFunLabySyntax.SpaceProc;
 begin
   repeat inc(Run) until not (FLine[Run] in [#1..#32]);
   FTokenID := tkSpace;
 end;
 
-procedure TFunLabyOldSyntax.CommentProc;
+procedure TFunLabySyntax.CommentProc;
 begin
   if (FRange <> rsComment) and (Run > 0) then UnknownProc else
   begin
@@ -346,7 +351,7 @@ begin
   end;
 end;
 
-procedure TFunLabyOldSyntax.SectionProc;
+procedure TFunLabySyntax.SectionProc;
 begin
   if Run > 0 then SymbolProc else
   begin
@@ -356,14 +361,14 @@ begin
   end;
 end;
 
-procedure TFunLabyOldSyntax.StringProc;
+procedure TFunLabySyntax.StringProc;
 begin
   while not (FLine[Run] in [#0, #10, #13, '}']) do inc(Run);
   if FLine[Run] = '}' then inc(Run);
   FTokenID := tkString;
 end;
 
-procedure TFunLabyOldSyntax.SubSectionProc;
+procedure TFunLabySyntax.SubSectionProc;
 begin
   if Run > 0 then UnknownProc else
   begin
@@ -372,61 +377,61 @@ begin
   end;
 end;
 
-procedure TFunLabyOldSyntax.IdentProc;
+procedure TFunLabySyntax.IdentProc;
 begin
   FTokenID := KeyFunc;
   inc(Run, Length(ReadIdent));
 end;
 
-procedure TFunLabyOldSyntax.SymbolProc;
+procedure TFunLabySyntax.SymbolProc;
 begin
   inc(Run);
   FTokenID := tkSymbol;
 end;
 
-procedure TFunLabyOldSyntax.UnknownProc;
+procedure TFunLabySyntax.UnknownProc;
 begin
   inc(Run, Length(ReadIdent));
   FTokenID := tkUnknown;
 end;
 
-function TFunLabyOldSyntax.GetIdentChars : TSynIdentChars;
+function TFunLabySyntax.GetIdentChars : TSynIdentChars;
 begin
   Result := ['_', 'A'..'Z', 'a'..'z'];
 end;
 
-function TFunLabyOldSyntax.GetSampleSource: string;
+function TFunLabySyntax.GetSampleSource: string;
 begin
   Result := '# Mise en évidence de la syntaxe';
 end;
 
-function TFunLabyOldSyntax.IsFilterStored : boolean;
+function TFunLabySyntax.IsFilterStored : boolean;
 begin
-  Result := FDefaultFilter <> SYNS_FilterFunLabyOld;
+  Result := FDefaultFilter <> SYNS_FilterFunLaby;
 end;
 
 {$IFNDEF SYN_CPPB_1} class {$ENDIF}
-function TFunLabyOldSyntax.GetLanguageName : string;
+function TFunLabySyntax.GetLanguageName : string;
 begin
-  Result := SYNS_LangFunLabyOld;
+  Result := SYNS_LangFunLaby;
 end;
 
-function TFunLabyOldSyntax.GetRange : Pointer;
+function TFunLabySyntax.GetRange : Pointer;
 begin
   Result := Pointer(FRange);
 end;
 
-procedure TFunLabyOldSyntax.ResetRange;
+procedure TFunLabySyntax.ResetRange;
 begin
   FRange := rsUnknown;
 end;
 
-procedure TFunLabyOldSyntax.SetRange(Value : Pointer);
+procedure TFunLabySyntax.SetRange(Value : Pointer);
 begin
   FRange := TFLRangeState(Value);
 end;
 
-function TFunLabyOldSyntax.GetDefaultAttribute(Index : integer) : TSynHighLighterAttributes;
+function TFunLabySyntax.GetDefaultAttribute(Index : integer) : TSynHighLighterAttributes;
 begin
   case Index of
     SYN_ATTR_COMMENT    : Result := fCommentAttri;
@@ -440,12 +445,12 @@ begin
   end;
 end;
 
-function TFunLabyOldSyntax.GetEol: Boolean;
+function TFunLabySyntax.GetEol: Boolean;
 begin
   Result := fTokenID = tkNull;
 end;
 
-procedure TFunLabyOldSyntax.SetLine(NewValue: String; LineNumber: Integer);
+procedure TFunLabySyntax.SetLine(NewValue: String; LineNumber: Integer);
 begin
   FLine := PChar(NewValue);
   Run := 0;
@@ -454,19 +459,19 @@ begin
   Next;
 end;
 
-function TFunLabyOldSyntax.GetToken : string;
+function TFunLabySyntax.GetToken : string;
 var Len : LongInt;
 begin
   Len := Run - FTokenPos;
   SetString(Result, (FLine + FTokenPos), Len);
 end;
 
-function TFunLabyOldSyntax.GetTokenID : TFLTokenKind;
+function TFunLabySyntax.GetTokenID : TFLTokenKind;
 begin
   Result := FTokenId;
 end;
 
-function TFunLabyOldSyntax.GetTokenAttribute : TSynHighLighterAttributes;
+function TFunLabySyntax.GetTokenAttribute : TSynHighLighterAttributes;
 begin
   case GetTokenID of
     tkCommand : Result := FCommandAttri;
@@ -486,17 +491,17 @@ begin
   end;
 end;
 
-function TFunLabyOldSyntax.GetTokenKind: integer;
+function TFunLabySyntax.GetTokenKind: integer;
 begin
   Result := Ord(FTokenId);
 end;
 
-function TFunLabyOldSyntax.GetTokenPos: Integer;
+function TFunLabySyntax.GetTokenPos: Integer;
 begin
   Result := FTokenPos;
 end;
 
-procedure TFunLabyOldSyntax.Next;
+procedure TFunLabySyntax.Next;
 begin
   FTokenPos := Run;
   if FRange = rsComment then
@@ -509,6 +514,7 @@ end;
 initialization
   DecimalSeparator := '.';
 {$IFNDEF SYN_CPPB_1}
-  RegisterPlaceableHighlighter(TFunLabyOldSyntax);
+  RegisterPlaceableHighlighter(TFunLabySyntax);
 {$ENDIF}
 end.
+

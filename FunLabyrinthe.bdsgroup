@@ -9,13 +9,14 @@
 		</Option>
 	</PersonalityInfo>
 	<Default.Personality>  <Projects>
+      <Projects Name="FunLabyCommonR.bpl">FunLabyCommonR.bdsproj</Projects>
+      <Projects Name="FunLabyCommonD.bpl">FunLabyCommonD.bdsproj</Projects>
       <Projects Name="Labyrinthe.exe">Labyrinthe.bdsproj</Projects>
       <Projects Name="EditLabyrinthe.exe">EditLabyrinthe.bdsproj</Projects>
       <Projects Name="EditActions.exe">EditActions.bdsproj</Projects>
-      <Projects Name="FunLabySyn.bpl">FunLabySyn.bdsproj</Projects>
       <Projects Name="NouvLab.dll">NouvLab.bdsproj</Projects>
       <Projects Name="GeneLaby.exe">GeneLaby.bdsproj</Projects>
-      <Projects Name="Targets">Labyrinthe.exe EditLabyrinthe.exe EditActions.exe FunLabySyn.bpl NouvLab.dll GeneLaby.exe</Projects>
+      <Projects Name="Targets">FunLabyCommonR.bpl FunLabyCommonD.bpl Labyrinthe.exe EditLabyrinthe.exe EditActions.exe NouvLab.dll GeneLaby.exe</Projects>
     </Projects>
     <Dependencies/>
   </Default.Personality>

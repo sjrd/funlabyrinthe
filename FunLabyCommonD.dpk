@@ -1,8 +1,8 @@
-package FunLabySyn;
+package FunLabyCommonD;
 
 {$R *.res}
 {$ALIGN 4}
-{$ASSERTIONS OFF}
+{$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO ON}
 {$EXTENDEDSYNTAX ON}
@@ -14,7 +14,7 @@ package FunLabySyn;
 {$OPTIMIZATION ON}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
-{$REFERENCEINFO OFF}
+{$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES OFF}
 {$TYPEDADDRESS OFF}
@@ -22,7 +22,8 @@ package FunLabySyn;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Syntaxe pour FunLaby Old'}
+{$DESCRIPTION 'Common units for FunLabyrinthe (design)'}
+{$DESIGNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
@@ -31,10 +32,10 @@ requires
   SynEdit_D2005,
   designide,
   vclactnband,
-  vclx;
+  vclx,
+  FunLabyCommonR;
 
 contains
-  FunLabyOldSyn in 'FunLabyOldSyn.pas',
-  RegisterFLOldSyn in 'RegisterFLOldSyn.pas';
+  RegFunLabyCommon in 'RegFunLabyCommon.pas';
 
 end.

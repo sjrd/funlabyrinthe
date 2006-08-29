@@ -5,8 +5,7 @@ uses
   WinHelpViewer,
   LabyrintheMain in 'LabyrintheMain.pas' {FormPrincipale},
   LiftDialog in 'LiftDialog.pas' {FormBougeAscenseur},
-  PropertiesDialog in 'PropertiesDialog.pas' {FormProprietes},
-  LabyrintheUtils in 'LabyrintheUtils.pas';
+  PropertiesDialog in 'PropertiesDialog.pas' {FormProprietes};
 
 {$R *.RES}
 
