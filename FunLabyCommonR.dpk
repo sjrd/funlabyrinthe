@@ -39,7 +39,8 @@ requires
 
 contains
   LabyrintheUtils in 'LabyrintheUtils.pas',
-  FunLabySyn in 'FunLabySyn.pas';
+  FunLabySyn in 'FunLabySyn.pas',
+  Screws in 'Screws.pas';
 
 end.
 

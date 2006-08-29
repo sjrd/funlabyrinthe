@@ -37,6 +37,44 @@ type
 
   TLabyrinthe = class;
 
+  TPlayer = class
+  private
+    FBuoys : integer;
+    FPlanks : integer;
+    FSilverKeys : integer;
+    FGoldenKeys : integer;
+
+    FCurrentBoat : integer;
+
+    FShowTips : boolean;
+  public
+    constructor Create;
+
+    property Buoys : integer read FBuoys write FBuoys;
+    property Planks : integer read FPlanks write FPlanks;
+    property SilverKeys : integer read FSilverKeys write FSilverKeys;
+    property GoldenKeys : integer read FGoldenKeys write FGoldenKeys;
+
+    property CurrentBoat : integer read FCurrentBoat write FCurrentBoat;
+
+    property ShowTips : boolean read FShowTips write FShowTips;
+  end;
+
+  TScrew = class
+  private
+    function GetName : string; virtual; abstract;
+    function GetAcceptPlank : boolean; virtual;
+  public
+    procedure Draw(Canvas : TCanvas; X, Y : integer); virtual;
+
+    function BeforeExecute(Player : TPlayer; Coord : T3DPoint) : boolean; virtual;
+    function Execute(Player : TPlayer; Coord : T3DPoint) : boolean; virtual;
+    procedure AfterExecute(Player : TPlayer; Coord : T3DPoint); virtual;
+
+    property Name : string read GetName;
+    property AcceptPlank : boolean read GetAcceptPlank;
+  end;
+
   TCaseActive = class
   private
     Labyrinthe : TLabyrinthe;
@@ -273,8 +311,6 @@ function VerifieIntPos(Str : string) : boolean;
 
 function CaseRect(CodeCase : integer; StyleBouton : TStyleBouton) : TRect;
 
-function Point3D(X, Y, Z : integer) : T3DPoint;
-
 implementation
 
 ///////////////////////////////////////
@@ -422,9 +458,50 @@ begin
   if Result < 128 then Dec(Result, 32) else Dec(Result, 145);
 end;
 
-//////////////////////////////////////////////
-/// Procédures et fonctions de TCaseActive ///
-//////////////////////////////////////////////
+//////////////////////
+/// Classe TPlayer ///
+//////////////////////
+
+constructor TPlayer.Create;
+begin
+  FBuoys := 0;
+  FPlanks := 0;
+  FSilverKeys := 0;
+  FGoldenKeys := 0;
+  FCurrentBoat := 0;
+  FShowTips := False;
+end;
+
+/////////////////////
+/// Classe TScrew ///
+/////////////////////
+
+function TScrew.GetAcceptPlank : boolean;
+begin
+  Result := True;
+end;
+
+procedure TScrew.Draw(Canvas : TCanvas; X, Y : integer);
+begin
+end;
+
+function TScrew.BeforeExecute(Player : TPlayer; Coord : T3DPoint) : boolean;
+begin
+  Result := True;
+end;
+
+function TScrew.Execute(Player : TPlayer; Coord : T3DPoint) : boolean;
+begin
+  Result := False;
+end;
+
+procedure TScrew.AfterExecute(Player : TPlayer; Coord : T3DPoint);
+begin
+end;
+
+//////////////////////////
+/// Classe TCaseActive ///
+//////////////////////////
 
 constructor TCaseActive.Create(Owner : TLabyrinthe);
 begin
@@ -1467,9 +1544,9 @@ begin
   If Str <> '' then Result := ExecuteInformation('Gagné !', Str, MB_ICONINFORMATION or MB_OK);
 end;
 
-////////////////////////////////////////////////////////////////////
-/// Constructeurs et destructeurs des descendants de TCaseActive ///
-////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////
+/// Classes descendantes de TCaseActive ///
+///////////////////////////////////////////
 
 constructor TCaseBouton.Create(Owner : TLabyrinthe);
 begin
@@ -1511,10 +1588,6 @@ begin
   inherited;
   CaseDesactiver := #0;
 end;
-
-//////////////////////////////////////////////////////////////
-/// Procédures et fonctions des descendants de TCaseActive ///
-//////////////////////////////////////////////////////////////
 
 procedure TCaseBouton.SetStyle(NewStyle : TStyleBouton);
 begin
@@ -1562,9 +1635,9 @@ begin
   end;
 end;
 
-//////////////////////////////////////////////
-/// Procédures et fonctions de TLabyrinthe ///
-//////////////////////////////////////////////
+//////////////////////////
+/// Classe TLabyrinthe ///
+//////////////////////////
 
 constructor TLabyrinthe.CreateOpen(FileName : string);
 var SL, EnTete : TScStrings;
