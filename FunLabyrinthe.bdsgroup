@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<PersonalityInfo>
+		<Option>
+			<Option Name="Personality">Default.Personality</Option>
+			<Option Name="ProjectType"></Option>
+			<Option Name="Version">1.0</Option>
+			<Option Name="GUID">{A43CC8A0-416F-4F0D-9598-BD223A865F7F}</Option>
+		</Option>
+	</PersonalityInfo>
+	<Default.Personality>  <Projects>
+      <Projects Name="Labyrinthe.exe">Labyrinthe.bdsproj</Projects>
+      <Projects Name="EditLabyrinthe.exe">EditLabyrinthe.bdsproj</Projects>
+      <Projects Name="EditActions.exe">EditActions.bdsproj</Projects>
+      <Projects Name="FunLabySyn.bpl">FunLabySyn.bdsproj</Projects>
+      <Projects Name="NouvLab.dll">NouvLab.bdsproj</Projects>
+      <Projects Name="GeneLaby.exe">GeneLaby.bdsproj</Projects>
+      <Projects Name="Targets">Labyrinthe.exe EditLabyrinthe.exe EditActions.exe FunLabySyn.bpl NouvLab.dll GeneLaby.exe</Projects>
+    </Projects>
+    <Dependencies/>
+  </Default.Personality>
+</BorlandProject>
