@@ -3,12 +3,18 @@ unit Screws;
 interface
 
 uses
-  Graphics, LabyrintheUtils;
+  Graphics, ScUtils, FunLabyUtils;
+
+resourcestring
+  sGrass = 'Herbe';
+
+const {don't localize}
+  fGrass = 'Grass';
 
 type
   TGrass = class(TScrew)
   public
-    procedure Draw(Canvas : TCanvas; X, Y : integer); override;
+    constructor Create(AMaster : TMaster; const AName : string = '');
   end;
 
 implementation
@@ -17,9 +23,10 @@ implementation
 /// Classe TGrass ///
 /////////////////////
 
-procedure TGrass.Draw(Canvas : TCanvas; X, Y : integer);
+constructor TGrass.Create(AMaster : TMaster; const AName : string = '');
 begin
-  inherited;
+  inherited Create(AMaster, IIF(AName = '', sGrass, AName));
+  Painter.ImgNames.Add(fGrass);
 end;
 
 end.

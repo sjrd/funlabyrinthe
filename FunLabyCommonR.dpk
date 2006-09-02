@@ -40,7 +40,8 @@ requires
 contains
   LabyrintheUtils in 'LabyrintheUtils.pas',
   FunLabySyn in 'FunLabySyn.pas',
-  Screws in 'Screws.pas';
+  Screws in 'Screws.pas',
+  FunLabyUtils in 'FunLabyUtils.pas';
 
 end.
 

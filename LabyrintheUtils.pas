@@ -37,44 +37,6 @@ type
 
   TLabyrinthe = class;
 
-  TPlayer = class
-  private
-    FBuoys : integer;
-    FPlanks : integer;
-    FSilverKeys : integer;
-    FGoldenKeys : integer;
-
-    FCurrentBoat : integer;
-
-    FShowTips : boolean;
-  public
-    constructor Create;
-
-    property Buoys : integer read FBuoys write FBuoys;
-    property Planks : integer read FPlanks write FPlanks;
-    property SilverKeys : integer read FSilverKeys write FSilverKeys;
-    property GoldenKeys : integer read FGoldenKeys write FGoldenKeys;
-
-    property CurrentBoat : integer read FCurrentBoat write FCurrentBoat;
-
-    property ShowTips : boolean read FShowTips write FShowTips;
-  end;
-
-  TScrew = class
-  private
-    function GetName : string; virtual; abstract;
-    function GetAcceptPlank : boolean; virtual;
-  public
-    procedure Draw(Canvas : TCanvas; X, Y : integer); virtual;
-
-    function BeforeExecute(Player : TPlayer; Coord : T3DPoint) : boolean; virtual;
-    function Execute(Player : TPlayer; Coord : T3DPoint) : boolean; virtual;
-    procedure AfterExecute(Player : TPlayer; Coord : T3DPoint); virtual;
-
-    property Name : string read GetName;
-    property AcceptPlank : boolean read GetAcceptPlank;
-  end;
-
   TCaseActive = class
   private
     Labyrinthe : TLabyrinthe;
@@ -456,47 +418,6 @@ function CodeToNoBouton (CodeCase : integer) : integer;
 begin
   Result := CodeCase;
   if Result < 128 then Dec(Result, 32) else Dec(Result, 145);
-end;
-
-//////////////////////
-/// Classe TPlayer ///
-//////////////////////
-
-constructor TPlayer.Create;
-begin
-  FBuoys := 0;
-  FPlanks := 0;
-  FSilverKeys := 0;
-  FGoldenKeys := 0;
-  FCurrentBoat := 0;
-  FShowTips := False;
-end;
-
-/////////////////////
-/// Classe TScrew ///
-/////////////////////
-
-function TScrew.GetAcceptPlank : boolean;
-begin
-  Result := True;
-end;
-
-procedure TScrew.Draw(Canvas : TCanvas; X, Y : integer);
-begin
-end;
-
-function TScrew.BeforeExecute(Player : TPlayer; Coord : T3DPoint) : boolean;
-begin
-  Result := True;
-end;
-
-function TScrew.Execute(Player : TPlayer; Coord : T3DPoint) : boolean;
-begin
-  Result := False;
-end;
-
-procedure TScrew.AfterExecute(Player : TPlayer; Coord : T3DPoint);
-begin
 end;
 
 //////////////////////////
