@@ -3,10 +3,12 @@ unit FunLabyUtils;
 interface
 
 uses
-  Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, ScUtils;
+  Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, ScUtils,
+  Forms, Dialogs, StdCtrls, Math;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
+  sWhichObject = 'Quel objet voulez-vous utiliser ?';
 
 const
   ScrewSize = 30;
@@ -87,7 +89,10 @@ type
       X : integer = 0; Y : integer = 0); virtual;
 
     procedure Moving(Player : TPlayer; OldDirection : TDirection;
-      Src, Dest : T3DPoint; var Cancel : boolean); virtual;
+      KeyPressed : boolean; Src, Dest : T3DPoint;
+      var Cancel : boolean); virtual;
+    procedure Moved(Player : TPlayer; KeyPressed : boolean;
+      Src, Dest : T3DPoint); virtual;
 
     function CanYou(Player : TPlayer; Action : integer) : boolean; virtual;
   end;
@@ -139,7 +144,8 @@ type
 
     function CanYou(Action : integer) : boolean;
 
-    procedure MoveTo(Dir : TDirection);
+    function Move(Dir : TDirection; KeyPressed : boolean;
+      out Redo : boolean) : boolean;
 
     property Position : P3DPoint read FPosAddr;
     property Direction : TDirection read FDirection write FDirection;
@@ -151,12 +157,15 @@ type
   TScrew = class(TFunLabyComponent)
   public
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      Src, Pos : T3DPoint; var Cancel, AbortEnter : boolean); virtual;
-    procedure Entered(Player : TPlayer; Src, Pos : T3DPoint;
-      var GoOnMoving : boolean); virtual;
+      KeyPressed : boolean; Src, Pos : T3DPoint;
+      var Cancel, AbortEntered : boolean); virtual;
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); virtual;
     procedure Exiting(Player : TPlayer; OldDirection : TDirection;
-      Pos, Dest : T3DPoint; var Cancel : boolean); virtual;
-    procedure Exited(Player : TPlayer; Pos, Dest : T3DPoint); virtual;
+      KeyPressed : boolean; Pos, Dest : T3DPoint;
+      var Cancel : boolean); virtual;
+    procedure Exited(Player : TPlayer; KeyPressed : boolean;
+      Pos, Dest : T3DPoint); virtual;
   end;
 
   TMap = class
@@ -198,7 +207,94 @@ implementation
 
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 begin
-  Result := Rect(X, Y, X+ScrewSize, Y+ScrewSize);
+  Result.Left := X;
+  Result.Top := Y;
+  Result.Right := X+ScrewSize;
+  Result.Bottom := Y+ScrewSize;
+end;
+
+function MessageDlgRadio(const Msg : string; DlgType : TMsgDlgType;
+  Buttons : TMsgDlgButtons; DefButton : TModalResult;
+  const RadioTitles : array of string; var Selected : integer;
+  OverButtons : boolean = False) : Word;
+var Form : TForm;
+    I, MaxWidth, OldWidth : integer;
+    Button : TButton;
+begin
+  // Création de la boite de dialogue
+  Form := CreateMessageDialog(Msg, DlgType, Buttons);
+
+  with Form do
+  try
+    // On augmente la taille de la boite de dialogue
+    Height := Height + Length(RadioTitles) * 25;
+
+    // Création des boutons radio et détermination de la largeur minimale
+    MaxWidth := 0;
+    for I := High(RadioTitles) downto Low(RadioTitles) do
+    with TRadioButton.Create(Form) do
+    begin
+      FreeNotification(Form);
+      Parent := Form;
+      Width := Canvas.TextWidth(RadioTitles[I]) + 20;
+      MaxWidth := Max(MaxWidth, Width-20);
+      Caption := RadioTitles[I];
+      Checked := I = Selected;
+      Tag := I;
+      Left := 8;
+
+      // OverButtons indique si les RadioBox sont au-dessus ou en-dessous des
+      // boutons
+      if OverButtons then
+        Top := Form.Height - 90 - (High(RadioTitles) - I) * 25
+      else
+        Top := Form.Height - 50 - (High(RadioTitles) - I) * 25;
+    end;
+
+    // Il faut aussi vérifier que la fiche peut afficher les textes des RadioBox
+    // en entier
+    OldWidth := 0;
+    if (MaxWidth + 40) > Width then
+    begin
+      OldWidth := Width;
+      Width := MaxWidth +40;
+    end;
+
+    for I := 0 to ComponentCount-1 do
+    begin
+      // On récupère chaque bouton
+      if Components[I] is TButton then
+      begin
+        Button := TButton(Components[I]);
+
+        // On met le bon bouton par défaut et on le sélectionne
+        Button.Default := Button.ModalResult = DefButton;
+        if Button.Default then ActiveControl := Button;
+
+        // S'il le faut, décaler tous les boutons vers le bas
+        if OverButtons then
+          Button.Top := Button.Top + Length(RadioTitles) * 25;
+
+        // S'il le faut, décaler tous les boutons vers la droite
+        if OldWidth > 0 then
+          Button.Left := Button.Left + (Width - OldWidth) div 2;
+      end;
+    end;
+
+    // On centre la boite de dialogue
+    Position := poScreenCenter;
+
+    // Affichage de la boîte de dialogue
+    Result := ShowModal;
+
+    // Récupération du choix de l'utilisateur
+    Selected := -1;
+    for I := 0 to ControlCount-1 do
+      if (Controls[I] is TRadioButton) and TRadioButton(Controls[I]).Checked then
+        Selected := Controls[I].Tag;
+  finally
+    Free;
+  end;
 end;
 
 ////////////////////////////
@@ -300,7 +396,7 @@ begin
   FMaster := AMaster;
   FName := AName;
   FPainter := TPainter.Create(FMaster.ImagesMaster);
-  FPainter.FImgNames.BeginUpdate;
+  FPainter.ImgNames.BeginUpdate;
 end;
 
 destructor TFunLabyComponent.Destroy;
@@ -312,7 +408,7 @@ end;
 procedure TFunLabyComponent.AfterConstruction;
 begin
   inherited;
-  FPainter.FImgNames.EndUpdate;
+  FPainter.ImgNames.EndUpdate;
 end;
 
 procedure TFunLabyComponent.Draw(Canvas : TCanvas; X : integer = 0;
@@ -330,9 +426,9 @@ begin
   inherited Create;
   FMaster := AMaster;
   FPainterBefore := TPainter.Create(FMaster.ImagesMaster);
-  FPainterBefore.FImgNames.BeginUpdate;
+  FPainterBefore.ImgNames.BeginUpdate;
   FPainterAfter := TPainter.Create(FMaster.ImagesMaster);
-  FPainterAfter.FImgNames.BeginUpdate;
+  FPainterAfter.ImgNames.BeginUpdate;
 end;
 
 destructor TPlayerPlugin.Destroy;
@@ -345,8 +441,8 @@ end;
 procedure TPlayerPlugin.AfterConstruction;
 begin
   inherited;
-  FPainterBefore.FImgNames.EndUpdate;
-  FPainterAfter.FImgNames.EndUpdate;
+  FPainterBefore.ImgNames.EndUpdate;
+  FPainterAfter.ImgNames.EndUpdate;
 end;
 
 procedure TPlayerPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
@@ -362,7 +458,12 @@ begin
 end;
 
 procedure TPlayerPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
-  Src, Dest : T3DPoint; var Cancel : boolean);
+  KeyPressed : boolean; Src, Dest : T3DPoint; var Cancel : boolean);
+begin
+end;
+
+procedure TPlayerPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
+  Src, Dest : T3DPoint);
 begin
 end;
 
@@ -485,6 +586,7 @@ end;
 function TPlayer.CanYou(Action : integer) : boolean;
 var I, GoodObjectCount : integer;
     GoodObjects : array of TPlayerObject;
+    RadioTitles : array of string;
     GoodObject : TPlayerObject;
 begin
   Result := True;
@@ -511,17 +613,66 @@ begin
   // Si plusieurs objets, demande au joueur lequel utiliser
   if GoodObjectCount = 1 then GoodObject := GoodObjects[0] else
   begin
-    { TODO 1 : Demander au joueur quel objet utiliser }
-    GoodObject := GoodObjects[0];
+    SetLength(RadioTitles, GoodObjectCount);
+    for I := 0 to GoodObjectCount-1 do
+      RadioTitles[I] := GoodObjects[I].Name;
+    I := 0;
+    MessageDlgRadio(sWhichObject, mtConfirmation, [mbOK], mrOK,
+      RadioTitles, I, True);
+    GoodObject := GoodObjects[I];
   end;
 
   // Utilisation de l'objet
   GoodObject.UseFor(Action);
 end;
 
-procedure TPlayer.MoveTo(Dir : TDirection);
+function TPlayer.Move(Dir : TDirection; KeyPressed : boolean;
+  out Redo : boolean) : boolean;
+var I : integer;
+    Src, Dest : T3DPoint;
+    OldDir : TDirection;
+    Cancel, AbortEntered : boolean;
 begin
   { TODO 2 : Déplacement du joueur }
+
+  // Initialisation des variables
+  Result := False;
+  Redo := False;
+  Src := FPosition;
+  Dest := FPosition;
+  case Dir of
+    diNorth : dec(Dest.Y);
+    diEast  : inc(Dest.X);
+    diSouth : inc(Dest.Y);
+    diWest  : dec(Dest.X);
+  end;
+  OldDir := FDirection;
+  AbortEntered := False;
+
+  // Premier passage : le déplacement est-il permis ?
+  if Dir <> diNone then // éviter le cas de la ré-exécution
+  begin
+    FDirection := Dir;
+    Cancel := False;
+
+    // Case source : exiting
+    Master.Map[Src].Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
+    if Cancel then exit;
+
+    // Plug-in : moving
+    for I := 0 to PluginCount-1 do
+      Plugins[I].Moving(Self, OldDir, KeyPressed, Src, Dest, Cancel);
+    if Cancel then exit;
+
+    // Case destination : entering
+    Master.Map[Dest].Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel,
+      AbortEntered);
+    if Cancel then exit;
+
+    // Déplacement du pion
+    if FPosition = Src then
+      FPosition := Dest;
+  end;
 end;
 
 /////////////////////
@@ -529,21 +680,23 @@ end;
 /////////////////////
 
 procedure TScrew.Entering(Player : TPlayer; OldDirection : TDirection;
-  Src, Pos : T3DPoint; var Cancel, AbortEnter : boolean);
+  KeyPressed : boolean; Src, Pos : T3DPoint;
+  var Cancel, AbortEntered : boolean);
 begin
 end;
 
-procedure TScrew.Entered(Player : TPlayer; Src, Pos : T3DPoint;
-  var GoOnMoving : boolean);
+procedure TScrew.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
 begin
 end;
 
 procedure TScrew.Exiting(Player : TPlayer; OldDirection : TDirection;
-  Pos, Dest : T3DPoint; var Cancel : boolean);
+  KeyPressed : boolean; Pos, Dest : T3DPoint; var Cancel : boolean);
 begin
 end;
 
-procedure TScrew.Exited(Player : TPlayer; Pos, Dest : T3DPoint);
+procedure TScrew.Exited(Player : TPlayer; KeyPressed : boolean;
+  Pos, Dest : T3DPoint);
 begin
 end;
 
