@@ -15,7 +15,7 @@
     </Description>
     <Author>S&#xE9;bastien Jean Robert Doeraene</Author>
     <HTMLlink>http://sjrd.developpez.com/programmes/funlaby/</HTMLlink>
-    <Copyright>Sébastien Doeraene - 2000-2006 - Sous license GNU GPL</Copyright>
+    <Copyright>S&#xE9;bastien Doeraene - 2000-2006 - Sous license GNU GPL</Copyright>
     <RecurseDirectory>FALSE</RecurseDirectory>
     <ConditionalDefines>
       <Count>3</Count>
@@ -30,7 +30,7 @@
     <OutputFormat>ofCHM</OutputFormat>
     <OutputFolder>C:\Program Files\DelphiCodeToDoc\out\</OutputFolder>
     <VisibilitySet>
-      <mvPrivate>FALSE</mvPrivate>
+      <mvPrivate>TRUE</mvPrivate>
       <mvProtected>TRUE</mvProtected>
       <mvPublic>TRUE</mvPublic>
       <mvPublished>TRUE</mvPublished>

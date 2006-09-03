@@ -1,3 +1,9 @@
+{*
+  Différentes cases de FunLabyrinthe
+  L'unité Screws comprend les définitions des cases de FunLabyrinthe.
+  @author Sébastien Jean Robert Doeraene
+  @version 4.5
+*}
 unit Screws;
 
 interface
@@ -6,54 +12,58 @@ uses
   Graphics, ScUtils, FunLabyUtils;
 
 resourcestring
-  sGrass = 'Herbe';
-  sDirectTurnstile = 'Tourniquet direct';
-  sIndirectTurnstile = 'Tourniquet indirect';
-  sOutside = 'Dehors';
+  sGrass = 'Herbe';                           /// Nom de l'herbe
+  sDirectTurnstile = 'Tourniquet direct';     /// Nom du tourniquet direct
+  sIndirectTurnstile = 'Tourniquet indirect'; /// Nom du tourniquet indirect
+  sOutside = 'Dehors';                        /// Nom du dehors
 
 const {don't localize}
-  fGrass = 'Grass';
-  fDirectTurnstile = 'DirectTurnstile';
-  fIndirectTurnstile = 'IndirectTurnstile';
-  fOutside = 'Outside';
+  fGrass = 'Grass';                           /// Fichier de l'herbe
+  fDirectTurnstile = 'DirectTurnstile';       /// Fichier du tourniquet direct
+  fIndirectTurnstile = 'IndirectTurnstile';   /// Fichier du tourniquet indirect
+  fOutside = 'Outside';                       /// Fichier du dehors
 
 const
-  cGrass                  = 48;
-  cWater                  = 49;
-  cWall                   = 50;
-  cHole                   = 51;
-  cSilverBlock            = 52;
-  cGoldenBlock            = 53;
-  cNorthArrow             = 54;
-  cEastArrow              = 55;
-  cSouthArrow             = 56;
-  cWestArrow              = 57;
-  cCrossroads             = 58;
-  cTreasure               = 59;
-  cSecretPassage          = 63;
-  cDirectTurnstile        = 224;
-  cIndirectTurnstile      = 225;
-  cButton                 = [33..47, 161..190];
-  cSunkenButton           = 64;
-  cInactiveTransporter    = 96;
-  cNextOneTransporter     = [97..109];
-  cPreviousOneTransporter = [110..122];
-  cRandomTransporter      = [123..126];
-  cStairs                 = [71..90];
-  cDownStairs             = 60;
-  cLift                   = 61;
-  cOpenLift               = 5;
-  cUpStairs               = 62;
-  cStart                  = 65;
-  cOutside                = 66;
-  cBuoy                   = 67;
-  cPlank                  = 68;
-  cSilverKey              = 69;
-  cGoldenKey              = 70;
-  cSky                    = 226;
-  cBoat                   = [193..202];
+  cGrass                  = 48;  /// Code de l'herbe
+  cWater                  = 49;  /// Code de l'eau
+  cWall                   = 50;  /// Code du mur
+  cHole                   = 51;  /// Code du trou
+  cSilverBlock            = 52;  /// Code du bloc en argent
+  cGoldenBlock            = 53;  /// Code du bloc en or
+  cNorthArrow             = 54;  /// Code de la flèche nord
+  cEastArrow              = 55;  /// Code de la flèche est
+  cSouthArrow             = 56;  /// Code de la flèche sud
+  cWestArrow              = 57;  /// Code de la flèche ouest
+  cCrossroads             = 58;  /// Code du carrefour
+  cTreasure               = 59;  /// Code du trésor
+  cSecretPassage          = 63;  /// Code du passage secret
+  cDirectTurnstile        = 224; /// Code du tourniquet direct
+  cIndirectTurnstile      = 225; /// Code du tourniquet indirect
+  cButton                 = [33..47, 161..190]; /// Codes des boutons
+  cSunkenButton           = 64;  /// Code du bouton enfoncé
+  cInactiveTransporter    = 96;  /// Code du téléporteur inactif
+  cNextOneTransporter     = [97..109];  /// Codes des téléporteurs 'suivant'
+  cPreviousOneTransporter = [110..122]; /// Codes des téléporteurs 'précédent'
+  cRandomTransporter      = [123..126]; /// Codes des téléporteurs aléatoires
+  cStairs                 = [71..90];   /// Codes des escaliers
+  cDownStairs             = 60;  /// Code de l'escalier descendant
+  cLift                   = 61;  /// Code de l'ascenseur
+  cOpenLift               = 5;   /// Code fictif de l'ascenseur ouvert
+  cUpStairs               = 62;  /// Code de l'escalier montant
+  cStart                  = 65;  /// Code du départ
+  cOutside                = 66;  /// Code du dehors
+  cBuoy                   = 67;  /// Code de la bouée
+  cPlank                  = 68;  /// Code de la planche
+  cSilverKey              = 69;  /// Code de la clef en argent
+  cGoldenKey              = 70;  /// Code de la clef en or
+  cSky                    = 226; /// Code du ciel
+  cBoat                   = [193..202]; /// Codes des barques
 
 type
+  {*
+    Herbe
+    L'herbe est la case de base de FunLabyrinthe. Elle est sans actions.
+  *}
   TGrass = class(TScrew)
   protected
     constructor Create(AMaster : TMaster; const AName : string;
@@ -62,6 +72,11 @@ type
     constructor Create(AMaster : TMaster); overload;
   end;
 
+  {*
+    Tourniquet Direct
+    Le tourniquet direct fait tourner le joueur dans le sens direct jusqu'à
+    parvenir à en sortir.
+  *}
   TDirectTurnstile = class(TGrass)
   protected
     constructor Create(AMaster : TMaster; const AName : string;
@@ -75,6 +90,11 @@ type
       Pos, Dest : T3DPoint); override;
   end;
 
+  {*
+    Tourniquet Indirect
+    Le tourniquet indirect fait tourner le joueur dans le sens indirect jusqu'à
+    parvenir à en sortir.
+  *}
   TIndirectTurnstile = class(TGrass)
   protected
     constructor Create(AMaster : TMaster; const AName : string;
@@ -88,6 +108,11 @@ type
       Pos, Dest : T3DPoint); override;
   end;
 
+  {*
+    Dehors
+    Le dehors représente l'extérieur du labyrinthe et fait remporter la victoire
+    au joueur qui y parvient.
+  *}
   TOutside = class(TGrass)
   protected
     constructor Create(AMaster : TMaster; const AName : string;
