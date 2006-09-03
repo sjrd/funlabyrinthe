@@ -1418,9 +1418,21 @@ begin
     EInvalidAction.Create('Son incorrect');
   J := PosEx('}', Str, I) - I;
   Str := Copy(Str, I, J);
-  if not ExecuteSound(Str, stSysSound, True) then
-  if not ExecuteSound(Dir+'Sons\'+Str, stFileName, True) then
-    raise EInvalidAction.Create('Son inexistant');
+
+  if FileExists(Dir+'Sons\'+Str) then
+  begin
+    if not ExecuteSound(Dir+'Sons\'+Str, stFileName, True) then
+      raise EInvalidAction.Create('Son inexistant');
+  end else
+  begin
+    if Str = 'Information' then Str := 'SystemAsterisk' else
+    if Str = 'Question'    then Str := 'SystemQuestion' else
+    if Str = 'Danger'      then Str := 'SystemExclamation' else
+    if Str = 'Erreur'      then Str := 'SystemHand';
+
+    if not ExecuteSound(Str, stSysSound, True) then
+      raise EInvalidAction.Create('Son inexistant');
+  end;
 end;
 
 function TCaseActive.ExecuteMessage(Str : string) : boolean;
