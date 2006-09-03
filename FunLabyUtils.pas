@@ -1,3 +1,9 @@
+{*
+  Types et classes de bases de FunLabyrinthe
+  FunLabyUtils comprend les types et classes de base de FunLabyrinthe.
+  @author Sébastien Jean Robert Doeraene
+  @version 4.5
+*}
 unit FunLabyUtils;
 
 interface
@@ -11,17 +17,34 @@ resourcestring
   sWhichObject = 'Quel objet voulez-vous utiliser ?';
 
 const
-  ScrewSize = 30;
-  clTransparent = clTeal;
+  ScrewSize = 30;         /// Taille (en largeur et hauteur) d'une case
+  clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
 
 type
+  {*
+    Type représentant une direction cardinale
+  *}
   TDirection = (diNone, diNorth, diEast, diSouth, diWest);
+
+  {*
+    Pointeur vers T3DPoint
+    @see T3DPoint
+  *}
   P3DPoint = ^T3DPoint;
+
+  {*
+    Type représentant le code d'une case
+  *}
   TScrewCode = type Byte;
 
   TMaster = class;
   TPlayer = class;
 
+  {*
+    Gère le chargement des images d'après leur nom
+    TImagesMaster s'occupe de charger automatiquement les images qu'on lui
+    demande d'afficher. Il les conserve dans une liste d'image.
+  *}
   TImagesMaster = class
   private
     FImgList : TImageList;
@@ -30,9 +53,35 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    {*
+      Renvoie l'index de l'image dont le nom est spécifié
+      IndexOf renvoie l'index de l'image dont le nom est spécifié dans la
+      liste d'images interne. Si l'image n'a pas encore été chargée, IndexOf
+      la charge.
+      @param ImgName Nom de l'image
+      @return Index de l'image
+    *}
     function IndexOf(const ImgName : string) : integer;
+
+    {*
+      Dessine une image à partir de son index
+      Draw dessine l'image indiquée sur un canevas.
+      @param Index  Index de l'image à dessiner
+      @param Canvas Canevas sur lequel dessiner l'image
+      @param X      Coordonnée X du point à partir duquel dessiner l'image
+      @param Y      Coordonnée Y du point à partir duquel dessiner l'image
+    *}
     procedure Draw(Index : integer; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); overload;
+
+    {*
+      Dessine une image à partir de son nom
+      Draw dessine l'image indiquée sur un canevas.
+      @param ImgName Nom de l'image à dessiner
+      @param Canvas  Canevas sur lequel dessiner l'image
+      @param X       Coordonnée X du point à partir duquel dessiner l'image
+      @param Y       Coordonnée Y du point à partir duquel dessiner l'image
+    *}
     procedure Draw(const ImgName : string; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); overload;
   end;
@@ -242,7 +291,14 @@ type
 
 var
   sScrewFileName : string = 'Screws\%s.bmp';
+    /// Chaîne de format pour les fichiers image
 
+{*
+  Crée un rectangle de la taille d'une case
+  @param X Bord gauche du rectangle
+  @param Y Bord supérieur du rectangle
+  @return Le rectangle de type TRect
+*}
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 
 implementation
