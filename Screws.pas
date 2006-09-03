@@ -14,7 +14,8 @@ const {don't localize}
 type
   TGrass = class(TScrew)
   public
-    constructor Create(AMaster : TMaster; const AName : string = '');
+    constructor Create(AMaster : TMaster; const AName : string = '';
+      ACode : Char = #0);
   end;
 
 implementation
@@ -23,9 +24,11 @@ implementation
 /// Classe TGrass ///
 /////////////////////
 
-constructor TGrass.Create(AMaster : TMaster; const AName : string = '');
+constructor TGrass.Create(AMaster : TMaster; const AName : string = '';
+  ACode : Char = #0);
 begin
-  inherited Create(AMaster, IIF(AName = '', sGrass, AName));
+  inherited Create(AMaster, IIF(AName = '', sGrass, AName),
+    IIF(ACode = #0, '0', ACode));
   Painter.ImgNames.Add(fGrass);
 end;
 

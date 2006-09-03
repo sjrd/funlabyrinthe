@@ -155,7 +155,11 @@ type
   end;
 
   TScrew = class(TFunLabyComponent)
+  private
+    FCode : Char;
   public
+    constructor Create(AMaster : TMaster; const AName : string; ACode : Char);
+
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
       var Cancel, AbortEntered : boolean); virtual;
@@ -166,6 +170,8 @@ type
       var Cancel : boolean); virtual;
     procedure Exited(Player : TPlayer; KeyPressed : boolean;
       Pos, Dest : T3DPoint); virtual;
+
+    property Code : Char read FCode;
   end;
 
   TMap = class
@@ -670,7 +676,7 @@ begin
     if Cancel then exit;
 
     // Déplacement du pion
-    if FPosition = Src then
+    if Same3DPoint(FPosition, Src) then
       FPosition := Dest;
   end;
 end;
@@ -678,6 +684,13 @@ end;
 /////////////////////
 /// Classe TScrew ///
 /////////////////////
+
+constructor TScrew.Create(AMaster : TMaster; const AName : string;
+  ACode : Char);
+begin
+  inherited Create(AMaster, AName);
+  FCode := ACode;
+end;
 
 procedure TScrew.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
