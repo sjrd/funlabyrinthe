@@ -17,6 +17,7 @@ const
 type
   TDirection = (diNone, diNorth, diEast, diSouth, diWest);
   P3DPoint = ^T3DPoint;
+  TScrewCode = type Byte;
 
   TMaster = class;
   TPlayer = class;
@@ -156,9 +157,10 @@ type
 
   TScrew = class(TFunLabyComponent)
   private
-    FCode : Char;
+    FCode : TScrewCode;
   public
-    constructor Create(AMaster : TMaster; const AName : string; ACode : Char);
+    constructor Create(AMaster : TMaster; const AName : string;
+      ACode : TScrewCode);
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
@@ -171,24 +173,49 @@ type
     procedure Exited(Player : TPlayer; KeyPressed : boolean;
       Pos, Dest : T3DPoint); virtual;
 
-    property Code : Char read FCode;
+    property Code : TScrewCode read FCode;
+  end;
+
+  TScrewsMaster = class
+  private
+    FMaster : TMaster;
+    FScrews : array[33..255] of TScrew;
+
+    function GetScrews(Code : TScrewCode) : TScrew;
+  public
+    constructor Create(AMaster : TMaster);
+    destructor Destroy; override;
+
+    property Master : TMaster read FMaster;
+    property Screws[Code : TScrewCode] : TScrew read GetScrews; default;
   end;
 
   TMap = class
   private
     FMaster : TMaster;
     FDimensions : T3DPoint;
+    FMap : array of TScrewCode;
+    FOutside : array of TScrewCode;
 
+    function GetCodeMap(Position : T3DPoint) : TScrewCode;
+    procedure SetCodeMap(Position : T3DPoint; Value : TScrewCode);
     function GetMap(Position : T3DPoint) : TScrew;
   public
     constructor Create(AMaster : TMaster; ADimensions : T3DPoint);
 
+    function InMap(Position : T3DPoint) : boolean;
+
+    property Master : TMaster read FMaster;
+    property Dimensions : T3DPoint read FDimensions;
+    property CodeMap[Position : T3DPoint] : TScrewCode
+      read GetCodeMap write SetCodeMap;
     property Map[Position : T3DPoint] : TScrew read GetMap; default;
   end;
 
   TMaster = class
   private
     FImagesMaster : TImagesMaster;
+    FScrewsMaster : TScrewsMaster;
     FMap : TMap;
     FPlayers : TObjectList;
 
@@ -199,17 +226,21 @@ type
     destructor Destroy; override;
 
     property ImagesMaster : TImagesMaster read FImagesMaster;
+    property ScrewsMaster : TScrewsMaster read FScrewsMaster;
     property Map : TMap read FMap;
     property PlayerCount : integer read GetPlayerCount;
     property Players[index : integer] : TPlayer read GetPlayers;
   end;
 
 var
-  sScrewFileName : string = 'Cases\%s.bmp';
+  sScrewFileName : string = 'Screws\%s.bmp';
 
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 
 implementation
+
+uses
+  Screws;
 
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 begin
@@ -639,8 +670,6 @@ var I : integer;
     OldDir : TDirection;
     Cancel, AbortEntered : boolean;
 begin
-  { TODO 2 : Déplacement du joueur }
-
   // Initialisation des variables
   Result := False;
   Redo := False;
@@ -651,33 +680,44 @@ begin
     diEast  : inc(Dest.X);
     diSouth : inc(Dest.Y);
     diWest  : dec(Dest.X);
+    else exit;
   end;
   OldDir := FDirection;
+  FDirection := Dir;
+  Cancel := False;
   AbortEntered := False;
 
   // Premier passage : le déplacement est-il permis ?
-  if Dir <> diNone then // éviter le cas de la ré-exécution
   begin
-    FDirection := Dir;
-    Cancel := False;
-
     // Case source : exiting
     Master.Map[Src].Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
-
     // Plug-in : moving
     for I := 0 to PluginCount-1 do
       Plugins[I].Moving(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
-
     // Case destination : entering
     Master.Map[Dest].Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel,
       AbortEntered);
     if Cancel then exit;
+  end;
 
-    // Déplacement du pion
-    if Same3DPoint(FPosition, Src) then
-      FPosition := Dest;
+  // Déplacement du joueur (à moins qu'il ait été déplacé par ailleurs)
+  if Same3DPoint(FPosition, Src) then
+    FPosition := Dest
+  else
+    Dest := FPosition;
+
+  // Second passage : le déplacement a été fait
+  begin
+    // Case source : exited
+    Master.Map[Src].Exited(Self, KeyPressed, Src, Dest);
+    // Plug-in : moved
+    for I := 0 to PluginCount-1 do
+      Plugins[I].Moved(Self, KeyPressed, Src, Dest);
+    // Case destination : entered (sauf si AbortEntered a été positionné à True)
+    if not AbortEntered then
+      Master.Map[Dest].Entered(Self, KeyPressed, Src, Dest, Redo);
   end;
 end;
 
@@ -686,7 +726,7 @@ end;
 /////////////////////
 
 constructor TScrew.Create(AMaster : TMaster; const AName : string;
-  ACode : Char);
+  ACode : TScrewCode);
 begin
   inherited Create(AMaster, AName);
   FCode := ACode;
@@ -713,20 +753,104 @@ procedure TScrew.Exited(Player : TPlayer; KeyPressed : boolean;
 begin
 end;
 
+////////////////////////////
+/// Classe TScrewsMaster ///
+////////////////////////////
+
+constructor TScrewsMaster.Create(AMaster : TMaster);
+var Code : TScrewCode;
+begin
+  inherited Create;
+  FMaster := AMaster;
+  for Code := 33 to 255 do
+    FScrews[Code] := nil;
+
+  // Quelques exemples pour la route...
+  FScrews[cGrass] := TGrass.Create(FMaster);
+  FScrews[cDirectTurnstile] := TDirectTurnstile.Create(FMaster);
+  FScrews[cIndirectTurnstile] := TIndirectTurnstile.Create(FMaster);
+  FScrews[cOutside] := TOutside.Create(FMaster);
+end;
+
+destructor TScrewsMaster.Destroy;
+var Code : TScrewCode;
+begin
+  for Code := 33 to 255 do if Assigned(FScrews[Code]) then
+    FScrews[Code].Free;
+  inherited;
+end;
+
+function TScrewsMaster.GetScrews(Code : TScrewCode) : TScrew;
+begin
+  Result := FScrews[Code];
+end;
+
 ///////////////////
 /// Classe TMap ///
 ///////////////////
 
 constructor TMap.Create(AMaster : TMaster; ADimensions : T3DPoint);
+var X, Y, Z : integer;
 begin
   inherited Create;
   FMaster := AMaster;
   FDimensions := ADimensions;
+
+  SetLength(FMap, FDimensions.X * FDimensions.Y * FDimensions.Z);
+  for X := 0 to FDimensions.X-1 do
+    for Y := 0 to FDimensions.Y-1 do
+      for Z := 0 to FDimensions.Z-1 do
+        FMap[Z*FDimensions.X*FDimensions.Y + Y*FDimensions.X + X] := cGrass;
+
+  SetLength(FOutside, FDimensions.Z);
+  for Z := 0 to FDimensions.Z-1 do
+    FOutside[Z] := cOutside;
+end;
+
+function TMap.GetCodeMap(Position : T3DPoint) : TScrewCode;
+var Index : integer;
+begin
+  if InMap(Position) then
+  begin
+    Index := Position.Z;
+    Index := Index * FDimensions.Y;
+    inc(Index, Position.Y);
+    Index := Index * FDimensions.X;
+    inc(Index, Position.X);
+
+    Result := FMap[Index];
+  end else
+  if (Position.Z < 0) or (Position.Z >= FDimensions.Z) then
+    Result := FOutside[0]
+  else
+    Result := FOutside[Position.Z];
+end;
+
+procedure TMap.SetCodeMap(Position : T3DPoint; Value : TScrewCode);
+var Index : integer;
+begin
+  if (not InMap(Position)) or (Master.ScrewsMaster[Value] = nil) then exit;
+
+  Index := Position.Z;
+  Index := Index * FDimensions.Y;
+  inc(Index, Position.Y);
+  Index := Index * FDimensions.X;
+  inc(Index, Position.X);
+
+  FMap[Index] := Value;
 end;
 
 function TMap.GetMap(Position : T3DPoint) : TScrew;
 begin
-  Result := nil;
+  Result := Master.ScrewsMaster[CodeMap[Position]];
+end;
+
+function TMap.InMap(Position : T3DPoint) : boolean;
+begin
+  Result :=
+    (Position.X >= 0) and (Position.X < FDimensions.X) and
+    (Position.Y >= 0) and (Position.Y < FDimensions.Y) and
+    (Position.Z >= 0) and (Position.Z < FDimensions.Z);
 end;
 
 //////////////////////
@@ -737,6 +861,7 @@ constructor TMaster.Create;
 begin
   inherited Create;
   FImagesMaster := TImagesMaster.Create;
+  FScrewsMaster := TScrewsMaster.Create(Self);
   FMap := TMap.Create(Self, Point3D(1, 1, 1));
   FPlayers := TObjectList.Create;
 end;
@@ -745,6 +870,7 @@ destructor TMaster.Destroy;
 begin
   FPlayers.Free;
   FMap.Free;
+  FScrewsMaster.Free;
   FImagesMaster.Free;
   inherited;
 end;
