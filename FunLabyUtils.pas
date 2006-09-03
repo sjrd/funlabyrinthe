@@ -143,6 +143,14 @@ type
     procedure AddPlugin(Plugin : TPlayerPlugin);
     procedure RemovePlugin(Plugin : TPlayerPlugin);
 
+    function ShowDialog(const Title, Text : string;
+      DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
+      DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
+    function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
+      DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
+      const RadioTitles : array of string; var Selected : integer;
+      OverButtons : boolean = False) : Word;
+
     function CanYou(Action : integer) : boolean;
 
     function Move(Dir : TDirection; KeyPressed : boolean;
@@ -248,90 +256,6 @@ begin
   Result.Top := Y;
   Result.Right := X+ScrewSize;
   Result.Bottom := Y+ScrewSize;
-end;
-
-function MessageDlgRadio(const Msg : string; DlgType : TMsgDlgType;
-  Buttons : TMsgDlgButtons; DefButton : TModalResult;
-  const RadioTitles : array of string; var Selected : integer;
-  OverButtons : boolean = False) : Word;
-var Form : TForm;
-    I, MaxWidth, OldWidth : integer;
-    Button : TButton;
-begin
-  // Création de la boite de dialogue
-  Form := CreateMessageDialog(Msg, DlgType, Buttons);
-
-  with Form do
-  try
-    // On augmente la taille de la boite de dialogue
-    Height := Height + Length(RadioTitles) * 25;
-
-    // Création des boutons radio et détermination de la largeur minimale
-    MaxWidth := 0;
-    for I := High(RadioTitles) downto Low(RadioTitles) do
-    with TRadioButton.Create(Form) do
-    begin
-      FreeNotification(Form);
-      Parent := Form;
-      Width := Canvas.TextWidth(RadioTitles[I]) + 20;
-      MaxWidth := Max(MaxWidth, Width-20);
-      Caption := RadioTitles[I];
-      Checked := I = Selected;
-      Tag := I;
-      Left := 8;
-
-      // OverButtons indique si les RadioBox sont au-dessus ou en-dessous des
-      // boutons
-      if OverButtons then
-        Top := Form.Height - 90 - (High(RadioTitles) - I) * 25
-      else
-        Top := Form.Height - 50 - (High(RadioTitles) - I) * 25;
-    end;
-
-    // Il faut aussi vérifier que la fiche peut afficher les textes des RadioBox
-    // en entier
-    OldWidth := 0;
-    if (MaxWidth + 40) > Width then
-    begin
-      OldWidth := Width;
-      Width := MaxWidth +40;
-    end;
-
-    for I := 0 to ComponentCount-1 do
-    begin
-      // On récupère chaque bouton
-      if Components[I] is TButton then
-      begin
-        Button := TButton(Components[I]);
-
-        // On met le bon bouton par défaut et on le sélectionne
-        Button.Default := Button.ModalResult = DefButton;
-        if Button.Default then ActiveControl := Button;
-
-        // S'il le faut, décaler tous les boutons vers le bas
-        if OverButtons then
-          Button.Top := Button.Top + Length(RadioTitles) * 25;
-
-        // S'il le faut, décaler tous les boutons vers la droite
-        if OldWidth > 0 then
-          Button.Left := Button.Left + (Width - OldWidth) div 2;
-      end;
-    end;
-
-    // On centre la boite de dialogue
-    Position := poScreenCenter;
-
-    // Affichage de la boîte de dialogue
-    Result := ShowModal;
-
-    // Récupération du choix de l'utilisateur
-    Selected := -1;
-    for I := 0 to ControlCount-1 do
-      if (Controls[I] is TRadioButton) and TRadioButton(Controls[I]).Checked then
-        Selected := Controls[I].Tag;
-  finally
-    Free;
-  end;
 end;
 
 ////////////////////////////
@@ -620,6 +544,100 @@ begin
   FPlugins.Remove(Plugin);
 end;
 
+function TPlayer.ShowDialog(const Title, Text : string;
+  DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
+  DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
+begin
+  // En prévision d'une exécution en thread du jeu (et client-serveur)
+  Result := ScUtils.ShowDialog(Title, Text, DlgType, DlgButtons,
+    DefButton, AddFlags);
+end;
+
+function TPlayer.ShowDialogRadio(const Title, Text : string;
+  DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
+  const RadioTitles : array of string; var Selected : integer;
+  OverButtons : boolean = False) : Word;
+var Form : TForm;
+    I, MaxWidth, OldWidth : integer;
+    Button : TButton;
+begin
+  // Création de la boite de dialogue
+  Form := CreateMessageDialog(Text, DlgType, DlgButtons);
+
+  with Form do
+  try
+    Caption := Title;
+    // On augmente la taille de la boite de dialogue
+    Height := Height + Length(RadioTitles) * 25;
+
+    // Création des boutons radio et détermination de la largeur minimale
+    MaxWidth := 0;
+    for I := High(RadioTitles) downto Low(RadioTitles) do
+    with TRadioButton.Create(Form) do
+    begin
+      FreeNotification(Form);
+      Parent := Form;
+      Width := Canvas.TextWidth(RadioTitles[I]) + 20;
+      MaxWidth := Max(MaxWidth, Width-20);
+      Caption := RadioTitles[I];
+      Checked := I = Selected;
+      Tag := I;
+      Left := 8;
+
+      // OverButtons indique si les RadioBox sont au-dessus ou en-dessous des
+      // boutons
+      if OverButtons then
+        Top := Form.Height - 90 - (High(RadioTitles) - I) * 25
+      else
+        Top := Form.Height - 50 - (High(RadioTitles) - I) * 25;
+    end;
+
+    // Il faut aussi vérifier que la fiche peut afficher les textes des RadioBox
+    // en entier
+    OldWidth := 0;
+    if (MaxWidth + 40) > Width then
+    begin
+      OldWidth := Width;
+      Width := MaxWidth +40;
+    end;
+
+    for I := 0 to ComponentCount-1 do
+    begin
+      // On récupère chaque bouton
+      if Components[I] is TButton then
+      begin
+        Button := TButton(Components[I]);
+
+        // On met le bon bouton par défaut et on le sélectionne
+        Button.Default := Button.ModalResult = DefButton;
+        if Button.Default then ActiveControl := Button;
+
+        // S'il le faut, décaler tous les boutons vers le bas
+        if OverButtons then
+          Button.Top := Button.Top + Length(RadioTitles) * 25;
+
+        // S'il le faut, décaler tous les boutons vers la droite
+        if OldWidth > 0 then
+          Button.Left := Button.Left + (Width - OldWidth) div 2;
+      end;
+    end;
+
+    // On centre la boite de dialogue
+    Position := poScreenCenter;
+
+    // Affichage de la boîte de dialogue
+    Result := ShowModal;
+
+    // Récupération du choix de l'utilisateur
+    Selected := -1;
+    for I := 0 to ControlCount-1 do
+      if (Controls[I] is TRadioButton) and TRadioButton(Controls[I]).Checked then
+        Selected := Controls[I].Tag;
+  finally
+    Free;
+  end;
+end;
+
 function TPlayer.CanYou(Action : integer) : boolean;
 var I, GoodObjectCount : integer;
     GoodObjects : array of TPlayerObject;
@@ -654,7 +672,7 @@ begin
     for I := 0 to GoodObjectCount-1 do
       RadioTitles[I] := GoodObjects[I].Name;
     I := 0;
-    MessageDlgRadio(sWhichObject, mtConfirmation, [mbOK], mrOK,
+    ShowDialogRadio(sWhichObject, sWhichObject, mtConfirmation, [mbOK], mrOK,
       RadioTitles, I, True);
     GoodObject := GoodObjects[I];
   end;
