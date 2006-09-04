@@ -21,21 +21,17 @@ const
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
 
 type
-  {*
-    Type représentant une direction cardinale
-  *}
+  /// Type représentant une direction cardinale
   TDirection = (diNone, diNorth, diEast, diSouth, diWest);
 
-  {*
-    Pointeur vers T3DPoint
-    @see T3DPoint
-  *}
+  /// Pointeur vers T3DPoint
   P3DPoint = ^T3DPoint;
 
-  {*
-    Type représentant le code d'une case
-  *}
+  /// Type représentant le code d'une case
   TScrewCode = type Byte;
+
+  /// Mode d'ouverture d'un fichier FunLabyrinthe
+  TFileMode = (fmEdit, fmEditActions, fmPlay);
 
   TMaster = class;
   TPlayer = class;
@@ -311,6 +307,40 @@ type
     property Map : TMap read FMap;
     property PlayerCount : integer read GetPlayerCount;
     property Players[index : integer] : TPlayer read GetPlayers;
+  end;
+
+  {*
+    Crée, ouvre, enregistre et gère les fichiers FunLabyrinthe
+    TFunLabyFile se charge de créer, ouvrir, enregistrer et gérer les fichiers
+    FunLabyrinthe (extension .lab). Elle est la seule de toutes les classes
+    métier de FunLabyrinthe à « savoir » qu'il existe des fichiers.
+    C'est la classe au plus haut niveau du fonctionnement de FunLabyrinthe.
+  *}
+  TFunLabyFile = class
+  private
+    FFileName : TFileName; /// Nom du fichier
+    FMode : TFileMode;     /// Mode d'ouverture du fichier
+    FName : string;        /// Nom du labyrinthe
+    FDescription : string; /// Description
+    FVersion : string;     /// Version lors de l'enregistrement
+    FAllowEdit : boolean;  /// Indique si le fichier peut être ouvert en édition
+
+    FMaster : TMaster;     /// Maître FunLabyrinthe
+  public
+    constructor Create(const AFileName : TFileName; AMode : TFileMode);
+    constructor CreateNew(AMap, AActions : TStrings);
+    destructor Destroy; override;
+
+    procedure Save(const AFileName : TFileName = '');
+
+    property FileName : TFileName read FFileName;
+    property Mode : TFileMode read FMode;
+    property Name : string read FName write FName;
+    property Description : string read FDescription write FDescription;
+    property Version : string read FVersion;
+    property AllowEdit : boolean read FAllowEdit;
+
+    property Master : TMaster read FMaster;
   end;
 
 var
@@ -1321,6 +1351,64 @@ end;
 function TMaster.GetPlayers(Index : integer) : TPlayer;
 begin
   Result := TPlayer(FPlayers[Index]);
+end;
+
+///////////////////////////
+/// Classe TFunLabyFile ///
+///////////////////////////
+
+{*
+  Ouvre un fichier FunLabyrinthe
+  @param AFileName   Nom du fichier à ouvrir
+  @param AMode       Mode sous lequel ouvrir le fichier
+*}
+constructor TFunLabyFile.Create(const AFileName : TFileName; AMode : TFileMode);
+begin
+  inherited Create;
+  FFileName := AFileName;
+  FMode := AMode;
+  FName := '';
+  FDescription := '';
+  FVersion := '';
+  FAllowEdit := True;
+  FMaster := TMaster.Create;
+  { TODO 2 : Charger un fichier }
+end;
+
+{*
+  Crée un nouveau fichier FunLabyrinthe en mode édition
+  @param AMap       Partie Carte du fichier
+  @param AActions   Partie Actions du fichier
+*}
+constructor TFunLabyFile.CreateNew(AMap, AActions : TStrings);
+begin
+  inherited Create;
+  FFileName := '';
+  FMode := fmEdit;
+  FName := '';
+  FDescription := '';
+  FVersion := '';
+  FAllowEdit := True;
+  FMaster := TMaster.Create;
+  { TODO 2 : Créer un nouveau fichier }
+end;
+
+{*
+  Détruit l'instance
+*}
+destructor TFunLabyFile.Destroy;
+begin
+  FMaster.Free;
+  inherited;
+end;
+
+{*
+  Enregistre le fichier
+  @param AFileName   Nom du fichier à enregistrer (si vide, conserve l'existant)
+*}
+procedure TFunLabyFile.Save(const AFileName : TFileName = '');
+begin
+  { TODO 2 : Enregistrer un fichier }
 end;
 
 initialization
