@@ -10,14 +10,18 @@ interface
 
 uses
   Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, ScUtils,
-  Forms, Dialogs, StdCtrls, Math;
+  Forms, Dialogs, StdCtrls, Math, ScLists;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
   sWhichObject = 'Quel objet voulez-vous utiliser ?';
+  sEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
+  sCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
 
 const
+  CurrentVersion = '5.0'; /// Version courante de FunLabyrinthe
   ScrewSize = 30;         /// Taille (en largeur et hauteur) d'une case
+  DefaultZoneSize = 7;    /// Taille par défaut d'une zone (en cases)
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
 
 type
@@ -32,6 +36,9 @@ type
 
   /// Mode d'ouverture d'un fichier FunLabyrinthe
   TFileMode = (fmEdit, fmEditActions, fmPlay);
+
+  /// Générée si l'ouverture d'un fichier est invalide
+  EInvalidFileOpening = class(Exception);
 
   TMaster = class;
   TPlayer = class;
@@ -299,7 +306,7 @@ type
     function GetPlayerCount : integer;
     function GetPlayers(Index : integer) : TPlayer;
   public
-    constructor Create;
+    constructor Create(ADimensions : T3DPoint);
     destructor Destroy; override;
 
     property ImagesMaster : TImagesMaster read FImagesMaster;
@@ -318,17 +325,22 @@ type
   *}
   TFunLabyFile = class
   private
-    FFileName : TFileName; /// Nom du fichier
-    FMode : TFileMode;     /// Mode d'ouverture du fichier
-    FName : string;        /// Nom du labyrinthe
-    FDescription : string; /// Description
-    FVersion : string;     /// Version lors de l'enregistrement
-    FAllowEdit : boolean;  /// Indique si le fichier peut être ouvert en édition
+    FFileName : TFileName;  /// Nom du fichier
+    FMode : TFileMode;      /// Mode d'ouverture du fichier
+    FName : string;         /// Nom du labyrinthe
+    FDescription : string;  /// Description
+    FVersion : string;      /// Version lors de l'enregistrement
+    FAllowEdit : boolean;   /// Indique si le fichier peut être édité
+    FIsSaveguard : boolean; /// Indique si le fichier était une sauvegarde
 
-    FMaster : TMaster;     /// Maître FunLabyrinthe
+    FMaster : TMaster;      /// Maître FunLabyrinthe
+
+    procedure NameFromFileName;
+    procedure Load(FileContents : TStrings);
+    procedure TestOpeningValidity;
   public
     constructor Create(const AFileName : TFileName; AMode : TFileMode);
-    constructor CreateNew(AMap, AActions : TStrings);
+    constructor CreateNew(Dimensions : T3DPoint; FileContents : TStrings = nil);
     destructor Destroy; override;
 
     procedure Save(const AFileName : TFileName = '');
@@ -339,6 +351,7 @@ type
     property Description : string read FDescription write FDescription;
     property Version : string read FVersion;
     property AllowEdit : boolean read FAllowEdit;
+    property IsSaveguard : boolean read FIsSaveguard;
 
     property Master : TMaster read FMaster;
   end;
@@ -367,7 +380,15 @@ function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 implementation
 
 uses
-  Screws;
+  Screws, StrUtils;
+
+const {don't localize}
+  secDimensions = '[Dimensions]';
+  keyColumns = 'Colonnes';
+  keyRows = 'Lignes';
+  keyFloors = 'Etages';
+
+  secLabyrinth = '[Labyrinthe]';
 
 {*
   Crée un rectangle de la taille d'une case
@@ -381,6 +402,68 @@ begin
   Result.Top := Y;
   Result.Right := X+ScrewSize;
   Result.Bottom := Y+ScrewSize;
+end;
+
+procedure GenerateDefaultFileContents(Dimensions : T3DPoint;
+  FileContents : TStrings);
+var X, Y, Z : integer;
+    Str0, Str2, StrB : string;
+begin
+  FileContents.Add(secLabyrinth);
+
+  // Création de la ligne d'herbe
+  SetLength(Str0, Dimensions.X);
+  Str0[1] := '2';
+  Str0[Dimensions.X] := '2';
+  for X := 2 to Dimensions.X-1 do Str0[X] := '0';
+
+  // Création de la ligne de murs
+  SetLength(Str2, Dimensions.X);
+  for X := 1 to Dimensions.X do Str2[X] := '2';
+
+  // Création de la ligne de dehors
+  SetLength(StrB, Dimensions.X);
+  for X := 1 to Dimensions.X do StrB[X] := 'B';
+
+  for Z := 0 to Dimensions.Z-1 do
+  begin
+    // Génération de la bande de dehors fictive héritée de la v1.0
+    if Z > 0 then
+    begin
+      for Y := 1 to 7 do
+        FileContents.Add(StrB);
+    end;
+
+    // Première ligne de l'étage
+    FileContents.Add(Str2);
+
+    // Contenu de l'étage
+    for Y := 2 to Dimensions.Y do
+      FileContents.Add(Str0);
+
+    // Dernière ligne de l'étage
+    FileContents.Add(Str2);
+  end;
+end;
+
+procedure LoadString(FileContents : TStrings;
+  SectionBegin, SectionEnd : integer; const Key : string; var Value : string);
+var I : integer;
+begin
+  I := StringsOps.FindAtPos(FileContents, Key+':', 1, SectionBegin, SectionEnd);
+  if I < 0 then exit;
+  Value := FileContents[I];
+  Value := Trim(Copy(Value, Length(Key)+2, Length(Value)));
+end;
+
+procedure LoadInt(FileContents : TStrings; SectionBegin, SectionEnd : integer;
+  const Key : string; var Value : integer);
+var StrValue : string;
+    ErrorCode : integer;
+begin
+  StrValue := '';
+  LoadString(FileContents, SectionBegin, SectionEnd, Key, StrValue);
+  Val(StrValue, Value, ErrorCode);
 end;
 
 ////////////////////////////
@@ -1327,13 +1410,14 @@ end;
 
 {*
   Crée une instance de TMaster
+  @param ADimensions   Dimensions de la carte (en cases)
 *}
-constructor TMaster.Create;
+constructor TMaster.Create(ADimensions : T3DPoint);
 begin
   inherited Create;
   FImagesMaster := TImagesMaster.Create;
   FScrewsMaster := TScrewsMaster.Create(Self);
-  FMap := TMap.Create(Self, Point3D(1, 1, 1));
+  FMap := TMap.Create(Self, ADimensions);
   FPlayers := TObjectList.Create;
 end;
 
@@ -1378,34 +1462,92 @@ end;
   @param AMode       Mode sous lequel ouvrir le fichier
 *}
 constructor TFunLabyFile.Create(const AFileName : TFileName; AMode : TFileMode);
+var FileContents : TStrings;
+    Dimensions : T3DPoint;
+    SecBegin, SecEnd : integer;
 begin
   inherited Create;
   FFileName := AFileName;
   FMode := AMode;
-  FName := '';
+  NameFromFileName;
   FDescription := '';
-  FVersion := '';
+  FVersion := CurrentVersion;
   FAllowEdit := True;
-  FMaster := TMaster.Create;
-  { TODO 2 : Charger un fichier }
+  FIsSaveguard := False;
+
+  FileContents := TStringList.Create;
+  try
+    FileContents.LoadFromFile(FFileName);
+
+    // Lecture des dimensions de la carte
+    Dimensions := Point3D(1, 1, 1);
+    SecBegin := FileContents.IndexOf(secDimensions)+1;
+    if SecBegin > 0 then
+    begin
+      SecEnd := StringsOps.FindAtPos(FileContents, '[', 1, SecBegin)-1;
+
+      LoadInt(FileContents, SecBegin, SecEnd, keyColumns, Dimensions.X);
+      LoadInt(FileContents, SecBegin, SecEnd, keyRows,    Dimensions.Y);
+      LoadInt(FileContents, SecBegin, SecEnd, keyFloors,  Dimensions.Z);
+    end;
+    Dimensions.X := Dimensions.X * DefaultZoneSize;
+    Dimensions.Y := Dimensions.Y * DefaultZoneSize;
+
+    // Création du maître FunLabyrinthe, chargement, et test de validité
+    FMaster := TMaster.Create(Dimensions);
+    try
+      Load(FileContents);
+      TestOpeningValidity;
+    except
+      FMaster.Free;
+      raise;
+    end;
+  finally
+    FileContents.Free;
+  end;
 end;
 
 {*
   Crée un nouveau fichier FunLabyrinthe en mode édition
-  @param AMap       Partie Carte du fichier
-  @param AActions   Partie Actions du fichier
+  @param Dimensions     Dimensions de la carte
+  @param FileContents   Contenu pré-créé du fichier (ou nil si par défaut)
 *}
-constructor TFunLabyFile.CreateNew(AMap, AActions : TStrings);
+constructor TFunLabyFile.CreateNew(Dimensions : T3DPoint;
+  FileContents : TStrings = nil);
+var OwnFileContents : boolean;
 begin
   inherited Create;
   FFileName := '';
   FMode := fmEdit;
   FName := '';
   FDescription := '';
-  FVersion := '';
+  FVersion := CurrentVersion;
   FAllowEdit := True;
-  FMaster := TMaster.Create;
-  { TODO 2 : Créer un nouveau fichier }
+  FIsSaveguard := False;
+
+  Dimensions.X := Dimensions.X * DefaultZoneSize;
+  Dimensions.Y := Dimensions.Y * DefaultZoneSize;
+  OwnFileContents := FileContents = nil;
+  if OwnFileContents then
+  begin
+    FileContents := TStringList.Create;
+    GenerateDefaultFileContents(Dimensions, FileContents);
+  end;
+
+  try
+    // Création du maître FunLabyrinthe, chargement, et test de validité
+    FMaster := TMaster.Create(Dimensions);
+    try
+      Load(FileContents);
+      TestOpeningValidity;
+    except
+      FMaster.Free;
+      raise;
+    end;
+  finally
+    if OwnFileContents then
+      FileContents.Free;
+  end;
 end;
 
 {*
@@ -1418,12 +1560,50 @@ begin
 end;
 
 {*
+  Donne au labyrinthe un nom par défaut à partir du nom du fichier
+*}
+procedure TFunLabyFile.NameFromFileName;
+var I : integer;
+begin
+  FName := ExtractFileName(FFileName);
+  I := Length(FName);
+  while (I > 0) and (FName[I] <> '.') do dec(I);
+  if I > 0 then
+    SetLength(FName, I);
+end;
+
+{*
+  Charge le contenu du fichier dans les classes
+  @param FileContents   Contenu du fichier
+*}
+procedure TFunLabyFile.Load(FileContents : TStrings);
+begin
+  { TODO 2 : Charger le fichier }
+end;
+
+{*
+  Teste la validité de l'ouverture d'un fichier
+  TestOpeningValidity vérifie que le fichier ouvert ne l'a pas été
+  « illégalement ». Deux cas d'illégalité sont à tester :
+  - Le fichier est une sauvegarde et est ouvert autrement que pour y jouer ;
+  - Le fichier a été interdit d'édition, et ouvert dans ce mode.
+  @throws EInvalidFileOpening : Le fichier a été ouvert illégalement
+*}
+procedure TFunLabyFile.TestOpeningValidity;
+begin
+  if IsSaveguard and (Mode <> fmPlay) then
+    raise EInvalidFileOpening.Create(sCantEditSaveguard);
+  if (not AllowEdit) and (Mode = fmEdit) then
+    raise EInvalidFileOpening.Create(sEditingNotAllowed);
+end;
+
+{*
   Enregistre le fichier
   @param AFileName   Nom du fichier à enregistrer (si vide, conserve l'existant)
 *}
 procedure TFunLabyFile.Save(const AFileName : TFileName = '');
 begin
-  { TODO 2 : Enregistrer un fichier }
+  { TODO 2 : Enregistrer le fichier }
 end;
 
 initialization
