@@ -1,3 +1,8 @@
+{*
+  Highlither SynEdit pour la syntaxe des actions de FunLabyrinthe
+  @author Sébastien Jean Robert Doeraene
+  @version 4.5
+*}
 unit FunLabySyn;
 
 {$I SynEdit.inc}
@@ -19,84 +24,90 @@ uses
   SynEditHighlighter;
 
 type
+  /// Type des lexèmes du langage
   TFLTokenKind = (tkCommand, tkComment, tkIdentifier, tkIfThenElse, tkKey,
                   tkNull, tkRemark, tkSection, tkSpace, tkString, tkSubCommand,
                   tkSubSection, tkSymbol, tkUnknown);
 
+  /// Type de sur-état
   TFLRangeState = (rsUnknown, rsComment);
 
+  /// Type méthode de traitement d'un lexème
   TProcTableProc = procedure of object;
 
 type
+  {*
+    Highlighter SynEdit pour la syntaxe des actions de FunLabyrinthe
+  *}
   TFunLabySyntax = class(TSynCustomHighlighter)
   private
-    FLine : PChar;         // Ligne en cours
-    FLineNumber : Integer; // N° de la ligne en cours
+    FLine : PChar;         /// Ligne en cours
+    FLineNumber : Integer; /// N° de la ligne en cours
 
-    // Tableau de procédures pour gérer les « tokens »
+    /// Tableau de procédures pour gérer les « tokens »
     FProcTable : array[#0..#255] of TProcTableProc;
 
-    FRange : TFLRangeState;                      // RangeState
-    Run : LongInt;                               // Index du caractère courant
-    FTokenPos : Integer;                         // Position du dernier token
-    FTokenID : TFLTokenKind;                     // Kind du dernier token
+    FRange : TFLRangeState;                      /// RangeState
+    Run : LongInt;                               /// Index du caractère courant
+    FTokenPos : Integer;                         /// Position du dernier token
+    FTokenID : TFLTokenKind;                     /// Kind du dernier token
 
-    FCommandAttri : TSynHighlighterAttributes;      // Attributs 'Command'
-    FCommentAttri : TSynHighlighterAttributes;      // Attributs 'Comment'
-    FIdentifierAttri : TSynHighlighterAttributes;   // Attributs 'Identifier'
-    FIfThenElseAttri : TSynHighlighterAttributes;   // Attributs 'IfThenElse'
-    FKeyAttri : TSynHighlighterAttributes;          // Attributs 'Key'
-    FRemarkAttri : TSynHighlighterAttributes;       // Attributs 'Remark'
-    FSectionAttri : TSynHighlighterAttributes;      // Attributs 'Section'
-    FSpaceAttri : TSynHighlighterAttributes;        // Attributs 'Space'
-    FStringAttri : TSynHighlighterAttributes;       // Attributs 'String'
-    FSubCommandAttri : TSynHighlighterAttributes;   // Attributs 'SubCommand'
-    FSubSectionAttri : TSynHighlighterAttributes;   // Attributs 'SubSection'
-    FSymbolAttri : TSynHighlighterAttributes;       // Attributs 'Symbol'
-    FUnknownAttri : TSynHighlighterAttributes;      // Attributs 'Unknown'
+    FCommandAttri : TSynHighlighterAttributes;      /// Attributs 'Command'
+    FCommentAttri : TSynHighlighterAttributes;      /// Attributs 'Comment'
+    FIdentifierAttri : TSynHighlighterAttributes;   /// Attributs 'Identifier'
+    FIfThenElseAttri : TSynHighlighterAttributes;   /// Attributs 'IfThenElse'
+    FKeyAttri : TSynHighlighterAttributes;          /// Attributs 'Key'
+    FRemarkAttri : TSynHighlighterAttributes;       /// Attributs 'Remark'
+    FSectionAttri : TSynHighlighterAttributes;      /// Attributs 'Section'
+    FSpaceAttri : TSynHighlighterAttributes;        /// Attributs 'Space'
+    FStringAttri : TSynHighlighterAttributes;       /// Attributs 'String'
+    FSubCommandAttri : TSynHighlighterAttributes;   /// Attributs 'SubCommand'
+    FSubSectionAttri : TSynHighlighterAttributes;   /// Attributs 'SubSection'
+    FSymbolAttri : TSynHighlighterAttributes;       /// Attributs 'Symbol'
+    FUnknownAttri : TSynHighlighterAttributes;      /// Attributs 'Unknown'
 
-    // Lit le nom de l'identificateur qui suit
+    /// Lit le nom de l'identificateur qui suit
     function ReadIdent : string;
-    // Compare le mot qui suit avec AKey
+    /// Compare le mot qui suit avec AKey
     function KeyComp(const AKey : string) : boolean;
-    // Compare le mot qui suit aux mots-clés
+    /// Compare le mot qui suit aux mots-clés
     function KeyFunc : TFLTokenKind;
 
-    procedure MakeMethodTables; // Initialize FProcTable
-    procedure NullProc;         // Procédure pour 'Null'
-    procedure SpaceProc;        // Procédure pour 'Space'
-    procedure CRProc;           // Procédure pour 'CR'        (Carbage Return)
-    procedure LFProc;           // Procédure pour 'LF'        (Line Feed)
-    procedure CommentProc;      // Procédure pour 'Comment'
-    procedure SectionProc;      // Procédure pour 'Section'
-    procedure StringProc;       // Procédure pour 'String'
-    procedure SubSectionProc;   // Procédure pour 'SubSection'
-    procedure IdentProc;        // Procédure pour les divers
-    procedure SymbolProc;       // Procédure pour 'Symbol'
-    procedure UnknownProc;      // Procédure pour inconnu
+    procedure MakeMethodTables; /// Initialise FProcTable
+    procedure NullProc;         /// Procédure pour 'Null'
+    procedure SpaceProc;        /// Procédure pour 'Space'
+    procedure CRProc;           /// Procédure pour 'CR'        (Carbage Return)
+    procedure LFProc;           /// Procédure pour 'LF'        (Line Feed)
+    procedure CommentProc;      /// Procédure pour 'Comment'
+    procedure SectionProc;      /// Procédure pour 'Section'
+    procedure StringProc;       /// Procédure pour 'String'
+    procedure SubSectionProc;   /// Procédure pour 'SubSection'
+    procedure IdentProc;        /// Procédure pour les divers
+    procedure SymbolProc;       /// Procédure pour 'Symbol'
+    procedure UnknownProc;      /// Procédure pour inconnu
   protected
-    function GetIdentChars : TSynIdentChars; override; // Caractères Identifiers
-    function GetSampleSource : string; override;       // Exemple source
-    function IsFilterStored : boolean; override;       // Filtre enregistrer ?
+    function GetIdentChars : TSynIdentChars; override; /// Caractères Identifiers
+    function GetSampleSource : string; override;       /// Exemple source
+    function IsFilterStored : boolean; override;       /// Filtre enregistrer ?
   public
-    constructor Create(AOwner : TComponent); override; // Constructeur
+    constructor Create(AOwner : TComponent); override; /// Constructeur
     {$IFNDEF SYN_CPPB_1} class {$ENDIF}
-    function GetLanguageName : string; override;       // Nom du langage
-    function GetRange : Pointer; override;             // RangeState
-    procedure ResetRange; override;                    // Reset RangeState
-    procedure SetRange(Value : Pointer); override;     // Set RangeState
+    function GetLanguageName : string; override;       /// Nom du langage
+    function GetRange : Pointer; override;             /// RangeState
+    procedure ResetRange; override;                    /// Reset RangeState
+    procedure SetRange(Value : Pointer); override;     /// Set RangeState
     function GetDefaultAttribute(Index: integer):
-      TSynHighlighterAttributes; override;             // Attr par défaut
-    function GetEol : boolean; override;               // Fin de la ligne ?
-    // Change la ligne courante
+      TSynHighlighterAttributes; override;             /// Attr par défaut
+    function GetEol : boolean; override;               /// Fin de la ligne ?
+    /// Change la ligne courante
     procedure SetLine(NewValue : string; LineNumber : Integer); override;
-    function GetToken : string; override;              // Dernier token
-    function GetTokenID : TFLTokenKind;                // Kind du dernier token
-    // Attributs du dernier token
+    function GetToken : string; override;              /// Dernier token
+    function GetTokenID : TFLTokenKind;                /// Kind du dernier token
+    /// Attributs du dernier token
     function GetTokenAttribute : TSynHighlighterAttributes; override;
-    function GetTokenKind : integer; override;        // Kind du dernier token
-    function GetTokenPos : integer; override;         // Pos du dernier token
-    procedure Next; override;                         // Token suivant
+    function GetTokenKind : integer; override;         /// Kind du dernier token
+    function GetTokenPos : integer; override;          /// Pos du dernier token
+    procedure Next; override;                          /// Token suivant
   published
     property CommandAttri : TSynHighlighterAttributes
       read FCommandAttri write FCommandAttri;

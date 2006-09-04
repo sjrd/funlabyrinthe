@@ -21,7 +21,7 @@
       <Count>3</Count>
       <Item0>MSWINDOWS</Item0>
       <Item1>WIN32</Item1>
-      <Item2>DELPHI5_UP</Item2>
+      <Item2>VER170</Item2>
     </ConditionalDefines>
     <ParseImplementationSection>TRUE</ParseImplementationSection>
     <CustomHeader>UNDER CONSTRUCTION</CustomHeader>
