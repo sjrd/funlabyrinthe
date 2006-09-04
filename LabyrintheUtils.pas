@@ -1,3 +1,9 @@
+{*
+  Types et classes de bases de FunLabyrinthe 4.x
+  LabyrintheUtils comprend les types et classes de base de FunLabyrinthe.
+  @author Sébastien Jean Robert Doeraene
+  @version 4.4.1
+*}
 unit LabyrintheUtils;
 
 interface

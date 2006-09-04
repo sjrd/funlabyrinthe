@@ -159,13 +159,14 @@
 		</VersionInfo>
 		<VersionInfoKeys>
 			<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
-			<VersionInfoKeys Name="ProductVersion">4.5</VersionInfoKeys>  <VersionInfoKeys Name="CompanyName">Jean-Paul Doeraene</VersionInfoKeys>
-      <VersionInfoKeys Name="FileDescription">Générateur de labyrinthe pour FunLabyrinthe</VersionInfoKeys>
-      <VersionInfoKeys Name="InternalName">GeneLaby</VersionInfoKeys>
-      <VersionInfoKeys Name="LegalCopyright">Copyright (c) 2004-2006 Jean-Paul Doeraene</VersionInfoKeys>
-      <VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
-      <VersionInfoKeys Name="OriginalFilename">GeneLaby.exe</VersionInfoKeys>
-      <VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
-    </VersionInfoKeys>
+			<VersionInfoKeys Name="ProductVersion">5.0</VersionInfoKeys>
+			<VersionInfoKeys Name="CompanyName">Jean-Paul Doeraene</VersionInfoKeys>
+			<VersionInfoKeys Name="FileDescription">Générateur de labyrinthe pour FunLabyrinthe</VersionInfoKeys>
+			<VersionInfoKeys Name="InternalName">GeneLaby</VersionInfoKeys>
+			<VersionInfoKeys Name="LegalCopyright">Copyright (c) 2004-2006 Jean-Paul Doeraene</VersionInfoKeys>
+			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
+			<VersionInfoKeys Name="OriginalFilename">GeneLaby.exe</VersionInfoKeys>
+			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
+		</VersionInfoKeys>
 	</Delphi.Personality>
 </BorlandProject>

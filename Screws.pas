@@ -2,7 +2,7 @@
   Différentes cases de FunLabyrinthe
   L'unité Screws comprend les définitions des cases de FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
-  @version 4.5
+  @version 5.0
 *}
 unit Screws;
 

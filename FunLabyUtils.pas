@@ -2,7 +2,7 @@
   Types et classes de bases de FunLabyrinthe
   FunLabyUtils comprend les types et classes de base de FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
-  @version 4.5
+  @version 5.0
 *}
 unit FunLabyUtils;
 

@@ -1,7 +1,7 @@
 {*
-  Highlither SynEdit pour la syntaxe des actions de FunLabyrinthe
+  Highlighter SynEdit pour la syntaxe des actions de FunLabyrinthe
   @author Sébastien Jean Robert Doeraene
-  @version 4.5
+  @version 5.0
 *}
 unit FunLabySyn;
 
