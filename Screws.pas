@@ -130,6 +130,12 @@ implementation
 /// Classe TGrass ///
 /////////////////////
 
+{*
+  Crée une instance de TGrass
+  @param AMaster   Maître FunLabyrinthe
+  @param AName     Nom de la case
+  @param ACode     Code de la case
+*}
 constructor TGrass.Create(AMaster : TMaster; const AName : string;
   ACode : TScrewCode);
 begin
@@ -137,6 +143,10 @@ begin
   Painter.ImgNames.Add(fGrass);
 end;
 
+{*
+  Crée une instance de TGrass
+  @param AMaster   Maître FunLabyrinthe
+*}
 constructor TGrass.Create(AMaster : TMaster);
 begin
   Create(AMaster, sGrass, cGrass);
@@ -146,6 +156,12 @@ end;
 /// Classe TDirectTurnstile ///
 ///////////////////////////////
 
+{*
+  Crée une instance de TDirectTurnstile
+  @param AMaster   Maître FunLabyrinthe
+  @param AName     Nom de la case
+  @param ACode     Code de la case
+*}
 constructor TDirectTurnstile.Create(AMaster : TMaster; const AName : string;
   ACode : TScrewCode);
 begin
@@ -153,11 +169,24 @@ begin
   Painter.ImgNames.Add(fDirectTurnstile);
 end;
 
+{*
+  Crée une instance de TDirectTurnstile
+  @param AMaster   Maître FunLabyrinthe
+*}
 constructor TDirectTurnstile.Create(AMaster : TMaster);
 begin
   Create(AMaster, sDirectTurnstile, cDirectTurnstile);
 end;
 
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
 procedure TDirectTurnstile.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
 var Dir : TDirection;
@@ -171,6 +200,14 @@ begin
   until Player.Move(Dir, KeyPressed, GoOnMoving);
 end;
 
+{*
+  Exécuté lorsque le joueur est sorti de la case
+  Exiting est exécuté lorsque le joueur est sorti de la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param Dest         Case de destination
+*}
 procedure TDirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
 begin
@@ -182,6 +219,12 @@ end;
 /// Classe TIndirectTurnstile ///
 /////////////////////////////////
 
+{*
+  Crée une instance de TIndirectTurnstile
+  @param AMaster   Maître FunLabyrinthe
+  @param AName     Nom de la case
+  @param ACode     Code de la case
+*}
 constructor TIndirectTurnstile.Create(AMaster : TMaster; const AName : string;
   ACode : TScrewCode);
 begin
@@ -189,11 +232,24 @@ begin
   Painter.ImgNames.Add(fIndirectTurnstile);
 end;
 
+{*
+  Crée une instance de TIndirectTurnstile
+  @param AMaster   Maître FunLabyrinthe
+*}
 constructor TIndirectTurnstile.Create(AMaster : TMaster);
 begin
   Create(AMaster, sIndirectTurnstile, cIndirectTurnstile);
 end;
 
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
 procedure TIndirectTurnstile.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
 var Dir : TDirection;
@@ -207,6 +263,14 @@ begin
   until Player.Move(Dir, KeyPressed, GoOnMoving);
 end;
 
+{*
+  Exécuté lorsque le joueur est sorti de la case
+  Exiting est exécuté lorsque le joueur est sorti de la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param Dest         Case de destination
+*}
 procedure TIndirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
 begin
@@ -218,6 +282,12 @@ end;
 /// Classe TOutside ///
 ///////////////////////
 
+{*
+  Crée une instance de TOutside
+  @param AMaster   Maître FunLabyrinthe
+  @param AName     Nom de la case
+  @param ACode     Code de la case
+*}
 constructor TOutside.Create(AMaster : TMaster; const AName : string;
   ACode : TScrewCode);
 begin
@@ -225,11 +295,24 @@ begin
   Painter.ImgNames.Add(fOutside);
 end;
 
+{*
+  Crée une instance de TOutside
+  @param AMaster   Maître FunLabyrinthe
+*}
 constructor TOutside.Create(AMaster : TMaster);
 begin
   Create(AMaster, sOutside, cOutside);
 end;
 
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
 procedure TOutside.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
 begin
