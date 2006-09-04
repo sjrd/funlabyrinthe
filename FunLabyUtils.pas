@@ -47,50 +47,29 @@ type
   *}
   TImagesMaster = class
   private
-    FImgList : TImageList;
-    FImgNames : TStrings;
+    FImgList : TImageList; /// Liste d'images interne
+    FImgNames : TStrings;  /// Liste des noms des images
   public
     constructor Create;
     destructor Destroy; override;
 
-    {*
-      Renvoie l'index de l'image dont le nom est spécifié
-      IndexOf renvoie l'index de l'image dont le nom est spécifié dans la
-      liste d'images interne. Si l'image n'a pas encore été chargée, IndexOf
-      la charge.
-      @param ImgName Nom de l'image
-      @return Index de l'image
-    *}
     function IndexOf(const ImgName : string) : integer;
-
-    {*
-      Dessine une image à partir de son index
-      Draw dessine l'image indiquée sur un canevas.
-      @param Index  Index de l'image à dessiner
-      @param Canvas Canevas sur lequel dessiner l'image
-      @param X      Coordonnée X du point à partir duquel dessiner l'image
-      @param Y      Coordonnée Y du point à partir duquel dessiner l'image
-    *}
     procedure Draw(Index : integer; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); overload;
-
-    {*
-      Dessine une image à partir de son nom
-      Draw dessine l'image indiquée sur un canevas.
-      @param ImgName Nom de l'image à dessiner
-      @param Canvas  Canevas sur lequel dessiner l'image
-      @param X       Coordonnée X du point à partir duquel dessiner l'image
-      @param Y       Coordonnée Y du point à partir duquel dessiner l'image
-    *}
     procedure Draw(const ImgName : string; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); overload;
   end;
 
+  {*
+    Enregistre est affiche par superposition une liste d'images
+    TPainter enregistre une liste d'images par leur noms et propose une méthode
+    pour les dessiner les unes sur les autres, par transparence.
+  *}
   TPainter = class
   private
-    FMaster : TImagesMaster;
-    FImgNames : TStrings;
-    FCachedImg : TBitmap;
+    FMaster : TImagesMaster; /// Maître d'images
+    FImgNames : TStrings;    /// Liste des noms des images
+    FCachedImg : TBitmap;    /// Copie cache de l'image résultante
 
     procedure ImgNamesChange(Sender : TObject);
   public
@@ -102,11 +81,17 @@ type
     property ImgNames : TStrings read FImgNames;
   end;
 
+  {*
+    Classe de base pour les composants de FunLabyrinthe
+    TFunLabyComponent est la classe de base pour tous les composants de
+    FunLabyrinthe. Elle fournit des propriétés et des méthodes pour nommer et
+    afficher le composant.
+  *}
   TFunLabyComponent = class
   private
-    FMaster : TMaster;
-    FName : string;
-    FPainter : TPainter;
+    FMaster : TMaster;   /// Maître FunLabyrinthe
+    FName : string;      /// Nom du composant
+    FPainter : TPainter; /// Peintre par défaut
   protected
     property Painter : TPainter read FPainter;
   public
@@ -120,11 +105,19 @@ type
     property Name : string read FName;
   end;
 
+  {*
+    Classe de base pour les plug-in de joueur
+    TPlayerPlugin est la classe de base pour les plug-in de joueur.
+    Un plug-in peut agir de plusieurs façons sur le joueur :
+    - Dessiner sous et sur le joueur ;
+    - Empêcher le déplacement du joueur et réagir à son déplacement effectif ;
+    - Indiquer au joueur qu'il a la capacité de faire certaines actions.
+  *}
   TPlayerPlugin = class
   private
-    FMaster : TMaster;
-    FPainterBefore : TPainter;
-    FPainterAfter : TPainter;
+    FMaster : TMaster;         /// Maître FunLabyrinthe
+    FPainterBefore : TPainter; /// Peintre par défaut sous le joueur
+    FPainterAfter : TPainter;  /// Peintre par défaut sur le joueur
   protected
     property PainterBefore : TPainter read FPainterBefore;
     property PainterAfter : TPainter read FPainterAfter;
@@ -147,10 +140,15 @@ type
     function CanYou(Player : TPlayer; Action : integer) : boolean; virtual;
   end;
 
+  {*
+    Classe de base pour les objets d'un joueur
+    TPlayerObject est la classe de base pour les objets que possède le joueur.
+    Les objets peuvent rendre un joueur capable d'effectuer certaines actions.
+  *}
   TPlayerObject = class(TFunLabyComponent)
   private
-    FPlayer : TPlayer;
-    FCount : integer;
+    FPlayer : TPlayer; /// Joueur possédant l'objet
+    FCount : integer;  /// Nombre d'objets de ce type que possède le joueur
   protected
     function GetShownInfos : string; virtual;
   public
@@ -165,15 +163,22 @@ type
     property ShownInfos : string read GetShownInfos;
   end;
 
+  {*
+    Classe représentant un joueur
+    TPlayer représente un joueur. Elle possède de nombreuses propriétés et
+    méthodes permettant d'afficher le joueur, de le déplacer, de lui greffer
+    des plug-in, etc.
+  *}
   TPlayer = class(TFunLabyComponent)
   private
-    FPosition : T3DPoint;
-    FPosAddr : P3DPoint;
-    FDirection : TDirection;
+    FPosition : T3DPoint;    /// Position
+    FPosAddr : P3DPoint;     /// Position
+    FDirection : TDirection; /// Direction
+    /// Peintres selon la direction du joueur
     FDirPainters : array[diNorth..diWest] of TPainter;
-    FColor : TColor;
-    FPlugins : TObjectList;
-    FObjects : TObjectList;
+    FColor : TColor;         /// Couleur
+    FPlugins : TObjectList;  /// Liste des plug-in
+    FObjects : TObjectList;  /// Liste des objets
 
     function GetPluginCount : integer;
     function GetPlugins(Index : integer) : TPlayerPlugin;
@@ -212,9 +217,14 @@ type
     property Objects[index : integer] : TPlayerObject read GetObjects;
   end;
 
+  {*
+    Classe de base pour les cases
+    TScrew est la classe de base pour les cases de la carte. Elle possède une
+    code et quatre méthodes qui définissent son comportement.
+  *}
   TScrew = class(TFunLabyComponent)
   private
-    FCode : TScrewCode;
+    FCode : TScrewCode; /// Code de case
   public
     constructor Create(AMaster : TMaster; const AName : string;
       ACode : TScrewCode);
@@ -233,10 +243,15 @@ type
     property Code : TScrewCode read FCode;
   end;
 
+  {*
+    Gère les cases et met en relation celles-ci avec leurs codes respectifs
+    TScrewsMaster gère les différentes cases de FunLabyrinthe, et met en
+    relation les codes des cases avec celles-ci.
+  *}
   TScrewsMaster = class
   private
-    FMaster : TMaster;
-    FScrews : array[33..255] of TScrew;
+    FMaster : TMaster;                  /// Maître FunLabyrinthe
+    FScrews : array[33..255] of TScrew; /// Liste des cases par code
 
     function GetScrews(Code : TScrewCode) : TScrew;
   public
@@ -247,12 +262,17 @@ type
     property Screws[Code : TScrewCode] : TScrew read GetScrews; default;
   end;
 
+  {*
+    Représente la carte du jeu
+    TMap gère et représente la carte du jeu. Elle offre des propriétés et
+    méthodes pour lire et modifier cette carte.
+  *}
   TMap = class
   private
-    FMaster : TMaster;
-    FDimensions : T3DPoint;
-    FMap : array of TScrewCode;
-    FOutside : array of TScrewCode;
+    FMaster : TMaster;              /// Maître FunLabyrinthe
+    FDimensions : T3DPoint;         /// Dimensions de la carte (en cases)
+    FMap : array of TScrewCode;     /// Codes des cases sur la carte
+    FOutside : array of TScrewCode; /// Codes des cases en-dehors de la carte
 
     function GetCodeMap(Position : T3DPoint) : TScrewCode;
     procedure SetCodeMap(Position : T3DPoint; Value : TScrewCode);
@@ -269,12 +289,16 @@ type
     property Map[Position : T3DPoint] : TScrew read GetMap; default;
   end;
 
+  {*
+    Maître FunLabyrinthe
+    TMaster crée et gère les différentes composantes de FunLabyrinthe.
+  *}
   TMaster = class
   private
-    FImagesMaster : TImagesMaster;
-    FScrewsMaster : TScrewsMaster;
-    FMap : TMap;
-    FPlayers : TObjectList;
+    FImagesMaster : TImagesMaster; /// Maître d'images
+    FScrewsMaster : TScrewsMaster; /// Maître des cases
+    FMap : TMap;                   /// Carte
+    FPlayers : TObjectList;        /// Liste des joueurs
 
     function GetPlayerCount : integer;
     function GetPlayers(Index : integer) : TPlayer;
@@ -290,15 +314,9 @@ type
   end;
 
 var
+  /// Chaîne de format pour les fichiers image
   sScrewFileName : string = 'Screws\%s.bmp';
-    /// Chaîne de format pour les fichiers image
 
-{*
-  Crée un rectangle de la taille d'une case
-  @param X Bord gauche du rectangle
-  @param Y Bord supérieur du rectangle
-  @return Le rectangle de type TRect
-*}
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 
 implementation
@@ -306,6 +324,12 @@ implementation
 uses
   Screws;
 
+{*
+  Crée un rectangle de la taille d'une case
+  @param X   Bord gauche du rectangle
+  @param Y   Bord supérieur du rectangle
+  @return Le rectangle de type TRect
+*}
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 begin
   Result.Left := X;
@@ -318,6 +342,9 @@ end;
 /// Classe TImagesMaster ///
 ////////////////////////////
 
+{*
+  Crée une instance de TImagesMaster
+*}
 constructor TImagesMaster.Create;
 begin
   inherited Create;
@@ -325,6 +352,9 @@ begin
   FImgNames := THashedStringList.Create;
 end;
 
+{*
+  Détruit l'instance
+*}
 destructor TImagesMaster.Destroy;
 begin
   FImgNames.Free;
@@ -332,6 +362,14 @@ begin
   inherited;
 end;
 
+{*
+  Renvoie l'index de l'image dont le nom est spécifié
+  IndexOf renvoie l'index de l'image dont le nom est spécifié dans la
+  liste d'images interne. Si l'image n'a pas encore été chargée, IndexOf
+  la charge.
+  @param ImgName   Nom de l'image
+  @return Index de l'image
+*}
 function TImagesMaster.IndexOf(const ImgName : string) : integer;
 var NewImg : TBitmap;
 begin
@@ -349,12 +387,28 @@ begin
   end;
 end;
 
+{*
+  Dessine une image à partir de son index
+  Draw dessine l'image indiquée sur un canevas.
+  @param Index    Index de l'image à dessiner
+  @param Canvas   Canevas sur lequel dessiner l'image
+  @param X        Coordonnée X du point à partir duquel dessiner l'image
+  @param Y        Coordonnée Y du point à partir duquel dessiner l'image
+*}
 procedure TImagesMaster.Draw(Index : integer; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   FImgList.Draw(Canvas, X, Y, Index);
 end;
 
+{*
+  Dessine une image à partir de son nom
+  Draw dessine l'image indiquée sur un canevas.
+  @param ImgName   Nom de l'image à dessiner
+  @param Canvas    Canevas sur lequel dessiner l'image
+  @param X         Coordonnée X du point à partir duquel dessiner l'image
+  @param Y         Coordonnée Y du point à partir duquel dessiner l'image
+*}
 procedure TImagesMaster.Draw(const ImgName : string; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
@@ -365,6 +419,10 @@ end;
 /// Classe TPainter ///
 ///////////////////////
 
+{*
+  Crée une instance de TPainter
+  @param AMaster   Maître d'images associé au peintre
+*}
 constructor TPainter.Create(AMaster : TImagesMaster);
 begin
   inherited Create;
@@ -382,6 +440,9 @@ begin
   ImgNamesChange(nil);
 end;
 
+{*
+  Détruit l'instance
+*}
 destructor TPainter.Destroy;
 begin
   FCachedImg.Free;
@@ -389,6 +450,12 @@ begin
   inherited;
 end;
 
+{*
+  Événement OnChange de la liste des noms des images
+  ImgNamesChange est appelé lorsque la liste des noms des images change.
+  Elle actualise l'image cache.
+  @param Sender   Objet lançant l'événement
+*}
 procedure TPainter.ImgNamesChange(Sender : TObject);
 var I : integer;
 begin
@@ -397,6 +464,15 @@ begin
     FMaster.Draw(FImgNames[I], FCachedImg.Canvas);
 end;
 
+{*
+  Dessine les images sur un canevas
+  La méthode Draw dessine les images de ImgNames sur le canevas, à la
+  position indiquée. Les différentes images sont superposée, celle d'index
+  0 tout au-dessous.
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
 procedure TPainter.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   Canvas.Brush.Style := bsClear;
@@ -407,6 +483,11 @@ end;
 /// Classe TFunLabyComponent ///
 ////////////////////////////////
 
+{*
+  Crée une instance de TFunLabyComponent
+  @param AMaster   Maître FunLabyrinthe
+  @param AName     Nom du composant
+*}
 constructor TFunLabyComponent.Create(AMaster : TMaster; const AName : string);
 begin
   inherited Create;
@@ -416,18 +497,33 @@ begin
   FPainter.ImgNames.BeginUpdate;
 end;
 
+{*
+  Détruit l'instance
+*}
 destructor TFunLabyComponent.Destroy;
 begin
   FPainter.Free;
   inherited;
 end;
 
+{*
+  Exécuté après la construction de l'objet
+  AfterConstruction est appelé après l'exécution du dernier constructeur.
+  N'appelez pas directement AfterConstruction.
+*}
 procedure TFunLabyComponent.AfterConstruction;
 begin
   inherited;
   FPainter.ImgNames.EndUpdate;
 end;
 
+{*
+  Dessine le composant sur un canevas
+  Draw dessine le composant sur un canevas à la position indiquée.
+  @param Canvas   Canevas sur lequel dessiner le composant
+  @param X        Coordonnée X du point à partir duquel dessiner le composant
+  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+*}
 procedure TFunLabyComponent.Draw(Canvas : TCanvas; X : integer = 0;
   Y : integer = 0);
 begin
@@ -438,6 +534,10 @@ end;
 /// Classe TPlayerPlugin ///
 ////////////////////////////
 
+{*
+  Crée une instance de TPlayerPlugin
+  @param AMaster   Maître FunLabyrinthe
+*}
 constructor TPlayerPlugin.Create(AMaster : TMaster);
 begin
   inherited Create;
@@ -448,6 +548,9 @@ begin
   FPainterAfter.ImgNames.BeginUpdate;
 end;
 
+{*
+  Détruit l'instance
+*}
 destructor TPlayerPlugin.Destroy;
 begin
   FPainterAfter.Free;
@@ -455,6 +558,11 @@ begin
   inherited;
 end;
 
+{*
+  Exécuté après la construction de l'objet
+  AfterConstruction est appelé après l'exécution du dernier constructeur.
+  N'appelez pas directement AfterConstruction.
+*}
 procedure TPlayerPlugin.AfterConstruction;
 begin
   inherited;
@@ -462,28 +570,73 @@ begin
   FPainterAfter.ImgNames.EndUpdate;
 end;
 
+{*
+  Dessine sous le joueur
+  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
+  effectué dans DrawBefore se retrouve donc sous le joueur.
+  @param Player   Joueur qui est dessiné
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
 procedure TPlayerPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   FPainterBefore.Draw(Canvas, X, Y);
 end;
 
+{*
+  Dessine sur le joueur
+  DrawAfter est exécuté lors du dessin du joueur, après celui-ci. Le dessin
+  effectué dans DrawAfter se retrouve donc sur le joueur.
+  @param Player   Joueur qui est dessiné
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
 procedure TPlayerPlugin.DrawAfter(Player : TPlayer; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   FPainterAfter.Draw(Canvas, X, Y);
 end;
 
+{*
+  Un joueur se déplace
+  Moving est exécuté lorsqu'un joueur se déplace d'une case à une autre. Pour
+  annuler le déplacement, Moving peut positionner le paramètre Cancel à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de départ
+  @param Dest           Case d'arrivée
+  @param Cancel         À positionner à True pour annuler le déplacement
+*}
 procedure TPlayerPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Dest : T3DPoint; var Cancel : boolean);
 begin
 end;
 
+{*
+  Un joueur s'est déplacé
+  Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de départ
+  @param Dest         Case d'arrivée
+*}
 procedure TPlayerPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
   Src, Dest : T3DPoint);
 begin
 end;
 
+{*
+  Indique si le plug-in permet au joueur d'effectuer une action donnée
+  CanYou doit renvoyer True si le plug-in permet au joueur d'effectuer
+  l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à tester
+  @return True si le joueur est capable d'effectuer l'action, False sinon
+*}
 function TPlayerPlugin.CanYou(Player : TPlayer; Action : integer) : boolean;
 begin
   Result := False;
@@ -493,6 +646,12 @@ end;
 /// Classe TPlayerObject ///
 ////////////////////////////
 
+{*
+  Crée une instance de TPlayerObject
+  @param AMaster   Maître FunLabyrinthe
+  @param AName     Nom de l'objet
+  @param APlayer   Joueur propriétaire
+*}
 constructor TPlayerObject.Create(AMaster : TMaster; const AName : string;
   APlayer : TPlayer);
 begin
@@ -501,16 +660,34 @@ begin
   FCount := 0;
 end;
 
+{*
+  Informations textuelles sur l'objet
+  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
+  @return Informations textuelles, ou une chaîne vide si rien à afficher
+*}
 function TPlayerObject.GetShownInfos : string;
 begin
   Result := Format(sDefaultObjectInfos, [FName, FCount]);
 end;
 
+{*
+  Indique si l'objet permet au joueur d'effectuer une action donnée
+  CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
+  d'effectuer l'action donnée en paramètre.
+  @param Action   Action à tester
+  @return True si l'objet permet d'effectuer l'action, False sinon
+*}
 function TPlayerObject.CanYou(Action : integer) : boolean;
 begin
   Result := False;
 end;
 
+{*
+  Utiliser l'objet pour effectuer l'action donnée
+  UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
+  effectuer l'action donnée en paramètre.
+  @param Action   Action à effectuer
+*}
 procedure TPlayerObject.UseFor(Action : integer);
 begin
 end;
@@ -519,6 +696,11 @@ end;
 /// Classe TPlayer ///
 //////////////////////
 
+{*
+  Crée une instance de TPlayer
+  @param AMaster   Maître FunLabyrinthe
+  @param AName     Nom du joueur
+*}
 constructor TPlayer.Create(AMaster : TMaster; const AName : string);
 var Dir : TDirection;
 begin
@@ -533,6 +715,9 @@ begin
   FObjects := TObjectList.Create;
 end;
 
+{*
+  Détruit l'instance
+*}
 destructor TPlayer.Destroy;
 var Dir : TDirection;
 begin
@@ -543,32 +728,59 @@ begin
   inherited;
 end;
 
+{*
+  Nombre de plug-in greffés au joueur
+  @return Nombre de plug-in
+*}
 function TPlayer.GetPluginCount : integer;
 begin
   Result := FPlugins.Count;
 end;
 
+{*
+  Tableau zero-based des plug-in greffés au joueur
+  @param Index   Index du plug-in dans le tableau
+  @return Le plug-in à la position indiquée
+*}
 function TPlayer.GetPlugins(Index : integer) : TPlayerPlugin;
 begin
   Result := TPlayerPlugin(FPlugins[Index]);
 end;
 
+{*
+  Nombre de types d'objets du joueur
+  @return Nombre de types d'objets
+*}
 function TPlayer.GetObjectCount : integer;
 begin
   Result := FObjects.Count;
 end;
 
+{*
+  Tableau zero-based des types d'objets du joueur
+  @param Index   Index de l'objet dans le tableau
+  @return L'objet à la position indiquée
+*}
 function TPlayer.GetObjects(Index : integer) : TPlayerObject;
 begin
   Result := TPlayerObject(FObjects[Index]);
 end;
 
+{*
+  Dessine le joueur sur un canevas
+  Draw dessine le joueur sur un canevas à la position indiquée.
+  @param Canvas   Canevas sur lequel dessiner le joueur
+  @param X        Coordonnée X du point à partir duquel dessiner le joueur
+  @param Y        Coordonnée Y du point à partir duquel dessiner le joueur
+*}
 procedure TPlayer.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 var I : integer;
 begin
+  // Dessine les plug-in en-dessous du joueur
   for I := 0 to PluginCount-1 do
     Plugins[I].DrawBefore(Self, Canvas, X, Y);
 
+  // Dessine le peintre correspondant à la direction...
   if FColor = clDefault then
   begin
     if (FDirection = diNone) or (not Assigned(FDirPainters[FDirection])) then
@@ -576,6 +788,7 @@ begin
     else
       FDirPainters[FDirection].Draw(Canvas, X, Y);
   end else
+  // ... ou le traditionnel disque coloré
   begin
     with Canvas do
     begin
@@ -586,20 +799,39 @@ begin
     end;
   end;
 
+  // Dessine les plug-in au-dessus du joueur
   for I := 0 to PluginCount-1 do
     Plugins[I].DrawAfter(Self, Canvas, X, Y);
 end;
 
+{*
+  Greffe un plug-in au joueur
+  @param Plugin   Le plug-in à greffer
+*}
 procedure TPlayer.AddPlugin(Plugin : TPlayerPlugin);
 begin
   FPlugins.Add(Plugin);
 end;
 
+{*
+  Retire un plug-in du joueur
+  @param Plugin   Le plug-in à retirer
+*}
 procedure TPlayer.RemovePlugin(Plugin : TPlayerPlugin);
 begin
   FPlugins.Remove(Plugin);
 end;
 
+{*
+  Affiche une boîte de dialogue
+  @param Title        Titre de la boîte de dialogue
+  @param Text         Texte de la boîte de dialogue
+  @param DlgType      Type de boîte de dialogue
+  @param DlgButtons   Boutons présents dans la boîte de dialogue
+  @param DefButton    Bouton sélectionné par défaut
+  @param AddFlags     Flags additionnels pour MessageBox
+  @return Code de résultat du bouton cliqué
+*}
 function TPlayer.ShowDialog(const Title, Text : string;
   DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
   DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
@@ -609,6 +841,20 @@ begin
     DefButton, AddFlags);
 end;
 
+{*
+  Affiche une boîte de dialogue avec des boutons radio
+  ShowDialogRadio est une variante de ShowDialog qui affiche des boutons radio
+  pour chaque choix possible.
+  @param Title   Titre de la boîte de dialogue
+  @param Text    Texte de la boîte de dialogue
+  @param DlgType   Type de boîte de dialogue
+  @param DlgButtons   Boutons présents dans la boîte de dialogue
+  @param DefButton    Bouton sélectionné par défaut
+  @param RadioTitles   Libellés des différents boutons radio
+  @param Selected      Bouton radio sélectionné
+  @param OverButtons   Boutons radio placés au-dessus des boutons si True
+  @return Code de résultat du bouton cliqué
+*}
 function TPlayer.ShowDialogRadio(const Title, Text : string;
   DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
   const RadioTitles : array of string; var Selected : integer;
@@ -694,6 +940,15 @@ begin
   end;
 end;
 
+{*
+  Indique si le joueur est capable d'effectuer une action donnée
+  CanYou commence par tester si un plug-in permet l'action. Sinon, il
+  détermine quels sont les objets permettant cette action. S'il y en a
+  plusieurs, le joueur se voit demander d'en choisir un, et celui-ci est
+  utilisé.
+  @param Action   Action à tester
+  @return True si le joueur est capabled d'effectuer l'action, False sinon
+*}
 function TPlayer.CanYou(Action : integer) : boolean;
 var I, GoodObjectCount : integer;
     GoodObjects : array of TPlayerObject;
@@ -737,6 +992,15 @@ begin
   GoodObject.UseFor(Action);
 end;
 
+{*
+  Déplace le joueur dans la direction indiquée
+  Move déplace le joueur dans la direction indiquée, en appliquant les
+  comportements conjugués des cases et plug-in.
+  @param Dir   Direction du déplacement
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Redo         Indique s'il faut réitérer le déplacement
+  @return True si le déplacement a réussi, False sinon
+*}
 function TPlayer.Move(Dir : TDirection; KeyPressed : boolean;
   out Redo : boolean) : boolean;
 var I : integer;
@@ -799,6 +1063,12 @@ end;
 /// Classe TScrew ///
 /////////////////////
 
+{*
+  Crée une instance de TScrew
+  @param AMaster   Maître FunLabyrinthe
+  @param AName     Nom de la case
+  @param ACode     Code de la case
+*}
 constructor TScrew.Create(AMaster : TMaster; const AName : string;
   ACode : TScrewCode);
 begin
@@ -806,22 +1076,64 @@ begin
   FCode := ACode;
 end;
 
+{*
+  Exécuté lorsque le joueur tente de venir sur la case
+  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
+  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
+  la méthode Entered de la case ne soit exécutée, il faut positionner
+  AbortEntered à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de provenance
+  @param Pos            Position de la case
+  @param Cancel         À positionner à True pour annuler le déplacement
+  @param AbortEntered   À positionner à True pour empêcher le Entered
+*}
 procedure TScrew.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
 end;
 
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
 procedure TScrew.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
 begin
 end;
 
+{*
+  Exécuté lorsque le joueur tente de sortir de la case
+  Exiting est exécuté lorsque le joueur tente de sortir de la case. Pour
+  annuler le déplacement, il faut positionner Cancel à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Pos            Position de la case
+  @param Dest           Case de destination
+  @param Cancel         À positionner à True pour annuler le déplacement
+*}
 procedure TScrew.Exiting(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Pos, Dest : T3DPoint; var Cancel : boolean);
 begin
 end;
 
+{*
+  Exécuté lorsque le joueur est sorti de la case
+  Exiting est exécuté lorsque le joueur est sorti de la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param Dest         Case de destination
+*}
 procedure TScrew.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
 begin
@@ -831,6 +1143,10 @@ end;
 /// Classe TScrewsMaster ///
 ////////////////////////////
 
+{*
+  Crée une instance de TScrewsMaster
+  @param AMaster   Maître FunLabyrinthe
+*}
 constructor TScrewsMaster.Create(AMaster : TMaster);
 var Code : TScrewCode;
 begin
@@ -846,6 +1162,9 @@ begin
   FScrews[cOutside] := TOutside.Create(FMaster);
 end;
 
+{*
+  Détruit l'instance
+*}
 destructor TScrewsMaster.Destroy;
 var Code : TScrewCode;
 begin
@@ -854,6 +1173,11 @@ begin
   inherited;
 end;
 
+{*
+  Tableau des cases indexé par leurs codes respectifs
+  @param Code   Code de la case
+  @return La case dont le code a été spécifié
+*}
 function TScrewsMaster.GetScrews(Code : TScrewCode) : TScrew;
 begin
   Result := FScrews[Code];
@@ -863,6 +1187,11 @@ end;
 /// Classe TMap ///
 ///////////////////
 
+{*
+  Crée une instance de TMap
+  @param AMaster       Maître FunLabyrinthe
+  @param ADimensions   Dimensions de la carte (en cases)
+*}
 constructor TMap.Create(AMaster : TMaster; ADimensions : T3DPoint);
 var X, Y, Z : integer;
 begin
@@ -881,6 +1210,11 @@ begin
     FOutside[Z] := cOutside;
 end;
 
+{*
+  Tableau des codes des cases indexés par leur position sur la carte
+  @param Position   Position sur la carte
+  @return Le code de la case à la position spécifiée
+*}
 function TMap.GetCodeMap(Position : T3DPoint) : TScrewCode;
 var Index : integer;
 begin
@@ -900,6 +1234,11 @@ begin
     Result := FOutside[Position.Z];
 end;
 
+{*
+  Modifie le tableau des codes des cases indexées par leur position sur la carte
+  @param Position   Position sur la carte
+  @param Value      Nouveau code de case
+*}
 procedure TMap.SetCodeMap(Position : T3DPoint; Value : TScrewCode);
 var Index : integer;
 begin
@@ -914,11 +1253,21 @@ begin
   FMap[Index] := Value;
 end;
 
+{*
+  Tableau des cases indexé par leur position sur la carte
+  @param Position   Position sur la carte
+  @return La case à la position spécifiée
+*}
 function TMap.GetMap(Position : T3DPoint) : TScrew;
 begin
   Result := Master.ScrewsMaster[CodeMap[Position]];
 end;
 
+{*
+  Teste si une coordonnée est à l'intérieur de la carte
+  @param Position   Coordonnée à tester
+  @return True si la coordonnée est dans la carte, False sinon
+*}
 function TMap.InMap(Position : T3DPoint) : boolean;
 begin
   Result :=
@@ -931,6 +1280,9 @@ end;
 /// Classe TMaster ///
 //////////////////////
 
+{*
+  Crée une instance de TMaster
+*}
 constructor TMaster.Create;
 begin
   inherited Create;
@@ -940,6 +1292,9 @@ begin
   FPlayers := TObjectList.Create;
 end;
 
+{*
+  Détruit l'instance
+*}
 destructor TMaster.Destroy;
 begin
   FPlayers.Free;
@@ -949,11 +1304,20 @@ begin
   inherited;
 end;
 
+{*
+  Nombre de joueurs dans la partie
+  @return Nombre de joueurs
+*}
 function TMaster.GetPlayerCount : integer;
 begin
   Result := FPlayers.Count;
 end;
 
+{*
+  Tableau zero-based des joueurs dans la partie
+  @param Index   Index du joueur
+  @return Le joueur à la position spécifiée
+*}
 function TMaster.GetPlayers(Index : integer) : TPlayer;
 begin
   Result := TPlayer(FPlayers[Index]);
