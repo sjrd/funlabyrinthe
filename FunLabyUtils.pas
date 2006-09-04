@@ -343,9 +343,24 @@ type
     property Master : TMaster read FMaster;
   end;
 
-var
+const {don't localize}
+  /// Fichier INI de FunLabyrinthe
+  fIniFileName = 'FunLabyrinthe.ini';
+
+var {don't localize}
+  /// Dossier de FunLabyrinthe dans Application Data
+  fFunLabyAppData : string = '';
+  /// Dossier des fichiers image
+  fScrewsDir : string = 'Screws\';
+  /// Dossier des fichiers son
+  fSoundsDir : string = 'Sounds\';
+  /// Dossier des fichiers labyrinthe
+  fLabyrinthsDir : string = 'Labyrinths\';
+  /// Dossier des fichiers sauvegarde
+  fSaveguardsDir : string = 'Saveguards\';
+
   /// Chaîne de format pour les fichiers image
-  sScrewFileName : string = 'Screws\%s.bmp';
+  fScrewFileName : string = '%s.bmp';
 
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 
@@ -408,7 +423,7 @@ begin
   begin
     NewImg := TBitmap.Create;
     try
-      NewImg.LoadFromFile(Format(sScrewFileName, [ImgName]));
+      NewImg.LoadFromFile(Format(fScrewFileName, [ImgName]));
       FImgList.AddMasked(NewImg, clTransparent);
       Result := FImgNames.Add(ImgName);
     finally
@@ -1412,6 +1427,18 @@ begin
 end;
 
 initialization
-  sScrewFileName := Dir+sScrewFileName;
+  with TMemIniFile.Create(Dir+fIniFileName) do
+  try
+    fFunLabyAppData := ReadString('Directories', 'AppData', Dir); {don't localize}
+
+    fScrewsDir := fFunLabyAppData + fScrewsDir;
+    fSoundsDir := fFunLabyAppData + fSoundsDir;
+    fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
+    fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
+
+    fScrewFileName := fScrewsDir+fScrewFileName;
+  finally
+    Free;
+  end;
 end.
 
