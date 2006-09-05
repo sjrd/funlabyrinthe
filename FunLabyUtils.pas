@@ -10,7 +10,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, ScUtils,
-  Forms, Dialogs, StdCtrls, Math, ScLists, ScStrUtils;
+  Forms, Dialogs, StdCtrls, Math, ScStrUtils;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
@@ -38,12 +38,6 @@ type
 
   /// Générée si un composant recherché n'est pas trouvé
   EComponentNotFound = class(Exception);
-
-  /// Mode d'ouverture d'un fichier FunLabyrinthe
-  TFileMode = (fmEdit, fmEditActions, fmPlay);
-
-  /// Générée si l'ouverture d'un fichier est invalide
-  EInvalidFileOpening = class(Exception);
 
   TMaster = class;
   TPlayer = class;
@@ -393,46 +387,6 @@ type
     property Players[index : integer] : TPlayer read GetPlayers;
   end;
 
-  {*
-    Crée, ouvre, enregistre et gère les fichiers FunLabyrinthe
-    TFunLabyFile se charge de créer, ouvrir, enregistrer et gérer les fichiers
-    FunLabyrinthe (extension .lab). Elle est la seule de toutes les classes
-    métier de FunLabyrinthe à « savoir » qu'il existe des fichiers.
-    C'est la classe au plus haut niveau du fonctionnement de FunLabyrinthe.
-  *}
-  TFunLabyFile = class
-  private
-    FFileName : TFileName;  /// Nom du fichier
-    FMode : TFileMode;      /// Mode d'ouverture du fichier
-    FName : string;         /// Nom du labyrinthe
-    FDescription : string;  /// Description
-    FVersion : string;      /// Version lors de l'enregistrement
-    FAllowEdit : boolean;   /// Indique si le fichier peut être édité
-    FIsSaveguard : boolean; /// Indique si le fichier était une sauvegarde
-
-    FMaster : TMaster;      /// Maître FunLabyrinthe
-
-    procedure NameFromFileName;
-    procedure Load(FileContents : TStrings = nil);
-    procedure TestOpeningValidity;
-  public
-    constructor Create(const AFileName : TFileName; AMode : TFileMode);
-    constructor CreateNew(Dimensions : T3DPoint; FileContents : TStrings = nil);
-    destructor Destroy; override;
-
-    procedure Save(const AFileName : TFileName = '');
-
-    property FileName : TFileName read FFileName;
-    property Mode : TFileMode read FMode;
-    property Name : string read FName write FName;
-    property Description : string read FDescription write FDescription;
-    property Version : string read FVersion;
-    property AllowEdit : boolean read FAllowEdit;
-    property IsSaveguard : boolean read FIsSaveguard;
-
-    property Master : TMaster read FMaster;
-  end;
-
 const {don't localize}
   /// Fichier INI de FunLabyrinthe
   fIniFileName = 'FunLabyrinthe.ini';
@@ -456,17 +410,6 @@ function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 
 implementation
 
-uses
-  Screws, StrUtils;
-
-const {don't localize}
-  secDimensions = '[Dimensions]';
-  keyColumns = 'Colonnes';
-  keyRows = 'Lignes';
-  keyFloors = 'Etages';
-
-  secLabyrinth = '[Labyrinthe]';
-
 {*
   Crée un rectangle de la taille d'une case
   @param X   Bord gauche du rectangle
@@ -479,68 +422,6 @@ begin
   Result.Top := Y;
   Result.Right := X+ScrewSize;
   Result.Bottom := Y+ScrewSize;
-end;
-
-procedure GenerateDefaultFileContents(Dimensions : T3DPoint;
-  FileContents : TStrings);
-var X, Y, Z : integer;
-    Str0, Str2, StrB : string;
-begin
-  FileContents.Add(secLabyrinth);
-
-  // Création de la ligne d'herbe
-  SetLength(Str0, Dimensions.X);
-  Str0[1] := '2';
-  Str0[Dimensions.X] := '2';
-  for X := 2 to Dimensions.X-1 do Str0[X] := '0';
-
-  // Création de la ligne de murs
-  SetLength(Str2, Dimensions.X);
-  for X := 1 to Dimensions.X do Str2[X] := '2';
-
-  // Création de la ligne de dehors
-  SetLength(StrB, Dimensions.X);
-  for X := 1 to Dimensions.X do StrB[X] := 'B';
-
-  for Z := 0 to Dimensions.Z-1 do
-  begin
-    // Génération de la bande de dehors fictive héritée de la v1.0
-    if Z > 0 then
-    begin
-      for Y := 1 to 7 do
-        FileContents.Add(StrB);
-    end;
-
-    // Première ligne de l'étage
-    FileContents.Add(Str2);
-
-    // Contenu de l'étage
-    for Y := 2 to Dimensions.Y do
-      FileContents.Add(Str0);
-
-    // Dernière ligne de l'étage
-    FileContents.Add(Str2);
-  end;
-end;
-
-procedure LoadString(FileContents : TStrings;
-  SectionBegin, SectionEnd : integer; const Key : string; var Value : string);
-var I : integer;
-begin
-  I := StringsOps.FindAtPos(FileContents, Key+':', 1, SectionBegin, SectionEnd);
-  if I < 0 then exit;
-  Value := FileContents[I];
-  Value := Trim(Copy(Value, Length(Key)+2, Length(Value)));
-end;
-
-procedure LoadInt(FileContents : TStrings; SectionBegin, SectionEnd : integer;
-  const Key : string; var Value : integer);
-var StrValue : string;
-    ErrorCode : integer;
-begin
-  StrValue := '';
-  LoadString(FileContents, SectionBegin, SectionEnd, Key, StrValue);
-  Val(StrValue, Value, ErrorCode);
 end;
 
 ////////////////////////////
@@ -1822,119 +1703,6 @@ begin
   if Component is TMap    then FMaps   .Add(Component) else
   if Component is TPlayer then FPlayers.Add(Component) else
   assert(False);
-end;
-
-///////////////////////////
-/// Classe TFunLabyFile ///
-///////////////////////////
-
-{*
-  Ouvre un fichier FunLabyrinthe
-  @param AFileName   Nom du fichier à ouvrir
-  @param AMode       Mode sous lequel ouvrir le fichier
-*}
-constructor TFunLabyFile.Create(const AFileName : TFileName; AMode : TFileMode);
-begin
-  inherited Create;
-  FFileName := AFileName;
-  FMode := AMode;
-  NameFromFileName;
-  FDescription := '';
-  FVersion := CurrentVersion;
-  FAllowEdit := True;
-  FIsSaveguard := False;
-
-  FMaster := TMaster.Create;
-  try
-    Load;
-    TestOpeningValidity;
-  except
-    FMaster.Free;
-    raise;
-  end;
-end;
-
-{*
-  Crée un nouveau fichier FunLabyrinthe en mode édition
-  @param Dimensions     Dimensions de la carte
-  @param FileContents   Contenu pré-créé du fichier (ou nil si par défaut)
-*}
-constructor TFunLabyFile.CreateNew(Dimensions : T3DPoint;
-  FileContents : TStrings = nil);
-begin
-  inherited Create;
-  FFileName := '';
-  FMode := fmEdit;
-  FName := '';
-  FDescription := '';
-  FVersion := CurrentVersion;
-  FAllowEdit := True;
-  FIsSaveguard := False;
-
-  FMaster := TMaster.Create;
-  try
-    Load(FileContents);
-    TestOpeningValidity;
-  except
-    FMaster.Free;
-    raise;
-  end;
-end;
-
-{*
-  Détruit l'instance
-*}
-destructor TFunLabyFile.Destroy;
-begin
-  FMaster.Free;
-  inherited;
-end;
-
-{*
-  Donne au labyrinthe un nom par défaut à partir du nom du fichier
-*}
-procedure TFunLabyFile.NameFromFileName;
-var I : integer;
-begin
-  FName := ExtractFileName(FFileName);
-  I := Length(FName);
-  while (I > 0) and (FName[I] <> '.') do dec(I);
-  if I > 0 then
-    SetLength(FName, I);
-end;
-
-{*
-  Charge le contenu du fichier dans les classes
-  @param FileContents   Contenu du fichier
-*}
-procedure TFunLabyFile.Load(FileContents : TStrings = nil);
-begin
-  { TODO 2 : Charger le fichier }
-end;
-
-{*
-  Teste la validité de l'ouverture d'un fichier
-  TestOpeningValidity vérifie que le fichier ouvert ne l'a pas été
-  « illégalement ». Deux cas d'illégalité sont à tester :
-  - Le fichier est une sauvegarde et est ouvert autrement que pour y jouer ;
-  - Le fichier a été interdit d'édition, et ouvert dans ce mode.
-  @throws EInvalidFileOpening : Le fichier a été ouvert illégalement
-*}
-procedure TFunLabyFile.TestOpeningValidity;
-begin
-  if IsSaveguard and (Mode <> fmPlay) then
-    raise EInvalidFileOpening.Create(sCantEditSaveguard);
-  if (not AllowEdit) and (Mode = fmEdit) then
-    raise EInvalidFileOpening.Create(sEditingNotAllowed);
-end;
-
-{*
-  Enregistre le fichier
-  @param AFileName   Nom du fichier à enregistrer (si vide, conserve l'existant)
-*}
-procedure TFunLabyFile.Save(const AFileName : TFileName = '');
-begin
-  { TODO 2 : Enregistrer le fichier }
 end;
 
 initialization
