@@ -130,13 +130,13 @@ type
 
   {*
     Classe de base pour les plug-in de joueur
-    TPlayerPlugin est la classe de base pour les plug-in de joueur.
+    TPlugin est la classe de base pour les plug-in de joueur.
     Un plug-in peut agir de plusieurs façons sur le joueur :
     - Dessiner sous et sur le joueur ;
     - Empêcher le déplacement du joueur et réagir à son déplacement effectif ;
     - Indiquer au joueur qu'il a la capacité de faire certaines actions.
   *}
-  TPlayerPlugin = class(TFunLabyComponent)
+  TPlugin = class(TFunLabyComponent)
   private
     FPainterBefore : TPainter; /// Peintre par défaut sous le joueur
     FPainterAfter : TPainter;  /// Peintre par défaut sur le joueur
@@ -289,12 +289,12 @@ type
     FObjects : TObjectList;  /// Liste des objets
 
     function GetPluginCount : integer;
-    function GetPlugins(Index : integer) : TPlayerPlugin;
+    function GetPlugins(Index : integer) : TPlugin;
     function GetObjectCount : integer;
     function GetObjects(Index : integer) : TPlayerObject;
 
     property PluginCount : integer read GetPluginCount;
-    property Plugins[index : integer] : TPlayerPlugin read GetPlugins;
+    property Plugins[index : integer] : TPlugin read GetPlugins;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; AMap : TMap; APosition : T3DPoint);
@@ -303,8 +303,8 @@ type
     procedure Draw(Canvas : TCanvas; X : integer = 0;
       Y : integer = 0); override;
 
-    procedure AddPlugin(Plugin : TPlayerPlugin);
-    procedure RemovePlugin(Plugin : TPlayerPlugin);
+    procedure AddPlugin(Plugin : TPlugin);
+    procedure RemovePlugin(Plugin : TPlugin);
 
     function ShowDialog(const Title, Text : string;
       DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
@@ -343,7 +343,7 @@ type
     FPlayers : TObjectList;        /// Liste des joueurs
 
     function GetComponent(const ID : TComponentID) : TFunLabyComponent;
-    function GetPlugin   (const ID : TComponentID) : TPlayerPlugin;
+    function GetPlugin   (const ID : TComponentID) : TPlugin;
     function GetField    (const ID : TComponentID) : TField;
     function GetEffect   (const ID : TComponentID) : TEffect;
     function GetScrew    (const ID : TComponentID) : TScrew;
@@ -351,7 +351,7 @@ type
     function GetPlayer   (const ID : TComponentID) : TPlayer;
 
     function GetPluginCount : integer;
-    function GetPlugins(Index : integer) : TPlayerPlugin;
+    function GetPlugins(Index : integer) : TPlugin;
     function GetFieldCount : integer;
     function GetFields(Index : integer) : TField;
     function GetEffectCount : integer;
@@ -372,15 +372,15 @@ type
 
     property Component[const ID : TComponentID] : TFunLabyComponent
       read GetComponent;
-    property Plugin   [const ID : TComponentID] : TPlayerPlugin read GetPlugin;
-    property Field    [const ID : TComponentID] : TField        read GetField;
-    property Effect   [const ID : TComponentID] : TEffect       read GetEffect;
-    property Screw    [const ID : TComponentID] : TScrew        read GetScrew;
-    property Map      [const ID : TComponentID] : TMap          read GetMap;
-    property Player   [const ID : TComponentID] : TPlayer       read GetPlayer;
+    property Plugin   [const ID : TComponentID] : TPlugin read GetPlugin;
+    property Field    [const ID : TComponentID] : TField  read GetField;
+    property Effect   [const ID : TComponentID] : TEffect read GetEffect;
+    property Screw    [const ID : TComponentID] : TScrew  read GetScrew;
+    property Map      [const ID : TComponentID] : TMap    read GetMap;
+    property Player   [const ID : TComponentID] : TPlayer read GetPlayer;
 
     property PluginCount : integer read GetPluginCount;
-    property Plugins[index : integer] : TPlayerPlugin read GetPlugins;
+    property Plugins[index : integer] : TPlugin read GetPlugins;
     property FieldCount : integer read GetFieldCount;
     property Fields[index : integer] : TField read GetFields;
     property EffectCount : integer read GetEffectCount;
@@ -758,7 +758,7 @@ end;
   Crée une instance de TPlayerPlugin
   @param AMaster   Maître FunLabyrinthe
 *}
-constructor TPlayerPlugin.Create(AMaster : TMaster; const AID : TComponentID);
+constructor TPlugin.Create(AMaster : TMaster; const AID : TComponentID);
 begin
   inherited Create(AMaster, AID);
   FPainterBefore := TPainter.Create(FMaster.ImagesMaster);
@@ -770,7 +770,7 @@ end;
 {*
   Détruit l'instance
 *}
-destructor TPlayerPlugin.Destroy;
+destructor TPlugin.Destroy;
 begin
   FPainterAfter.Free;
   FPainterBefore.Free;
@@ -782,7 +782,7 @@ end;
   AfterConstruction est appelé après l'exécution du dernier constructeur.
   N'appelez pas directement AfterConstruction.
 *}
-procedure TPlayerPlugin.AfterConstruction;
+procedure TPlugin.AfterConstruction;
 begin
   inherited;
   FPainterBefore.ImgNames.EndUpdate;
@@ -798,7 +798,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TPlayerPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
+procedure TPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   FPainterBefore.Draw(Canvas, X, Y);
@@ -813,7 +813,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TPlayerPlugin.DrawAfter(Player : TPlayer; Canvas : TCanvas;
+procedure TPlugin.DrawAfter(Player : TPlayer; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   FPainterAfter.Draw(Canvas, X, Y);
@@ -830,7 +830,7 @@ end;
   @param Dest           Case d'arrivée
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TPlayerPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
+procedure TPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Dest : T3DPoint; var Cancel : boolean);
 begin
 end;
@@ -843,7 +843,7 @@ end;
   @param Src          Case de départ
   @param Dest         Case d'arrivée
 *}
-procedure TPlayerPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
+procedure TPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
   Src, Dest : T3DPoint);
 begin
 end;
@@ -856,7 +856,7 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TPlayerPlugin.CanYou(Player : TPlayer; Action : integer) : boolean;
+function TPlugin.CanYou(Player : TPlayer; Action : integer) : boolean;
 begin
   Result := False;
 end;
@@ -1228,9 +1228,9 @@ end;
   @param Index   Index du plug-in dans le tableau
   @return Le plug-in à la position indiquée
 *}
-function TPlayer.GetPlugins(Index : integer) : TPlayerPlugin;
+function TPlayer.GetPlugins(Index : integer) : TPlugin;
 begin
-  Result := TPlayerPlugin(FPlugins[Index]);
+  Result := TPlugin(FPlugins[Index]);
 end;
 
 {*
@@ -1294,7 +1294,7 @@ end;
   Greffe un plug-in au joueur
   @param Plugin   Le plug-in à greffer
 *}
-procedure TPlayer.AddPlugin(Plugin : TPlayerPlugin);
+procedure TPlayer.AddPlugin(Plugin : TPlugin);
 begin
   FPlugins.Add(Plugin);
 end;
@@ -1303,7 +1303,7 @@ end;
   Retire un plug-in du joueur
   @param Plugin   Le plug-in à retirer
 *}
-procedure TPlayer.RemovePlugin(Plugin : TPlayerPlugin);
+procedure TPlayer.RemovePlugin(Plugin : TPlugin);
 begin
   FPlugins.Remove(Plugin);
 end;
@@ -1614,9 +1614,9 @@ end;
   @return Le plug-in dont l'ID a été spécifié
   @throws EComponentNotFound : Aucun plug-in ne correspond à l'ID spécifié
 *}
-function TMaster.GetPlugin(const ID : TComponentID) : TPlayerPlugin;
+function TMaster.GetPlugin(const ID : TComponentID) : TPlugin;
 begin
-  Result := Component[ID] as TPlayerPlugin;
+  Result := Component[ID] as TPlugin;
 end;
 
 {*
@@ -1708,9 +1708,9 @@ end;
   @param Index   Index du plug-in
   @return Le plug-in à la position spécifiée
 *}
-function TMaster.GetPlugins(Index : integer) : TPlayerPlugin;
+function TMaster.GetPlugins(Index : integer) : TPlugin;
 begin
-  Result := TPlayerPlugin(FPlugins[Index]);
+  Result := TPlugin(FPlugins[Index]);
 end;
 
 {*
@@ -1815,12 +1815,12 @@ end;
 procedure TMaster.AddComponent(Component : TFunLabyComponent);
 begin
   FComponents.AddObject(Component.ID, Component);
-  if Component is TPlayerPlugin then FPlugins.Add(Component) else
-  if Component is TField        then FFields .Add(Component) else
-  if Component is TEffect       then FEffects.Add(Component) else
-  if Component is TScrew        then FScrews .Add(Component) else
-  if Component is TMap          then FMaps   .Add(Component) else
-  if Component is TPlayer       then FPlayers.Add(Component) else
+  if Component is TPlugin then FPlugins.Add(Component) else
+  if Component is TField  then FFields .Add(Component) else
+  if Component is TEffect then FEffects.Add(Component) else
+  if Component is TScrew  then FScrews .Add(Component) else
+  if Component is TMap    then FMaps   .Add(Component) else
+  if Component is TPlayer then FPlayers.Add(Component) else
   assert(False);
 end;
 
