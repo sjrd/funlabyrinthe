@@ -239,29 +239,60 @@ type
   end;
 
   {*
+    Classe de base pour les terrains
+    TField est la classe de base pour la création de terrains. Les terrains
+    sont la première composante d'une case.
+  *}
+  TField = class(TVisualComponent)
+  private
+    FDelegateDrawTo : TField; /// Terrain délégué pour l'affichage
+
+    /// Réservation d'un emplacement dans la VMT pour stocker le Draw original
+    procedure OriginalDraw(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); virtual; abstract;
+    procedure DerivedDraw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; ADelegateDrawTo : TField = nil);
+
+    procedure Entering(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; Src, Pos : T3DPoint;
+      var Cancel, AbortEntered : boolean); virtual;
+    procedure Exiting(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; Pos, Dest : T3DPoint;
+      var Cancel : boolean); virtual;
+  end;
+
+  {*
+    Classe de base pour les effets de case
+    TEffect est la classe de base la création d'effets de case. Les effets
+    sont la seconde composante d'une case.
+  *}
+  TEffect = class(TVisualComponent)
+  public
+    procedure Pushed(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint); virtual;
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); virtual;
+    procedure Exited(Player : TPlayer; KeyPressed : boolean;
+      Pos, Dest : T3DPoint); virtual;
+  end;
+
+  {*
     Classe de base pour les cases
     TScrew est la classe de base pour les cases de la carte. Elle possède une
     code et quatre méthodes qui définissent son comportement.
   *}
   TScrew = class(TVisualComponent)
   private
-    FCode : TScrewCode; /// Code de case
+    FField : TField;   /// Terrain
+    FEffect : TEffect; /// Effet
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ACode : TScrewCode);
+      const AName : string; AField : TField; AEffect : TEffect);
 
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); virtual;
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); virtual;
-    procedure Exiting(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Pos, Dest : T3DPoint;
-      var Cancel : boolean); virtual;
-    procedure Exited(Player : TPlayer; KeyPressed : boolean;
-      Pos, Dest : T3DPoint); virtual;
-
-    property Code : TScrewCode read FCode;
+    property Field : TField read FField;
+    property Effect : TEffect read FEffect;
   end;
 
   {*
@@ -1189,18 +1220,22 @@ begin
   AbortEntered := False;
 
   // Premier passage : le déplacement est-il permis ?
-  begin
+  try
     // Case source : exiting
-    Master.Map[Src].Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
+    Master.Map[Src].Field.Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
     // Plug-in : moving
     for I := 0 to PluginCount-1 do
       Plugins[I].Moving(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
     // Case destination : entering
-    Master.Map[Dest].Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel,
+    Master.Map[Dest].Field.Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel,
       AbortEntered);
     if Cancel then exit;
+  finally
+    // Case destination : pushed (seulement si on a annulé)
+    if Cancel then
+      Master.Map[Dest].Effect.Pushed(Self, KeyPressed, Src, Dest);
   end;
 
   // Déplacement du joueur (à moins qu'il ait été déplacé par ailleurs)
@@ -1212,31 +1247,76 @@ begin
   // Second passage : le déplacement a été fait
   begin
     // Case source : exited
-    Master.Map[Src].Exited(Self, KeyPressed, Src, Dest);
+    Master.Map[Src].Effect.Exited(Self, KeyPressed, Src, Dest);
     // Plug-in : moved
     for I := 0 to PluginCount-1 do
       Plugins[I].Moved(Self, KeyPressed, Src, Dest);
     // Case destination : entered (sauf si AbortEntered a été positionné à True)
     if not AbortEntered then
-      Master.Map[Dest].Entered(Self, KeyPressed, Src, Dest, Redo);
+      Master.Map[Dest].Effect.Entered(Self, KeyPressed, Src, Dest, Redo);
   end;
 end;
 
 /////////////////////
-/// Classe TScrew ///
+/// Classe TField ///
 /////////////////////
 
 {*
-  Crée une instance de TScrew
-  @param AMaster   Maître FunLabyrinthe
-  @param AName     Nom de la case
-  @param ACode     Code de la case
+  Crée une instance de TField
+  @param AMaster           Maître FunLabyrinthe
+  @param AID               ID du terrain
+  @param AName             Nom du terrain
+  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
-constructor TScrew.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ACode : TScrewCode);
+constructor TField.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; ADelegateDrawTo : TField = nil);
 begin
   inherited Create(AMaster, AID, AName);
-  FCode := ACode;
+  FDelegateDrawTo := ADelegateDrawTo;
+
+  { On dérive tout appel à Draw vers DerivedDraw, en modifiant directement la
+    VMT de la classe. On prend soin de conserver l'ancienne valeur, pour
+    pouvoir tout de même l'appeler si FDelegateDrawTo vaut nil.
+    Remarque : Comme toutes les instances d'une même classe partagent la même
+    VMT, il faut éviter le cas où ce remplacement a déjà eu lieu, tout
+    simplement en testant si Draw vaut déjà DerivedDraw.                       }
+  {$IFNDEF DCTD} // évite le bug de DelphiCodeToDoc avec l'assembleur
+  asm
+    mov edx, [eax] // récupération de la VMT
+
+    // test du cas où le remplacement a déjà été fait
+    mov ecx, dword ptr TField.DerivedDraw
+    cmp dword ptr [edx + VMTOFFSET TVisualComponent.Draw], ecx
+    je  @@AlreadyDone
+
+    // sauvegarde du pointeur vers Draw dans OriginalDraw
+    mov ecx, dword ptr [edx + VMTOFFSET TField.Draw]
+    mov dword ptr [edx + VMTOFFSET TField.OriginalDraw], ecx
+    // remplacement par DerivedDraw
+    mov ecx, dword ptr TField.DerivedDraw
+    mov dword ptr [edx], ecx
+
+    @@AlreadyDone :
+  end;
+  {$ENDIF}
+end;
+
+{*
+  Dessine le terrain sur le canevas indiqué, ou délègue le dessin
+  Grâce à la redirection mise en place dans le constructeur, tout appel à Draw
+  se résoud en l'appel de DerivedDraw. On peut alors tester s'il faut déléguer
+  l'affichage ou appeler la méthode Draw originale.
+  @param Canvas   Canevas sur lequel dessiner le terrain
+  @param X        Coordonnée X du point à partir duquel dessiner le terrain
+  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+*}
+procedure TField.DerivedDraw(Canvas : TCanvas; X : integer = 0;
+  Y : integer = 0);
+begin
+  if FDelegateDrawTo = nil then
+    OriginalDraw(Canvas, X, Y)
+  else
+    FDelegateDrawTo.DerivedDraw(Canvas, X, Y);
 end;
 
 {*
@@ -1253,23 +1333,9 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
   @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
-procedure TScrew.Entering(Player : TPlayer; OldDirection : TDirection;
+procedure TField.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
-begin
-end;
-
-{*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
-*}
-procedure TScrew.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
 begin
 end;
 
@@ -1284,22 +1350,70 @@ end;
   @param Dest           Case de destination
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TScrew.Exiting(Player : TPlayer; OldDirection : TDirection;
+procedure TField.Exiting(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Pos, Dest : T3DPoint; var Cancel : boolean);
+begin
+end;
+
+//////////////////////
+/// Classe TEffect ///
+//////////////////////
+
+{*
+  Exécuté lorsque le joueur a poussé sur la case
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+*}
+procedure TEffect.Pushed(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint);
+begin
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TEffect.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
 begin
 end;
 
 {*
   Exécuté lorsque le joueur est sorti de la case
-  Exiting est exécuté lorsque le joueur est sorti de la case.
   @param Player       Joueur qui se déplace
   @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Pos          Position de la case
   @param Dest         Case de destination
 *}
-procedure TScrew.Exited(Player : TPlayer; KeyPressed : boolean;
+procedure TEffect.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
 begin
+end;
+
+/////////////////////
+/// Classe TScrew ///
+/////////////////////
+
+{*
+  Crée une instance de TScrew
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de la case
+  @param AName     Nom de la case
+  @param AField    Terrain
+  @param AEffect   Effet
+*}
+constructor TScrew.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; AField : TField; AEffect : TEffect);
+begin
+  inherited Create(AMaster, AID, AName);
+  FField := AField;
+  FEffect := AEffect;
 end;
 
 ////////////////////////////
@@ -1317,15 +1431,6 @@ begin
   FMaster := AMaster;
   for Code := 33 to 255 do
     FScrews[Code] := nil;
-
-  // Quelques exemples pour la route...
-  {don't localize}
-  FScrews[cGrass] := TGrass.Create(FMaster, 'Grass');
-  FScrews[cDirectTurnstile] := TDirectTurnstile.Create(FMaster,
-    'DirectTurnstile');
-  FScrews[cIndirectTurnstile] := TIndirectTurnstile.Create(FMaster,
-    'IndirectTurnstile');
-  FScrews[cOutside] := TOutside.Create(FMaster, 'Outside');
 end;
 
 {*

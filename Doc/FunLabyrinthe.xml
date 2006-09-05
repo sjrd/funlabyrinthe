@@ -18,10 +18,11 @@
     <Copyright>S&#xE9;bastien Doeraene - 2000-2006 - Sous license GNU GPL</Copyright>
     <RecurseDirectory>FALSE</RecurseDirectory>
     <ConditionalDefines>
-      <Count>3</Count>
+      <Count>4</Count>
       <Item0>MSWINDOWS</Item0>
       <Item1>WIN32</Item1>
       <Item2>VER170</Item2>
+      <Item3>DCTD</Item3>
     </ConditionalDefines>
     <ParseImplementationSection>TRUE</ParseImplementationSection>
     <CustomHeader>UNDER CONSTRUCTION</CustomHeader>
