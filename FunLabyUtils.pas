@@ -17,8 +17,6 @@ resourcestring
   sDefaultScrewName = '%1:s sur %0:s';
   sWhichObject = 'Quel objet voulez-vous utiliser ?';
   sComponentNotFound = 'Le composant d''ID %s n''existe pas';
-  sEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
-  sCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
 
 const
   CurrentVersion = '5.0'; /// Version courante de FunLabyrinthe
