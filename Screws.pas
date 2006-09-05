@@ -66,10 +66,10 @@ type
   *}
   TGrass = class(TScrew)
   protected
-    constructor Create(AMaster : TMaster; const AName : string;
-      ACode : TScrewCode); overload;
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; ACode : TScrewCode); overload;
   public
-    constructor Create(AMaster : TMaster); overload;
+    constructor Create(AMaster : TMaster; const AID : TComponentID); overload;
   end;
 
   {*
@@ -79,10 +79,10 @@ type
   *}
   TDirectTurnstile = class(TGrass)
   protected
-    constructor Create(AMaster : TMaster; const AName : string;
-      ACode : TScrewCode); overload;
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; ACode : TScrewCode); overload;
   public
-    constructor Create(AMaster : TMaster); overload;
+    constructor Create(AMaster : TMaster; const AID : TComponentID); overload;
 
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
@@ -97,10 +97,10 @@ type
   *}
   TIndirectTurnstile = class(TGrass)
   protected
-    constructor Create(AMaster : TMaster; const AName : string;
-      ACode : TScrewCode); overload;
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; ACode : TScrewCode); overload;
   public
-    constructor Create(AMaster : TMaster); overload;
+    constructor Create(AMaster : TMaster; const AID : TComponentID); overload;
 
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
@@ -115,10 +115,10 @@ type
   *}
   TOutside = class(TGrass)
   protected
-    constructor Create(AMaster : TMaster; const AName : string;
-      ACode : TScrewCode); overload;
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; ACode : TScrewCode); overload;
   public
-    constructor Create(AMaster : TMaster); overload;
+    constructor Create(AMaster : TMaster; const AID : TComponentID); overload;
 
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
@@ -136,10 +136,10 @@ implementation
   @param AName     Nom de la case
   @param ACode     Code de la case
 *}
-constructor TGrass.Create(AMaster : TMaster; const AName : string;
-  ACode : TScrewCode);
+constructor TGrass.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; ACode : TScrewCode);
 begin
-  inherited Create(AMaster, AName, ACode);
+  inherited Create(AMaster, AID, AName, ACode);
   Painter.ImgNames.Add(fGrass);
 end;
 
@@ -147,9 +147,9 @@ end;
   Crée une instance de TGrass
   @param AMaster   Maître FunLabyrinthe
 *}
-constructor TGrass.Create(AMaster : TMaster);
+constructor TGrass.Create(AMaster : TMaster; const AID : TComponentID);
 begin
-  Create(AMaster, sGrass, cGrass);
+  Create(AMaster, AID, sGrass, cGrass);
 end;
 
 ///////////////////////////////
@@ -162,10 +162,10 @@ end;
   @param AName     Nom de la case
   @param ACode     Code de la case
 *}
-constructor TDirectTurnstile.Create(AMaster : TMaster; const AName : string;
-  ACode : TScrewCode);
+constructor TDirectTurnstile.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; ACode : TScrewCode);
 begin
-  inherited Create(AMaster, AName, ACode);
+  inherited Create(AMaster, AID, AName, ACode);
   Painter.ImgNames.Add(fDirectTurnstile);
 end;
 
@@ -173,9 +173,10 @@ end;
   Crée une instance de TDirectTurnstile
   @param AMaster   Maître FunLabyrinthe
 *}
-constructor TDirectTurnstile.Create(AMaster : TMaster);
+constructor TDirectTurnstile.Create(AMaster : TMaster;
+  const AID : TComponentID);
 begin
-  Create(AMaster, sDirectTurnstile, cDirectTurnstile);
+  Create(AMaster, AID, sDirectTurnstile, cDirectTurnstile);
 end;
 
 {*
@@ -225,10 +226,10 @@ end;
   @param AName     Nom de la case
   @param ACode     Code de la case
 *}
-constructor TIndirectTurnstile.Create(AMaster : TMaster; const AName : string;
-  ACode : TScrewCode);
+constructor TIndirectTurnstile.Create(AMaster : TMaster;
+  const AID : TComponentID; const AName : string; ACode : TScrewCode);
 begin
-  inherited Create(AMaster, AName, ACode);
+  inherited Create(AMaster, AID, AName, ACode);
   Painter.ImgNames.Add(fIndirectTurnstile);
 end;
 
@@ -236,9 +237,10 @@ end;
   Crée une instance de TIndirectTurnstile
   @param AMaster   Maître FunLabyrinthe
 *}
-constructor TIndirectTurnstile.Create(AMaster : TMaster);
+constructor TIndirectTurnstile.Create(AMaster : TMaster;
+  const AID : TComponentID);
 begin
-  Create(AMaster, sIndirectTurnstile, cIndirectTurnstile);
+  Create(AMaster, AID, sIndirectTurnstile, cIndirectTurnstile);
 end;
 
 {*
@@ -288,10 +290,10 @@ end;
   @param AName     Nom de la case
   @param ACode     Code de la case
 *}
-constructor TOutside.Create(AMaster : TMaster; const AName : string;
-  ACode : TScrewCode);
+constructor TOutside.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; ACode : TScrewCode);
 begin
-  inherited Create(AMaster, AName, ACode);
+  inherited Create(AMaster, AID, AName, ACode);
   Painter.ImgNames.Add(fOutside);
 end;
 
@@ -299,9 +301,9 @@ end;
   Crée une instance de TOutside
   @param AMaster   Maître FunLabyrinthe
 *}
-constructor TOutside.Create(AMaster : TMaster);
+constructor TOutside.Create(AMaster : TMaster; const AID : TComponentID);
 begin
-  Create(AMaster, sOutside, cOutside);
+  Create(AMaster, AID, sOutside, cOutside);
 end;
 
 {*

@@ -25,6 +25,9 @@ const
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
 
 type
+  /// Identificateur de composant FunLabyrinthe
+  TComponentID = type string;
+
   /// Type représentant une direction cardinale
   TDirection = (diNone, diNorth, diEast, diSouth, diWest);
 
@@ -87,24 +90,39 @@ type
   {*
     Classe de base pour les composants de FunLabyrinthe
     TFunLabyComponent est la classe de base pour tous les composants de
-    FunLabyrinthe. Elle fournit des propriétés et des méthodes pour nommer et
-    afficher le composant.
+    FunLabyrinthe. Elle fournit des propriétés et des méthodes pour repérer le
+    maître FunLabyrinthe et pour identifier le composant.
   *}
   TFunLabyComponent = class
   private
-    FMaster : TMaster;   /// Maître FunLabyrinthe
+    FMaster : TMaster;  /// Maître FunLabyrinthe
+    FID : TComponentID; /// ID du composant
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID);
+
+    property Master : TMaster read FMaster;
+    property ID : TComponentID read FID;
+  end;
+
+  {*
+    Classe de base pour les composants devant être affichés
+    TVisualComponent étend la classe TFunLabyComponent pour lui ajouter un
+    traitement standart et simple de nommage et de dessin.
+  *}
+  TVisualComponent = class(TFunLabyComponent)
+  private
     FName : string;      /// Nom du composant
     FPainter : TPainter; /// Peintre par défaut
   protected
     property Painter : TPainter read FPainter;
   public
-    constructor Create(AMaster : TMaster; const AName : string);
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
     procedure Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0); virtual;
 
-    property Master : TMaster read FMaster;
     property Name : string read FName;
   end;
 
@@ -116,16 +134,15 @@ type
     - Empêcher le déplacement du joueur et réagir à son déplacement effectif ;
     - Indiquer au joueur qu'il a la capacité de faire certaines actions.
   *}
-  TPlayerPlugin = class
+  TPlayerPlugin = class(TFunLabyComponent)
   private
-    FMaster : TMaster;         /// Maître FunLabyrinthe
     FPainterBefore : TPainter; /// Peintre par défaut sous le joueur
     FPainterAfter : TPainter;  /// Peintre par défaut sur le joueur
   protected
     property PainterBefore : TPainter read FPainterBefore;
     property PainterAfter : TPainter read FPainterAfter;
   public
-    constructor Create(AMaster : TMaster);
+    constructor Create(AMaster : TMaster; const AID : TComponentID);
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
@@ -148,15 +165,15 @@ type
     TPlayerObject est la classe de base pour les objets que possède le joueur.
     Les objets peuvent rendre un joueur capable d'effectuer certaines actions.
   *}
-  TPlayerObject = class(TFunLabyComponent)
+  TPlayerObject = class(TVisualComponent)
   private
     FPlayer : TPlayer; /// Joueur possédant l'objet
     FCount : integer;  /// Nombre d'objets de ce type que possède le joueur
   protected
     function GetShownInfos : string; virtual;
   public
-    constructor Create(AMaster : TMaster; const AName : string;
-      APlayer : TPlayer);
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; APlayer : TPlayer);
 
     function CanYou(Action : integer) : boolean; virtual;
     procedure UseFor(Action : integer); virtual;
@@ -172,7 +189,7 @@ type
     méthodes permettant d'afficher le joueur, de le déplacer, de lui greffer
     des plug-in, etc.
   *}
-  TPlayer = class(TFunLabyComponent)
+  TPlayer = class(TVisualComponent)
   private
     FPosition : T3DPoint;    /// Position
     FPosAddr : P3DPoint;     /// Position
@@ -191,7 +208,8 @@ type
     property PluginCount : integer read GetPluginCount;
     property Plugins[index : integer] : TPlayerPlugin read GetPlugins;
   public
-    constructor Create(AMaster : TMaster; const AName : string);
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
     destructor Destroy; override;
 
     procedure Draw(Canvas : TCanvas; X : integer = 0;
@@ -225,12 +243,12 @@ type
     TScrew est la classe de base pour les cases de la carte. Elle possède une
     code et quatre méthodes qui définissent son comportement.
   *}
-  TScrew = class(TFunLabyComponent)
+  TScrew = class(TVisualComponent)
   private
     FCode : TScrewCode; /// Code de case
   public
-    constructor Create(AMaster : TMaster; const AName : string;
-      ACode : TScrewCode);
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; ACode : TScrewCode);
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
@@ -614,12 +632,27 @@ end;
 {*
   Crée une instance de TFunLabyComponent
   @param AMaster   Maître FunLabyrinthe
-  @param AName     Nom du composant
+  @param AID       ID du composant
 *}
-constructor TFunLabyComponent.Create(AMaster : TMaster; const AName : string);
+constructor TFunLabyComponent.Create(AMaster : TMaster;
+  const AID : TComponentID);
 begin
   inherited Create;
   FMaster := AMaster;
+  FID := AID;
+end;
+
+///////////////////////////////
+/// Classe TVisualComponent ///
+///////////////////////////////
+
+{*
+  Crée une instance de TVisualComponent
+*}
+constructor TVisualComponent.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID);
   FName := AName;
   FPainter := TPainter.Create(FMaster.ImagesMaster);
   FPainter.ImgNames.BeginUpdate;
@@ -628,7 +661,7 @@ end;
 {*
   Détruit l'instance
 *}
-destructor TFunLabyComponent.Destroy;
+destructor TVisualComponent.Destroy;
 begin
   FPainter.Free;
   inherited;
@@ -639,7 +672,7 @@ end;
   AfterConstruction est appelé après l'exécution du dernier constructeur.
   N'appelez pas directement AfterConstruction.
 *}
-procedure TFunLabyComponent.AfterConstruction;
+procedure TVisualComponent.AfterConstruction;
 begin
   inherited;
   FPainter.ImgNames.EndUpdate;
@@ -652,7 +685,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le composant
   @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TFunLabyComponent.Draw(Canvas : TCanvas; X : integer = 0;
+procedure TVisualComponent.Draw(Canvas : TCanvas; X : integer = 0;
   Y : integer = 0);
 begin
   FPainter.Draw(Canvas, X, Y);
@@ -666,10 +699,9 @@ end;
   Crée une instance de TPlayerPlugin
   @param AMaster   Maître FunLabyrinthe
 *}
-constructor TPlayerPlugin.Create(AMaster : TMaster);
+constructor TPlayerPlugin.Create(AMaster : TMaster; const AID : TComponentID);
 begin
-  inherited Create;
-  FMaster := AMaster;
+  inherited Create(AMaster, AID);
   FPainterBefore := TPainter.Create(FMaster.ImagesMaster);
   FPainterBefore.ImgNames.BeginUpdate;
   FPainterAfter := TPainter.Create(FMaster.ImagesMaster);
@@ -777,13 +809,14 @@ end;
 {*
   Crée une instance de TPlayerObject
   @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'objet
   @param AName     Nom de l'objet
   @param APlayer   Joueur propriétaire
 *}
-constructor TPlayerObject.Create(AMaster : TMaster; const AName : string;
-  APlayer : TPlayer);
+constructor TPlayerObject.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; APlayer : TPlayer);
 begin
-  inherited Create(AMaster, AName);
+  inherited Create(AMaster, AID, AName);
   FPlayer := APlayer;
   FCount := 0;
 end;
@@ -795,7 +828,7 @@ end;
 *}
 function TPlayerObject.GetShownInfos : string;
 begin
-  Result := Format(sDefaultObjectInfos, [FName, FCount]);
+  Result := Format(sDefaultObjectInfos, [Name, Count]);
 end;
 
 {*
@@ -827,12 +860,14 @@ end;
 {*
   Crée une instance de TPlayer
   @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du joueur
   @param AName     Nom du joueur
 *}
-constructor TPlayer.Create(AMaster : TMaster; const AName : string);
+constructor TPlayer.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
 var Dir : TDirection;
 begin
-  inherited;
+  inherited Create(AMaster, AID, AName);
   FPosition := Point3D(0, 0, 0);
   FPosAddr := @FPosition;
   FDirection := diNone;
@@ -912,7 +947,7 @@ begin
   if FColor = clDefault then
   begin
     if (FDirection = diNone) or (not Assigned(FDirPainters[FDirection])) then
-      FPainter.Draw(Canvas, X, Y)
+      Painter.Draw(Canvas, X, Y)
     else
       FDirPainters[FDirection].Draw(Canvas, X, Y);
   end else
@@ -1197,10 +1232,10 @@ end;
   @param AName     Nom de la case
   @param ACode     Code de la case
 *}
-constructor TScrew.Create(AMaster : TMaster; const AName : string;
-  ACode : TScrewCode);
+constructor TScrew.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; ACode : TScrewCode);
 begin
-  inherited Create(AMaster, AName);
+  inherited Create(AMaster, AID, AName);
   FCode := ACode;
 end;
 
@@ -1284,10 +1319,13 @@ begin
     FScrews[Code] := nil;
 
   // Quelques exemples pour la route...
-  FScrews[cGrass] := TGrass.Create(FMaster);
-  FScrews[cDirectTurnstile] := TDirectTurnstile.Create(FMaster);
-  FScrews[cIndirectTurnstile] := TIndirectTurnstile.Create(FMaster);
-  FScrews[cOutside] := TOutside.Create(FMaster);
+  {don't localize}
+  FScrews[cGrass] := TGrass.Create(FMaster, 'Grass');
+  FScrews[cDirectTurnstile] := TDirectTurnstile.Create(FMaster,
+    'DirectTurnstile');
+  FScrews[cIndirectTurnstile] := TIndirectTurnstile.Create(FMaster,
+    'IndirectTurnstile');
+  FScrews[cOutside] := TOutside.Create(FMaster, 'Outside');
 end;
 
 {*
