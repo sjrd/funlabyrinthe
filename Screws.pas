@@ -14,13 +14,23 @@ uses
 resourcestring
   sGrass = 'Herbe';                           /// Nom de l'herbe
   sWall = 'Mur';                              /// Nom du mur
+
   sDirectTurnstile = 'Tourniquet direct';     /// Nom du tourniquet direct
   sIndirectTurnstile = 'Tourniquet indirect'; /// Nom du tourniquet indirect
   sOutside = 'Dehors';                        /// Nom du dehors
 
 const {don't localize}
+  idGrass = 'Grass';                          /// ID de l'herbe
+  idWall = 'Wall';                            /// ID du mur
+
+  idDirectTurnstile = 'DirectTurnstile';      /// ID du tourniquet direct
+  idIndirectTurnstile = 'IndirectTurnstile';  /// ID du tourniquet indirect
+  idOutside = 'Outside';                      /// ID du dehors
+
+const {don't localize}
   fGrass = 'Grass';                           /// Fichier de l'herbe
   fWall = 'Wall';                             /// Fichier du mur
+
   fDirectTurnstile = 'DirectTurnstile';       /// Fichier du tourniquet direct
   fIndirectTurnstile = 'IndirectTurnstile';   /// Fichier du tourniquet indirect
   fOutside = 'Outside';                       /// Fichier du dehors
@@ -242,7 +252,7 @@ procedure TDirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
 begin
   inherited;
-  Master.Map.Map[Pos] := Master.ScrewsMaster[cIndirectTurnstile];
+  Player.Map[Pos] := Master.Screw[idIndirectTurnstile];
 end;
 
 /////////////////////////////////
@@ -296,7 +306,7 @@ procedure TIndirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
 begin
   inherited;
-  Master.Map.Map[Pos] := Master.ScrewsMaster[cDirectTurnstile];
+  Player.Map[Pos] := Master.Screw[idDirectTurnstile];
 end;
 
 ///////////////////////

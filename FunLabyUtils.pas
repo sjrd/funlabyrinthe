@@ -10,11 +10,13 @@ interface
 
 uses
   Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, ScUtils,
-  Forms, Dialogs, StdCtrls, Math, ScLists;
+  Forms, Dialogs, StdCtrls, Math, ScLists, ScStrUtils;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
+  sDefaultScrewName = '%1:s sur %0:s';
   sWhichObject = 'Quel objet voulez-vous utiliser ?';
+  sComponentNotFound = 'Le composant d''ID %s n''existe pas';
   sEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
   sCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
 
@@ -34,8 +36,8 @@ type
   /// Pointeur vers T3DPoint
   P3DPoint = ^T3DPoint;
 
-  /// Type représentant le code d'une case
-  TScrewCode = type Byte;
+  /// Générée si un composant recherché n'est pas trouvé
+  EComponentNotFound = class(Exception);
 
   /// Mode d'ouverture d'un fichier FunLabyrinthe
   TFileMode = (fmEdit, fmEditActions, fmPlay);
@@ -184,61 +186,6 @@ type
   end;
 
   {*
-    Classe représentant un joueur
-    TPlayer représente un joueur. Elle possède de nombreuses propriétés et
-    méthodes permettant d'afficher le joueur, de le déplacer, de lui greffer
-    des plug-in, etc.
-  *}
-  TPlayer = class(TVisualComponent)
-  private
-    FPosition : T3DPoint;    /// Position
-    FPosAddr : P3DPoint;     /// Position
-    FDirection : TDirection; /// Direction
-    /// Peintres selon la direction du joueur
-    FDirPainters : array[diNorth..diWest] of TPainter;
-    FColor : TColor;         /// Couleur
-    FPlugins : TObjectList;  /// Liste des plug-in
-    FObjects : TObjectList;  /// Liste des objets
-
-    function GetPluginCount : integer;
-    function GetPlugins(Index : integer) : TPlayerPlugin;
-    function GetObjectCount : integer;
-    function GetObjects(Index : integer) : TPlayerObject;
-
-    property PluginCount : integer read GetPluginCount;
-    property Plugins[index : integer] : TPlayerPlugin read GetPlugins;
-  public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
-    destructor Destroy; override;
-
-    procedure Draw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
-
-    procedure AddPlugin(Plugin : TPlayerPlugin);
-    procedure RemovePlugin(Plugin : TPlayerPlugin);
-
-    function ShowDialog(const Title, Text : string;
-      DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
-      DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
-    function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
-      DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
-      const RadioTitles : array of string; var Selected : integer;
-      OverButtons : boolean = False) : Word;
-
-    function CanYou(Action : integer) : boolean;
-
-    function Move(Dir : TDirection; KeyPressed : boolean;
-      out Redo : boolean) : boolean;
-
-    property Position : P3DPoint read FPosAddr;
-    property Direction : TDirection read FDirection write FDirection;
-    property Color : TColor read FColor write FColor;
-    property ObjectCount : integer read GetObjectCount;
-    property Objects[index : integer] : TPlayerObject read GetObjects;
-  end;
-
-  {*
     Classe de base pour les terrains
     TField est la classe de base pour la création de terrains. Les terrains
     sont la première composante d'une case.
@@ -296,32 +243,12 @@ type
   end;
 
   {*
-    Gère les cases et met en relation celles-ci avec leurs codes respectifs
-    TScrewsMaster gère les différentes cases de FunLabyrinthe, et met en
-    relation les codes des cases avec celles-ci.
-  *}
-  TScrewsMaster = class
-  private
-    FMaster : TMaster;                  /// Maître FunLabyrinthe
-    FScrews : array[33..255] of TScrew; /// Liste des cases par code
-
-    function GetScrews(Code : TScrewCode) : TScrew;
-  public
-    constructor Create(AMaster : TMaster);
-    destructor Destroy; override;
-
-    property Master : TMaster read FMaster;
-    property Screws[Code : TScrewCode] : TScrew read GetScrews; default;
-  end;
-
-  {*
     Représente la carte du jeu
     TMap gère et représente la carte du jeu. Elle offre des propriétés et
     méthodes pour lire et modifier cette carte.
   *}
-  TMap = class
+  TMap = class(TFunLabyComponent)
   private
-    FMaster : TMaster;          /// Maître FunLabyrinthe
     FDimensions : T3DPoint;     /// Dimensions de la carte (en cases)
     FMap : array of TScrew;     /// Cases sur la carte
     FOutside : array of TScrew; /// Cases en-dehors de la carte
@@ -331,11 +258,11 @@ type
     function GetOutside(Floor : integer) : TScrew;
     procedure SetOutside(Floor : integer; Value : TScrew);
   public
-    constructor Create(AMaster : TMaster; ADimensions : T3DPoint);
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      ADimensions : T3DPoint);
 
     function InMap(Position : T3DPoint) : boolean;
 
-    property Master : TMaster read FMaster;
     property Dimensions : T3DPoint read FDimensions;
     property Map[Position : T3DPoint] : TScrew
       read GetMap write SetMap; default;
@@ -344,25 +271,124 @@ type
   end;
 
   {*
+    Classe représentant un joueur
+    TPlayer représente un joueur. Elle possède de nombreuses propriétés et
+    méthodes permettant d'afficher le joueur, de le déplacer, de lui greffer
+    des plug-in, etc.
+  *}
+  TPlayer = class(TVisualComponent)
+  private
+    FMap : TMap;             /// Carte
+    FPosition : T3DPoint;    /// Position
+    FPosAddr : P3DPoint;     /// Position
+    FDirection : TDirection; /// Direction
+    /// Peintres selon la direction du joueur
+    FDirPainters : array[diNorth..diWest] of TPainter;
+    FColor : TColor;         /// Couleur
+    FPlugins : TObjectList;  /// Liste des plug-in
+    FObjects : TObjectList;  /// Liste des objets
+
+    function GetPluginCount : integer;
+    function GetPlugins(Index : integer) : TPlayerPlugin;
+    function GetObjectCount : integer;
+    function GetObjects(Index : integer) : TPlayerObject;
+
+    property PluginCount : integer read GetPluginCount;
+    property Plugins[index : integer] : TPlayerPlugin read GetPlugins;
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; AMap : TMap; APosition : T3DPoint);
+    destructor Destroy; override;
+
+    procedure Draw(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); override;
+
+    procedure AddPlugin(Plugin : TPlayerPlugin);
+    procedure RemovePlugin(Plugin : TPlayerPlugin);
+
+    function ShowDialog(const Title, Text : string;
+      DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
+      DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
+    function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
+      DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
+      const RadioTitles : array of string; var Selected : integer;
+      OverButtons : boolean = False) : Word;
+
+    function CanYou(Action : integer) : boolean;
+
+    function Move(Dir : TDirection; KeyPressed : boolean;
+      out Redo : boolean) : boolean;
+
+    property Map : TMap read FMap;
+    property Position : P3DPoint read FPosAddr;
+    property Direction : TDirection read FDirection write FDirection;
+    property Color : TColor read FColor write FColor;
+    property ObjectCount : integer read GetObjectCount;
+    property Objects[index : integer] : TPlayerObject read GetObjects;
+  end;
+
+  {*
     Maître FunLabyrinthe
-    TMaster crée et gère les différentes composantes de FunLabyrinthe.
+    TMaster gère les différents composants de FunLabyrinthe.
   *}
   TMaster = class
   private
     FImagesMaster : TImagesMaster; /// Maître d'images
-    FScrewsMaster : TScrewsMaster; /// Maître des cases
-    FMap : TMap;                   /// Carte
+    FComponents : TStrings;        /// Table de hashage ID -> composant
+    FPlugins : TObjectList;        /// Liste des plug-in
+    FFields : TObjectList;         /// Liste des terrains
+    FEffects : TObjectList;        /// Liste des effets
+    FScrews : TObjectList;         /// Liste des cases
+    FMaps : TObjectList;           /// Liste des cartes
     FPlayers : TObjectList;        /// Liste des joueurs
 
+    function GetComponent(const ID : TComponentID) : TFunLabyComponent;
+    function GetPlugin   (const ID : TComponentID) : TPlayerPlugin;
+    function GetField    (const ID : TComponentID) : TField;
+    function GetEffect   (const ID : TComponentID) : TEffect;
+    function GetScrew    (const ID : TComponentID) : TScrew;
+    function GetMap      (const ID : TComponentID) : TMap;
+    function GetPlayer   (const ID : TComponentID) : TPlayer;
+
+    function GetPluginCount : integer;
+    function GetPlugins(Index : integer) : TPlayerPlugin;
+    function GetFieldCount : integer;
+    function GetFields(Index : integer) : TField;
+    function GetEffectCount : integer;
+    function GetEffects(Index : integer) : TEffect;
+    function GetScrewCount : integer;
+    function GetScrews(Index : integer) : TScrew;
+    function GetMapCount : integer;
+    function GetMaps(Index : integer) : TMap;
     function GetPlayerCount : integer;
     function GetPlayers(Index : integer) : TPlayer;
   public
-    constructor Create(ADimensions : T3DPoint);
+    constructor Create;
     destructor Destroy; override;
 
+    procedure AddComponent(Component : TFunLabyComponent);
+
     property ImagesMaster : TImagesMaster read FImagesMaster;
-    property ScrewsMaster : TScrewsMaster read FScrewsMaster;
-    property Map : TMap read FMap;
+
+    property Component[const ID : TComponentID] : TFunLabyComponent
+      read GetComponent;
+    property Plugin   [const ID : TComponentID] : TPlayerPlugin read GetPlugin;
+    property Field    [const ID : TComponentID] : TField        read GetField;
+    property Effect   [const ID : TComponentID] : TEffect       read GetEffect;
+    property Screw    [const ID : TComponentID] : TScrew        read GetScrew;
+    property Map      [const ID : TComponentID] : TMap          read GetMap;
+    property Player   [const ID : TComponentID] : TPlayer       read GetPlayer;
+
+    property PluginCount : integer read GetPluginCount;
+    property Plugins[index : integer] : TPlayerPlugin read GetPlugins;
+    property FieldCount : integer read GetFieldCount;
+    property Fields[index : integer] : TField read GetFields;
+    property EffectCount : integer read GetEffectCount;
+    property Effects[index : integer] : TEffect read GetEffects;
+    property ScrewCount : integer read GetScrewCount;
+    property Screws[index : integer] : TScrew read GetScrews;
+    property MapCount : integer read GetMapCount;
+    property Maps[index : integer] : TMap read GetMaps;
     property PlayerCount : integer read GetPlayerCount;
     property Players[index : integer] : TPlayer read GetPlayers;
   end;
@@ -387,7 +413,7 @@ type
     FMaster : TMaster;      /// Maître FunLabyrinthe
 
     procedure NameFromFileName;
-    procedure Load(FileContents : TStrings);
+    procedure Load(FileContents : TStrings = nil);
     procedure TestOpeningValidity;
   public
     constructor Create(const AFileName : TFileName; AMode : TFileMode);
@@ -886,22 +912,286 @@ procedure TPlayerObject.UseFor(Action : integer);
 begin
 end;
 
+/////////////////////
+/// Classe TField ///
+/////////////////////
+
+{*
+  Crée une instance de TField
+  @param AMaster           Maître FunLabyrinthe
+  @param AID               ID du terrain
+  @param AName             Nom du terrain
+  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
+*}
+constructor TField.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; ADelegateDrawTo : TField = nil);
+begin
+  inherited Create(AMaster, AID, AName);
+  FDelegateDrawTo := ADelegateDrawTo;
+
+  { On dérive tout appel à Draw vers DerivedDraw, en modifiant directement la
+    VMT de la classe. On prend soin de conserver l'ancienne valeur, pour
+    pouvoir tout de même l'appeler si FDelegateDrawTo vaut nil.
+    Remarque : Comme toutes les instances d'une même classe partagent la même
+    VMT, il faut éviter le cas où ce remplacement a déjà eu lieu, tout
+    simplement en testant si Draw vaut déjà DerivedDraw.                       }
+  {$IFNDEF DCTD} // évite le bug de DelphiCodeToDoc avec l'assembleur
+  asm
+    mov edx, [eax] // récupération de la VMT
+
+    // test du cas où le remplacement a déjà été fait
+    mov ecx, dword ptr TField.DerivedDraw
+    cmp dword ptr [edx + VMTOFFSET TVisualComponent.Draw], ecx
+    je  @@AlreadyDone
+
+    // sauvegarde du pointeur vers Draw dans OriginalDraw
+    mov ecx, dword ptr [edx + VMTOFFSET TField.Draw]
+    mov dword ptr [edx + VMTOFFSET TField.OriginalDraw], ecx
+    // remplacement par DerivedDraw
+    mov ecx, dword ptr TField.DerivedDraw
+    mov dword ptr [edx], ecx
+
+    @@AlreadyDone :
+  end;
+  {$ENDIF}
+end;
+
+{*
+  Dessine le terrain sur le canevas indiqué, ou délègue le dessin
+  Grâce à la redirection mise en place dans le constructeur, tout appel à Draw
+  se résoud en l'appel de DerivedDraw. On peut alors tester s'il faut déléguer
+  l'affichage ou appeler la méthode Draw originale.
+  @param Canvas   Canevas sur lequel dessiner le terrain
+  @param X        Coordonnée X du point à partir duquel dessiner le terrain
+  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+*}
+procedure TField.DerivedDraw(Canvas : TCanvas; X : integer = 0;
+  Y : integer = 0);
+begin
+  if FDelegateDrawTo = nil then
+    OriginalDraw(Canvas, X, Y)
+  else
+    FDelegateDrawTo.DerivedDraw(Canvas, X, Y);
+end;
+
+{*
+  Exécuté lorsque le joueur tente de venir sur la case
+  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
+  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
+  la méthode Entered de la case ne soit exécutée, il faut positionner
+  AbortEntered à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de provenance
+  @param Pos            Position de la case
+  @param Cancel         À positionner à True pour annuler le déplacement
+  @param AbortEntered   À positionner à True pour empêcher le Entered
+*}
+procedure TField.Entering(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; Src, Pos : T3DPoint;
+  var Cancel, AbortEntered : boolean);
+begin
+end;
+
+{*
+  Exécuté lorsque le joueur tente de sortir de la case
+  Exiting est exécuté lorsque le joueur tente de sortir de la case. Pour
+  annuler le déplacement, il faut positionner Cancel à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Pos            Position de la case
+  @param Dest           Case de destination
+  @param Cancel         À positionner à True pour annuler le déplacement
+*}
+procedure TField.Exiting(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; Pos, Dest : T3DPoint; var Cancel : boolean);
+begin
+end;
+
+//////////////////////
+/// Classe TEffect ///
+//////////////////////
+
+{*
+  Exécuté lorsque le joueur a poussé sur la case
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+*}
+procedure TEffect.Pushed(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint);
+begin
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TEffect.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+begin
+end;
+
+{*
+  Exécuté lorsque le joueur est sorti de la case
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param Dest         Case de destination
+*}
+procedure TEffect.Exited(Player : TPlayer; KeyPressed : boolean;
+  Pos, Dest : T3DPoint);
+begin
+end;
+
+/////////////////////
+/// Classe TScrew ///
+/////////////////////
+
+{*
+  Crée une instance de TScrew
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de la case
+  @param AName     Nom de la case
+  @param AField    Terrain
+  @param AEffect   Effet
+*}
+constructor TScrew.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; AField : TField; AEffect : TEffect);
+begin
+  inherited Create(AMaster, AID, AName);
+  FField := AField;
+  FEffect := AEffect;
+end;
+
+///////////////////
+/// Classe TMap ///
+///////////////////
+
+{*
+  Crée une instance de TMap
+  @param AMaster       Maître FunLabyrinthe
+  @param ADimensions   Dimensions de la carte (en cases)
+*}
+constructor TMap.Create(AMaster : TMaster; const AID : TComponentID;
+  ADimensions : T3DPoint);
+var X, Y, Z : integer;
+begin
+  inherited Create(AMaster, AID);
+  FDimensions := ADimensions;
+
+  SetLength(FMap, FDimensions.X * FDimensions.Y * FDimensions.Z);
+  for X := 0 to FDimensions.X-1 do
+    for Y := 0 to FDimensions.Y-1 do
+      for Z := 0 to FDimensions.Z-1 do
+        FMap[Z*FDimensions.X*FDimensions.Y + Y*FDimensions.X + X] := nil;
+
+  SetLength(FOutside, FDimensions.Z);
+  for Z := 0 to FDimensions.Z-1 do
+    FOutside[Z] := nil;
+end;
+
+{*
+  Tableau des cases indexé par leur position sur la carte
+  @param Position   Position sur la carte
+  @return La case à la position spécifiée
+*}
+function TMap.GetMap(Position : T3DPoint) : TScrew;
+var Index : integer;
+begin
+  if InMap(Position) then
+  begin
+    Index := Position.Z;
+    Index := Index * FDimensions.Y;
+    inc(Index, Position.Y);
+    Index := Index * FDimensions.X;
+    inc(Index, Position.X);
+
+    Result := FMap[Index];
+  end else Result := Outside[Position.Z];
+end;
+
+{*
+  Modifie le tableau des cases indexé par leur position sur la carte
+  @param Position   Position sur la carte
+  @param Value      Nouvelle case
+*}
+procedure TMap.SetMap(Position : T3DPoint; Value : TScrew);
+var Index : integer;
+begin
+  if not InMap(Position) then exit;
+
+  Index := Position.Z;
+  Index := Index * FDimensions.Y;
+  inc(Index, Position.Y);
+  Index := Index * FDimensions.X;
+  inc(Index, Position.X);
+
+  FMap[Index] := Value;
+end;
+
+{*
+  Tableau des cases hors de la carte indexé par étage
+  @param Floor   Étage
+  @return La case hors de la carte à l'étage spécifié
+*}
+function TMap.GetOutside(Floor : integer) : TScrew;
+begin
+  if Floor < 0 then Floor := 0 else
+  if Floor >= FDimensions.Z then Floor := FDimensions.Z-1;
+  Result := FOutside[Floor];
+end;
+
+{*
+  Modifie le tableau des cases hors de la carte indexé par étage
+  @param Floor   Étage
+  @param Value   Nouvelle case
+*}
+procedure TMap.SetOutside(Floor : integer; Value : TScrew);
+begin
+  if (Floor >= 0) and (Floor < FDimensions.Z) then
+    FOutside[Floor] := Value;
+end;
+
+{*
+  Teste si une coordonnée est à l'intérieur de la carte
+  @param Position   Coordonnée à tester
+  @return True si la coordonnée est dans la carte, False sinon
+*}
+function TMap.InMap(Position : T3DPoint) : boolean;
+begin
+  Result :=
+    (Position.X >= 0) and (Position.X < FDimensions.X) and
+    (Position.Y >= 0) and (Position.Y < FDimensions.Y) and
+    (Position.Z >= 0) and (Position.Z < FDimensions.Z);
+end;
+
 //////////////////////
 /// Classe TPlayer ///
 //////////////////////
 
 {*
   Crée une instance de TPlayer
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du joueur
-  @param AName     Nom du joueur
+  @param AMaster     Maître FunLabyrinthe
+  @param AID         ID du joueur
+  @param AName       Nom du joueur
+  @param AMap        Carte de départ
+  @param APosition   Position de départ
 *}
 constructor TPlayer.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+  const AName : string; AMap : TMap; APosition : T3DPoint);
 var Dir : TDirection;
 begin
   inherited Create(AMaster, AID, AName);
-  FPosition := Point3D(0, 0, 0);
+  FMap := AMap;
+  FPosition := APosition;
   FPosAddr := @FPosition;
   FDirection := diNone;
   for Dir in [diNorth..diWest] do
@@ -1224,20 +1514,20 @@ begin
   // Premier passage : le déplacement est-il permis ?
   try
     // Case source : exiting
-    Master.Map[Src].Field.Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
+    Map[Src].Field.Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
     // Plug-in : moving
     for I := 0 to PluginCount-1 do
       Plugins[I].Moving(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
     // Case destination : entering
-    Master.Map[Dest].Field.Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel,
+    Map[Dest].Field.Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel,
       AbortEntered);
     if Cancel then exit;
   finally
     // Case destination : pushed (seulement si on a annulé)
     if Cancel then
-      Master.Map[Dest].Effect.Pushed(Self, KeyPressed, Src, Dest);
+      Map[Dest].Effect.Pushed(Self, KeyPressed, Src, Dest);
   end;
 
   // Déplacement du joueur (à moins qu'il ait été déplacé par ailleurs)
@@ -1249,313 +1539,14 @@ begin
   // Second passage : le déplacement a été fait
   begin
     // Case source : exited
-    Master.Map[Src].Effect.Exited(Self, KeyPressed, Src, Dest);
+    Map[Src].Effect.Exited(Self, KeyPressed, Src, Dest);
     // Plug-in : moved
     for I := 0 to PluginCount-1 do
       Plugins[I].Moved(Self, KeyPressed, Src, Dest);
     // Case destination : entered (sauf si AbortEntered a été positionné à True)
     if not AbortEntered then
-      Master.Map[Dest].Effect.Entered(Self, KeyPressed, Src, Dest, Redo);
+      Map[Dest].Effect.Entered(Self, KeyPressed, Src, Dest, Redo);
   end;
-end;
-
-/////////////////////
-/// Classe TField ///
-/////////////////////
-
-{*
-  Crée une instance de TField
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
-*}
-constructor TField.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ADelegateDrawTo : TField = nil);
-begin
-  inherited Create(AMaster, AID, AName);
-  FDelegateDrawTo := ADelegateDrawTo;
-
-  { On dérive tout appel à Draw vers DerivedDraw, en modifiant directement la
-    VMT de la classe. On prend soin de conserver l'ancienne valeur, pour
-    pouvoir tout de même l'appeler si FDelegateDrawTo vaut nil.
-    Remarque : Comme toutes les instances d'une même classe partagent la même
-    VMT, il faut éviter le cas où ce remplacement a déjà eu lieu, tout
-    simplement en testant si Draw vaut déjà DerivedDraw.                       }
-  {$IFNDEF DCTD} // évite le bug de DelphiCodeToDoc avec l'assembleur
-  asm
-    mov edx, [eax] // récupération de la VMT
-
-    // test du cas où le remplacement a déjà été fait
-    mov ecx, dword ptr TField.DerivedDraw
-    cmp dword ptr [edx + VMTOFFSET TVisualComponent.Draw], ecx
-    je  @@AlreadyDone
-
-    // sauvegarde du pointeur vers Draw dans OriginalDraw
-    mov ecx, dword ptr [edx + VMTOFFSET TField.Draw]
-    mov dword ptr [edx + VMTOFFSET TField.OriginalDraw], ecx
-    // remplacement par DerivedDraw
-    mov ecx, dword ptr TField.DerivedDraw
-    mov dword ptr [edx], ecx
-
-    @@AlreadyDone :
-  end;
-  {$ENDIF}
-end;
-
-{*
-  Dessine le terrain sur le canevas indiqué, ou délègue le dessin
-  Grâce à la redirection mise en place dans le constructeur, tout appel à Draw
-  se résoud en l'appel de DerivedDraw. On peut alors tester s'il faut déléguer
-  l'affichage ou appeler la méthode Draw originale.
-  @param Canvas   Canevas sur lequel dessiner le terrain
-  @param X        Coordonnée X du point à partir duquel dessiner le terrain
-  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
-*}
-procedure TField.DerivedDraw(Canvas : TCanvas; X : integer = 0;
-  Y : integer = 0);
-begin
-  if FDelegateDrawTo = nil then
-    OriginalDraw(Canvas, X, Y)
-  else
-    FDelegateDrawTo.DerivedDraw(Canvas, X, Y);
-end;
-
-{*
-  Exécuté lorsque le joueur tente de venir sur la case
-  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
-*}
-procedure TField.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
-begin
-end;
-
-{*
-  Exécuté lorsque le joueur tente de sortir de la case
-  Exiting est exécuté lorsque le joueur tente de sortir de la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Pos            Position de la case
-  @param Dest           Case de destination
-  @param Cancel         À positionner à True pour annuler le déplacement
-*}
-procedure TField.Exiting(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Pos, Dest : T3DPoint; var Cancel : boolean);
-begin
-end;
-
-//////////////////////
-/// Classe TEffect ///
-//////////////////////
-
-{*
-  Exécuté lorsque le joueur a poussé sur la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
-  @param Pos          Position de la case
-*}
-procedure TEffect.Pushed(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint);
-begin
-end;
-
-{*
-  Exécuté lorsque le joueur est arrivé sur la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
-*}
-procedure TEffect.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
-begin
-end;
-
-{*
-  Exécuté lorsque le joueur est sorti de la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
-  @param Dest         Case de destination
-*}
-procedure TEffect.Exited(Player : TPlayer; KeyPressed : boolean;
-  Pos, Dest : T3DPoint);
-begin
-end;
-
-/////////////////////
-/// Classe TScrew ///
-/////////////////////
-
-{*
-  Crée une instance de TScrew
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de la case
-  @param AName     Nom de la case
-  @param AField    Terrain
-  @param AEffect   Effet
-*}
-constructor TScrew.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; AField : TField; AEffect : TEffect);
-begin
-  inherited Create(AMaster, AID, AName);
-  FField := AField;
-  FEffect := AEffect;
-end;
-
-////////////////////////////
-/// Classe TScrewsMaster ///
-////////////////////////////
-
-{*
-  Crée une instance de TScrewsMaster
-  @param AMaster   Maître FunLabyrinthe
-*}
-constructor TScrewsMaster.Create(AMaster : TMaster);
-var Code : TScrewCode;
-begin
-  inherited Create;
-  FMaster := AMaster;
-  for Code := 33 to 255 do
-    FScrews[Code] := nil;
-end;
-
-{*
-  Détruit l'instance
-*}
-destructor TScrewsMaster.Destroy;
-var Code : TScrewCode;
-begin
-  for Code := 33 to 255 do if Assigned(FScrews[Code]) then
-    FScrews[Code].Free;
-  inherited;
-end;
-
-{*
-  Tableau des cases indexé par leurs codes respectifs
-  @param Code   Code de la case
-  @return La case dont le code a été spécifié
-*}
-function TScrewsMaster.GetScrews(Code : TScrewCode) : TScrew;
-begin
-  Result := FScrews[Code];
-end;
-
-///////////////////
-/// Classe TMap ///
-///////////////////
-
-{*
-  Crée une instance de TMap
-  @param AMaster       Maître FunLabyrinthe
-  @param ADimensions   Dimensions de la carte (en cases)
-*}
-constructor TMap.Create(AMaster : TMaster; ADimensions : T3DPoint);
-var X, Y, Z : integer;
-begin
-  inherited Create;
-  FMaster := AMaster;
-  FDimensions := ADimensions;
-
-  SetLength(FMap, FDimensions.X * FDimensions.Y * FDimensions.Z);
-  for X := 0 to FDimensions.X-1 do
-    for Y := 0 to FDimensions.Y-1 do
-      for Z := 0 to FDimensions.Z-1 do
-        FMap[Z*FDimensions.X*FDimensions.Y + Y*FDimensions.X + X] := nil;
-
-  SetLength(FOutside, FDimensions.Z);
-  for Z := 0 to FDimensions.Z-1 do
-    FOutside[Z] := nil;
-end;
-
-{*
-  Tableau des cases indexé par leur position sur la carte
-  @param Position   Position sur la carte
-  @return La case à la position spécifiée
-*}
-function TMap.GetMap(Position : T3DPoint) : TScrew;
-var Index : integer;
-begin
-  if InMap(Position) then
-  begin
-    Index := Position.Z;
-    Index := Index * FDimensions.Y;
-    inc(Index, Position.Y);
-    Index := Index * FDimensions.X;
-    inc(Index, Position.X);
-
-    Result := FMap[Index];
-  end else Result := Outside[Position.Z];
-end;
-
-{*
-  Modifie le tableau des cases indexé par leur position sur la carte
-  @param Position   Position sur la carte
-  @param Value      Nouvelle case
-*}
-procedure TMap.SetMap(Position : T3DPoint; Value : TScrew);
-var Index : integer;
-begin
-  if not InMap(Position) then exit;
-
-  Index := Position.Z;
-  Index := Index * FDimensions.Y;
-  inc(Index, Position.Y);
-  Index := Index * FDimensions.X;
-  inc(Index, Position.X);
-
-  FMap[Index] := Value;
-end;
-
-{*
-  Tableau des cases hors de la carte indexé par étage
-  @param Floor   Étage
-  @return La case hors de la carte à l'étage spécifié
-*}
-function TMap.GetOutside(Floor : integer) : TScrew;
-begin
-  if Floor < 0 then Floor := 0 else
-  if Floor >= FDimensions.Z then Floor := FDimensions.Z-1;
-  Result := FOutside[Floor];
-end;
-
-{*
-  Modifie le tableau des cases hors de la carte indexé par étage
-  @param Floor   Étage
-  @param Value   Nouvelle case
-*}
-procedure TMap.SetOutside(Floor : integer; Value : TScrew);
-begin
-  if (Floor >= 0) and (Floor < FDimensions.Z) then
-    FOutside[Floor] := Value;
-end;
-
-{*
-  Teste si une coordonnée est à l'intérieur de la carte
-  @param Position   Coordonnée à tester
-  @return True si la coordonnée est dans la carte, False sinon
-*}
-function TMap.InMap(Position : T3DPoint) : boolean;
-begin
-  Result :=
-    (Position.X >= 0) and (Position.X < FDimensions.X) and
-    (Position.Y >= 0) and (Position.Y < FDimensions.Y) and
-    (Position.Z >= 0) and (Position.Z < FDimensions.Z);
 end;
 
 //////////////////////
@@ -1564,14 +1555,23 @@ end;
 
 {*
   Crée une instance de TMaster
-  @param ADimensions   Dimensions de la carte (en cases)
 *}
-constructor TMaster.Create(ADimensions : T3DPoint);
+constructor TMaster.Create;
 begin
   inherited Create;
   FImagesMaster := TImagesMaster.Create;
-  FScrewsMaster := TScrewsMaster.Create(Self);
-  FMap := TMap.Create(Self, ADimensions);
+  FComponents := THashedStringList.Create;
+  with TStringList(FComponents) do
+  begin
+    CaseSensitive := True;
+    Duplicates := dupError;
+  end;
+
+  FPlugins := TObjectList.Create;
+  FFields  := TObjectList.Create;
+  FEffects := TObjectList.Create;
+  FScrews  := TObjectList.Create;
+  FMaps    := TObjectList.Create;
   FPlayers := TObjectList.Create;
 end;
 
@@ -1581,14 +1581,216 @@ end;
 destructor TMaster.Destroy;
 begin
   FPlayers.Free;
-  FMap.Free;
-  FScrewsMaster.Free;
+  FMaps.Free;
+  FScrews.Free;
+  FEffects.Free;
+  FFields.Free;
+  FPlugins.Free;
+
+  FComponents.Free;
   FImagesMaster.Free;
   inherited;
 end;
 
 {*
-  Nombre de joueurs dans la partie
+  Tableau des composants indexé par leur ID
+  @param ID   ID du composant à trouver
+  @return Le composant dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucun composant ne correspond à l'ID spécifié
+*}
+function TMaster.GetComponent(const ID : TComponentID) : TFunLabyComponent;
+var Index : integer;
+begin
+  Index := FComponents.IndexOf(ID);
+  if Index >= 0 then
+    Result := TFunLabyComponent(FComponents.Objects[Index])
+  else
+    raise EComponentNotFound.CreateFmt(sComponentNotFound, [ID]);
+end;
+
+{*
+  Tableau des plug-in indexé par leur ID
+  @param ID   ID du plug-in à trouver
+  @return Le plug-in dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucun plug-in ne correspond à l'ID spécifié
+*}
+function TMaster.GetPlugin(const ID : TComponentID) : TPlayerPlugin;
+begin
+  Result := Component[ID] as TPlayerPlugin;
+end;
+
+{*
+  Tableau des terrains indexé par leur ID
+  @param ID   ID du terrain à trouver
+  @return Le terrain dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucun terrain ne correspond à l'ID spécifié
+*}
+function TMaster.GetField(const ID : TComponentID) : TField;
+begin
+  Result := Component[ID] as TField;
+end;
+
+{*
+  Tableau des effets de case indexé par leur ID
+  @param ID   ID de l'effet à trouver
+  @return L'effet dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucun effet ne correspond à l'ID spécifié
+*}
+function TMaster.GetEffect(const ID : TComponentID) : TEffect;
+begin
+  Result := Component[ID] as TEffect;
+end;
+
+{*
+  Tableau des cases indexé par leur ID
+  Si la case n'a pas pu être trouvée, GetScrew essaye de trouver les terrain
+  et effet correspondant à son ID et de créer la case automatiquement
+  @param ID   ID de la case à trouver
+  @return La case dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucune case ne correspond à l'ID spécifié
+*}
+function TMaster.GetScrew(const ID : TComponentID) : TScrew;
+var AField : TField;
+    AEffect : TEffect;
+begin
+  try
+    Result := Component[ID] as TScrew;
+  except
+    on Error : EComponentNotFound do
+    begin
+      Result := nil;
+      try
+        AField := Field[GetFirstToken(ID, '-')];
+        AEffect := Effect[GetLastToken(ID, '-')];
+        Result := TScrew.Create(Self, ID,
+          Format(sDefaultScrewName, [AField.Name, AEffect.Name]),
+          AField, AEffect);
+      except
+      end;
+      if Result = nil then raise;
+    end;
+  end;
+end;
+
+{*
+  Tableau des cartes indexé par leur ID
+  @param ID   ID de la carte à trouver
+  @return La carte dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucune carte ne correspond à l'ID spécifié
+*}
+function TMaster.GetMap(const ID : TComponentID) : TMap;
+begin
+  Result := Component[ID] as TMap;
+end;
+
+{*
+  Tableau des joueurs indexé par leur ID
+  @param ID   ID du joueur à trouver
+  @return Le joueur dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucun joueur ne correspond à l'ID spécifié
+*}
+function TMaster.GetPlayer(const ID : TComponentID) : TPlayer;
+begin
+  Result := Component[ID] as TPlayer;
+end;
+
+{*
+  Nombre de plug-in
+  @return Nombre de plug-in
+*}
+function TMaster.GetPluginCount : integer;
+begin
+  Result := FPlugins.Count;
+end;
+
+{*
+  Tableau zero-based des plug-in
+  @param Index   Index du plug-in
+  @return Le plug-in à la position spécifiée
+*}
+function TMaster.GetPlugins(Index : integer) : TPlayerPlugin;
+begin
+  Result := TPlayerPlugin(FPlugins[Index]);
+end;
+
+{*
+  Nombre de terrains
+  @return Nombre de terrains
+*}
+function TMaster.GetFieldCount : integer;
+begin
+  Result := FFields.Count;
+end;
+
+{*
+  Tableau zero-based des terrains
+  @param Index   Index du terrain
+  @return Le terrain à la position spécifiée
+*}
+function TMaster.GetFields(Index : integer) : TField;
+begin
+  Result := TField(FFields[Index]);
+end;
+
+{*
+  Nombre d'effets
+  @return Nombre d'effets
+*}
+function TMaster.GetEffectCount : integer;
+begin
+  Result := FEffects.Count;
+end;
+
+{*
+  Tableau zero-based des effets
+  @param Index   Index de l'effet
+  @return L'effet à la position spécifiée
+*}
+function TMaster.GetEffects(Index : integer) : TEffect;
+begin
+  Result := TEffect(FEffects[Index]);
+end;
+
+{*
+  Nombre de cases
+  @return Nombre de cases
+*}
+function TMaster.GetScrewCount : integer;
+begin
+  Result := FScrews.Count;
+end;
+
+{*
+  Tableau zero-based des cases
+  @param Index   Index de la case
+  @return La case à la position spécifiée
+*}
+function TMaster.GetScrews(Index : integer) : TScrew;
+begin
+  Result := TScrew(FScrews[Index]);
+end;
+
+{*
+  Nombre de cartes
+  @return Nombre de cartes
+*}
+function TMaster.GetMapCount : integer;
+begin
+  Result := FMaps.Count;
+end;
+
+{*
+  Tableau zero-based des cartes
+  @param Index   Index de la carte
+  @return La carte à la position spécifiée
+*}
+function TMaster.GetMaps(Index : integer) : TMap;
+begin
+  Result := TMap(FMaps[Index]);
+end;
+
+{*
+  Nombre de joueurs
   @return Nombre de joueurs
 *}
 function TMaster.GetPlayerCount : integer;
@@ -1597,13 +1799,29 @@ begin
 end;
 
 {*
-  Tableau zero-based des joueurs dans la partie
+  Tableau zero-based des joueurs
   @param Index   Index du joueur
   @return Le joueur à la position spécifiée
 *}
 function TMaster.GetPlayers(Index : integer) : TPlayer;
 begin
   Result := TPlayer(FPlayers[Index]);
+end;
+
+{*
+  Ajoute un composant
+  @param Component   Le composant à ajouter
+*}
+procedure TMaster.AddComponent(Component : TFunLabyComponent);
+begin
+  FComponents.AddObject(Component.ID, Component);
+  if Component is TPlayerPlugin then FPlugins.Add(Component) else
+  if Component is TField        then FFields .Add(Component) else
+  if Component is TEffect       then FEffects.Add(Component) else
+  if Component is TScrew        then FScrews .Add(Component) else
+  if Component is TMap          then FMaps   .Add(Component) else
+  if Component is TPlayer       then FPlayers.Add(Component) else
+  assert(False);
 end;
 
 ///////////////////////////
@@ -1616,9 +1834,6 @@ end;
   @param AMode       Mode sous lequel ouvrir le fichier
 *}
 constructor TFunLabyFile.Create(const AFileName : TFileName; AMode : TFileMode);
-var FileContents : TStrings;
-    Dimensions : T3DPoint;
-    SecBegin, SecEnd : integer;
 begin
   inherited Create;
   FFileName := AFileName;
@@ -1629,35 +1844,13 @@ begin
   FAllowEdit := True;
   FIsSaveguard := False;
 
-  FileContents := TStringList.Create;
+  FMaster := TMaster.Create;
   try
-    FileContents.LoadFromFile(FFileName);
-
-    // Lecture des dimensions de la carte
-    Dimensions := Point3D(1, 1, 1);
-    SecBegin := FileContents.IndexOf(secDimensions)+1;
-    if SecBegin > 0 then
-    begin
-      SecEnd := StringsOps.FindAtPos(FileContents, '[', 1, SecBegin)-1;
-
-      LoadInt(FileContents, SecBegin, SecEnd, keyColumns, Dimensions.X);
-      LoadInt(FileContents, SecBegin, SecEnd, keyRows,    Dimensions.Y);
-      LoadInt(FileContents, SecBegin, SecEnd, keyFloors,  Dimensions.Z);
-    end;
-    Dimensions.X := Dimensions.X * DefaultZoneSize;
-    Dimensions.Y := Dimensions.Y * DefaultZoneSize;
-
-    // Création du maître FunLabyrinthe, chargement, et test de validité
-    FMaster := TMaster.Create(Dimensions);
-    try
-      Load(FileContents);
-      TestOpeningValidity;
-    except
-      FMaster.Free;
-      raise;
-    end;
-  finally
-    FileContents.Free;
+    Load;
+    TestOpeningValidity;
+  except
+    FMaster.Free;
+    raise;
   end;
 end;
 
@@ -1668,7 +1861,6 @@ end;
 *}
 constructor TFunLabyFile.CreateNew(Dimensions : T3DPoint;
   FileContents : TStrings = nil);
-var OwnFileContents : boolean;
 begin
   inherited Create;
   FFileName := '';
@@ -1679,28 +1871,13 @@ begin
   FAllowEdit := True;
   FIsSaveguard := False;
 
-  Dimensions.X := Dimensions.X * DefaultZoneSize;
-  Dimensions.Y := Dimensions.Y * DefaultZoneSize;
-  OwnFileContents := FileContents = nil;
-  if OwnFileContents then
-  begin
-    FileContents := TStringList.Create;
-    GenerateDefaultFileContents(Dimensions, FileContents);
-  end;
-
+  FMaster := TMaster.Create;
   try
-    // Création du maître FunLabyrinthe, chargement, et test de validité
-    FMaster := TMaster.Create(Dimensions);
-    try
-      Load(FileContents);
-      TestOpeningValidity;
-    except
-      FMaster.Free;
-      raise;
-    end;
-  finally
-    if OwnFileContents then
-      FileContents.Free;
+    Load(FileContents);
+    TestOpeningValidity;
+  except
+    FMaster.Free;
+    raise;
   end;
 end;
 
@@ -1730,7 +1907,7 @@ end;
   Charge le contenu du fichier dans les classes
   @param FileContents   Contenu du fichier
 *}
-procedure TFunLabyFile.Load(FileContents : TStrings);
+procedure TFunLabyFile.Load(FileContents : TStrings = nil);
 begin
   { TODO 2 : Charger le fichier }
 end;
