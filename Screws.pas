@@ -242,7 +242,7 @@ procedure TDirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
 begin
   inherited;
-  Master.Map.CodeMap[Pos] := cIndirectTurnstile;
+  Master.Map.Map[Pos] := Master.ScrewsMaster[cIndirectTurnstile];
 end;
 
 /////////////////////////////////
@@ -296,7 +296,7 @@ procedure TIndirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
 begin
   inherited;
-  Master.Map.CodeMap[Pos] := cDirectTurnstile;
+  Master.Map.Map[Pos] := Master.ScrewsMaster[cDirectTurnstile];
 end;
 
 ///////////////////////

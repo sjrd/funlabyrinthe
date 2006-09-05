@@ -321,14 +321,15 @@ type
   *}
   TMap = class
   private
-    FMaster : TMaster;              /// Maître FunLabyrinthe
-    FDimensions : T3DPoint;         /// Dimensions de la carte (en cases)
-    FMap : array of TScrewCode;     /// Codes des cases sur la carte
-    FOutside : array of TScrewCode; /// Codes des cases en-dehors de la carte
+    FMaster : TMaster;          /// Maître FunLabyrinthe
+    FDimensions : T3DPoint;     /// Dimensions de la carte (en cases)
+    FMap : array of TScrew;     /// Cases sur la carte
+    FOutside : array of TScrew; /// Cases en-dehors de la carte
 
-    function GetCodeMap(Position : T3DPoint) : TScrewCode;
-    procedure SetCodeMap(Position : T3DPoint; Value : TScrewCode);
     function GetMap(Position : T3DPoint) : TScrew;
+    procedure SetMap(Position : T3DPoint; Value : TScrew);
+    function GetOutside(Floor : integer) : TScrew;
+    procedure SetOutside(Floor : integer; Value : TScrew);
   public
     constructor Create(AMaster : TMaster; ADimensions : T3DPoint);
 
@@ -336,9 +337,10 @@ type
 
     property Master : TMaster read FMaster;
     property Dimensions : T3DPoint read FDimensions;
-    property CodeMap[Position : T3DPoint] : TScrewCode
-      read GetCodeMap write SetCodeMap;
-    property Map[Position : T3DPoint] : TScrew read GetMap; default;
+    property Map[Position : T3DPoint] : TScrew
+      read GetMap write SetMap; default;
+    property Outside[Floor : integer] : TScrew
+      read GetOutside write SetOutside;
   end;
 
   {*
@@ -1474,19 +1476,19 @@ begin
   for X := 0 to FDimensions.X-1 do
     for Y := 0 to FDimensions.Y-1 do
       for Z := 0 to FDimensions.Z-1 do
-        FMap[Z*FDimensions.X*FDimensions.Y + Y*FDimensions.X + X] := cGrass;
+        FMap[Z*FDimensions.X*FDimensions.Y + Y*FDimensions.X + X] := nil;
 
   SetLength(FOutside, FDimensions.Z);
   for Z := 0 to FDimensions.Z-1 do
-    FOutside[Z] := cOutside;
+    FOutside[Z] := nil;
 end;
 
 {*
-  Tableau des codes des cases indexés par leur position sur la carte
+  Tableau des cases indexé par leur position sur la carte
   @param Position   Position sur la carte
-  @return Le code de la case à la position spécifiée
+  @return La case à la position spécifiée
 *}
-function TMap.GetCodeMap(Position : T3DPoint) : TScrewCode;
+function TMap.GetMap(Position : T3DPoint) : TScrew;
 var Index : integer;
 begin
   if InMap(Position) then
@@ -1498,22 +1500,18 @@ begin
     inc(Index, Position.X);
 
     Result := FMap[Index];
-  end else
-  if (Position.Z < 0) or (Position.Z >= FDimensions.Z) then
-    Result := FOutside[0]
-  else
-    Result := FOutside[Position.Z];
+  end else Result := Outside[Position.Z];
 end;
 
 {*
-  Modifie le tableau des codes des cases indexées par leur position sur la carte
+  Modifie le tableau des cases indexé par leur position sur la carte
   @param Position   Position sur la carte
-  @param Value      Nouveau code de case
+  @param Value      Nouvelle case
 *}
-procedure TMap.SetCodeMap(Position : T3DPoint; Value : TScrewCode);
+procedure TMap.SetMap(Position : T3DPoint; Value : TScrew);
 var Index : integer;
 begin
-  if (not InMap(Position)) or (Master.ScrewsMaster[Value] = nil) then exit;
+  if not InMap(Position) then exit;
 
   Index := Position.Z;
   Index := Index * FDimensions.Y;
@@ -1525,13 +1523,26 @@ begin
 end;
 
 {*
-  Tableau des cases indexé par leur position sur la carte
-  @param Position   Position sur la carte
-  @return La case à la position spécifiée
+  Tableau des cases hors de la carte indexé par étage
+  @param Floor   Étage
+  @return La case hors de la carte à l'étage spécifié
 *}
-function TMap.GetMap(Position : T3DPoint) : TScrew;
+function TMap.GetOutside(Floor : integer) : TScrew;
 begin
-  Result := Master.ScrewsMaster[CodeMap[Position]];
+  if Floor < 0 then Floor := 0 else
+  if Floor >= FDimensions.Z then Floor := FDimensions.Z-1;
+  Result := FOutside[Floor];
+end;
+
+{*
+  Modifie le tableau des cases hors de la carte indexé par étage
+  @param Floor   Étage
+  @param Value   Nouvelle case
+*}
+procedure TMap.SetOutside(Floor : integer; Value : TScrew);
+begin
+  if (Floor >= 0) and (Floor < FDimensions.Z) then
+    FOutside[Floor] := Value;
 end;
 
 {*
