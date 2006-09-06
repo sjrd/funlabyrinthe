@@ -358,7 +358,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure AddComponent(Component : TFunLabyComponent);
+    procedure AddComponent(Component : TFunLabyComponent;
+      FreeOnError : boolean = True);
 
     property ImagesMaster : TImagesMaster read FImagesMaster;
 
@@ -396,6 +397,10 @@ var {don't localize}
   fScrewsDir : string = 'Screws\';
   /// Dossier des fichiers son
   fSoundsDir : string = 'Sounds\';
+  /// Dossier des unités
+  fUnitsDir : string = 'Units\';
+  /// Dossier des cartes
+  fMapsDir : string = 'Maps\';
   /// Dossier des fichiers labyrinthe
   fLabyrinthsDir : string = 'Labyrinths\';
   /// Dossier des fichiers sauvegarde
@@ -1691,16 +1696,29 @@ end;
   Ajoute un composant
   @param Component   Le composant à ajouter
 *}
-procedure TMaster.AddComponent(Component : TFunLabyComponent);
+procedure TMaster.AddComponent(Component : TFunLabyComponent;
+  FreeOnError : boolean = True);
+var Index : integer;
 begin
-  FComponents.AddObject(Component.ID, Component);
-  if Component is TPlugin then FPlugins.Add(Component) else
-  if Component is TField  then FFields .Add(Component) else
-  if Component is TEffect then FEffects.Add(Component) else
-  if Component is TScrew  then FScrews .Add(Component) else
-  if Component is TMap    then FMaps   .Add(Component) else
-  if Component is TPlayer then FPlayers.Add(Component) else
-  assert(False);
+  try
+    Index := FComponents.AddObject(Component.ID, Component);
+    try
+      if Component is TPlugin then FPlugins.Add(Component) else
+      if Component is TField  then FFields .Add(Component) else
+      if Component is TEffect then FEffects.Add(Component) else
+      if Component is TScrew  then FScrews .Add(Component) else
+      if Component is TMap    then FMaps   .Add(Component) else
+      if Component is TPlayer then FPlayers.Add(Component) else
+      assert(False);
+    except
+      FComponents.Delete(Index);
+      raise;
+    end;
+  except
+    if FreeOnError then
+      Component.Free;
+    raise;
+  end;
 end;
 
 initialization

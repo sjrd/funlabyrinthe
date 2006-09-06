@@ -44,7 +44,7 @@
       <tcXMLDoc>FALSE</tcXMLDoc>
     </TagCommentSet>
     <AlphaSort>TRUE</AlphaSort>
-    <WarnEmptyTAG>TRUE</WarnEmptyTAG>
+    <WarnEmptyTAG>FALSE</WarnEmptyTAG>
     <HideEmptyTAGSection>FALSE</HideEmptyTAGSection>
     <HideEmptyOutputBlock>TRUE</HideEmptyOutputBlock>
     <OutputFilteringCategory>
