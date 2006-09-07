@@ -42,7 +42,8 @@ contains
   FunLabySyn in 'FunLabySyn.pas',
   Screws in 'Screws.pas',
   FunLabyUtils in 'FunLabyUtils.pas',
-  FilesUtils in 'FilesUtils.pas';
+  FilesUtils in 'FilesUtils.pas',
+  MapFiles in 'MapFiles.pas';
 
 end.
 

@@ -90,6 +90,16 @@ type
       const AMIMEType : string; const AMapID : TComponentID;
       ADimensions : T3DPoint); overload;
   public
+    {*
+      Crée une instance de TMapFile
+      Les descendants de TMapFile doivent implémenter ce constructeur, lire
+      les dimensions, avant d'appeler le constructeur protégé qui va créer la
+      carte.
+      @param AMasterFile   Fichier maître
+      @param AFileName     Nom du fichier
+      @param AMIMEType     Type MIME du fichier
+      @param AMapID        ID de la carte
+    *}
     constructor Create(AMasterFile : TMasterFile; const AFileName : TFileName;
       const AMIMEType : string;
       const AMapID : TComponentID); overload; virtual; abstract;
