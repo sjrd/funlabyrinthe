@@ -24,6 +24,7 @@ const {don't localize}
   idGrass = 'Grass';                          /// ID de l'herbe
   idWall = 'Wall';                            /// ID du mur
 
+  idNoEffect = 'NoEffect';                    /// ID du sans effet
   idDirectTurnstile = 'DirectTurnstile';      /// ID du tourniquet direct
   idIndirectTurnstile = 'IndirectTurnstile';  /// ID du tourniquet indirect
   idOutside = 'Outside';                      /// ID du dehors
@@ -107,7 +108,26 @@ type
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
+procedure LoadCoreComponents(Master : TMaster);
+
 implementation
+
+{*
+  Charge tous les composants au coeur de FunLabyrinthe
+  @param Master   Maître FunLabyrinthe dans lequel charger les composants
+*}
+procedure LoadCoreComponents(Master : TMaster);
+begin
+  // Terrains
+  TGrass.Create(Master, idGrass, sGrass);
+  TWall.Create(Master, idWall, sWall);
+
+  // Effets de case
+  TEffect.Create(Master, idNoEffect, '');
+  TDirectTurnstile.Create(Master, idDirectTurnstile, sDirectTurnstile);
+  TIndirectTurnstile.Create(Master, idIndirectTurnstile, sIndirectTurnstile);
+  TOutside.Create(Master, idOutside, sOutside);
+end;
 
 /////////////////////
 /// Classe TGrass ///

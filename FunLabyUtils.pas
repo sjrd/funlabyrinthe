@@ -191,9 +191,8 @@ type
   private
     FDelegateDrawTo : TField; /// Terrain délégué pour l'affichage
 
-    /// Réservation d'un emplacement dans la VMT pour stocker le Draw original
     procedure OriginalDraw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); virtual; abstract;
+      Y : integer = 0); virtual;
     procedure DerivedDraw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
@@ -375,12 +374,11 @@ type
     function GetMaps(Index : integer) : TMap;
     function GetPlayerCount : integer;
     function GetPlayers(Index : integer) : TPlayer;
+
+    procedure AddComponent(Component : TFunLabyComponent);
   public
     constructor Create;
     destructor Destroy; override;
-
-    procedure AddComponent(Component : TFunLabyComponent;
-      FreeOnError : boolean = True);
 
     property ImagesMaster : TImagesMaster read FImagesMaster;
 
@@ -607,6 +605,7 @@ begin
   inherited Create;
   FMaster := AMaster;
   FID := AID;
+  Master.AddComponent(Self);
 end;
 
 ///////////////////////////////
@@ -870,6 +869,17 @@ begin
     @@AlreadyDone :
   end;
   {$ENDIF}
+end;
+
+{*
+  Réservation d'un emplacement dans la VMT pour stocker le Draw original
+  @param Canvas   Canevas sur lequel dessiner le terrain
+  @param X        Coordonnée X du point à partir duquel dessiner le terrain
+  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+*}
+procedure TField.OriginalDraw(Canvas : TCanvas; X : integer = 0;
+  Y : integer = 0);
+begin
 end;
 
 {*
@@ -1531,7 +1541,7 @@ begin
   FEffects    := TObjectList.Create;
   FScrews     := TObjectList.Create;
   FMaps       := TObjectList.Create;
-  FPlayers   := TObjectList.Create;
+  FPlayers    := TObjectList.Create;
 end;
 
 {*
@@ -1803,28 +1813,21 @@ end;
   Ajoute un composant
   @param Component   Le composant à ajouter
 *}
-procedure TMaster.AddComponent(Component : TFunLabyComponent;
-  FreeOnError : boolean = True);
+procedure TMaster.AddComponent(Component : TFunLabyComponent);
 var Index : integer;
 begin
+  Index := FComponents.AddObject(Component.ID, Component);
   try
-    Index := FComponents.AddObject(Component.ID, Component);
-    try
-      if Component is TPlugin    then FPlugins   .Add(Component) else
-      if Component is TObjectDef then FObjectDefs.Add(Component) else
-      if Component is TField     then FFields    .Add(Component) else
-      if Component is TEffect    then FEffects   .Add(Component) else
-      if Component is TScrew     then FScrews    .Add(Component) else
-      if Component is TMap       then FMaps      .Add(Component) else
-      if Component is TPlayer    then FPlayers   .Add(Component) else
-      assert(False);
-    except
-      FComponents.Delete(Index);
-      raise;
-    end;
+    if Component is TPlugin    then FPlugins   .Add(Component) else
+    if Component is TObjectDef then FObjectDefs.Add(Component) else
+    if Component is TField     then FFields    .Add(Component) else
+    if Component is TEffect    then FEffects   .Add(Component) else
+    if Component is TScrew     then FScrews    .Add(Component) else
+    if Component is TMap       then FMaps      .Add(Component) else
+    if Component is TPlayer    then FPlayers   .Add(Component) else
+    assert(False);
   except
-    if FreeOnError then
-      Component.Free;
+    FComponents.Delete(Index);
     raise;
   end;
 end;

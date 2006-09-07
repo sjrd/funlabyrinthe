@@ -11,7 +11,8 @@ unit FilesUtils;
 interface
 
 uses
-  SysUtils, Classes, Contnrs, ScUtils, ScLists, ScStrUtils, MSXML, FunLabyUtils;
+  SysUtils, Classes, Contnrs, ScUtils, ScLists, ScStrUtils, MSXML, FunLabyUtils,
+  FunLabyCore;
 
 resourcestring
   sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
@@ -271,14 +272,13 @@ end;
   @param AMapID        ID de la carte
   @param ADimensions   Dimensions de la carte
 *}
-constructor TMapFile.Create(AMasterFile : TMasterFile; const AFileName : TFileName;
-  const AMIMEType : string; const AMapID : TComponentID;
-  ADimensions : T3DPoint);
+constructor TMapFile.Create(AMasterFile : TMasterFile;
+  const AFileName : TFileName; const AMIMEType : string;
+  const AMapID : TComponentID; ADimensions : T3DPoint);
 begin
   inherited Create(AMasterFile, AFileName, AMIMEType);
   FMapID := AMapID;
   FMap := TMap.Create(Master, AMapID, ADimensions);
-  Master.AddComponent(FMap);
 end;
 
 {*
@@ -481,6 +481,9 @@ begin
     FAuthor := text;
   end;
 
+  // Chargement des composants au coeur de FunLabyrinthe
+  LoadCoreComponents(Master);
+
   // Unités utilisées
   NodeList := Element.selectNodes('./units/unit');
   for I := 0 to NodeList.length-1 do with NodeList.item[I] as IXMLDOMElement do
@@ -521,7 +524,6 @@ begin
     end;
 
     Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position);
-    Master.AddComponent(Player);
 
     with selectNodes('./attributes/attribute') do
     begin
