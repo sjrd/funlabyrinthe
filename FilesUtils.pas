@@ -450,8 +450,10 @@ procedure TMasterFile.Load(Document : IXMLDOMDocument);
   end;
 var Element : IXMLDOMElement;
     NodeList : IXMLDOMNodeList;
-    I : integer;
-    ID, FileType : string;
+    I, J : integer;
+    ID, FileType, Name, MapID : string;
+    Position : T3DPoint;
+    Player : TPlayer;
     FileName : TFileName;
 begin
   { Don't localize strings in this method }
@@ -508,6 +510,27 @@ begin
   for I := 0 to NodeList.length-1 do with NodeList.item[I] as IXMLDOMElement do
   begin
     ID := getAttribute('id');
+    Name := getAttribute('name');
+    if Name = '' then Name := ID;
+
+    with selectSingleNode('./position') as IXMLDOMElement do
+    begin
+      MapID := getAttribute('map');
+      Position.X := getAttribute('posx');
+      Position.Y := getAttribute('posy');
+      Position.Z := getAttribute('posz');
+    end;
+
+    Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position);
+    Master.AddComponent(Player);
+
+    with selectNodes('./attributes/attribute') do
+    begin
+      for J := 0 to length-1 do with item[J] as IXMLDOMElement do
+        Player.Attribute[getAttribute('name')] := getAttribute('value');
+    end;
+
+    { TODO 1 : Ajouter le support du dessin du joueur }
   end;
 end;
 
