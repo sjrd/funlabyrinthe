@@ -657,13 +657,14 @@ begin
   FPainter.Draw(Canvas, X, Y);
 end;
 
-////////////////////////////
-/// Classe TPlayerPlugin ///
-////////////////////////////
+//////////////////////
+/// Classe TPlugin ///
+//////////////////////
 
 {*
-  Crée une instance de TPlayerPlugin
+  Crée une instance de TPlugin
   @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du plug-in
 *}
 constructor TPlugin.Create(AMaster : TMaster; const AID : TComponentID);
 begin
@@ -851,7 +852,7 @@ begin
     VMT, il faut éviter le cas où ce remplacement a déjà eu lieu, tout
     simplement en testant si Draw vaut déjà DerivedDraw.                       }
   {$IFNDEF DCTD} // évite le bug de DelphiCodeToDoc avec l'assembleur
-  asm
+  {asm
     mov edx, [eax] // récupération de la VMT
 
     // test du cas où le remplacement a déjà été fait
@@ -867,7 +868,7 @@ begin
     mov dword ptr [edx], ecx
 
     @@AlreadyDone :
-  end;
+  end;}
   {$ENDIF}
 end;
 
@@ -1839,6 +1840,8 @@ initialization
 
     fScrewsDir := fFunLabyAppData + fScrewsDir;
     fSoundsDir := fFunLabyAppData + fSoundsDir;
+    FUnitsDir := fFunLabyAppData + fUnitsDir;
+    FMapsDir := fFunLabyAppData + fMapsDir;
     fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
     fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
 

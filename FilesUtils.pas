@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Classes, Contnrs, ScUtils, ScLists, ScStrUtils, MSXML, FunLabyUtils,
-  FunLabyCore;
+  FunLabyCore, Variants;
 
 resourcestring
   sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
@@ -324,20 +324,13 @@ begin
   FUnitFiles := TObjectList.Create;
   FMapFiles := TObjectList.Create;
 
-  try
-    Document := CoDOMDocument.Create;
-    Document.async := False;
-    if not Document.load(FFileName) then
-      InvalidFormat;
+  Document := CoDOMDocument.Create;
+  Document.async := False;
+  if not Document.load(FFileName) then
+    InvalidFormat;
 
-    Load(Document);
-    TestOpeningValidity;
-  except
-    FMapFiles.Free;
-    FUnitFiles.Free;
-    FMaster.Free;
-    raise;
-  end;
+  Load(Document);
+  TestOpeningValidity;
 end;
 
 {*
@@ -369,7 +362,7 @@ begin
   FMapFiles := TObjectList.Create;
 
   if Assigned(FileContents) then
-  try
+  begin
     Document := CoDOMDocument.Create;
     Document.async := False;
     if not Document.loadXML(FileContents.Text) then
@@ -377,11 +370,6 @@ begin
 
     Load(Document);
     TestOpeningValidity;
-  except
-    FMapFiles.Free;
-    FUnitFiles.Free;
-    FMaster.Free;
-    raise;
   end;
 end;
 
@@ -457,7 +445,7 @@ var Element : IXMLDOMElement;
 begin
   { Don't localize strings in this method }
 
-  Element := Document.documentElement.firstChild as IXMLDOMElement;
+  Element := Document.documentElement as IXMLDOMElement;
   if Element.nodeName <> 'funlabyrinthe' then InvalidFormat;
 
   // Test de version
@@ -512,8 +500,8 @@ begin
   for I := 0 to NodeList.length-1 do with NodeList.item[I] as IXMLDOMElement do
   begin
     ID := getAttribute('id');
-    Name := getAttribute('name');
-    if Name = '' then Name := ID;
+    if VarIsNull(getAttribute('name')) then Name := ID else
+      Name := getAttribute('name');
 
     with selectSingleNode('./position') as IXMLDOMElement do
     begin

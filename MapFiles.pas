@@ -111,7 +111,7 @@ begin
       dec(ReadIndex);
     end;
   finally
-    Free;
+    Stream.Free;
   end;
 end;
 
