@@ -91,11 +91,19 @@ type
   private
     FMaster : TMaster;  /// Maître FunLabyrinthe
     FID : TComponentID; /// ID du composant
+    {*
+      Valeur non fonctionnelle pouvant servir au fonctionnement d'un algorithme
+      Cette valeur est susceptible d'être utilisée par beaucoup d'algorithmes
+      différents, et donc interférer. Il ne faut donc l'utiliser que
+      ponctuellement.
+    *}
+    FTag : integer;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID);
 
     property Master : TMaster read FMaster;
     property ID : TComponentID read FID;
+    property Tag : integer read FTag write FTag;
   end;
 
   {*
@@ -241,14 +249,19 @@ type
   *}
   TMap = class(TFunLabyComponent)
   private
-    FDimensions : T3DPoint;     /// Dimensions de la carte (en cases)
-    FMap : array of TScrew;     /// Cases sur la carte
-    FOutside : array of TScrew; /// Cases en-dehors de la carte
+    FDimensions : T3DPoint;   /// Dimensions de la carte (en cases)
+    FMap : array of TScrew;   /// Carte stockée de façon linéaire
+    FOutsideOffset : integer; /// Offset de départ de l'extérieur
 
     function GetMap(Position : T3DPoint) : TScrew;
     procedure SetMap(Position : T3DPoint; Value : TScrew);
+
     function GetOutside(Floor : integer) : TScrew;
     procedure SetOutside(Floor : integer; Value : TScrew);
+
+    function GetLinearMapCount : integer;
+    function GetLinearMap(Index : integer) : TScrew;
+    procedure SetLinearMap(Index : integer; Value : TScrew);
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       ADimensions : T3DPoint);
@@ -256,10 +269,16 @@ type
     function InMap(Position : T3DPoint) : boolean;
 
     property Dimensions : T3DPoint read FDimensions;
+
     property Map[Position : T3DPoint] : TScrew
       read GetMap write SetMap; default;
+
     property Outside[Floor : integer] : TScrew
       read GetOutside write SetOutside;
+
+    property LinearMapCount : integer read GetLinearMapCount;
+    property LinearMap[index : integer] : TScrew
+      read GetLinearMap write SetLinearMap;
   end;
 
   {*
@@ -966,20 +985,15 @@ end;
 *}
 constructor TMap.Create(AMaster : TMaster; const AID : TComponentID;
   ADimensions : T3DPoint);
-var X, Y, Z : integer;
+var I : integer;
 begin
   inherited Create(AMaster, AID);
   FDimensions := ADimensions;
 
-  SetLength(FMap, FDimensions.X * FDimensions.Y * FDimensions.Z);
-  for X := 0 to FDimensions.X-1 do
-    for Y := 0 to FDimensions.Y-1 do
-      for Z := 0 to FDimensions.Z-1 do
-        FMap[Z*FDimensions.X*FDimensions.Y + Y*FDimensions.X + X] := nil;
-
-  SetLength(FOutside, FDimensions.Z);
-  for Z := 0 to FDimensions.Z-1 do
-    FOutside[Z] := nil;
+  FOutsideOffset := FDimensions.X * FDimensions.Y * FDimensions.Z;
+  SetLength(FMap, FOutsideOffset + FDimensions.Z);
+  for I := Low(FMap) to High(FMap) do
+    FMap[I] := nil;
 end;
 
 {*
@@ -1030,7 +1044,7 @@ function TMap.GetOutside(Floor : integer) : TScrew;
 begin
   if Floor < 0 then Floor := 0 else
   if Floor >= FDimensions.Z then Floor := FDimensions.Z-1;
-  Result := FOutside[Floor];
+  Result := FMap[Floor + FOutsideOffset];
 end;
 
 {*
@@ -1041,7 +1055,36 @@ end;
 procedure TMap.SetOutside(Floor : integer; Value : TScrew);
 begin
   if (Floor >= 0) and (Floor < FDimensions.Z) then
-    FOutside[Floor] := Value;
+    FMap[Floor + FOutsideOffset] := Value;
+end;
+
+{*
+  Taille du tableau de la carte linéaire
+  @return Taille du tableau de la carte linéaire
+*}
+function TMap.GetLinearMapCount : integer;
+begin
+  Result := Length(FMap);
+end;
+
+{*
+  Tableau zero-based de la carte linéaire
+  @param Index   Index dans le tableau
+  @return Case de la carte linéaire à l'index spécifié
+*}
+function TMap.GetLinearMap(Index : integer) : TScrew;
+begin
+  Result := FMap[Index];
+end;
+
+{*
+  Modifie le tableau zero-based de la carte linéaire
+  @param Index   Index dans le tableau
+  @param Value   Nouvelle case
+*}
+procedure TMap.SetLinearMap(Index : integer; Value : TScrew);
+begin
+  FMap[Index] := Value;
 end;
 
 {*
