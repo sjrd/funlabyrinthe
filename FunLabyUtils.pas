@@ -163,26 +163,23 @@ type
   end;
 
   {*
-    Classe de base pour les objets d'un joueur
-    TPlayerObject est la classe de base pour les objets que possède le joueur.
+    Classe de base pour les définitions d'objets
+    TObjectDef est la classe de base pour les définitions d'objets que possède
+    le joueur.
     Les objets peuvent rendre un joueur capable d'effectuer certaines actions.
   *}
-  TPlayerObject = class(TVisualComponent)
+  TObjectDef = class(TVisualComponent)
   private
-    FPlayer : TPlayer; /// Joueur possédant l'objet
-    FCount : integer;  /// Nombre d'objets de ce type que possède le joueur
+    function GetCount(Player : TPlayer) : integer;
+    procedure SetCount(Player : TPlayer; Value : integer);
   protected
-    function GetShownInfos : string; virtual;
+    function GetShownInfos(Player : TPlayer) : string; virtual;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; APlayer : TPlayer);
+    function CanYou(Player : TPlayer; Action : integer) : boolean; virtual;
+    procedure UseFor(Player : TPlayer; Action : integer); virtual;
 
-    function CanYou(Action : integer) : boolean; virtual;
-    procedure UseFor(Action : integer); virtual;
-
-    property Player : TPlayer read FPlayer;
-    property Count : integer read FCount write FCount;
-    property ShownInfos : string read GetShownInfos;
+    property Count[Player : TPlayer] : integer read GetCount write SetCount;
+    property ShownInfos[Player : TPlayer] : string read GetShownInfos;
   end;
 
   {*
@@ -297,12 +294,13 @@ type
     FDirPainters : array[diNorth..diWest] of TPainter;
     FColor : TColor;         /// Couleur
     FPlugins : TObjectList;  /// Liste des plug-in
-    FObjects : TObjectList;  /// Liste des objets
+    FAttributes : TStrings;  /// Liste des attributs
 
     function GetPluginCount : integer;
     function GetPlugins(Index : integer) : TPlugin;
-    function GetObjectCount : integer;
-    function GetObjects(Index : integer) : TPlayerObject;
+
+    function GetAttribute(const AttrName : string) : integer;
+    procedure SetAttribute(const AttrName : string; Value : integer);
 
     property PluginCount : integer read GetPluginCount;
     property Plugins[index : integer] : TPlugin read GetPlugins;
@@ -334,8 +332,8 @@ type
     property Position : P3DPoint read FPosAddr;
     property Direction : TDirection read FDirection write FDirection;
     property Color : TColor read FColor write FColor;
-    property ObjectCount : integer read GetObjectCount;
-    property Objects[index : integer] : TPlayerObject read GetObjects;
+    property Attribute[const AttrName : string] : integer
+      read GetAttribute write SetAttribute;
   end;
 
   {*
@@ -347,6 +345,7 @@ type
     FImagesMaster : TImagesMaster; /// Maître d'images
     FComponents : TStrings;        /// Table de hashage ID -> composant
     FPlugins : TObjectList;        /// Liste des plug-in
+    FObjectDefs : TObjectList;     /// Liste des définitions d'objet
     FFields : TObjectList;         /// Liste des terrains
     FEffects : TObjectList;        /// Liste des effets
     FScrews : TObjectList;         /// Liste des cases
@@ -355,6 +354,7 @@ type
 
     function GetComponent(const ID : TComponentID) : TFunLabyComponent;
     function GetPlugin   (const ID : TComponentID) : TPlugin;
+    function GetObjectDef(const ID : TComponentID) : TObjectDef;
     function GetField    (const ID : TComponentID) : TField;
     function GetEffect   (const ID : TComponentID) : TEffect;
     function GetScrew    (const ID : TComponentID) : TScrew;
@@ -363,6 +363,8 @@ type
 
     function GetPluginCount : integer;
     function GetPlugins(Index : integer) : TPlugin;
+    function GetObjectDefCount : integer;
+    function GetObjectDefs(Index : integer) : TObjectDef;
     function GetFieldCount : integer;
     function GetFields(Index : integer) : TField;
     function GetEffectCount : integer;
@@ -384,15 +386,18 @@ type
 
     property Component[const ID : TComponentID] : TFunLabyComponent
       read GetComponent;
-    property Plugin   [const ID : TComponentID] : TPlugin read GetPlugin;
-    property Field    [const ID : TComponentID] : TField  read GetField;
-    property Effect   [const ID : TComponentID] : TEffect read GetEffect;
-    property Screw    [const ID : TComponentID] : TScrew  read GetScrew;
-    property Map      [const ID : TComponentID] : TMap    read GetMap;
-    property Player   [const ID : TComponentID] : TPlayer read GetPlayer;
+    property Plugin   [const ID : TComponentID] : TPlugin    read GetPlugin;
+    property ObjectDef[const ID : TComponentID] : TObjectDef read GetObjectDef;
+    property Field    [const ID : TComponentID] : TField     read GetField;
+    property Effect   [const ID : TComponentID] : TEffect    read GetEffect;
+    property Screw    [const ID : TComponentID] : TScrew     read GetScrew;
+    property Map      [const ID : TComponentID] : TMap       read GetMap;
+    property Player   [const ID : TComponentID] : TPlayer    read GetPlayer;
 
     property PluginCount : integer read GetPluginCount;
     property Plugins[index : integer] : TPlugin read GetPlugins;
+    property ObjectDefCount : integer read GetObjectDefCount;
+    property ObjectDefs[index : integer] : TObjectDef read GetObjectDefs;
     property FieldCount : integer read GetFieldCount;
     property Fields[index : integer] : TField read GetFields;
     property EffectCount : integer read GetEffectCount;
@@ -769,38 +774,45 @@ end;
 ////////////////////////////
 
 {*
-  Crée une instance de TPlayerObject
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'objet
-  @param AName     Nom de l'objet
-  @param APlayer   Joueur propriétaire
+  Nombre d'objets de ce type possédés par un joueur
+  @param Player   Joueur concerné
+  @return Nombre d'objets que ce joueur possède
 *}
-constructor TPlayerObject.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; APlayer : TPlayer);
+function TObjectDef.GetCount(Player : TPlayer) : integer;
 begin
-  inherited Create(AMaster, AID, AName);
-  FPlayer := APlayer;
-  FCount := 0;
+  Result := Player.Attribute[ID];
+end;
+
+{*
+  Modifie le nombre d'objets de ce type possédés par un joueur
+  @param Player   Joueur concerné
+  @param Value    Nouveau nombre d'objets
+*}
+procedure TObjectDef.SetCount(Player : TPlayer; Value : integer);
+begin
+  Player.Attribute[ID] := Value;
 end;
 
 {*
   Informations textuelles sur l'objet
   GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
+  @param Player   Joueur pour lequel on veut obtenir les infos
   @return Informations textuelles, ou une chaîne vide si rien à afficher
 *}
-function TPlayerObject.GetShownInfos : string;
+function TObjectDef.GetShownInfos(Player : TPlayer) : string;
 begin
-  Result := Format(sDefaultObjectInfos, [Name, Count]);
+  Result := Format(sDefaultObjectInfos, [Name, Count[Player]]);
 end;
 
 {*
   Indique si l'objet permet au joueur d'effectuer une action donnée
   CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
   d'effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TPlayerObject.CanYou(Action : integer) : boolean;
+function TObjectDef.CanYou(Player : TPlayer; Action : integer) : boolean;
 begin
   Result := False;
 end;
@@ -809,9 +821,10 @@ end;
   Utiliser l'objet pour effectuer l'action donnée
   UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
   effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
   @param Action   Action à effectuer
 *}
-procedure TPlayerObject.UseFor(Action : integer);
+procedure TObjectDef.UseFor(Player : TPlayer; Action : integer);
 begin
 end;
 
@@ -1125,7 +1138,8 @@ begin
     FDirPainters[Dir] := nil;
   FColor := clBlue;
   FPlugins := TObjectList.Create(False);
-  FObjects := TObjectList.Create;
+  FAttributes := THashedStringList.Create;
+  TStringList(FAttributes).CaseSensitive := True;
 end;
 
 {*
@@ -1134,7 +1148,7 @@ end;
 destructor TPlayer.Destroy;
 var Dir : TDirection;
 begin
-  FObjects.Free;
+  FAttributes.Free;
   FPlugins.Free;
   for Dir in [diNorth..diWest] do if Assigned(FDirPainters[Dir]) then
     FDirPainters[Dir].Free;
@@ -1161,22 +1175,36 @@ begin
 end;
 
 {*
-  Nombre de types d'objets du joueur
-  @return Nombre de types d'objets
+  Tableau indexé par chaîne des attributs du joueur
+  @param AttrName   Nom de l'attribut à récupérer
+  @return Attribut dont le nom a été spécifié
 *}
-function TPlayer.GetObjectCount : integer;
+function TPlayer.GetAttribute(const AttrName : string) : integer;
+var Index : integer;
 begin
-  Result := FObjects.Count;
+  Index := FAttributes.IndexOf(AttrName);
+  if Index < 0 then Result := 0 else
+    Result := integer(FAttributes.Objects[Index]);
 end;
 
 {*
-  Tableau zero-based des types d'objets du joueur
-  @param Index   Index de l'objet dans le tableau
-  @return L'objet à la position indiquée
+  Modifie le tableau indexé par chaîne des attributs du joueur
+  @param AttrName   Nom de l'attribut à modifier
+  @param Value      Nouvelle valeur de l'attribut
 *}
-function TPlayer.GetObjects(Index : integer) : TPlayerObject;
+procedure TPlayer.SetAttribute(const AttrName : string; Value : integer);
+var Index : integer;
 begin
-  Result := TPlayerObject(FObjects[Index]);
+  Index := FAttributes.IndexOf(AttrName);
+  if Index < 0 then
+  begin
+    if Value <> 0 then
+      FAttributes.AddObject(AttrName, TObject(Value));
+  end else
+  begin
+    if Value = 0 then FAttributes.Delete(Index) else
+      FAttributes.Objects[Index] := TObject(Value);
+  end;
 end;
 
 {*
@@ -1364,9 +1392,9 @@ end;
 *}
 function TPlayer.CanYou(Action : integer) : boolean;
 var I, GoodObjectCount : integer;
-    GoodObjects : array of TPlayerObject;
+    GoodObjects : array of TObjectDef;
     RadioTitles : array of string;
-    GoodObject : TPlayerObject;
+    GoodObject : TObjectDef;
 begin
   Result := True;
 
@@ -1374,12 +1402,15 @@ begin
   for I := 0 to PluginCount-1 do if Plugins[I].CanYou(Self, Action) then exit;
 
   // Listage des objets susceptibles d'aider le joueur
-  SetLength(GoodObjects, ObjectCount);
+  SetLength(GoodObjects, Master.ObjectDefCount);
   GoodObjectCount := 0;
-  for I := 0 to ObjectCount-1 do if Objects[I].CanYou(Action) then
+  for I := 0 to Master.ObjectDefCount-1 do
   begin
-    GoodObjects[GoodObjectCount] := Objects[I];
-    inc(GoodObjectCount);
+    if Master.ObjectDefs[I].CanYou(Self, Action) then
+    begin
+      GoodObjects[GoodObjectCount] := Master.ObjectDefs[I];
+      inc(GoodObjectCount);
+    end;
   end;
 
   // Aucun objet trouvé : échec
@@ -1402,7 +1433,7 @@ begin
   end;
 
   // Utilisation de l'objet
-  GoodObject.UseFor(Action);
+  GoodObject.UseFor(Self, Action);
 end;
 
 {*
@@ -1494,12 +1525,13 @@ begin
     Duplicates := dupError;
   end;
 
-  FPlugins := TObjectList.Create;
-  FFields  := TObjectList.Create;
-  FEffects := TObjectList.Create;
-  FScrews  := TObjectList.Create;
-  FMaps    := TObjectList.Create;
-  FPlayers := TObjectList.Create;
+  FPlugins    := TObjectList.Create;
+  FObjectDefs := TObjectList.Create;
+  FFields     := TObjectList.Create;
+  FEffects    := TObjectList.Create;
+  FScrews     := TObjectList.Create;
+  FMaps       := TObjectList.Create;
+  FPlayers   := TObjectList.Create;
 end;
 
 {*
@@ -1512,6 +1544,7 @@ begin
   FScrews.Free;
   FEffects.Free;
   FFields.Free;
+  FObjectDefs.Free;
   FPlugins.Free;
 
   FComponents.Free;
@@ -1544,6 +1577,17 @@ end;
 function TMaster.GetPlugin(const ID : TComponentID) : TPlugin;
 begin
   Result := Component[ID] as TPlugin;
+end;
+
+{*
+  Tableau des définitions d'objet indexé par leur ID
+  @param ID   ID de la définition d'objet à trouver
+  @return La définition d'objet dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucune définition ne correspond à l'ID spécifié
+*}
+function TMaster.GetObjectDef(const ID : TComponentID) : TObjectDef;
+begin
+  Result := Component[ID] as TObjectDef;
 end;
 
 {*
@@ -1638,6 +1682,25 @@ end;
 function TMaster.GetPlugins(Index : integer) : TPlugin;
 begin
   Result := TPlugin(FPlugins[Index]);
+end;
+
+{*
+  Nombre de définitions d'objet
+  @return Nombre de définitions d'objet
+*}
+function TMaster.GetObjectDefCount : integer;
+begin
+  Result := FObjectDefs.Count;
+end;
+
+{*
+  Tableau zero-based des définitions d'objet
+  @param Index   Index de la définition d'objet
+  @return La définition d'objet à la position spécifiée
+*}
+function TMaster.GetObjectDefs(Index : integer) : TObjectDef;
+begin
+  Result := TObjectDef(FObjectDefs[Index]);
 end;
 
 {*
@@ -1746,12 +1809,13 @@ begin
   try
     Index := FComponents.AddObject(Component.ID, Component);
     try
-      if Component is TPlugin then FPlugins.Add(Component) else
-      if Component is TField  then FFields .Add(Component) else
-      if Component is TEffect then FEffects.Add(Component) else
-      if Component is TScrew  then FScrews .Add(Component) else
-      if Component is TMap    then FMaps   .Add(Component) else
-      if Component is TPlayer then FPlayers.Add(Component) else
+      if Component is TPlugin    then FPlugins   .Add(Component) else
+      if Component is TObjectDef then FObjectDefs.Add(Component) else
+      if Component is TField     then FFields    .Add(Component) else
+      if Component is TEffect    then FEffects   .Add(Component) else
+      if Component is TScrew     then FScrews    .Add(Component) else
+      if Component is TMap       then FMaps      .Add(Component) else
+      if Component is TPlayer    then FPlayers   .Add(Component) else
       assert(False);
     except
       FComponents.Delete(Index);
