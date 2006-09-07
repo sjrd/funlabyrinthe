@@ -52,10 +52,11 @@ var Stream : TStream;
       Stream.ReadBuffer(Value, 2);
       if Count <= 16 then
       begin
-        Read[0] := Value shr 12;
-        Read[1] := (Value shr 8) and $0F;
-        Read[2] := (Value shr 4) and $0F;
-        Read[3] := Value and $0F;
+        // Attention ici : à l'intérieur d'un octet, on est en Little Endian
+        Read[0] := (Value shr 8) and $0F;
+        Read[1] := Value shr 12;
+        Read[2] := Value and $0F;
+        Read[3] := (Value shr 4) and $0F;
         ReadIndex := 3;
       end else
       if Count <= 256 then
@@ -130,8 +131,9 @@ var I, Value, Count, WritingIndex : integer;
     begin
       if Count <= 16 then
       begin
-        Value := Writing[3] shl 12 + Writing[2] shl 8 +
-          Writing[1] shl 4 + Writing[0];
+        // Attention ici : à l'intérieur d'un octet, on est en Little Endian
+        Value := Writing[3] shl 8 + Writing[2] shl 12 +
+          Writing[1] + Writing[0] shl 4;
         WritingIndex := 3;
       end else
       if Count <= 256 then
