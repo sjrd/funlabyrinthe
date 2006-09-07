@@ -1,10 +1,11 @@
 {*
-  Différentes cases de FunLabyrinthe
-  L'unité Screws comprend les définitions des cases de FunLabyrinthe.
+  Décrit les composants au coeur de Funlabyrinthe
+  L'unité FunLabyCore décrit les plug-in, objets, terrains, et effets de case
+  qui sont au coeur de FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit Screws;
+unit FunLabyCore;
 
 interface
 
@@ -34,42 +35,6 @@ const {don't localize}
   fDirectTurnstile = 'DirectTurnstile';       /// Fichier du tourniquet direct
   fIndirectTurnstile = 'IndirectTurnstile';   /// Fichier du tourniquet indirect
   fOutside = 'Outside';                       /// Fichier du dehors
-
-const
-  cGrass                  = 48;  /// Code de l'herbe
-  cWater                  = 49;  /// Code de l'eau
-  cWall                   = 50;  /// Code du mur
-  cHole                   = 51;  /// Code du trou
-  cSilverBlock            = 52;  /// Code du bloc en argent
-  cGoldenBlock            = 53;  /// Code du bloc en or
-  cNorthArrow             = 54;  /// Code de la flèche nord
-  cEastArrow              = 55;  /// Code de la flèche est
-  cSouthArrow             = 56;  /// Code de la flèche sud
-  cWestArrow              = 57;  /// Code de la flèche ouest
-  cCrossroads             = 58;  /// Code du carrefour
-  cTreasure               = 59;  /// Code du trésor
-  cSecretPassage          = 63;  /// Code du passage secret
-  cDirectTurnstile        = 224; /// Code du tourniquet direct
-  cIndirectTurnstile      = 225; /// Code du tourniquet indirect
-  cButton                 = [33..47, 161..190]; /// Codes des boutons
-  cSunkenButton           = 64;  /// Code du bouton enfoncé
-  cInactiveTransporter    = 96;  /// Code du téléporteur inactif
-  cNextOneTransporter     = [97..109];  /// Codes des téléporteurs 'suivant'
-  cPreviousOneTransporter = [110..122]; /// Codes des téléporteurs 'précédent'
-  cRandomTransporter      = [123..126]; /// Codes des téléporteurs aléatoires
-  cStairs                 = [71..90];   /// Codes des escaliers
-  cDownStairs             = 60;  /// Code de l'escalier descendant
-  cLift                   = 61;  /// Code de l'ascenseur
-  cOpenLift               = 5;   /// Code fictif de l'ascenseur ouvert
-  cUpStairs               = 62;  /// Code de l'escalier montant
-  cStart                  = 65;  /// Code du départ
-  cOutside                = 66;  /// Code du dehors
-  cBuoy                   = 67;  /// Code de la bouée
-  cPlank                  = 68;  /// Code de la planche
-  cSilverKey              = 69;  /// Code de la clef en argent
-  cGoldenKey              = 70;  /// Code de la clef en or
-  cSky                    = 226; /// Code du ciel
-  cBoat                   = [193..202]; /// Codes des barques
 
 type
   {*

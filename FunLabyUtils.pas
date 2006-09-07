@@ -1623,6 +1623,7 @@ end;
 function TMaster.GetScrew(const ID : TComponentID) : TScrew;
 var AField : TField;
     AEffect : TEffect;
+    AName : string;
 begin
   try
     Result := Component[ID] as TScrew;
@@ -1633,9 +1634,9 @@ begin
       try
         AField := Field[GetFirstToken(ID, '-')];
         AEffect := Effect[GetLastToken(ID, '-')];
-        Result := TScrew.Create(Self, ID,
-          Format(sDefaultScrewName, [AField.Name, AEffect.Name]),
-          AField, AEffect);
+        if AEffect.Name = '' then AName := AField.Name else
+          AName := Format(sDefaultScrewName, [AField.Name, AEffect.Name]);
+        Result := TScrew.Create(Self, ID, AName, AField, AEffect);
       except
       end;
       if Result = nil then raise;

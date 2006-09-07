@@ -11,8 +11,7 @@ unit FilesUtils;
 interface
 
 uses
-  SysUtils, Classes, Contnrs, ScUtils, ScLists, ScStrUtils, MSXML, FunLabyUtils,
-  Screws;
+  SysUtils, Classes, Contnrs, ScUtils, ScLists, ScStrUtils, MSXML, FunLabyUtils;
 
 resourcestring
   sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';

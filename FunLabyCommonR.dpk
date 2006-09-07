@@ -40,10 +40,10 @@ requires
 contains
   LabyrintheUtils in 'LabyrintheUtils.pas',
   FunLabySyn in 'FunLabySyn.pas',
-  Screws in 'Screws.pas',
   FunLabyUtils in 'FunLabyUtils.pas',
   FilesUtils in 'FilesUtils.pas',
-  MapFiles in 'MapFiles.pas';
+  MapFiles in 'MapFiles.pas',
+  FunLabyCore in 'FunLabyCore.pas';
 
 end.
 
