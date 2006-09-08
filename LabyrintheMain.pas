@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, LabyrintheUtils, ScUtils, ScStrUtils,
-  SdDialogs, ShellAPI;
+  SdDialogs, ShellAPI, FunLabyUtils, PlayerView, FilesUtils, MapFiles;
 
 type
   TFormPrincipale = class(TForm)
@@ -33,6 +33,7 @@ type
     MenuPropJoueur: TMenuItem;
     MenuRecommencer: TMenuItem;
     AboutDialog: TSdAboutDialog;
+    procedure MovePlayer(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure MenuQuitterClick(Sender: TObject);
@@ -51,6 +52,10 @@ type
     procedure MenuRecommencerClick(Sender: TObject);
   private
     { Déclarations privées }
+    MasterFile : TMasterFile;
+    Master : TMaster;
+    View : TPlayerView;
+
     HiddenBitmap : TBitmap;
     function GetEcran(X, Y : integer) : integer;
     procedure SetEcran(X, Y, SC : integer);
@@ -58,6 +63,10 @@ type
   public
     { Déclarations publiques }
     PartieEnCours : boolean;
+
+    procedure NewGame(FileName : TFileName);
+    procedure EndGame;
+
     procedure Commencer(FileName : string);
     procedure Terminer;
     procedure Affiche(Jou, Reel, InverserComm : boolean);
@@ -324,6 +333,25 @@ end;
 /// Procédures et fonctions de TFormPrincipale ///
 //////////////////////////////////////////////////
 
+procedure TFormPrincipale.NewGame(FileName : TFileName);
+begin
+  MasterFile := TMasterFile.Create(FileName, fmPlay);
+  Master := MasterFile.Master;
+  View := TPlayerView.Create(Master.Players[0]);
+  View.Draw(HiddenBitmap.Canvas);
+  Image.Picture.Assign(HiddenBitmap);
+
+  OnKeyDown := MovePlayer;
+end;
+
+procedure TFormPrincipale.EndGame;
+begin
+  OnKeyDown := nil;
+
+  View.Free;
+  MasterFile.Free;
+end;
+
 function TFormPrincipale.SaveCurrentGame : boolean;
 begin
   if not PartieEnCours then Result := True else
@@ -471,6 +499,10 @@ begin
   PartieEnCours := False;
   if ParamStr(2) = 'TestActions' then TestActions := True;
   Commencer(ParamStr(1));
+
+  MasterFile := nil;
+  Master := nil;
+  View := nil;
 end;
 
 function TFormPrincipale.GetEcran(X, Y : integer) : integer;
@@ -507,7 +539,8 @@ begin
   else
   begin
     TestActions := False;
-    Commencer(Ouvrir.FileName);
+    //Commencer(Ouvrir.FileName);
+    NewGame(Ouvrir.FileName);
   end;
 end;
 
@@ -523,7 +556,8 @@ begin
   if ofExtensionDifferent in Ouvrir.Options then
     RunURL(Ouvrir.FileName)
   else
-    Commencer(Ouvrir.FileName);
+    //Commencer(Ouvrir.FileName);
+    NewGame(Ouvrir.FileName);
 end;
 
 procedure TFormPrincipale.MenuRubrAideClick(Sender: TObject);
@@ -1127,6 +1161,37 @@ begin
     drYes : CanClose := SaveCurrentGame;
     drCancel : CanClose := False;
   end;
+end;
+
+procedure TFormPrincipale.MovePlayer(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var Dir : TDirection;
+    KeyPressed, Redo : boolean;
+begin
+  if Master = nil then exit;
+  case Key of
+    VK_UP    : Dir := diNorth;
+    VK_RIGHT : Dir := diEast;
+    VK_DOWN  : Dir := diSouth;
+    VK_LEFT  : Dir := diWest;
+    else exit;
+  end;
+
+  KeyPressed := True;
+  repeat
+    View.Player.Move(Dir, KeyPressed, Redo);
+    KeyPressed := False;
+
+    View.Draw(HiddenBitmap.Canvas);
+    Image.Picture.Assign(HiddenBitmap);
+
+    if Redo then
+    begin
+      Dir := View.Player.Direction;
+      Application.ProcessMessages;
+      Sleep(500);
+    end;
+  until not Redo;
 end;
 
 end.

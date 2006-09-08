@@ -29,7 +29,7 @@ object FormPrincipale: TFormPrincipale
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  OnKeyDown = FormKeyDown
+  OnKeyDown = MovePlayer
   PixelsPerInch = 96
   TextHeight = 13
   object Image: TImage
@@ -140,8 +140,8 @@ object FormPrincipale: TFormPrincipale
     end
   end
   object Ouvrir: TOpenDialog
-    DefaultExt = 'lab'
-    Filter = 'Labyrinthes (*.lab)|*.lab;*.url'
+    DefaultExt = 'flg'
+    Filter = 'Labyrinthes (*.flg)|*.flg;*.url'
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofNoNetworkButton]
     Left = 104
     Top = 120

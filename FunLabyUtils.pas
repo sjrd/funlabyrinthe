@@ -249,6 +249,7 @@ type
   TMap = class(TFunLabyComponent)
   private
     FDimensions : T3DPoint;   /// Dimensions de la carte (en cases)
+    FZoneSize : integer;      /// Taille d'une zone de la carte
     FMap : array of TScrew;   /// Carte stockée de façon linéaire
     FOutsideOffset : integer; /// Offset de départ de l'extérieur
 
@@ -268,6 +269,7 @@ type
     function InMap(Position : T3DPoint) : boolean;
 
     property Dimensions : T3DPoint read FDimensions;
+    property ZoneSize : integer read FZoneSize;
 
     property Map[Position : T3DPoint] : TScrew
       read GetMap write SetMap; default;
@@ -290,7 +292,6 @@ type
   private
     FMap : TMap;             /// Carte
     FPosition : T3DPoint;    /// Position
-    FPosAddr : P3DPoint;     /// Position
     FDirection : TDirection; /// Direction
     /// Peintres selon la direction du joueur
     FDirPainters : array[diNorth..diWest] of TPainter;
@@ -331,7 +332,7 @@ type
       out Redo : boolean) : boolean;
 
     property Map : TMap read FMap;
-    property Position : P3DPoint read FPosAddr;
+    property Position : T3DPoint read FPosition write FPosition;
     property Direction : TDirection read FDirection write FDirection;
     property Color : TColor read FColor write FColor;
     property Attribute[const AttrName : string] : integer
@@ -1025,6 +1026,7 @@ var I : integer;
 begin
   inherited Create(AMaster, AID);
   FDimensions := ADimensions;
+  FZoneSize := DefaultZoneSize;
 
   FOutsideOffset := FDimensions.X * FDimensions.Y * FDimensions.Z;
   SetLength(FMap, FOutsideOffset + FDimensions.Z);
@@ -1155,7 +1157,6 @@ begin
   inherited Create(AMaster, AID, AName);
   FMap := AMap;
   FPosition := APosition;
-  FPosAddr := @FPosition;
   FDirection := diNone;
   for Dir in [diNorth..diWest] do
     FDirPainters[Dir] := nil;
