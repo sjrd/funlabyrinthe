@@ -1,3 +1,10 @@
+{*
+  Gestionnaires de fichiers carte FunLabyrinthe
+  L'unité MapFiles contient les classes permettant de charger les fichiers
+  carte FunLabyrinthe.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit MapFiles;
 
 interface

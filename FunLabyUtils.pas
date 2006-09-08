@@ -234,6 +234,9 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; AField : TField; AEffect : TEffect);
 
+    procedure Draw(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); override;
+
     property Field : TField read FField;
     property Effect : TEffect read FEffect;
   end;
@@ -546,7 +549,7 @@ begin
     Width := ScrewSize;
     Height := ScrewSize;
     Canvas.Brush.Color := clTransparent;
-    Canvas.Pen.Style := psClear;
+    Canvas.Pen.Color := clTransparent;
   end;
   ImgNamesChange(nil);
 end;
@@ -769,9 +772,9 @@ begin
   Result := False;
 end;
 
-////////////////////////////
-/// Classe TPlayerObject ///
-////////////////////////////
+/////////////////////////
+/// Classe TObjectDef ///
+/////////////////////////
 
 {*
   Nombre d'objets de ce type possédés par un joueur
@@ -853,7 +856,10 @@ begin
     simplement en testant si Draw vaut déjà DerivedDraw.                       }
   {$IFNDEF DCTD} // évite le bug de DelphiCodeToDoc avec l'assembleur
   {asm
-    mov edx, [eax] // récupération de la VMT
+    Ceci ne fonctionne pas car la mémoire des VMT ne peut être accédée en
+    écriture : il faudra trouver autre chose...
+    mov eax, Self
+    mov edx, dword ptr [eax] // récupération de la VMT
 
     // test du cas où le remplacement a déjà été fait
     mov ecx, dword ptr TField.DerivedDraw
@@ -865,7 +871,7 @@ begin
     mov dword ptr [edx + VMTOFFSET TField.OriginalDraw], ecx
     // remplacement par DerivedDraw
     mov ecx, dword ptr TField.DerivedDraw
-    mov dword ptr [edx], ecx
+    mov dword ptr [edx + VMTOFFSET TField.Draw], ecx
 
     @@AlreadyDone :
   end;}
@@ -996,6 +1002,12 @@ begin
   inherited Create(AMaster, AID, AName);
   FField := AField;
   FEffect := AEffect;
+end;
+
+procedure TScrew.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+begin
+  Field.Draw(Canvas, X, Y);
+  Effect.Draw(Canvas, X, Y);
 end;
 
 ///////////////////
