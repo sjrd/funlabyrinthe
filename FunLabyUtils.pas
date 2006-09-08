@@ -198,13 +198,15 @@ type
   TField = class(TVisualComponent)
   private
     FDelegateDrawTo : TField; /// Terrain délégué pour l'affichage
-
-    procedure OriginalDraw(Canvas : TCanvas; X : integer = 0;
+  protected
+    procedure DrawField(Canvas : TCanvas; X : integer = 0;
       Y : integer = 0); virtual;
-    procedure DerivedDraw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ADelegateDrawTo : TField = nil);
+
+    procedure Draw(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); override;
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
@@ -856,64 +858,35 @@ constructor TField.Create(AMaster : TMaster; const AID : TComponentID;
 begin
   inherited Create(AMaster, AID, AName);
   FDelegateDrawTo := ADelegateDrawTo;
-
-  { On dérive tout appel à Draw vers DerivedDraw, en modifiant directement la
-    VMT de la classe. On prend soin de conserver l'ancienne valeur, pour
-    pouvoir tout de même l'appeler si FDelegateDrawTo vaut nil.
-    Remarque : Comme toutes les instances d'une même classe partagent la même
-    VMT, il faut éviter le cas où ce remplacement a déjà eu lieu, tout
-    simplement en testant si Draw vaut déjà DerivedDraw.                       }
-  {$IFNDEF DCTD} // évite le bug de DelphiCodeToDoc avec l'assembleur
-  {asm
-    Ceci ne fonctionne pas car la mémoire des VMT ne peut être accédée en
-    écriture : il faudra trouver autre chose...
-    mov eax, Self
-    mov edx, dword ptr [eax] // récupération de la VMT
-
-    // test du cas où le remplacement a déjà été fait
-    mov ecx, dword ptr TField.DerivedDraw
-    cmp dword ptr [edx + VMTOFFSET TVisualComponent.Draw], ecx
-    je  @@AlreadyDone
-
-    // sauvegarde du pointeur vers Draw dans OriginalDraw
-    mov ecx, dword ptr [edx + VMTOFFSET TField.Draw]
-    mov dword ptr [edx + VMTOFFSET TField.OriginalDraw], ecx
-    // remplacement par DerivedDraw
-    mov ecx, dword ptr TField.DerivedDraw
-    mov dword ptr [edx + VMTOFFSET TField.Draw], ecx
-
-    @@AlreadyDone :
-  end;}
-  {$ENDIF}
 end;
 
 {*
-  Réservation d'un emplacement dans la VMT pour stocker le Draw original
+  Dessine le terrain sur le canevas indiqué
+  Les descendants de TField doivent réimplémenter DrawField plutôt que Draw.
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TField.OriginalDraw(Canvas : TCanvas; X : integer = 0;
+procedure TField.DrawField(Canvas : TCanvas; X : integer = 0;
   Y : integer = 0);
 begin
+  inherited Draw(Canvas, X, Y);
 end;
 
 {*
   Dessine le terrain sur le canevas indiqué, ou délègue le dessin
-  Grâce à la redirection mise en place dans le constructeur, tout appel à Draw
-  se résoud en l'appel de DerivedDraw. On peut alors tester s'il faut déléguer
-  l'affichage ou appeler la méthode Draw originale.
+  Les descendants de TField ne doivent pas réimplémenter Draw, mais DrawField
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TField.DerivedDraw(Canvas : TCanvas; X : integer = 0;
+procedure TField.Draw(Canvas : TCanvas; X : integer = 0;
   Y : integer = 0);
 begin
   if FDelegateDrawTo = nil then
-    OriginalDraw(Canvas, X, Y)
+    DrawField(Canvas, X, Y)
   else
-    FDelegateDrawTo.DerivedDraw(Canvas, X, Y);
+    FDelegateDrawTo.Draw(Canvas, X, Y);
 end;
 
 {*
