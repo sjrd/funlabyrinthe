@@ -49,7 +49,7 @@ var Stream : TStream;
     I, Count, Value, ReadIndex : integer;
     Dimensions : T3DPoint;
     Palette : array of TScrew;
-    Read : array[0..3] of integer;
+    Read : array[0..1] of integer;
 
   procedure ReadFurther;
   begin
@@ -57,15 +57,6 @@ var Stream : TStream;
     if ReadIndex < 0 then
     begin
       Stream.ReadBuffer(Value, 2);
-      if Count <= 16 then
-      begin
-        // Attention ici : à l'intérieur d'un octet, on est en Little Endian
-        Read[0] := (Value shr 8) and $0F;
-        Read[1] := Value shr 12;
-        Read[2] := Value and $0F;
-        Read[3] := (Value shr 4) and $0F;
-        ReadIndex := 3;
-      end else
       if Count <= 256 then
       begin
         Read[0] := Value shr 8;
@@ -129,20 +120,13 @@ procedure TFLMMapFile.SaveFile;
 var I, Value, Count, WritingIndex : integer;
     Stream : TStream;
     Dimensions : T3DPoint;
-    Writing : array[0..3] of integer;
+    Writing : array[0..1] of integer;
 
   procedure WriteFurther;
   begin
     // Si on ne peut plus prévoir de case à écrire, les écrire effectivement
     if WritingIndex < 0 then
     begin
-      if Count <= 16 then
-      begin
-        // Attention ici : à l'intérieur d'un octet, on est en Little Endian
-        Value := Writing[3] shl 8 + Writing[2] shl 12 +
-          Writing[1] + Writing[0] shl 4;
-        WritingIndex := 3;
-      end else
       if Count <= 256 then
       begin
         Value := Writing[1] shl 8 + Writing[0];
@@ -188,10 +172,7 @@ begin
     end;
 
     // Écriture de la carte
-    if Count <= 16 then WritingIndex := 3 else
-    if Count <= 256 then WritingIndex := 1 else
-    WritingIndex := 0;
-
+    if Count <= 256 then WritingIndex := 1 else WritingIndex := 0;
     for I := 0 to Map.LinearMapCount-1 do
     begin
       // Ajouter une case à écrire
