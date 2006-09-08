@@ -812,12 +812,21 @@ procedure TDirectTurnstile.Entered(Player : TPlayer; KeyPressed : boolean;
 var Dir : TDirection;
 begin
   inherited;
-  repeat
+
+  Sleep(500);
+
+  if Player.Direction = diWest then
+    Dir := diNorth
+  else
+    Dir := Succ(Player.Direction);
+
+  while not Player.Move(Dir, False, GoOnMoving) do
+  begin
     if Player.Direction = diNorth then
       Dir := diWest
     else
       Dir := Pred(Player.Direction);
-  until Player.Move(Dir, KeyPressed, GoOnMoving);
+  end;
 end;
 
 {*
@@ -830,9 +839,11 @@ end;
 *}
 procedure TDirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
+var FieldID : TComponentID;
 begin
   inherited;
-  Player.Map[Pos] := Master.Screw[idIndirectTurnstile];
+  FieldID := Player.Map[Pos].Field.ID;
+  Player.Map[Pos] := Master.Screw[FieldID+'-'+idIndirectTurnstile];
 end;
 
 /////////////////////////////////
@@ -866,12 +877,21 @@ procedure TIndirectTurnstile.Entered(Player : TPlayer; KeyPressed : boolean;
 var Dir : TDirection;
 begin
   inherited;
-  repeat
+
+  Sleep(500);
+
+  if Player.Direction = diNorth then
+    Dir := diWest
+  else
+    Dir := Pred(Player.Direction);
+
+  while not Player.Move(Dir, False, GoOnMoving) do
+  begin
     if Player.Direction = diWest then
       Dir := diNorth
     else
       Dir := Succ(Player.Direction);
-  until Player.Move(Dir, KeyPressed, GoOnMoving);
+  end;
 end;
 
 {*
@@ -884,9 +904,11 @@ end;
 *}
 procedure TIndirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
+var FieldID : TComponentID;
 begin
   inherited;
-  Player.Map[Pos] := Master.Screw[idDirectTurnstile];
+  FieldID := Player.Map[Pos].Field.ID;
+  Player.Map[Pos] := Master.Screw[FieldID+'-'+idDirectTurnstile];
 end;
 
 ///////////////////////

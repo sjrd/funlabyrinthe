@@ -1495,6 +1495,7 @@ begin
     FPosition := Dest
   else
     Dest := FPosition;
+  Result := True;
 
   // Second passage : le déplacement a été fait
   begin
