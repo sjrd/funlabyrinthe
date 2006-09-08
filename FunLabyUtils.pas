@@ -1266,7 +1266,7 @@ begin
       Brush.Style := bsSolid;
       Brush.Color := FColor;
       Pen.Style := psClear;
-      Ellipse(X+6, Y+6, X+24, Y+24);
+      Ellipse(X+6, Y+6, X+ScrewSize-6, Y+ScrewSize-6);
     end;
   end;
 

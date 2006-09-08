@@ -546,7 +546,7 @@ begin
     Brush.Style := bsSolid;
     Pen.Color := clYellow;
     Pen.Style := psSolid;
-    Ellipse(ScrewRect(X, Y));
+    Ellipse(X+1, Y+1, X+ScrewSize-1, Y+ScrewSize-1);
   end;
 end;
 
@@ -592,7 +592,7 @@ end;
 constructor TBuoys.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string);
 begin
-  inherited Create(Master, ID, Name);
+  inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fBuoy);
 end;
 
@@ -655,7 +655,7 @@ end;
 constructor TPlanks.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string);
 begin
-  inherited Create(Master, ID, Name);
+  inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fPlank);
 end;
 
@@ -718,7 +718,7 @@ end;
 constructor TSilverKeys.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string);
 begin
-  inherited Create(Master, ID, Name);
+  inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fSilverKey);
 end;
 
@@ -781,7 +781,7 @@ end;
 constructor TGoldenKeys.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string);
 begin
-  inherited Create(Master, ID, Name);
+  inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fGoldenKey);
 end;
 

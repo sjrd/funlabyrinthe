@@ -22,6 +22,20 @@ resourcestring
 
 type
   {*
+    Thread de déplacement du pion
+  *}
+  TMoveThread = class(TThread)
+  private
+    Player : TPlayer;
+    Dir : TDirection;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(APlayer : TPlayer; ADir : TDirection;
+      AOnTerminate : TNotifyEvent);
+  end;
+
+  {*
     Classe de la fiche principale
   *}
   TFormMain = class(TForm)
@@ -50,6 +64,8 @@ type
     MenuReloadGame: TMenuItem;
     AboutDialog: TSdAboutDialog;
     LoadGameDialog: TOpenDialog;
+    TimerUpdateImage: TTimer;
+    procedure UpdateImage(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure MovePlayer(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -74,12 +90,16 @@ type
     Master : TMaster;
     View : TPlayerView;
 
+    MoveThread : TMoveThread;
+
     procedure NewGame(FileName : TFileName);
     procedure EndGame;
     function SaveGame : boolean;
 
     procedure AdaptSizeToView;
     procedure ShowStatus;
+
+    procedure MovingTerminated(Sender : TObject);
   public
     { Déclarations publiques }
   end;
@@ -93,6 +113,32 @@ implementation
 
 uses
   LiftDialog, PropertiesDialog;
+
+//////////////////////////
+/// Classe TMoveThread ///
+//////////////////////////
+
+constructor TMoveThread.Create(APlayer : TPlayer; ADir : TDirection;
+  AOnTerminate : TNotifyEvent);
+begin
+  inherited Create(True);
+  Player := APlayer;
+  Dir := ADir;
+  OnTerminate := AOnTerminate;
+  Resume;
+end;
+
+procedure TMoveThread.Execute;
+var Redo : boolean;
+begin
+  Player.Move(Dir, True, Redo);
+  while Redo do
+  begin
+    Sleep(500);
+    Dir := Player.Direction;
+    Player.Move(Dir, False, Redo);
+  end;
+end;
 
 ////////////////////////
 /// Classe TFormMain ///
@@ -112,6 +158,8 @@ begin
   Master := MasterFile.Master;
   View := TPlayerView.Create(Master.Players[0]);
 
+  MoveThread := nil;
+
   Caption := MasterFile.Title;
   MenuReloadGame.Enabled := True;
   MenuSaveGame.Enabled := True;
@@ -121,10 +169,9 @@ begin
   ShowStatus;
 
   AdaptSizeToView;
-  View.Draw(HiddenBitmap.Canvas);
-  Image.Picture.Assign(HiddenBitmap);
 
   OnKeyDown := MovePlayer;
+  TimerUpdateImage.Enabled := True;
 end;
 
 {*
@@ -132,11 +179,12 @@ end;
 *}
 procedure TFormMain.EndGame;
 begin
+  TimerUpdateImage.Enabled := False;
+  OnKeyDown := nil;
+
   MenuSaveGame.Enabled := False;
   MenuDescription.Enabled := False;
   MenuProperties.Enabled := False;
-
-  OnKeyDown := nil;
 
   View.Free;
   MasterFile.Free;
@@ -192,6 +240,14 @@ begin
   StatusBar.Panels[1].Text := Format(sPlankCount, [0]);
   StatusBar.Panels[2].Text := Format(sSilverKeyCount, [0]);
   StatusBar.Panels[3].Text := Format(sGoldenKeyCount, [0]);
+end;
+
+{*
+  Gestionnaire d'événement pour MoveThread.OnTerminated
+*}
+procedure TFormMain.MovingTerminated(Sender : TObject);
+begin
+  MoveThread := nil;
 end;
 
 {*
@@ -313,9 +369,9 @@ end;
 procedure TFormMain.MovePlayer(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var Dir : TDirection;
-    KeyPressed, Redo : boolean;
 begin
-  if MasterFile = nil then exit;
+  if (MasterFile = nil) or (MoveThread <> nil) then exit;
+
   case Key of
     VK_UP    : Dir := diNorth;
     VK_RIGHT : Dir := diEast;
@@ -324,21 +380,7 @@ begin
     else exit;
   end;
 
-  KeyPressed := True;
-  repeat
-    View.Player.Move(Dir, KeyPressed, Redo);
-    KeyPressed := False;
-
-    View.Draw(HiddenBitmap.Canvas);
-    Image.Picture.Assign(HiddenBitmap);
-
-    if Redo then
-    begin
-      Dir := View.Player.Direction;
-      Application.ProcessMessages;
-      Sleep(500);
-    end;
-  until not Redo;
+  MoveThread := TMoveThread.Create(View.Player, Dir, MovingTerminated);
 end;
 
 {*
@@ -351,6 +393,12 @@ begin
     EndGame;
 
   HiddenBitmap.Free;
+end;
+
+procedure TFormMain.UpdateImage(Sender: TObject);
+begin
+  View.Draw(HiddenBitmap.Canvas);
+  Image.Picture.Assign(HiddenBitmap);
 end;
 
 end.

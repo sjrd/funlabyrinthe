@@ -182,4 +182,11 @@ object FormMain: TFormMain
     Left = 104
     Top = 120
   end
+  object TimerUpdateImage: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = UpdateImage
+    Left = 200
+    Top = 120
+  end
 end
