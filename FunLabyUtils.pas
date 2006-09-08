@@ -39,9 +39,6 @@ type
   /// Type représentant une direction cardinale
   TDirection = (diNone, diNorth, diEast, diSouth, diWest);
 
-  /// Pointeur vers T3DPoint
-  P3DPoint = ^T3DPoint;
-
   /// Générée si un composant recherché n'est pas trouvé
   EComponentNotFound = class(Exception);
 
@@ -1828,9 +1825,11 @@ begin
 end;
 
 initialization
+  Randomize;
   with TMemIniFile.Create(Dir+fIniFileName) do
   try
-    fFunLabyAppData := ReadString('Directories', 'AppData', Dir); {don't localize}
+    fFunLabyAppData :=
+      ReadString('Directories', 'AppData', Dir); {don't localize}
 
     fScrewsDir := fFunLabyAppData + fScrewsDir;
     fSoundsDir := fFunLabyAppData + fSoundsDir;

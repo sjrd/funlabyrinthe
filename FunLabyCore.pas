@@ -10,7 +10,7 @@ unit FunLabyCore;
 interface
 
 uses
-  Graphics, ScUtils, FunLabyUtils;
+  Windows, SysUtils, Graphics, ScUtils, FunLabyUtils;
 
 resourcestring
   sGrass = 'Herbe';                           /// Nom de l'herbe
@@ -25,7 +25,12 @@ resourcestring
   sEastArrow = 'Flèche est';                  /// Nom de la flèche est
   sSouthArrow = 'Flèche sud';                 /// Nom de la flèche sud
   sWestArrow = 'Flèche ouest';                /// Nom de la flèche ouest
-  sTransporter = 'Téléporteur';               /// Nom du téléporteur
+
+  sInactiveTransporter = 'Téléporteur inactif';      /// Téléporteur inactif
+  sTransporterNext = 'Téléporteur suivant n°%d';     /// Téléporteur suivant
+  sTransporterPrev = 'Téléporteur précédent n°%d';   /// Téléporteur précédent
+  sTransporterRandom = 'Téléporteur aléatoire n°%d'; /// Téléporteur aléatoire
+
   sUpStairs = 'Escalier montant';             /// Nom de l'escalier montant
   sDownStairs = 'Escalier descendant';        /// Nom de l'escalier descendant
   sDirectTurnstile = 'Tourniquet direct';     /// Nom du tourniquet direct
@@ -46,10 +51,12 @@ const {don't localize}
   idEastArrow = 'EastArrow';                     /// ID de la flèche est
   idSouthArrow = 'SouthArrow';                   /// ID de la flèche sud
   idWestArrow = 'WestArrow';                     /// ID de la flèche ouest
+
   idInactiveTransporter = 'InactiveTransporter'; /// ID du téléporteur inactif
-  idTransporterNext = 'TransporterNext';         /// ID du téléporteur suivant
-  idTransporterPrev = 'TransporterPrev';         /// ID du téléporteur précédent
-  idTransporterRandom = 'TransporterRandom';     /// ID du téléporteur aléatoire
+  idTransporterNext = 'TransporterNext%d';       /// ID du téléporteur suivant
+  idTransporterPrev = 'TransporterPrev%d';       /// ID du téléporteur précédent
+  idTransporterRandom = 'TransporterRandom%d';   /// ID du téléporteur aléatoire
+
   idUpStairs = 'UpStairs';                       /// ID de l'escalier montant
   idDownStairs = 'DownStairs';                   /// ID de l'escalier descendant
   idDirectTurnstile = 'DirectTurnstile';         /// ID du tourniquet direct
@@ -69,6 +76,7 @@ const {don't localize}
   fEastArrow = 'EastArrow';                 /// Fichier de la flèche est
   fSouthArrow = 'SouthArrow';               /// Fichier de la flèche sud
   fWestArrow = 'WestArrow';                 /// Fichier de la flèche ouest
+
   fTransporter = 'Transporter';             /// Fichier du téléporteur inactif
   fUpStairs = 'UpStairs';                   /// Fichier de l'escalier montant
   fDownStairs = 'DownStairs';               /// Fichier de l'escalier descendant
@@ -94,6 +102,8 @@ resourcestring
                     'Tu peux faire disparaître un bloc en or.';
 
 type
+  TTransporterKind = (tkInactive, tkNext, tkPrevious, tkRandom);
+
   {*
     Herbe
     L'herbe est le terrain de base de FunLabyrinthe. Il n'a pas de condition.
@@ -208,6 +218,27 @@ type
   end;
 
   {*
+    Téléporteur
+    Le téléporteur emmène le joueur à un autre téléporteur
+  *}
+  TTransporter = class(TEffect)
+  private
+    FKind : TTransporterKind; /// Type de téléporteur
+
+    procedure FindNext(Map : TMap; var Pos : T3DPoint);
+    procedure FindPrevious(Map : TMap; var Pos : T3DPoint);
+    procedure FindRandom(Map : TMap; var Pos : T3DPoint);
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; AKind : TTransporterKind = tkInactive);
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+
+    property Kind : TTransporterKind read FKind;
+  end;
+
+  {*
     Tourniquet Direct
     Le tourniquet direct fait tourner le joueur dans le sens direct jusqu'à
     parvenir à en sortir.
@@ -262,6 +293,7 @@ implementation
   @param Master   Maître FunLabyrinthe dans lequel charger les composants
 *}
 procedure LoadCoreComponents(Master : TMaster);
+var I : integer;
 begin
   // Terrains
   TGrass.Create(Master, idGrass, sGrass);
@@ -279,6 +311,17 @@ begin
   TArrow.Create(Master, idEastArrow , sEastArrow , diEast );
   TArrow.Create(Master, idSouthArrow, sSouthArrow, diSouth);
   TArrow.Create(Master, idWestArrow , sWestArrow , diWest );
+
+  TTransporter.Create(Master, idInactiveTransporter, sInactiveTransporter);
+  for I := 1 to 15 do
+    TTransporter.Create(Master, Format(idTransporterNext, [I]),
+      Format(sTransporterNext, [I]), tkNext);
+  for I := 1 to 15 do
+    TTransporter.Create(Master, Format(idTransporterPrev, [I]),
+      Format(sTransporterPrev, [I]), tkPrevious);
+  for I := 1 to 15 do
+    TTransporter.Create(Master, Format(idTransporterRandom, [I]),
+      Format(sTransporterRandom, [I]), tkRandom);
 
   TDirectTurnstile.Create(Master, idDirectTurnstile, sDirectTurnstile);
   TIndirectTurnstile.Create(Master, idIndirectTurnstile, sIndirectTurnstile);
@@ -581,6 +624,161 @@ begin
   inherited;
   Player.Direction := FDirection;
   GoOnMoving := True;
+end;
+
+///////////////////////////
+/// Classe TTransporter ///
+///////////////////////////
+
+{*
+  Crée une instance de TTransporter
+  @param AMaster      Maître FunLabyrinthe
+  @param AID          ID de l'effet de case
+  @param AName        Nom de la case
+  @param AKind        Type de téléporteur
+*}
+constructor TTransporter.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; AKind : TTransporterKind = tkInactive);
+begin
+  inherited Create(AMaster, AID, AName);
+  FKind := AKind;
+  Painter.ImgNames.Add(fTransporter);
+end;
+
+{*
+  Trouve le téléporteur suivant sur la carte
+  @param Map   Carte sur laquelle chercher
+  @param Pos   Position du téléporteur initiale en entrée et finale en sortie
+*}
+procedure TTransporter.FindNext(Map : TMap; var Pos : T3DPoint);
+var DimX, DimY, DimZ : integer;
+begin
+  with Map.Dimensions do
+  begin
+    DimX := X;
+    DimY := Y;
+    DimZ := Z;
+  end;
+
+  repeat
+    inc(Pos.X);
+    if Pos.X >= DimX then
+    begin
+      Pos.X := 0;
+      inc(Pos.Y);
+      if Pos.Y >= DimY then
+      begin
+        Pos.Y := 0;
+        inc(Pos.Z);
+        if Pos.Z >= DimZ then
+          Pos.Z := 0;
+      end;
+    end;
+  until Map[Pos].Effect = Self;
+end;
+
+{*
+  Trouve le téléporteur précédent sur la carte
+  @param Map   Carte sur laquelle chercher
+  @param Pos   Position du téléporteur initiale en entrée et finale en sortie
+*}
+procedure TTransporter.FindPrevious(Map : TMap; var Pos : T3DPoint);
+var DimX, DimY, DimZ : integer;
+begin
+  with Map.Dimensions do
+  begin
+    DimX := X;
+    DimY := Y;
+    DimZ := Z;
+  end;
+
+  repeat
+    dec(Pos.X);
+    if Pos.X < 0 then
+    begin
+      Pos.X := DimX-1;
+      dec(Pos.Y);
+      if Pos.Y < 0 then
+      begin
+        Pos.Y := DimY-1;
+        dec(Pos.Z);
+        if Pos.Z < 0 then
+          Pos.Z := DimZ-1;
+      end;
+    end;
+  until Map[Pos].Effect = Self;
+end;
+
+{*
+  Trouve un autre téléporteur aléatoirement sur la carte
+  @param Map   Carte sur laquelle chercher
+  @param Pos   Position du téléporteur initiale en entrée et finale en sortie
+*}
+procedure TTransporter.FindRandom(Map : TMap; var Pos : T3DPoint);
+const
+  AllocBy = 10;
+var DimX, DimY, DimZ : integer;
+    Others : array of T3DPoint;
+    Count, X, Y, Z : integer;
+    Other : T3DPoint;
+begin
+  with Map.Dimensions do
+  begin
+    DimX := X;
+    DimY := Y;
+    DimZ := Z;
+  end;
+
+  // Recensement de toutes les cases identiques, à l'exception de l'originale
+  Count := 0;
+  SetLength(Others, AllocBy);
+  for X := 0 to DimX-1 do for Y := 0 to DimY-1 do for Z := 0 to DimZ-1 do
+  begin
+    Other := Point3D(X, Y, Z);
+    if (Map[Other].Effect = Self) and (not Same3DPoint(Other, Pos)) then
+    begin
+      if Count >= Length(Others) then
+        SetLength(Others, Count+AllocBy);
+      Others[Count] := Other;
+      inc(Count);
+    end;
+  end;
+  SetLength(Others, Count);
+
+  // À moins que la liste soit vide, on en pêche un au hasard
+  if Count > 0 then
+    Pos := Others[Random(Count)];
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TTransporter.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+var Other : T3DPoint;
+begin
+  inherited;
+
+  Other := Pos;
+
+  // Recherche de la case de destination
+  case FKind of
+    tkNext     : FindNext    (Player.Map, Other);
+    tkPrevious : FindPrevious(Player.Map, Other);
+    tkRandom   : FindRandom  (Player.Map, Other);
+    else exit; // on évite des tests inutiles pour un inactif
+  end;
+
+  // Si l'on a trouvé une autre case, on déplace le joueur
+  if Same3DPoint(Other, Pos) then exit;
+  Sleep(500);
+  Player.Position := Other;
 end;
 
 ///////////////////////////////
