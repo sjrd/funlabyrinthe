@@ -39,6 +39,9 @@ type
   /// Type représentant une direction cardinale
   TDirection = (diNone, diNorth, diEast, diSouth, diWest);
 
+  /// Type représentant une action
+  TPlayerAction = type string;
+
   /// Générée si un composant recherché n'est pas trouvé
   EComponentNotFound = class(Exception);
 
@@ -164,7 +167,8 @@ type
     procedure Moved(Player : TPlayer; KeyPressed : boolean;
       Src, Dest : T3DPoint); virtual;
 
-    function CanYou(Player : TPlayer; Action : integer) : boolean; virtual;
+    function CanYou(Player : TPlayer;
+      const Action : TPlayerAction) : boolean; virtual;
   end;
 
   {*
@@ -180,8 +184,9 @@ type
   protected
     function GetShownInfos(Player : TPlayer) : string; virtual;
   public
-    function CanYou(Player : TPlayer; Action : integer) : boolean; virtual;
-    procedure UseFor(Player : TPlayer; Action : integer); virtual;
+    function CanYou(Player : TPlayer;
+      const Action : TPlayerAction) : boolean; virtual;
+    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); virtual;
 
     property Count[Player : TPlayer] : integer read GetCount write SetCount;
     property ShownInfos[Player : TPlayer] : string read GetShownInfos;
@@ -333,7 +338,7 @@ type
       const RadioTitles : array of string; var Selected : integer;
       OverButtons : boolean = False) : Word;
 
-    function CanYou(Action : integer) : boolean;
+    function CanYou(const Action : TPlayerAction) : boolean;
 
     function Move(Dir : TDirection; KeyPressed : boolean;
       out Redo : boolean) : boolean;
@@ -442,9 +447,27 @@ var {don't localize}
   /// Chaîne de format pour les fichiers image
   fScrewFileName : string = '%s.bmp';
 
+function PointBehind(const Src : T3DPoint; Dir : TDirection) : T3DPoint;
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 
 implementation
+
+{*
+  Renvoie le point situé derrière un point dans la direction indiquée
+  @param Src   Point origine
+  @param Dir   Direction dans laquelle on va
+  @return Le point situé derrière le point Src dans la direction Dir
+*}
+function PointBehind(const Src : T3DPoint; Dir : TDirection) : T3DPoint;
+begin
+  Result := Src;
+  case Dir of
+    diNorth : dec(Result.Y);
+    diEast  : inc(Result.X);
+    diSouth : inc(Result.Y);
+    diWest  : dec(Result.X);
+  end;
+end;
 
 {*
   Crée un rectangle de la taille d'une case
@@ -625,6 +648,9 @@ end;
 
 {*
   Crée une instance de TVisualComponent
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du composant
+  @param AName     Nom du composant
 *}
 constructor TVisualComponent.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string);
@@ -775,7 +801,8 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TPlugin.CanYou(Player : TPlayer; Action : integer) : boolean;
+function TPlugin.CanYou(Player : TPlayer;
+  const Action : TPlayerAction) : boolean;
 begin
   Result := False;
 end;
@@ -823,7 +850,8 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TObjectDef.CanYou(Player : TPlayer; Action : integer) : boolean;
+function TObjectDef.CanYou(Player : TPlayer;
+  const Action : TPlayerAction) : boolean;
 begin
   Result := False;
 end;
@@ -835,7 +863,7 @@ end;
   @param Player   Joueur concerné
   @param Action   Action à effectuer
 *}
-procedure TObjectDef.UseFor(Player : TPlayer; Action : integer);
+procedure TObjectDef.UseFor(Player : TPlayer; const Action : TPlayerAction);
 begin
 end;
 
@@ -1392,7 +1420,7 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capabled d'effectuer l'action, False sinon
 *}
-function TPlayer.CanYou(Action : integer) : boolean;
+function TPlayer.CanYou(const Action : TPlayerAction) : boolean;
 var I, GoodObjectCount : integer;
     GoodObjects : array of TObjectDef;
     RadioTitles : array of string;
@@ -1458,14 +1486,7 @@ begin
   Result := False;
   Redo := False;
   Src := FPosition;
-  Dest := FPosition;
-  case Dir of
-    diNorth : dec(Dest.Y);
-    diEast  : inc(Dest.X);
-    diSouth : inc(Dest.Y);
-    diWest  : dec(Dest.X);
-    else exit;
-  end;
+  Dest := PointBehind(FPosition, Dir);
   OldDir := FDirection;
   FDirection := Dir;
   Cancel := False;

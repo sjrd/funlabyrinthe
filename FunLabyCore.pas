@@ -12,6 +12,37 @@ interface
 uses
   Windows, SysUtils, Graphics, ScUtils, FunLabyUtils;
 
+const {don't localize}
+  actGoOnWater = 'GoOnWater';         /// Action d'aller sur l'eau
+  actPassOverScrew = 'PassOverScrew'; /// Action de passer au-dessus d'une case
+  /// Action d'ouvrir une serrure en argent
+  actOpenSilverLock = 'OpenSilverLock';
+  /// Action d'ouvrir une serrure en or
+  actOpenGoldenLock = 'OpenGoldenLock';
+
+const {don't localize}
+  idBuoyPlugin = 'BuoyPlugin'; /// ID du plug-in bouée
+
+resourcestring
+  sBuoys           = 'Bouée';              /// Nom de l'objet bouée
+  sBuoyInfos       = '%d bouée';           /// Infos bouées (singulier)
+  sBuoysInfos      = '%d bouées';          /// Infos bouées (pluriel)
+  sPlanks          = 'Planche';            /// Nom de l'objet planche
+  sPlankInfos      = '%d planche';         /// Infos planches (singulier)
+  sPlanksInfos     = '%d planches';        /// Infos planches (pluriel)
+  sSilverKeys      = 'Clef d''argent';     /// Nom de l'objet clef d'argent
+  sSilverKeyInfos  = '%d clef d''argent';  /// Infos clefs d'argent (singulier)
+  sSilverKeysInfos = '%d clefs d''argent'; /// Infos clefs d'argent (pluriel)
+  sGoldenKeys      = 'Clef d''or';         /// Nom de l'objet clef d'or
+  sGoldenKeyInfos  = '%d clef d''or';      /// Infos clefs d'or (singulier)
+  sGoldenKeysInfos = '%d clefs d''or';     /// Infos clefs d'or (pluriel)
+
+const {don't localize}
+  idBuoys = 'Buoys';           /// ID des bouées
+  idPlanks = 'Planks';         /// ID des planches
+  idSilverKeys = 'SilverKeys'; /// ID des clefs d'argent
+  idGoldenKeys = 'GoldenKeys'; /// ID des clefs d'or
+
 resourcestring
   sGrass = 'Herbe';                           /// Nom de l'herbe
   sWall = 'Mur';                              /// Nom du mur
@@ -36,6 +67,11 @@ resourcestring
   sDirectTurnstile = 'Tourniquet direct';     /// Nom du tourniquet direct
   sIndirectTurnstile = 'Tourniquet indirect'; /// Nom du tourniquet indirect
   sOutside = 'Dehors';                        /// Nom du dehors
+
+  sBuoy = 'Bouée';                            /// Nom de la bouée
+  sPlank = 'Planche';                         /// Nom de la planche
+  sSilverKey = 'Clef d''argent';              /// Nom de la clef d'argent
+  sGoldenKey = 'Clef d''or';                  /// Nom de la clef d'or
 
 const {don't localize}
   idGrass = 'Grass';                             /// ID de l'herbe
@@ -63,6 +99,11 @@ const {don't localize}
   idIndirectTurnstile = 'IndirectTurnstile';     /// ID du tourniquet indirect
   idOutside = 'Outside';                         /// ID du dehors
 
+  idBuoy = 'Buoy';                               /// ID de la bouée
+  idPlank = 'Plank';                             /// ID de la planche
+  idSilverKey = 'SilverKey';                     /// ID de la clef d'argent
+  idGoldenKey = 'GoldenKey';                     /// ID de la clef d'or
+
 const {don't localize}
   fGrass = 'Grass';                         /// Fichier de l'herbe
   fWall = 'Wall';                           /// Fichier du mur
@@ -84,10 +125,14 @@ const {don't localize}
   fIndirectTurnstile = 'IndirectTurnstile'; /// Fichier du tourniquet indirect
   fOutside = 'Outside';                     /// Fichier du dehors
 
+  fBuoy = 'Buoy';                           /// Fichier de la bouée
+  fPlank = 'Plank';                         /// Fichier de la planche
+  fSilverKey = 'SilverKey';                 /// Fichier de la clef d'argent
+  fGoldenKey = 'GoldenKey';                 /// Fichier de la clef d'or
+
 resourcestring
-  sCantUsePlank = 'Impossible de passer ici avec la planche.';
-  sCantGoOnHole = 'T''es pas bien de vouloir sauter dans ce trou !?';
   sCantGoOnWater = 'Sans bouée, on coule dans l''eau.';
+  sCantGoOnHole = 'T''es pas bien de vouloir sauter dans ce trou !?';
   sCantOpenSilverBlock = 'Ce bloc ne disparaîtra qu''avec une clef d''argent.';
   sCantOpenGoldenBlock = 'Ce bloc ne disparaîtra qu''avec une clef d''or.';
   sCantGoOnSky = 'Tu ne peux pas voler !';
@@ -102,7 +147,90 @@ resourcestring
                     'Tu peux faire disparaître un bloc en or.';
 
 type
+  {*
+    Type de téléporteur
+  *}
   TTransporterKind = (tkInactive, tkNext, tkPrevious, tkRandom);
+
+  {*
+    Plug-in bouée
+    Affiche une bouée sous le joueur, et permet d'aller dans l'eau
+  *}
+  TBuoyPlugin = class(TPlugin)
+  public
+    procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
+
+    procedure Moved(Player : TPlayer; KeyPressed : boolean;
+      Src, Dest : T3DPoint); override;
+
+    function CanYou(Player : TPlayer;
+      const Action : TPlayerAction) : boolean; override;
+  end;
+
+  {*
+    Définition de l'objet bouée
+    La bouée permet d'aller dans l'eau.
+  *}
+  TBuoys = class(TObjectDef)
+  protected
+    function GetShownInfos(Player : TPlayer) : string; override;
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    function CanYou(Player : TPlayer;
+      const Action : TPlayerAction) : boolean; override;
+    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
+  end;
+
+  {*
+    Définition de l'objet planche
+    La planche permet de passer au-dessus des cases
+  *}
+  TPlanks = class(TObjectDef)
+  protected
+    function GetShownInfos(Player : TPlayer) : string; override;
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    function CanYou(Player : TPlayer;
+      const Action : TPlayerAction) : boolean; override;
+    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
+  end;
+
+  {*
+    Définition de l'objet clef d'argent
+    La clef d'argent permet d'ouvrir une serrure en argent
+  *}
+  TSilverKeys = class(TObjectDef)
+  protected
+    function GetShownInfos(Player : TPlayer) : string; override;
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    function CanYou(Player : TPlayer;
+      const Action : TPlayerAction) : boolean; override;
+    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
+  end;
+
+  {*
+    Définition de l'objet clef d'or
+    La clef d'or permet d'ouvrir une serrure en or
+  *}
+  TGoldenKeys = class(TObjectDef)
+  protected
+    function GetShownInfos(Player : TPlayer) : string; override;
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    function CanYou(Player : TPlayer;
+      const Action : TPlayerAction) : boolean; override;
+    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
+  end;
 
   {*
     Herbe
@@ -284,6 +412,58 @@ type
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
+  {*
+    Bouée
+    La bouée donne au joueur un objet bouée
+  *}
+  TBuoy = class(TEffect)
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+  end;
+
+  {*
+    Planche
+    La planche donne au joueur un objet planche
+  *}
+  TPlank = class(TEffect)
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+  end;
+
+  {*
+    Clef d'argent
+    La clef d'argent donne au joueur un objet clef d'argent
+  *}
+  TSilverKey = class(TEffect)
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+  end;
+
+  {*
+    Clef d'or
+    La clef d'or donne au joueur un objet clef d'or
+  *}
+  TGoldenKey = class(TEffect)
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+  end;
+
 procedure LoadCoreComponents(Master : TMaster);
 
 implementation
@@ -295,6 +475,15 @@ implementation
 procedure LoadCoreComponents(Master : TMaster);
 var I : integer;
 begin
+  // Plug-in
+  TBuoyPlugin.Create(Master, idBuoyPlugin);
+
+  // Défintions d'objet
+  TBuoys.Create(Master, idBuoys, sBuoys);
+  TPlanks.Create(Master, idPlanks, sPlanks);
+  TSilverKeys.Create(Master, idSilverKeys, sSilverKeys);
+  TGoldenKeys.Create(Master, idGoldenKeys, sGoldenKeys);
+
   // Terrains
   TGrass.Create(Master, idGrass, sGrass);
   TWall.Create(Master, idWall, sWall);
@@ -327,6 +516,319 @@ begin
   TIndirectTurnstile.Create(Master, idIndirectTurnstile, sIndirectTurnstile);
 
   TOutside.Create(Master, idOutside, sOutside);
+
+  TBuoy.Create(Master, idBuoy, sBuoy);
+  TPlank.Create(Master, idPlank, sPlank);
+  TSilverKey.Create(Master, idSilverKey, sSilverKey);
+  TGoldenKey.Create(Master, idGoldenKey, sGoldenKey);
+end;
+
+//////////////////////////
+/// Classe TBuoyPlugin ///
+//////////////////////////
+
+{*
+  Dessine sous le joueur
+  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
+  effectué dans DrawBefore se retrouve donc sous le joueur.
+  @param Player   Joueur qui est dessiné
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
+procedure TBuoyPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+begin
+  inherited;
+  with Canvas do
+  begin
+    Brush.Color := clYellow;
+    Brush.Style := bsSolid;
+    Pen.Color := clYellow;
+    Pen.Style := psSolid;
+    Ellipse(ScrewRect(X, Y));
+  end;
+end;
+
+{*
+  Un joueur s'est déplacé
+  Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de départ
+  @param Dest         Case d'arrivée
+*}
+procedure TBuoyPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
+  Src, Dest : T3DPoint);
+begin
+  if not (Player.Map[Dest].Field is TWater) then
+    Player.RemovePlugin(Self);
+end;
+
+{*
+  Indique si le plug-in permet au joueur d'effectuer une action donnée
+  CanYou doit renvoyer True si le plug-in permet au joueur d'effectuer
+  l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à tester
+  @return True si le joueur est capable d'effectuer l'action, False sinon
+*}
+function TBuoyPlugin.CanYou(Player : TPlayer;
+  const Action : TPlayerAction) : boolean;
+begin
+  Result := Action = actGoOnWater;
+end;
+
+/////////////////////
+/// Classe TBuoys ///
+/////////////////////
+
+{*
+  Crée une instance de TBuoys
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du composant
+  @param AName     Nom du composant
+*}
+constructor TBuoys.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(Master, ID, Name);
+  Painter.ImgNames.Add(fBuoy);
+end;
+
+{*
+  Informations textuelles sur l'objet
+  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
+  @param Player   Joueur pour lequel on veut obtenir les infos
+  @return Informations textuelles, ou une chaîne vide si rien à afficher
+*}
+function TBuoys.GetShownInfos(Player : TPlayer) : string;
+var ACount : integer;
+begin
+  ACount := Count[Player];
+  if ACount < 2 then
+    Result := Format(sBuoyInfos, [ACount])
+  else
+    Result := Format(sBuoysInfos, [ACount]);
+end;
+
+{*
+  Indique si l'objet permet au joueur d'effectuer une action donnée
+  CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
+  d'effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à tester
+  @return True si l'objet permet d'effectuer l'action, False sinon
+*}
+function TBuoys.CanYou(Player : TPlayer;
+  const Action : TPlayerAction) : boolean;
+begin
+  Result := ((Action = actGoOnWater) and (Count[Player] > 0)) or
+    (inherited CanYou(Player, Action));
+end;
+
+{*
+  Utiliser l'objet pour effectuer l'action donnée
+  UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
+  effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à effectuer
+*}
+procedure TBuoys.UseFor(Player : TPlayer; const Action : TPlayerAction);
+begin
+  if Action = actGoOnWater then
+    Player.AddPlugin(Master.Plugin[idBuoyPlugin])
+  else
+    inherited;
+end;
+
+//////////////////////
+/// Classe TPlanks ///
+//////////////////////
+
+{*
+  Crée une instance de TPlanks
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du composant
+  @param AName     Nom du composant
+*}
+constructor TPlanks.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(Master, ID, Name);
+  Painter.ImgNames.Add(fPlank);
+end;
+
+{*
+  Informations textuelles sur l'objet
+  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
+  @param Player   Joueur pour lequel on veut obtenir les infos
+  @return Informations textuelles, ou une chaîne vide si rien à afficher
+*}
+function TPlanks.GetShownInfos(Player : TPlayer) : string;
+var ACount : integer;
+begin
+  ACount := Count[Player];
+  if ACount < 2 then
+    Result := Format(sPlankInfos, [ACount])
+  else
+    Result := Format(sPlanksInfos, [ACount]);
+end;
+
+{*
+  Indique si l'objet permet au joueur d'effectuer une action donnée
+  CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
+  d'effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à tester
+  @return True si l'objet permet d'effectuer l'action, False sinon
+*}
+function TPlanks.CanYou(Player : TPlayer;
+  const Action : TPlayerAction) : boolean;
+begin
+  Result := ((Action = actPassOverScrew) and (Count[Player] > 0)) or
+    (inherited CanYou(Player, Action));
+end;
+
+{*
+  Utiliser l'objet pour effectuer l'action donnée
+  UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
+  effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à effectuer
+*}
+procedure TPlanks.UseFor(Player : TPlayer; const Action : TPlayerAction);
+begin
+  if Action = actPassOverScrew then
+    { TODO 1 : Utiliser la planche }
+  else
+    inherited;
+end;
+
+//////////////////////////
+/// Classe TSilverKeys ///
+//////////////////////////
+
+{*
+  Crée une instance de TSilverKeys
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du composant
+  @param AName     Nom du composant
+*}
+constructor TSilverKeys.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(Master, ID, Name);
+  Painter.ImgNames.Add(fSilverKey);
+end;
+
+{*
+  Informations textuelles sur l'objet
+  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
+  @param Player   Joueur pour lequel on veut obtenir les infos
+  @return Informations textuelles, ou une chaîne vide si rien à afficher
+*}
+function TSilverKeys.GetShownInfos(Player : TPlayer) : string;
+var ACount : integer;
+begin
+  ACount := Count[Player];
+  if ACount < 2 then
+    Result := Format(sSilverKeyInfos, [ACount])
+  else
+    Result := Format(sSilverKeysInfos, [ACount]);
+end;
+
+{*
+  Indique si l'objet permet au joueur d'effectuer une action donnée
+  CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
+  d'effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à tester
+  @return True si l'objet permet d'effectuer l'action, False sinon
+*}
+function TSilverKeys.CanYou(Player : TPlayer;
+  const Action : TPlayerAction) : boolean;
+begin
+  Result := ((Action = actOpenSilverLock) and (Count[Player] > 0)) or
+    (inherited CanYou(Player, Action));
+end;
+
+{*
+  Utiliser l'objet pour effectuer l'action donnée
+  UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
+  effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à effectuer
+*}
+procedure TSilverKeys.UseFor(Player : TPlayer; const Action : TPlayerAction);
+begin
+  if Action = actOpenSilverLock then
+    Count[Player] := Count[Player]-1
+  else
+    inherited;
+end;
+
+//////////////////////////
+/// Classe TGoldenKeys ///
+//////////////////////////
+
+{*
+  Crée une instance de TGoldenKeys
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du composant
+  @param AName     Nom du composant
+*}
+constructor TGoldenKeys.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(Master, ID, Name);
+  Painter.ImgNames.Add(fGoldenKey);
+end;
+
+{*
+  Informations textuelles sur l'objet
+  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
+  @param Player   Joueur pour lequel on veut obtenir les infos
+  @return Informations textuelles, ou une chaîne vide si rien à afficher
+*}
+function TGoldenKeys.GetShownInfos(Player : TPlayer) : string;
+var ACount : integer;
+begin
+  ACount := Count[Player];
+  if ACount < 2 then
+    Result := Format(sGoldenKeyInfos, [ACount])
+  else
+    Result := Format(sGoldenKeysInfos, [ACount]);
+end;
+
+{*
+  Indique si l'objet permet au joueur d'effectuer une action donnée
+  CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
+  d'effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à tester
+  @return True si l'objet permet d'effectuer l'action, False sinon
+*}
+function TGoldenKeys.CanYou(Player : TPlayer;
+  const Action : TPlayerAction) : boolean;
+begin
+  Result := ((Action = actOpenGoldenLock) and (Count[Player] > 0)) or
+    (inherited CanYou(Player, Action));
+end;
+
+{*
+  Utiliser l'objet pour effectuer l'action donnée
+  UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
+  effectuer l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à effectuer
+*}
+procedure TGoldenKeys.UseFor(Player : TPlayer; const Action : TPlayerAction);
+begin
+  if Action = actOpenGoldenLock then
+    Count[Player] := Count[Player]-1
+  else
+    inherited;
 end;
 
 /////////////////////
@@ -422,8 +924,17 @@ procedure TWater.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
-  { TODO 1 : Implémenter TWater.Entering }
-  Cancel := True;
+  with Player do
+  begin
+    if CanYou(actGoOnWater) then exit;
+
+    if (Map[PointBehind(Pos, Direction)].Field = Map[Src].Field) and
+      CanYou(actPassOverScrew) then exit;
+
+    if KeyPressed then
+      Player.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
+    Cancel := True;
+  end;
 end;
 
 ////////////////////
@@ -462,8 +973,15 @@ procedure THole.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
-  { TODO 1 : Implémenter THole.Entering }
-  Cancel := True;
+  with Player do
+  begin
+    if (Map[PointBehind(Pos, Direction)].Field = Map[Src].Field) and
+      CanYou(actPassOverScrew) then exit;
+
+    if KeyPressed then
+      Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
+    Cancel := True;
+  end;
 end;
 
 ///////////////////////////
@@ -501,7 +1019,17 @@ end;
 procedure TSilverBlock.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
+var EffectID : TComponentID;
 begin
+  if KeyPressed then with Player do
+  begin
+    if CanYou(actOpenSilverLock) then
+    begin
+      EffectID := Map[Pos].Effect.ID;
+      Map[Pos] := Master.Screw[idGrass+'-'+EffectID];
+    end else ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
+  end;
+
   Cancel := True;
 end;
 
@@ -540,7 +1068,17 @@ end;
 procedure TGoldenBlock.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
+var EffectID : TComponentID;
 begin
+  if KeyPressed then with Player do
+  begin
+    if CanYou(actOpenGoldenLock) then
+    begin
+      EffectID := Map[Pos].Effect.ID;
+      Map[Pos] := Master.Screw[idGrass+'-'+EffectID];
+    end else ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
+  end;
+
   Cancel := True;
 end;
 
@@ -942,6 +1480,178 @@ procedure TOutside.Entered(Player : TPlayer; KeyPressed : boolean;
 begin
   inherited;
   // Faire gagner le joueur
+end;
+
+////////////////////
+/// Classe TBuoy ///
+////////////////////
+
+{*
+  Crée une instance de TBuoy
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'effet de case
+  @param AName     Nom de la case
+*}
+constructor TBuoy.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(fBuoy);
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TBuoy.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+var FieldID : TComponentID;
+begin
+  inherited;
+
+  // Désactivation de la case
+  FieldID := Player.Map[Pos].Field.ID;
+  Player.Map[Pos] := Master.Screw[FieldID+'-'+idNoEffect];
+
+  // Incrémentation du nombre de bouées du joueur
+  with Master.ObjectDef[idBuoys] do Count[Player] := Count[Player]+1;
+
+  // Affichage d'un message de notification
+  Player.ShowDialog(sMessage, sFoundBuoy);
+end;
+
+/////////////////////
+/// Classe TPlank ///
+/////////////////////
+
+{*
+  Crée une instance de TPlank
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'effet de case
+  @param AName     Nom de la case
+*}
+constructor TPlank.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(fPlank);
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TPlank.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+var FieldID : TComponentID;
+begin
+  inherited;
+
+  // Désactivation de la case
+  FieldID := Player.Map[Pos].Field.ID;
+  Player.Map[Pos] := Master.Screw[FieldID+'-'+idNoEffect];
+
+  // Incrémentation du nombre de bouées du joueur
+  with Master.ObjectDef[idPlanks] do Count[Player] := Count[Player]+1;
+
+  // Affichage d'un message de notification
+  Player.ShowDialog(sMessage, sFoundPlank);
+end;
+
+/////////////////////////
+/// Classe TSilverKey ///
+/////////////////////////
+
+{*
+  Crée une instance de TSilverKey
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'effet de case
+  @param AName     Nom de la case
+*}
+constructor TSilverKey.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(fSilverKey);
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TSilverKey.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+var FieldID : TComponentID;
+begin
+  inherited;
+
+  // Désactivation de la case
+  FieldID := Player.Map[Pos].Field.ID;
+  Player.Map[Pos] := Master.Screw[FieldID+'-'+idNoEffect];
+
+  // Incrémentation du nombre de bouées du joueur
+  with Master.ObjectDef[idSilverKeys] do Count[Player] := Count[Player]+1;
+
+  // Affichage d'un message de notification
+  Player.ShowDialog(sMessage, sFoundSilverKey);
+end;
+
+/////////////////////////
+/// Classe TGoldenKey ///
+/////////////////////////
+
+{*
+  Crée une instance de TGoldenKey
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'effet de case
+  @param AName     Nom de la case
+*}
+constructor TGoldenKey.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(fGoldenKey);
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TGoldenKey.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+var FieldID : TComponentID;
+begin
+  inherited;
+
+  // Désactivation de la case
+  FieldID := Player.Map[Pos].Field.ID;
+  Player.Map[Pos] := Master.Screw[FieldID+'-'+idNoEffect];
+
+  // Incrémentation du nombre de bouées du joueur
+  with Master.ObjectDef[idGoldenKeys] do Count[Player] := Count[Player]+1;
+
+  // Affichage d'un message de notification
+  Player.ShowDialog(sMessage, sFoundGoldenKey);
 end;
 
 end.
