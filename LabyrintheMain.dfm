@@ -39,7 +39,7 @@ object FormMain: TFormMain
     Align = alClient
     Center = True
   end
-  object Barre: TStatusBar
+  object StatusBar: TStatusBar
     Left = 0
     Top = 270
     Width = 270
@@ -60,31 +60,31 @@ object FormMain: TFormMain
     SizeGrip = False
   end
   object BigMenu: TMainMenu
-    Left = 72
+    Left = 40
     Top = 120
-    object MenuFichier: TMenuItem
+    object BigMenuFile: TMenuItem
       Caption = '&Fichier'
-      object MenuNouveau: TMenuItem
+      object MenuNewGame: TMenuItem
         Caption = 'Nouvelle Partie'
         ShortCut = 113
-        OnClick = MenuNouveauClick
+        OnClick = MenuNewGameClick
       end
-      object MenuRecommencer: TMenuItem
+      object MenuReloadGame: TMenuItem
         Caption = 'Recommencer'
         Enabled = False
         ShortCut = 114
-        OnClick = MenuRecommencerClick
+        OnClick = MenuReloadGameClick
       end
-      object MenuCharger: TMenuItem
+      object MenuLoadGame: TMenuItem
         Caption = 'Charger'
         ShortCut = 16451
-        OnClick = MenuChargerClick
+        OnClick = MenuLoadGameClick
       end
-      object MenuEnregistrer: TMenuItem
+      object MenuSaveGame: TMenuItem
         Caption = 'Enregistrer'
         Enabled = False
         ShortCut = 16467
-        OnClick = MenuEnregistrerClick
+        OnClick = MenuSaveGameClick
       end
       object Sep1: TMenuItem
         Caption = '-'
@@ -94,61 +94,62 @@ object FormMain: TFormMain
         Enabled = False
         OnClick = MenuDescriptionClick
       end
-      object MenuProprietes: TMenuItem
+      object MenuProperties: TMenuItem
         Caption = 'Propri'#233't'#233's'
         Enabled = False
-        object MenuPropLabyrinthe: TMenuItem
-          Caption = 'Labyrinthe'
-          OnClick = MenuPropLabyrintheClick
+        object MenuMapProperties: TMenuItem
+          Caption = 'Carte'
+          OnClick = MenuMapPropertiesClick
         end
-        object MenuPropJoueur: TMenuItem
+        object MenuPlayerProperties: TMenuItem
           Caption = 'Joueur'
-          OnClick = MenuPropJoueurClick
+          OnClick = MenuPlayerPropertiesClick
         end
       end
       object Sep2: TMenuItem
         Caption = '-'
       end
-      object MenuQuitter: TMenuItem
+      object MenuExit: TMenuItem
         Caption = 'Quitter'
         ShortCut = 16465
-        OnClick = MenuQuitterClick
+        OnClick = MenuExitClick
       end
     end
-    object MenuOptions: TMenuItem
+    object BigMenuOptions: TMenuItem
       Caption = '&Options'
-      object MenuIndices: TMenuItem
+      object MenuTips: TMenuItem
         Caption = 'Montrer les indices'
-        OnClick = MenuIndicesClick
+        OnClick = MenuTipsClick
       end
     end
-    object MenuAide: TMenuItem
+    object BigMenuHelp: TMenuItem
       Caption = '&Aide'
-      object MenuRubrAide: TMenuItem
+      object MenuHelpTopics: TMenuItem
         Caption = 'Rubriques d'#39'aide'
         ShortCut = 112
-        OnClick = MenuRubrAideClick
+        OnClick = MenuHelpTopicsClick
       end
       object Sep3: TMenuItem
         Caption = '-'
       end
-      object MenuAPropos: TMenuItem
+      object MenuAbout: TMenuItem
         Caption = 'A propos...'
-        OnClick = MenuAProposClick
+        OnClick = MenuAboutClick
       end
     end
   end
-  object Ouvrir: TOpenDialog
+  object NewGameDialog: TOpenDialog
     DefaultExt = 'flg'
     Filter = 'Labyrinthes (*.flg)|*.flg;*.url'
-    Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofNoNetworkButton]
-    Left = 104
+    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Title = 'Nouvelle partie'
+    Left = 72
     Top = 120
   end
-  object Sauver: TSaveDialog
-    DefaultExt = 'lab'
-    Filter = 'Labyrinthes (*.lab)|*.lab'
-    Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofCreatePrompt, ofNoNetworkButton]
+  object SaveGameDialog: TSaveDialog
+    DefaultExt = 'flg'
+    Filter = 'Labyrinthes (*.flg)|*.flg'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Title = 'Enregistrer la partie'
     Left = 136
     Top = 120
@@ -171,6 +172,14 @@ object FormMain: TFormMain
     AuthorEMail = 'sjrd@redaction-developpez.com'
     WebSite = 'http://sjrd.developpez.com/programmes/funlaby/'
     Left = 168
+    Top = 120
+  end
+  object LoadGameDialog: TOpenDialog
+    DefaultExt = 'flg'
+    Filter = 'Labyrinthes (*.flg)|*.flg;*.url'
+    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Title = 'Charger une partie'
+    Left = 104
     Top = 120
   end
 end

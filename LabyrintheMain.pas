@@ -12,9 +12,6 @@ uses
   SdDialogs, ShellAPI, FunLabyUtils, PlayerView, FilesUtils, MapFiles;
 
 resourcestring
-  sNewGame = 'Nouvelle partie';
-  sLoadGame = 'Charger une partir';
-
   sBuoyCount = '%d bouée(s)';
   sPlankCount = '%d planche(s)';
   sSilverKeyCount = '%d clef(s) d''argent';
@@ -29,44 +26,45 @@ type
   *}
   TFormMain = class(TForm)
     Image: TImage;
-    Barre: TStatusBar;
+    StatusBar: TStatusBar;
     BigMenu: TMainMenu;
-    MenuFichier: TMenuItem;
-    MenuQuitter: TMenuItem;
-    MenuNouveau: TMenuItem;
-    MenuEnregistrer: TMenuItem;
-    MenuCharger: TMenuItem;
+    BigMenuFile: TMenuItem;
+    MenuExit: TMenuItem;
+    MenuNewGame: TMenuItem;
+    MenuSaveGame: TMenuItem;
+    MenuLoadGame: TMenuItem;
     Sep2: TMenuItem;
-    MenuAide: TMenuItem;
-    MenuRubrAide: TMenuItem;
+    BigMenuHelp: TMenuItem;
+    MenuHelpTopics: TMenuItem;
     Sep3: TMenuItem;
-    MenuAPropos: TMenuItem;
-    Ouvrir: TOpenDialog;
-    Sauver: TSaveDialog;
+    MenuAbout: TMenuItem;
+    NewGameDialog: TOpenDialog;
+    SaveGameDialog: TSaveDialog;
     Sep1: TMenuItem;
     MenuDescription: TMenuItem;
-    MenuOptions: TMenuItem;
-    MenuIndices: TMenuItem;
-    MenuProprietes: TMenuItem;
-    MenuPropLabyrinthe: TMenuItem;
-    MenuPropJoueur: TMenuItem;
-    MenuRecommencer: TMenuItem;
+    BigMenuOptions: TMenuItem;
+    MenuTips: TMenuItem;
+    MenuProperties: TMenuItem;
+    MenuMapProperties: TMenuItem;
+    MenuPlayerProperties: TMenuItem;
+    MenuReloadGame: TMenuItem;
     AboutDialog: TSdAboutDialog;
+    LoadGameDialog: TOpenDialog;
     procedure FormDestroy(Sender: TObject);
     procedure MovePlayer(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormCreate(Sender: TObject);
-    procedure MenuQuitterClick(Sender: TObject);
-    procedure MenuNouveauClick(Sender: TObject);
-    procedure MenuChargerClick(Sender: TObject);
-    procedure MenuRubrAideClick(Sender: TObject);
-    procedure MenuAProposClick(Sender: TObject);
-    procedure MenuEnregistrerClick(Sender: TObject);
+    procedure MenuExitClick(Sender: TObject);
+    procedure MenuNewGameClick(Sender: TObject);
+    procedure MenuLoadGameClick(Sender: TObject);
+    procedure MenuHelpTopicsClick(Sender: TObject);
+    procedure MenuAboutClick(Sender: TObject);
+    procedure MenuSaveGameClick(Sender: TObject);
     procedure MenuDescriptionClick(Sender: TObject);
-    procedure MenuPropLabyrintheClick(Sender: TObject);
-    procedure MenuPropJoueurClick(Sender: TObject);
-    procedure MenuIndicesClick(Sender: TObject);
-    procedure MenuRecommencerClick(Sender: TObject);
+    procedure MenuMapPropertiesClick(Sender: TObject);
+    procedure MenuPlayerPropertiesClick(Sender: TObject);
+    procedure MenuTipsClick(Sender: TObject);
+    procedure MenuReloadGameClick(Sender: TObject);
   private
     { Déclarations privées }
     HiddenBitmap : TBitmap;
@@ -109,15 +107,17 @@ begin
   if MasterFile <> nil then
     EndGame;
 
+  LastFileName := FileName;
   MasterFile := TMasterFile.Create(FileName, fmPlay);
   Master := MasterFile.Master;
   View := TPlayerView.Create(Master.Players[0]);
 
   Caption := MasterFile.Title;
-  MenuEnregistrer.Enabled := True;
+  MenuReloadGame.Enabled := True;
+  MenuSaveGame.Enabled := True;
   MenuDescription.Enabled := True;
-  MenuProprietes.Enabled := True;
-  MenuIndices.Checked := False;
+  MenuProperties.Enabled := True;
+  MenuTips.Checked := False;
   ShowStatus;
 
   AdaptSizeToView;
@@ -132,9 +132,9 @@ end;
 *}
 procedure TFormMain.EndGame;
 begin
-  MenuEnregistrer.Enabled := False;
+  MenuSaveGame.Enabled := False;
   MenuDescription.Enabled := False;
-  MenuProprietes.Enabled := False;
+  MenuProperties.Enabled := False;
 
   OnKeyDown := nil;
 
@@ -154,12 +154,10 @@ function TFormMain.SaveGame : boolean;
 begin
   if MasterFile = nil then Result := True else
   begin
-    Sauver.FileName := '';
-    Sauver.InitialDir := fSaveguardsDir;
-    Result := Sauver.Execute;
+    Result := SaveGameDialog.Execute;
 
     if Result then
-      MasterFile.Save(Sauver.FileName);
+      MasterFile.Save(SaveGameDialog.FileName);
   end;
 end;
 
@@ -190,10 +188,10 @@ end;
 procedure TFormMain.ShowStatus;
 begin
   if MasterFile = nil then exit;
-  Barre.Panels[0].Text := Format(sBuoyCount, [0]);
-  Barre.Panels[1].Text := Format(sPlankCount, [0]);
-  Barre.Panels[2].Text := Format(sSilverKeyCount, [0]);
-  Barre.Panels[3].Text := Format(sGoldenKeyCount, [0]);
+  StatusBar.Panels[0].Text := Format(sBuoyCount, [0]);
+  StatusBar.Panels[1].Text := Format(sPlankCount, [0]);
+  StatusBar.Panels[2].Text := Format(sSilverKeyCount, [0]);
+  StatusBar.Panels[3].Text := Format(sGoldenKeyCount, [0]);
 end;
 
 {*
@@ -203,6 +201,9 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   Menu := BigMenu;
+  NewGameDialog.InitialDir := fLabyrinthsDir;
+  LoadGameDialog.InitialDir := fSaveguardsDir;
+  SaveGameDialog.InitialDir := fSaveguardsDir;
 
   LastFileName := '';
 
@@ -224,46 +225,40 @@ begin
     NewGame(ParamStr(1));
 end;
 
-procedure TFormMain.MenuQuitterClick(Sender: TObject);
+procedure TFormMain.MenuExitClick(Sender: TObject);
 begin
   Close;
 end;
 
-procedure TFormMain.MenuNouveauClick(Sender: TObject);
+procedure TFormMain.MenuNewGameClick(Sender: TObject);
 begin
-  Ouvrir.Title := sNewGame;
-  Ouvrir.InitialDir := fLabyrinthsDir;
-
-  if not Ouvrir.Execute then exit;
-  if ofExtensionDifferent in Ouvrir.Options then
-    RunURL(Ouvrir.FileName)
+  if not NewGameDialog.Execute then exit;
+  if ofExtensionDifferent in NewGameDialog.Options then
+    RunURL(NewGameDialog.FileName)
   else
-    NewGame(Ouvrir.FileName);
+    NewGame(NewGameDialog.FileName);
 end;
 
-procedure TFormMain.MenuChargerClick(Sender: TObject);
+procedure TFormMain.MenuLoadGameClick(Sender: TObject);
 begin
-  Ouvrir.Title := sLoadGame;
-  Ouvrir.InitialDir := fSaveguardsDir;
-
-  if not Ouvrir.Execute then exit;
-  if ofExtensionDifferent in Ouvrir.Options then
-    RunURL(Ouvrir.FileName)
+  if not LoadGameDialog.Execute then exit;
+  if ofExtensionDifferent in LoadGameDialog.Options then
+    RunURL(LoadGameDialog.FileName)
   else
-    NewGame(Ouvrir.FileName);
+    NewGame(LoadGameDialog.FileName);
 end;
 
-procedure TFormMain.MenuRubrAideClick(Sender: TObject);
+procedure TFormMain.MenuHelpTopicsClick(Sender: TObject);
 begin
   Application.HelpContext(1);
 end;
 
-procedure TFormMain.MenuAProposClick(Sender: TObject);
+procedure TFormMain.MenuAboutClick(Sender: TObject);
 begin
   AboutDialog.Execute;
 end;
 
-procedure TFormMain.MenuEnregistrerClick(Sender: TObject);
+procedure TFormMain.MenuSaveGameClick(Sender: TObject);
 begin
   SaveGame;
 end;
@@ -273,22 +268,22 @@ begin
   ShowDialog(sDescription, MasterFile.Description);
 end;
 
-procedure TFormMain.MenuPropLabyrintheClick(Sender: TObject);
+procedure TFormMain.MenuMapPropertiesClick(Sender: TObject);
 begin
   FormProperties.ShowMapProps(View.Player.Map);
 end;
 
-procedure TFormMain.MenuPropJoueurClick(Sender: TObject);
+procedure TFormMain.MenuPlayerPropertiesClick(Sender: TObject);
 begin
   FormProperties.ShowPlayerProps(View.Player);
 end;
 
-procedure TFormMain.MenuIndicesClick(Sender: TObject);
+procedure TFormMain.MenuTipsClick(Sender: TObject);
 begin
-  MenuIndices.Checked := not MenuIndices.Checked;
+  MenuTips.Checked := not MenuTips.Checked;
 end;
 
-procedure TFormMain.MenuRecommencerClick(Sender: TObject);
+procedure TFormMain.MenuReloadGameClick(Sender: TObject);
 begin
   NewGame(LastFileName);
 end;
