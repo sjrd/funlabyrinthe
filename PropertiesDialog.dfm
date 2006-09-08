@@ -1,4 +1,4 @@
-object FormProprietes: TFormProprietes
+object FormProperties: TFormProperties
   Left = 400
   Top = 122
   BorderIcons = [biSystemMenu]
@@ -16,7 +16,7 @@ object FormProprietes: TFormProprietes
   Position = poScreenCenter
   PixelsPerInch = 96
   TextHeight = 13
-  object Objets: TListBox
+  object ListBox: TListBox
     Left = 0
     Top = 0
     Width = 305

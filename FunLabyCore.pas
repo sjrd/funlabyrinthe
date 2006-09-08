@@ -77,9 +77,21 @@ const {don't localize}
   fOutside = 'Outside';                     /// Fichier du dehors
 
 resourcestring
-  sBlindAlley = 'Impasse';
+  sCantUsePlank = 'Impossible de passer ici avec la planche.';
+  sCantGoOnHole = 'T''es pas bien de vouloir sauter dans ce trou !?';
+  sCantGoOnWater = 'Sans bouée, on coule dans l''eau.';
+  sCantOpenSilverBlock = 'Ce bloc ne disparaîtra qu''avec une clef d''argent.';
+  sCantOpenGoldenBlock = 'Ce bloc ne disparaîtra qu''avec une clef d''or.';
+  sCantGoOnSky = 'Tu ne peux pas voler !';
 
-  sYouCantFly = 'Tu ne peux pas voler !';
+  sFoundBuoy      = 'Tu as trouvé une bouée.'+#10+
+                    'Tu peux aller dans l''eau.';
+  sFoundPlank     = 'Tu as trouvé une planche.'+#10+
+                    'Tu peux franchir certains obstacles.';
+  sFoundSilverKey = 'Tu as trouvé une clef d''argent.'+#10+
+                    'Tu peux faire disparaître un bloc en argent.';
+  sFoundGoldenKey = 'Tu as trouvé une clef d''or.'+#10+
+                    'Tu peux faire disparaître un bloc en or.';
 
 type
   {*
@@ -526,7 +538,7 @@ procedure TSky.Entering(Player : TPlayer; OldDirection : TDirection;
   var Cancel, AbortEntered : boolean);
 begin
   if KeyPressed then
-    Player.ShowDialog(sBlindAlley, sYouCantFly, dtError);
+    Player.ShowDialog(sBlindAlley, sCantGoOnSky, dtError);
   Cancel := True;
 end;
 

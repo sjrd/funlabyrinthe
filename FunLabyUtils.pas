@@ -18,6 +18,14 @@ resourcestring
   sWhichObject = 'Quel objet voulez-vous utiliser ?';
   sComponentNotFound = 'Le composant d''ID %s n''existe pas';
 
+  sDescription = 'Description';
+  sMessage = 'Message';
+  sTip = 'Indice';
+  sChoice = 'Choix';
+  sFailure = 'Échec';
+  sBlindAlley = 'Impasse';
+  sWon = 'Gagné !';
+
 const
   CurrentVersion = '5.0'; /// Version courante de FunLabyrinthe
   ScrewSize = 30;         /// Taille (en largeur et hauteur) d'une case

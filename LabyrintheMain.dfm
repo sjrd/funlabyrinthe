@@ -1,4 +1,4 @@
-object FormPrincipale: TFormPrincipale
+object FormMain: TFormMain
   Left = 255
   Top = 129
   BorderIcons = [biSystemMenu, biMinimize]
@@ -26,10 +26,9 @@ object FormPrincipale: TFormPrincipale
   KeyPreview = True
   OldCreateOrder = True
   Position = poScreenCenter
-  OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  OnKeyDown = MovePlayer
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object Image: TImage
@@ -38,7 +37,7 @@ object FormPrincipale: TFormPrincipale
     Width = 270
     Height = 270
     Align = alClient
-    Stretch = True
+    Center = True
   end
   object Barre: TStatusBar
     Left = 0

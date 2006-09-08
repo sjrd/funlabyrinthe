@@ -3,9 +3,10 @@ program Labyrinthe;
 uses
   Forms,
   WinHelpViewer,
-  LabyrintheMain in 'LabyrintheMain.pas' {FormPrincipale},
+  ScUtils,
+  LabyrintheMain in 'LabyrintheMain.pas' {FormMain},
   LiftDialog in 'LiftDialog.pas' {FormBougeAscenseur},
-  PropertiesDialog in 'PropertiesDialog.pas' {FormProprietes},
+  PropertiesDialog in 'PropertiesDialog.pas' {FormProperties},
   PlayerView in 'PlayerView.pas';
 
 {$R *.RES}
@@ -13,9 +14,11 @@ uses
 begin
   Application.Initialize;
   Application.Title := 'Labyrinthe';
+  Application.HelpFile := Dir+'Labyrinthe.hlp';
   Application.Tag := 1;
-  Application.CreateForm(TFormPrincipale, FormPrincipale);
+  Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormBougeAscenseur, FormBougeAscenseur);
-  Application.CreateForm(TFormProprietes, FormProprietes);
+  Application.CreateForm(TFormProperties, FormProperties);
   Application.Run;
 end.
+
