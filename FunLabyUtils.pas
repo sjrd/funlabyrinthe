@@ -367,6 +367,8 @@ type
     FMaps : TObjectList;           /// Liste des cartes
     FPlayers : TObjectList;        /// Liste des joueurs
 
+    FBeginTickCount : Cardinal;    /// TickCount au lancement
+
     function GetComponent(const ID : TComponentID) : TFunLabyComponent;
     function GetPlugin   (const ID : TComponentID) : TPlugin;
     function GetObjectDef(const ID : TComponentID) : TObjectDef;
@@ -390,6 +392,8 @@ type
     function GetMaps(Index : integer) : TMap;
     function GetPlayerCount : integer;
     function GetPlayers(Index : integer) : TPlayer;
+
+    function GetTickCount : Cardinal;
 
     procedure AddComponent(Component : TFunLabyComponent);
   public
@@ -422,6 +426,8 @@ type
     property Maps[index : integer] : TMap read GetMaps;
     property PlayerCount : integer read GetPlayerCount;
     property Players[index : integer] : TPlayer read GetPlayers;
+
+    property TickCount : Cardinal read GetTickCount;
   end;
 
 const {don't localize}
@@ -1556,6 +1562,8 @@ begin
   FScrews     := TObjectList.Create;
   FMaps       := TObjectList.Create;
   FPlayers    := TObjectList.Create;
+
+  FBeginTickCount := Windows.GetTickCount;
 end;
 
 {*
@@ -1821,6 +1829,11 @@ end;
 function TMaster.GetPlayers(Index : integer) : TPlayer;
 begin
   Result := TPlayer(FPlayers[Index]);
+end;
+
+function TMaster.GetTickCount : Cardinal;
+begin
+  Result := Windows.GetTickCount - FBeginTickCount;
 end;
 
 {*

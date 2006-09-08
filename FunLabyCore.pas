@@ -108,6 +108,7 @@ const {don't localize}
   fGrass = 'Grass';                         /// Fichier de l'herbe
   fWall = 'Wall';                           /// Fichier du mur
   fWater = 'Water';                         /// Fichier de l'eau
+  fAlternateWater = 'AlternateWater';       /// Fichier alternatif de l'eau
   fHole = 'Hole';                           /// Fichier du trou
   fSilverBlock = 'SilverBlock';             /// Fichier du bloc en argent
   fGoldenBlock = 'GoldenBlock';             /// Fichier du bloc en or
@@ -262,9 +263,18 @@ type
     et au-dessus duquel on peut passer avec une planche.
   *}
   TWater = class(TField)
+  private
+    FAlternatePainter : TPainter;
+  protected
+    procedure DrawField(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); override;
+
+    property AlternatePainter : TPainter read FAlternatePainter;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ADelegateDrawTo : TField = nil);
+    destructor Destroy; override;
+    procedure AfterConstruction; override;
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
@@ -903,7 +913,46 @@ constructor TWater.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string; ADelegateDrawTo : TField = nil);
 begin
   inherited Create(AMaster, AID, AName, ADelegateDrawTo);
+  FAlternatePainter := TPainter.Create(Master.ImagesMaster);
+  FAlternatePainter.ImgNames.BeginUpdate;
+
   Painter.ImgNames.Add(fWater);
+  AlternatePainter.ImgNames.Add(fAlternateWater);
+end;
+
+{*
+  Exécuté après la construction de l'objet
+  AfterConstruction est appelé après l'exécution du dernier constructeur.
+  N'appelez pas directement AfterConstruction.
+*}
+procedure TWater.AfterConstruction;
+begin
+  inherited;
+  FAlternatePainter.ImgNames.EndUpdate;
+end;
+
+{*
+  Détruit l'instance
+*}
+destructor TWater.Destroy;
+begin
+  FAlternatePainter.Free;
+  inherited;
+end;
+
+{*
+  Dessine le terrain sur le canevas indiqué
+  Les descendants de TField doivent réimplémenter DrawField plutôt que Draw.
+  @param Canvas   Canevas sur lequel dessiner le terrain
+  @param X        Coordonnée X du point à partir duquel dessiner le terrain
+  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+*}
+procedure TWater.DrawField(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+begin
+  if (Master.TickCount mod 2000) < 1000 then
+    Painter.Draw(Canvas, X, Y)
+  else
+    AlternatePainter.Draw(Canvas, X, Y);
 end;
 
 {*
