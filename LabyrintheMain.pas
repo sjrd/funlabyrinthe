@@ -9,14 +9,10 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, NumberDialog,
-  SdDialogs, ShellAPI, FunLabyUtils, PlayerView, FilesUtils, MapFiles;
+  SdDialogs, ShellAPI, FunLabyUtils, PlayerView, FilesUtils, MapFiles,
+  FunLabyCore;
 
 resourcestring
-  sBuoyCount = '%d bouée(s)';
-  sPlankCount = '%d planche(s)';
-  sSilverKeyCount = '%d clef(s) d''argent';
-  sGoldenKeyCount = '%d clef(s) d''or';
-
   sViewSize = 'Taille de la vue';
   sViewSizePrompt = 'Taille de la vue :';
 
@@ -243,10 +239,14 @@ end;
 procedure TFormMain.ShowStatus;
 begin
   if MasterFile = nil then exit;
-  StatusBar.Panels[0].Text := Format(sBuoyCount, [0]);
-  StatusBar.Panels[1].Text := Format(sPlankCount, [0]);
-  StatusBar.Panels[2].Text := Format(sSilverKeyCount, [0]);
-  StatusBar.Panels[3].Text := Format(sGoldenKeyCount, [0]);
+  StatusBar.Panels[0].Text :=
+    Master.ObjectDef[idBuoys].ShownInfos[View.Player];
+  StatusBar.Panels[1].Text :=
+    Master.ObjectDef[idPlanks].ShownInfos[View.Player];
+  StatusBar.Panels[2].Text :=
+    Master.ObjectDef[idSilverKeys].ShownInfos[View.Player];
+  StatusBar.Panels[3].Text :=
+    Master.ObjectDef[idGoldenKeys].ShownInfos[View.Player];
 end;
 
 {*
@@ -410,6 +410,7 @@ procedure TFormMain.UpdateImage(Sender: TObject);
 begin
   View.Draw(HiddenBitmap.Canvas);
   Image.Picture.Assign(HiddenBitmap);
+  ShowStatus;
 end;
 
 {*
