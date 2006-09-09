@@ -117,6 +117,11 @@ object FormMain: TFormMain
     end
     object BigMenuOptions: TMenuItem
       Caption = '&Options'
+      object MenuViewSize: TMenuItem
+        Caption = 'Taille de la vue'
+        Enabled = False
+        OnClick = MenuViewSizeClick
+      end
       object MenuTips: TMenuItem
         Caption = 'Montrer les indices'
         OnClick = MenuTipsClick

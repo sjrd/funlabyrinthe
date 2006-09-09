@@ -8,7 +8,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils,
+  Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, NumberDialog,
   SdDialogs, ShellAPI, FunLabyUtils, PlayerView, FilesUtils, MapFiles;
 
 resourcestring
@@ -16,6 +16,9 @@ resourcestring
   sPlankCount = '%d planche(s)';
   sSilverKeyCount = '%d clef(s) d''argent';
   sGoldenKeyCount = '%d clef(s) d''or';
+
+  sViewSize = 'Taille de la vue';
+  sViewSizePrompt = 'Taille de la vue :';
 
   sExitConfirmTitle = 'Quitter FunLabyrinthe';
   sExitConfirm = 'Voulez-vous enregistrer la partie en cours ?';
@@ -65,6 +68,8 @@ type
     AboutDialog: TSdAboutDialog;
     LoadGameDialog: TOpenDialog;
     TimerUpdateImage: TTimer;
+    MenuViewSize: TMenuItem;
+    procedure MenuViewSizeClick(Sender: TObject);
     procedure UpdateImage(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure MovePlayer(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -112,7 +117,7 @@ implementation
 {$R *.DFM}
 
 uses
-  LiftDialog, PropertiesDialog;
+  PropertiesDialog;
 
 //////////////////////////
 /// Classe TMoveThread ///
@@ -165,6 +170,7 @@ begin
   MenuSaveGame.Enabled := True;
   MenuDescription.Enabled := True;
   MenuProperties.Enabled := True;
+  MenuViewSize.Enabled := True;
   MenuTips.Checked := False;
   ShowStatus;
 
@@ -185,6 +191,7 @@ begin
   MenuSaveGame.Enabled := False;
   MenuDescription.Enabled := False;
   MenuProperties.Enabled := False;
+  MenuViewSize.Enabled := False;
 
   View.Free;
   MasterFile.Free;
@@ -216,7 +223,7 @@ procedure TFormMain.AdaptSizeToView;
 var ImgSize : integer;
 begin
   if View = nil then ImgSize := 270 else
-    ImgSize := View.Size * ScrewSize;
+    ImgSize := View.TotalSize * ScrewSize;
 
   with HiddenBitmap do
   begin
@@ -395,10 +402,25 @@ begin
   HiddenBitmap.Free;
 end;
 
+{*
+  Gestionnaire d'événement OnTimer
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.UpdateImage(Sender: TObject);
 begin
   View.Draw(HiddenBitmap.Canvas);
   Image.Picture.Assign(HiddenBitmap);
+end;
+
+{*
+  Gestionnaire du menu 'Taille de la vue'
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.MenuViewSizeClick(Sender: TObject);
+begin
+  View.Size := TFormNumber.ChooseNumber(sViewSize, sViewSizePrompt,
+    View.Size, View.MinSize, View.MaxSize);
+  AdaptSizeToView;
 end;
 
 end.

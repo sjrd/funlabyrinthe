@@ -1,10 +1,9 @@
-object FormBougeAscenseur: TFormBougeAscenseur
+object FormNumber: TFormNumber
   Left = 481
   Top = 29
-  ActiveControl = BoutonOK
   BorderIcons = []
   BorderStyle = bsDialog
-  Caption = 'Ascenseur'
+  Caption = 'Choix d'#39'un nombre'
   ClientHeight = 105
   ClientWidth = 257
   Color = clBtnFace
@@ -15,21 +14,22 @@ object FormBougeAscenseur: TFormBougeAscenseur
   Font.Style = []
   KeyPreview = True
   OldCreateOrder = True
+  Position = poScreenCenter
   OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
   PixelsPerInch = 96
   TextHeight = 13
-  object LabelEtage: TLabel
+  object LabelPrompt: TLabel
     Left = 16
     Top = 24
-    Width = 129
+    Width = 32
     Height = 13
-    Caption = #192' quel '#233'tage veux-tu aller ?'
+    Caption = 'Invite :'
   end
-  object EditEtage: TSpinEdit
-    Left = 160
+  object EditValue: TSpinEdit
+    Left = 176
     Top = 17
-    Width = 81
+    Width = 65
     Height = 26
     AutoSelect = False
     EditorEnabled = False
@@ -39,13 +39,13 @@ object FormBougeAscenseur: TFormBougeAscenseur
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     MaxLength = 10
-    MaxValue = 1
+    MaxValue = 0
     MinValue = 0
     ParentFont = False
     TabOrder = 0
-    Value = 1
+    Value = 0
   end
-  object BoutonOK: TButton
+  object ButtonOK: TButton
     Left = 84
     Top = 64
     Width = 89

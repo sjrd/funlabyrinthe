@@ -43,7 +43,8 @@ contains
   FunLabyUtils in 'FunLabyUtils.pas',
   FilesUtils in 'FilesUtils.pas',
   MapFiles in 'MapFiles.pas',
-  FunLabyCore in 'FunLabyCore.pas';
+  FunLabyCore in 'FunLabyCore.pas',
+  NumberDialog in 'NumberDialog.pas';
 
 end.
 

@@ -88,7 +88,7 @@ type
   protected
     constructor Create(AMasterFile : TMasterFile; const AFileName : TFileName;
       const AMIMEType : string; const AMapID : TComponentID;
-      ADimensions : T3DPoint); overload;
+      ADimensions : T3DPoint; AZoneSize : integer); overload;
   public
     {*
       Crée une instance de TMapFile
@@ -271,14 +271,15 @@ end;
   @param AMIMEType     Type MIME du fichier
   @param AMapID        ID de la carte
   @param ADimensions   Dimensions de la carte
+  @param AZoneSize     Taille d'une zone de la carte
 *}
 constructor TMapFile.Create(AMasterFile : TMasterFile;
   const AFileName : TFileName; const AMIMEType : string;
-  const AMapID : TComponentID; ADimensions : T3DPoint);
+  const AMapID : TComponentID; ADimensions : T3DPoint; AZoneSize : integer);
 begin
   inherited Create(AMasterFile, AFileName, AMIMEType);
   FMapID := AMapID;
-  FMap := TMap.Create(Master, AMapID, ADimensions);
+  FMap := TMap.Create(Master, AMapID, ADimensions, AZoneSize);
 end;
 
 {*
@@ -437,7 +438,7 @@ procedure TMasterFile.Load(Document : IXMLDOMDocument);
   end;
 var Element : IXMLDOMElement;
     NodeList : IXMLDOMNodeList;
-    I, J : integer;
+    I, J, MaxViewSize : integer;
     ID, FileType, Name, MapID : string;
     Position : T3DPoint;
     Player : TPlayer;
@@ -490,7 +491,13 @@ begin
     FileType := getAttribute('type');
     FileName := ResolveHRef(getAttribute('href'), fMapsDir);
 
-    FindMapFileClass(FileType).Create(Self, FileName, FileType, ID);
+    if VarIsNull(getAttribute('maxviewsize')) then
+      MaxViewSize := MinViewSize
+    else
+      MaxViewSize := getAttribute('maxviewsize');
+
+    FindMapFileClass(FileType).Create(
+      Self, FileName, FileType, ID).Map.MaxViewSize := MaxViewSize;
   end;
 
   // Joueurs

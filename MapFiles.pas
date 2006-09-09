@@ -83,11 +83,13 @@ begin
     if Value > FLMVersion then
       EFileError.CreateFmt(sVersionTooHigh, [IntToStr(Value)]);
 
-    // Lecture des dimensions
+    // Lecture des dimensions et de la taille d'une zone
     Stream.ReadBuffer(Dimensions, sizeof(T3DPoint));
+    Stream.ReadBuffer(Value, 4);
 
     // On peut enfin appeler le constructeur hérité
-    inherited Create(AMasterFile, AFileName, AMIMEType, AMapID, Dimensions);
+    inherited Create(AMasterFile, AFileName, AMIMEType, AMapID,
+      Dimensions, Value);
 
     // Lecture de la palette de cases
     Stream.ReadBuffer(Count, 4);

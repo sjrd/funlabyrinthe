@@ -29,7 +29,7 @@ resourcestring
 const
   CurrentVersion = '5.0'; /// Version courante de FunLabyrinthe
   ScrewSize = 30;         /// Taille (en largeur et hauteur) d'une case
-  DefaultZoneSize = 7;    /// Taille par défaut d'une zone (en cases)
+  MinViewSize = 1;        /// Taille minimale d'une vue
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
 
 type
@@ -262,8 +262,11 @@ type
   private
     FDimensions : T3DPoint;   /// Dimensions de la carte (en cases)
     FZoneSize : integer;      /// Taille d'une zone de la carte
+    FMaxViewSize : integer;   /// Taille maximale d'une vue pour cette carte
     FMap : array of TScrew;   /// Carte stockée de façon linéaire
     FOutsideOffset : integer; /// Offset de départ de l'extérieur
+
+    procedure SetMaxViewSize(Value : integer);
 
     function GetMap(Position : T3DPoint) : TScrew;
     procedure SetMap(Position : T3DPoint; Value : TScrew);
@@ -276,12 +279,13 @@ type
     procedure SetLinearMap(Index : integer; Value : TScrew);
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      ADimensions : T3DPoint);
+      ADimensions : T3DPoint; AZoneSize : integer);
 
     function InMap(Position : T3DPoint) : boolean;
 
     property Dimensions : T3DPoint read FDimensions;
     property ZoneSize : integer read FZoneSize;
+    property MaxViewSize : integer read FMaxViewSize write SetMaxViewSize;
 
     property Map[Position : T3DPoint] : TScrew
       read GetMap write SetMap; default;
@@ -1030,20 +1034,35 @@ end;
 {*
   Crée une instance de TMap
   @param AMaster       Maître FunLabyrinthe
+  @param AID           ID de la carte
   @param ADimensions   Dimensions de la carte (en cases)
+  @param AZoneSize     Taille d'une zone de la carte
 *}
 constructor TMap.Create(AMaster : TMaster; const AID : TComponentID;
-  ADimensions : T3DPoint);
+  ADimensions : T3DPoint; AZoneSize : integer);
 var I : integer;
 begin
   inherited Create(AMaster, AID);
   FDimensions := ADimensions;
-  FZoneSize := DefaultZoneSize;
+  FZoneSize := AZoneSize;
+  FMaxViewSize := MinViewSize;
 
   FOutsideOffset := FDimensions.X * FDimensions.Y * FDimensions.Z;
   SetLength(FMap, FOutsideOffset + FDimensions.Z);
   for I := Low(FMap) to High(FMap) do
     FMap[I] := nil;
+end;
+
+{*
+  Modifie la taille maximale d'une vue pour cette carte
+  @param Value   Nouvelle taille maximale
+*}
+procedure TMap.SetMaxViewSize(Value : integer);
+begin
+  if Value < MinViewSize then
+    FMaxViewSize := MinViewSize
+  else
+    FMaxViewSize := Value;
 end;
 
 {*
