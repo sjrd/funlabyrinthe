@@ -10,7 +10,7 @@ unit FunLabyCore;
 interface
 
 uses
-  Windows, SysUtils, Graphics, ScUtils, FunLabyUtils;
+  Windows, SysUtils, Classes, Graphics, ScUtils, FunLabyUtils;
 
 const {don't localize}
   actGoOnWater = 'GoOnWater';         /// Action d'aller sur l'eau
@@ -474,7 +474,7 @@ type
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
-procedure LoadCoreComponents(Master : TMaster);
+procedure LoadCoreComponents(Master : TMaster; Params : TStrings);
 
 implementation
 
@@ -482,7 +482,7 @@ implementation
   Charge tous les composants au coeur de FunLabyrinthe
   @param Master   Maître FunLabyrinthe dans lequel charger les composants
 *}
-procedure LoadCoreComponents(Master : TMaster);
+procedure LoadCoreComponents(Master : TMaster; Params : TStrings);
 var I : integer;
 begin
   // Plug-in

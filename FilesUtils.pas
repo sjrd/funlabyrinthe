@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Classes, Contnrs, ScUtils, ScLists, ScStrUtils, MSXML, FunLabyUtils,
-  FunLabyCore, Variants;
+  FunLabyCore, Variants, IniFiles;
 
 resourcestring
   sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
@@ -71,7 +71,7 @@ type
   TUnitFile = class(TDependantFile)
   public
     constructor Create(AMasterFile : TMasterFile; const AFileName : TFileName;
-      const AMIMEType : string); virtual;
+      const AMIMEType : string; Params : TStrings); virtual;
     procedure AfterConstruction; override;
   end;
   TUnitFileClass = class of TUnitFile;
@@ -186,9 +186,12 @@ type
 
 implementation
 
+uses
+  UnitFiles, MapFiles;
+
 var
-  UnitFileClasses : TStrings; /// Table de hashage Type MIME -> Classe unité
-  MapFileClasses : TStrings;  /// Table de hashage Type MIME -> Classe carte
+  UnitFileClasses : TStrings = nil; /// Type MIME -> Classe unité
+  MapFileClasses : TStrings = nil;  /// Type MIME -> Classe carte
 
 function CompareVersions(Version1, Version2 : string) : integer;
 var SubVer1, SubVer2 : string;
@@ -200,6 +203,14 @@ begin
     Delete(Version2, 1, Length(SubVer2)+1);
     Result := StrToIntDef(SubVer1, 0) - StrToIntDef(SubVer2, 0);
   until (Result <> 0) or ((Version1 = '') and (Version2 = ''));
+end;
+
+procedure EnsureClassListCreated;
+begin
+  if UnitFileClasses = nil then
+    UnitFileClasses := TStringList.Create;
+  if MapFileClasses = nil then
+    MapFileClasses := TStringList.Create;
 end;
 
 /////////////////////////////
@@ -242,9 +253,10 @@ end;
   @param AMasterFile   Fichier maître
   @param AFileName     Nom du fichier
   @param AMIMEType     Type MIME du fichier
+  @param Params        Paramètres envoyés à l'unité
 *}
 constructor TUnitFile.Create(AMasterFile : TMasterFile;
-  const AFileName : TFileName; const AMIMEType : string);
+  const AFileName : TFileName; const AMIMEType : string; Params : TStrings);
 begin
   inherited Create(AMasterFile, AFileName, AMIMEType);
 end;
@@ -436,8 +448,7 @@ procedure TMasterFile.Load(Document : IXMLDOMDocument);
     for I := 0 to Node.childNodes.length-1 do
       Result := Result+Node.childNodes.item[I].xml;
   end;
-var Element : IXMLDOMElement;
-    NodeList : IXMLDOMNodeList;
+var Params : TStrings;
     I, J, MaxViewSize : integer;
     ID, FileType, Name, MapID : string;
     Position : T3DPoint;
@@ -446,87 +457,107 @@ var Element : IXMLDOMElement;
 begin
   { Don't localize strings in this method }
 
-  Element := Document.documentElement as IXMLDOMElement;
-  if Element.nodeName <> 'funlabyrinthe' then InvalidFormat;
-
-  // Test de version
-  FVersion := Element.getAttribute('version');
-  if FVersion = '' then InvalidFormat;
-  if CompareVersions(FVersion, CurrentVersion) > 0 then
-    raise EFileError.CreateFmt(sVersionTooHigh, [FVersion]);
-
-  // Attributs du fichier
-  FAllowEdit := Element.getAttribute('allowedit') <> 'no';
-  FIsSaveguard := Element.getAttribute('issaveguard') = 'yes';
-
-  // Infos standart sur le labyrinthe
-  FTitle := Element.selectSingleNode('./title').text;
-  if FTitle = '' then TitleFromFileName;
-  FDescription := ExtractContents(Element.selectSingleNode('./description'));
-  FDifficulty := Element.selectSingleNode('./difficulty').text;
-  with Element.selectSingleNode('./author') as IXMLDOMElement do
+  with Document.documentElement as IXMLDOMElement do
   begin
-    FAuthorID := StrToIntDef(getAttribute('id'), 0);
-    FAuthor := text;
-  end;
+    if nodeName <> 'funlabyrinthe' then InvalidFormat;
 
-  // Chargement des composants au coeur de FunLabyrinthe
-  LoadCoreComponents(Master);
+    // Test de version
+    FVersion := getAttribute('version');
+    if FVersion = '' then InvalidFormat;
+    if CompareVersions(FVersion, CurrentVersion) > 0 then
+      raise EFileError.CreateFmt(sVersionTooHigh, [FVersion]);
 
-  // Unités utilisées
-  NodeList := Element.selectNodes('./units/unit');
-  for I := 0 to NodeList.length-1 do with NodeList.item[I] as IXMLDOMElement do
-  begin
-    FileType := getAttribute('type');
-    FileName := ResolveHRef(getAttribute('href'), fUnitsDir);
+    // Attributs du fichier
+    FAllowEdit := getAttribute('allowedit') <> 'no';
+    FIsSaveguard := getAttribute('issaveguard') = 'yes';
 
-    FindUnitFileClass(FileType).Create(Self, FileName, FileType);
-  end;
-
-  // Cartes
-  NodeList := Element.selectNodes('./maps/map');
-  for I := 0 to NodeList.length-1 do with NodeList.item[I] as IXMLDOMElement do
-  begin
-    ID := getAttribute('id');
-    FileType := getAttribute('type');
-    FileName := ResolveHRef(getAttribute('href'), fMapsDir);
-
-    if VarIsNull(getAttribute('maxviewsize')) then
-      MaxViewSize := MinViewSize
-    else
-      MaxViewSize := getAttribute('maxviewsize');
-
-    FindMapFileClass(FileType).Create(
-      Self, FileName, FileType, ID).Map.MaxViewSize := MaxViewSize;
-  end;
-
-  // Joueurs
-  NodeList := Element.selectNodes('./players/player');
-  if NodeList.length <> 1 then
-    raise EFileError.Create(sThereMustBeOnePlayer);
-  for I := 0 to NodeList.length-1 do with NodeList.item[I] as IXMLDOMElement do
-  begin
-    ID := getAttribute('id');
-    if VarIsNull(getAttribute('name')) then Name := ID else
-      Name := getAttribute('name');
-
-    with selectSingleNode('./position') as IXMLDOMElement do
+    // Infos standart sur le labyrinthe
+    FTitle := selectSingleNode('./title').text;
+    if FTitle = '' then TitleFromFileName;
+    FDescription := ExtractContents(selectSingleNode('./description'));
+    FDifficulty := selectSingleNode('./difficulty').text;
+    with selectSingleNode('./author') as IXMLDOMElement do
     begin
-      MapID := getAttribute('map');
-      Position.X := getAttribute('posx');
-      Position.Y := getAttribute('posy');
-      Position.Z := getAttribute('posz');
+      FAuthorID := StrToIntDef(getAttribute('id'), 0);
+      FAuthor := text;
     end;
 
-    Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position);
+    // Unités utilisées
+    Params := THashedStringList.Create;
+    try
+      // Chargement des composants au coeur de FunLabyrinthe
+      LoadCoreComponents(Master, Params);
 
-    with selectNodes('./attributes/attribute') do
-    begin
-      for J := 0 to length-1 do with item[J] as IXMLDOMElement do
-        Player.Attribute[getAttribute('name')] := getAttribute('value');
+      with selectNodes('./units/unit') do
+      begin
+        for I := 0 to length-1 do with item[I] as IXMLDOMElement do
+        begin
+          FileType := getAttribute('type');
+          FileName := ResolveHRef(getAttribute('href'), fUnitsDir);
+
+          Params.Clear;
+          with selectNodes('./param') do
+          begin
+            for J := 0 to length-1 do with item[J] as IXMLDOMElement do
+              Params.Values[getAttribute('name')] := getAttribute('value');
+          end;
+
+          FindUnitFileClass(FileType).Create(Self, FileName, FileType, Params);
+        end;
+      end;
+    finally
+      Params.Free;
     end;
 
-    { TODO 1 : Ajouter le support du dessin du joueur }
+    // Cartes
+    with selectNodes('./maps/map') do
+    begin
+      for I := 0 to length-1 do with item[I] as IXMLDOMElement do
+      begin
+        ID := getAttribute('id');
+        FileType := getAttribute('type');
+        FileName := ResolveHRef(getAttribute('href'), fMapsDir);
+
+        if VarIsNull(getAttribute('maxviewsize')) then
+          MaxViewSize := MinViewSize
+        else
+          MaxViewSize := getAttribute('maxviewsize');
+
+        FindMapFileClass(FileType).Create(
+          Self, FileName, FileType, ID).Map.MaxViewSize := MaxViewSize;
+      end;
+    end;
+
+    // Joueurs
+    with selectNodes('./players/player') do
+    begin
+      if length <> 1 then
+        raise EFileError.Create(sThereMustBeOnePlayer);
+      for I := 0 to length-1 do with item[I] as IXMLDOMElement do
+      begin
+        ID := getAttribute('id');
+        if VarIsNull(getAttribute('name')) then Name := ID else
+          Name := getAttribute('name');
+
+        with selectSingleNode('./position') as IXMLDOMElement do
+        begin
+          MapID := getAttribute('map');
+          Position.X := getAttribute('posx');
+          Position.Y := getAttribute('posy');
+          Position.Z := getAttribute('posz');
+        end;
+
+        Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position);
+
+        with selectNodes('./attributes/attribute') do
+        begin
+          for J := 0 to length-1 do with item[J] as IXMLDOMElement do
+            Player.Attribute[getAttribute('name')] := getAttribute('value');
+        end;
+
+        { TODO 1 : Ajouter le support du dessin du joueur }
+      end;
+    end;
   end;
 end;
 
@@ -593,6 +624,7 @@ class procedure TMasterFile.RegisterUnitFileClass(const MIMEType : string;
   UnitFileClass : TUnitFileClass);
 var Index : integer;
 begin
+  EnsureClassListCreated;
   Index := UnitFileClasses.IndexOf(MIMEType);
   if Index < 0 then
     UnitFileClasses.AddObject(MIMEType, TObject(UnitFileClass))
@@ -610,6 +642,7 @@ class function TMasterFile.FindUnitFileClass(
   const MIMEType : string) : TUnitFileClass;
 var Index : integer;
 begin
+  EnsureClassListCreated;
   Index := UnitFileClasses.IndexOf(MIMEType);
   if Index < 0 then
     raise EFileError.CreateFmt(sUnknownUnitType, [MIMEType])
@@ -626,6 +659,7 @@ class procedure TMasterFile.RegisterMapFileClass(const MIMEType : string;
   MapFileClass : TMapFileClass);
 var Index : integer;
 begin
+  EnsureClassListCreated;
   Index := MapFileClasses.IndexOf(MIMEType);
   if Index < 0 then
     MapFileClasses.AddObject(MIMEType, TObject(MapFileClass))
@@ -643,6 +677,7 @@ class function TMasterFile.FindMapFileClass(
   const MIMEType : string) : TMapFileClass;
 var Index : integer;
 begin
+  EnsureClassListCreated;
   Index := MapFileClasses.IndexOf(MIMEType);
   if Index < 0 then
     raise EFileError.CreateFmt(sUnknownMapType, [MIMEType])
@@ -660,8 +695,7 @@ begin
 end;
 
 initialization
-  UnitFileClasses := TStringList.Create;
-  MapFileClasses := TStringList.Create;
+  EnsureClassListCreated;
 finalization
   MapFileClasses.Free;
   UnitFileClasses.Free;

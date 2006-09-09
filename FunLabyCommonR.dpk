@@ -44,7 +44,8 @@ contains
   FilesUtils in 'FilesUtils.pas',
   MapFiles in 'MapFiles.pas',
   FunLabyCore in 'FunLabyCore.pas',
-  NumberDialog in 'NumberDialog.pas';
+  NumberDialog in 'NumberDialog.pas',
+  UnitFiles in 'UnitFiles.pas';
 
 end.
 

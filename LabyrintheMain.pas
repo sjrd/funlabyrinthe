@@ -9,8 +9,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, NumberDialog,
-  SdDialogs, ShellAPI, FunLabyUtils, PlayerView, FilesUtils, MapFiles,
-  FunLabyCore;
+  SdDialogs, ShellAPI, FunLabyUtils, PlayerView, FilesUtils, FunLabyCore;
 
 resourcestring
   sViewSize = 'Taille de la vue';
