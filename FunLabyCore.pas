@@ -81,8 +81,6 @@ const {don't localize}
   idHole = 'Hole';                               /// ID du trou
   idSky = 'Sky';                                 /// ID du ciel
 
-  idNoEffect = 'NoEffect';                       /// ID du sans effet
-
   idNorthArrow = 'NorthArrow';                   /// ID de la flèche nord
   idEastArrow = 'EastArrow';                     /// ID de la flèche est
   idSouthArrow = 'SouthArrow';                   /// ID de la flèche sud
@@ -103,8 +101,6 @@ const {don't localize}
   idPlank = 'Plank';                             /// ID de la planche
   idSilverKey = 'SilverKey';                     /// ID de la clef d'argent
   idGoldenKey = 'GoldenKey';                     /// ID de la clef d'or
-
-  idNoObstacle = 'NoObstacle';                   /// ID du sans obstacle
 
   idSilverBlock = 'SilverBlock';                 /// ID du bloc en argent
   idGoldenBlock = 'GoldenBlock';                 /// ID du bloc en or
@@ -508,8 +504,6 @@ begin
   TSky.Create(Master, idSky, sSky);
 
   // Effets de case
-  TEffect.Create(Master, idNoEffect, '');
-
   TArrow.Create(Master, idNorthArrow, sNorthArrow, diNorth);
   TArrow.Create(Master, idEastArrow , sEastArrow , diEast );
   TArrow.Create(Master, idSouthArrow, sSouthArrow, diSouth);
@@ -537,8 +531,6 @@ begin
   TGoldenKey.Create(Master, idGoldenKey, sGoldenKey);
 
   // Obstacles
-  TObstacle.Create(Master, idNoObstacle, '');
-
   TSilverBlock.Create(Master, idSilverBlock, sSilverBlock);
   TGoldenBlock.Create(Master, idGoldenBlock, sGoldenBlock);
 end;
@@ -1459,7 +1451,7 @@ begin
   inherited;
 
   // Désactivation de la case
-  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idNoEffect);
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect;
 
   // Incrémentation du nombre de bouées du joueur
   with Master.ObjectDef[idBuoys] do Count[Player] := Count[Player]+1;
@@ -1500,7 +1492,7 @@ begin
   inherited;
 
   // Désactivation de la case
-  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idNoEffect);
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect;
 
   // Incrémentation du nombre de bouées du joueur
   with Master.ObjectDef[idPlanks] do Count[Player] := Count[Player]+1;
@@ -1541,7 +1533,7 @@ begin
   inherited;
 
   // Désactivation de la case
-  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idNoEffect);
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect;
 
   // Incrémentation du nombre de bouées du joueur
   with Master.ObjectDef[idSilverKeys] do Count[Player] := Count[Player]+1;
@@ -1582,7 +1574,7 @@ begin
   inherited;
 
   // Désactivation de la case
-  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idNoEffect);
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect;
 
   // Incrémentation du nombre de bouées du joueur
   with Master.ObjectDef[idGoldenKeys] do Count[Player] := Count[Player]+1;
@@ -1629,7 +1621,7 @@ begin
   if KeyPressed then with Player do
   begin
     if CanYou(actOpenSilverLock) then
-      Map[Pos] := Map[Pos].ChangeObstacle(idNoObstacle)
+      Map[Pos] := Map[Pos].ChangeObstacle
     else
       ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
   end;
@@ -1675,7 +1667,7 @@ begin
   if KeyPressed then with Player do
   begin
     if CanYou(actOpenGoldenLock) then
-      Map[Pos] := Map[Pos].ChangeObstacle(idNoObstacle)
+      Map[Pos] := Map[Pos].ChangeObstacle
     else
       ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
   end;

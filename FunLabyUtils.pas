@@ -263,8 +263,8 @@ type
       Y : integer = 0); override;
 
     function ChangeField(NewField : TComponentID) : TScrew;
-    function ChangeEffect(NewEffect : TComponentID) : TScrew;
-    function ChangeObstacle(NewObstacle : TComponentID) : TScrew;
+    function ChangeEffect(NewEffect : TComponentID = '') : TScrew;
+    function ChangeObstacle(NewObstacle : TComponentID = '') : TScrew;
 
     property Field : TField read FField;
     property Effect : TEffect read FEffect;
@@ -1066,8 +1066,10 @@ end;
 procedure TScrew.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   Field.Draw(Canvas, X, Y);
-  Effect.Draw(Canvas, X, Y);
-  Obstacle.Draw(Canvas, X, Y);
+  if Assigned(Effect) then
+    Effect.Draw(Canvas, X, Y);
+  if Assigned(Obstacle) then
+    Obstacle.Draw(Canvas, X, Y);
 end;
 
 {*
@@ -1076,8 +1078,13 @@ end;
   @return Une case identique à celle-ci mais avec le terrain indiqué
 *}
 function TScrew.ChangeField(NewField : TComponentID) : TScrew;
+var EffectID, ObstacleID : TComponentID;
 begin
-  Result := Master.Screw[NewField+'-'+Effect.ID+'-'+Obstacle.ID];
+  if Effect = nil then EffectID := '' else
+    EffectID := Effect.ID;
+  if Obstacle = nil then ObstacleID := '' else
+    ObstacleID := Obstacle.ID;
+  Result := Master.Screw[NewField+'-'+EffectID+'-'+ObstacleID];
 end;
 
 {*
@@ -1085,9 +1092,12 @@ end;
   @param NewEffect   ID du nouvel effet
   @return Une case identique à celle-ci mais avec l'effet indiqué
 *}
-function TScrew.ChangeEffect(NewEffect : TComponentID) : TScrew;
+function TScrew.ChangeEffect(NewEffect : TComponentID = '') : TScrew;
+var ObstacleID : TComponentID;
 begin
-  Result := Master.Screw[Field.ID+'-'+NewEffect+'-'+Obstacle.ID];
+  if Obstacle = nil then ObstacleID := '' else
+    ObstacleID := Obstacle.ID;
+  Result := Master.Screw[Field.ID+'-'+NewEffect+'-'+ObstacleID];
 end;
 
 {*
@@ -1095,9 +1105,12 @@ end;
   @param NewObstacle   ID du nouvel obstacle
   @return Une case identique à celle-ci mais avec l'obstacle indiqué
 *}
-function TScrew.ChangeObstacle(NewObstacle : TComponentID) : TScrew;
+function TScrew.ChangeObstacle(NewObstacle : TComponentID = '') : TScrew;
+var EffectID : TComponentID;
 begin
-  Result := Master.Screw[Field.ID+'-'+Effect.ID+'-'+NewObstacle];
+  if Effect = nil then EffectID := '' else
+    EffectID := Effect.ID;
+  Result := Master.Screw[Field.ID+'-'+EffectID+'-'+NewObstacle];
 end;
 
 ///////////////////
@@ -1606,8 +1619,9 @@ begin
     Map[Dest].Field.Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
     // Case destination : pushing
-    Map[Dest].Obstacle.Pushing(Self, OldDir, KeyPressed, Src, Dest, Cancel,
-      AbortEntered);
+    if Assigned(Map[Dest].Obstacle) then
+      Map[Dest].Obstacle.Pushing(Self, OldDir, KeyPressed, Src, Dest, Cancel,
+        AbortEntered);
     if Cancel then exit;
   end;
 
@@ -1621,12 +1635,13 @@ begin
   // Second passage : le déplacement a été fait
   begin
     // Case source : exited
-    Map[Src].Effect.Exited(Self, KeyPressed, Src, Dest);
+    if Assigned(Map[Src].Effect) then
+      Map[Src].Effect.Exited(Self, KeyPressed, Src, Dest);
     // Plug-in : moved
     for I := 0 to PluginCount-1 do
       Plugins[I].Moved(Self, KeyPressed, Src, Dest);
     // Case destination : entered (sauf si AbortEntered a été positionné à True)
-    if not AbortEntered then
+    if Assigned(Map[Dest].Effect) and (not AbortEntered) then
       Map[Dest].Effect.Entered(Self, KeyPressed, Src, Dest, Redo);
   end;
 end;
@@ -1737,7 +1752,8 @@ end;
 *}
 function TMaster.GetEffect(const ID : TComponentID) : TEffect;
 begin
-  Result := Component[ID] as TEffect;
+  if ID = '' then Result := nil else
+    Result := Component[ID] as TEffect;
 end;
 
 {*
@@ -1748,7 +1764,8 @@ end;
 *}
 function TMaster.GetObstacle(const ID : TComponentID) : TObstacle;
 begin
-  Result := Component[ID] as TObstacle;
+  if ID = '' then Result := nil else
+    Result := Component[ID] as TObstacle;
 end;
 
 {*
@@ -1777,9 +1794,9 @@ begin
         AObstacle := Obstacle[GetXToken(ID, '-', 3)];
 
         AName := AField.Name;
-        if AEffect.Name <> '' then
+        if Assigned(AEffect) then
           AName := Format(sEffectName, [AName, AEffect.Name]);
-        if AObstacle.Name <> '' then
+        if Assigned(AObstacle) then
           AName := Format(sObstacleName, [AName, AObstacle.Name]);
 
         Result := TScrew.Create(Self, ID, AName, AField, AEffect, AObstacle);
