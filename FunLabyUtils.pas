@@ -109,6 +109,7 @@ type
     FTag : integer;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID);
+    destructor Destroy; override;
 
     property Master : TMaster read FMaster;
     property ID : TComponentID read FID;
@@ -422,6 +423,7 @@ type
     function GetTickCount : Cardinal;
 
     procedure AddComponent(Component : TFunLabyComponent);
+    procedure RemoveComponent(Component : TFunLabyComponent);
   public
     constructor Create;
     destructor Destroy; override;
@@ -675,6 +677,15 @@ begin
   FMaster := AMaster;
   FID := AID;
   Master.AddComponent(Self);
+end;
+
+{*
+  Détruit l'instance
+*}
+destructor TFunLabyComponent.Destroy;
+begin
+  Master.RemoveComponent(Self);
+  inherited;
 end;
 
 ///////////////////////////////
@@ -1664,14 +1675,14 @@ begin
     Duplicates := dupError;
   end;
 
-  FPlugins    := TObjectList.Create;
-  FObjectDefs := TObjectList.Create;
-  FFields     := TObjectList.Create;
-  FEffects    := TObjectList.Create;
-  FObstacles  := TObjectList.Create;
-  FScrews     := TObjectList.Create;
-  FMaps       := TObjectList.Create;
-  FPlayers    := TObjectList.Create;
+  FPlugins    := TObjectList.Create(False);
+  FObjectDefs := TObjectList.Create(False);
+  FFields     := TObjectList.Create(False);
+  FEffects    := TObjectList.Create(False);
+  FObstacles  := TObjectList.Create(False);
+  FScrews     := TObjectList.Create(False);
+  FMaps       := TObjectList.Create(False);
+  FPlayers    := TObjectList.Create(False);
 
   FBeginTickCount := Windows.GetTickCount;
 end;
@@ -1681,6 +1692,9 @@ end;
 *}
 destructor TMaster.Destroy;
 begin
+  while FComponents.Count > 0 do
+    FComponents.Objects[0].Free;
+
   FPlayers.Free;
   FMaps.Free;
   FScrews.Free;
@@ -2011,6 +2025,25 @@ begin
     FComponents.Delete(Index);
     raise;
   end;
+end;
+
+{*
+  Retire un composant
+  @param Component   Le composant à retirer
+*}
+procedure TMaster.RemoveComponent(Component : TFunLabyComponent);
+begin
+  FComponents.Delete(FComponents.IndexOf(Component.ID));
+
+  if Component is TPlugin    then FPlugins   .Remove(Component) else
+  if Component is TObjectDef then FObjectDefs.Remove(Component) else
+  if Component is TField     then FFields    .Remove(Component) else
+  if Component is TEffect    then FEffects   .Remove(Component) else
+  if Component is TObstacle  then FObstacles .Remove(Component) else
+  if Component is TScrew     then FScrews    .Remove(Component) else
+  if Component is TMap       then FMaps      .Remove(Component) else
+  if Component is TPlayer    then FPlayers   .Remove(Component) else
+  assert(False);
 end;
 
 initialization

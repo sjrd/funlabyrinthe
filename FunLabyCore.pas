@@ -54,6 +54,7 @@ resourcestring
   sEastArrow = 'Flèche est';                  /// Nom de la flèche est
   sSouthArrow = 'Flèche sud';                 /// Nom de la flèche sud
   sWestArrow = 'Flèche ouest';                /// Nom de la flèche ouest
+  sCrossroads = 'Carrefour';                  /// Nom du carrefour
 
   sInactiveTransporter = 'Téléporteur inactif';      /// Téléporteur inactif
   sTransporterNext = 'Téléporteur suivant n°%d';     /// Téléporteur suivant
@@ -75,6 +76,10 @@ resourcestring
   sGoldenBlock = 'Bloc en or';                /// Nom du bloc en or
 
 const {don't localize}
+  idPlankField = 'PlankField';                   /// ID du terrain planche
+  idPlankEffect = 'PlankEffect';                 /// ID de l'effet planche
+  idPlankScrew = '%s-Plank-%s';                  /// ID de la case planche
+
   idGrass = 'Grass';                             /// ID de l'herbe
   idWall = 'Wall';                               /// ID du mur
   idWater = 'Water';                             /// ID de l'eau
@@ -85,6 +90,7 @@ const {don't localize}
   idEastArrow = 'EastArrow';                     /// ID de la flèche est
   idSouthArrow = 'SouthArrow';                   /// ID de la flèche sud
   idWestArrow = 'WestArrow';                     /// ID de la flèche ouest
+  idCrossroads = 'Crossroads';                   /// ID du carrefour
 
   idInactiveTransporter = 'InactiveTransporter'; /// ID du téléporteur inactif
   idTransporterNext = 'TransporterNext%d';       /// ID du téléporteur suivant
@@ -117,6 +123,7 @@ const {don't localize}
   fEastArrow = 'EastArrow';                 /// Fichier de la flèche est
   fSouthArrow = 'SouthArrow';               /// Fichier de la flèche sud
   fWestArrow = 'WestArrow';                 /// Fichier de la flèche ouest
+  fCrossroads = 'Crossroads';               /// Fichier du carrefour
 
   fTransporter = 'Transporter';             /// Fichier du téléporteur inactif
   fUpStairs = 'UpStairs';                   /// Fichier de l'escalier montant
@@ -233,6 +240,50 @@ type
     function CanYou(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
     procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
+  end;
+
+  {*
+    Terrain spécial planche
+    Ce terrain ne doit pas être utilisé normalement. Il n'est utilisé que par la
+    case spéciale planche.
+  *}
+  TPlankField = class(TField)
+  public
+    procedure Entering(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; Src, Pos : T3DPoint;
+      var Cancel : boolean); override;
+  end;
+
+  {*
+    Effet spécial planche
+    Cet effet ne doit pas être utilisé normalement. Il n'est utilisé que par la
+    case spéciale planche.
+  *}
+  TPlankEffect = class(TEffect)
+  public
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Exited(Player : TPlayer; KeyPressed : boolean;
+      Pos, Dest : T3DPoint); override;
+  end;
+
+  {*
+    Case spéciale planche
+    Cette case est utilisée pour le déplacement particulier de la planche.
+  *}
+  TPlankScrew = class(TScrew)
+  private
+    FOriginalScrew : TScrew; /// Case originale
+    FPlayer : TPlayer;       /// Joueur qui passe sur la case
+  public
+    constructor Create(AMaster : TMaster; AOriginalScrew : TScrew;
+      APlayer : TPlayer);
+
+    procedure Draw(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); override;
+
+    property OriginalScrew : TScrew read FOriginalScrew;
+    property Player : TPlayer read FPlayer;
   end;
 
   {*
@@ -476,6 +527,9 @@ type
       var Cancel, AbortEntered : boolean); override;
   end;
 
+const
+  clPlankColor = $00004080;
+
 procedure LoadCoreComponents(Master : TMaster; Params : TStrings);
 
 implementation
@@ -496,6 +550,10 @@ begin
   TSilverKeys.Create(Master, idSilverKeys, sSilverKeys);
   TGoldenKeys.Create(Master, idGoldenKeys, sGoldenKeys);
 
+  // Terrain et effet spécial planche
+  TPlankField.Create(Master, idPlankField, '');
+  TPlankEffect.Create(Master, idPlankEffect, '');
+
   // Terrains
   TGrass.Create(Master, idGrass, sGrass);
   TWall.Create(Master, idWall, sWall);
@@ -508,6 +566,7 @@ begin
   TArrow.Create(Master, idEastArrow , sEastArrow , diEast );
   TArrow.Create(Master, idSouthArrow, sSouthArrow, diSouth);
   TArrow.Create(Master, idWestArrow , sWestArrow , diWest );
+  TArrow.Create(Master, idCrossroads, sCrossroads, diNone );
 
   TTransporter.Create(Master, idInactiveTransporter, sInactiveTransporter);
   for I := 1 to 15 do
@@ -710,11 +769,14 @@ end;
   @param Action   Action à effectuer
 *}
 procedure TPlanks.UseFor(Player : TPlayer; const Action : TPlayerAction);
+var Pos : T3DPoint;
 begin
-  if Action = actPassOverScrew then
-    { TODO 1 : Utiliser la planche }
-  else
-    inherited;
+  if Action = actPassOverScrew then with Player do
+  begin
+    Pos := PointBehind(Position, Direction);
+    Map[Pos] := TPlankScrew.Create(Master, Map[Pos], Player);
+    Sleep(500);
+  end else inherited;
 end;
 
 //////////////////////////
@@ -841,6 +903,111 @@ begin
     Count[Player] := Count[Player]-1
   else
     inherited;
+end;
+
+//////////////////////////
+/// Classe TPlankField ///
+//////////////////////////
+
+{*
+  Exécuté lorsque le joueur tente de venir sur la case
+  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
+  annuler le déplacement, il faut positionner Cancel à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de provenance
+  @param Pos            Position de la case
+  @param Cancel         À positionner à True pour annuler le déplacement
+*}
+procedure TPlankField.Entering(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; Src, Pos : T3DPoint;
+  var Cancel : boolean);
+begin
+  if Player <> (Player.Map[Src] as TPlankScrew).Player then
+    Cancel := True;
+end;
+
+///////////////////////////
+/// Classe TPlankEffect ///
+///////////////////////////
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TPlankEffect.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+begin
+  inherited;
+  GoOnMoving := True;
+end;
+
+{*
+  Exécuté lorsque le joueur est sorti de la case
+  Exiting est exécuté lorsque le joueur est sorti de la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param Dest         Case de destination
+*}
+procedure TPlankEffect.Exited(Player : TPlayer; KeyPressed : boolean;
+  Pos, Dest : T3DPoint);
+var PlankScrew : TPlankScrew;
+begin
+  inherited;
+  PlankScrew := Player.Map[Pos] as TPlankScrew;
+  Player.Map[Pos] := PlankScrew.OriginalScrew;
+  PlankScrew.Free;
+end;
+
+//////////////////////////
+/// Classe TPlankScrew ///
+//////////////////////////
+
+{*
+  Crée une instance de TPlankScrew
+  @param AMaster          Maître FunLabyrinthe
+  @param AOriginalScrew   Case originale
+  @param APlayer          Joueur qui passe sur la case
+*}
+constructor TPlankScrew.Create(AMaster : TMaster; AOriginalScrew : TScrew;
+  APlayer : TPlayer);
+begin
+  inherited Create(AMaster,
+    Format(idPlankScrew, [AOriginalScrew.ID, APlayer.ID]), AOriginalScrew.Name,
+    AMaster.Field[idPlankField], AMaster.Effect[idPlankEffect], nil);
+  FOriginalScrew := AOriginalScrew;
+  FPlayer := APlayer;
+end;
+
+{*
+  Dessine la case sur un canevas
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
+procedure TPlankScrew.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+begin
+  OriginalScrew.Draw(Canvas, X, Y);
+
+  with Canvas do
+  begin
+    Brush.Color := clPlankColor;
+    Brush.Style := bsSolid;
+    Pen.Color := clPlankColor;
+    Pen.Style := psSolid;
+
+    if Player.Direction in [diNorth, diSouth] then
+      Rectangle(X+6, Y-5, X+ScrewSize-6, Y+ScrewSize+5)
+    else
+      Rectangle(X-5, Y+6, X+ScrewSize+5, Y+ScrewSize-6);
+  end;
 end;
 
 /////////////////////
@@ -1081,6 +1248,7 @@ begin
   inherited Create(AMaster, AID, AName);
   FDirection := ADirection;
   case FDirection of
+    diNone  : Painter.ImgNames.Add(fCrossroads);
     diNorth : Painter.ImgNames.Add(fNorthArrow);
     diEast  : Painter.ImgNames.Add(fEastArrow);
     diSouth : Painter.ImgNames.Add(fSouthArrow);
@@ -1101,7 +1269,8 @@ procedure TArrow.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
-  Player.Direction := FDirection;
+  if FDirection <> diNone then
+    Player.Direction := FDirection;
   GoOnMoving := True;
 end;
 
