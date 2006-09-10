@@ -1068,15 +1068,13 @@ end;
 procedure TSilverBlock.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
-var EffectID : TComponentID;
 begin
   if KeyPressed then with Player do
   begin
     if CanYou(actOpenSilverLock) then
-    begin
-      EffectID := Map[Pos].Effect.ID;
-      Map[Pos] := Master.Screw[idGrass+'-'+EffectID];
-    end else ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
+      Map[Pos] := Map[Pos].ChangeField(idGrass)
+    else
+      ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
   end;
 
   Cancel := True;
@@ -1117,15 +1115,13 @@ end;
 procedure TGoldenBlock.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
-var EffectID : TComponentID;
 begin
   if KeyPressed then with Player do
   begin
     if CanYou(actOpenGoldenLock) then
-    begin
-      EffectID := Map[Pos].Effect.ID;
-      Map[Pos] := Master.Screw[idGrass+'-'+EffectID];
-    end else ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
+      Map[Pos] := Map[Pos].ChangeField(idGrass)
+    else
+      ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
   end;
 
   Cancel := True;
@@ -1426,11 +1422,9 @@ end;
 *}
 procedure TDirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
-var FieldID : TComponentID;
 begin
   inherited;
-  FieldID := Player.Map[Pos].Field.ID;
-  Player.Map[Pos] := Master.Screw[FieldID+'-'+idIndirectTurnstile];
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idIndirectTurnstile);
 end;
 
 /////////////////////////////////
@@ -1491,11 +1485,9 @@ end;
 *}
 procedure TIndirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
-var FieldID : TComponentID;
 begin
   inherited;
-  FieldID := Player.Map[Pos].Field.ID;
-  Player.Map[Pos] := Master.Screw[FieldID+'-'+idDirectTurnstile];
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idDirectTurnstile);
 end;
 
 ///////////////////////
@@ -1559,13 +1551,11 @@ end;
 *}
 procedure TBuoy.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
-var FieldID : TComponentID;
 begin
   inherited;
 
   // Désactivation de la case
-  FieldID := Player.Map[Pos].Field.ID;
-  Player.Map[Pos] := Master.Screw[FieldID+'-'+idNoEffect];
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idNoEffect);
 
   // Incrémentation du nombre de bouées du joueur
   with Master.ObjectDef[idBuoys] do Count[Player] := Count[Player]+1;
@@ -1602,13 +1592,11 @@ end;
 *}
 procedure TPlank.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
-var FieldID : TComponentID;
 begin
   inherited;
 
   // Désactivation de la case
-  FieldID := Player.Map[Pos].Field.ID;
-  Player.Map[Pos] := Master.Screw[FieldID+'-'+idNoEffect];
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idNoEffect);
 
   // Incrémentation du nombre de bouées du joueur
   with Master.ObjectDef[idPlanks] do Count[Player] := Count[Player]+1;
@@ -1645,13 +1633,11 @@ end;
 *}
 procedure TSilverKey.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
-var FieldID : TComponentID;
 begin
   inherited;
 
   // Désactivation de la case
-  FieldID := Player.Map[Pos].Field.ID;
-  Player.Map[Pos] := Master.Screw[FieldID+'-'+idNoEffect];
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idNoEffect);
 
   // Incrémentation du nombre de bouées du joueur
   with Master.ObjectDef[idSilverKeys] do Count[Player] := Count[Player]+1;
@@ -1688,13 +1674,11 @@ end;
 *}
 procedure TGoldenKey.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
-var FieldID : TComponentID;
 begin
   inherited;
 
   // Désactivation de la case
-  FieldID := Player.Map[Pos].Field.ID;
-  Player.Map[Pos] := Master.Screw[FieldID+'-'+idNoEffect];
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idNoEffect);
 
   // Incrémentation du nombre de bouées du joueur
   with Master.ObjectDef[idGoldenKeys] do Count[Player] := Count[Player]+1;

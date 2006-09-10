@@ -234,9 +234,9 @@ type
   end;
 
   {*
-    Classe de base pour les cases
-    TScrew est la classe de base pour les cases de la carte. Elle possède une
-    code et quatre méthodes qui définissent son comportement.
+    Représente une case du jeu
+    TScrew représente une case du jeu. Une case possède deux parties : le
+    terrain et l'effet.
   *}
   TScrew = class(TVisualComponent)
   private
@@ -248,6 +248,9 @@ type
 
     procedure Draw(Canvas : TCanvas; X : integer = 0;
       Y : integer = 0); override;
+
+    function ChangeField(NewField : TComponentID) : TScrew;
+    function ChangeEffect(NewEffect : TComponentID) : TScrew;
 
     property Field : TField read FField;
     property Effect : TEffect read FEffect;
@@ -1021,10 +1024,36 @@ begin
   FEffect := AEffect;
 end;
 
+{*
+  Dessine la case sur un canevas
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
 procedure TScrew.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   Field.Draw(Canvas, X, Y);
   Effect.Draw(Canvas, X, Y);
+end;
+
+{*
+  Change le terrain d'une case et renvoie la case modifiée
+  @param NewField   ID du nouveau terrain
+  @return Une case identique à celle-ci mais avec le terrain indiqué
+*}
+function TScrew.ChangeField(NewField : TComponentID) : TScrew;
+begin
+  Result := Master.Screw[NewField+'-'+Effect.ID];
+end;
+
+{*
+  Change l'effet d'une case et renvoie la case modifiée
+  @param NewEffect   ID du nouvel effet
+  @return Une case identique à celle-ci mais avec l'effet indiqué
+*}
+function TScrew.ChangeEffect(NewEffect : TComponentID) : TScrew;
+begin
+  Result := Master.Screw[Field.ID+'-'+NewEffect];
 end;
 
 ///////////////////
