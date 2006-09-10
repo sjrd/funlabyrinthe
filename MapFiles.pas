@@ -154,9 +154,11 @@ begin
     Value := FLMVersion;
     Stream.WriteBuffer(Value, 4);
 
-    // Écriture des dimensions
+    // Écriture des dimensions et de la taille d'une zone
     Dimensions := Map.Dimensions;
     Stream.WriteBuffer(Dimensions, sizeof(T3DPoint));
+    Value := Map.ZoneSize;
+    Stream.WriteBuffer(Value, 4);
 
     // Préparation de la palette (Screws.Tag) et écriture de celle-ci
     for I := 0 to Master.ScrewCount-1 do

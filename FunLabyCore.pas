@@ -48,8 +48,6 @@ resourcestring
   sWall = 'Mur';                              /// Nom du mur
   sWater = 'Eau';                             /// Nom de l'eau
   sHole = 'Trou';                             /// Nom du trou
-  sSilverBlock = 'Bloc en argent';            /// Nom du bloc en argent
-  sGoldenBlock = 'Bloc en or';                /// Nom du bloc en or
   sSky = 'Ciel';                              /// Nom du ciel
 
   sNorthArrow = 'Flèche nord';                /// Nom de la flèche nord
@@ -73,16 +71,18 @@ resourcestring
   sSilverKey = 'Clef d''argent';              /// Nom de la clef d'argent
   sGoldenKey = 'Clef d''or';                  /// Nom de la clef d'or
 
+  sSilverBlock = 'Bloc en argent';            /// Nom du bloc en argent
+  sGoldenBlock = 'Bloc en or';                /// Nom du bloc en or
+
 const {don't localize}
   idGrass = 'Grass';                             /// ID de l'herbe
   idWall = 'Wall';                               /// ID du mur
   idWater = 'Water';                             /// ID de l'eau
   idHole = 'Hole';                               /// ID du trou
-  idSilverBlock = 'SilverBlock';                 /// ID du bloc en argent
-  idGoldenBlock = 'GoldenBlock';                 /// ID du bloc en or
   idSky = 'Sky';                                 /// ID du ciel
 
   idNoEffect = 'NoEffect';                       /// ID du sans effet
+
   idNorthArrow = 'NorthArrow';                   /// ID de la flèche nord
   idEastArrow = 'EastArrow';                     /// ID de la flèche est
   idSouthArrow = 'SouthArrow';                   /// ID de la flèche sud
@@ -104,14 +104,17 @@ const {don't localize}
   idSilverKey = 'SilverKey';                     /// ID de la clef d'argent
   idGoldenKey = 'GoldenKey';                     /// ID de la clef d'or
 
+  idNoObstacle = 'NoObstacle';                   /// ID du sans obstacle
+
+  idSilverBlock = 'SilverBlock';                 /// ID du bloc en argent
+  idGoldenBlock = 'GoldenBlock';                 /// ID du bloc en or
+
 const {don't localize}
   fGrass = 'Grass';                         /// Fichier de l'herbe
   fWall = 'Wall';                           /// Fichier du mur
   fWater = 'Water';                         /// Fichier de l'eau
   fAlternateWater = 'AlternateWater';       /// Fichier alternatif de l'eau
   fHole = 'Hole';                           /// Fichier du trou
-  fSilverBlock = 'SilverBlock';             /// Fichier du bloc en argent
-  fGoldenBlock = 'GoldenBlock';             /// Fichier du bloc en or
   fSky = 'Sky';                             /// Fichier du ciel
 
   fNorthArrow = 'NorthArrow';               /// Fichier de la flèche nord
@@ -130,6 +133,9 @@ const {don't localize}
   fPlank = 'Plank';                         /// Fichier de la planche
   fSilverKey = 'SilverKey';                 /// Fichier de la clef d'argent
   fGoldenKey = 'GoldenKey';                 /// Fichier de la clef d'or
+
+  fSilverBlock = 'SilverBlock';             /// Fichier du bloc en argent
+  fGoldenBlock = 'GoldenBlock';             /// Fichier du bloc en or
 
 resourcestring
   sCantGoOnWater = 'Sans bouée, on coule dans l''eau.';
@@ -254,7 +260,7 @@ type
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); override;
+      var Cancel : boolean); override;
   end;
 
   {*
@@ -278,7 +284,7 @@ type
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); override;
+      var Cancel : boolean); override;
   end;
 
   {*
@@ -293,35 +299,7 @@ type
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); override;
-  end;
-
-  {*
-    Bloc en argent
-    Le bloc en argent peut être détruit au moyen d'une clef en argent.
-  *}
-  TSilverBlock = class(TField)
-  public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ADelegateDrawTo : TField = nil);
-
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); override;
-  end;
-
-  {*
-    Bloc en or
-    Le bloc en or peut être détruit au moyen d'une clef en or.
-  *}
-  TGoldenBlock = class(TField)
-  public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ADelegateDrawTo : TField = nil);
-
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); override;
+      var Cancel : boolean); override;
   end;
 
   {*
@@ -335,7 +313,7 @@ type
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); override;
+      var Cancel : boolean); override;
   end;
 
   {*
@@ -474,6 +452,34 @@ type
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
+  {*
+    Bloc en argent
+    Le bloc en argent peut être détruit au moyen d'une clef en argent.
+  *}
+  TSilverBlock = class(TObstacle)
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; Src, Pos : T3DPoint;
+      var Cancel, AbortEntered : boolean); override;
+  end;
+
+  {*
+    Bloc en or
+    Le bloc en or peut être détruit au moyen d'une clef en or.
+  *}
+  TGoldenBlock = class(TObstacle)
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; Src, Pos : T3DPoint;
+      var Cancel, AbortEntered : boolean); override;
+  end;
+
 procedure LoadCoreComponents(Master : TMaster; Params : TStrings);
 
 implementation
@@ -499,8 +505,6 @@ begin
   TWall.Create(Master, idWall, sWall);
   TWater.Create(Master, idWater, sWater);
   THole.Create(Master, idHole, sHole);
-  TSilverBlock.Create(Master, idSilverBlock, sSilverBlock);
-  TGoldenBlock.Create(Master, idGoldenBlock, sGoldenBlock);
   TSky.Create(Master, idSky, sSky);
 
   // Effets de case
@@ -531,6 +535,12 @@ begin
   TPlank.Create(Master, idPlank, sPlank);
   TSilverKey.Create(Master, idSilverKey, sSilverKey);
   TGoldenKey.Create(Master, idGoldenKey, sGoldenKey);
+
+  // Obstacles
+  TObstacle.Create(Master, idNoObstacle, '');
+
+  TSilverBlock.Create(Master, idSilverBlock, sSilverBlock);
+  TGoldenBlock.Create(Master, idGoldenBlock, sGoldenBlock);
 end;
 
 //////////////////////////
@@ -880,20 +890,17 @@ end;
 {*
   Exécuté lorsque le joueur tente de venir sur la case
   Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
+  annuler le déplacement, il faut positionner Cancel à True.
   @param Player         Joueur qui se déplace
   @param OldDirection   Direction du joueur avant ce déplacement
   @param KeyPressed     True si une touche a été pressée pour le déplacement
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
 procedure TWall.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
+  var Cancel : boolean);
 begin
   Cancel := True;
 end;
@@ -958,20 +965,17 @@ end;
 {*
   Exécuté lorsque le joueur tente de venir sur la case
   Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
+  annuler le déplacement, il faut positionner Cancel à True.
   @param Player         Joueur qui se déplace
   @param OldDirection   Direction du joueur avant ce déplacement
   @param KeyPressed     True si une touche a été pressée pour le déplacement
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
 procedure TWater.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
+  var Cancel : boolean);
 begin
   with Player do
   begin
@@ -1007,20 +1011,17 @@ end;
 {*
   Exécuté lorsque le joueur tente de venir sur la case
   Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
+  annuler le déplacement, il faut positionner Cancel à True.
   @param Player         Joueur qui se déplace
   @param OldDirection   Direction du joueur avant ce déplacement
   @param KeyPressed     True si une touche a été pressée pour le déplacement
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
 procedure THole.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
+  var Cancel : boolean);
 begin
   with Player do
   begin
@@ -1031,100 +1032,6 @@ begin
       Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
     Cancel := True;
   end;
-end;
-
-///////////////////////////
-/// Classe TSilverBlock ///
-///////////////////////////
-
-{*
-  Crée une instance de TSilverBlock
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
-*}
-constructor TSilverBlock.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ADelegateDrawTo : TField = nil);
-begin
-  inherited Create(AMaster, AID, AName, ADelegateDrawTo);
-  Painter.ImgNames.Add(fSilverBlock);
-end;
-
-{*
-  Exécuté lorsque le joueur tente de venir sur la case
-  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
-*}
-procedure TSilverBlock.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
-begin
-  if KeyPressed then with Player do
-  begin
-    if CanYou(actOpenSilverLock) then
-      Map[Pos] := Map[Pos].ChangeField(idGrass)
-    else
-      ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
-  end;
-
-  Cancel := True;
-end;
-
-///////////////////////////
-/// Classe TGoldenBlock ///
-///////////////////////////
-
-{*
-  Crée une instance de TGoldenBlock
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
-*}
-constructor TGoldenBlock.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ADelegateDrawTo : TField = nil);
-begin
-  inherited Create(AMaster, AID, AName, ADelegateDrawTo);
-  Painter.ImgNames.Add(fGoldenBlock);
-end;
-
-{*
-  Exécuté lorsque le joueur tente de venir sur la case
-  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
-*}
-procedure TGoldenBlock.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
-begin
-  if KeyPressed then with Player do
-  begin
-    if CanYou(actOpenGoldenLock) then
-      Map[Pos] := Map[Pos].ChangeField(idGrass)
-    else
-      ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
-  end;
-
-  Cancel := True;
 end;
 
 ///////////////////
@@ -1148,20 +1055,17 @@ end;
 {*
   Exécuté lorsque le joueur tente de venir sur la case
   Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
+  annuler le déplacement, il faut positionner Cancel à True.
   @param Player         Joueur qui se déplace
   @param OldDirection   Direction du joueur avant ce déplacement
   @param KeyPressed     True si une touche a été pressée pour le déplacement
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
 procedure TSky.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
+  var Cancel : boolean);
 begin
   if KeyPressed then
     Player.ShowDialog(sBlindAlley, sCantGoOnSky, dtError);
@@ -1685,6 +1589,98 @@ begin
 
   // Affichage d'un message de notification
   Player.ShowDialog(sMessage, sFoundGoldenKey);
+end;
+
+///////////////////////////
+/// Classe TSilverBlock ///
+///////////////////////////
+
+{*
+  Crée une instance de TSilverBlock
+  @param AMaster           Maître FunLabyrinthe
+  @param AID               ID du terrain
+  @param AName             Nom du terrain
+*}
+constructor TSilverBlock.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(fSilverBlock);
+end;
+
+{*
+  Exécuté lorsque le joueur pousse sur l'obstacle
+  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
+  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
+  la méthode Entered de la case ne soit exécutée, il faut positionner
+  AbortEntered à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de provenance
+  @param Pos            Position de la case
+  @param Cancel         À positionner à True pour annuler le déplacement
+  @param AbortEntered   À positionner à True pour empêcher le Entered
+*}
+procedure TSilverBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; Src, Pos : T3DPoint;
+  var Cancel, AbortEntered : boolean);
+begin
+  if KeyPressed then with Player do
+  begin
+    if CanYou(actOpenSilverLock) then
+      Map[Pos] := Map[Pos].ChangeObstacle(idNoObstacle)
+    else
+      ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
+  end;
+
+  Cancel := True;
+end;
+
+///////////////////////////
+/// Classe TGoldenBlock ///
+///////////////////////////
+
+{*
+  Crée une instance de TGoldenBlock
+  @param AMaster           Maître FunLabyrinthe
+  @param AID               ID du terrain
+  @param AName             Nom du terrain
+*}
+constructor TGoldenBlock.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(fGoldenBlock);
+end;
+
+{*
+  Exécuté lorsque le joueur pousse sur l'obstacle
+  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
+  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
+  la méthode Entered de la case ne soit exécutée, il faut positionner
+  AbortEntered à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de provenance
+  @param Pos            Position de la case
+  @param Cancel         À positionner à True pour annuler le déplacement
+  @param AbortEntered   À positionner à True pour empêcher le Entered
+*}
+procedure TGoldenBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; Src, Pos : T3DPoint;
+  var Cancel, AbortEntered : boolean);
+begin
+  if KeyPressed then with Player do
+  begin
+    if CanYou(actOpenGoldenLock) then
+      Map[Pos] := Map[Pos].ChangeObstacle(idNoObstacle)
+    else
+      ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
+  end;
+
+  Cancel := True;
 end;
 
 end.

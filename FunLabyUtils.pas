@@ -14,7 +14,8 @@ uses
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
-  sDefaultScrewName = '%1:s sur %0:s';
+  sEffectName = '%1:s sur %0:s';
+  sObstacleName = '%s obstrué par %s';
   sWhichObject = 'Quel objet voulez-vous utiliser ?';
   sComponentNotFound = 'Le composant d''ID %s n''existe pas';
 
@@ -212,7 +213,7 @@ type
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); virtual;
+      var Cancel : boolean); virtual;
     procedure Exiting(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Pos, Dest : T3DPoint;
       var Cancel : boolean); virtual;
@@ -220,17 +221,27 @@ type
 
   {*
     Classe de base pour les effets de case
-    TEffect est la classe de base la création d'effets de case. Les effets
-    sont la seconde composante d'une case.
+    TEffect est la classe de base pour la création d'effets de case. Les effets
+    sont la deuxième composante d'une case.
   *}
   TEffect = class(TVisualComponent)
   public
-    procedure Pushed(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint); virtual;
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); virtual;
     procedure Exited(Player : TPlayer; KeyPressed : boolean;
       Pos, Dest : T3DPoint); virtual;
+  end;
+
+  {*
+    Classe de base pour les obstacles
+    TObstacle est la classe de base pour la création d'obstacles. Les obstacles
+    sont la troisième composante d'une case.
+  *}
+  TObstacle = class(TVisualComponent)
+  public
+    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; Src, Pos : T3DPoint;
+      var Cancel, AbortEntered : boolean); virtual;
   end;
 
   {*
@@ -240,20 +251,24 @@ type
   *}
   TScrew = class(TVisualComponent)
   private
-    FField : TField;   /// Terrain
-    FEffect : TEffect; /// Effet
+    FField : TField;       /// Terrain
+    FEffect : TEffect;     /// Effet
+    FObstacle : TObstacle; /// Obstacle
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; AField : TField; AEffect : TEffect);
+      const AName : string; AField : TField; AEffect : TEffect;
+      AObstacle : TObstacle);
 
     procedure Draw(Canvas : TCanvas; X : integer = 0;
       Y : integer = 0); override;
 
     function ChangeField(NewField : TComponentID) : TScrew;
     function ChangeEffect(NewEffect : TComponentID) : TScrew;
+    function ChangeObstacle(NewObstacle : TComponentID) : TScrew;
 
     property Field : TField read FField;
     property Effect : TEffect read FEffect;
+    property Obstacle : TObstacle read FObstacle;
   end;
 
   {*
@@ -370,6 +385,7 @@ type
     FObjectDefs : TObjectList;     /// Liste des définitions d'objet
     FFields : TObjectList;         /// Liste des terrains
     FEffects : TObjectList;        /// Liste des effets
+    FObstacles : TObjectList;      /// Liste des obstacles
     FScrews : TObjectList;         /// Liste des cases
     FMaps : TObjectList;           /// Liste des cartes
     FPlayers : TObjectList;        /// Liste des joueurs
@@ -381,6 +397,7 @@ type
     function GetObjectDef(const ID : TComponentID) : TObjectDef;
     function GetField    (const ID : TComponentID) : TField;
     function GetEffect   (const ID : TComponentID) : TEffect;
+    function GetObstacle (const ID : TComponentID) : TObstacle;
     function GetScrew    (const ID : TComponentID) : TScrew;
     function GetMap      (const ID : TComponentID) : TMap;
     function GetPlayer   (const ID : TComponentID) : TPlayer;
@@ -393,6 +410,8 @@ type
     function GetFields(Index : integer) : TField;
     function GetEffectCount : integer;
     function GetEffects(Index : integer) : TEffect;
+    function GetObstacleCount : integer;
+    function GetObstacles(Index : integer) : TObstacle;
     function GetScrewCount : integer;
     function GetScrews(Index : integer) : TScrew;
     function GetMapCount : integer;
@@ -415,6 +434,7 @@ type
     property ObjectDef[const ID : TComponentID] : TObjectDef read GetObjectDef;
     property Field    [const ID : TComponentID] : TField     read GetField;
     property Effect   [const ID : TComponentID] : TEffect    read GetEffect;
+    property Obstacle [const ID : TComponentID] : TObstacle  read GetObstacle;
     property Screw    [const ID : TComponentID] : TScrew     read GetScrew;
     property Map      [const ID : TComponentID] : TMap       read GetMap;
     property Player   [const ID : TComponentID] : TPlayer    read GetPlayer;
@@ -427,6 +447,8 @@ type
     property Fields[index : integer] : TField read GetFields;
     property EffectCount : integer read GetEffectCount;
     property Effects[index : integer] : TEffect read GetEffects;
+    property ObstacleCount : integer read GetObstacleCount;
+    property Obstacles[index : integer] : TObstacle read GetObstacles;
     property ScrewCount : integer read GetScrewCount;
     property Screws[index : integer] : TScrew read GetScrews;
     property MapCount : integer read GetMapCount;
@@ -930,20 +952,16 @@ end;
 {*
   Exécuté lorsque le joueur tente de venir sur la case
   Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
+  annuler le déplacement, il faut positionner Cancel à True.
   @param Player         Joueur qui se déplace
   @param OldDirection   Direction du joueur avant ce déplacement
   @param KeyPressed     True si une touche a été pressée pour le déplacement
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
 procedure TField.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
+  KeyPressed : boolean; Src, Pos : T3DPoint; var Cancel : boolean);
 begin
 end;
 
@@ -966,18 +984,6 @@ end;
 //////////////////////
 /// Classe TEffect ///
 //////////////////////
-
-{*
-  Exécuté lorsque le joueur a poussé sur la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
-  @param Pos          Position de la case
-*}
-procedure TEffect.Pushed(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint);
-begin
-end;
 
 {*
   Exécuté lorsque le joueur est arrivé sur la case
@@ -1004,24 +1010,51 @@ procedure TEffect.Exited(Player : TPlayer; KeyPressed : boolean;
 begin
 end;
 
+////////////////////////
+/// Classe TObstacle ///
+////////////////////////
+
+{*
+  Exécuté lorsque le joueur pousse sur l'obstacle
+  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
+  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
+  la méthode Entered de la case ne soit exécutée, il faut positionner
+  AbortEntered à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de provenance
+  @param Pos            Position de la case
+  @param Cancel         À positionner à True pour annuler le déplacement
+  @param AbortEntered   À positionner à True pour empêcher le Entered
+*}
+procedure TObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; Src, Pos : T3DPoint;
+  var Cancel, AbortEntered : boolean);
+begin
+end;
+
 /////////////////////
 /// Classe TScrew ///
 /////////////////////
 
 {*
   Crée une instance de TScrew
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de la case
-  @param AName     Nom de la case
-  @param AField    Terrain
-  @param AEffect   Effet
+  @param AMaster     Maître FunLabyrinthe
+  @param AID         ID de la case
+  @param AName       Nom de la case
+  @param AField      Terrain
+  @param AEffect     Effet
+  @param AObstacle   Obstacle
 *}
 constructor TScrew.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; AField : TField; AEffect : TEffect);
+  const AName : string; AField : TField; AEffect : TEffect;
+  AObstacle : TObstacle);
 begin
   inherited Create(AMaster, AID, AName);
   FField := AField;
   FEffect := AEffect;
+  FObstacle := AObstacle;
 end;
 
 {*
@@ -1034,6 +1067,7 @@ procedure TScrew.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   Field.Draw(Canvas, X, Y);
   Effect.Draw(Canvas, X, Y);
+  Obstacle.Draw(Canvas, X, Y);
 end;
 
 {*
@@ -1043,7 +1077,7 @@ end;
 *}
 function TScrew.ChangeField(NewField : TComponentID) : TScrew;
 begin
-  Result := Master.Screw[NewField+'-'+Effect.ID];
+  Result := Master.Screw[NewField+'-'+Effect.ID+'-'+Obstacle.ID];
 end;
 
 {*
@@ -1053,7 +1087,17 @@ end;
 *}
 function TScrew.ChangeEffect(NewEffect : TComponentID) : TScrew;
 begin
-  Result := Master.Screw[Field.ID+'-'+NewEffect];
+  Result := Master.Screw[Field.ID+'-'+NewEffect+'-'+Obstacle.ID];
+end;
+
+{*
+  Change l'obstacle d'une case et renvoie la case modifiée
+  @param NewObstacle   ID du nouvel obstacle
+  @return Une case identique à celle-ci mais avec l'obstacle indiqué
+*}
+function TScrew.ChangeObstacle(NewObstacle : TComponentID) : TScrew;
+begin
+  Result := Master.Screw[Field.ID+'-'+Effect.ID+'-'+NewObstacle];
 end;
 
 ///////////////////
@@ -1458,8 +1502,11 @@ begin
     // Récupération du choix de l'utilisateur
     Selected := -1;
     for I := 0 to ControlCount-1 do
-      if (Controls[I] is TRadioButton) and TRadioButton(Controls[I]).Checked then
+    begin
+      if (Controls[I] is TRadioButton) and
+         TRadioButton(Controls[I]).Checked then
         Selected := Controls[I].Tag;
+    end;
   finally
     Free;
   end;
@@ -1547,7 +1594,7 @@ begin
   AbortEntered := False;
 
   // Premier passage : le déplacement est-il permis ?
-  try
+  begin
     // Case source : exiting
     Map[Src].Field.Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
@@ -1556,13 +1603,12 @@ begin
       Plugins[I].Moving(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
     // Case destination : entering
-    Map[Dest].Field.Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel,
+    Map[Dest].Field.Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel);
+    if Cancel then exit;
+    // Case destination : pushing
+    Map[Dest].Obstacle.Pushing(Self, OldDir, KeyPressed, Src, Dest, Cancel,
       AbortEntered);
     if Cancel then exit;
-  finally
-    // Case destination : pushed (seulement si on a annulé)
-    if Cancel then
-      Map[Dest].Effect.Pushed(Self, KeyPressed, Src, Dest);
   end;
 
   // Déplacement du joueur (à moins qu'il ait été déplacé par ailleurs)
@@ -1607,6 +1653,7 @@ begin
   FObjectDefs := TObjectList.Create;
   FFields     := TObjectList.Create;
   FEffects    := TObjectList.Create;
+  FObstacles  := TObjectList.Create;
   FScrews     := TObjectList.Create;
   FMaps       := TObjectList.Create;
   FPlayers    := TObjectList.Create;
@@ -1622,6 +1669,7 @@ begin
   FPlayers.Free;
   FMaps.Free;
   FScrews.Free;
+  FObstacles.Free;
   FEffects.Free;
   FFields.Free;
   FObjectDefs.Free;
@@ -1693,6 +1741,17 @@ begin
 end;
 
 {*
+  Tableau des obstacles indexé par leur ID
+  @param ID   ID de l'obstacle à trouver
+  @return L'obstacle dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucun obstacle ne correspond à l'ID spécifié
+*}
+function TMaster.GetObstacle(const ID : TComponentID) : TObstacle;
+begin
+  Result := Component[ID] as TObstacle;
+end;
+
+{*
   Tableau des cases indexé par leur ID
   Si la case n'a pas pu être trouvée, GetScrew essaye de trouver les terrain
   et effet correspondant à son ID et de créer la case automatiquement
@@ -1703,6 +1762,7 @@ end;
 function TMaster.GetScrew(const ID : TComponentID) : TScrew;
 var AField : TField;
     AEffect : TEffect;
+    AObstacle : TObstacle;
     AName : string;
 begin
   try
@@ -1712,11 +1772,17 @@ begin
     begin
       Result := nil;
       try
-        AField := Field[GetFirstToken(ID, '-')];
-        AEffect := Effect[GetLastToken(ID, '-')];
-        if AEffect.Name = '' then AName := AField.Name else
-          AName := Format(sDefaultScrewName, [AField.Name, AEffect.Name]);
-        Result := TScrew.Create(Self, ID, AName, AField, AEffect);
+        AField := Field[GetXToken(ID, '-', 1)];
+        AEffect := Effect[GetXToken(ID, '-', 2)];
+        AObstacle := Obstacle[GetXToken(ID, '-', 3)];
+
+        AName := AField.Name;
+        if AEffect.Name <> '' then
+          AName := Format(sEffectName, [AName, AEffect.Name]);
+        if AObstacle.Name <> '' then
+          AName := Format(sObstacleName, [AName, AObstacle.Name]);
+
+        Result := TScrew.Create(Self, ID, AName, AField, AEffect, AObstacle);
       except
       end;
       if Result = nil then raise;
@@ -1823,6 +1889,25 @@ begin
 end;
 
 {*
+  Nombre d'obstacles
+  @return Nombre d'obstacles
+*}
+function TMaster.GetObstacleCount : integer;
+begin
+  Result := FObstacles.Count;
+end;
+
+{*
+  Tableau zero-based des obstacles
+  @param Index   Index de l'obstacle
+  @return L'obstacle à la position spécifiée
+*}
+function TMaster.GetObstacles(Index : integer) : TObstacle;
+begin
+  Result := TObstacle(FObstacles[Index]);
+end;
+
+{*
   Nombre de cases
   @return Nombre de cases
 *}
@@ -1879,6 +1964,9 @@ begin
   Result := TPlayer(FPlayers[Index]);
 end;
 
+{*
+  Tick count de la partie
+*}
 function TMaster.GetTickCount : Cardinal;
 begin
   Result := Windows.GetTickCount - FBeginTickCount;
@@ -1897,6 +1985,7 @@ begin
     if Component is TObjectDef then FObjectDefs.Add(Component) else
     if Component is TField     then FFields    .Add(Component) else
     if Component is TEffect    then FEffects   .Add(Component) else
+    if Component is TObstacle  then FObstacles .Add(Component) else
     if Component is TScrew     then FScrews    .Add(Component) else
     if Component is TMap       then FMaps      .Add(Component) else
     if Component is TPlayer    then FPlayers   .Add(Component) else
