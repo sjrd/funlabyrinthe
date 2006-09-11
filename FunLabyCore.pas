@@ -21,9 +21,10 @@ const {don't localize}
   actOpenGoldenLock = 'OpenGoldenLock';
 
 const {don't localize}
-  idBuoyPlugin = 'BuoyPlugin';   /// ID du plug-in bouée
-  idPlankPlugin = 'PlankPlugin'; /// ID du plug-in planche
-  idBoatPlugin = 'BoatPlugin';   /// ID du plug-in barque
+  idAvoidShowPlugin = 'AvoidShowPlugin'; /// ID du plug-in masquand le joueur
+  idBuoyPlugin = 'BuoyPlugin';           /// ID du plug-in bouée
+  idPlankPlugin = 'PlankPlugin';         /// ID du plug-in planche
+  idBoatPlugin = 'BoatPlugin';           /// ID du plug-in barque
 
 resourcestring
   sBuoys           = 'Bouée';              /// Nom de l'objet bouée
@@ -176,6 +177,28 @@ type
     Type de téléporteur
   *}
   TTransporterKind = (tkInactive, tkNext, tkPrevious, tkRandom);
+
+  {*
+    Plug-in masque
+    Filtre l'affichage du joueur au moyen d'un masque monochrome.
+  *}
+  TMaskPlugin = class(TPlugin)
+  private
+    FMask : TBitmap;   /// Masque monochrome à appliquer
+    FBefore : TBitmap; /// Ce qu'il y avait avant le joueur
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      AMask : TBitmap = nil);
+    destructor Destroy; override;
+
+    procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
+    procedure DrawAfter(Player : TPlayer; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
+
+    property Mask : TBitmap read FMask;
+    property Before : TBitmap read FBefore;
+  end;
 
   {*
     Plug-in bouée
@@ -648,6 +671,7 @@ procedure LoadCoreComponents(Master : TMaster; Params : TStrings);
 var I : integer;
 begin
   // Plug-in
+  TMaskPlugin.Create(Master, idAvoidShowPlugin);
   TBuoyPlugin.Create(Master, idBuoyPlugin);
   TPlankPlugin.Create(Master, idPlankPlugin);
   TBoatPlugin.Create(Master, idBoatPlugin);
@@ -710,6 +734,101 @@ begin
   TSilverBlock.Create(Master, idSilverBlock, sSilverBlock);
   TGoldenBlock.Create(Master, idGoldenBlock, sGoldenBlock);
   TSecretWay.Create(Master, idSecretWay, sSecretWay);
+end;
+
+//////////////////////////
+/// Classe TMaskPlugin ///
+//////////////////////////
+
+{*
+  Crée une instance de TMaskPlugin
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du plug-in
+  @param AMaks     Masque à appliquer
+*}
+constructor TMaskPlugin.Create(AMaster : TMaster; const AID : TComponentID;
+  AMask : TBitmap = nil);
+var X, Y : integer;
+begin
+  inherited Create(AMaster, AID);
+
+  FMask := TBitmap.Create;
+  with FMask do
+  begin
+    if Assigned(AMask) then
+    begin
+      Assign(AMask);
+      for X := 0 to ScrewSize do for Y := 0 to ScrewSize do
+      begin
+        if Canvas.Pixels[X, Y] = clTransparent then
+          Canvas.Pixels[X, Y] := clBlack
+        else
+          Canvas.Pixels[X, Y] := clTransparent;
+      end;
+    end else
+    begin
+      Width := ScrewSize;
+      Height := ScrewSize;
+      with Canvas do
+      begin
+        Brush.Color := clBlack;
+        Pen.Color := clBlack;
+        Rectangle(ScrewRect);
+      end;
+    end;
+    TransparentColor := clBlack;
+    Transparent := True;
+  end;
+
+  FBefore := TBitmap.Create;
+  with FBefore do
+  begin
+    Width := ScrewSize;
+    Height := ScrewSize;
+    TransparentColor := clTransparent;
+    Transparent := True;
+  end;
+end;
+
+{*
+  Détruit l'instance
+*}
+destructor TMaskPlugin.Destroy;
+begin
+  FBefore.Free;
+  FMask.Free;
+  inherited;
+end;
+
+{*
+  Dessine sous le joueur
+  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
+  effectué dans DrawBefore se retrouve donc sous le joueur.
+  @param Player   Joueur qui est dessiné
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
+procedure TMaskPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+begin
+  Before.Canvas.CopyRect(ScrewRect, Canvas, ScrewRect(X, Y));
+  Before.Canvas.Draw(0, 0, Mask);
+end;
+
+{*
+  Dessine sur le joueur
+  DrawAfter est exécuté lors du dessin du joueur, après celui-ci. Le dessin
+  effectué dans DrawAfter se retrouve donc sur le joueur.
+  @param Player   Joueur qui est dessiné
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
+procedure TMaskPlugin.DrawAfter(Player : TPlayer; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+begin
+  Canvas.Draw(X, Y, Before);
 end;
 
 //////////////////////////
