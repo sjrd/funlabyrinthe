@@ -115,6 +115,15 @@ begin
   // Origine à la position du joueur
   OrigX := Player.Position.X;
   OrigY := Player.Position.Y;
+  { Si le joueur a fini de jouer et qu'on est en bordure de carte, on affiche la
+    la zone la plus proche dans la carte. }
+  if Player.PlayState <> psPlaying then
+  begin
+    if OrigX = -1 then OrigX := 0 else
+    if OrigX = Map.Dimensions.X then dec(OrigX);
+    if OrigY = -1 then OrigY := 0 else
+    if OrigY = Map.Dimensions.Y then dec(OrigY);
+  end;
   // Origine au niveau de la zone
   dec(OrigX, IntMod(OrigX, Map.ZoneSize));
   dec(OrigY, IntMod(OrigY, Map.ZoneSize));
