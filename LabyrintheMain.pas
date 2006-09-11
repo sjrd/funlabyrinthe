@@ -9,7 +9,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, NumberDialog,
-  SdDialogs, ShellAPI, FunLabyUtils, PlayerView, FilesUtils, FunLabyCore;
+  SdDialogs, ShellAPI, FunLabyUtils, PlayUtils, FilesUtils, FunLabyCore;
 
 resourcestring
   sViewSize = 'Taille de la vue';
@@ -19,20 +19,6 @@ resourcestring
   sExitConfirm = 'Voulez-vous enregistrer la partie en cours ?';
 
 type
-  {*
-    Thread de déplacement du pion
-  *}
-  TMoveThread = class(TThread)
-  private
-    Player : TPlayer;
-    Dir : TDirection;
-  protected
-    procedure Execute; override;
-  public
-    constructor Create(APlayer : TPlayer; ADir : TDirection;
-      AOnTerminate : TNotifyEvent);
-  end;
-
   {*
     Classe de la fiche principale
   *}
@@ -113,32 +99,6 @@ implementation
 
 uses
   PropertiesDialog;
-
-//////////////////////////
-/// Classe TMoveThread ///
-//////////////////////////
-
-constructor TMoveThread.Create(APlayer : TPlayer; ADir : TDirection;
-  AOnTerminate : TNotifyEvent);
-begin
-  inherited Create(True);
-  Player := APlayer;
-  Dir := ADir;
-  OnTerminate := AOnTerminate;
-  Resume;
-end;
-
-procedure TMoveThread.Execute;
-var Redo : boolean;
-begin
-  Player.Move(Dir, True, Redo);
-  while Redo do
-  begin
-    Sleep(500);
-    Dir := Player.Direction;
-    Player.Move(Dir, False, Redo);
-  end;
-end;
 
 ////////////////////////
 /// Classe TFormMain ///
