@@ -21,7 +21,8 @@ const {don't localize}
   actOpenGoldenLock = 'OpenGoldenLock';
 
 const {don't localize}
-  idBuoyPlugin = 'BuoyPlugin'; /// ID du plug-in bouée
+  idBuoyPlugin = 'BuoyPlugin';   /// ID du plug-in bouée
+  idPlankPlugin = 'PlankPlugin'; /// ID du plug-in planche
 
 resourcestring
   sBuoys           = 'Bouée';              /// Nom de l'objet bouée
@@ -78,7 +79,7 @@ resourcestring
 const {don't localize}
   idPlankField = 'PlankField';                   /// ID du terrain planche
   idPlankEffect = 'PlankEffect';                 /// ID de l'effet planche
-  idPlankScrew = '%s-Plank-%s';                  /// ID de la case planche
+  idPlankScrew = 'PlankScrew-%s';                /// ID de la case planche
 
   idGrass = 'Grass';                             /// ID de l'herbe
   idWall = 'Wall';                               /// ID du mur
@@ -164,7 +165,7 @@ type
 
   {*
     Plug-in bouée
-    Affiche une bouée sous le joueur, et permet d'aller dans l'eau
+    Affiche une bouée sous le joueur, et permet d'aller dans l'eau.
   *}
   TBuoyPlugin = class(TPlugin)
   public
@@ -176,6 +177,16 @@ type
 
     function CanYou(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
+  end;
+
+  {*
+    Plug-in planche
+    Affiche une planche à côté du joueur ou sous celui-ci.
+  *}
+  TPlankPlugin = class(TPlugin)
+  public
+    procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
   end;
 
   {*
@@ -271,18 +282,13 @@ type
     Case spéciale planche
     Cette case est utilisée pour le déplacement particulier de la planche.
   *}
-  TPlankScrew = class(TScrew)
+  TPlankScrew = class(TOverriddenScrew)
   private
-    FOriginalScrew : TScrew; /// Case originale
-    FPlayer : TPlayer;       /// Joueur qui passe sur la case
+    FPlayer : TPlayer; /// Joueur qui passe sur la case
   public
-    constructor Create(AMaster : TMaster; AOriginalScrew : TScrew;
+    constructor Create(AMaster : TMaster; AMap : TMap; APosition : T3DPoint;
       APlayer : TPlayer);
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
-
-    property OriginalScrew : TScrew read FOriginalScrew;
     property Player : TPlayer read FPlayer;
   end;
 
@@ -543,6 +549,7 @@ var I : integer;
 begin
   // Plug-in
   TBuoyPlugin.Create(Master, idBuoyPlugin);
+  TPlankPlugin.Create(Master, idPlankPlugin);
 
   // Défintions d'objet
   TBuoys.Create(Master, idBuoys, sBuoys);
@@ -648,6 +655,50 @@ function TBuoyPlugin.CanYou(Player : TPlayer;
   const Action : TPlayerAction) : boolean;
 begin
   Result := Action = actGoOnWater;
+end;
+
+///////////////////////////
+/// Classe TPlankPlugin ///
+///////////////////////////
+
+{*
+  Dessine sous le joueur
+  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
+  effectué dans DrawBefore se retrouve donc sous le joueur.
+  @param Player   Joueur qui est dessiné
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
+procedure TPlankPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+begin
+  inherited;
+
+  // Détermination de l'endroit où dessiner réellement la planche
+  if not (Player.Map[Player.Position] is TPlankScrew) then
+  begin
+    case Player.Direction of
+      diNorth : dec(Y, ScrewSize);
+      diEast  : inc(X, ScrewSize);
+      diSouth : inc(Y, ScrewSize);
+      diWest  : dec(X, ScrewSize);
+    end;
+  end;
+
+  // Dessin de la planche
+  with Canvas do
+  begin
+    Brush.Color := clPlankColor;
+    Brush.Style := bsSolid;
+    Pen.Color := clPlankColor;
+    Pen.Style := psSolid;
+
+    if Player.Direction in [diNorth, diSouth] then
+      Rectangle(X+6, Y-5, X+ScrewSize-6, Y+ScrewSize+5)
+    else
+      Rectangle(X-5, Y+6, X+ScrewSize+5, Y+ScrewSize-6);
+  end;
 end;
 
 /////////////////////
@@ -769,12 +820,11 @@ end;
   @param Action   Action à effectuer
 *}
 procedure TPlanks.UseFor(Player : TPlayer; const Action : TPlayerAction);
-var Pos : T3DPoint;
 begin
   if Action = actPassOverScrew then with Player do
   begin
-    Pos := PointBehind(Position, Direction);
-    Map[Pos] := TPlankScrew.Create(Master, Map[Pos], Player);
+    TPlankScrew.Create(Master, Map, PointBehind(Position, Direction), Player);
+    AddPlugin(Master.Plugin[idPlankPlugin]);
     Sleep(500);
   end else inherited;
 end;
@@ -958,12 +1008,10 @@ end;
 *}
 procedure TPlankEffect.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
-var PlankScrew : TPlankScrew;
 begin
   inherited;
-  PlankScrew := Player.Map[Pos] as TPlankScrew;
-  Player.Map[Pos] := PlankScrew.OriginalScrew;
-  PlankScrew.Free;
+  Player.RemovePlugin(Master.Plugin[idPlankPlugin]);
+  Player.Map[Pos].Free;
 end;
 
 //////////////////////////
@@ -972,42 +1020,17 @@ end;
 
 {*
   Crée une instance de TPlankScrew
-  @param AMaster          Maître FunLabyrinthe
-  @param AOriginalScrew   Case originale
-  @param APlayer          Joueur qui passe sur la case
+  @param AMaster     Maître FunLabyrinthe
+  @param AMap        Carte
+  @param APosition   Position
+  @param APlayer     Joueur qui passe sur la case
 *}
-constructor TPlankScrew.Create(AMaster : TMaster; AOriginalScrew : TScrew;
-  APlayer : TPlayer);
+constructor TPlankScrew.Create(AMaster : TMaster; AMap : TMap;
+  APosition : T3DPoint; APlayer : TPlayer);
 begin
-  inherited Create(AMaster,
-    Format(idPlankScrew, [AOriginalScrew.ID, APlayer.ID]), AOriginalScrew.Name,
+  inherited Create(AMaster, Format(idPlankScrew, [APlayer.ID]), AMap, APosition,
     AMaster.Field[idPlankField], AMaster.Effect[idPlankEffect], nil);
-  FOriginalScrew := AOriginalScrew;
   FPlayer := APlayer;
-end;
-
-{*
-  Dessine la case sur un canevas
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
-*}
-procedure TPlankScrew.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
-begin
-  OriginalScrew.Draw(Canvas, X, Y);
-
-  with Canvas do
-  begin
-    Brush.Color := clPlankColor;
-    Brush.Style := bsSolid;
-    Pen.Color := clPlankColor;
-    Pen.Style := psSolid;
-
-    if Player.Direction in [diNorth, diSouth] then
-      Rectangle(X+6, Y-5, X+ScrewSize-6, Y+ScrewSize+5)
-    else
-      Rectangle(X-5, Y+6, X+ScrewSize+5, Y+ScrewSize-6);
-  end;
 end;
 
 /////////////////////

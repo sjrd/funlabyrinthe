@@ -46,8 +46,9 @@ type
   /// Générée si un composant recherché n'est pas trouvé
   EComponentNotFound = class(Exception);
 
-  TMaster = class;
   TPlayer = class;
+  TMap = class;
+  TMaster = class;
 
   {*
     Gère le chargement des images d'après leur nom
@@ -270,6 +271,31 @@ type
     property Field : TField read FField;
     property Effect : TEffect read FEffect;
     property Obstacle : TObstacle read FObstacle;
+  end;
+
+  {*
+    Classe de base pour les cases en « surchargeant » d'autres
+    TOverriddenScrew est la classe de base pour les cases spéciales qui
+    surchargent momentanément une autre case. Elle fournit des propriétés et
+    méthodes pour identifier la case en question et la dessiner.
+  *}
+  TOverriddenScrew = class(TScrew)
+  private
+    FMap : TMap;             /// Carte
+    FPosition : T3DPoint;    /// Position
+    FOriginalScrew : TScrew; /// Case originale
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      AMap : TMap; APosition : T3DPoint; AField : TField; AEffect : TEffect;
+      AObstacle : TObstacle);
+    destructor Destroy; override;
+
+    procedure Draw(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); override;
+
+    property Map : TMap read FMap;
+    property Position : T3DPoint read FPosition;
+    property OriginalScrew : TScrew read FOriginalScrew;
   end;
 
   {*
@@ -1122,6 +1148,56 @@ begin
   if Effect = nil then EffectID := '' else
     EffectID := Effect.ID;
   Result := Master.Screw[Field.ID+'-'+EffectID+'-'+NewObstacle];
+end;
+
+///////////////////////////////
+/// Classe TOverriddenScrew ///
+///////////////////////////////
+
+{*
+  Crée une instance de TOverriddenScrew
+  @param AMaster     Maître FunLabyrinthe
+  @param AID         ID de la case
+  @param AMap        Carte
+  @param APosition   Position
+  @param AField      Terrain
+  @param AEffect     Effet
+  @param AObstacle   Obstacle
+*}
+constructor TOverriddenScrew.Create(AMaster : TMaster; const AID : TComponentID;
+  AMap : TMap; APosition : T3DPoint; AField : TField; AEffect : TEffect;
+  AObstacle : TObstacle);
+var AOriginalScrew : TScrew;
+begin
+  AOriginalScrew := AMap[APosition];
+  inherited Create(AMaster, AID, AOriginalScrew.Name,
+    AField, AEffect, AObstacle);
+  FMap := AMap;
+  FPosition := APosition;
+  FOriginalScrew := AOriginalScrew;
+
+  Map[Position] := Self;
+end;
+
+{*
+  Détruit l'instance
+*}
+destructor TOverriddenScrew.Destroy;
+begin
+  Map[Position] := OriginalScrew;
+  inherited;
+end;
+
+{*
+  Dessine la case sur un canevas
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
+procedure TOverriddenScrew.Draw(Canvas : TCanvas; X : integer = 0;
+  Y : integer = 0);
+begin
+  OriginalScrew.Draw(Canvas, X, Y);
 end;
 
 ///////////////////
