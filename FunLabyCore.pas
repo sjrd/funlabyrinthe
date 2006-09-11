@@ -23,6 +23,7 @@ const {don't localize}
 const {don't localize}
   idBuoyPlugin = 'BuoyPlugin';   /// ID du plug-in bouée
   idPlankPlugin = 'PlankPlugin'; /// ID du plug-in planche
+  idBoatPlugin = 'BoatPlugin';   /// ID du plug-in barque
 
 resourcestring
   sBuoys           = 'Bouée';              /// Nom de l'objet bouée
@@ -73,9 +74,11 @@ resourcestring
   sPlank = 'Planche';                         /// Nom de la planche
   sSilverKey = 'Clef d''argent';              /// Nom de la clef d'argent
   sGoldenKey = 'Clef d''or';                  /// Nom de la clef d'or
+  sBoat = 'Barque';                           /// Nom de la barque
 
   sSilverBlock = 'Bloc en argent';            /// Nom du bloc en argent
   sGoldenBlock = 'Bloc en or';                /// Nom du bloc en or
+  sSecretWay = 'Passage secret';              /// Nom du passage secret
 
 const {don't localize}
   idPlankField = 'PlankField';                   /// ID du terrain planche
@@ -87,6 +90,8 @@ const {don't localize}
   idWater = 'Water';                             /// ID de l'eau
   idHole = 'Hole';                               /// ID du trou
   idSky = 'Sky';                                 /// ID du ciel
+
+  idGrassWater = 'GrassWater';                   /// ID de l'eau effet herbe
 
   idNorthArrow = 'NorthArrow';                   /// ID de la flèche nord
   idEastArrow = 'EastArrow';                     /// ID de la flèche est
@@ -110,9 +115,11 @@ const {don't localize}
   idPlank = 'Plank';                             /// ID de la planche
   idSilverKey = 'SilverKey';                     /// ID de la clef d'argent
   idGoldenKey = 'GoldenKey';                     /// ID de la clef d'or
+  idBoat = 'Boat%d';                             /// ID de la barque
 
   idSilverBlock = 'SilverBlock';                 /// ID du bloc en argent
   idGoldenBlock = 'GoldenBlock';                 /// ID du bloc en or
+  idSecretWay = 'SecretWay';                     /// ID du passage secret
 
 const {don't localize}
   fGrass = 'Grass';                         /// Fichier de l'herbe
@@ -140,6 +147,7 @@ const {don't localize}
   fPlank = 'Plank';                         /// Fichier de la planche
   fSilverKey = 'SilverKey';                 /// Fichier de la clef d'argent
   fGoldenKey = 'GoldenKey';                 /// Fichier de la clef d'or
+  fBoat = 'Boat';                           /// Fichier de la barque
 
   fSilverBlock = 'SilverBlock';             /// Fichier du bloc en argent
   fGoldenBlock = 'GoldenBlock';             /// Fichier du bloc en or
@@ -193,6 +201,26 @@ type
   public
     procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
+  end;
+
+  {*
+    Plug-in barque
+    Affiche une barque sous le joueur, et permet d'aller dans l'eau. De plus,
+    ce plug-in bloque un mouvement si la direction a changé.
+  *}
+  TBoatPlugin = class(TPlugin)
+  public
+    procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
+
+    procedure Moving(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; Src, Dest : T3DPoint;
+      var Cancel : boolean); override;
+    procedure Moved(Player : TPlayer; KeyPressed : boolean;
+      Src, Dest : T3DPoint); override;
+
+    function CanYou(Player : TPlayer;
+      const Action : TPlayerAction) : boolean; override;
   end;
 
   {*
@@ -398,6 +426,7 @@ type
   *}
   TTransporter = class(TEffect)
   private
+    FNumber : integer;        /// Numéro du téléporteur
     FKind : TTransporterKind; /// Type de téléporteur
 
     procedure FindNext(Map : TMap; var Pos : T3DPoint);
@@ -405,12 +434,31 @@ type
     procedure FindRandom(Map : TMap; var Pos : T3DPoint);
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; AKind : TTransporterKind = tkInactive);
+      const AName : string; ANumber : integer;
+      AKind : TTransporterKind = tkInactive);
 
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
 
+    property Number : integer read FNumber;
     property Kind : TTransporterKind read FKind;
+  end;
+
+  {*
+    Escaliers
+    Les escaliers permettent de monter ou descendre d'un étage
+  *}
+  TStairs = class(TEffect)
+  private
+    FUp : boolean; /// Indique si l'escalier est montant
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; AUp : boolean);
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+
+    property Up : boolean read FUp;
   end;
 
   {*
@@ -525,6 +573,23 @@ type
   end;
 
   {*
+    Barque
+    La barque est un moyen de transport permettant d'aller sur l'eau.
+  *}
+  TBoat = class(TEffect)
+  private
+    FNumber : integer; /// Numéro de la barque
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string; ANumber : integer);
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+
+    property Number : integer read FNumber;
+  end;
+
+  {*
     Bloc en argent
     Le bloc en argent peut être détruit au moyen d'une clef en argent.
   *}
@@ -552,8 +617,24 @@ type
       var Cancel, AbortEntered : boolean); override;
   end;
 
+  {*
+    Passage secret
+    Le passage secret a l'apparence d'un mur mais peut être ouvert sans rien.
+  *}
+  TSecretWay = class(TObstacle)
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; Src, Pos : T3DPoint;
+      var Cancel, AbortEntered : boolean); override;
+  end;
+
 const
-  clPlankColor = $00004080;
+  clPlank   = $00004080; /// Couleur de la planche
+  clOutBoat = $00004080; /// Couleur de l'extérieur d'une barque
+  clInBoat  = $00006699; /// Couleur de l'intérieur d'une barque
 
 procedure LoadCoreComponents(Master : TMaster; Params : TStrings);
 
@@ -569,6 +650,7 @@ begin
   // Plug-in
   TBuoyPlugin.Create(Master, idBuoyPlugin);
   TPlankPlugin.Create(Master, idPlankPlugin);
+  TBoatPlugin.Create(Master, idBoatPlugin);
 
   // Défintions d'objet
   TBuoys.Create(Master, idBuoys, sBuoys);
@@ -587,6 +669,8 @@ begin
   THole.Create(Master, idHole, sHole);
   TSky.Create(Master, idSky, sSky);
 
+  TGrass.Create(Master, idGrassWater, sWater, Master.Field[idWater]);
+
   // Effets de case
   TArrow.Create(Master, idNorthArrow, sNorthArrow, diNorth);
   TArrow.Create(Master, idEastArrow , sEastArrow , diEast );
@@ -594,16 +678,19 @@ begin
   TArrow.Create(Master, idWestArrow , sWestArrow , diWest );
   TArrow.Create(Master, idCrossroads, sCrossroads, diNone );
 
-  TTransporter.Create(Master, idInactiveTransporter, sInactiveTransporter);
+  TTransporter.Create(Master, idInactiveTransporter, sInactiveTransporter, 0);
   for I := 1 to 15 do
-    TTransporter.Create(Master, Format(idTransporterNext, [I]),
-      Format(sTransporterNext, [I]), tkNext);
+    TTransporter.Create(Master, idTransporterNext, sTransporterNext,
+      I, tkNext);
   for I := 1 to 15 do
-    TTransporter.Create(Master, Format(idTransporterPrev, [I]),
-      Format(sTransporterPrev, [I]), tkPrevious);
+    TTransporter.Create(Master, idTransporterPrev, sTransporterPrev,
+      I, tkPrevious);
   for I := 1 to 15 do
-    TTransporter.Create(Master, Format(idTransporterRandom, [I]),
-      Format(sTransporterRandom, [I]), tkRandom);
+    TTransporter.Create(Master, idTransporterRandom, sTransporterRandom,
+      I, tkRandom);
+
+  TStairs.Create(Master, idUpStairs, sUpStairs, True);
+  TStairs.Create(Master, idDownStairs, sDownStairs, False);
 
   TDirectTurnstile.Create(Master, idDirectTurnstile, sDirectTurnstile);
   TIndirectTurnstile.Create(Master, idIndirectTurnstile, sIndirectTurnstile);
@@ -616,9 +703,13 @@ begin
   TSilverKey.Create(Master, idSilverKey, sSilverKey);
   TGoldenKey.Create(Master, idGoldenKey, sGoldenKey);
 
+  for I := 1 to 10 do
+    TBoat.Create(Master, idBoat, sBoat, I);
+
   // Obstacles
   TSilverBlock.Create(Master, idSilverBlock, sSilverBlock);
   TGoldenBlock.Create(Master, idGoldenBlock, sGoldenBlock);
+  TSecretWay.Create(Master, idSecretWay, sSecretWay);
 end;
 
 //////////////////////////
@@ -709,9 +800,9 @@ begin
   // Dessin de la planche
   with Canvas do
   begin
-    Brush.Color := clPlankColor;
+    Brush.Color := clPlank;
     Brush.Style := bsSolid;
-    Pen.Color := clPlankColor;
+    Pen.Color := clPlank;
     Pen.Style := psSolid;
 
     if Player.Direction in [diNorth, diSouth] then
@@ -719,6 +810,151 @@ begin
     else
       Rectangle(X-5, Y+6, X+ScrewSize+5, Y+ScrewSize-6);
   end;
+end;
+
+//////////////////////////
+/// Classe TBoatPlugin ///
+//////////////////////////
+
+{*
+  Dessine sous le joueur
+  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
+  effectué dans DrawBefore se retrouve donc sous le joueur.
+  @param Player   Joueur qui est dessiné
+  @param Canvas   Canevas sur lequel dessiner les images
+  @param X        Coordonnée X du point à partir duquel dessiner les images
+  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+*}
+procedure TBoatPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+begin
+  inherited;
+  with Canvas do
+  begin
+    Brush.Color := clInBoat;
+    Brush.Style := bsSolid;
+    Pen.Color := clOutBoat;
+    Pen.Style := psSolid;
+    Pen.Width := 2;
+
+    case Player.Direction of
+      diNorth :
+      begin
+        // Proue
+        Arc(X-5, Y-2, X+25, Y+24, X+25, Y+12, X+15, Y+ 2);
+        Arc(X+5, Y-2, X+35, Y+24, X+15, Y+ 2, X+ 5, Y+12);
+        // Bastingage
+        MoveTo(X+ 5, Y+12);
+        LineTo(X+ 5, Y+29);
+        LineTo(X+25, Y+29);
+        LineTo(X+25, Y+12);
+        // Pont
+        FloodFill(X+15, Y+15, clOutBoat, fsBorder);
+      end;
+      diEast :
+      begin
+        // Proue
+        Arc(X+4, Y-5, X+32, Y+25, X+18, Y+25, X+30, Y+15);
+        Arc(X+4, Y+5, X+32, Y+35, X+30, Y+15, X+18, Y+ 5);
+        // Bastingage
+        MoveTo(X+18, Y+ 5);
+        LineTo(X+ 1, Y+ 5);
+        LineTo(X+ 1, Y+25);
+        LineTo(X+18, Y+25);
+        // Pont
+        FloodFill(X+15, Y+15, clOutBoat, fsBorder);
+      end;
+      diSouth :
+      begin
+        // Proue
+        Arc(X+5, Y+4, X+35, Y+32, X+ 5, Y+18, X+15, Y+30);
+        Arc(X-5, Y+4, X+25, Y+32, X+15, Y+30, X+25, Y+18);
+        // Bastingage
+        MoveTo(X+ 5, Y+18);
+        LineTo(X+ 5, Y+ 1);
+        LineTo(X+25, Y+ 1);
+        LineTo(X+25, Y+18);
+        // Pont
+        FloodFill(X+15, Y+15, clOutBoat, fsBorder);
+      end;
+      diWest :
+      begin
+        // Proue
+        Arc(X-2, Y+5, X+26, Y+35, X+12, Y+ 5, X   , Y+15);
+        Arc(X-2, Y-5, X+26, Y+25, X   , Y+15, X+12, Y+25);
+        // Bastingage
+        MoveTo(X+10, Y+ 5);
+        LineTo(X+29, Y+ 5);
+        LineTo(X+29, Y+25);
+        LineTo(X+12, Y+25);
+        // Pont
+        FloodFill(X+15, Y+15, clOutBoat, fsBorder);
+      end;
+    end;
+
+    Pen.Width := 1;
+  end;
+end;
+
+{*
+  Un joueur se déplace
+  Moving est exécuté lorsqu'un joueur se déplace d'une case à une autre. Pour
+  annuler le déplacement, Moving peut positionner le paramètre Cancel à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de départ
+  @param Dest           Case d'arrivée
+  @param Cancel         À positionner à True pour annuler le déplacement
+*}
+procedure TBoatPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; Src, Dest : T3DPoint; var Cancel : boolean);
+begin
+  if Player.Direction <> OldDirection then
+    Cancel := True;
+end;
+
+{*
+  Un joueur s'est déplacé
+  Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de départ
+  @param Dest         Case d'arrivée
+*}
+procedure TBoatPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
+  Src, Dest : T3DPoint);
+var ScrewID : TComponentID;
+begin
+  with Player do if not (Map[Dest].Field is TWater) then
+  begin
+    // Retirer le plug-in barque
+    RemovePlugin(Self);
+
+    // Placer un effet barque sur la case source
+    if not Assigned(Map[Src].Obstacle) then ScrewID := '' else
+      ScrewID := Map[Src].Obstacle.ID;
+    ScrewID := Format(idGrassWater+'-'+idBoat+'-'+ScrewID,
+      [Attribute[idBoatPlugin]]);
+    Map[Src] := Master.Screw[ScrewID];
+
+    // Remettre à 0 l'attribut du joueur concernant la barque
+    Attribute[idBoatPlugin] := 0;
+  end;
+end;
+
+{*
+  Indique si le plug-in permet au joueur d'effectuer une action donnée
+  CanYou doit renvoyer True si le plug-in permet au joueur d'effectuer
+  l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à tester
+  @return True si le joueur est capable d'effectuer l'action, False sinon
+*}
+function TBoatPlugin.CanYou(Player : TPlayer;
+  const Action : TPlayerAction) : boolean;
+begin
+  Result := Action = actGoOnWater;
 end;
 
 /////////////////////
@@ -1329,9 +1565,11 @@ end;
   @param AKind        Type de téléporteur
 *}
 constructor TTransporter.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; AKind : TTransporterKind = tkInactive);
+  const AName : string; ANumber : integer;
+  AKind : TTransporterKind = tkInactive);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited Create(AMaster, Format(AID, [ANumber]), Format(AName, [ANumber]));
+  FNumber := ANumber;
   FKind := AKind;
   Painter.ImgNames.Add(fTransporter);
 end;
@@ -1468,6 +1706,53 @@ begin
 
   // Si l'on a trouvé une autre case, on déplace le joueur
   if Same3DPoint(Other, Pos) then exit;
+  Sleep(500);
+  Player.Position := Other;
+end;
+
+//////////////////////
+/// Classe TStairs ///
+//////////////////////
+
+{*
+  Crée une instance de TStairs
+  @param AMaster      Maître FunLabyrinthe
+  @param AID          ID de l'effet de case
+  @param AName        Nom de la case
+  @param AUp          Indique si l'escalier est montant
+*}
+constructor TStairs.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; AUp : boolean);
+begin
+  inherited Create(AMaster, AID, AName);
+  FUp := AUp;
+  if Up then
+    Painter.ImgNames.Add(fUpStairs)
+  else
+    Painter.ImgNames.Add(fDownStairs);
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TStairs.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+var Other : T3DPoint;
+begin
+  inherited;
+
+  Other := Pos;
+  if Up then
+    inc(Other.Z)
+  else
+    dec(Other.Z);
+
   Sleep(500);
   Player.Position := Other;
 end;
@@ -1830,15 +2115,63 @@ begin
   Player.ShowDialog(sMessage, sFoundGoldenKey);
 end;
 
+////////////////////
+/// Classe TBoat ///
+////////////////////
+
+{*
+  Crée une instance de TBoat
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'effet de case
+  @param AName     Nom de la case
+*}
+constructor TBoat.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; ANumber : integer);
+begin
+  inherited Create(AMaster, Format(AID, [ANumber]), Format(AName, [ANumber]));
+  FNumber := ANumber;
+  Painter.ImgNames.Add(fBoat);
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TBoat.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+var ObstacleID : TComponentID;
+begin
+  inherited;
+
+  with Player do
+  begin
+    // Remplacement de la case par de l'eau simple
+    if not Assigned(Map[Pos].Obstacle) then ObstacleID := '' else
+      ObstacleID := Map[Pos].Obstacle.ID;
+    Map[Pos] := Master.Screw[idWater+'--'+ObstacleID];
+
+    // Indication du numéro de la barque dans l'attribut correspondant
+    Attribute[idBoatPlugin] := Number;
+
+    // Ajout du plug-in barque
+    AddPlugin(Master.Plugin[idBoatPlugin]);
+  end;
+end;
+
 ///////////////////////////
 /// Classe TSilverBlock ///
 ///////////////////////////
 
 {*
   Crée une instance de TSilverBlock
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du terrain
+  @param AName     Nom de l'obstacle
 *}
 constructor TSilverBlock.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string);
@@ -1882,9 +2215,9 @@ end;
 
 {*
   Crée une instance de TGoldenBlock
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du terrain
+  @param AName     Nom de l'obstacle
 *}
 constructor TGoldenBlock.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string);
@@ -1918,6 +2251,47 @@ begin
     else
       ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
   end;
+
+  Cancel := True;
+end;
+
+/////////////////////////
+/// Classe TSecretWay ///
+/////////////////////////
+
+{*
+  Crée une instance de TSecretWay
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du terrain
+  @param AName     Nom de l'obstacle
+*}
+constructor TSecretWay.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(fWall);
+end;
+
+{*
+  Exécuté lorsque le joueur pousse sur l'obstacle
+  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
+  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
+  la méthode Entered de la case ne soit exécutée, il faut positionner
+  AbortEntered à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de provenance
+  @param Pos            Position de la case
+  @param Cancel         À positionner à True pour annuler le déplacement
+  @param AbortEntered   À positionner à True pour empêcher le Entered
+*}
+procedure TSecretWay.Pushing(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; Src, Pos : T3DPoint;
+  var Cancel, AbortEntered : boolean);
+begin
+  if KeyPressed then
+    Player.Map[Pos] := Player.Map[Pos].ChangeObstacle;
 
   Cancel := True;
 end;
