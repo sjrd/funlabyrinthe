@@ -213,6 +213,9 @@ end;
 *}
 procedure TFormMain.MovingTerminated(Sender : TObject);
 begin
+  if MoveThread.FatalException <> nil then
+    with Exception(MoveThread.FatalException) do
+      ShowDialog(ClassName, Message, dtError);
   MoveThread := nil;
 end;
 

@@ -1562,7 +1562,7 @@ constructor TEngagedLiftScrew.Create(AMaster : TMaster; AMap : TMap;
 var Effect : TEffect;
 begin
   if not WithEffect then Effect := nil else
-    Effect := Master.Effect[idEngagedLiftEffect];
+    Effect := AMaster.Effect[idEngagedLiftEffect];
   inherited Create(AMaster,
     Format(idEngagedLiftScrew, [APlayer.ID, APosition.Z]), AMap, APosition,
     AMaster.Field[idEngagedLiftField], Effect, nil);

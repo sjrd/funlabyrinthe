@@ -1164,6 +1164,7 @@ begin
     Effect.Draw(Canvas, X, Y);
   if Assigned(Obstacle) then
     Obstacle.Draw(Canvas, X, Y);
+  inherited;
 end;
 
 {*
