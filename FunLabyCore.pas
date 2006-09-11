@@ -67,6 +67,7 @@ resourcestring
   sDirectTurnstile = 'Tourniquet direct';     /// Nom du tourniquet direct
   sIndirectTurnstile = 'Tourniquet indirect'; /// Nom du tourniquet indirect
   sOutside = 'Dehors';                        /// Nom du dehors
+  sTreasure = 'Trésor';                       /// Nom du trésor
 
   sBuoy = 'Bouée';                            /// Nom de la bouée
   sPlank = 'Planche';                         /// Nom de la planche
@@ -103,6 +104,7 @@ const {don't localize}
   idDirectTurnstile = 'DirectTurnstile';         /// ID du tourniquet direct
   idIndirectTurnstile = 'IndirectTurnstile';     /// ID du tourniquet indirect
   idOutside = 'Outside';                         /// ID du dehors
+  idTreasure = 'Treasure';                       /// ID du trésor
 
   idBuoy = 'Buoy';                               /// ID de la bouée
   idPlank = 'Plank';                             /// ID de la planche
@@ -132,6 +134,7 @@ const {don't localize}
   fDirectTurnstile = 'DirectTurnstile';     /// Fichier du tourniquet direct
   fIndirectTurnstile = 'IndirectTurnstile'; /// Fichier du tourniquet indirect
   fOutside = 'Outside';                     /// Fichier du dehors
+  fTreasure = 'Treasure';                   /// Fichier du trésor
 
   fBuoy = 'Buoy';                           /// Fichier de la bouée
   fPlank = 'Plank';                         /// Fichier de la planche
@@ -147,6 +150,9 @@ resourcestring
   sCantOpenSilverBlock = 'Ce bloc ne disparaîtra qu''avec une clef d''argent.';
   sCantOpenGoldenBlock = 'Ce bloc ne disparaîtra qu''avec une clef d''or.';
   sCantGoOnSky = 'Tu ne peux pas voler !';
+
+  sGotOutsideMaze = 'BRAVO ! Tu as réussi à sortir du labyrinthe !';
+  sFoundTreasure  = 'BRAVO ! Tu as trouvé le trésor !';
 
   sFoundBuoy      = 'Tu as trouvé une bouée.'+#10+
                     'Tu peux aller dans l''eau.';
@@ -454,6 +460,19 @@ type
   end;
 
   {*
+    Trésor
+    Le trésor fait remporter la victoire au joueur qui le trouve.
+  *}
+  TTreasure = class(TEffect)
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+  end;
+
+  {*
     Bouée
     La bouée donne au joueur un objet bouée
   *}
@@ -590,6 +609,7 @@ begin
   TIndirectTurnstile.Create(Master, idIndirectTurnstile, sIndirectTurnstile);
 
   TOutside.Create(Master, idOutside, sOutside);
+  TTreasure.Create(Master, idTreasure, sTreasure);
 
   TBuoy.Create(Master, idBuoy, sBuoy);
   TPlank.Create(Master, idPlank, sPlank);
@@ -1608,7 +1628,42 @@ procedure TOutside.Entered(Player : TPlayer; KeyPressed : boolean;
   Src, Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
-  // Faire gagner le joueur
+  Player.Win;
+  Player.ShowDialog(sWon, sGotOutsideMaze);
+end;
+
+////////////////////////
+/// Classe TTreasure ///
+////////////////////////
+
+{*
+  Crée une instance de TTreasure
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'effet de case
+  @param AName     Nom de la case
+*}
+constructor TTreasure.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(fTreasure);
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TTreasure.Entered(Player : TPlayer; KeyPressed : boolean;
+  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+begin
+  inherited;
+  Player.Win;
+  Player.ShowDialog(sWon, sFoundTreasure);
 end;
 
 ////////////////////

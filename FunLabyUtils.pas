@@ -43,6 +43,9 @@ type
   /// Type représentant une action
   TPlayerAction = type string;
 
+  /// État de victoire/défaite d'un joueur
+  TPlayState = (psPlaying, psWon, psLost);
+
   /// Générée si un composant recherché n'est pas trouvé
   EComponentNotFound = class(Exception);
 
@@ -359,6 +362,7 @@ type
     FColor : TColor;         /// Couleur
     FPlugins : TObjectList;  /// Liste des plug-in
     FAttributes : TStrings;  /// Liste des attributs
+    FPlayState : TPlayState;   /// État de victoire/défaite
 
     function GetPluginCount : integer;
     function GetPlugins(Index : integer) : TPlugin;
@@ -392,12 +396,16 @@ type
     function Move(Dir : TDirection; KeyPressed : boolean;
       out Redo : boolean) : boolean;
 
+    procedure Win;
+    procedure Lose;
+
     property Map : TMap read FMap;
     property Position : T3DPoint read FPosition write FPosition;
     property Direction : TDirection read FDirection write FDirection;
     property Color : TColor read FColor write FColor;
     property Attribute[const AttrName : string] : integer
       read GetAttribute write SetAttribute;
+    property PlayState : TPlayState read FPlayState;
   end;
 
   {*
@@ -418,6 +426,7 @@ type
     FPlayers : TObjectList;        /// Liste des joueurs
 
     FBeginTickCount : Cardinal;    /// TickCount au lancement
+    FTerminated : boolean;         /// Indique si la partie est terminée
 
     function GetComponent(const ID : TComponentID) : TFunLabyComponent;
     function GetPlugin   (const ID : TComponentID) : TPlugin;
@@ -450,6 +459,8 @@ type
 
     procedure AddComponent(Component : TFunLabyComponent);
     procedure RemoveComponent(Component : TFunLabyComponent);
+
+    procedure Terminate;
   public
     constructor Create;
     destructor Destroy; override;
@@ -485,6 +496,7 @@ type
     property Players[index : integer] : TPlayer read GetPlayers;
 
     property TickCount : Cardinal read GetTickCount;
+    property Terminated : boolean read FTerminated;
   end;
 
 const {don't localize}
@@ -1368,6 +1380,7 @@ begin
   FPlugins := TObjectList.Create(False);
   FAttributes := THashedStringList.Create;
   TStringList(FAttributes).CaseSensitive := True;
+  FPlayState := psPlaying;
 end;
 
 {*
@@ -1693,6 +1706,9 @@ begin
   Cancel := False;
   AbortEntered := False;
 
+  // Le joueur est-il toujours en train de jouer
+  if PlayState <> psPlaying then exit;
+
   // Premier passage : le déplacement est-il permis ?
   begin
     // Case source : exiting
@@ -1733,6 +1749,42 @@ begin
   end;
 end;
 
+{*
+  Fait gagner le joueur
+*}
+procedure TPlayer.Win;
+var I : integer;
+begin
+  if FPlayState <> psPlaying then exit;
+
+  // Ce joueur a gagné
+  FPlayState := psWon;
+
+  // Les autres joueurs ont perdu
+  for I := 0 to Master.PlayerCount-1 do if Master.Players[I] <> Self then
+    Master.Players[I].FPlayState := psLost;
+
+  // La partie est terminée
+  Master.Terminate;
+end;
+
+{*
+  Fait perdre le joueur
+*}
+procedure TPlayer.Lose;
+var I : integer;
+begin
+  if FPlayState <> psPlaying then exit;
+
+  // Ce joueur a perdu
+  FPlayState := psLost;
+
+  // Si plus aucun joueur ne joue, la partie est terminée
+  for I := 0 to Master.PlayerCount-1 do
+    if Master.Players[I].PlayState = psPlaying then exit;
+  Master.Terminate;
+end;
+
 //////////////////////
 /// Classe TMaster ///
 //////////////////////
@@ -1761,6 +1813,7 @@ begin
   FPlayers    := TObjectList.Create(False);
 
   FBeginTickCount := Windows.GetTickCount;
+  FTerminated := False;
 end;
 
 {*
@@ -2120,6 +2173,14 @@ begin
   if Component is TMap       then FMaps      .Remove(Component) else
   if Component is TPlayer    then FPlayers   .Remove(Component) else
   assert(False);
+end;
+
+{*
+  Met fin à la partie
+*}
+procedure TMaster.Terminate;
+begin
+  FTerminated := True;
 end;
 
 initialization

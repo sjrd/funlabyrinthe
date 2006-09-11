@@ -410,6 +410,10 @@ begin
   View.Draw(HiddenBitmap.Canvas);
   Image.Picture.Assign(HiddenBitmap);
   ShowStatus;
+
+  // Vérification de terminaison
+  if Master.Terminated and (MoveThread = nil) then
+    EndGame;
 end;
 
 {*
