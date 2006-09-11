@@ -1414,13 +1414,16 @@ end;
 procedure TWater.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel : boolean);
+var Behind : T3DPoint;
 begin
   with Player do
   begin
     if CanYou(actGoOnWater) then exit;
 
-    if (Map[PointBehind(Pos, Direction)].Field = Map[Src].Field) and
-      CanYou(actPassOverScrew) then exit;
+    Behind := PointBehind(Pos, Direction);
+    if (Map[Behind].Field is TGrass) and
+       (Map[Behind].Obstacle = Map[Src].Obstacle) and
+       CanYou(actPassOverScrew) then exit;
 
     if KeyPressed then
       Player.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
@@ -1460,11 +1463,14 @@ end;
 procedure THole.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel : boolean);
+var Behind : T3DPoint;
 begin
   with Player do
   begin
-    if (Map[PointBehind(Pos, Direction)].Field = Map[Src].Field) and
-      CanYou(actPassOverScrew) then exit;
+    Behind := PointBehind(Pos, Direction);
+    if (Map[Behind].Field is TGrass) and
+       (Map[Behind].Obstacle = Map[Src].Obstacle) and
+       CanYou(actPassOverScrew) then exit;
 
     if KeyPressed then
       Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
