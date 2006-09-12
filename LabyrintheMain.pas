@@ -70,17 +70,17 @@ type
   private
     { Déclarations privées }
     HiddenBitmap : TBitmap;
-    LastFileName : TFileName;
 
     MasterFile : TMasterFile;
     Master : TMaster;
     View : TPlayerView;
+    LastFileName : TFileName;
 
     MoveThread : TMoveThread;
 
     procedure NewGame(FileName : TFileName);
-    procedure EndGame;
     function SaveGame : boolean;
+    function CloseGame(DontSave : boolean = False) : boolean;
 
     procedure AdaptSizeToView;
     procedure ShowStatus;
@@ -110,13 +110,10 @@ uses
 *}
 procedure TFormMain.NewGame(FileName : TFileName);
 begin
-  if MasterFile <> nil then
-    EndGame;
-
-  LastFileName := FileName;
   MasterFile := TMasterFile.Create(FileName, fmPlay);
   Master := MasterFile.Master;
   View := TPlayerView.Create(Master.Players[0]);
+  LastFileName := FileName;
 
   MoveThread := nil;
 
@@ -136,10 +133,48 @@ begin
 end;
 
 {*
-  Termine la partie et libère les classes métier
+  Enregistre la partie en cours
+  @return True si la partie a effectivement été enregistrée, False sinon
 *}
-procedure TFormMain.EndGame;
+function TFormMain.SaveGame : boolean;
 begin
+  if MasterFile = nil then Result := True else
+  begin
+    Result := SaveGameDialog.Execute;
+
+    if Result then
+    begin
+      MasterFile.Save(SaveGameDialog.FileName);
+      LastFileName := SaveGameDialog.FileName;
+    end;
+  end;
+end;
+
+{*
+  Termine la partie et libère les classes métier
+  @param DontSave   À True, ne demande pas à l'utilisateur d'enregistrer
+  @return True si la partie a effectivement été terminée, False sinon
+*}
+function TFormMain.CloseGame(DontSave : boolean = False) : boolean;
+begin
+  if MasterFile = nil then
+  begin
+    Result := True;
+    exit;
+  end;
+
+  if DontSave then Result := True else
+  begin
+    case ShowDialog(sExitConfirmTitle, sExitConfirm,
+                    dtConfirmation, dbYesNoCancel) of
+      drYes : Result := SaveGame;
+      drCancel : Result := False;
+      else Result := True;
+    end;
+
+    if not Result then exit;
+  end;
+
   TimerUpdateImage.Enabled := False;
   OnKeyDown := nil;
 
@@ -154,21 +189,6 @@ begin
   View := nil;
   Master := nil;
   MasterFile := nil;
-end;
-
-{*
-  Enregistre la partie en cours
-  @return True si la partie a effectivement été enregistrée, False sinon
-*}
-function TFormMain.SaveGame : boolean;
-begin
-  if MasterFile = nil then Result := True else
-  begin
-    Result := SaveGameDialog.Execute;
-
-    if Result then
-      MasterFile.Save(SaveGameDialog.FileName);
-  end;
 end;
 
 {*
@@ -256,20 +276,28 @@ end;
 
 procedure TFormMain.MenuNewGameClick(Sender: TObject);
 begin
-  if not NewGameDialog.Execute then exit;
-  if ofExtensionDifferent in NewGameDialog.Options then
-    RunURL(NewGameDialog.FileName)
-  else
-    NewGame(NewGameDialog.FileName);
+  if CloseGame then
+  begin
+    if not NewGameDialog.Execute then exit;
+
+    if ofExtensionDifferent in NewGameDialog.Options then
+      RunURL(NewGameDialog.FileName)
+    else
+      NewGame(NewGameDialog.FileName);
+  end;
 end;
 
 procedure TFormMain.MenuLoadGameClick(Sender: TObject);
 begin
-  if not LoadGameDialog.Execute then exit;
-  if ofExtensionDifferent in LoadGameDialog.Options then
-    RunURL(LoadGameDialog.FileName)
-  else
-    NewGame(LoadGameDialog.FileName);
+  if CloseGame then
+  begin
+    if not LoadGameDialog.Execute then exit;
+
+    if ofExtensionDifferent in LoadGameDialog.Options then
+      RunURL(LoadGameDialog.FileName)
+    else
+      NewGame(LoadGameDialog.FileName);
+  end;
 end;
 
 procedure TFormMain.MenuHelpTopicsClick(Sender: TObject);
@@ -309,6 +337,7 @@ end;
 
 procedure TFormMain.MenuReloadGameClick(Sender: TObject);
 begin
+  CloseGame(True);
   NewGame(LastFileName);
 end;
 
@@ -320,12 +349,7 @@ end;
 procedure TFormMain.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
 begin
-  if MasterFile <> nil then
-  case ShowDialog(sExitConfirmTitle, sExitConfirm,
-                  dtConfirmation, dbYesNoCancel) of
-    drYes : CanClose := SaveGame;
-    drCancel : CanClose := False;
-  end;
+  CanClose := CloseGame;
 end;
 
 {*
@@ -357,8 +381,7 @@ end;
 *}
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
-  if MasterFile <> nil then
-    EndGame;
+  CloseGame(True);
 
   HiddenBitmap.Free;
 end;
@@ -375,7 +398,7 @@ begin
 
   // Vérification de terminaison
   if Master.Terminated and (MoveThread = nil) then
-    EndGame;
+    CloseGame(True);
 end;
 
 {*
