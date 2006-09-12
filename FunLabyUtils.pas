@@ -429,6 +429,8 @@ type
       const AName : string; AMap : TMap; APosition : T3DPoint);
     destructor Destroy; override;
 
+    procedure GetAttributes(Attributes : TStrings);
+
     procedure Draw(Canvas : TCanvas; X : integer = 0;
       Y : integer = 0); override;
 
@@ -1493,6 +1495,15 @@ begin
     if Value = 0 then FAttributes.Delete(Index) else
       FAttributes.Objects[Index] := TObject(Value);
   end;
+end;
+
+{*
+  Dresse la liste des attributs du joueur
+  @param Attributes   Liste de chaînes dans laquelle enregistrer les attributs
+*}
+procedure TPlayer.GetAttributes(Attributes : TStrings);
+begin
+  Attributes.Assign(FAttributes);
 end;
 
 {*

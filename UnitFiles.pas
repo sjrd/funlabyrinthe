@@ -13,8 +13,9 @@ type
   private
     FHandle : HMODULE; /// Module du package chargé
   public
-    constructor Create(AMasterFile : TMasterFile; const AFileName : TFileName;
-      const AMIMEType : string; Params : TStrings); override;
+    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
+      const AFileName : TFileName; const AMIMEType : string;
+      Params : TStrings); override;
     destructor Destroy; override;
   end;
 
@@ -35,7 +36,7 @@ const {don't localize}
   @param AMIMEType     Type MIME du fichier
   @param Params        Paramètres envoyés à l'unité
 *}
-constructor TBPLUnitFile.Create(AMasterFile : TMasterFile;
+constructor TBPLUnitFile.Create(AMasterFile : TMasterFile; const AHRef : string;
   const AFileName : TFileName; const AMIMEType : string; Params : TStrings);
 type
   TLoadComponentsProc = procedure(Master : TMaster; Params : TStrings); stdcall;

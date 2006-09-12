@@ -25,6 +25,8 @@ resourcestring
   sEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
   sCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
 
+  sNoFileName = 'Aucun nom de fichier spécifié';
+
 type
   /// Mode d'ouverture d'un fichier FunLabyrinthe
   TFileMode = (fmEdit, fmEditActions, fmPlay);
@@ -42,23 +44,16 @@ type
   TDependantFile = class
   private
     FMasterFile : TMasterFile; /// Fichier maître
+    FHRef : string;            /// HRef
     FFileName : TFileName;     /// Nom du fichier
     FMIMEType : string;        /// Type MIME du fichier
     FMaster : TMaster;         /// Maître FunLabyrinthe
-  protected
-    {*
-      Enregistre le fichier
-      Les descendants de TDependantFile doivent implémenter SaveFile pour
-      pouvoir enregistrer le fichier
-    *}
-    procedure SaveFile; virtual; abstract;
   public
-    constructor Create(AMasterFile : TMasterFile; const AFileName : TFileName;
-      const AMIMEType : string);
-
-    procedure Save(const AFileName : TFileName = '');
+    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
+      const AFileName : TFileName; const AMIMEType : string);
 
     property MasterFile : TMasterFile read FMasterFile;
+    property HRef : string read FHRef;
     property FileName : TFileName read FFileName;
     property MIMEType : string read FMIMEType;
     property Master : TMaster read FMaster;
@@ -70,9 +65,12 @@ type
   *}
   TUnitFile = class(TDependantFile)
   public
-    constructor Create(AMasterFile : TMasterFile; const AFileName : TFileName;
-      const AMIMEType : string; Params : TStrings); virtual;
+    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
+      const AFileName : TFileName; const AMIMEType : string;
+      Params : TStrings); virtual;
     procedure AfterConstruction; override;
+
+    procedure GetParams(Params : TStrings); virtual;
   end;
   TUnitFileClass = class of TUnitFile;
 
@@ -86,8 +84,16 @@ type
     FMapID : TComponentID; /// ID de la carte liée
     FMap : TMap;           /// Carte liée
   protected
-    constructor Create(AMasterFile : TMasterFile; const AFileName : TFileName;
-      const AMIMEType : string; const AMapID : TComponentID;
+    {*
+      Enregistre le fichier
+      Les descendants de TMapFile doivent implémenter SaveFile pour pouvoir
+      enregistrer la carte
+    *}
+    procedure SaveFile; virtual; abstract;
+  protected
+    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
+      const AFileName : TFileName; const AMIMEType : string;
+      const AMapID : TComponentID;
       ADimensions : T3DPoint; AZoneSize : integer); overload;
   public
     {*
@@ -100,10 +106,12 @@ type
       @param AMIMEType     Type MIME du fichier
       @param AMapID        ID de la carte
     *}
-    constructor Create(AMasterFile : TMasterFile; const AFileName : TFileName;
-      const AMIMEType : string;
+    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
+      const AFileName : TFileName; const AMIMEType : string;
       const AMapID : TComponentID); overload; virtual; abstract;
     procedure AfterConstruction; override;
+
+    procedure Save(const AHRef : string = ''; const AFileName : TFileName = '');
 
     property MapID : TComponentID read FMapID;
     property Map : TMap read FMap;
@@ -161,7 +169,7 @@ type
       MapFileClass : TMapFileClass);
     class function FindMapFileClass(const MIMEType : string) : TMapFileClass;
 
-    procedure Save(const AFileName : TFileName = '');
+    procedure Save(AFileName : TFileName = '');
 
     property FileName : TFileName read FFileName;
     property Mode : TFileMode read FMode;
@@ -224,24 +232,14 @@ end;
   @param AMIMEType     Type MIME du fichier
 *}
 constructor TDependantFile.Create(AMasterFile : TMasterFile;
-  const AFileName : TFileName; const AMIMEType : string);
+  const AHRef : string; const AFileName : TFileName; const AMIMEType : string);
 begin
   inherited Create;
   FMasterFile := AMasterFile;
+  FHRef := AHRef;
   FFileName := AFileName;
   FMIMEType := AMIMEType;
   FMaster := FMasterFile.Master;
-end;
-
-{*
-  Enregistre le fichier
-  @param AFileName   Nom du fichier dans lequel enregistrer
-*}
-procedure TDependantFile.Save(const AFileName : TFileName = '');
-begin
-  if AFileName <> '' then
-    FFileName := AFileName;
-  SaveFile;
 end;
 
 ////////////////////////
@@ -255,10 +253,10 @@ end;
   @param AMIMEType     Type MIME du fichier
   @param Params        Paramètres envoyés à l'unité
 *}
-constructor TUnitFile.Create(AMasterFile : TMasterFile;
+constructor TUnitFile.Create(AMasterFile : TMasterFile; const AHRef : string;
   const AFileName : TFileName; const AMIMEType : string; Params : TStrings);
 begin
-  inherited Create(AMasterFile, AFileName, AMIMEType);
+  inherited Create(AMasterFile, AHRef, AFileName, AMIMEType);
 end;
 
 {*
@@ -270,6 +268,16 @@ procedure TUnitFile.AfterConstruction;
 begin
   inherited;
   MasterFile.FUnitFiles.Add(Self);
+end;
+
+{*
+  Dresse la liste des paramètres à enregistrer
+  Les descendants de TUnitFile peuvent surcharger cette méthode pour indiquer
+  au fichier maître les paramètres qu'il doit enregistrer.
+  @param Params   Liste des paramètres
+*}
+procedure TUnitFile.GetParams(Params : TStrings);
+begin
 end;
 
 ///////////////////////
@@ -285,11 +293,11 @@ end;
   @param ADimensions   Dimensions de la carte
   @param AZoneSize     Taille d'une zone de la carte
 *}
-constructor TMapFile.Create(AMasterFile : TMasterFile;
+constructor TMapFile.Create(AMasterFile : TMasterFile; const AHRef : string;
   const AFileName : TFileName; const AMIMEType : string;
   const AMapID : TComponentID; ADimensions : T3DPoint; AZoneSize : integer);
 begin
-  inherited Create(AMasterFile, AFileName, AMIMEType);
+  inherited Create(AMasterFile, AHRef, AFileName, AMIMEType);
   FMapID := AMapID;
   FMap := TMap.Create(Master, AMapID, ADimensions, AZoneSize);
 end;
@@ -303,6 +311,21 @@ procedure TMapFile.AfterConstruction;
 begin
   inherited;
   MasterFile.FMapFiles.Add(Self);
+end;
+
+{*
+  Enregistre le fichier
+  @param AFileName   Nom du fichier dans lequel enregistrer
+*}
+procedure TMapFile.Save(const AHRef : string = '';
+  const AFileName : TFileName = '');
+begin
+  if AHRef <> '' then
+  begin
+    FHRef := AHRef;
+    FFileName := AFileName;
+  end;
+  SaveFile;
 end;
 
 //////////////////////////
@@ -460,7 +483,7 @@ procedure TMasterFile.Load(Document : IXMLDOMDocument);
   end;
 var Params : TStrings;
     I, J, MaxViewSize : integer;
-    ID, FileType, Name, MapID : string;
+    ID, FileType, HRef, Name, MapID : string;
     Position : T3DPoint;
     Player : TPlayer;
     FileName : TFileName;
@@ -501,7 +524,8 @@ begin
         for I := 0 to length-1 do with item[I] as IXMLDOMElement do
         begin
           FileType := getAttribute('type');
-          FileName := ResolveHRef(getAttribute('href'), fUnitsDir);
+          HRef := getAttribute('href');
+          FileName := ResolveHRef(HRef, fUnitsDir);
 
           Params.Clear;
           with selectNodes('./param') do
@@ -510,7 +534,8 @@ begin
               Params.Values[getAttribute('name')] := getAttribute('value');
           end;
 
-          FindUnitFileClass(FileType).Create(Self, FileName, FileType, Params);
+          FindUnitFileClass(FileType).Create(
+            Self, HRef, FileName, FileType, Params);
         end;
       end;
     finally
@@ -524,7 +549,8 @@ begin
       begin
         ID := getAttribute('id');
         FileType := getAttribute('type');
-        FileName := ResolveHRef(getAttribute('href'), fMapsDir);
+        HRef := getAttribute('href');
+        FileName := ResolveHRef(HRef, fMapsDir);
 
         if VarIsNull(getAttribute('maxviewsize')) then
           MaxViewSize := MinViewSize
@@ -532,7 +558,7 @@ begin
           MaxViewSize := getAttribute('maxviewsize');
 
         MapFile := FindMapFileClass(FileType).Create(
-          Self, FileName, FileType, ID);
+          Self, HRef, FileName, FileType, ID);
         MapFile.Map.MaxViewSize := MaxViewSize;
       end;
     end;
@@ -698,9 +724,178 @@ end;
   Enregistre le fichier
   @param AFileName   Nom du fichier à enregistrer (si vide, conserve l'existant)
 *}
-procedure TMasterFile.Save(const AFileName : TFileName = '');
+procedure TMasterFile.Save(AFileName : TFileName = '');
+var Document : IXMLDOMDocument;
+    FunLabyrinthe, Units, Maps, Players, Player : IXMLDOMElement;
+    Element, Param : IXMLDOMElement;
+    Params : TStrings;
+    MapHRef : string;
+    MapFileName : TFileName;
+    I, J : integer;
 begin
-  { TODO 2 : Enregistrer le fichier }
+  { Don't localize strings in this method }
+
+  if (AFileName = '') and (Mode = fmPlay) and (not IsSaveguard) then
+    raise EFileError.Create(sNoFileName);
+  if AFileName = '' then
+    AFileName := FFileName;
+
+  if Mode = fmPlay then
+  begin
+    MapHRef := ExtractFileName(AFileName);
+    I := LastDelimiter('.', MapHRef);
+    if I > 0 then
+    begin
+      SetLength(MapHRef, I);
+      MapHRef[I] := PathDelim;
+    end else MapHRef := MapHRef + '-files' + PathDelim;
+
+    MapFileName := ExtractFilePath(AFileName) + MapHRef;
+
+    ForceDirectories(MapFileName);
+  end else
+  begin
+    MapHRef := '';
+    MapFileName := '';
+  end;
+
+  Document := CoDOMDocument.Create;
+  Document.async := False;
+
+  with Document do
+  begin
+    FunLabyrinthe := Document.createElement('funlabyrinthe');
+
+    FunLabyrinthe.setAttribute('version', CurrentVersion);
+    if not AllowEdit then
+      FunLabyrinthe.setAttribute('allowedit', 'no');
+    if Mode = fmPlay then
+      FunLabyrinthe.setAttribute('issaveguard', 'yes');
+
+    with FunLabyrinthe do
+    begin
+      Element := Document.createElement('title');
+      Element.text := Title;
+      appendChild(Element);
+
+      Element := Document.createElement('description');
+      Element.text := Description;
+      appendChild(Element);
+
+      Element := Document.createElement('difficulty');
+      Element.text := Difficulty;
+      appendChild(Element);
+
+      Element := Document.createElement('author');
+      Element.text := Author;
+      if AuthorID > 0 then
+        Element.setAttribute('id', AuthorID);
+      appendChild(Element);
+
+      // Unités
+      Units := Document.createElement('units');
+      with Units do
+      begin
+        Params := TStringList.Create;
+        try
+          for I := 0 to UnitFileCount-1 do with UnitFiles[I] do
+          begin
+            Params.Clear;
+            GetParams(Params);
+
+            Element := Document.createElement('unit');
+            Element.setAttribute('type', MIMEType);
+            Element.setAttribute('href', HRef);
+
+            with Element do for J := 0 to Params.Count-1 do
+            begin
+              Param := Document.createElement('param');
+              Param.setAttribute('name', Params.Names[J]);
+              Param.setAttribute('value', Params.ValueFromIndex[J]);
+              appendChild(Param);
+            end;
+
+            appendChild(Element); // unit
+          end;
+        finally
+          Params.Free;
+        end;
+      end;
+      appendChild(Units);
+
+      // Cartes
+      Maps := Document.createElement('maps');
+      with Maps do
+      begin
+        for I := 0 to MapFileCount-1 do with MapFiles[I] do
+        begin
+          if Mode <> fmPlay then Save else
+            Save(MapHRef+ExtractFileName(FileName),
+              MapFileName+ExtractFileName(FileName));
+
+          Element := Document.createElement('map');
+          Element.setAttribute('id', Map.ID);
+          Element.setAttribute('type', MIMEType);
+          Element.setAttribute('href', HRef);
+          if Map.MaxViewSize > 1 then
+            Element.setAttribute('maxviewsize', Map.MaxViewSize);
+          appendChild(Element);
+        end;
+      end;
+      appendChild(Maps);
+
+      // Joueurs
+      Players := Document.createElement('players');
+      with Players do
+      begin
+        Params := TStringList.Create;
+        try
+          for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
+          begin
+            Player := Document.createElement('player');
+            Player.setAttribute('id', ID);
+            Player.setAttribute('name', Name);
+
+            with Player do
+            begin
+              Element := Document.createElement('position');
+              Element.setAttribute('map', Map.ID);
+              Element.setAttribute('posx', Position.X);
+              Element.setAttribute('posy', Position.Y);
+              Element.setAttribute('posz', Position.Z);
+              appendChild(Element);
+
+              Element := Document.createElement('attributes');
+              with Element do
+              begin
+                GetAttributes(Params);
+                for J := 0 to Params.Count-1 do
+                begin
+                  Param := Document.createElement('attribute');
+                  Param.setAttribute('name', Params[J]);
+                  Param.setAttribute('value', integer(Params.Objects[J]));
+                  appendChild(Param);
+                end;
+              end;
+              appendChild(Element); // attributes
+            end;
+
+            appendChild(Player);
+          end;
+        finally
+          Params.Free;
+        end;
+      end;
+      appendChild(Players);
+    end;
+
+    appendChild(FunLabyrinthe);
+  end;
+
+  Document.save(AFileName);
+  FFileName := AFileName;
+  if Mode = fmPlay then
+    FIsSaveguard := True;
 end;
 
 initialization

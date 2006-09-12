@@ -20,8 +20,9 @@ type
   protected
     procedure SaveFile; override;
   public
-    constructor Create(AMasterFile : TMasterFile; const AFileName : TFileName;
-      const AMIMEType : string; const AMapID : TComponentID); override;
+    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
+      const AFileName : TFileName; const AMIMEType : string;
+      const AMapID : TComponentID); override;
   end;
 
 implementation
@@ -42,7 +43,7 @@ const {don't localize}
   @param AMIMEType     Type MIME du fichier
   @param AMapID        ID de la carte
 *}
-constructor TFLMMapFile.Create(AMasterFile : TMasterFile;
+constructor TFLMMapFile.Create(AMasterFile : TMasterFile; const AHRef : string;
   const AFileName : TFileName; const AMIMEType : string;
   const AMapID : TComponentID);
 var Stream : TStream;
@@ -88,7 +89,7 @@ begin
     Stream.ReadBuffer(Value, 4);
 
     // On peut enfin appeler le constructeur hérité
-    inherited Create(AMasterFile, AFileName, AMIMEType, AMapID,
+    inherited Create(AMasterFile, AHRef, AFileName, AMIMEType, AMapID,
       Dimensions, Value);
 
     // Lecture de la palette de cases
@@ -119,7 +120,7 @@ end;
   Enregistre le fichier
 *}
 procedure TFLMMapFile.SaveFile;
-var I, Value, Count, WritingIndex : integer;
+var I, Value, Count, WritingIndex, PaletteCountPos : integer;
     Stream : TStream;
     Dimensions : T3DPoint;
     Writing : array[0..1] of integer;
@@ -131,7 +132,7 @@ var I, Value, Count, WritingIndex : integer;
     begin
       if Count <= 256 then
       begin
-        Value := Writing[1] shl 8 + Writing[0];
+        Value := Writing[0] shl 8 + Writing[1];
         WritingIndex := 1;
       end else
       begin
@@ -164,6 +165,7 @@ begin
     for I := 0 to Master.ScrewCount-1 do
       Master.Screws[I].Tag := -1;
     Count := 0;
+    PaletteCountPos := Stream.Position;
     Stream.WriteBuffer(Count, 4); // On repassera changer çà plus tard
     for I := 0 to Map.LinearMapCount-1 do with Map.LinearMap[I] do
     begin
@@ -187,6 +189,10 @@ begin
 
       WriteFurther;
     end;
+
+    // On retourne écrire la taille de la palette
+    Stream.Seek(PaletteCountPos, soFromBeginning);
+    Stream.WriteBuffer(Count, 4);
   finally
     Stream.Free;
   end;
