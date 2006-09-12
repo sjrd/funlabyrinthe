@@ -590,6 +590,12 @@ begin
             Player.Attribute[getAttribute('name')] := getAttribute('value');
         end;
 
+        with selectNodes('./plugins/plugin') do
+        begin
+          for J := 0 to length-1 do with item[J] as IXMLDOMElement do
+            Player.AddPlugin(Master.Plugin[getAttribute('id')]);
+        end;
+
         { TODO 1 : Ajouter le support du dessin du joueur }
       end;
     end;
@@ -878,6 +884,19 @@ begin
                 end;
               end;
               appendChild(Element); // attributes
+
+              Element := Document.createElement('plugins');
+              with Element do
+              begin
+                GetPluginIDs(Params);
+                for J := 0 to Params.Count-1 do
+                begin
+                  Param := Document.createElement('plugin');
+                  Param.setAttribute('id', Params[J]);
+                  appendChild(Param);
+                end;
+              end;
+              appendChild(Element); // plugins
             end;
 
             appendChild(Player);

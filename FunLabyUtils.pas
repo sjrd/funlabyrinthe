@@ -430,6 +430,7 @@ type
     destructor Destroy; override;
 
     procedure GetAttributes(Attributes : TStrings);
+    procedure GetPluginIDs(PluginIDs : TStrings);
 
     procedure Draw(Canvas : TCanvas; X : integer = 0;
       Y : integer = 0); override;
@@ -1504,6 +1505,18 @@ end;
 procedure TPlayer.GetAttributes(Attributes : TStrings);
 begin
   Attributes.Assign(FAttributes);
+end;
+
+{*
+  Dresse la liste des ID des plug-in du joueur
+  @param Plugins   Liste de chaînes dans laquelle enregistrer les ID des plug-in
+*}
+procedure TPlayer.GetPluginIDs(PluginIDs : TStrings);
+var I : integer;
+begin
+  PluginIDs.Clear;
+  for I := 0 to PluginCount-1 do
+    PluginIDs.Add(Plugins[I].ID);
 end;
 
 {*
