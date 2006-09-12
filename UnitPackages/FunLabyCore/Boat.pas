@@ -94,7 +94,7 @@ begin
     Pen.Width := 2;
 
     case Player.Direction of
-      diNorth :
+      diNone, diNorth :
       begin
         // Proue
         Arc(X-5, Y-2, X+25, Y+24, X+25, Y+12, X+15, Y+ 2);
