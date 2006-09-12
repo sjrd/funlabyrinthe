@@ -12,6 +12,10 @@ interface
 uses
   SysUtils, Classes, ScUtils, FunLabyUtils, FilesUtils;
 
+resourcestring
+  sTemporaryStatedMap =
+    'La carte d''ID %s est dans un état temporaire qui ne peut être enregistré';
+
 type
   {*
     Représente un fichier carte de type 'application/flm'
@@ -169,6 +173,8 @@ begin
     Stream.WriteBuffer(Count, 4); // On repassera changer çà plus tard
     for I := 0 to Map.LinearMapCount-1 do with Map.LinearMap[I] do
     begin
+      if ClassType <> TScrew then
+        raise EFileError.CreateFmt(sTemporaryStatedMap, [Map.ID]);
       if Tag < 0 then
       begin
         Tag := Count;
