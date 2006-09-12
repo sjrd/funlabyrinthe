@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Spin, Math, ExtCtrls, ComCtrls;
+  StdCtrls, Spin, Math, ExtCtrls, ComCtrls, ScUtils;
 
 type
   TFormPrincipale = class(TForm)
@@ -87,11 +87,108 @@ implementation
 
 {$R *.DFM}
 
+const
+  sMasterFileContents =
+  '<?xml version="1.0" encoding="UTF-8"?>'#10+
+  '<funlabyrinthe version="%s">'#10+
+  '  <title>Labyrinthe genere</title>'#10+
+  '  <description>Labyrinthe genere</description>'#10+
+  '  <difficulty>Moyen</difficulty>'#10+
+  '  <author id="2">Jean-Paul Doeraene</author>'#10+
+  '  <units><unit type="application/bpl" href="FunLabyCore.bpl"/></units>'#10+
+  '  <maps><map id="MainMap" type="application/flm" href="%s" maxviewsize="%d"/></maps>'#10+
+  '  <players>'#10+
+  '    <player id="Player1">'#10+
+  '      <position map="MainMap" posx="%d" posy="%d" posz="%d"/>'#10+
+  '    </player>'#10+
+  '  </players>'#10+
+  '</funlabyrinthe>'#10;
+  sCurrentVersion = '5.0';
+
+  FLMFormatCode : LongInt = $6D6C662E; // Correspond à '.flm'
+  FLMVersion = 1;
+
 function WDir : string;
-var PS : string;
+//var PS : string;
 begin
-  PS := ParamStr(0);
-  Result := ExtractFilePath(PS);
+//  PS := ParamStr(0);
+//  Result := ExtractFilePath(PS);
+  Result := 'C:\Documents and Settings\All Users\Application Data\SJRDoeraene\FunLabyrinthe\';
+end;
+
+procedure CreeSortie(Labyrinthe : TStrings;
+  const MasterFileName, MapHRef, MapFileName : TFileName;
+  DimX, DimY, DimZ : integer; MaxViewSize : integer = 1);
+var PosX, PosY, PosZ, X, Y, Z, Value : integer;
+    Stream : TStream;
+begin
+  ForceDirectories(ExtractFilePath(MapFileName));
+
+  PosX := 0;
+  PosY := 0;
+  PosZ := 0;
+
+  Stream := TFileStream.Create(MapFileName, fmCreate or fmShareExclusive);
+  with Stream do
+  try
+    Value := FLMFormatCode;
+    WriteBuffer(Value, 4);
+
+    Value := FLMVersion;
+    WriteBuffer(Value, 4);
+
+    // Taille de zone
+    Value := 21;
+    WriteBuffer(DimX, 4);
+    WriteBuffer(DimY, 4);
+    WriteBuffer(DimZ, 4);
+    WriteBuffer(Value, 4);
+
+    Value := 7; // taille de palette
+    WriteBuffer(Value, 4);
+    WriteStrToStream(Stream, 'Grass--');
+    WriteStrToStream(Stream, 'Wall--');
+    WriteStrToStream(Stream, 'Grass-Crossroads-');
+    WriteStrToStream(Stream, 'Grass-UpStairs-');
+    WriteStrToStream(Stream, 'Grass-DownStairs-');
+    WriteStrToStream(Stream, 'Grass-Treasure-');
+    WriteStrToStream(Stream, 'Grass-Outside-');
+
+    for Z := 0 to DimZ-1 do for Y := 0 to DimY-1 do for X := 0 to DimX-1 do
+    begin
+      case Labyrinthe[Z*(DimY+7) + Y][X+1] of
+        '0' : Value := 0;
+        '2' : Value := 1;
+        ':' : Value := 2;
+        '>' : Value := 3;
+        '<' : Value := 4;
+        ';' : Value := 5;
+        'A' :
+        begin
+          Value := 0;
+          PosX := X;
+          PosY := Y;
+          PosZ := Z;
+        end;
+      end;
+      WriteBuffer(Value, 1);
+    end;
+
+    Value := 6;
+    for Z := 0 to DimZ-1 do
+      WriteBuffer(Value, 1);
+  finally
+    Free;
+  end;
+
+  with TStringList.Create do
+  try
+    Text := Format(sMasterFileContents,
+      [sCurrentVersion, UTF8Encode(MapHRef), MaxViewSize, PosX, PosY, PosZ]);
+    SaveToFile(MasterFileName);
+  finally
+    Free;
+  end;
 end;
 
 constructor TCase.Create(XX, YY, ZZ : integer);
@@ -293,13 +390,18 @@ begin
       Labyrinthe[CoordY+1] := Temp;
     end;
   end;
-  Labyrinthe.Insert(0, 'Etages: '+IntToStr(NEtaZ));
+(*  Labyrinthe.Insert(0, 'Etages: '+IntToStr(NEtaZ));
   Labyrinthe.Insert(0, 'Lignes: '+IntToStr(NLigZ));
   Labyrinthe.Insert(0, 'Colonnes: '+IntToStr(NColZ));
   Labyrinthe.Insert(0, '[Dimensions]');
-  {$I-} MkDir(WDir+'Labyrinthes'); {$I+}
-  NomComplet := WDir+'Labyrinthes\'+FormPrincipale.EditNomFichier.Text+'.lab';
-  Labyrinthe.SaveToFile(NomComplet);
+  {$I-} MkDir(WDir+'Labyrinthes'); {$I+}*)
+  Labyrinthe.Delete(0);
+  NomComplet := WDir+'Labyrinths\'+FormPrincipale.EditNomFichier.Text;
+  CreeSortie(Labyrinthe, NomComplet+'.flg',
+    FormPrincipale.EditNomFichier.Text+'\MainMap.flm',
+    NomComplet+'\MainMap.flm',
+    NColZ*7, NLigZ*7, NEtaZ);
+//  Labyrinthe.SaveToFile(NomComplet);
   Labyrinthe.Free;
 end;
 
