@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Classes, Contnrs, ScUtils, ScLists, ScStrUtils, MSXML, FunLabyUtils,
-  FunLabyCore, Variants, IniFiles;
+  Variants, IniFiles;
 
 resourcestring
   sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
@@ -391,9 +391,19 @@ end;
 *}
 destructor TMasterFile.Destroy;
 begin
-  FMapFiles.Free;
-  FUnitFiles.Free;
+  { Ici on détruit le maître d'abord, afin de permettre aux unités de
+    décharger leurs infos sans contraintes. Évidemment il ne faut donc pas que
+    les gestionnaires d'unités et de cartes n'accèdent encore au maître dans
+    le destructeur. }
   FMaster.Free;
+  FMapFiles.Free;
+
+  { Dans la mesure où des unités pourraient être dépendantes d'autres, il faut
+    absolument les libérer dans l'ordre inverse de chargement. }
+  while FUnitFiles.Count > 0 do
+    FUnitFiles.Delete(FUnitFiles.Count-1);
+  FUnitFiles.Free;
+
   inherited;
 end;
 
@@ -454,6 +464,7 @@ var Params : TStrings;
     Position : T3DPoint;
     Player : TPlayer;
     FileName : TFileName;
+    MapFile : TMapFile;
 begin
   { Don't localize strings in this method }
 
@@ -485,9 +496,6 @@ begin
     // Unités utilisées
     Params := THashedStringList.Create;
     try
-      // Chargement des composants au coeur de FunLabyrinthe
-      LoadCoreComponents(Master, Params);
-
       with selectNodes('./units/unit') do
       begin
         for I := 0 to length-1 do with item[I] as IXMLDOMElement do
@@ -523,8 +531,9 @@ begin
         else
           MaxViewSize := getAttribute('maxviewsize');
 
-        FindMapFileClass(FileType).Create(
-          Self, FileName, FileType, ID).Map.MaxViewSize := MaxViewSize;
+        MapFile := FindMapFileClass(FileType).Create(
+          Self, FileName, FileType, ID);
+        MapFile.Map.MaxViewSize := MaxViewSize;
       end;
     end;
 

@@ -9,7 +9,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, NumberDialog,
-  SdDialogs, ShellAPI, FunLabyUtils, PlayUtils, FilesUtils, FunLabyCore;
+  SdDialogs, ShellAPI, FunLabyUtils, PlayUtils, FilesUtils;
 
 resourcestring
   sViewSize = 'Taille de la vue';
@@ -196,16 +196,15 @@ end;
   Affiche les quatre objets principaux dans la barre de statut
 *}
 procedure TFormMain.ShowStatus;
+var I : integer;
 begin
   if MasterFile = nil then exit;
-  StatusBar.Panels[0].Text :=
-    Master.ObjectDef[idBuoys].ShownInfos[View.Player];
-  StatusBar.Panels[1].Text :=
-    Master.ObjectDef[idPlanks].ShownInfos[View.Player];
-  StatusBar.Panels[2].Text :=
-    Master.ObjectDef[idSilverKeys].ShownInfos[View.Player];
-  StatusBar.Panels[3].Text :=
-    Master.ObjectDef[idGoldenKeys].ShownInfos[View.Player];
+  for I := 0 to 3 do
+  begin
+    if I >= Master.ObjectDefCount then Break;
+    StatusBar.Panels[I].Text :=
+      Master.ObjectDefs[I].ShownInfos[View.Player];
+  end;
 end;
 
 {*

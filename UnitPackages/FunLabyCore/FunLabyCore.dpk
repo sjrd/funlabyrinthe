@@ -1,4 +1,4 @@
-package FunLabyCommonR;
+package FunLabyCore;
 
 {$R *.res}
 {$ALIGN 8}
@@ -22,24 +22,25 @@ package FunLabyCommonR;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Common units for FunLabyrinthe'}
+{$DESCRIPTION 'FunLabyrinthe core components'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  SCLR,
-  SynEdit_R2005;
+  FunLabyCommonR;
 
 contains
-  LabyrintheUtils in 'LabyrintheUtils.pas',
-  FunLabySyn in 'FunLabySyn.pas',
-  FunLabyUtils in 'FunLabyUtils.pas',
-  FilesUtils in 'FilesUtils.pas',
-  MapFiles in 'MapFiles.pas',
-  NumberDialog in 'NumberDialog.pas',
-  UnitFiles in 'UnitFiles.pas';
+  FunLabyCoreMain in 'FunLabyCoreMain.pas',
+  Common in 'Common.pas',
+  Fields in 'Fields.pas',
+  SimpleEffects in 'SimpleEffects.pas',
+  SimpleObjects in 'SimpleObjects.pas',
+  Plank in 'Plank.pas',
+  Boat in 'Boat.pas',
+  Lift in 'Lift.pas',
+  Obstacles in 'Obstacles.pas';
 
 end.
 

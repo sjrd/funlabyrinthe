@@ -38,7 +38,7 @@ const {don't localize}
 constructor TBPLUnitFile.Create(AMasterFile : TMasterFile;
   const AFileName : TFileName; const AMIMEType : string; Params : TStrings);
 type
-  TLoadComponentsProc = procedure(Master : TMaster; Params : TStrings);
+  TLoadComponentsProc = procedure(Master : TMaster; Params : TStrings); stdcall;
 var LoadComponents : TLoadComponentsProc;
 begin
   inherited;
