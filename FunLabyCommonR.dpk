@@ -29,12 +29,10 @@ package FunLabyCommonR;
 requires
   rtl,
   vcl,
-  SCLR,
-  SynEdit_R2005;
+  SCLR;
 
 contains
   LabyrintheUtils in 'LabyrintheUtils.pas',
-  FunLabySyn in 'FunLabySyn.pas',
   FunLabyUtils in 'FunLabyUtils.pas',
   FilesUtils in 'FilesUtils.pas',
   MapFiles in 'MapFiles.pas',

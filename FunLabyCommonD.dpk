@@ -29,7 +29,6 @@ package FunLabyCommonD;
 requires
   rtl,
   vcl,
-  SynEdit_D2005,
   designide,
   vclactnband,
   vclx,
