@@ -16,13 +16,22 @@ const {don't localize}
   idBoatPlugin = 'BoatPlugin'; /// ID du plug-in barque
 
 resourcestring
-  sBoat = 'Barque'; /// Nom de la barque
+  sBoat = 'Barque n°%d';    /// Nom de la barque
+  sBoatTemplate = 'Barque'; /// Nom de la barque modèle
 
 const {don't localize}
-  idBoat = 'Boat%d'; /// ID de la barque
+  idBoat = 'Boat%d';               /// ID de la barque
+  idBoatTemplate = 'BoatTemplate'; /// ID de la barque modèle
+
+  idBoatScrew = idGrassWater+'-'+idBoat+'-'; /// ID de la case barque
+  idBoatScrewTemplate = idGrassWater+'-'+idBoatTemplate+'-'; /// Barque modèle
 
 const {don't localize}
   fBoat = 'Boat'; /// Fichier de la barque
+
+resourcestring
+  sBoatTitle = 'Numéro de la barque';
+  sBoatPrompt = 'Numéro de la barque (1 à 10) :';
 
 type
   {*

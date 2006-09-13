@@ -51,9 +51,28 @@ type
   /// Générée si un composant recherché n'est pas trouvé
   EComponentNotFound = class(Exception);
 
+  TFunLabyComponent = class;
   TPlayer = class;
   TMap = class;
   TMaster = class;
+
+  {*
+    Type de méthode call-back pour l'enregistrement d'un unique composant
+    @param Component   Le composant à enregistrer
+  *}
+  TRegisterSingleComponentProc = procedure(
+    Component : TFunLabyComponent) of object; stdcall;
+
+  {*
+    Type de méthode call-back pour l'enregistrement d'un ensemble de composants
+    @param Template       Composant modèle pour l'image et le nom à afficher
+    @param Components     Liste des composants faisant partie de l'ensemble
+    @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
+    @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
+  *}
+  TRegisterComponentSetProc = procedure(Template : TFunLabyComponent;
+    Components : array of TFunLabyComponent;
+    const DialogTitle, DialogPrompt : string) of object; stdcall;
 
   {*
     Gère le chargement des images d'après leur nom

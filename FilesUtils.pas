@@ -70,6 +70,10 @@ type
       Params : TStrings); virtual;
     procedure AfterConstruction; override;
 
+    procedure RegisterComponents(
+      RegisterSingleComponentProc : TRegisterSingleComponentProc;
+      RegisterComponentSetProc : TRegisterComponentSetProc); virtual;
+
     procedure GetParams(Params : TStrings); virtual;
   end;
   TUnitFileClass = class of TUnitFile;
@@ -168,6 +172,10 @@ type
     class procedure RegisterMapFileClass(const MIMEType : string;
       MapFileClass : TMapFileClass);
     class function FindMapFileClass(const MIMEType : string) : TMapFileClass;
+
+    procedure RegisterComponents(
+      RegisterSingleComponentProc : TRegisterSingleComponentProc;
+      RegisterComponentSetProc : TRegisterComponentSetProc);
 
     procedure Save(AFileName : TFileName = '');
 
@@ -268,6 +276,17 @@ procedure TUnitFile.AfterConstruction;
 begin
   inherited;
   MasterFile.FUnitFiles.Add(Self);
+end;
+
+{*
+  Enregistre les différents composants à placer dans la palette d'édition
+  @param RegisterSingleComponentProc   Call-back pour un unique composant
+  @param RegisterComponentSetProc      Call-back pour un ensemble de composants
+*}
+procedure TUnitFile.RegisterComponents(
+  RegisterSingleComponentProc : TRegisterSingleComponentProc;
+  RegisterComponentSetProc : TRegisterComponentSetProc);
+begin
 end;
 
 {*
@@ -729,6 +748,23 @@ begin
     raise EFileError.CreateFmt(sUnknownMapType, [MIMEType])
   else
     Result := TMapFileClass(MapFileClasses.Objects[Index]);
+end;
+
+{*
+  Enregistre les différents composants à placer dans la palette d'édition
+  @param RegisterSingleComponentProc   Call-back pour un unique composant
+  @param RegisterComponentSetProc      Call-back pour un ensemble de composants
+*}
+procedure TMasterFile.RegisterComponents(
+  RegisterSingleComponentProc : TRegisterSingleComponentProc;
+  RegisterComponentSetProc : TRegisterComponentSetProc);
+var I : integer;
+begin
+  for I := 0 to UnitFileCount-1 do
+  begin
+    UnitFiles[I].RegisterComponents(
+      RegisterSingleComponentProc, RegisterComponentSetProc);
+  end;
 end;
 
 {*

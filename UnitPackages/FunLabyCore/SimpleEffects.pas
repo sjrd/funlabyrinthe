@@ -24,6 +24,7 @@ resourcestring
   sTransporterNext = 'Téléporteur suivant n°%d';     /// Téléporteur suivant
   sTransporterPrev = 'Téléporteur précédent n°%d';   /// Téléporteur précédent
   sTransporterRandom = 'Téléporteur aléatoire n°%d'; /// Téléporteur aléatoire
+  sTransporterTemplate = 'Téléporteur';              /// Téléporteur modèle
 
   sUpStairs = 'Escalier montant';             /// Nom de l'escalier montant
   sDownStairs = 'Escalier descendant';        /// Nom de l'escalier descendant
@@ -45,6 +46,7 @@ const {don't localize}
   idTransporterNext = 'TransporterNext%d';       /// ID du téléporteur suivant
   idTransporterPrev = 'TransporterPrev%d';       /// ID du téléporteur précédent
   idTransporterRandom = 'TransporterRandom%d';   /// ID du téléporteur aléatoire
+  idTransporterTemplate = 'TransporterTemplate'; /// ID du téléporteur modèle
 
   idUpStairs = 'UpStairs';                       /// ID de l'escalier montant
   idDownStairs = 'DownStairs';                   /// ID de l'escalier descendant
@@ -76,6 +78,9 @@ const {don't localize}
 resourcestring
   sGotOutsideMaze = 'BRAVO ! Tu as réussi à sortir du labyrinthe !';
   sFoundTreasure  = 'BRAVO ! Tu as trouvé le trésor !';
+
+  sTransporterTitle = 'Numéro du téléporteur';
+  sTransporterPrompt = 'Numéro du téléporteur (0 à 45) :';
 
 type
   {*

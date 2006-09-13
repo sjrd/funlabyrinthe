@@ -17,6 +17,10 @@ type
       const AFileName : TFileName; const AMIMEType : string;
       Params : TStrings); override;
     destructor Destroy; override;
+
+    procedure RegisterComponents(
+      RegisterSingleComponentProc : TRegisterSingleComponentProc;
+      RegisterComponentSetProc : TRegisterComponentSetProc); override;
   end;
 
 implementation
@@ -28,6 +32,7 @@ implementation
 const {don't localize}
   BPLMIMEType = 'application/bpl';
   LoadComponentsProc = 'LoadComponents';
+  RegisterComponentsProc = 'RegisterComponents';
 
 {*
   Crée une instance de TBPLUnitFile
@@ -65,6 +70,28 @@ begin
     UnloadPackage(FHandle);
 
   inherited;
+end;
+
+{*
+  Enregistre les différents composants à placer dans la palette d'édition
+  @param RegisterSingleComponentProc   Call-back pour un unique composant
+  @param RegisterComponentSetProc      Call-back pour un ensemble de composants
+*}
+procedure TBPLUnitFile.RegisterComponents(
+  RegisterSingleComponentProc : TRegisterSingleComponentProc;
+  RegisterComponentSetProc : TRegisterComponentSetProc);
+type
+  TRegisterComponentsProc = procedure(Master : TMaster;
+    RegisterSingleComponentProc : TRegisterSingleComponentProc;
+    RegisterComponentSetProc : TRegisterComponentSetProc); stdcall;
+var RegisterComponents : TRegisterComponentsProc;
+begin
+  RegisterComponents := TRegisterComponentsProc(
+    GetProcAddress(FHandle, RegisterComponentsProc));
+
+  if Assigned(RegisterComponents) then
+    RegisterComponents(Master,
+      RegisterSingleComponentProc, RegisterComponentSetProc);
 end;
 
 initialization

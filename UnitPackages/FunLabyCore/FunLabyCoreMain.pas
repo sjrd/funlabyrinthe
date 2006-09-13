@@ -10,10 +10,14 @@ unit FunLabyCoreMain;
 interface
 
 uses
-  Classes, FunLabyUtils, Common, Fields, SimpleEffects, SimpleObjects, Plank,
-  Boat, Lift, Obstacles;
+  SysUtils, Classes, FunLabyUtils, Common, Fields, SimpleEffects, SimpleObjects,
+  Plank, Boat, Lift, Obstacles;
 
 procedure LoadComponents(Master : TMaster; Params : TStrings); stdcall;
+
+procedure RegisterComponents(Master : TMaster;
+  RegisterSingleComponentProc : TRegisterSingleComponentProc;
+  RegisterComponentSetProc : TRegisterComponentSetProc); stdcall;
 
 implementation
 
@@ -46,6 +50,7 @@ begin
   TEngagedLiftEffect.Create(Master, idEngagedLiftEffect, '');
 
   // Terrains
+
   TGrass.Create(Master, idGrass, sGrass);
   TWall.Create(Master, idWall, sWall);
   TWater.Create(Master, idWater, sWater);
@@ -55,6 +60,7 @@ begin
   TGrass.Create(Master, idGrassWater, sWater, Master.Field[idWater]);
 
   // Effets de case
+
   TArrow.Create(Master, idNorthArrow, sNorthArrow, diNorth);
   TArrow.Create(Master, idEastArrow , sEastArrow , diEast );
   TArrow.Create(Master, idSouthArrow, sSouthArrow, diSouth);
@@ -65,12 +71,13 @@ begin
   for I := 1 to 15 do
     TTransporter.Create(Master, idTransporterNext, sTransporterNext,
       I, tkNext);
-  for I := 1 to 15 do
+  for I := 16 to 30 do
     TTransporter.Create(Master, idTransporterPrev, sTransporterPrev,
       I, tkPrevious);
-  for I := 1 to 15 do
+  for I := 31 to 45 do
     TTransporter.Create(Master, idTransporterRandom, sTransporterRandom,
       I, tkRandom);
+  TTransporter.Create(Master, idTransporterTemplate, sTransporterTemplate, 0);
 
   TStairs.Create(Master, idUpStairs, sUpStairs, True);
   TStairs.Create(Master, idDownStairs, sDownStairs, False);
@@ -89,15 +96,93 @@ begin
 
   for I := 1 to 10 do
     TBoat.Create(Master, idBoat, sBoat, I);
+  TBoat.Create(Master, idBoatTemplate, sBoatTemplate, 0);
 
   // Obstacles
+
   TSilverBlock.Create(Master, idSilverBlock, sSilverBlock);
   TGoldenBlock.Create(Master, idGoldenBlock, sGoldenBlock);
   TSecretWay.Create(Master, idSecretWay, sSecretWay);
 end;
 
+procedure RegisterComponents(Master : TMaster;
+  RegisterSingleComponentProc : TRegisterSingleComponentProc;
+  RegisterComponentSetProc : TRegisterComponentSetProc);
+
+  procedure RegSingle(Component : TComponentID);
+  begin
+    RegisterSingleComponentProc(Master.Component[Component]);
+  end;
+
+  procedure RegSet(Template : TComponentID;
+    Components : array of TFunLabyComponent;
+    const DialogTitle, DialogPrompt : string);
+  begin
+    RegisterComponentSetProc(Master.Component[Template],
+      Components, DialogTitle, DialogPrompt);
+  end;
+
+var I : integer;
+    Transporters : array[0..45] of TFunLabyComponent;
+    Boats : array[1..10] of TFunLabyComponent;
+begin
+  // Terrains
+
+  RegSingle(idGrass);
+  RegSingle(idWall);
+  RegSingle(idWater);
+  RegSingle(idHole);
+  RegSingle(idSky);
+
+  // Effets
+
+  RegSingle(idNorthArrow);
+  RegSingle(idEastArrow);
+  RegSingle(idSouthArrow);
+  RegSingle(idWestArrow);
+  RegSingle(idCrossroads);
+
+  Transporters[0] := Master.Component[idInactiveTransporter];
+  for I := 1 to 15 do
+    Transporters[I] := Master.Component[Format(idTransporterNext, [I])];
+  for I := 16 to 30 do
+    Transporters[I] := Master.Component[Format(idTransporterPrev, [I])];
+  for I := 31 to 45 do
+    Transporters[I] := Master.Component[Format(idTransporterRandom, [I])];
+  RegSet(idTransporterTemplate, Transporters,
+    sTransporterTitle, sTransporterPrompt);
+
+  RegSingle(idUpStairs);
+  RegSingle(idDownStairs);
+  RegSingle(idLift);
+
+  RegSingle(idDirectTurnstile);
+  RegSingle(idIndirectTurnstile);
+
+  RegSingle(idOutside);
+  RegSingle(idTreasure);
+
+  RegSingle(idBuoy);
+  RegSingle(idPlank);
+  RegSingle(idSilverKey);
+  RegSingle(idGoldenKey);
+
+  // Obstacles
+
+  RegSingle(idSilverBlock);
+  RegSingle(idGoldenBlock);
+  RegSingle(idSecretWay);
+
+  // Cases
+
+  for I := 1 to 10 do
+    Boats[I] := Master.Component[Format(idBoatScrew, [I])];
+  RegSet(idBoatScrewTemplate, Boats, sBoatTitle, sBoatPrompt);
+end;
+
 exports
-  LoadComponents name 'LoadComponents';
+  LoadComponents name 'LoadComponents',
+  RegisterComponents name 'RegisterComponents';
 
 end.
 
