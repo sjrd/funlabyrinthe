@@ -347,7 +347,7 @@ begin
   with Master.ObjectDef[idPlanks] do Count[Player] := Count[Player]+1;
 
   // Affichage d'un message de notification
-  Player.Dialoger.ShowDialog(sMessage, sFoundPlank);
+  Player.Controller.ShowDialog(sMessage, sFoundPlank);
 end;
 
 end.

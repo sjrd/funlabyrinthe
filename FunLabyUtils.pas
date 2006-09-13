@@ -370,9 +370,9 @@ type
   end;
 
   {*
-    Interface de dialogue thread-safe avec l'utilisateur
+    Interface de contrôle thread-safe d'un joueur
   *}
-  IDialoger = interface
+  IPlayerController = interface
     {*
       Affiche une boîte de dialogue
       @param Title        Titre de la boîte de dialogue
@@ -418,6 +418,11 @@ type
     *}
     function ChooseNumber(const Title, Prompt : string;
       Default, Min, Max : integer) : integer;
+
+    {*
+      Le joueur a changé de carte
+    *}
+    procedure MapChanged;
   end;
 
   {*
@@ -428,16 +433,16 @@ type
   *}
   TPlayer = class(TVisualComponent)
   private
-    FMap : TMap;             /// Carte
-    FPosition : T3DPoint;    /// Position
-    FDirection : TDirection; /// Direction
+    FMap : TMap;                     /// Carte
+    FPosition : T3DPoint;            /// Position
+    FDirection : TDirection;         /// Direction
     /// Peintres selon la direction du joueur
     FDirPainters : array[diNorth..diWest] of TPainter;
-    FColor : TColor;         /// Couleur
-    FPlugins : TObjectList;  /// Liste des plug-in
-    FAttributes : TStrings;  /// Liste des attributs
-    FDialoger : IDialoger;   /// Dialogueur
-    FPlayState : TPlayState; /// État de victoire/défaite
+    FColor : TColor;                 /// Couleur
+    FPlugins : TObjectList;          /// Liste des plug-in
+    FAttributes : TStrings;          /// Liste des attributs
+    FController : IPlayerController; /// Contrôleur
+    FPlayState : TPlayState;         /// État de victoire/défaite
 
     function GetPluginCount : integer;
     function GetPlugins(Index : integer) : TPlugin;
@@ -465,6 +470,7 @@ type
 
     function Move(Dir : TDirection; KeyPressed : boolean;
       out Redo : boolean) : boolean;
+    procedure ChangeMap(AMap : TMap; APosition : T3DPoint);
 
     procedure Win;
     procedure Lose;
@@ -475,7 +481,7 @@ type
     property Color : TColor read FColor write FColor;
     property Attribute[const AttrName : string] : integer
       read GetAttribute write SetAttribute;
-    property Dialoger : IDialoger read FDialoger write FDialoger;
+    property Controller : IPlayerController read FController write FController;
     property PlayState : TPlayState read FPlayState;
   end;
 
@@ -1645,7 +1651,7 @@ begin
     for I := 0 to GoodObjectCount-1 do
       RadioTitles[I] := GoodObjects[I].Name;
     I := 0;
-    Dialoger.ShowDialogRadio(sWhichObject, sWhichObject, mtConfirmation,
+    Controller.ShowDialogRadio(sWhichObject, sWhichObject, mtConfirmation,
       [mbOK], mrOK, RadioTitles, I, True);
     GoodObject := GoodObjects[I];
   end;
@@ -1721,6 +1727,18 @@ begin
     if Assigned(Map[Dest].Effect) and (not AbortEntered) then
       Map[Dest].Effect.Entered(Self, KeyPressed, Src, Dest, Redo);
   end;
+end;
+
+{*
+  Fait changer le joueur de carte
+  @param AMap        Nouvelle carte
+  @param APosition   Nouvelle position
+*}
+procedure TPlayer.ChangeMap(AMap : TMap; APosition : T3DPoint);
+begin
+  FMap := AMap;
+  FPosition := APosition;
+  Controller.MapChanged;
 end;
 
 {*

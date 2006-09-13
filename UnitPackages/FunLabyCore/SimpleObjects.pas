@@ -443,7 +443,7 @@ begin
   with Master.ObjectDef[idBuoys] do Count[Player] := Count[Player]+1;
 
   // Affichage d'un message de notification
-  Player.Dialoger.ShowDialog(sMessage, sFoundBuoy);
+  Player.Controller.ShowDialog(sMessage, sFoundBuoy);
 end;
 
 /////////////////////////
@@ -484,7 +484,7 @@ begin
   with Master.ObjectDef[idSilverKeys] do Count[Player] := Count[Player]+1;
 
   // Affichage d'un message de notification
-  Player.Dialoger.ShowDialog(sMessage, sFoundSilverKey);
+  Player.Controller.ShowDialog(sMessage, sFoundSilverKey);
 end;
 
 /////////////////////////
@@ -525,7 +525,7 @@ begin
   with Master.ObjectDef[idGoldenKeys] do Count[Player] := Count[Player]+1;
 
   // Affichage d'un message de notification
-  Player.Dialoger.ShowDialog(sMessage, sFoundGoldenKey);
+  Player.Controller.ShowDialog(sMessage, sFoundGoldenKey);
 end;
 
 end.

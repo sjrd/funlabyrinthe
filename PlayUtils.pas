@@ -13,7 +13,7 @@ type
   {*
     Thread de déplacement du pion
   *}
-  TMoveThread = class(TThread, IDialoger)
+  TMoveThread = class(TThread, IPlayerController)
   private
     Player : TPlayer;
     Dir : TDirection;
@@ -39,6 +39,8 @@ type
 
     function ChooseNumber(const Title, Prompt : string;
       Default, Min, Max : integer) : integer;
+
+    procedure MapChanged;
   end;
 
   {*
@@ -239,7 +241,7 @@ end;
 procedure TMoveThread.Execute;
 var Redo : boolean;
 begin
-  Player.Dialoger := Self;
+  Player.Controller := Self;
   try
     Player.Move(Dir, True, Redo);
     while Redo do
@@ -249,7 +251,7 @@ begin
       Player.Move(Dir, False, Redo);
     end;
   finally
-    Player.Dialoger := nil;
+    Player.Controller := nil;
   end;
 end;
 
@@ -372,6 +374,13 @@ begin
   finally
     Dialog.Free;
   end;
+end;
+
+{*
+  Le joueur a changé de carte
+*}
+procedure TMoveThread.MapChanged;
+begin
 end;
 
 //////////////////////////

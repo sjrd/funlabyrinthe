@@ -613,7 +613,7 @@ procedure TOutside.Entered(Player : TPlayer; KeyPressed : boolean;
 begin
   inherited;
   Player.Win;
-  Player.Dialoger.ShowDialog(sWon, sGotOutsideMaze);
+  Player.Controller.ShowDialog(sWon, sGotOutsideMaze);
 end;
 
 ////////////////////////
@@ -647,7 +647,7 @@ procedure TTreasure.Entered(Player : TPlayer; KeyPressed : boolean;
 begin
   inherited;
   Player.Win;
-  Player.Dialoger.ShowDialog(sWon, sFoundTreasure);
+  Player.Controller.ShowDialog(sWon, sFoundTreasure);
 end;
 
 end.
