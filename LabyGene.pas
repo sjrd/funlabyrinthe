@@ -138,10 +138,11 @@ begin
     WriteBuffer(Value, 4);
 
     // Taille de zone
-    Value := 21;
+    Value := 7;
     WriteBuffer(DimX, 4);
     WriteBuffer(DimY, 4);
     WriteBuffer(DimZ, 4);
+    WriteBuffer(Value, 4);
     WriteBuffer(Value, 4);
 
     Value := 7; // taille de palette

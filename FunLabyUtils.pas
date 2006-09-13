@@ -23,9 +23,11 @@ resourcestring
   sMessage = 'Message';
   sTip = 'Indice';
   sChoice = 'Choix';
+  sError = 'Erreur';
   sFailure = 'Échec';
   sBlindAlley = 'Impasse';
   sWon = 'Gagné !';
+  sLost = 'Perdu !';
 
 const
   CurrentVersion = '5.0'; /// Version courante de FunLabyrinthe
@@ -309,7 +311,8 @@ type
   TMap = class(TFunLabyComponent)
   private
     FDimensions : T3DPoint;   /// Dimensions de la carte (en cases)
-    FZoneSize : integer;      /// Taille d'une zone de la carte
+    FZoneWidth : integer;     /// Largeur d'une zone de la carte
+    FZoneHeight : integer;    /// Hauteur d'une zone de la carte
     FMaxViewSize : integer;   /// Taille maximale d'une vue pour cette carte
     FMap : array of TScrew;   /// Carte stockée de façon linéaire
     FOutsideOffset : integer; /// Offset de départ de l'extérieur
@@ -327,12 +330,13 @@ type
     procedure SetLinearMap(Index : integer; Value : TScrew);
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      ADimensions : T3DPoint; AZoneSize : integer);
+      ADimensions : T3DPoint; AZoneWidth, AZoneHeight : integer);
 
     function InMap(Position : T3DPoint) : boolean;
 
     property Dimensions : T3DPoint read FDimensions;
-    property ZoneSize : integer read FZoneSize;
+    property ZoneWidth : integer read FZoneWidth;
+    property ZoneHeight : integer read FZoneHeight;
     property MaxViewSize : integer read FMaxViewSize write SetMaxViewSize;
 
     property Map[Position : T3DPoint] : TScrew
@@ -1274,12 +1278,13 @@ end;
   @param AZoneSize     Taille d'une zone de la carte
 *}
 constructor TMap.Create(AMaster : TMaster; const AID : TComponentID;
-  ADimensions : T3DPoint; AZoneSize : integer);
+  ADimensions : T3DPoint; AZoneWidth, AZoneHeight : integer);
 var I : integer;
 begin
   inherited Create(AMaster, AID);
   FDimensions := ADimensions;
-  FZoneSize := AZoneSize;
+  FZoneWidth := AZoneWidth;
+  FZoneHeight := AZoneHeight;
   FMaxViewSize := MinViewSize;
 
   FOutsideOffset := FDimensions.X * FDimensions.Y * FDimensions.Z;

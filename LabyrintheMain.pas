@@ -195,19 +195,26 @@ end;
   Adapte la taille de HiddenBitmap et de la fenêtre à la taille de la vue
 *}
 procedure TFormMain.AdaptSizeToView;
-var ImgSize : integer;
+var ImgWidth, ImgHeight : integer;
 begin
-  if View = nil then ImgSize := 270 else
-    ImgSize := View.TotalSize * ScrewSize;
+  if View = nil then
+  begin
+    ImgWidth := 270;
+    ImgHeight := 270;
+  end else
+  begin
+    ImgWidth := View.Width * ScrewSize;
+    ImgHeight := View.Height * ScrewSize;
+  end;
 
   with HiddenBitmap do
   begin
-    Width := ImgSize;
-    Height := ImgSize;
+    Width := ImgWidth;
+    Height := ImgHeight;
   end;
 
-  ClientWidth := ImgSize;
-  ClientHeight := ImgSize+19;
+  ClientWidth := ImgWidth;
+  ClientHeight := ImgHeight+19;
 
   Position := poScreenCenter;
 end;

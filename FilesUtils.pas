@@ -29,7 +29,7 @@ resourcestring
 
 type
   /// Mode d'ouverture d'un fichier FunLabyrinthe
-  TFileMode = (fmEdit, fmEditActions, fmPlay);
+  TFileMode = (fmEdit, fmPlay);
 
   /// Générée si un fichier ne respecte pas le format attendu
   EFileError = class(Exception);
@@ -94,7 +94,7 @@ type
     constructor Create(AMasterFile : TMasterFile; const AHRef : string;
       const AFileName : TFileName; const AMIMEType : string;
       const AMapID : TComponentID;
-      ADimensions : T3DPoint; AZoneSize : integer); overload;
+      ADimensions : T3DPoint; AZoneWidth, AZoneHeight : integer); overload;
   public
     {*
       Crée une instance de TMapFile
@@ -295,11 +295,12 @@ end;
 *}
 constructor TMapFile.Create(AMasterFile : TMasterFile; const AHRef : string;
   const AFileName : TFileName; const AMIMEType : string;
-  const AMapID : TComponentID; ADimensions : T3DPoint; AZoneSize : integer);
+  const AMapID : TComponentID; ADimensions : T3DPoint;
+  AZoneWidth, AZoneHeight : integer);
 begin
   inherited Create(AMasterFile, AHRef, AFileName, AMIMEType);
   FMapID := AMapID;
-  FMap := TMap.Create(Master, AMapID, ADimensions, AZoneSize);
+  FMap := TMap.Create(Master, AMapID, ADimensions, AZoneWidth, AZoneHeight);
 end;
 
 {*
@@ -584,6 +585,10 @@ begin
 
         Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position);
 
+        if (not VarIsNull(getAttribute('lost'))) and
+           (getAttribute('lost') = 'yes') then
+          Player.Lose;
+
         with selectNodes('./attributes/attribute') do
         begin
           for J := 0 to length-1 do with item[J] as IXMLDOMElement do
@@ -861,6 +866,8 @@ begin
             Player := Document.createElement('player');
             Player.setAttribute('id', ID);
             Player.setAttribute('name', Name);
+            if PlayState = psLost then
+              Player.setAttribute('lost', 'yes');
 
             with Player do
             begin

@@ -54,7 +54,8 @@ type
 
     function GetSize : integer;
     procedure SetSize(Value : integer);
-    function GetTotalSize : integer;
+    function GetWidth : integer;
+    function GetHeight : integer;
   public
     constructor Create(APlayer : TPlayer);
 
@@ -65,7 +66,8 @@ type
     property MinSize : integer read GetMinSize;
     property MaxSize : integer read GetMaxSize;
     property Size : integer read GetSize write SetSize;
-    property TotalSize : integer read GetTotalSize;
+    property Width : integer read GetWidth;
+    property Height : integer read GetHeight;
   end;
 
 implementation
@@ -426,12 +428,21 @@ begin
 end;
 
 {*
-  Taille totale affichée par la vue
-  @return Taille totale affichée par la vue
+  Nombre de cases affichées en largeur par la vue
+  @return Nombre de cases affichées en largeur par la vue
 *}
-function TPlayerView.GetTotalSize : integer;
+function TPlayerView.GetWidth : integer;
 begin
-  Result := Player.Map.ZoneSize + 2*Size;
+  Result := Player.Map.ZoneWidth + 2*Size;
+end;
+
+{*
+  Nombre de cases affichées en hauteur par la vue
+  @return Nombre de cases affichées en hauteur par la vue
+*}
+function TPlayerView.GetHeight : integer;
+begin
+  Result := Player.Map.ZoneHeight + 2*Size;
 end;
 
 {*
@@ -440,14 +451,15 @@ end;
 *}
 procedure TPlayerView.Draw(Canvas : TCanvas);
 var Map : TMap;
-    Size, TotalSize : integer;
+    Size, Width, Height : integer;
     OrigX, OrigY : integer;
     X, Y, Z, I : integer;
 begin
   // Simplifier et accélérer les accès aux informations
   Map := Player.Map;
   Size := GetSize;
-  TotalSize := GetTotalSize;
+  Width := GetWidth;
+  Height := GetHeight;
 
   // Origine à la position du joueur
   OrigX := Player.Position.X;
@@ -462,15 +474,15 @@ begin
     if OrigY = Map.Dimensions.Y then dec(OrigY);
   end;
   // Origine au niveau de la zone
-  dec(OrigX, IntMod(OrigX, Map.ZoneSize));
-  dec(OrigY, IntMod(OrigY, Map.ZoneSize));
+  dec(OrigX, IntMod(OrigX, Map.ZoneWidth));
+  dec(OrigY, IntMod(OrigY, Map.ZoneHeight));
   // Origine au niveau de la vue
   dec(OrigX, Size);
   dec(OrigY, Size);
 
   // Dessin des cases
   Z := Player.Position.Z;
-  for X := 0 to TotalSize-1 do for Y := 0 to TotalSize-1 do
+  for X := 0 to Width-1 do for Y := 0 to Height-1 do
     Map[Point3D(OrigX+X, OrigY+Y, Z)].Draw(Canvas, X*ScrewSize, Y*ScrewSize);
 
   // Dessin des joueurs

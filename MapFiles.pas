@@ -51,7 +51,7 @@ constructor TFLMMapFile.Create(AMasterFile : TMasterFile; const AHRef : string;
   const AFileName : TFileName; const AMIMEType : string;
   const AMapID : TComponentID);
 var Stream : TStream;
-    I, Count, Value, ReadIndex : integer;
+    ZoneWidth, ZoneHeight, I, Count, Value, ReadIndex : integer;
     Dimensions : T3DPoint;
     Palette : array of TScrew;
     Read : array[0..1] of integer;
@@ -90,11 +90,12 @@ begin
 
     // Lecture des dimensions et de la taille d'une zone
     Stream.ReadBuffer(Dimensions, sizeof(T3DPoint));
-    Stream.ReadBuffer(Value, 4);
+    Stream.ReadBuffer(ZoneWidth, 4);
+    Stream.ReadBuffer(ZoneHeight, 4);
 
     // On peut enfin appeler le constructeur hérité
     inherited Create(AMasterFile, AHRef, AFileName, AMIMEType, AMapID,
-      Dimensions, Value);
+      Dimensions, ZoneWidth, ZoneHeight);
 
     // Lecture de la palette de cases
     Stream.ReadBuffer(Count, 4);
@@ -162,7 +163,9 @@ begin
     // Écriture des dimensions et de la taille d'une zone
     Dimensions := Map.Dimensions;
     Stream.WriteBuffer(Dimensions, sizeof(T3DPoint));
-    Value := Map.ZoneSize;
+    Value := Map.ZoneWidth;
+    Stream.WriteBuffer(Value, 4);
+    Value := Map.ZoneHeight;
     Stream.WriteBuffer(Value, 4);
 
     // Préparation de la palette (Screws.Tag) et écriture de celle-ci
