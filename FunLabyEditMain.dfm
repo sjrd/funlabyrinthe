@@ -2,7 +2,7 @@ object FormMain: TFormMain
   Left = 0
   Top = 0
   Width = 687
-  Height = 455
+  Height = 510
   Caption = #201'diteur FunLabyrinthe'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -29,16 +29,16 @@ object FormMain: TFormMain
   PixelsPerInch = 96
   TextHeight = 13
   object SplitterScrews: TSplitter
-    Left = 129
+    Left = 150
     Top = 50
-    Height = 352
+    Height = 407
     MinSize = 100
     ResizeStyle = rsLine
   end
   object SplitterPlayers: TSplitter
-    Left = 547
+    Left = 526
     Top = 50
-    Height = 352
+    Height = 407
     Align = alRight
     MinSize = 100
     ResizeStyle = rsLine
@@ -75,7 +75,7 @@ object FormMain: TFormMain
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 402
+    Top = 457
     Width = 679
     Height = 19
     Panels = <>
@@ -83,8 +83,8 @@ object FormMain: TFormMain
   object ScrewsContainer: TCategoryButtons
     Left = 0
     Top = 50
-    Width = 129
-    Height = 352
+    Width = 150
+    Height = 407
     Align = alLeft
     ButtonFlow = cbfVertical
     ButtonHeight = 36
@@ -124,10 +124,10 @@ object FormMain: TFormMain
     OnButtonClicked = ScrewsContainerButtonClicked
   end
   object PlayersContainer: TCategoryButtons
-    Left = 550
+    Left = 529
     Top = 50
-    Width = 129
-    Height = 352
+    Width = 150
+    Height = 407
     Align = alRight
     ButtonFlow = cbfVertical
     ButtonHeight = 36
@@ -156,10 +156,10 @@ object FormMain: TFormMain
     TabOrder = 0
   end
   object PanelCenter: TPanel
-    Left = 132
+    Left = 153
     Top = 50
-    Width = 415
-    Height = 352
+    Width = 373
+    Height = 407
     Align = alClient
     BevelKind = bkTile
     BevelOuter = bvNone
@@ -167,7 +167,7 @@ object FormMain: TFormMain
     object MapTabSet: TTabSet
       Left = 0
       Top = 0
-      Width = 411
+      Width = 369
       Height = 21
       Align = alTop
       Font.Charset = DEFAULT_CHARSET
@@ -181,8 +181,8 @@ object FormMain: TFormMain
     end
     object PanelMapInfos: TPanel
       Left = 0
-      Top = 259
-      Width = 411
+      Top = 314
+      Width = 369
       Height = 89
       Align = alBottom
       BevelOuter = bvNone
@@ -239,8 +239,8 @@ object FormMain: TFormMain
     object ScrollBoxMap: TScrollBox
       Left = 0
       Top = 21
-      Width = 411
-      Height = 238
+      Width = 369
+      Height = 293
       HorzScrollBar.Increment = 30
       VertScrollBar.Increment = 30
       Align = alClient

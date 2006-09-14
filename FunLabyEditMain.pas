@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ActnList, XPStyleActnCtrls, ActnMan, Menus, ImgList, StdCtrls,
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
-  StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin;
+  StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, NumberDialog;
 
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
@@ -14,7 +14,24 @@ resourcestring
   sConfirmExitTitle = 'Quitter FunLabyEdit';
   sConfirmExit = 'Le fichier a été modifé. Voulez-vous l''enregistrer ?';
 
+  sReplaceOutsideTitle = 'Remplacer l''extérieur de la carte';
+  sReplaceOutside = 'Voulez-vous vraiment modifier l''extérieur de la carte ?';
+
 type
+  TComponentSet = class
+  private
+    FMinIndex : integer;                    /// Index minimal
+    FMaxIndex : integer;                    /// Index maximal
+    FComponents : array of TScrewComponent; /// Ensemble des composants
+    FDialogTitle : string;                  /// Titre de la boîte de dialogue
+    FDialogPrompt : string;                 /// Invite de la boîte de dialogue
+  public
+    constructor Create(AComponents : array of TScrewComponent;
+      const ADialogTitle, ADialogPrompt : string);
+
+    function ChooseComponent(var LastIndex : integer) : TScrewComponent;
+  end;
+
   TFormMain = class(TForm)
     Images: TImageList;
     ActionManager: TActionManager;
@@ -65,6 +82,7 @@ type
   private
     { Déclarations privées }
     ScrewBmp : TBitmap;          /// Bitmap à tout faire de la taille d'une case
+    LastCompIndex : integer;     /// Dernier index de composant choisi
 
     Modified : boolean;          /// Indique si le fichier a été modifié
     MasterFile : TMasterFile;    /// Fichier maître
@@ -101,6 +119,46 @@ var
 implementation
 
 {$R *.dfm}
+
+////////////////////////////
+/// Classe TComponentSet ///
+////////////////////////////
+
+{*
+  Crée une instance de TComponentSet
+  @param AComponents     Ensemble de composants
+  @param ADialogTitle    Titre de la boîte de dialogue
+  @param ADialogPrompt   Invite de la boîte de dialogue
+*}
+constructor TComponentSet.Create(AComponents : array of TScrewComponent;
+  const ADialogTitle, ADialogPrompt : string);
+var Len, I : integer;
+begin
+  inherited Create;
+
+  FMinIndex := Low(AComponents);
+  FMaxIndex := High(AComponents);
+
+  Len := Length(AComponents);
+  SetLength(FComponents, Len);
+  for I := 0 to Len-1 do
+    FComponents[I] := AComponents[Low(AComponents) + I];
+
+  FDialogTitle := ADialogTitle;
+  FDialogPrompt := ADialogPrompt;
+end;
+
+function TComponentSet.ChooseComponent(
+  var LastIndex : integer) : TScrewComponent;
+begin
+  LastIndex := TFormNumber.ChooseNumber(FDialogTitle, FDialogPrompt,
+    MinMax(LastIndex, FMinIndex, FMaxIndex), FMinIndex, FMaxIndex);
+  Result := FComponents[LastIndex - FMinIndex];
+end;
+
+////////////////////////
+/// Classe TFormMain ///
+////////////////////////
 
 {*
   Modifie l'étage courant
@@ -162,7 +220,7 @@ procedure TFormMain.RegisterComponentSet(Template : TScrewComponent;
 var Button : TButtonItem;
 begin
   Button := AddScrewButton(Template);
-  Button.Data := nil;
+  Button.Data := TComponentSet.Create(Components, DialogTitle, DialogPrompt);
 end;
 
 {*
@@ -290,6 +348,8 @@ begin
   ScrewBmp := TBitmap.Create;
   ScrewBmp.Width := ScrewSize;
   ScrewBmp.Height := ScrewSize;
+
+  LastCompIndex := 0;
 
   OpenDialog.InitialDir := fLabyrinthsDir;
   SaveDialog.InitialDir := fLabyrinthsDir;
@@ -443,7 +503,10 @@ end;
 procedure TFormMain.ScrewsContainerButtonClicked(Sender: TObject;
   const Button: TButtonItem);
 begin
-  Component := TScrewComponent(Button.Data);
+  if TObject(Button.Data) is TComponentSet then
+    Component := TComponentSet(Button.Data).ChooseComponent(LastCompIndex)
+  else
+    Component := TScrewComponent(Button.Data);
 end;
 
 procedure TFormMain.PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
@@ -468,6 +531,9 @@ begin
     CurrentMap[Position] := Master.Screw[NewID];
   end else
   begin
+    if ShowDialog(sReplaceOutsideTitle, sReplaceOutside,
+      dtConfirmation, dbOKCancel) <> drOK then exit;
+    CurrentMap.Outside[CurrentFloor] := Master.Screw[NewID];
   end;
 
   Modified := True;
