@@ -523,7 +523,7 @@ begin
   begin
     if Component is TField    then NewID := NewID+'--' else
     if Component is TEffect   then NewID := Field.ID+'-'+NewID+'-' else
-    if Component is TObstacle then NewID := Field.ID+'-'+Effect.ID+'-'+NewID;
+    if Component is TObstacle then NewID := ChangeObstacle(NewID).ID;
   end;
 
   if CurrentMap.InMap(Position) then

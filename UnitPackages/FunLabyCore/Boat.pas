@@ -65,6 +65,9 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ANumber : integer);
 
+    procedure Draw(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); override;
+
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
 
@@ -238,6 +241,21 @@ begin
   inherited Create(AMaster, Format(AID, [ANumber]), Format(AName, [ANumber]));
   FNumber := ANumber;
   Painter.ImgNames.Add(fBoat);
+end;
+
+{*
+  Dessine la barque sur le canevas indiqué
+  @param Canvas   Canevas sur lequel dessiner le terrain
+  @param X        Coordonnée X du point à partir duquel dessiner le terrain
+  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+*}
+procedure TBoat.Draw(Canvas : TCanvas; X : integer = 0;
+  Y : integer = 0);
+begin
+  inherited;
+
+  if Master.Editing then
+    DrawNumber(Canvas, X, Y, Number);
 end;
 
 {*

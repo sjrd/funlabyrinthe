@@ -508,6 +508,7 @@ type
     FMaps : TObjectList;           /// Liste des cartes
     FPlayers : TObjectList;        /// Liste des joueurs
 
+    FEditing : boolean;            /// Indique si on est en mode édition
     FBeginTickCount : Cardinal;    /// Tick count système au lancement
     FTickCount : Cardinal;         /// Tick count de la partie
     FTerminated : boolean;         /// Indique si la partie est terminée
@@ -546,7 +547,7 @@ type
 
     procedure Terminate;
   public
-    constructor Create;
+    constructor Create(AEditing : boolean);
     destructor Destroy; override;
 
     procedure UpdateTickCount;
@@ -583,6 +584,7 @@ type
     property PlayerCount : integer read GetPlayerCount;
     property Players[index : integer] : TPlayer read GetPlayers;
 
+    property Editing : boolean read FEditing;
     property TickCount : Cardinal read FTickCount;
     property Terminated : boolean read FTerminated;
   end;
@@ -1227,6 +1229,7 @@ begin
     Effect.Draw(Canvas, X, Y);
   if Assigned(Obstacle) then
     Obstacle.Draw(Canvas, X, Y);
+
   inherited;
 end;
 
@@ -1815,7 +1818,7 @@ end;
 {*
   Crée une instance de TMaster
 *}
-constructor TMaster.Create;
+constructor TMaster.Create(AEditing : boolean);
 begin
   inherited Create;
   FImagesMaster := TImagesMaster.Create;
@@ -1835,6 +1838,7 @@ begin
   FMaps       := TObjectList.Create(False);
   FPlayers    := TObjectList.Create(False);
 
+  FEditing := AEditing;
   FBeginTickCount := Windows.GetTickCount;
   FTerminated := False;
 end;

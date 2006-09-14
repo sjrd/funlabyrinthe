@@ -11,7 +11,7 @@ unit SimpleEffects;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, Common;
 
 resourcestring
   sNorthArrow = 'Flèche nord';                /// Nom de la flèche nord
@@ -123,6 +123,9 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ANumber : integer;
       AKind : TTransporterKind = tkInactive);
+
+    procedure Draw(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); override;
 
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
@@ -376,6 +379,27 @@ begin
   // À moins que la liste soit vide, on en pêche un au hasard
   if Count > 0 then
     Pos := Others[Random(Count)];
+end;
+
+{*
+  Dessine le téléporteur sur le canevas indiqué
+  @param Canvas   Canevas sur lequel dessiner le terrain
+  @param X        Coordonnée X du point à partir duquel dessiner le terrain
+  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+*}
+procedure TTransporter.Draw(Canvas : TCanvas; X : integer = 0;
+  Y : integer = 0);
+begin
+  inherited;
+
+  if Master.Editing then
+  begin
+    case FKind of
+      tkNext     : DrawNumber(Canvas, X, Y, Number, clRed);
+      tkPrevious : DrawNumber(Canvas, X, Y, Number, clGreen);
+      tkRandom   : DrawNumber(Canvas, X, Y, Number, clBlue);
+    end;
+  end;
 end;
 
 {*

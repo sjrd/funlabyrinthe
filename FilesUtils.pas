@@ -375,7 +375,7 @@ begin
   FAllowEdit := True;
   FIsSaveguard := False;
 
-  FMaster := TMaster.Create;
+  FMaster := TMaster.Create(Mode = fmEdit);
 
   FUnitFiles := TObjectList.Create;
   FMapFiles := TObjectList.Create;
@@ -412,7 +412,7 @@ begin
   FAllowEdit := True;
   FIsSaveguard := False;
 
-  FMaster := TMaster.Create;
+  FMaster := TMaster.Create(True);
 
   FUnitFiles := TObjectList.Create;
   FMapFiles := TObjectList.Create;

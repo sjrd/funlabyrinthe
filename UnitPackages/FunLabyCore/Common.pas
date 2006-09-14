@@ -11,7 +11,7 @@ unit Common;
 interface
 
 uses
-  Graphics, FunLabyUtils;
+  SysUtils, Graphics, FunLabyUtils;
 
 const {don't localize}
   /// Action d'aller sur l'eau
@@ -49,7 +49,30 @@ type
     property Before : TBitmap read FBefore;
   end;
 
+procedure DrawNumber(Canvas : TCanvas; X, Y, Number : integer;
+  FontColor : TColor = clBlack);
+
 implementation
+
+{*
+  Dessine un numéro sur un canevas
+  @param Canvas      Canevas sur lequel dessiner le numéro
+  @param X           Bord gauche de la case
+  @param Y           Bord supérieur de la case
+  @param Number      Numéro à écrire
+  @param FontColor   Couleur du texte
+*}
+procedure DrawNumber(Canvas : TCanvas; X, Y, Number : integer;
+  FontColor : TColor = clBlack);
+begin
+  with Canvas do
+  begin
+    Brush.Color := clWhite;
+    Font.Name := 'Arial'; {don't localize}
+    Font.Color := FontColor;
+    TextOut(X+10, Y+8, IntToStr(Number));
+  end;
+end;
 
 //////////////////////////
 /// Classe TMaskPlugin ///
