@@ -611,6 +611,7 @@ var {don't localize}
 
 function PointBehind(const Src : T3DPoint; Dir : TDirection) : T3DPoint;
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
+procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 
 implementation
 
@@ -643,6 +644,25 @@ begin
   Result.Top := Y;
   Result.Right := X+ScrewSize;
   Result.Bottom := Y+ScrewSize;
+end;
+
+
+{*
+  Efface un rectangle de case sur un canevas (avec du transparent)
+  @param Canvas   Canevas à traiter
+  @param X        Bord gauche du rectangle
+  @param Y        Bord supérieur du rectangle
+*}
+procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+begin
+  with Canvas do
+  begin
+    Brush.Color := clTransparent;
+    Brush.Style := bsSolid;
+    Pen.Color := clTransparent;
+    Pen.Style := psSolid;
+    Rectangle(ScrewRect(X, Y));
+  end;
 end;
 
 ////////////////////////////
@@ -1864,7 +1884,17 @@ end;
 *}
 function TMaster.GetScrewComponent(const ID : TComponentID) : TScrewComponent;
 begin
-  Result := Component[ID] as TScrewComponent
+  try
+    Result := Component[ID] as TScrewComponent;
+  except
+    on Error : EComponentNotFound do
+    begin
+      if NberCharInStr('-', ID) = 2 then
+        Result := Screw[ID]
+      else
+        raise;
+    end;
+  end;
 end;
 
 {*
