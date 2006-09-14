@@ -159,7 +159,6 @@ begin
   RegSingle(idDirectTurnstile);
   RegSingle(idIndirectTurnstile);
 
-  RegSingle(idOutside);
   RegSingle(idTreasure);
 
   RegSingle(idBuoy);
@@ -178,6 +177,8 @@ begin
   for I := 1 to 10 do
     Boats[I] := Master.ScrewComponent[Format(idBoatScrew, [I])];
   RegSet(idBoatScrewTemplate, Boats, sBoatTitle, sBoatPrompt);
+
+  RegSingle(idOutsideScrew);
 end;
 
 exports

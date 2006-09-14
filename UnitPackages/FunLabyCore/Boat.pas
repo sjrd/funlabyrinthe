@@ -254,7 +254,7 @@ procedure TBoat.Draw(Canvas : TCanvas; X : integer = 0;
 begin
   inherited;
 
-  if Master.Editing then
+  if Master.Editing and (Number <> 0) then
     DrawNumber(Canvas, X, Y, Number);
 end;
 

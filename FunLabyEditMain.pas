@@ -11,11 +11,25 @@ uses
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
 
+  sPlayerPosition = 'Position : %s';
+  sCenterToPosition = 'Centrer la vue sur ce joueur';
+  sShowPlugins = 'Plug-in...';
+  sShowAttributes = 'Attributs...';
+  sShowObjects = 'Objets...';
+
   sConfirmExitTitle = 'Quitter FunLabyEdit';
   sConfirmExit = 'Le fichier a été modifé. Voulez-vous l''enregistrer ?';
 
   sReplaceOutsideTitle = 'Remplacer l''extérieur de la carte';
   sReplaceOutside = 'Voulez-vous vraiment modifier l''extérieur de la carte ?';
+
+const
+  opMask = $07;
+  opShift = 3;
+  opCenterToPosition = 1;
+  opShowPlugins = 2;
+  opShowAttributes = 3;
+  opShowObjects = 4;
 
 type
   TComponentSet = class
@@ -62,6 +76,11 @@ type
     PaintBoxMap: TPaintBox;
     LabelFloor: TLabel;
     EditFloor: TSpinEdit;
+    StaticPosition: TStaticText;
+    StaticField: TStaticText;
+    StaticEffect: TStaticText;
+    StaticObstacle: TStaticText;
+    ActionFileProperties: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -70,6 +89,7 @@ type
     procedure ActionSaveFileExecute(Sender: TObject);
     procedure ActionSaveFileAsExecute(Sender: TObject);
     procedure ActionCloseFileExecute(Sender: TObject);
+    procedure ActionFilePropertiesExecute(Sender: TObject);
     procedure ActionExitExecute(Sender: TObject);
     procedure MapTabSetChange(Sender: TObject; NewTab: Integer;
       var AllowChange: Boolean);
@@ -77,8 +97,12 @@ type
     procedure EditFloorChange(Sender: TObject);
     procedure ScrewsContainerButtonClicked(Sender: TObject;
       const Button: TButtonItem);
+    procedure PlayersContainerButtonClicked(Sender: TObject;
+      const Button: TButtonItem);
     procedure PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure PaintBoxMapMouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer);
   private
     { Déclarations privées }
     ScrewBmp : TBitmap;          /// Bitmap à tout faire de la taille d'une case
@@ -101,12 +125,16 @@ type
       Components : array of TScrewComponent;
       const DialogTitle, DialogPrompt : string); stdcall;
 
+    procedure LoadPlayers;
+
     procedure LoadFile;
     procedure UnloadFile;
 
     procedure OpenFile(FileName : TFileName);
     function SaveFile(FileName : TFileName = '') : boolean;
     function CloseFile : boolean;
+
+    procedure CenterToPlayerPosition(Player : TPlayer);
 
     property CurrentFloor : integer read FCurrentFloor write SetCurrentFloor;
   public
@@ -224,6 +252,53 @@ begin
 end;
 
 {*
+  Charge les infos sur les joueurs
+*}
+procedure TFormMain.LoadPlayers;
+var I : integer;
+    Player : TPlayer;
+begin
+  for I := 0 to Master.PlayerCount-1 do
+  begin
+    Player := Master.Players[I];
+
+    with PlayersContainer.Categories.Add do
+    begin
+      Caption := Player.ID;
+      Color := $E8BBA2;
+
+      Items.Add.Caption := Player.Name;
+
+      with Items.Add do
+      begin
+        Caption := Format(sPlayerPosition,
+          [Point3DToString(Player.Position, ', ')]);
+        Hint := sCenterToPosition;
+        Data := Pointer(I shl opShift + opCenterToPosition);
+      end;
+
+      with Items.Add do
+      begin
+        Caption := sShowPlugins;
+        Data := Pointer(I shl opShift + opShowPlugins);
+      end;
+
+      with Items.Add do
+      begin
+        Caption := sShowAttributes;
+        Data := Pointer(I shl opShift + opShowAttributes);
+      end;
+
+      with Items.Add do
+      begin
+        Caption := sShowObjects;
+        Data := Pointer(I shl opShift + opShowObjects);
+      end;
+    end;
+  end;
+end;
+
+{*
   Charge le MasterFile créé
   Charge le MasterFile créé dans les autres variables et dans l'interface
   graphique
@@ -241,9 +316,13 @@ begin
   ActionSaveFile.Enabled := True;
   ActionSaveFileAs.Enabled := True;
   ActionCloseFile.Enabled := True;
+  ActionFileProperties.Enabled := True;
 
   // Recensement des composants d'édition
   MasterFile.RegisterComponents(RegisterSingleComponent, RegisterComponentSet);
+
+  // Chargement des infos des joueurs
+  LoadPlayers;
 
   // Recensement des cartes
   with MasterFile do for I := 0 to MapFileCount-1 do
@@ -263,11 +342,21 @@ begin
   MapTabSet.TabIndex := -1;
   MapTabSet.Tabs.Clear;
 
+  // Vider les onglets des joueurs
+  PlayersContainer.Categories.Clear;
+
   // Vider les composants d'édition
   with ScrewsContainer do
   begin
     for I := 0 to Categories.Count-1 do with Categories[I] do
-      while Items.Count > 0 do Items.Delete(0);
+    begin
+      while Items.Count > 0 do
+      begin
+        if TObject(Items[0].Data) is TComponentSet then
+          TObject(Items[0].Data).Free;
+        Items.Delete(0);
+      end;
+    end;
   end;
   ScrewsImages.Clear;
 
@@ -275,6 +364,7 @@ begin
   ActionSaveFile.Enabled := False;
   ActionSaveFileAs.Enabled := False;
   ActionCloseFile.Enabled := False;
+  ActionFileProperties.Enabled := False;
 
   // Autres variables
   Component := nil;
@@ -343,6 +433,12 @@ begin
   MasterFile := nil;
 end;
 
+procedure TFormMain.CenterToPlayerPosition(Player : TPlayer);
+begin
+  ShowDialog(sError, sFeatureIsNotImplementedYet, dtError);
+  { TODO 1 : Centrer sur la position du joueur }
+end;
+
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   ScrewBmp := TBitmap.Create;
@@ -402,6 +498,12 @@ begin
   CloseFile;
 end;
 
+procedure TFormMain.ActionFilePropertiesExecute(Sender: TObject);
+begin
+  ShowDialog(sError, sFeatureIsNotImplementedYet, dtError);
+  { TODO 1 : Modifier les propriétés }
+end;
+
 procedure TFormMain.ActionExitExecute(Sender: TObject);
 begin
   Close;
@@ -410,6 +512,11 @@ end;
 procedure TFormMain.MapTabSetChange(Sender: TObject; NewTab: Integer;
   var AllowChange: Boolean);
 begin
+  StaticPosition.Caption := '';
+  StaticField.Caption := '';
+  StaticEffect.Caption := '';
+  StaticObstacle.Caption := '';
+
   if NewTab < 0 then
   begin
     CurrentMap := nil;
@@ -509,6 +616,19 @@ begin
     Component := TScrewComponent(Button.Data);
 end;
 
+procedure TFormMain.PlayersContainerButtonClicked(Sender: TObject;
+  const Button: TButtonItem);
+var Player : TPlayer;
+begin
+  Player := Master.Players[integer(Button.Data) shr opShift];
+  case integer(Button.Data) and opMask of
+    opCenterToPosition : CenterToPlayerPosition(Player);
+    opShowPlugins : ;
+    opShowAttributes : ;
+    opShowObjects : ;
+  end;
+end;
+
 procedure TFormMain.PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var Position : T3DPoint;
@@ -538,6 +658,25 @@ begin
 
   Modified := True;
   PaintBoxMap.Invalidate;
+end;
+
+procedure TFormMain.PaintBoxMapMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+var Position : T3DPoint;
+begin
+  if CurrentMap = nil then exit;
+
+  Position := Point3D(X div ScrewSize - 1, Y div ScrewSize - 1, CurrentFloor);
+  StaticPosition.Caption := Point3DToString(Position, ', ');
+
+  with CurrentMap[Position] do
+  begin
+    StaticField.Caption := Field.Name;
+    if Effect = nil then StaticEffect.Caption := '' else
+      StaticEffect.Caption := Effect.Name;
+    if Obstacle = nil then StaticObstacle.Caption := '' else
+      StaticObstacle.Caption := Obstacle.Name;
+  end;
 end;
 
 end.
