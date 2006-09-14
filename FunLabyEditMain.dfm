@@ -22,6 +22,7 @@ object FormMain: TFormMain
     0000FFFF0000FFFF0000C0030000DFFB0000DFFB0000D8030000DE7B0000DE7B
     0000C01B0000DFFB0000DFFB0000C0030000FFFF0000FFFF0000FFFF0000}
   OldCreateOrder = False
+  Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -31,6 +32,7 @@ object FormMain: TFormMain
     Left = 129
     Top = 50
     Height = 352
+    MinSize = 100
     ResizeStyle = rsLine
   end
   object SplitterPlayers: TSplitter
@@ -38,6 +40,7 @@ object FormMain: TFormMain
     Top = 50
     Height = 352
     Align = alRight
+    MinSize = 100
     ResizeStyle = rsLine
   end
   object ToolBarFile: TActionToolBar
@@ -160,49 +163,6 @@ object FormMain: TFormMain
     BevelKind = bkTile
     BevelOuter = bvNone
     TabOrder = 5
-    DesignSize = (
-      411
-      348)
-    object ImageMap: TImage
-      Left = 2
-      Top = 24
-      Width = 379
-      Height = 211
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      Center = True
-    end
-    object LabelPosition: TLabel
-      Left = 8
-      Top = 268
-      Width = 44
-      Height = 13
-      Anchors = [akLeft, akBottom]
-      Caption = 'Position :'
-    end
-    object LabelField: TLabel
-      Left = 8
-      Top = 284
-      Width = 41
-      Height = 13
-      Anchors = [akLeft, akBottom]
-      Caption = 'Terrain :'
-    end
-    object LabelEffect: TLabel
-      Left = 8
-      Top = 300
-      Width = 31
-      Height = 13
-      Anchors = [akLeft, akBottom]
-      Caption = 'Effet :'
-    end
-    object LabelObstacle: TLabel
-      Left = 8
-      Top = 316
-      Width = 49
-      Height = 13
-      Anchors = [akLeft, akBottom]
-      Caption = 'Obstacle :'
-    end
     object MapTabSet: TTabSet
       Left = 0
       Top = 0
@@ -215,31 +175,65 @@ object FormMain: TFormMain
       Font.Name = 'Tahoma'
       Font.Style = []
       Style = tsModernTabs
-      Tabs.Strings = (
-        'MainMap'
-        'House'
-        'Underground')
-      TabIndex = 0
       TabPosition = tpTop
+      OnChange = MapTabSetChange
     end
-    object HorzScrollBar: TScrollBar
-      Left = 2
-      Top = 236
-      Width = 379
-      Height = 17
-      Anchors = [akLeft, akRight, akBottom]
-      PageSize = 0
+    object PanelMapInfos: TPanel
+      Left = 0
+      Top = 259
+      Width = 411
+      Height = 89
+      Align = alBottom
+      BevelOuter = bvNone
       TabOrder = 1
+      object LabelPosition: TLabel
+        Left = 8
+        Top = 12
+        Width = 44
+        Height = 13
+        Caption = 'Position :'
+      end
+      object LabelField: TLabel
+        Left = 8
+        Top = 36
+        Width = 41
+        Height = 13
+        Caption = 'Terrain :'
+      end
+      object LabelEffect: TLabel
+        Left = 8
+        Top = 52
+        Width = 31
+        Height = 13
+        Caption = 'Effet :'
+      end
+      object LabelObstacle: TLabel
+        Left = 8
+        Top = 68
+        Width = 49
+        Height = 13
+        Caption = 'Obstacle :'
+      end
     end
-    object VertScrollBar: TScrollBar
-      Left = 382
-      Top = 24
-      Width = 17
-      Height = 211
-      Anchors = [akTop, akRight, akBottom]
-      Kind = sbVertical
-      PageSize = 0
+    object ScrollBoxMap: TScrollBox
+      Left = 0
+      Top = 21
+      Width = 411
+      Height = 238
+      HorzScrollBar.Increment = 30
+      VertScrollBar.Increment = 30
+      Align = alClient
+      BorderStyle = bsNone
+      Constraints.MinHeight = 100
+      Constraints.MinWidth = 200
       TabOrder = 2
+      object PaintBoxMap: TPaintBox
+        Left = 0
+        Top = 0
+        Width = 100
+        Height = 100
+        OnPaint = PaintBoxMapPaint
+      end
     end
   end
   object Images: TImageList

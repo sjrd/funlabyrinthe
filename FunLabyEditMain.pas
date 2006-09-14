@@ -24,14 +24,7 @@ type
     StatusBar: TStatusBar;
     PanelCenter: TPanel;
     MapTabSet: TTabSet;
-    ImageMap: TImage;
     SplitterScrews: TSplitter;
-    HorzScrollBar: TScrollBar;
-    VertScrollBar: TScrollBar;
-    LabelPosition: TLabel;
-    LabelField: TLabel;
-    LabelEffect: TLabel;
-    LabelObstacle: TLabel;
     ScrewsContainer: TCategoryButtons;
     ScrewsImages: TImageList;
     PlayersContainer: TCategoryButtons;
@@ -43,6 +36,13 @@ type
     ActionNewFile: TAction;
     OpenDialog: TOpenDialog;
     SaveDialog: TSaveDialog;
+    PanelMapInfos: TPanel;
+    LabelPosition: TLabel;
+    LabelField: TLabel;
+    LabelEffect: TLabel;
+    LabelObstacle: TLabel;
+    ScrollBoxMap: TScrollBox;
+    PaintBoxMap: TPaintBox;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -52,13 +52,20 @@ type
     procedure ActionSaveFileAsExecute(Sender: TObject);
     procedure ActionCloseFileExecute(Sender: TObject);
     procedure ActionExitExecute(Sender: TObject);
+    procedure MapTabSetChange(Sender: TObject; NewTab: Integer;
+      var AllowChange: Boolean);
+    procedure PaintBoxMapPaint(Sender: TObject);
   private
     { Déclarations privées }
     ScrewBmp : TBitmap;
 
-    MasterFile : TMasterFile;
     Modified : boolean;
+    MasterFile : TMasterFile;
+    Master : TMaster;
+    CurrentMap : TMap;
+    CurrentFloor : integer;
 
+    function AddScrewButton(Template : TScrewComponent) : TButtonItem;
     procedure RegisterSingleComponent(Component : TScrewComponent); stdcall;
     procedure RegisterComponentSet(Template : TScrewComponent;
       Components : array of TScrewComponent;
@@ -82,29 +89,40 @@ implementation
 {$R *.dfm}
 
 {*
+  Ajoute un bouton de case à partir d'un modèle de case et le renvoie
+  @param Template   Modèle de case, pour l'image et le hint du bouton
+  @return Le bouton nouvellement créé
+*}
+function TFormMain.AddScrewButton(Template : TScrewComponent) : TButtonItem;
+var ImageIndex : integer;
+    Category : TButtonCategory;
+begin
+  // Ajout de l'image du composant dans la liste d'images
+  EmptyScrewRect(ScrewBmp.Canvas);
+  Template.Draw(ScrewBmp.Canvas);
+  ImageIndex := ScrewsImages.AddMasked(ScrewBmp, clTransparent);
+
+  // Choix de la catégorie
+  if Template is TField    then Category := ScrewsContainer.Categories[0] else
+  if Template is TEffect   then Category := ScrewsContainer.Categories[1] else
+  if Template is TObstacle then Category := ScrewsContainer.Categories[2] else
+  Category := ScrewsContainer.Categories[3];
+
+  // Ajout du bouton
+  Result := Category.Items.Add;
+  Result.ImageIndex := ImageIndex;
+  Result.Hint := Template.Name;
+end;
+
+{*
   Enregistre un unique composant
   @param Component   Le composant à enregistrer
 *}
 procedure TFormMain.RegisterSingleComponent(Component : TScrewComponent);
-var ImageIndex : integer;
-    Category : TButtonCategory;
-    Button : TButtonItem;
+var Button : TButtonItem;
 begin
-  // Ajout de l'image du composant dans la liste d'images
-  EmptyScrewRect(ScrewBmp.Canvas);
-  Component.Draw(ScrewBmp.Canvas);
-  ImageIndex := ScrewsImages.AddMasked(ScrewBmp, clTransparent);
-
-  // Choix de la catégorie
-  if Component is TField    then Category := ScrewsContainer.Categories[0] else
-  if Component is TEffect   then Category := ScrewsContainer.Categories[1] else
-  if Component is TObstacle then Category := ScrewsContainer.Categories[2] else
-  Category := ScrewsContainer.Categories[3];
-
-  // Ajout du bouton
-  Button := Category.Items.Add;
-  Button.ImageIndex := ImageIndex;
-  Button.Hint := Component.Name;
+  Button := AddScrewButton(Component);
+  Button.Data := nil;
 end;
 
 {*
@@ -117,7 +135,10 @@ end;
 procedure TFormMain.RegisterComponentSet(Template : TScrewComponent;
   Components : array of TScrewComponent;
   const DialogTitle, DialogPrompt : string);
+var Button : TButtonItem;
 begin
+  Button := AddScrewButton(Template);
+  Button.Data := nil;
 end;
 
 {*
@@ -126,14 +147,27 @@ end;
   graphique
 *}
 procedure TFormMain.LoadFile;
+var I : integer;
 begin
+  // Un fichier nouvellement chargé n'est modifié que s'il vient d'être créé
   Modified := MasterFile.FileName = '';
 
+  // Autres variables
+  Master := MasterFile.Master;
+
+  // Activation de l'interface utilisateur
   ActionSaveFile.Enabled := True;
   ActionSaveFileAs.Enabled := True;
   ActionCloseFile.Enabled := True;
 
+  // Recensement des composants d'édition
   MasterFile.RegisterComponents(RegisterSingleComponent, RegisterComponentSet);
+
+  // Recensement des cartes
+  with MasterFile do for I := 0 to MapFileCount-1 do
+    MapTabSet.Tabs.Add(MapFiles[I].MapID);
+  CurrentFloor := 0;
+  MapTabSet.TabIndex := 0;
 end;
 
 {*
@@ -143,6 +177,11 @@ end;
 procedure TFormMain.UnloadFile;
 var I : integer;
 begin
+  // Vider les onglets de carte
+  MapTabSet.TabIndex := -1;
+  MapTabSet.Tabs.Clear;
+
+  // Vider les composants d'édition
   with ScrewsContainer do
   begin
     for I := 0 to Categories.Count-1 do with Categories[I] do
@@ -150,9 +189,13 @@ begin
   end;
   ScrewsImages.Clear;
 
+  // Désactivation de l'interface utilisateur
   ActionSaveFile.Enabled := False;
   ActionSaveFileAs.Enabled := False;
   ActionCloseFile.Enabled := False;
+
+  // Autres variables
+  Master := nil;
 end;
 
 {*
@@ -185,9 +228,8 @@ begin
     end;
   end;
 
-  Result := True;
-
   ShowDialog(sError, sFeatureIsNotImplementedYet, dtError);
+  Result := False;
   { TODO 1 : Enregistrer le fichier }
 end;
 
@@ -228,6 +270,7 @@ begin
   SaveDialog.InitialDir := fLabyrinthsDir;
 
   MasterFile := nil;
+  CurrentMap := nil;
 end;
 
 procedure TFormMain.FormDestroy(Sender: TObject);
@@ -275,6 +318,84 @@ end;
 procedure TFormMain.ActionExitExecute(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TFormMain.MapTabSetChange(Sender: TObject; NewTab: Integer;
+  var AllowChange: Boolean);
+begin
+  if NewTab < 0 then
+  begin
+    CurrentMap := nil;
+    PaintBoxMap.Width := 100;
+    PaintBoxMap.Height := 100;
+  end else
+  begin
+    CurrentMap := MasterFile.MapFiles[NewTab].Map;
+    if CurrentFloor >= CurrentMap.Dimensions.Z then
+      CurrentFloor := CurrentMap.Dimensions.Z-1;
+    PaintBoxMap.Width  := (CurrentMap.Dimensions.X + 2*MinViewSize) * ScrewSize;
+    PaintBoxMap.Height := (CurrentMap.Dimensions.Y + 2*MinViewSize) * ScrewSize;
+  end;
+  PaintBoxMap.Invalidate;
+end;
+
+procedure TFormMain.PaintBoxMapPaint(Sender: TObject);
+var Left, Top, Right, Bottom : integer;
+    LeftZone, TopZone, RightZone, BottomZone : integer;
+    I, X, Y : integer;
+begin
+  if CurrentMap = nil then exit;
+
+  // Calcul des coordonnées à afficher
+  Left := ScrollBoxMap.HorzScrollBar.Position div ScrewSize - MinViewSize;
+  Top  := ScrollBoxMap.VertScrollBar.Position div ScrewSize - MinViewSize;
+  Right  := Left + ScrollBoxMap.ClientWidth  div ScrewSize + 1;
+  Bottom := Top  + ScrollBoxMap.ClientHeight div ScrewSize + 1;
+
+  LeftZone := Left div CurrentMap.ZoneWidth;
+  TopZone  := Top  div CurrentMap.ZoneHeight;
+  RightZone  := LeftZone + Right  div CurrentMap.ZoneWidth ;
+  BottomZone := TopZone  + Bottom div CurrentMap.ZoneHeight;
+
+  // Dessin des cases
+  for X := Left to Right do for Y := Top to Bottom do
+  begin
+    CurrentMap[Point3D(X, Y, CurrentFloor)].Draw(PaintBoxMap.Canvas,
+      (MinViewSize+X) * ScrewSize, (MinViewSize+Y) * ScrewSize);
+  end;
+
+  // Dessin des joueurs
+  for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
+  begin
+    if Position.Z = CurrentFloor then
+    begin
+      Draw(PaintBoxMap.Canvas, (MinViewSize+Position.X) * ScrewSize,
+        (MinViewSize+Position.Y) * ScrewSize);
+    end;
+  end;
+
+  // Dessin des lignes de séparation des zones
+  with PaintBoxMap.Canvas do
+  begin
+    Pen.Color := clBlack;
+    Pen.Style := psDash;
+    Pen.Width := 3;
+
+    for X := LeftZone to RightZone do
+    begin
+      MoveTo((CurrentMap.ZoneWidth * X + 1) * ScrewSize, Top * ScrewSize);
+      LineTo((CurrentMap.ZoneWidth * X + 1) * ScrewSize,
+        (Bottom+2) * ScrewSize);
+    end;
+    for Y := TopZone to BottomZone do
+    begin
+      MoveTo(Left * ScrewSize, (CurrentMap.ZoneHeight * Y + 1) * ScrewSize);
+      LineTo((Right+2) * ScrewSize,
+        (CurrentMap.ZoneHeight * Y + 1) * ScrewSize);
+    end;
+
+    Pen.Width := 1;
+  end;
 end;
 
 end.
