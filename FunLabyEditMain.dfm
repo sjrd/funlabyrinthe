@@ -121,6 +121,7 @@ object FormMain: TFormMain
     SelectedButtonColor = 15711942
     ShowHint = True
     TabOrder = 4
+    OnButtonClicked = ScrewsContainerButtonClicked
   end
   object PlayersContainer: TCategoryButtons
     Left = 550
@@ -252,6 +253,7 @@ object FormMain: TFormMain
         Top = 0
         Width = 100
         Height = 100
+        OnMouseDown = PaintBoxMapMouseDown
         OnPaint = PaintBoxMapPaint
       end
     end

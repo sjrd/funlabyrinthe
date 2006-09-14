@@ -58,16 +58,22 @@ type
       var AllowChange: Boolean);
     procedure PaintBoxMapPaint(Sender: TObject);
     procedure EditFloorChange(Sender: TObject);
+    procedure ScrewsContainerButtonClicked(Sender: TObject;
+      const Button: TButtonItem);
+    procedure PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     { Déclarations privées }
-    ScrewBmp : TBitmap;       /// Bitmap à tout faire de la taille d'une case
+    ScrewBmp : TBitmap;          /// Bitmap à tout faire de la taille d'une case
 
-    Modified : boolean;
-    MasterFile : TMasterFile; /// Fichier maître
-    Master : TMaster;         /// Maître FunLabyrinthe
-    CurrentMap : TMap;        /// Carte courante
+    Modified : boolean;          /// Indique si le fichier a été modifié
+    MasterFile : TMasterFile;    /// Fichier maître
+    Master : TMaster;            /// Maître FunLabyrinthe
+    CurrentMap : TMap;           /// Carte courante
 
-    FCurrentFloor : integer;  /// Étage courant
+    FCurrentFloor : integer;     /// Étage courant
+
+    Component : TScrewComponent; /// Composant à placer
 
     procedure SetCurrentFloor(Value : integer);
 
@@ -140,7 +146,7 @@ procedure TFormMain.RegisterSingleComponent(Component : TScrewComponent);
 var Button : TButtonItem;
 begin
   Button := AddScrewButton(Component);
-  Button.Data := nil;
+  Button.Data := Component;
 end;
 
 {*
@@ -213,6 +219,7 @@ begin
   ActionCloseFile.Enabled := False;
 
   // Autres variables
+  Component := nil;
   Master := nil;
 end;
 
@@ -289,6 +296,8 @@ begin
 
   MasterFile := nil;
   CurrentMap := nil;
+
+  Component := nil;
 end;
 
 procedure TFormMain.FormDestroy(Sender: TObject);
@@ -428,6 +437,40 @@ end;
 procedure TFormMain.EditFloorChange(Sender: TObject);
 begin
   FCurrentFloor := EditFloor.Value;
+  PaintBoxMap.Invalidate;
+end;
+
+procedure TFormMain.ScrewsContainerButtonClicked(Sender: TObject;
+  const Button: TButtonItem);
+begin
+  Component := TScrewComponent(Button.Data);
+end;
+
+procedure TFormMain.PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var Position : T3DPoint;
+    NewID : TComponentID;
+begin
+  if (Button <> mbLeft) or (Component = nil) then exit;
+
+  Position := Point3D(X div ScrewSize - 1, Y div ScrewSize - 1, CurrentFloor);
+
+  NewID := Component.ID;
+  with CurrentMap[Position] do
+  begin
+    if Component is TField    then NewID := NewID+'--' else
+    if Component is TEffect   then NewID := Field.ID+'-'+NewID+'-' else
+    if Component is TObstacle then NewID := Field.ID+'-'+Effect.ID+'-'+NewID;
+  end;
+
+  if CurrentMap.InMap(Position) then
+  begin
+    CurrentMap[Position] := Master.Screw[NewID];
+  end else
+  begin
+  end;
+
+  Modified := True;
   PaintBoxMap.Invalidate;
 end;
 
