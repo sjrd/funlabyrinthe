@@ -188,31 +188,51 @@ object FormMain: TFormMain
       TabOrder = 1
       object LabelPosition: TLabel
         Left = 8
-        Top = 12
+        Top = 16
         Width = 44
         Height = 13
         Caption = 'Position :'
       end
       object LabelField: TLabel
         Left = 8
-        Top = 36
+        Top = 32
         Width = 41
         Height = 13
         Caption = 'Terrain :'
       end
       object LabelEffect: TLabel
         Left = 8
-        Top = 52
+        Top = 48
         Width = 31
         Height = 13
         Caption = 'Effet :'
       end
       object LabelObstacle: TLabel
         Left = 8
-        Top = 68
+        Top = 64
         Width = 49
         Height = 13
         Caption = 'Obstacle :'
+      end
+      object LabelFloor: TLabel
+        Left = 152
+        Top = 16
+        Width = 35
+        Height = 13
+        Caption = #201'tage :'
+      end
+      object EditFloor: TSpinEdit
+        Left = 192
+        Top = 8
+        Width = 49
+        Height = 22
+        EditorEnabled = False
+        Enabled = False
+        MaxValue = 0
+        MinValue = 0
+        TabOrder = 0
+        Value = 0
+        OnChange = EditFloorChange
       end
     end
     object ScrollBoxMap: TScrollBox

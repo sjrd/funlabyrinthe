@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ActnList, XPStyleActnCtrls, ActnMan, Menus, ImgList, StdCtrls,
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
-  StdActns, ScUtils, FunLabyUtils, FilesUtils;
+  StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin;
 
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
@@ -43,6 +43,8 @@ type
     LabelObstacle: TLabel;
     ScrollBoxMap: TScrollBox;
     PaintBoxMap: TPaintBox;
+    LabelFloor: TLabel;
+    EditFloor: TSpinEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -55,15 +57,19 @@ type
     procedure MapTabSetChange(Sender: TObject; NewTab: Integer;
       var AllowChange: Boolean);
     procedure PaintBoxMapPaint(Sender: TObject);
+    procedure EditFloorChange(Sender: TObject);
   private
     { Déclarations privées }
-    ScrewBmp : TBitmap;
+    ScrewBmp : TBitmap;       /// Bitmap à tout faire de la taille d'une case
 
     Modified : boolean;
-    MasterFile : TMasterFile;
-    Master : TMaster;
-    CurrentMap : TMap;
-    CurrentFloor : integer;
+    MasterFile : TMasterFile; /// Fichier maître
+    Master : TMaster;         /// Maître FunLabyrinthe
+    CurrentMap : TMap;        /// Carte courante
+
+    FCurrentFloor : integer;  /// Étage courant
+
+    procedure SetCurrentFloor(Value : integer);
 
     function AddScrewButton(Template : TScrewComponent) : TButtonItem;
     procedure RegisterSingleComponent(Component : TScrewComponent); stdcall;
@@ -77,6 +83,8 @@ type
     procedure OpenFile(FileName : TFileName);
     function SaveFile(FileName : TFileName = '') : boolean;
     function CloseFile : boolean;
+
+    property CurrentFloor : integer read FCurrentFloor write SetCurrentFloor;
   public
     { Déclarations publiques }
   end;
@@ -87,6 +95,16 @@ var
 implementation
 
 {$R *.dfm}
+
+{*
+  Modifie l'étage courant
+  @param Value   Nouvel étage
+*}
+procedure TFormMain.SetCurrentFloor(Value : integer);
+begin
+  EditFloor.Value := Value;
+  PaintBoxMap.Invalidate;
+end;
 
 {*
   Ajoute un bouton de case à partir d'un modèle de case et le renvoie
@@ -326,13 +344,21 @@ begin
   if NewTab < 0 then
   begin
     CurrentMap := nil;
+
+    CurrentFloor := 0;
+    EditFloor.Enabled := False;
+
     PaintBoxMap.Width := 100;
     PaintBoxMap.Height := 100;
   end else
   begin
     CurrentMap := MasterFile.MapFiles[NewTab].Map;
+
+    EditFloor.MaxValue := CurrentMap.Dimensions.Z-1;
+    EditFloor.Enabled := CurrentMap.Dimensions.Z > 1;
     if CurrentFloor >= CurrentMap.Dimensions.Z then
       CurrentFloor := CurrentMap.Dimensions.Z-1;
+
     PaintBoxMap.Width  := (CurrentMap.Dimensions.X + 2*MinViewSize) * ScrewSize;
     PaintBoxMap.Height := (CurrentMap.Dimensions.Y + 2*MinViewSize) * ScrewSize;
   end;
@@ -387,6 +413,7 @@ begin
       LineTo((CurrentMap.ZoneWidth * X + 1) * ScrewSize,
         (Bottom+2) * ScrewSize);
     end;
+
     for Y := TopZone to BottomZone do
     begin
       MoveTo(Left * ScrewSize, (CurrentMap.ZoneHeight * Y + 1) * ScrewSize);
@@ -396,6 +423,12 @@ begin
 
     Pen.Width := 1;
   end;
+end;
+
+procedure TFormMain.EditFloorChange(Sender: TObject);
+begin
+  FCurrentFloor := EditFloor.Value;
+  PaintBoxMap.Invalidate;
 end;
 
 end.
