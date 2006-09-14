@@ -111,20 +111,20 @@ procedure RegisterComponents(Master : TMaster;
 
   procedure RegSingle(Component : TComponentID);
   begin
-    RegisterSingleComponentProc(Master.Component[Component]);
+    RegisterSingleComponentProc(Master.ScrewComponent[Component]);
   end;
 
   procedure RegSet(Template : TComponentID;
-    Components : array of TFunLabyComponent;
+    Components : array of TScrewComponent;
     const DialogTitle, DialogPrompt : string);
   begin
-    RegisterComponentSetProc(Master.Component[Template],
+    RegisterComponentSetProc(Master.ScrewComponent[Template],
       Components, DialogTitle, DialogPrompt);
   end;
 
 var I : integer;
-    Transporters : array[0..45] of TFunLabyComponent;
-    Boats : array[1..10] of TFunLabyComponent;
+    Transporters : array[0..45] of TScrewComponent;
+    Boats : array[1..10] of TScrewComponent;
 begin
   // Terrains
 
@@ -142,13 +142,13 @@ begin
   RegSingle(idWestArrow);
   RegSingle(idCrossroads);
 
-  Transporters[0] := Master.Component[idInactiveTransporter];
+  Transporters[0] := Master.ScrewComponent[idInactiveTransporter];
   for I := 1 to 15 do
-    Transporters[I] := Master.Component[Format(idTransporterNext, [I])];
+    Transporters[I] := Master.ScrewComponent[Format(idTransporterNext, [I])];
   for I := 16 to 30 do
-    Transporters[I] := Master.Component[Format(idTransporterPrev, [I])];
+    Transporters[I] := Master.ScrewComponent[Format(idTransporterPrev, [I])];
   for I := 31 to 45 do
-    Transporters[I] := Master.Component[Format(idTransporterRandom, [I])];
+    Transporters[I] := Master.ScrewComponent[Format(idTransporterRandom, [I])];
   RegSet(idTransporterTemplate, Transporters,
     sTransporterTitle, sTransporterPrompt);
 
@@ -176,7 +176,7 @@ begin
   // Cases
 
   for I := 1 to 10 do
-    Boats[I] := Master.Component[Format(idBoatScrew, [I])];
+    Boats[I] := Master.ScrewComponent[Format(idBoatScrew, [I])];
   RegSet(idBoatScrewTemplate, Boats, sBoatTitle, sBoatPrompt);
 end;
 

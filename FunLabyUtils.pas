@@ -51,7 +51,7 @@ type
   /// Générée si un composant recherché n'est pas trouvé
   EComponentNotFound = class(Exception);
 
-  TFunLabyComponent = class;
+  TScrewComponent = class;
   TPlayer = class;
   TMap = class;
   TMaster = class;
@@ -61,7 +61,7 @@ type
     @param Component   Le composant à enregistrer
   *}
   TRegisterSingleComponentProc = procedure(
-    Component : TFunLabyComponent) of object; stdcall;
+    Component : TScrewComponent) of object; stdcall;
 
   {*
     Type de méthode call-back pour l'enregistrement d'un ensemble de composants
@@ -70,8 +70,8 @@ type
     @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
     @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
   *}
-  TRegisterComponentSetProc = procedure(Template : TFunLabyComponent;
-    Components : array of TFunLabyComponent;
+  TRegisterComponentSetProc = procedure(Template : TScrewComponent;
+    Components : array of TScrewComponent;
     const DialogTitle, DialogPrompt : string) of object; stdcall;
 
   {*
@@ -220,11 +220,17 @@ type
   end;
 
   {*
+    Classe de base pour les composants de case
+  *}
+  TScrewComponent = class(TVisualComponent)
+  end;
+
+  {*
     Classe de base pour les terrains
     TField est la classe de base pour la création de terrains. Les terrains
     sont la première composante d'une case.
   *}
-  TField = class(TVisualComponent)
+  TField = class(TScrewComponent)
   private
     FDelegateDrawTo : TField; /// Terrain délégué pour l'affichage
   protected
@@ -250,7 +256,7 @@ type
     TEffect est la classe de base pour la création d'effets de case. Les effets
     sont la deuxième composante d'une case.
   *}
-  TEffect = class(TVisualComponent)
+  TEffect = class(TScrewComponent)
   public
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); virtual;
@@ -263,7 +269,7 @@ type
     TObstacle est la classe de base pour la création d'obstacles. Les obstacles
     sont la troisième composante d'une case.
   *}
-  TObstacle = class(TVisualComponent)
+  TObstacle = class(TScrewComponent)
   public
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
@@ -275,7 +281,7 @@ type
     TScrew représente une case du jeu. Une case possède deux parties : le
     terrain et l'effet.
   *}
-  TScrew = class(TVisualComponent)
+  TScrew = class(TScrewComponent)
   private
     FField : TField;       /// Terrain
     FEffect : TEffect;     /// Effet
@@ -506,6 +512,8 @@ type
     FTerminated : boolean;         /// Indique si la partie est terminée
 
     function GetComponent(const ID : TComponentID) : TFunLabyComponent;
+    function GetScrewComponent(const ID : TComponentID) : TScrewComponent;
+
     function GetPlugin   (const ID : TComponentID) : TPlugin;
     function GetObjectDef(const ID : TComponentID) : TObjectDef;
     function GetField    (const ID : TComponentID) : TField;
@@ -546,6 +554,8 @@ type
 
     property Component[const ID : TComponentID] : TFunLabyComponent
       read GetComponent;
+    property ScrewComponent[const ID : TComponentID] : TScrewComponent
+      read GetScrewComponent;
     property Plugin   [const ID : TComponentID] : TPlugin    read GetPlugin;
     property ObjectDef[const ID : TComponentID] : TObjectDef read GetObjectDef;
     property Field    [const ID : TComponentID] : TField     read GetField;
@@ -1844,6 +1854,17 @@ begin
     Result := TFunLabyComponent(FComponents.Objects[Index])
   else
     raise EComponentNotFound.CreateFmt(sComponentNotFound, [ID]);
+end;
+
+{*
+  Tableau des composants de case indexé par leur ID
+  @param ID   ID du composant à trouver
+  @return Le composant dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucun composant ne correspond à l'ID spécifié
+*}
+function TMaster.GetScrewComponent(const ID : TComponentID) : TScrewComponent;
+begin
+  Result := Component[ID] as TScrewComponent
 end;
 
 {*
