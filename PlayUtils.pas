@@ -464,6 +464,9 @@ var Map : TMap;
     OrigX, OrigY : integer;
     X, Y, Z, I : integer;
 begin
+  // Mettre à jour le tick count de la partie avant de dessiner
+  Master.UpdateTickCount;
+
   // Simplifier et accélérer les accès aux informations
   Map := Player.Map;
   Size := GetSize;

@@ -508,7 +508,8 @@ type
     FMaps : TObjectList;           /// Liste des cartes
     FPlayers : TObjectList;        /// Liste des joueurs
 
-    FBeginTickCount : Cardinal;    /// TickCount au lancement
+    FBeginTickCount : Cardinal;    /// Tick count système au lancement
+    FTickCount : Cardinal;         /// Tick count de la partie
     FTerminated : boolean;         /// Indique si la partie est terminée
 
     function GetComponent(const ID : TComponentID) : TFunLabyComponent;
@@ -540,8 +541,6 @@ type
     function GetPlayerCount : integer;
     function GetPlayers(Index : integer) : TPlayer;
 
-    function GetTickCount : Cardinal;
-
     procedure AddComponent(Component : TFunLabyComponent);
     procedure RemoveComponent(Component : TFunLabyComponent);
 
@@ -549,6 +548,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+
+    procedure UpdateTickCount;
 
     property ImagesMaster : TImagesMaster read FImagesMaster;
 
@@ -582,7 +583,7 @@ type
     property PlayerCount : integer read GetPlayerCount;
     property Players[index : integer] : TPlayer read GetPlayers;
 
-    property TickCount : Cardinal read GetTickCount;
+    property TickCount : Cardinal read FTickCount;
     property Terminated : boolean read FTerminated;
   end;
 
@@ -2168,14 +2169,6 @@ begin
 end;
 
 {*
-  Tick count de la partie
-*}
-function TMaster.GetTickCount : Cardinal;
-begin
-  Result := Windows.GetTickCount - FBeginTickCount;
-end;
-
-{*
   Ajoute un composant
   @param Component   Le composant à ajouter
 *}
@@ -2224,6 +2217,14 @@ end;
 procedure TMaster.Terminate;
 begin
   FTerminated := True;
+end;
+
+{*
+  Met à jour le tick count de la partie
+*}
+procedure TMaster.UpdateTickCount;
+begin
+  FTickCount := GetTickCount - FBeginTickCount;
 end;
 
 initialization
