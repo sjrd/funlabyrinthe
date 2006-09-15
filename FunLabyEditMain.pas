@@ -81,6 +81,7 @@ type
     StaticEffect: TStaticText;
     StaticObstacle: TStaticText;
     ActionFileProperties: TAction;
+    SaveMapDialog: TSaveDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -387,23 +388,46 @@ end;
   @return True si l'enregistrement a bien été effectué, False sinon
 *}
 function TFormMain.SaveFile(FileName : TFileName = '') : boolean;
+var DirName : TFileName;
+    I : integer;
+    MapFile : TMapFile;
+    MapFileName : TFileName;
+    MapHRef : string;
 begin
+  Result := False;
+
   if FileName = '' then
   begin
-    if SaveDialog.Execute then
+    if not SaveDialog.Execute then exit;
+    OpenDialog.FileName := SaveDialog.FileName;
+    FileName := SaveDialog.FileName;
+  end;
+  DirName := ExtractFilePath(FileName);
+
+  for I := 0 to MasterFile.MapFileCount-1 do
+  begin
+    MapFile := MasterFile.MapFiles[I];
+    MapFileName := MapFile.FileName;
+
+    if MapFileName = '' then
     begin
-      OpenDialog.FileName := SaveDialog.FileName;
-      FileName := SaveDialog.FileName;
-    end else
-    begin
-      Result := False;
-      exit;
+      SaveMapDialog.FileName := MapFile.MapID;
+      if not SaveMapDialog.Execute then exit;
+      MapFileName := SaveMapDialog.FileName;
     end;
+
+    if AnsiSameText(Copy(MapFileName, 1, Length(DirName)), DirName) then
+      MapHRef := Copy(MapFileName, Length(DirName)+1, Length(MapFileName)) else
+    if AnsiSameText(Copy(MapFileName, 1, Length(fMapsDir)), fMapsDir) then
+      MapHRef := Copy(MapFileName, Length(fMapsDir)+1, Length(MapFileName)) else
+    MapHRef := MapFileName;
+
+    MapFile.Save(MapHRef, MapFileName);
   end;
 
-  ShowDialog(sError, sFeatureIsNotImplementedYet, dtError);
-  Result := False;
-  { TODO 1 : Enregistrer le fichier }
+  MasterFile.Save(FileName);
+  Result := True;
+  Modified := False;
 end;
 
 {*

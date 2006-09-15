@@ -876,4 +876,12 @@ object FormMain: TFormMain
     Left = 280
     Top = 216
   end
+  object SaveMapDialog: TSaveDialog
+    DefaultExt = 'flm'
+    Filter = 'Cartes FunLabyrinthe (*.flm)|*.flm'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
+    Title = 'Enregistrer la carte'
+    Left = 312
+    Top = 216
+  end
 end
