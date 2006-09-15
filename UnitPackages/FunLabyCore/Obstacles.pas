@@ -10,7 +10,7 @@ unit Obstacles;
 interface
 
 uses
-  Windows, SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, Common, Fields;
+  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, Common, Fields;
 
 resourcestring
   sSilverBlock = 'Bloc en argent'; /// Nom du bloc en argent
@@ -67,6 +67,9 @@ type
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
+
+    procedure Draw(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0); override;
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
@@ -182,6 +185,28 @@ constructor TSecretWay.Create(AMaster : TMaster; const AID : TComponentID;
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fWall);
+end;
+
+{*
+  Dessine le passage secret sur le canevas indiqué
+  @param Canvas   Canevas sur lequel dessiner le terrain
+  @param X        Coordonnée X du point à partir duquel dessiner le terrain
+  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+*}
+procedure TSecretWay.Draw(Canvas : TCanvas; X : integer = 0;
+  Y : integer = 0);
+begin
+  inherited;
+
+  if Master.Editing then with Canvas do
+  begin
+    Brush.Color := clWhite;
+    Font.Color := clBlack;
+    Font.Size := 12;
+    Font.Style := [fsBold];
+    Font.Name := 'Courier'; {don't localize}
+    TextOut(X+10, Y+8, '!'); {don't localize}
+  end;
 end;
 
 {*

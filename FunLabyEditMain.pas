@@ -434,9 +434,23 @@ begin
 end;
 
 procedure TFormMain.CenterToPlayerPosition(Player : TPlayer);
+var TabIndex : integer;
+    X, Y : integer;
 begin
-  ShowDialog(sError, sFeatureIsNotImplementedYet, dtError);
-  { TODO 1 : Centrer sur la position du joueur }
+  TabIndex := Master.MapCount-1;
+  while TabIndex >= 0 do
+    if Master.Maps[TabIndex] = Player.Map then Break else dec(TabIndex);
+  MapTabSet.TabIndex := TabIndex;
+
+  X := Player.Position.X * ScrewSize + ScrewSize div 2;
+  Y := Player.Position.Y * ScrewSize + ScrewSize div 2;
+  CurrentFloor := Player.Position.Z;
+
+  with ScrollBoxMap do
+  begin
+    HorzScrollBar.Position := X - ClientWidth  div 2;
+    VertScrollBar.Position := Y - ClientHeight div 2;
+  end;
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
@@ -569,7 +583,7 @@ begin
   // Dessin des joueurs
   for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
   begin
-    if Position.Z = CurrentFloor then
+    if (Map = CurrentMap) and (Position.Z = CurrentFloor) then
     begin
       Draw(PaintBoxMap.Canvas, (MinViewSize+Position.X) * ScrewSize,
         (MinViewSize+Position.Y) * ScrewSize);

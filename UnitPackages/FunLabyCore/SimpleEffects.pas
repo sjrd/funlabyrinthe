@@ -397,9 +397,9 @@ begin
   if Master.Editing then
   begin
     case FKind of
-      tkNext     : DrawNumber(Canvas, X, Y, Number, clRed);
-      tkPrevious : DrawNumber(Canvas, X, Y, Number, clGreen);
-      tkRandom   : DrawNumber(Canvas, X, Y, Number, clBlue);
+      tkNext     : DrawScrewNumber(Canvas, X, Y, Number, clRed);
+      tkPrevious : DrawScrewNumber(Canvas, X, Y, Number, clGreen);
+      tkRandom   : DrawScrewNumber(Canvas, X, Y, Number, clBlue);
     end;
   end;
 end;

@@ -499,7 +499,7 @@ begin
 
   // Dessin des joueurs
   for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
-    if Position.Z = Z then
+    if (Map = Player.Map) and (Position.Z = Z) then
       Draw(Canvas, (Position.X-OrigX)*ScrewSize, (Position.Y-OrigY)*ScrewSize);
 end;
 

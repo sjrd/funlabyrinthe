@@ -49,20 +49,20 @@ type
     property Before : TBitmap read FBefore;
   end;
 
-procedure DrawNumber(Canvas : TCanvas; X, Y, Number : integer;
+procedure DrawScrewNumber(Canvas : TCanvas; X, Y, Number : integer;
   FontColor : TColor = clBlack);
 
 implementation
 
 {*
-  Dessine un numéro sur un canevas
+  Dessine un numéro sur un canevas de case
   @param Canvas      Canevas sur lequel dessiner le numéro
   @param X           Bord gauche de la case
   @param Y           Bord supérieur de la case
   @param Number      Numéro à écrire
   @param FontColor   Couleur du texte
 *}
-procedure DrawNumber(Canvas : TCanvas; X, Y, Number : integer;
+procedure DrawScrewNumber(Canvas : TCanvas; X, Y, Number : integer;
   FontColor : TColor = clBlack);
 begin
   with Canvas do

@@ -255,7 +255,7 @@ begin
   inherited;
 
   if Master.Editing and (Number <> 0) then
-    DrawNumber(Canvas, X, Y, Number);
+    DrawScrewNumber(Canvas, X, Y, Number);
 end;
 
 {*
