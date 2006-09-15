@@ -614,6 +614,7 @@ var {don't localize}
 
 function PointBehind(const Src : T3DPoint; Dir : TDirection) : T3DPoint;
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
+procedure EmptyRect(Canvas : TCanvas; Rect : TRect);
 procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 
 implementation
@@ -649,6 +650,22 @@ begin
   Result.Bottom := Y+ScrewSize;
 end;
 
+{*
+  Efface un rectangle sur un canevas (avec du transparent)
+  @param Canvas   Canevas à traiter
+  @param Rect     Rectangle à effacer
+*}
+procedure EmptyRect(Canvas : TCanvas; Rect : TRect);
+begin
+  with Canvas do
+  begin
+    Brush.Color := clTransparent;
+    Brush.Style := bsSolid;
+    Pen.Color := clTransparent;
+    Pen.Style := psSolid;
+    Rectangle(Rect);
+  end;
+end;
 
 {*
   Efface un rectangle de case sur un canevas (avec du transparent)
@@ -658,14 +675,7 @@ end;
 *}
 procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
-  with Canvas do
-  begin
-    Brush.Color := clTransparent;
-    Brush.Style := bsSolid;
-    Pen.Color := clTransparent;
-    Pen.Style := psSolid;
-    Rectangle(ScrewRect(X, Y));
-  end;
+  EmptyRect(Canvas, ScrewRect(X, Y));
 end;
 
 ////////////////////////////

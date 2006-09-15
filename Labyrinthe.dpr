@@ -6,7 +6,8 @@ uses
   ScUtils,
   LabyrintheMain in 'LabyrintheMain.pas' {FormMain},
   PropertiesDialog in 'PropertiesDialog.pas' {FormProperties},
-  PlayUtils in 'PlayUtils.pas';
+  PlayUtils in 'PlayUtils.pas',
+  PlayerObjects in 'PlayerObjects.pas' {FormObjects};
 
 {$R *.RES}
 

@@ -7,7 +7,7 @@ uses
   Dialogs, ActnList, XPStyleActnCtrls, ActnMan, Menus, ImgList, StdCtrls,
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
   StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, NumberDialog,
-  PlayerPlugins, PlayerAttributes;
+  PlayerPlugins, PlayerAttributes, PlayerObjects;
 
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
@@ -679,7 +679,7 @@ begin
       if TFormAttributes.ManageAttributes(Player) then
         Modified := True;
     end;
-    opShowObjects : ;
+    opShowObjects : TFormObjects.ShowObjects(Player);
   end;
 end;
 

@@ -7,7 +7,7 @@ uses
   Dialogs, StdCtrls, Grids, ValEdit, ScExtra, FunLabyUtils;
 
 resourcestring
-  sWrongKeyFormat = 'Les noms d''attributs ne doivent être constitués que de'+
+  sWrongKeyFormat = 'Les noms d''attributs ne doivent être constitués que de '+
     'lettres non accentuées et de chiffres';
 
 type

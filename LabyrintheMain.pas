@@ -9,13 +9,13 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, NumberDialog,
-  SdDialogs, ShellAPI, FunLabyUtils, PlayUtils, FilesUtils;
+  SdDialogs, ShellAPI, FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects;
 
 resourcestring
   sViewSize = 'Taille de la vue';
   sViewSizePrompt = 'Taille de la vue :';
 
-  sExitConfirmTitle = 'Quitter FunLabyrinthe';
+  sExitConfirmTitle = 'Enregistrer la partie';
   sExitConfirm = 'Voulez-vous enregistrer la partie en cours ?';
 
 type
@@ -334,7 +334,7 @@ end;
 
 procedure TFormMain.MenuPlayerPropertiesClick(Sender: TObject);
 begin
-  FormProperties.ShowPlayerProps(View.Player);
+  TFormObjects.ShowObjects(View.Player);
 end;
 
 procedure TFormMain.MenuTipsClick(Sender: TObject);
