@@ -494,13 +494,6 @@ end;
   @throws EFileError : Un fichier à charger n'existe pas ou n'est pas valide
 *}
 procedure TMasterFile.Load(Document : IXMLDOMDocument);
-  function ExtractContents(Node : IXMLDOMNode) : string;
-  var I : integer;
-  begin
-    Result := '';
-    for I := 0 to Node.childNodes.length-1 do
-      Result := Result+Node.childNodes.item[I].xml;
-  end;
 var Params : TStrings;
     I, J, MaxViewSize : integer;
     ID, FileType, HRef, Name, MapID : string;
@@ -528,7 +521,7 @@ begin
     // Infos standart sur le labyrinthe
     FTitle := selectSingleNode('./title').text;
     if FTitle = '' then TitleFromFileName;
-    FDescription := ExtractContents(selectSingleNode('./description'));
+    FDescription := selectSingleNode('./description').text;
     FDifficulty := selectSingleNode('./difficulty').text;
     with selectSingleNode('./author') as IXMLDOMElement do
     begin
