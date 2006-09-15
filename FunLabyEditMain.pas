@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ActnList, XPStyleActnCtrls, ActnMan, Menus, ImgList, StdCtrls,
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
-  StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, NumberDialog;
+  StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, NumberDialog,
+  PlayerPlugins;
 
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
@@ -17,7 +18,7 @@ resourcestring
   sShowAttributes = 'Attributs...';
   sShowObjects = 'Objets...';
 
-  sConfirmExitTitle = 'Quitter FunLabyEdit';
+  sConfirmExitTitle = 'Enregistrer le fichier';
   sConfirmExit = 'Le fichier a été modifé. Voulez-vous l''enregistrer ?';
 
   sReplaceOutsideTitle = 'Remplacer l''extérieur de la carte';
@@ -457,6 +458,10 @@ begin
   MasterFile := nil;
 end;
 
+{*
+  Centre l'affichage sur le joueur
+  @param Player   Joueur à visionner
+*}
 procedure TFormMain.CenterToPlayerPosition(Player : TPlayer);
 var TabIndex : integer;
     X, Y : integer;
@@ -661,7 +666,14 @@ begin
   Player := Master.Players[integer(Button.Data) shr opShift];
   case integer(Button.Data) and opMask of
     opCenterToPosition : CenterToPlayerPosition(Player);
-    opShowPlugins : ;
+    opShowPlugins :
+    begin
+      if TFormPlugins.ManagePlugins(Player) then
+      begin
+        Modified := True;
+        PaintBoxMap.Invalidate;
+      end;
+    end;
     opShowAttributes : ;
     opShowObjects : ;
   end;

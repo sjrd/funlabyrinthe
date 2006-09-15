@@ -1580,7 +1580,7 @@ var I : integer;
 begin
   PluginIDs.Clear;
   for I := 0 to PluginCount-1 do
-    PluginIDs.Add(Plugins[I].ID);
+    PluginIDs.AddObject(Plugins[I].ID, Plugins[I]);
 end;
 
 {*
