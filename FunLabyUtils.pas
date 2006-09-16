@@ -1201,6 +1201,7 @@ procedure TObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
+  Cancel := True;
 end;
 
 /////////////////////

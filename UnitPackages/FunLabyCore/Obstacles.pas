@@ -113,6 +113,8 @@ procedure TSilverBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
+  inherited;
+
   if KeyPressed then with Player do
   begin
     if CanYou(actOpenSilverLock) then
@@ -120,8 +122,6 @@ begin
     else
       ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
   end;
-
-  Cancel := True;
 end;
 
 ///////////////////////////
@@ -159,6 +159,8 @@ procedure TGoldenBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
+  inherited;
+
   if KeyPressed then with Player do
   begin
     if CanYou(actOpenGoldenLock) then
@@ -166,8 +168,6 @@ begin
     else
       ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
   end;
-
-  Cancel := True;
 end;
 
 /////////////////////////
@@ -227,10 +227,10 @@ procedure TSecretWay.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
+  inherited;
+
   if KeyPressed then
     Player.Map[Pos] := Player.Map[Pos].ChangeObstacle;
-
-  Cancel := True;
 end;
 
 end.
