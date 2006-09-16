@@ -172,6 +172,12 @@ type
       MapFileClass : TMapFileClass);
     class function FindMapFileClass(const MIMEType : string) : TMapFileClass;
 
+    function AddUnitFile(const MIMEType, HRef : string;
+      Params : TStrings = nil) : TUnitFile;
+    function AddMapFile(const ID : TComponentID;
+      const MIMEType, HRef : string;
+      MaxViewSize : integer = MinViewSize) : TMapFile;
+
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
       RegisterComponentSetProc : TRegisterComponentSetProc);
@@ -489,8 +495,6 @@ var Params : TStrings;
     ID, FileType, HRef, Name, MapID : string;
     Position : T3DPoint;
     Player : TPlayer;
-    FileName : TFileName;
-    MapFile : TMapFile;
 begin
   { Don't localize strings in this method }
 
@@ -527,7 +531,6 @@ begin
         begin
           FileType := getAttribute('type');
           HRef := getAttribute('href');
-          FileName := ResolveHRef(HRef, fUnitsDir);
 
           Params.Clear;
           with selectNodes('./param') do
@@ -536,8 +539,7 @@ begin
               Params.Values[getAttribute('name')] := getAttribute('value');
           end;
 
-          FindUnitFileClass(FileType).Create(
-            Self, HRef, FileName, FileType, Params);
+          AddUnitFile(FileType, HRef, Params);
         end;
       end;
     finally
@@ -552,16 +554,13 @@ begin
         ID := getAttribute('id');
         FileType := getAttribute('type');
         HRef := getAttribute('href');
-        FileName := ResolveHRef(HRef, fMapsDir);
 
         if VarIsNull(getAttribute('maxviewsize')) then
           MaxViewSize := MinViewSize
         else
           MaxViewSize := getAttribute('maxviewsize');
 
-        MapFile := FindMapFileClass(FileType).Create(
-          Self, HRef, FileName, FileType, ID);
-        MapFile.Map.MaxViewSize := MaxViewSize;
+        AddMapFile(ID, FileType, HRef, MaxViewSize);
       end;
     end;
 
@@ -729,6 +728,47 @@ begin
     raise EFileError.CreateFmt(sUnknownMapType, [MIMEType])
   else
     Result := TMapFileClass(MapFileClasses.Objects[Index]);
+end;
+
+{*
+  Ajoute un fichier unité
+  @param MIMEType   Type MIME
+  @param HRef       Adresse du fichier
+  @param Params     Paramètres passés au fichier, ou nil pour aucun
+  @return Le fichier unité créé et chargé
+*}
+function TMasterFile.AddUnitFile(const MIMEType, HRef : string;
+  Params : TStrings = nil) : TUnitFile;
+var OwnParams : boolean;
+begin
+  if Assigned(Params) then OwnParams := False else
+  begin
+    OwnParams := True;
+    Params := TStringList.Create;
+  end;
+  try
+    Result := FindUnitFileClass(MIMEType).Create(Self, HRef,
+      ResolveHRef(HRef, fUnitsDir), MIMEType, Params);
+  finally
+    if OwnParams then Params.Free;
+  end;
+end;
+
+{*
+  Ajoute un fichier carte
+  @param ID            ID de la carte
+  @param MIMEType      Type MIME
+  @param HRef          Adresse du fichier
+  @param MaxViewSize   Taille maximale d'une vue pour cette carte
+  @return Le fichier carte créé et chargé
+*}
+function TMasterFile.AddMapFile(const ID : TComponentID;
+  const MIMEType, HRef : string;
+  MaxViewSize : integer = MinViewSize) : TMapFile;
+begin
+  Result := FindMapFileClass(MIMEType).Create(Self, HRef,
+    ResolveHRef(HRef, fMapsDir), MIMEType, ID);
+  Result.Map.MaxViewSize := MaxViewSize;
 end;
 
 {*

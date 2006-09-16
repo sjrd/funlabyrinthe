@@ -34,6 +34,9 @@ resourcestring
   sReplaceOutsideTitle = 'Remplacer l''extérieur de la carte';
   sReplaceOutside = 'Voulez-vous vraiment modifier l''extérieur de la carte ?';
 
+  sRemoveMapTitle = 'Retirer une carte';
+  sRemoveMap = 'Êtes-vous certain de vouloir retirer cette carte du projet ?';
+
 const
   opMask = $07;
   opShift = 3;
@@ -93,6 +96,8 @@ type
     StaticObstacle: TStaticText;
     ActionFileProperties: TAction;
     SaveMapDialog: TSaveDialog;
+    ActionAddMap: TAction;
+    ActionRemoveMap: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -115,6 +120,8 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure PaintBoxMapMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
+    procedure ActionAddMapExecute(Sender: TObject);
+    procedure ActionRemoveMapExecute(Sender: TObject);
   private
     { Déclarations privées }
     ScrewBmp : TBitmap;           /// Bitmap à tout faire de la taille d'une case
@@ -153,6 +160,11 @@ type
   public
     { Déclarations publiques }
   end;
+
+const {don't localize}
+  FunLabyCoreMIMEType = 'application/bpl';
+  FunLabyCoreHRef = 'FunLabyCore.bpl';
+  idPlayer = 'Player';
 
 var
   FormMain: TFormMain;
@@ -334,6 +346,9 @@ begin
   ActionCloseFile.Enabled := True;
   ActionFileProperties.Enabled := True;
 
+  MainMenuBar.ActionClient.Items[1].Visible := True; // menu des cartes
+  ActionAddMap.Enabled := True;
+
   // Recensement des composants d'édition
   MasterFile.RegisterComponents(RegisterSingleComponent, RegisterComponentSet);
 
@@ -383,6 +398,9 @@ begin
   ActionCloseFile.Enabled := False;
   ActionFileProperties.Enabled := False;
 
+  MainMenuBar.ActionClient.Items[1].Visible := False; // menu des cartes
+  ActionAddMap.Enabled := False;
+
   // Autres variables
   Component := nil;
   Master := nil;
@@ -396,7 +414,8 @@ begin
   MasterFile := TMasterFile.CreateNew;
   if TFormFileProperties.ManageProperties(MasterFile) then
   begin
-    TPlayer.Create(MasterFile.Master, 'Player', sDefaultPlayerName,
+    MasterFile.AddUnitFile(FunLabyCoreMIMEType, FunLabyCoreHRef);
+    TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName,
       nil, Point3D(0, 0, 0));
     LoadFile;
   end else
@@ -616,6 +635,8 @@ begin
 
     PaintBoxMap.Width := 100;
     PaintBoxMap.Height := 100;
+
+    ActionRemoveMap.Enabled := False;
   end else
   begin
     CurrentMap := MasterFile.MapFiles[NewTab].Map;
@@ -627,6 +648,8 @@ begin
 
     PaintBoxMap.Width  := (CurrentMap.Dimensions.X + 2*MinViewSize) * ScrewSize;
     PaintBoxMap.Height := (CurrentMap.Dimensions.Y + 2*MinViewSize) * ScrewSize;
+
+    ActionRemoveMap.Enabled := True;
   end;
   PaintBoxMap.Invalidate;
 end;
@@ -735,7 +758,7 @@ procedure TFormMain.PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
 var Position : T3DPoint;
     NewID : TComponentID;
 begin
-  if (Button <> mbLeft) or (Component = nil) then exit;
+  if (Button <> mbLeft) or (CurrentMap = nil) or (Component = nil) then exit;
 
   Position := Point3D(X div ScrewSize - 1, Y div ScrewSize - 1, CurrentFloor);
 
@@ -784,6 +807,40 @@ begin
     if Obstacle = nil then StaticObstacle.Caption := '' else
       StaticObstacle.Caption := Obstacle.Name;
   end;
+end;
+
+procedure TFormMain.ActionAddMapExecute(Sender: TObject);
+begin
+  ShowDialog(sError, sFeatureIsNotImplementedYet, dtError);
+  { TODO 1 : Ajouter une carte }
+end;
+
+procedure TFormMain.ActionRemoveMapExecute(Sender: TObject);
+var Map : TMap;
+    I, Index : integer;
+begin
+  Map := CurrentMap;
+  if Map = nil then exit;
+
+  if ShowDialog(sRemoveMapTitle, sRemoveMap,
+    dtConfirmation, dbOKCancel, 2) <> drOK then exit;
+
+  for I := 0 to Master.PlayerCount-1 do
+  begin
+    if Master.Players[I].Map = Map then
+      Master.Players[I].ChangeMap(nil, Point3D(0, 0, 0));
+  end;
+
+  Index := MapTabSet.TabIndex;
+  if (Index = 0) and (MapTabSet.Tabs.Count > 1) then
+    MapTabSet.TabIndex := 1
+  else
+    MapTabSet.TabIndex := Index - 1;
+
+  MapTabSet.Tabs.Delete(Index);
+  Map.Free;
+
+  Modified := True;
 end;
 
 end.
