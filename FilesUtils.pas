@@ -151,7 +151,6 @@ type
 
     procedure InvalidFormat;
 
-    procedure TitleFromFileName;
     function ResolveHRef(const HRef, DefaultDir : string) : TFileName;
     procedure Load(Document : IXMLDOMDocument);
     procedure TestOpeningValidity;
@@ -460,19 +459,6 @@ begin
 end;
 
 {*
-  Donne au labyrinthe un titre par défaut à partir du nom du fichier
-*}
-procedure TMasterFile.TitleFromFileName;
-var I : integer;
-begin
-  FTitle := ExtractFileName(FFileName);
-  I := Length(FTitle);
-  while (I > 0) and (FTitle[I] <> '.') do dec(I);
-  if I > 0 then
-    SetLength(FTitle, I);
-end;
-
-{*
   Résoud l'adresse HRef en cherchant dans les dossiers correspondants
   @param HRef         Adresse HRef du fichier
   @param DefaultDir   Dossier par défaut du type de fichier attendu
@@ -494,6 +480,10 @@ end;
   @throws EFileError : Un fichier à charger n'existe pas ou n'est pas valide
 *}
 procedure TMasterFile.Load(Document : IXMLDOMDocument);
+  function NullToEmptyStr(Value : Variant) : Variant;
+  begin
+    if VarIsNull(Value) then Result := '' else Result := Value;
+  end;
 var Params : TStrings;
     I, J, MaxViewSize : integer;
     ID, FileType, HRef, Name, MapID : string;
@@ -515,18 +505,17 @@ begin
       raise EFileError.CreateFmt(sVersionTooHigh, [FVersion]);
 
     // Attributs du fichier
-    FAllowEdit := getAttribute('allowedit') <> 'no';
-    FIsSaveguard := getAttribute('issaveguard') = 'yes';
+    FAllowEdit := NullToEmptyStr(getAttribute('allowedit')) <> 'no';
+    FIsSaveguard := NullToEmptyStr(getAttribute('issaveguard')) = 'yes';
 
     // Infos standart sur le labyrinthe
     FTitle := selectSingleNode('./title').text;
-    if FTitle = '' then TitleFromFileName;
-    FDescription := selectSingleNode('./description').text;
-    FDifficulty := selectSingleNode('./difficulty').text;
+    FDescription := NullToEmptyStr(selectSingleNode('./description').text);
+    FDifficulty := NullToEmptyStr(selectSingleNode('./difficulty').text);
     with selectSingleNode('./author') as IXMLDOMElement do
     begin
-      FAuthorID := StrToIntDef(getAttribute('id'), 0);
-      FAuthor := text;
+      FAuthorID := StrToIntDef(NullToEmptyStr(getAttribute('id')), 0);
+      FAuthor := NullToEmptyStr(text);
     end;
 
     // Unités utilisées
@@ -597,8 +586,7 @@ begin
 
         Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position);
 
-        if (not VarIsNull(getAttribute('lost'))) and
-           (getAttribute('lost') = 'yes') then
+        if NullToEmptyStr(getAttribute('lost')) = 'yes' then
           Player.Lose;
 
         with selectNodes('./attributes/attribute') do

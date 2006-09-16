@@ -12,6 +12,8 @@ uses
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
 
+  sDefaultPlayerName = 'Joueur';
+
   sPlayerPosition = 'Position : %s';
   sCenterToPosition = 'Centrer la vue sur ce joueur';
   sShowPlugins = 'Plug-in...';
@@ -20,6 +22,14 @@ resourcestring
 
   sConfirmExitTitle = 'Enregistrer le fichier';
   sConfirmExit = 'Le fichier a été modifé. Voulez-vous l''enregistrer ?';
+
+  sCantSave = 'Impossible d''enregistrer';
+  sCantSaveUnplacedPlayer =
+    'Impossible d''enregistrer car le joueur d''ID %s n''a pas été placé';
+
+  sCantCenterToPosition = 'Impossible de centrer le joueur';
+  sCantCenterToUnplacedPlayer =
+    'Impossible de centrer sur ce joueur car il n''a pas été placé';
 
   sReplaceOutsideTitle = 'Remplacer l''extérieur de la carte';
   sReplaceOutside = 'Voulez-vous vraiment modifier l''extérieur de la carte ?';
@@ -132,6 +142,7 @@ type
     procedure LoadFile;
     procedure UnloadFile;
 
+    procedure NewFile;
     procedure OpenFile(FileName : TFileName);
     function SaveFile(FileName : TFileName = '') : boolean;
     function CloseFile : boolean;
@@ -333,7 +344,8 @@ begin
   with MasterFile do for I := 0 to MapFileCount-1 do
     MapTabSet.Tabs.Add(MapFiles[I].MapID);
   CurrentFloor := 0;
-  MapTabSet.TabIndex := 0;
+  if MasterFile.MapFileCount > 0 then
+    MapTabSet.TabIndex := 0;
 end;
 
 {*
@@ -377,6 +389,24 @@ begin
 end;
 
 {*
+  Crée un nouveau fichier et le charge
+*}
+procedure TFormMain.NewFile;
+begin
+  MasterFile := TMasterFile.CreateNew;
+  if TFormFileProperties.ManageProperties(MasterFile) then
+  begin
+    TPlayer.Create(MasterFile.Master, 'Player', sDefaultPlayerName,
+      nil, Point3D(0, 0, 0));
+    LoadFile;
+  end else
+  begin
+    MasterFile.Free;
+    MasterFile := nil;
+  end;
+end;
+
+{*
   Ouvre un fichier et le charge
   @param FileName   Nom du fichier maître à charger
 *}
@@ -399,6 +429,15 @@ var DirName : TFileName;
     MapHRef : string;
 begin
   Result := False;
+
+  for I := 0 to Master.PlayerCount do with Master.Players[I] do
+  begin
+    if Map = nil then
+    begin
+      ShowDialog(sCantSave, Format(sCantSaveUnplacedPlayer, [ID]), dtError);
+      exit;
+    end;
+  end;
 
   if FileName = '' then
   begin
@@ -469,6 +508,12 @@ procedure TFormMain.CenterToPlayerPosition(Player : TPlayer);
 var TabIndex : integer;
     X, Y : integer;
 begin
+  if Player.Map = nil then
+  begin
+    ShowDialog(sCantCenterToPosition, sCantCenterToUnplacedPlayer, dtError);
+    exit;
+  end;
+
   TabIndex := Master.MapCount-1;
   while TabIndex >= 0 do
     if Master.Maps[TabIndex] = Player.Map then Break else dec(TabIndex);
@@ -514,8 +559,7 @@ end;
 
 procedure TFormMain.ActionNewFileExecute(Sender: TObject);
 begin
-  ShowDialog(sError, sFeatureIsNotImplementedYet, dtError);
-  { TODO 1 : Créer un nouveau fichier }
+  if CloseFile then NewFile;
 end;
 
 procedure TFormMain.ActionOpenFileExecute(Sender: TObject);
