@@ -867,16 +867,16 @@ object FormMain: TFormMain
     Top = 248
   end
   object OpenDialog: TOpenDialog
-    DefaultExt = 'flg'
-    Filter = 'Labyrinthe FunLabyrinthe (*.flg)|*.flg'
+    DefaultExt = 'flp'
+    Filter = 'Projet FunLabyrinthe (*.flp)|*.flp'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofNoReadOnlyReturn, ofEnableSizing]
     Title = 'Ouvrir un fichier existant'
     Left = 248
     Top = 216
   end
   object SaveDialog: TSaveDialog
-    DefaultExt = 'flg'
-    Filter = 'Labyrinthe FunLabyrinthe (*.flg)|*.flg'
+    DefaultExt = 'flp'
+    Filter = 'Projet FunLabyrinthe (*.flp)|*.flp'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
     Title = 'Enregistrer le fichier'
     Left = 280

@@ -144,8 +144,8 @@ object FormMain: TFormMain
     end
   end
   object NewGameDialog: TOpenDialog
-    DefaultExt = 'flg'
-    Filter = 'Labyrinthes (*.flg)|*.flg;*.url'
+    DefaultExt = 'flp'
+    Filter = 'Projet FunLabyrinthe (*.flp)|*.flp;*.url'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Title = 'Nouvelle partie'
     Left = 72
@@ -153,7 +153,7 @@ object FormMain: TFormMain
   end
   object SaveGameDialog: TSaveDialog
     DefaultExt = 'flg'
-    Filter = 'Labyrinthes (*.flg)|*.flg'
+    Filter = 'Projet FunLabyrinthe (*.flp)|*.flp'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Title = 'Enregistrer la partie'
     Left = 136
@@ -180,8 +180,8 @@ object FormMain: TFormMain
     Top = 120
   end
   object LoadGameDialog: TOpenDialog
-    DefaultExt = 'flg'
-    Filter = 'Labyrinthes (*.flg)|*.flg;*.url'
+    DefaultExt = 'flp'
+    Filter = 'Projet FunLabyrinthe (*.flp)|*.flp'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Title = 'Charger une partie'
     Left = 104
