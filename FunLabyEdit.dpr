@@ -6,7 +6,8 @@ uses
   FunLabyEditMain in 'FunLabyEditMain.pas' {FormMain},
   PlayerPlugins in 'PlayerPlugins.pas' {FormPlugins},
   PlayerAttributes in 'PlayerAttributes.pas' {FormAttributes},
-  PlayerObjects in 'PlayerObjects.pas' {FormObjects};
+  PlayerObjects in 'PlayerObjects.pas' {FormObjects},
+  FileProperties in 'FileProperties.pas' {FormFileProperties};
 
 {$R *.res}
 

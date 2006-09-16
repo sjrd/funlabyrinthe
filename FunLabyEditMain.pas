@@ -7,7 +7,7 @@ uses
   Dialogs, ActnList, XPStyleActnCtrls, ActnMan, Menus, ImgList, StdCtrls,
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
   StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, NumberDialog,
-  PlayerPlugins, PlayerAttributes, PlayerObjects;
+  PlayerPlugins, PlayerAttributes, PlayerObjects, FileProperties;
 
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
@@ -543,8 +543,8 @@ end;
 
 procedure TFormMain.ActionFilePropertiesExecute(Sender: TObject);
 begin
-  ShowDialog(sError, sFeatureIsNotImplementedYet, dtError);
-  { TODO 1 : Modifier les propriétés }
+  if TFormFileProperties.ManageProperties(MasterFile) then
+    Modified := True;
 end;
 
 procedure TFormMain.ActionExitExecute(Sender: TObject);
