@@ -107,21 +107,21 @@ type
       X, Y: Integer);
   private
     { Déclarations privées }
-    ScrewBmp : TBitmap;          /// Bitmap à tout faire de la taille d'une case
-    LastCompIndex : integer;     /// Dernier index de composant choisi
+    ScrewBmp : TBitmap;           /// Bitmap à tout faire de la taille d'une case
+    LastCompIndex : integer;      /// Dernier index de composant choisi
 
-    Modified : boolean;          /// Indique si le fichier a été modifié
-    MasterFile : TMasterFile;    /// Fichier maître
-    Master : TMaster;            /// Maître FunLabyrinthe
-    CurrentMap : TMap;           /// Carte courante
+    Modified : boolean;           /// Indique si le fichier a été modifié
+    MasterFile : TMasterFile;     /// Fichier maître
+    Master : TMaster;             /// Maître FunLabyrinthe
+    CurrentMap : TMap;            /// Carte courante
 
-    FCurrentFloor : integer;     /// Étage courant
+    FCurrentFloor : integer;      /// Étage courant
 
-    Component : TScrewComponent; /// Composant à placer
+    Component : TVisualComponent; /// Composant à placer
 
     procedure SetCurrentFloor(Value : integer);
 
-    function AddScrewButton(Template : TScrewComponent) : TButtonItem;
+    function AddScrewButton(Template : TVisualComponent) : TButtonItem;
     procedure RegisterSingleComponent(Component : TScrewComponent); stdcall;
     procedure RegisterComponentSet(Template : TScrewComponent;
       Components : array of TScrewComponent;
@@ -205,7 +205,7 @@ end;
   @param Template   Modèle de case, pour l'image et le hint du bouton
   @return Le bouton nouvellement créé
 *}
-function TFormMain.AddScrewButton(Template : TScrewComponent) : TButtonItem;
+function TFormMain.AddScrewButton(Template : TVisualComponent) : TButtonItem;
 var ImageIndex : integer;
     Category : TButtonCategory;
 begin
@@ -218,7 +218,8 @@ begin
   if Template is TField    then Category := ScrewsContainer.Categories[0] else
   if Template is TEffect   then Category := ScrewsContainer.Categories[1] else
   if Template is TObstacle then Category := ScrewsContainer.Categories[2] else
-  Category := ScrewsContainer.Categories[3];
+  if Template is TScrew    then Category := ScrewsContainer.Categories[3] else
+  Category := ScrewsContainer.Categories[4];
 
   // Ajout du bouton
   Result := Category.Items.Add;
@@ -263,6 +264,8 @@ begin
   for I := 0 to Master.PlayerCount-1 do
   begin
     Player := Master.Players[I];
+
+    AddScrewButton(Player).Data := Player;
 
     with PlayersContainer.Categories.Add do
     begin
@@ -692,22 +695,28 @@ begin
 
   Position := Point3D(X div ScrewSize - 1, Y div ScrewSize - 1, CurrentFloor);
 
-  NewID := Component.ID;
-  with CurrentMap[Position] do
+  if Component is TPlayer then
   begin
-    if Component is TField    then NewID := NewID+'--' else
-    if Component is TEffect   then NewID := Field.ID+'-'+NewID+'-' else
-    if Component is TObstacle then NewID := ChangeObstacle(NewID).ID;
-  end;
-
-  if CurrentMap.InMap(Position) then
-  begin
-    CurrentMap[Position] := Master.Screw[NewID];
+    TPlayer(Component).ChangeMap(CurrentMap, Position);
   end else
   begin
-    if ShowDialog(sReplaceOutsideTitle, sReplaceOutside,
-      dtConfirmation, dbOKCancel) <> drOK then exit;
-    CurrentMap.Outside[CurrentFloor] := Master.Screw[NewID];
+    NewID := Component.ID;
+    with CurrentMap[Position] do
+    begin
+      if Component is TField    then NewID := NewID+'--' else
+      if Component is TEffect   then NewID := Field.ID+'-'+NewID+'-' else
+      if Component is TObstacle then NewID := ChangeObstacle(NewID).ID;
+    end;
+
+    if CurrentMap.InMap(Position) then
+    begin
+      CurrentMap[Position] := Master.Screw[NewID];
+    end else
+    begin
+      if ShowDialog(sReplaceOutsideTitle, sReplaceOutside,
+        dtConfirmation, dbOKCancel) <> drOK then exit;
+      CurrentMap.Outside[CurrentFloor] := Master.Screw[NewID];
+    end;
   end;
 
   Modified := True;

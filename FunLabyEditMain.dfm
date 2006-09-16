@@ -113,6 +113,12 @@ object FormMain: TFormMain
         Color = 15252386
         Collapsed = False
         Items = <>
+      end
+      item
+        Caption = 'Joueurs'
+        Color = 15252386
+        Collapsed = False
+        Items = <>
       end>
     Color = clWhite
     RegularButtonColor = 15660791

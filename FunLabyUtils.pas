@@ -1782,7 +1782,9 @@ procedure TPlayer.ChangeMap(AMap : TMap; APosition : T3DPoint);
 begin
   FMap := AMap;
   FPosition := APosition;
-  Controller.MapChanged;
+
+  if Assigned(Controller) then
+    Controller.MapChanged;
 end;
 
 {*
