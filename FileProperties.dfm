@@ -94,8 +94,8 @@ object FormFileProperties: TFormFileProperties
     Height = 25
     Caption = 'OK'
     Default = True
-    ModalResult = 1
     TabOrder = 5
+    OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
     Left = 176

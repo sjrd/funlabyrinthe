@@ -4,7 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, FilesUtils;
+  Dialogs, StdCtrls, ScUtils, FilesUtils;
+
+resourcestring
+  sUnfilledTitleTitle = 'Titre non complété';
+  sUnfilledTitle = 'Vous devez indiquer le titre';
 
 type
   TFormFileProperties = class(TForm)
@@ -20,6 +24,7 @@ type
     EditAuthorID: TEdit;
     ButtonOK: TButton;
     ButtonCancel: TButton;
+    procedure ButtonOKClick(Sender: TObject);
     procedure EditAuthorIDExit(Sender: TObject);
   private
     { Déclarations privées }
@@ -57,7 +62,7 @@ begin
       MasterFile.Description := EditDescription.Text;
       MasterFile.Difficulty := EditDifficulty.Text;
       MasterFile.Author := EditAuthor.Text;
-      MasterFile.AuthorID := StrToIntDef(EditAuthorID.Text, 0);
+      MasterFile.AuthorID := StrToInt(EditAuthorID.Text);
 
       Result := True;
     end;
@@ -69,6 +74,15 @@ end;
 procedure TFormFileProperties.EditAuthorIDExit(Sender: TObject);
 begin
   EditAuthorID.Text := IntToStr(StrToIntDef(EditAuthorID.Text, 0));
+end;
+
+procedure TFormFileProperties.ButtonOKClick(Sender: TObject);
+begin
+  EditAuthorIDExit(Sender);
+  if EditTitle.Text = '' then
+    ShowDialog(sUnfilledTitleTitle, sUnfilledTitle, dtError)
+  else
+    ModalResult := mrOK;
 end;
 
 end.
