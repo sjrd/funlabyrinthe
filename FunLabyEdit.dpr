@@ -7,7 +7,8 @@ uses
   PlayerPlugins in 'PlayerPlugins.pas' {FormPlugins},
   PlayerAttributes in 'PlayerAttributes.pas' {FormAttributes},
   PlayerObjects in 'PlayerObjects.pas' {FormObjects},
-  FileProperties in 'FileProperties.pas' {FormFileProperties};
+  FileProperties in 'FileProperties.pas' {FormFileProperties},
+  AddMap in 'AddMap.pas' {FormAddMap};
 
 {$R *.res}
 
@@ -15,6 +16,7 @@ begin
   Application.Initialize;
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.CreateForm(TFormMain, FormMain);
+  Application.CreateForm(TFormAddMap, FormAddMap);
   Application.Run;
 end.
 

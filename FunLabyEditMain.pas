@@ -7,7 +7,7 @@ uses
   Dialogs, ActnList, XPStyleActnCtrls, ActnMan, Menus, ImgList, StdCtrls,
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
   StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, NumberDialog,
-  PlayerPlugins, PlayerAttributes, PlayerObjects, FileProperties;
+  PlayerPlugins, PlayerAttributes, PlayerObjects, FileProperties, AddMap;
 
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
@@ -449,7 +449,7 @@ var DirName : TFileName;
 begin
   Result := False;
 
-  for I := 0 to Master.PlayerCount do with Master.Players[I] do
+  for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
   begin
     if Map = nil then
     begin
@@ -810,9 +810,11 @@ begin
 end;
 
 procedure TFormMain.ActionAddMapExecute(Sender: TObject);
+var MapID : TComponentID;
 begin
-  ShowDialog(sError, sFeatureIsNotImplementedYet, dtError);
-  { TODO 1 : Ajouter une carte }
+  MapID := TFormAddMap.AddMap(MasterFile);
+  if MapID <> '' then
+    MapTabSet.TabIndex := MapTabSet.Tabs.Add(MapID);
 end;
 
 procedure TFormMain.ActionRemoveMapExecute(Sender: TObject);
