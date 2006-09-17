@@ -89,7 +89,6 @@ type
     ScrollBoxMap: TScrollBox;
     PaintBoxMap: TPaintBox;
     LabelFloor: TLabel;
-    EditFloor: TSpinEdit;
     StaticPosition: TStaticText;
     StaticField: TStaticText;
     StaticEffect: TStaticText;
@@ -123,6 +122,8 @@ type
     procedure ActionAddMapExecute(Sender: TObject);
     procedure ActionRemoveMapExecute(Sender: TObject);
   private
+    { Composants non disponibles dans Turbo Explorer }
+    EditFloor : TSpinEdit;
     { Déclarations privées }
     ScrewBmp : TBitmap;           /// Bitmap à tout faire de la taille d'une case
     LastCompIndex : integer;      /// Dernier index de composant choisi
@@ -551,6 +552,20 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
+  // Création dynamique des composants non disponibles dans Turbo Explorer
+  EditFloor := TSpinEdit.Create(Self);
+  with EditFloor do
+  begin
+    Name := 'EditFloor'; {don't localize}
+    Parent := PanelMapInfos;
+    Left := 296;
+    Top := 8;
+    Width := 49;
+    Anchors := [akTop, akRight];
+    EditorEnabled := False;
+    Enabled := False;
+  end;
+
   ScrewBmp := TBitmap.Create;
   ScrewBmp.Width := ScrewSize;
   ScrewBmp.Height := ScrewSize;

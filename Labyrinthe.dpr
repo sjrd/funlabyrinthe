@@ -13,7 +13,7 @@ uses
 
 begin
   Application.Initialize;
-  Application.Title := 'Labyrinthe';
+  Application.Title := 'FunLabyrinthe';
   Application.HelpFile := Dir+'Labyrinthe.hlp';
   Application.Tag := 1;
   Application.CreateForm(TFormMain, FormMain);

@@ -29,7 +29,9 @@ package FunLabyCommonR;
 requires
   rtl,
   vcl,
-  SCLR;
+  SCLR,
+  SVCLR,
+  SDLR;
 
 contains
   LabyrintheUtils in 'LabyrintheUtils.pas',

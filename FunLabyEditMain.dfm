@@ -214,20 +214,6 @@ object FormMain: TFormMain
         Anchors = [akTop, akRight]
         Caption = #201'tage :'
       end
-      object EditFloor: TSpinEdit
-        Left = 296
-        Top = 8
-        Width = 49
-        Height = 22
-        Anchors = [akTop, akRight]
-        EditorEnabled = False
-        Enabled = False
-        MaxValue = 0
-        MinValue = 0
-        TabOrder = 0
-        Value = 0
-        OnChange = EditFloorChange
-      end
       object StaticPosition: TStaticText
         Left = 64
         Top = 8
@@ -235,7 +221,7 @@ object FormMain: TFormMain
         Height = 17
         AutoSize = False
         BorderStyle = sbsSunken
-        TabOrder = 1
+        TabOrder = 0
       end
       object StaticField: TStaticText
         Left = 64
@@ -244,7 +230,7 @@ object FormMain: TFormMain
         Height = 17
         AutoSize = False
         BorderStyle = sbsSunken
-        TabOrder = 2
+        TabOrder = 1
       end
       object StaticEffect: TStaticText
         Left = 64
@@ -253,7 +239,7 @@ object FormMain: TFormMain
         Height = 17
         AutoSize = False
         BorderStyle = sbsSunken
-        TabOrder = 3
+        TabOrder = 2
       end
       object StaticObstacle: TStaticText
         Left = 64
@@ -262,7 +248,7 @@ object FormMain: TFormMain
         Height = 17
         AutoSize = False
         BorderStyle = sbsSunken
-        TabOrder = 4
+        TabOrder = 3
       end
     end
     object ScrollBoxMap: TScrollBox

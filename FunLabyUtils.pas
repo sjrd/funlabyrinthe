@@ -10,7 +10,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, ScUtils,
-  Forms, Dialogs, StdCtrls, Math, ScStrUtils;
+  Forms, Dialogs, StdCtrls, Math, ScStrUtils, SdDialogs;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
@@ -29,8 +29,12 @@ resourcestring
   sWon = 'Gagné !';
   sLost = 'Perdu !';
 
-const
+const {don't localize}
   CurrentVersion = '5.0'; /// Version courante de FunLabyrinthe
+  FunLabyAuthorName = 'Sébastien Jean Robert Doeraene'; /// Auteur
+  FunLabyAuthorEMail = 'sjrd@redaction-developpez.com'; /// E-mail de l'auteur
+  FunLabyWebSite = 'http://sjrd.developpez.com/programmes/funlaby/'; /// Site
+
   ScrewSize = 30;         /// Taille (en largeur et hauteur) d'une case
   MinViewSize = 1;        /// Taille minimale d'une vue
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
@@ -612,12 +616,36 @@ var {don't localize}
   /// Chaîne de format pour les fichiers image
   fScrewFileName : string = '%s.bmp';
 
+procedure ShowFunLabyAbout;
+
 function PointBehind(const Src : T3DPoint; Dir : TDirection) : T3DPoint;
 function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 procedure EmptyRect(Canvas : TCanvas; Rect : TRect);
 procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 
 implementation
+
+{*
+  Affiche une boîte de dialogue À propos de FunLabyrinthe
+  @param Icon   Icône du programme
+  @param Name   Nom du programme
+*}
+procedure ShowFunLabyAbout;
+begin
+  with TSdAboutDialog.Create(nil) do
+  try
+    ProgramIcon := Application.Icon;
+    ProgramName := Application.Title;
+    ProgramVersion := CurrentVersion;
+    AuthorName := FunLabyAuthorName;
+    AuthorEMail := FunLabyAuthorEMail;
+    WebSite := FunLabyWebSite;
+
+    Execute;
+  finally
+    Free;
+  end;
+end;
 
 {*
   Renvoie le point situé derrière un point dans la direction indiquée

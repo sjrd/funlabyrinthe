@@ -46,7 +46,6 @@ type
     MenuMapProperties: TMenuItem;
     MenuPlayerProperties: TMenuItem;
     MenuReloadGame: TMenuItem;
-    AboutDialog: TSdAboutDialog;
     LoadGameDialog: TOpenDialog;
     TimerUpdateImage: TTimer;
     MenuViewSize: TMenuItem;
@@ -314,7 +313,7 @@ end;
 
 procedure TFormMain.MenuAboutClick(Sender: TObject);
 begin
-  AboutDialog.Execute;
+  ShowFunLabyAbout;
 end;
 
 procedure TFormMain.MenuSaveGameClick(Sender: TObject);

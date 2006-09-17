@@ -9,12 +9,14 @@ uses
 type
   TFormNumber = class(TForm)
     LabelPrompt: TLabel;
-    EditValue: TSpinEdit;
     ButtonOK: TButton;
+    procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
   private
+    { Composants non disponibles dans Turbo Explorer }
+    EditValue : TSpinEdit;
     { Déclarations privées }
   public
     { Déclarations publiques }
@@ -61,6 +63,23 @@ begin
     Result := EditValue.Value;
   finally
     Release;
+  end;
+end;
+
+procedure TFormNumber.FormCreate(Sender: TObject);
+begin
+  // Création dynamique des composants non disponibles dans Turbo Explorer
+  EditValue := TSpinEdit.Create(Self);
+  with EditValue do
+  begin
+    Name := 'EditValue'; {don't localize}
+    Parent := Self;
+    Left := 176;
+    Top := 16;
+    Width := 65;
+    AutoSelect := False;
+    EditorEnabled := False;
+    TabOrder := 0;
   end;
 end;
 

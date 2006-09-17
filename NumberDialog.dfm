@@ -15,6 +15,7 @@ object FormNumber: TFormNumber
   KeyPreview = True
   OldCreateOrder = True
   Position = poScreenCenter
+  OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
   PixelsPerInch = 96
@@ -26,25 +27,6 @@ object FormNumber: TFormNumber
     Height = 13
     Caption = 'Invite :'
   end
-  object EditValue: TSpinEdit
-    Left = 176
-    Top = 17
-    Width = 65
-    Height = 26
-    AutoSelect = False
-    EditorEnabled = False
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlack
-    Font.Height = -13
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    MaxLength = 10
-    MaxValue = 0
-    MinValue = 0
-    ParentFont = False
-    TabOrder = 0
-    Value = 0
-  end
   object ButtonOK: TButton
     Left = 84
     Top = 64
@@ -53,6 +35,6 @@ object FormNumber: TFormNumber
     Caption = 'OK'
     Default = True
     ModalResult = 1
-    TabOrder = 1
+    TabOrder = 0
   end
 end
