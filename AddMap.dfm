@@ -3,7 +3,7 @@ object FormAddMap: TFormAddMap
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Ajouter une carte'
-  ClientHeight = 185
+  ClientHeight = 241
   ClientWidth = 321
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -56,6 +56,20 @@ object FormAddMap: TFormAddMap
       00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
     OnClick = ButtonBrowseClick
   end
+  object LabelDimensions: TLabel
+    Left = 32
+    Top = 144
+    Width = 113
+    Height = 13
+    Caption = 'Dimensions (en cases) :'
+  end
+  object LabelZoneSize: TLabel
+    Left = 32
+    Top = 168
+    Width = 137
+    Height = 13
+    Caption = 'Taile d'#39'une zone (en cases) :'
+  end
   object EditID: TEdit
     Left = 16
     Top = 32
@@ -93,23 +107,45 @@ object FormAddMap: TFormAddMap
   end
   object ButtonOK: TButton
     Left = 56
-    Top = 144
+    Top = 200
     Width = 97
     Height = 25
     Caption = 'OK'
     Default = True
-    TabOrder = 4
+    TabOrder = 6
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
     Left = 168
-    Top = 144
+    Top = 200
     Width = 97
     Height = 25
     Cancel = True
     Caption = 'Annuler'
     ModalResult = 2
+    TabOrder = 7
+  end
+  object EditDimensions: TMaskEdit
+    Left = 184
+    Top = 136
+    Width = 121
+    Height = 21
+    Enabled = False
+    EditMask = '!999x999x99;1;0'
+    MaxLength = 10
+    TabOrder = 4
+    Text = '  7x  7x 1'
+  end
+  object EditZoneSize: TMaskEdit
+    Left = 184
+    Top = 160
+    Width = 121
+    Height = 21
+    Enabled = False
+    EditMask = '!99x99;1;0'
+    MaxLength = 5
     TabOrder = 5
+    Text = ' 7x 7'
   end
   object OpenDialog: TOpenDialog
     DefaultExt = 'flm'
@@ -117,6 +153,6 @@ object FormAddMap: TFormAddMap
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing, ofDontAddToRecent]
     Title = 'Charger une carte existante'
     Left = 16
-    Top = 144
+    Top = 200
   end
 end

@@ -27,6 +27,9 @@ resourcestring
 
   sNoFileName = 'Aucun nom de fichier spécifié';
 
+  sTemporaryStatedMap =
+    'La carte d''ID %s est dans un état temporaire qui ne peut être enregistré';
+
 type
   /// Mode d'ouverture d'un fichier FunLabyrinthe
   TFileMode = (fmEdit, fmPlay);
@@ -46,16 +49,14 @@ type
     FMasterFile : TMasterFile; /// Fichier maître
     FHRef : string;            /// HRef
     FFileName : TFileName;     /// Nom du fichier
-    FMIMEType : string;        /// Type MIME du fichier
     FMaster : TMaster;         /// Maître FunLabyrinthe
   public
     constructor Create(AMasterFile : TMasterFile; const AHRef : string;
-      const AFileName : TFileName; const AMIMEType : string);
+      const AFileName : TFileName);
 
     property MasterFile : TMasterFile read FMasterFile;
     property HRef : string read FHRef;
     property FileName : TFileName read FFileName;
-    property MIMEType : string read FMIMEType;
     property Master : TMaster read FMaster;
   end;
 
@@ -64,6 +65,8 @@ type
     TUnitFile est la classe de base pour les fichiers d'unité FunLabyrinthe.
   *}
   TUnitFile = class(TDependantFile)
+  private
+    FMIMEType : string;/// Type MIME du fichier unité
   public
     constructor Create(AMasterFile : TMasterFile; const AHRef : string;
       const AFileName : TFileName; const AMIMEType : string;
@@ -75,44 +78,26 @@ type
       RegisterComponentSetProc : TRegisterComponentSetProc); virtual;
 
     procedure GetParams(Params : TStrings); virtual;
+
+    property MIMEType : string read FMIMEType;
   end;
   TUnitFileClass = class of TUnitFile;
 
   {*
     Représente un fichier carte
-    TMapFile est la classe de base pour les fichiers de carte FunLabyrinthe.
-    Elle fournit des propriétés pour identifier la carte liée.
+    TMapFile représente un fichier carte FunLabyrinthe (extension .flm). Elle
+    fournit des méthodes pour créer, charger et enregistrer des cartes.
   *}
   TMapFile = class(TDependantFile)
   private
     FMapID : TComponentID; /// ID de la carte liée
     FMap : TMap;           /// Carte liée
-  protected
-    {*
-      Enregistre le fichier
-      Les descendants de TMapFile doivent implémenter SaveFile pour pouvoir
-      enregistrer la carte
-    *}
-    procedure SaveFile; virtual; abstract;
-  protected
-    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
-      const AFileName : TFileName; const AMIMEType : string;
-      const AMapID : TComponentID;
-      ADimensions : T3DPoint; AZoneWidth, AZoneHeight : integer); overload;
   public
-    {*
-      Crée une instance de TMapFile
-      Les descendants de TMapFile doivent implémenter ce constructeur, lire
-      les dimensions, avant d'appeler le constructeur protégé qui va créer la
-      carte.
-      @param AMasterFile   Fichier maître
-      @param AFileName     Nom du fichier
-      @param AMIMEType     Type MIME du fichier
-      @param AMapID        ID de la carte
-    *}
     constructor Create(AMasterFile : TMasterFile; const AHRef : string;
-      const AFileName : TFileName; const AMIMEType : string;
-      const AMapID : TComponentID); overload; virtual; abstract;
+      const AFileName : TFileName; const AMapID : TComponentID);
+    constructor CreateNew(AMasterFile : TMasterFile;
+      const AMapID : TComponentID; const ADimensions : T3DPoint;
+      AZoneWidth, AZoneHeight : integer);
     procedure AfterConstruction; override;
 
     procedure Save(const AHRef : string = ''; const AFileName : TFileName = '');
@@ -168,15 +153,13 @@ type
       UnitFileClass : TUnitFileClass);
     class function FindUnitFileClass(const MIMEType : string) : TUnitFileClass;
 
-    class procedure RegisterMapFileClass(const MIMEType : string;
-      MapFileClass : TMapFileClass);
-    class function FindMapFileClass(const MIMEType : string) : TMapFileClass;
-
     function AddUnitFile(const MIMEType, HRef : string;
       Params : TStrings = nil) : TUnitFile;
-    function AddMapFile(const ID : TComponentID;
-      const MIMEType, HRef : string;
-      MaxViewSize : integer = MinViewSize) : TMapFile;
+    function AddMapFile(const ID : TComponentID; const HRef : string;
+      MaxViewSize : integer = 1) : TMapFile;
+    function AddNewMapFile(const ID : TComponentID; const Dimensions : T3DPoint;
+      ZoneWidth, ZoneHeight : integer;
+      MaxViewSize : integer = 1) : TMapFile;
 
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
@@ -208,11 +191,14 @@ type
 implementation
 
 uses
-  UnitFiles, MapFiles;
+  UnitFiles;
+
+const {don't localize}
+  FLMFormatCode : LongInt = $6D6C662E; // Correspond à '.flm'
+  FLMVersion = 1;
 
 var
   UnitFileClasses : TStrings = nil; /// Type MIME -> Classe unité
-  MapFileClasses : TStrings = nil;  /// Type MIME -> Classe carte
 
 function CompareVersions(Version1, Version2 : string) : integer;
 var SubVer1, SubVer2 : string;
@@ -230,8 +216,6 @@ procedure EnsureClassListCreated;
 begin
   if UnitFileClasses = nil then
     UnitFileClasses := TStringList.Create;
-  if MapFileClasses = nil then
-    MapFileClasses := TStringList.Create;
 end;
 
 /////////////////////////////
@@ -245,13 +229,12 @@ end;
   @param AMIMEType     Type MIME du fichier
 *}
 constructor TDependantFile.Create(AMasterFile : TMasterFile;
-  const AHRef : string; const AFileName : TFileName; const AMIMEType : string);
+  const AHRef : string; const AFileName : TFileName);
 begin
   inherited Create;
   FMasterFile := AMasterFile;
   FHRef := AHRef;
   FFileName := AFileName;
-  FMIMEType := AMIMEType;
   FMaster := FMasterFile.Master;
 end;
 
@@ -269,7 +252,8 @@ end;
 constructor TUnitFile.Create(AMasterFile : TMasterFile; const AHRef : string;
   const AFileName : TFileName; const AMIMEType : string; Params : TStrings);
 begin
-  inherited Create(AMasterFile, AHRef, AFileName, AMIMEType);
+  inherited Create(AMasterFile, AHRef, AFileName);
+  FMIMEType := AMIMEType;
 end;
 
 {*
@@ -309,20 +293,76 @@ end;
 ///////////////////////
 
 {*
-  Crée une instance de TMapFile
+  Crée une instance de TMapFile en chargeant la carte depuis un fichier
   @param AMasterFile   Fichier maître
+  @param AHRef         HRef du fichier
   @param AFileName     Nom du fichier
-  @param AMIMEType     Type MIME du fichier
   @param AMapID        ID de la carte
-  @param ADimensions   Dimensions de la carte
-  @param AZoneSize     Taille d'une zone de la carte
 *}
 constructor TMapFile.Create(AMasterFile : TMasterFile; const AHRef : string;
-  const AFileName : TFileName; const AMIMEType : string;
-  const AMapID : TComponentID; ADimensions : T3DPoint;
+  const AFileName : TFileName; const AMapID : TComponentID);
+var Stream : TStream;
+    ZoneWidth, ZoneHeight, I, Count, Value, ScrewSize : integer;
+    Dimensions : T3DPoint;
+    Palette : array of TScrew;
+begin
+  inherited Create(AMasterFile, AHRef, AFileName);
+  FMapID := AMapID;
+
+  Stream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+  try
+    // Contrôle de format
+    Stream.ReadBuffer(Value, 4);
+    if Value <> FLMFormatCode then
+      EFileError.Create(sInvalidFileFormat);
+
+    // Contrôle de version de format
+    Stream.ReadBuffer(Value, 4);
+    if Value > FLMVersion then
+      EFileError.CreateFmt(sVersionTooHigh, [IntToStr(Value)]);
+
+    // Lecture des dimensions et de la taille d'une zone
+    Stream.ReadBuffer(Dimensions, sizeof(T3DPoint));
+    Stream.ReadBuffer(ZoneWidth, 4);
+    Stream.ReadBuffer(ZoneHeight, 4);
+
+    // Création de la carte elle-même
+    FMap := TMap.Create(Master, MapID, Dimensions, ZoneWidth, ZoneHeight);
+
+    // Lecture de la palette de cases
+    Stream.ReadBuffer(Count, 4);
+    SetLength(Palette, Count);
+    for I := 0 to Count-1 do
+      Palette[I] := Master.Screw[ReadStrFromStream(Stream)];
+
+    // Lecture de la carte
+    if Count <= 256 then ScrewSize := 1 else ScrewSize := 2;
+    Value := 0;
+    for I := 0 to Map.LinearMapCount-1 do
+    begin
+      Stream.ReadBuffer(Value, ScrewSize);
+      Map.LinearMap[I] := Palette[Value];
+    end;
+  finally
+    Stream.Free;
+  end;
+end;
+
+{*
+  Crée une instance de TMapFile, en créant une nouvelle carte
+  La nouvelle carte ainsi créée est vide : il est impératif de la remplir avant
+  toute utilisation, sous peine de violations d'accès.
+  @param AMasterFile   Fichier maître
+  @param AMapID        ID de la carte
+  @param ADimensions   Dimensions de la carte
+  @param AZoneWidth    Largeur d'une zone
+  @param AZoneHeight   Hauteur d'une zone
+*}
+constructor TMapFile.CreateNew(AMasterFile : TMasterFile;
+  const AMapID : TComponentID; const ADimensions : T3DPoint;
   AZoneWidth, AZoneHeight : integer);
 begin
-  inherited Create(AMasterFile, AHRef, AFileName, AMIMEType);
+  inherited Create(AMasterFile, '', '');
   FMapID := AMapID;
   FMap := TMap.Create(Master, AMapID, ADimensions, AZoneWidth, AZoneHeight);
 end;
@@ -344,13 +384,66 @@ end;
 *}
 procedure TMapFile.Save(const AHRef : string = '';
   const AFileName : TFileName = '');
+var I, Value, Count, PaletteCountPos, ScrewSize : integer;
+    Stream : TStream;
+    Dimensions : T3DPoint;
 begin
   if AHRef <> '' then
   begin
     FHRef := AHRef;
     FFileName := AFileName;
   end;
-  SaveFile;
+
+  Stream := TFileStream.Create(FileName, fmCreate or fmShareExclusive);
+  try
+    // Indication de format
+    Value := FLMFormatCode;
+    Stream.WriteBuffer(Value, 4);
+
+    // Indication de version de format
+    Value := FLMVersion;
+    Stream.WriteBuffer(Value, 4);
+
+    // Écriture des dimensions et de la taille d'une zone
+    Dimensions := Map.Dimensions;
+    Stream.WriteBuffer(Dimensions, sizeof(T3DPoint));
+    Value := Map.ZoneWidth;
+    Stream.WriteBuffer(Value, 4);
+    Value := Map.ZoneHeight;
+    Stream.WriteBuffer(Value, 4);
+
+    // Préparation de la palette (Screws.Tag) et écriture de celle-ci
+    for I := 0 to Master.ScrewCount-1 do
+      Master.Screws[I].Tag := -1;
+    Count := 0;
+    PaletteCountPos := Stream.Position;
+    Stream.WriteBuffer(Count, 4); // On repassera changer çà plus tard
+    for I := 0 to Map.LinearMapCount-1 do with Map.LinearMap[I] do
+    begin
+      if ClassType <> TScrew then
+        raise EFileError.CreateFmt(sTemporaryStatedMap, [Map.ID]);
+      if Tag < 0 then
+      begin
+        Tag := Count;
+        WriteStrToStream(Stream, ID);
+        inc(Count);
+      end;
+    end;
+
+    // Écriture de la carte
+    if Count <= 256 then ScrewSize := 1 else ScrewSize := 2;
+    for I := 0 to Map.LinearMapCount-1 do
+    begin
+      Value := Map.LinearMap[I].Tag;
+      Stream.WriteBuffer(Value, ScrewSize);
+    end;
+
+    // On retourne écrire la taille de la palette
+    Stream.Seek(PaletteCountPos, soFromBeginning);
+    Stream.WriteBuffer(Count, 4);
+  finally
+    Stream.Free;
+  end;
 end;
 
 //////////////////////////
@@ -552,7 +645,6 @@ begin
       for I := 0 to length-1 do with item[I] as IXMLDOMElement do
       begin
         ID := getAttribute('id');
-        FileType := getAttribute('type');
         HRef := getAttribute('href');
 
         if VarIsNull(getAttribute('maxviewsize')) then
@@ -560,7 +652,7 @@ begin
         else
           MaxViewSize := getAttribute('maxviewsize');
 
-        AddMapFile(ID, FileType, HRef, MaxViewSize);
+        AddMapFile(ID, HRef, MaxViewSize);
       end;
     end;
 
@@ -696,41 +788,6 @@ begin
 end;
 
 {*
-  Enregistre un gestionnaire de carte
-  @param MIMEType       Type MIME géré par la classe
-  @param MapFileClass   Classe gestionnaire du type MIME
-*}
-class procedure TMasterFile.RegisterMapFileClass(const MIMEType : string;
-  MapFileClass : TMapFileClass);
-var Index : integer;
-begin
-  EnsureClassListCreated;
-  Index := MapFileClasses.IndexOf(MIMEType);
-  if Index < 0 then
-    MapFileClasses.AddObject(MIMEType, TObject(MapFileClass))
-  else
-    MapFileClasses.Objects[Index] := TObject(MapFileClass);
-end;
-
-{*
-  Trouve la classe de fichier carte gérant le type MIME donné
-  @param MIMEType   Type MIME dont il faut trouver le gestionnaire
-  @return Classe de fichier carte gérant le type MIME spécifié
-  @throws EFileError : Type de carte inconnu
-*}
-class function TMasterFile.FindMapFileClass(
-  const MIMEType : string) : TMapFileClass;
-var Index : integer;
-begin
-  EnsureClassListCreated;
-  Index := MapFileClasses.IndexOf(MIMEType);
-  if Index < 0 then
-    raise EFileError.CreateFmt(sUnknownMapType, [MIMEType])
-  else
-    Result := TMapFileClass(MapFileClasses.Objects[Index]);
-end;
-
-{*
   Ajoute un fichier unité
   @param MIMEType   Type MIME
   @param HRef       Adresse du fichier
@@ -757,17 +814,31 @@ end;
 {*
   Ajoute un fichier carte
   @param ID            ID de la carte
-  @param MIMEType      Type MIME
   @param HRef          Adresse du fichier
   @param MaxViewSize   Taille maximale d'une vue pour cette carte
   @return Le fichier carte créé et chargé
 *}
-function TMasterFile.AddMapFile(const ID : TComponentID;
-  const MIMEType, HRef : string;
-  MaxViewSize : integer = MinViewSize) : TMapFile;
+function TMasterFile.AddMapFile(const ID : TComponentID; const HRef : string;
+  MaxViewSize : integer = 1) : TMapFile;
 begin
-  Result := FindMapFileClass(MIMEType).Create(Self, HRef,
-    ResolveHRef(HRef, fMapsDir), MIMEType, ID);
+  Result := TMapFile.Create(Self, HRef, ResolveHRef(HRef, fMapsDir), ID);
+  Result.Map.MaxViewSize := MaxViewSize;
+end;
+
+{*
+  Ajoute un nouveau fichier carte
+  @param ID            ID de la carte
+  @param Dimensions    Dimensions
+  @param ZoneWidth     Largeur d'une zone
+  @param ZoneHeight    Hauteur d'une zone
+  @param MaxViewSize   Taille maximale d'une vue pour cette carte
+  @return Le fichier carte créé
+*}
+function TMasterFile.AddNewMapFile(const ID : TComponentID;
+  const Dimensions : T3DPoint; ZoneWidth, ZoneHeight : integer;
+  MaxViewSize : integer = 1) : TMapFile;
+begin
+  Result := TMapFile.CreateNew(Self, ID, Dimensions, ZoneWidth, ZoneHeight);
   Result.Map.MaxViewSize := MaxViewSize;
 end;
 
@@ -903,7 +974,6 @@ begin
 
           Element := Document.createElement('map');
           Element.setAttribute('id', Map.ID);
-          Element.setAttribute('type', MIMEType);
           Element.setAttribute('href', HRef);
           if Map.MaxViewSize > 1 then
             Element.setAttribute('maxviewsize', Map.MaxViewSize);
@@ -984,7 +1054,6 @@ end;
 initialization
   EnsureClassListCreated;
 finalization
-  MapFileClasses.Free;
   UnitFileClasses.Free;
 end.
 

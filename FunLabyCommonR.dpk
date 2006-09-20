@@ -34,10 +34,8 @@ requires
   SDLR;
 
 contains
-  LabyrintheUtils in 'LabyrintheUtils.pas',
   FunLabyUtils in 'FunLabyUtils.pas',
   FilesUtils in 'FilesUtils.pas',
-  MapFiles in 'MapFiles.pas',
   NumberDialog in 'NumberDialog.pas',
   UnitFiles in 'UnitFiles.pas';
 

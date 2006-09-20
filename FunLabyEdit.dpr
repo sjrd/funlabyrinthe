@@ -8,7 +8,8 @@ uses
   PlayerAttributes in 'PlayerAttributes.pas' {FormAttributes},
   PlayerObjects in 'PlayerObjects.pas' {FormObjects},
   FileProperties in 'FileProperties.pas' {FormFileProperties},
-  AddMap in 'AddMap.pas' {FormAddMap};
+  AddMap in 'AddMap.pas' {FormAddMap},
+  MapBase in 'MapBase.pas' {FormMapBase};
 
 {$R *.res}
 
@@ -17,6 +18,7 @@ begin
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAddMap, FormAddMap);
+  Application.CreateForm(TFormMapBase, FormMapBase);
   Application.Run;
 end.
 

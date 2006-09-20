@@ -829,7 +829,10 @@ var MapID : TComponentID;
 begin
   MapID := TFormAddMap.AddMap(MasterFile);
   if MapID <> '' then
+  begin
     MapTabSet.TabIndex := MapTabSet.Tabs.Add(MapID);
+    Modified := True;
+  end;
 end;
 
 procedure TFormMain.ActionRemoveMapExecute(Sender: TObject);
