@@ -8,16 +8,15 @@
 			<Option Name="GUID">{A43CC8A0-416F-4F0D-9598-BD223A865F7F}</Option>
 		</Option>
 	</PersonalityInfo>
-	<Default.Personality>  
-    
-    <Projects>
+	<Default.Personality>  <Projects>
       <Projects Name="FunLabyCommonR.bpl">FunLabyCommonR.bdsproj</Projects>
       <Projects Name="FunLabyCommonD.bpl">FunLabyCommonD.bdsproj</Projects>
       <Projects Name="Labyrinthe.exe">Labyrinthe.bdsproj</Projects>
       <Projects Name="FunLabyEdit.exe">FunLabyEdit.bdsproj</Projects>
       <Projects Name="GeneLaby.exe">GeneLaby.bdsproj</Projects>
       <Projects Name="FunLabyCore.bpl">UnitPackages\FunLabyCore\FunLabyCore.bdsproj</Projects>
-      <Projects Name="Targets">FunLabyCommonR.bpl FunLabyCommonD.bpl Labyrinthe.exe FunLabyEdit.exe GeneLaby.exe FunLabyCore.bpl</Projects>
+      <Projects Name="FunLabyButtons.bpl">UnitPackages\FunLabyButtons\FunLabyButtons.bdsproj</Projects>
+      <Projects Name="Targets">FunLabyCommonR.bpl FunLabyCommonD.bpl Labyrinthe.exe FunLabyEdit.exe GeneLaby.exe FunLabyCore.bpl FunLabyButtons.bpl</Projects>
     </Projects>
     <Dependencies/>
   </Default.Personality>

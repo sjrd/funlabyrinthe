@@ -105,6 +105,12 @@ begin
   TSecretWay.Create(Master, idSecretWay, sSecretWay);
 end;
 
+{*
+  Enregistre les différents composants à placer dans la palette d'édition
+  @param Master                        Maître FunLabyrinthe
+  @param RegisterSingleComponentProc   Call-back pour un unique composant
+  @param RegisterComponentSetProc      Call-back pour un ensemble de composants
+*}
 procedure RegisterComponents(Master : TMaster;
   RegisterSingleComponentProc : TRegisterSingleComponentProc;
   RegisterComponentSetProc : TRegisterComponentSetProc);
