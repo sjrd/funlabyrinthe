@@ -1,11 +1,12 @@
 {*
-  Recense les composants des boutons de FunLabyrinthe
-  L'unité FunLabyCoreMain recense tous les composants du package FunLabyButtons,
-  ceux qui décrivent les boutons de FunLabyrinthe.
+  Recense les composants de compatibilité 4.x de FunLabyrinthe
+  L'unité FunLabyCoreMain recense tous les composants du package
+  Compatibility4x, ceux qui décrivent les composants de compatibilité 4.x de
+  FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FunLabyButtonsMain;
+unit Compatibility4xMain;
 
 interface
 
@@ -21,7 +22,7 @@ procedure RegisterComponents(Master : TMaster;
 implementation
 
 {*
-  Charge tous les composants des boutons de FunLabyrinthe
+  Charge tous les composants de compatibilité 4.x de FunLabyrinthe
   @param Master   Maître FunLabyrinthe dans lequel charger les composants
   @param Params   Paramètres envoyés au fichier unité
 *}

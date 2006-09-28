@@ -1,4 +1,4 @@
-package FunLabyButtons;
+package Compatibility4x;
 
 {$R *.res}
 {$ALIGN 8}
@@ -22,16 +22,18 @@ package FunLabyButtons;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'FunLabyrinthe buttons components'}
+{$DESCRIPTION 'FunLabyrinthe components for 4.x compatibility'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
-  FunLabyCommonR;
+  FunLabyCommonR,
+  vcl;
 
 contains
-  FunLabyButtonsMain in 'FunLabyButtonsMain.pas';
+  Compatibility4xMain in 'Compatibility4xMain.pas',
+  Screws in 'Screws.pas';
 
 end.
 
