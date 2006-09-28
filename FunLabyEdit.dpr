@@ -3,6 +3,7 @@ program FunLabyEdit;
 uses
   XPMan,
   Forms,
+  FunLabyUtils,
   FunLabyEditMain in 'FunLabyEditMain.pas' {FormMain},
   PlayerPlugins in 'PlayerPlugins.pas' {FormPlugins},
   PlayerAttributes in 'PlayerAttributes.pas' {FormAttributes},
@@ -14,6 +15,7 @@ uses
 {$R *.res}
 
 begin
+  if not CheckValidLaunch then exit;
   Application.Initialize;
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.CreateForm(TFormMain, FormMain);

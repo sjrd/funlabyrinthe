@@ -18,6 +18,8 @@ resourcestring
   sObstacleName = '%s obstrué par %s';
   sWhichObject = 'Quel objet voulez-vous utiliser ?';
   sComponentNotFound = 'Le composant d''ID %s n''existe pas';
+  sCantLaunchThroughNetwork = 'FunLabyrinthe doit être installé sur '+
+    'l''ordinateur local pour fonctionner';
 
   sDescription = 'Description';
   sMessage = 'Message';
@@ -616,6 +618,7 @@ var {don't localize}
   /// Chaîne de format pour les fichiers image
   fScrewFileName : string = '%s.bmp';
 
+function CheckValidLaunch : boolean;
 procedure ShowFunLabyAbout;
 
 function PointBehind(const Src : T3DPoint; Dir : TDirection) : T3DPoint;
@@ -624,6 +627,20 @@ procedure EmptyRect(Canvas : TCanvas; Rect : TRect);
 procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 
 implementation
+
+{*
+  Vérifie que FunLabyrinthe a été lancé de façon valide
+  @return True si FunLabyrinthe a été lancé de façon valide, False sinon
+*}
+function CheckValidLaunch : boolean;
+begin
+  if (Dir[1] = PathDelim) and (Dir[2] = PathDelim) then
+  begin
+    ShowDialog(sError, sCantLaunchThroughNetwork, dtError);
+    Result := False;
+  end else
+  Result := True;
+end;
 
 {*
   Affiche une boîte de dialogue À propos de FunLabyrinthe

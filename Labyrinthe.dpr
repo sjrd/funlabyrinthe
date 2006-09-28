@@ -4,6 +4,7 @@ uses
   Forms,
   WinHelpViewer,
   ScUtils,
+  FunLabyUtils,
   LabyrintheMain in 'LabyrintheMain.pas' {FormMain},
   PropertiesDialog in 'PropertiesDialog.pas' {FormProperties},
   PlayUtils in 'PlayUtils.pas',
@@ -12,6 +13,7 @@ uses
 {$R *.RES}
 
 begin
+  if not CheckValidLaunch then exit;
   Application.Initialize;
   Application.Title := 'FunLabyrinthe';
   Application.HelpFile := Dir+'Labyrinthe.hlp';
