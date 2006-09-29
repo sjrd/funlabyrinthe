@@ -11,7 +11,7 @@ unit Compatibility4xMain;
 interface
 
 uses
-  Classes, FunLabyUtils;
+  Classes, SysUtils, FunLabyUtils, Common, Screws;
 
 procedure LoadComponents(Master : TMaster; Params : TStrings); stdcall;
 
@@ -27,7 +27,18 @@ implementation
   @param Params   Paramètres envoyés au fichier unité
 *}
 procedure LoadComponents(Master : TMaster; Params : TStrings);
+var I : integer;
 begin
+  // Effets
+
+  for I := 1 to 75 do
+    TActionsEffect.Create(Master, idActionsEffect, sButton, I);
+  TSunkButton.Create(Master, idSunkButton, sSunkButton);
+
+  // Obstacles
+
+  for I := 1 to 75 do
+    TActionsObstacle.Create(Master, idActionsObstacle, sButton, I);
 end;
 
 {*
@@ -52,7 +63,19 @@ procedure RegisterComponents(Master : TMaster;
     RegisterComponentSetProc(Master.ScrewComponent[Template],
       Components, DialogTitle, DialogPrompt);
   end;
+
+var I : integer;
+    Components : array[1..75] of TScrewComponent;
 begin
+  // Effets
+
+  RegSingle(idSunkButton);
+
+  // Cases
+
+  for I := 1 to 75 do
+    Components[I] := Master.Effect[Format(idActionsScrew, [I])];
+  RegSet(idActionsScrewTemplate, Components, sButtonTitle, sButtonPrompt);
 end;
 
 exports

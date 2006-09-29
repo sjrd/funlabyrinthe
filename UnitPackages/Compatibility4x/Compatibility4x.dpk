@@ -33,7 +33,8 @@ requires
 
 contains
   Compatibility4xMain in 'Compatibility4xMain.pas',
-  Screws in 'Screws.pas';
+  Screws in 'Screws.pas',
+  Common in 'Common.pas';
 
 end.
 
