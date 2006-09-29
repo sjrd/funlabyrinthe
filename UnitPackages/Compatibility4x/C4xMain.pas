@@ -33,7 +33,10 @@ begin
 
   for I := 1 to 75 do
     TActionsEffect.Create(Master, idActionsEffect, sButton, I);
-  TSunkButton.Create(Master, idSunkButton, sSunkButton);
+  TDecorativeEffect.Create(Master, idButtonTemplate, sButtonTemplate, fButton);
+
+  TDecorativeEffect.Create(Master, idSunkenButton,
+    sSunkenButton, fSunkenButton);
 
   // Obstacles
 
@@ -69,12 +72,12 @@ var I : integer;
 begin
   // Effets
 
-  RegSingle(idSunkButton);
+  RegSingle(idSunkenButton);
 
   // Cases
 
   for I := 1 to 75 do
-    Components[I] := Master.Effect[Format(idActionsScrew, [I])];
+    Components[I] := Master.Screw[Format(idActionsScrew, [I])];
   RegSet(idActionsScrewTemplate, Components, sButtonTitle, sButtonPrompt);
 end;
 

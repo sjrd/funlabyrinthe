@@ -271,6 +271,17 @@ type
   end;
 
   {*
+    Effet décoratif
+    La classe TDecorativeEffect permet de créer facilement un effet qui ne fait
+    rien, qui ajoute juste une touche décorative.
+  *}
+  TDecorativeEffect = class(TEffect)
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName, AImgName : string);
+  end;
+
+  {*
     Classe de base pour les obstacles
     TObstacle est la classe de base pour la création d'obstacles. Les obstacles
     sont la troisième composante d'une case.
@@ -1222,6 +1233,24 @@ end;
 procedure TEffect.Exited(Player : TPlayer; KeyPressed : boolean;
   Pos, Dest : T3DPoint);
 begin
+end;
+
+////////////////////////////////
+/// Classe TDecorativeEffect ///
+////////////////////////////////
+
+{*
+  Crée une instance de TDecorativeEffect
+  @param AMaster    Maître FunLabyrinthe
+  @param AID        ID de l'effet de case
+  @param AName      Nom de la case
+  @param AImgName   Nom du fichier image
+*}
+constructor TDecorativeEffect.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName, AImgName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(AImgName);
 end;
 
 ////////////////////////

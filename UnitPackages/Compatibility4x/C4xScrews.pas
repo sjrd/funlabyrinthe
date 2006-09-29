@@ -13,25 +13,25 @@ uses
   SysUtils, Graphics, ScUtils, FunLabyUtils, C4xCommon;
 
 resourcestring
-  sSunkButton = 'Bouton enfoncé'; /// Nom du bouton enfoncé
-  sButton = 'Bouton n°%d';        /// Nom du bouton
-  sButtonTemplate = 'Bouton';     /// Nom du bouton modèle
+  sSunkenButton = 'Bouton enfoncé'; /// Nom du bouton enfoncé
+  sButton = 'Bouton n°%d';          /// Nom du bouton
+  sButtonTemplate = 'Bouton';       /// Nom du bouton modèle
 
 const {don't localize}
   idActionsEffect = 'ActionsEffect%d';     /// ID de l'effet à actions
   idActionsObstacle = 'ActionsObstacle%d'; /// ID de l'obstacle à actions
 
-  idSunkButton = 'SunkButton';             /// ID du bouton enfoncé
+  idSunkenButton = 'SunkenButton';         /// ID du bouton enfoncé
   idButtonTemplate = 'ButtonTemplate';     /// ID du bouton modèle
 
   /// ID de la case à actions
-  idActionsScrew = idGrass+'ActionsEffect%d-ActionsObstacle%0:d';
+  idActionsScrew = idGrass+'-ActionsEffect%d-ActionsObstacle%0:d';
   /// ID de la case à actions modèle
   idActionsScrewTemplate = idGrass+'-'+idButtonTemplate+'-';
 
 const {don't localize}
-  fSunkButton = 'SunkButton'; /// Fichier du bouton enfoncé
-  fButton = 'Button';         /// Fichier du bouton
+  fSunkenButton = 'SunkenButton'; /// Fichier du bouton enfoncé
+  fButton = 'Button';             /// Fichier du bouton
 
 resourcestring
   sButtonTitle = 'Numéro du bouton';
@@ -67,28 +67,6 @@ type
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
       var Cancel, AbortEntered : boolean); override;
-  end;
-
-  {*
-    Bouton modèle
-    Le bouton modèle sert uniquement de modèle pour l'enregistrement dans la
-    palette des cases
-  *}
-  TButtonTemplate = class(TEffect)
-  public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
-  end;
-
-  {*
-    Bouton enfoncé
-    Le bouton enfoncé n'a aucun effet, il représente uniquement l'état désactivé
-    d'un bouton.
-  *}
-  TSunkButton = class(TEffect)
-  public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
   end;
 
 implementation
@@ -161,40 +139,6 @@ procedure TActionsObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
   var Cancel, AbortEntered : boolean);
 begin
   inherited;
-end;
-
-//////////////////////////////
-/// Classe TButtonTemplate ///
-//////////////////////////////
-
-{*
-  Crée une instance de TButtonTemplate
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
-*}
-constructor TButtonTemplate.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
-begin
-  inherited Create(AMaster, AID, AName);
-  Painter.ImgNames.Add(fButton);
-end;
-
-//////////////////////////
-/// Classe TSunkButton ///
-//////////////////////////
-
-{*
-  Crée une instance de TSunkButton
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
-*}
-constructor TSunkButton.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
-begin
-  inherited Create(AMaster, AID, AName);
-  Painter.ImgNames.Add(fSunkButton);
 end;
 
 end.
