@@ -5,12 +5,12 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit Lift;
+unit FLCLift;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, Common;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon;
 
 resourcestring
   sLift = 'Ascenseur'; /// Nom de l'ascenseur

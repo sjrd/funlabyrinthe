@@ -5,13 +5,13 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FunLabyCoreMain;
+unit FLCMain;
 
 interface
 
 uses
-  SysUtils, Classes, FunLabyUtils, Common, Fields, SimpleEffects, SimpleObjects,
-  Plank, Boat, Lift, Obstacles;
+  SysUtils, Classes, FunLabyUtils, FLCCommon, FLCFields, FLCSimpleEffects,
+  FLCSimpleObjects, FLCPlank, FLCBoat, FLCLift, FLCObstacles;
 
 procedure LoadComponents(Master : TMaster; Params : TStrings); stdcall;
 

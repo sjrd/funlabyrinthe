@@ -6,12 +6,12 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit Compatibility4xMain;
+unit C4xMain;
 
 interface
 
 uses
-  Classes, SysUtils, FunLabyUtils, Common, Screws;
+  Classes, SysUtils, FunLabyUtils, C4xCommon, C4xScrews;
 
 procedure LoadComponents(Master : TMaster; Params : TStrings); stdcall;
 

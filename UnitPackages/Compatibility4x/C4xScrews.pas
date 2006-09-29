@@ -5,12 +5,12 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit Screws;
+unit C4xScrews;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, Common;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, C4xCommon;
 
 resourcestring
   sSunkButton = 'Bouton enfoncé'; /// Nom du bouton enfoncé

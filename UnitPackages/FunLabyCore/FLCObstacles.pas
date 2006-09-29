@@ -5,12 +5,12 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit Obstacles;
+unit FLCObstacles;
 
 interface
 
 uses
-  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, Common, Fields;
+  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FLCCommon, FLCFields;
 
 resourcestring
   sSilverBlock = 'Bloc en argent'; /// Nom du bloc en argent

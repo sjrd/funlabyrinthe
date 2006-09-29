@@ -6,12 +6,12 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit SimpleEffects;
+unit FLCSimpleEffects;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, Common, Fields;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon, FLCFields;
 
 resourcestring
   sNorthArrow = 'Flèche nord';                /// Nom de la flèche nord

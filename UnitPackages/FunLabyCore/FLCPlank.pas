@@ -5,12 +5,12 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit Plank;
+unit FLCPlank;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, Common;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon;
 
 const {don't localize}
   idPlankPlugin = 'PlankPlugin'; /// ID du plug-in planche

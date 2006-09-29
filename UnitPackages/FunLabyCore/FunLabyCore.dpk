@@ -32,15 +32,15 @@ requires
   FunLabyCommonR;
 
 contains
-  FunLabyCoreMain in 'FunLabyCoreMain.pas',
-  Common in 'Common.pas',
-  Fields in 'Fields.pas',
-  SimpleEffects in 'SimpleEffects.pas',
-  SimpleObjects in 'SimpleObjects.pas',
-  Plank in 'Plank.pas',
-  Boat in 'Boat.pas',
-  Lift in 'Lift.pas',
-  Obstacles in 'Obstacles.pas';
+  FLCMain in 'FLCMain.pas',
+  FLCCommon in 'FLCCommon.pas',
+  FLCFields in 'FLCFields.pas',
+  FLCSimpleEffects in 'FLCSimpleEffects.pas',
+  FLCSimpleObjects in 'FLCSimpleObjects.pas',
+  FLCPlank in 'FLCPlank.pas',
+  FLCBoat in 'FLCBoat.pas',
+  FLCLift in 'FLCLift.pas',
+  FLCObstacles in 'FLCObstacles.pas';
 
 end.
 

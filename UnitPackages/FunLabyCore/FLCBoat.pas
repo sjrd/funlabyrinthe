@@ -5,12 +5,12 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit Boat;
+unit FLCBoat;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, Common, Fields;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon, FLCFields;
 
 const {don't localize}
   idBoatPlugin = 'BoatPlugin'; /// ID du plug-in barque

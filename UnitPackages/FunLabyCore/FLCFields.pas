@@ -4,12 +4,12 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit Fields;
+unit FLCFields;
 
 interface
 
 uses
-  Graphics, ScUtils, FunLabyUtils, Common;
+  Graphics, ScUtils, FunLabyUtils, FLCCommon;
 
 resourcestring
   sGrass = 'Herbe'; /// Nom de l'herbe

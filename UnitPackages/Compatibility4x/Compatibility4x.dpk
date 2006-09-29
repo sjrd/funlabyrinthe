@@ -32,9 +32,9 @@ requires
   vcl;
 
 contains
-  Compatibility4xMain in 'Compatibility4xMain.pas',
-  Screws in 'Screws.pas',
-  Common in 'Common.pas';
+  C4xMain in 'C4xMain.pas',
+  C4xScrews in 'C4xScrews.pas',
+  C4xCommon in 'C4xCommon.pas';
 
 end.
 

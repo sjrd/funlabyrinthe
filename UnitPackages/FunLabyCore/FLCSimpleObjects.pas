@@ -7,12 +7,12 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit SimpleObjects;
+unit FLCSimpleObjects;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, Common, Fields;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon, FLCFields;
 
 const {don't localize}
   idBuoyPlugin = 'BuoyPlugin'; /// ID du plug-in bouée

@@ -6,7 +6,7 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit Common;
+unit FLCCommon;
 
 interface
 
