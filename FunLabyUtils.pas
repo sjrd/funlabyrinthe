@@ -77,7 +77,7 @@ type
     @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
   *}
   TRegisterComponentSetProc = procedure(Template : TScrewComponent;
-    Components : array of TScrewComponent;
+    const Components : array of TScrewComponent; BaseIndex : integer;
     const DialogTitle, DialogPrompt : string) of object; stdcall;
 
   {*

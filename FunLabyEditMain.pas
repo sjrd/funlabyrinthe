@@ -54,8 +54,8 @@ type
     FDialogTitle : string;                  /// Titre de la boîte de dialogue
     FDialogPrompt : string;                 /// Invite de la boîte de dialogue
   public
-    constructor Create(AComponents : array of TScrewComponent;
-      const ADialogTitle, ADialogPrompt : string);
+    constructor Create(const AComponents : array of TScrewComponent;
+      BaseIndex : integer; const ADialogTitle, ADialogPrompt : string);
 
     function ChooseComponent(var LastIndex : integer) : TScrewComponent;
   end;
@@ -142,7 +142,7 @@ type
     function AddScrewButton(Template : TVisualComponent) : TButtonItem;
     procedure RegisterSingleComponent(Component : TScrewComponent); stdcall;
     procedure RegisterComponentSet(Template : TScrewComponent;
-      Components : array of TScrewComponent;
+      const Components : array of TScrewComponent; BaseIndex : integer;
       const DialogTitle, DialogPrompt : string); stdcall;
 
     procedure LoadPlayers;
@@ -184,16 +184,16 @@ implementation
   @param ADialogTitle    Titre de la boîte de dialogue
   @param ADialogPrompt   Invite de la boîte de dialogue
 *}
-constructor TComponentSet.Create(AComponents : array of TScrewComponent;
-  const ADialogTitle, ADialogPrompt : string);
+constructor TComponentSet.Create(const AComponents : array of TScrewComponent;
+  BaseIndex : integer; const ADialogTitle, ADialogPrompt : string);
 var Len, I : integer;
 begin
   inherited Create;
 
-  FMinIndex := Low(AComponents);
-  FMaxIndex := High(AComponents);
-
   Len := Length(AComponents);
+  FMinIndex := BaseIndex;
+  FMaxIndex := BaseIndex+Len-1;
+
   SetLength(FComponents, Len);
   for I := 0 to Len-1 do
     FComponents[I] := AComponents[Low(AComponents) + I];
@@ -270,12 +270,13 @@ end;
   @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
 *}
 procedure TFormMain.RegisterComponentSet(Template : TScrewComponent;
-  Components : array of TScrewComponent;
+  const Components : array of TScrewComponent; BaseIndex : integer;
   const DialogTitle, DialogPrompt : string);
 var Button : TButtonItem;
 begin
   Button := AddScrewButton(Template);
-  Button.Data := TComponentSet.Create(Components, DialogTitle, DialogPrompt);
+  Button.Data := TComponentSet.Create(Components,
+    BaseIndex, DialogTitle, DialogPrompt);
 end;
 
 {*

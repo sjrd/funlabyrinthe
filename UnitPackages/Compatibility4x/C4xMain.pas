@@ -60,11 +60,11 @@ procedure RegisterComponents(Master : TMaster;
   end;
 
   procedure RegSet(Template : TComponentID;
-    Components : array of TScrewComponent;
+    const Components : array of TScrewComponent; BaseIndex : integer;
     const DialogTitle, DialogPrompt : string);
   begin
     RegisterComponentSetProc(Master.ScrewComponent[Template],
-      Components, DialogTitle, DialogPrompt);
+      Components, BaseIndex, DialogTitle, DialogPrompt);
   end;
 
 var I : integer;
@@ -78,7 +78,8 @@ begin
 
   for I := 1 to 75 do
     Components[I] := Master.Screw[Format(idActionsScrew, [I])];
-  RegSet(idActionsScrewTemplate, Components, sButtonTitle, sButtonPrompt);
+  RegSet(idActionsScrewTemplate, Components, Low(Components),
+    sButtonTitle, sButtonPrompt);
 end;
 
 exports

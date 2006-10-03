@@ -1,9 +1,9 @@
 object FormMain: TFormMain
   Left = 0
   Top = 0
+  Width = 678
+  Height = 507
   Caption = #201'diteur FunLabyrinthe'
-  ClientHeight = 473
-  ClientWidth = 670
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

@@ -121,11 +121,11 @@ procedure RegisterComponents(Master : TMaster;
   end;
 
   procedure RegSet(Template : TComponentID;
-    Components : array of TScrewComponent;
+    const Components : array of TScrewComponent; BaseIndex : integer;
     const DialogTitle, DialogPrompt : string);
   begin
     RegisterComponentSetProc(Master.ScrewComponent[Template],
-      Components, DialogTitle, DialogPrompt);
+      Components, BaseIndex, DialogTitle, DialogPrompt);
   end;
 
 var I : integer;
@@ -155,7 +155,7 @@ begin
     Transporters[I] := Master.ScrewComponent[Format(idTransporterPrev, [I])];
   for I := 31 to 45 do
     Transporters[I] := Master.ScrewComponent[Format(idTransporterRandom, [I])];
-  RegSet(idTransporterTemplate, Transporters,
+  RegSet(idTransporterTemplate, Transporters, Low(Transporters),
     sTransporterTitle, sTransporterPrompt);
 
   RegSingle(idUpStairs);
@@ -182,7 +182,7 @@ begin
 
   for I := 1 to 10 do
     Boats[I] := Master.ScrewComponent[Format(idBoatScrew, [I])];
-  RegSet(idBoatScrewTemplate, Boats, sBoatTitle, sBoatPrompt);
+  RegSet(idBoatScrewTemplate, Boats, Low(Boats), sBoatTitle, sBoatPrompt);
 
   RegSingle(idOutsideScrew);
 end;
