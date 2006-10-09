@@ -65,12 +65,13 @@
     <BracketStarJavaDocCharPrefix>42</BracketStarJavaDocCharPrefix>
     <FilesIncludeList>
       <Count>1</Count>
-      <Item0>C:\Documents and Settings\S&#xE9;bastien\Mes documents\Projets Borland Studio\FunLabyrinthe\</Item0>
+      <Item0>.\..\</Item0>
     </FilesIncludeList>
     <FilesExcludeList>
       <Count>0</Count>
     </FilesExcludeList>
     <AllowHtmlInDescription>FALSE</AllowHtmlInDescription>
     <PropertyCommentFromAssessors>TRUE</PropertyCommentFromAssessors>
+    <DisplayHiddenItems>FALSE</DisplayHiddenItems>
   </TDOCOptions>
 </DelphiCodeToDoc_Project>
