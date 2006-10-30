@@ -99,9 +99,9 @@ implementation
 uses
   PropertiesDialog;
 
-////////////////////////
-/// Classe TFormMain ///
-////////////////////////
+{------------------}
+{ Classe TFormMain }
+{------------------}
 
 {*
   Commence une nouvelle partie

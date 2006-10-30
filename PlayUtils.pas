@@ -115,9 +115,9 @@ type
     procedure Execute;
   end;
 
-////////////////////////////////////////
-/// Classes de dialogues thread-safe ///
-////////////////////////////////////////
+{----------------------------------}
+{ Classes de dialogues thread-safe }
+{----------------------------------}
 
 procedure TShowDialog.Execute;
 begin
@@ -215,9 +215,9 @@ begin
   Result := TFormNumber.ChooseNumber(Title, Prompt, Default, Min, Max);
 end;
 
-//////////////////////////
-/// Classe TMoveThread ///
-//////////////////////////
+{--------------------}
+{ Classe TMoveThread }
+{--------------------}
 
 {*
   Crée une instance de TMoveThread
@@ -383,9 +383,9 @@ procedure TMoveThread.MapChanged;
 begin
 end;
 
-//////////////////////////
-/// Classe TPlayerView ///
-//////////////////////////
+{--------------------}
+{ Classe TPlayerView }
+{--------------------}
 
 {*
   Crée une instance de TPlayerView

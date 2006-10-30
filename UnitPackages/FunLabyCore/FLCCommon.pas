@@ -74,9 +74,9 @@ begin
   end;
 end;
 
-//////////////////////////
-/// Classe TMaskPlugin ///
-//////////////////////////
+{--------------------}
+{ Classe TMaskPlugin }
+{--------------------}
 
 {*
   Crée une instance de TMaskPlugin

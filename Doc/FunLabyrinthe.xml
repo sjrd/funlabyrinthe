@@ -29,7 +29,7 @@
     <CustomFooter>UNDER CONSTRUCTION</CustomFooter>
     <Language>lEnglish</Language>
     <OutputFormat>ofCHM</OutputFormat>
-    <OutputFolder>C:\Program Files\DelphiCodeToDoc\out\</OutputFolder>
+    <OutputFolder>.\</OutputFolder>
     <VisibilitySet>
       <mvPrivate>TRUE</mvPrivate>
       <mvProtected>TRUE</mvProtected>

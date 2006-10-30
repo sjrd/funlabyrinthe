@@ -31,9 +31,9 @@ type
 
 implementation
 
-//////////////////////////
-/// Classe TFLMMapFile ///
-//////////////////////////
+{--------------------}
+{ Classe TFLMMapFile }
+{--------------------}
 
 const {don't localize}
   FLMMIMEType = 'application/flm';

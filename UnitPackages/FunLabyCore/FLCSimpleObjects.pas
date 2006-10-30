@@ -160,9 +160,9 @@ type
 
 implementation
 
-//////////////////////////
-/// Classe TBuoyPlugin ///
-//////////////////////////
+{--------------------}
+{ Classe TBuoyPlugin }
+{--------------------}
 
 {*
   Dessine sous le joueur
@@ -216,9 +216,9 @@ begin
   Result := Action = actGoOnWater;
 end;
 
-/////////////////////
-/// Classe TBuoys ///
-/////////////////////
+{---------------}
+{ Classe TBuoys }
+{---------------}
 
 {*
   Crée une instance de TBuoys
@@ -279,9 +279,9 @@ begin
     inherited;
 end;
 
-//////////////////////////
-/// Classe TSilverKeys ///
-//////////////////////////
+{--------------------}
+{ Classe TSilverKeys }
+{--------------------}
 
 {*
   Crée une instance de TSilverKeys
@@ -342,9 +342,9 @@ begin
     inherited;
 end;
 
-//////////////////////////
-/// Classe TGoldenKeys ///
-//////////////////////////
+{--------------------}
+{ Classe TGoldenKeys }
+{--------------------}
 
 {*
   Crée une instance de TGoldenKeys
@@ -405,9 +405,9 @@ begin
     inherited;
 end;
 
-////////////////////
-/// Classe TBuoy ///
-////////////////////
+{--------------}
+{ Classe TBuoy }
+{--------------}
 
 {*
   Crée une instance de TBuoy
@@ -446,9 +446,9 @@ begin
   Player.Controller.ShowDialog(sMessage, sFoundBuoy);
 end;
 
-/////////////////////////
-/// Classe TSilverKey ///
-/////////////////////////
+{-------------------}
+{ Classe TSilverKey }
+{-------------------}
 
 {*
   Crée une instance de TSilverKey
@@ -487,9 +487,9 @@ begin
   Player.Controller.ShowDialog(sMessage, sFoundSilverKey);
 end;
 
-/////////////////////////
-/// Classe TGoldenKey ///
-/////////////////////////
+{-------------------}
+{ Classe TGoldenKey }
+{-------------------}
 
 {*
   Crée une instance de TGoldenKey

@@ -81,9 +81,9 @@ type
 
 implementation
 
-////////////////////////////////
-/// Classe TEngagedLiftField ///
-////////////////////////////////
+{--------------------------}
+{ Classe TEngagedLiftField }
+{--------------------------}
 
 {*
   Exécuté lorsque le joueur tente de venir sur la case
@@ -106,9 +106,9 @@ begin
   Cancel := True;
 end;
 
-/////////////////////////////////
-/// Classe TEngagedLiftEffect ///
-/////////////////////////////////
+{---------------------------}
+{ Classe TEngagedLiftEffect }
+{---------------------------}
 
 {*
   Exécuté lorsque le joueur est sorti de la case
@@ -146,9 +146,9 @@ begin
   Player.Map[Pos].Free;
 end;
 
-////////////////////////////////
-/// Classe TEngagedLiftScrew ///
-////////////////////////////////
+{--------------------------}
+{ Classe TEngagedLiftScrew }
+{--------------------------}
 
 {*
   Crée une instance de TEngagedLiftScrew
@@ -173,9 +173,9 @@ begin
     Painter.ImgNames.Add(fOpenedLift);
 end;
 
-////////////////////
-/// Classe TLift ///
-////////////////////
+{--------------}
+{ Classe TLift }
+{--------------}
 
 {*
   Crée une instance de TLift

@@ -71,9 +71,9 @@ type
 
 implementation
 
-/////////////////////////////
-/// Classe TActionsEffect ///
-/////////////////////////////
+{-----------------------}
+{ Classe TActionsEffect }
+{-----------------------}
 
 {*
   Crée une instance de TActionsEffect
@@ -103,9 +103,9 @@ begin
   inherited;
 end;
 
-///////////////////////////////
-/// Classe TActionsObstacle ///
-///////////////////////////////
+{-------------------------}
+{ Classe TActionsObstacle }
+{-------------------------}
 
 {*
   Crée une instance de TActionsObstacle

@@ -218,9 +218,9 @@ begin
     UnitFileClasses := TStringList.Create;
 end;
 
-/////////////////////////////
-/// Classe TDependantFile ///
-/////////////////////////////
+{-----------------------}
+{ Classe TDependantFile }
+{-----------------------}
 
 {*
   Crée une instance de TDependantFile
@@ -238,9 +238,9 @@ begin
   FMaster := FMasterFile.Master;
 end;
 
-////////////////////////
-/// Classe TUnitFile ///
-////////////////////////
+{------------------}
+{ Classe TUnitFile }
+{------------------}
 
 {*
   Crée une instance de TUnitFile
@@ -288,9 +288,9 @@ procedure TUnitFile.GetParams(Params : TStrings);
 begin
 end;
 
-///////////////////////
-/// Classe TMapFile ///
-///////////////////////
+{-----------------}
+{ Classe TMapFile }
+{-----------------}
 
 {*
   Crée une instance de TMapFile en chargeant la carte depuis un fichier
@@ -446,9 +446,9 @@ begin
   end;
 end;
 
-//////////////////////////
-/// Classe TMasterFile ///
-//////////////////////////
+{--------------------}
+{ Classe TMasterFile }
+{--------------------}
 
 {*
   Ouvre un fichier FunLabyrinthe

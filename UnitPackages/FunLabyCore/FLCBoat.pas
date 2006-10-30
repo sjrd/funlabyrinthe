@@ -80,9 +80,9 @@ const
 
 implementation
 
-//////////////////////////
-/// Classe TBoatPlugin ///
-//////////////////////////
+{--------------------}
+{ Classe TBoatPlugin }
+{--------------------}
 
 {*
   Dessine sous le joueur
@@ -225,9 +225,9 @@ begin
   Result := Action = actGoOnWater;
 end;
 
-////////////////////
-/// Classe TBoat ///
-////////////////////
+{--------------}
+{ Classe TBoat }
+{--------------}
 
 {*
   Crée une instance de TBoat

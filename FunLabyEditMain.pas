@@ -174,9 +174,9 @@ implementation
 
 {$R *.dfm}
 
-////////////////////////////
-/// Classe TComponentSet ///
-////////////////////////////
+{----------------------}
+{ Classe TComponentSet }
+{----------------------}
 
 {*
   Crée une instance de TComponentSet
@@ -210,9 +210,9 @@ begin
   Result := FComponents[LastIndex - FMinIndex];
 end;
 
-////////////////////////
-/// Classe TFormMain ///
-////////////////////////
+{------------------}
+{ Classe TFormMain }
+{------------------}
 
 {*
   Modifie l'étage courant

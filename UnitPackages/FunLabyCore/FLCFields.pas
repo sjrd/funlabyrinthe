@@ -120,9 +120,9 @@ type
 
 implementation
 
-/////////////////////
-/// Classe TGrass ///
-/////////////////////
+{---------------}
+{ Classe TGrass }
+{---------------}
 
 {*
   Crée une instance de TGrass
@@ -138,9 +138,9 @@ begin
   Painter.ImgNames.Add(fGrass);
 end;
 
-////////////////////
-/// Classe TWall ///
-////////////////////
+{--------------}
+{ Classe TWall }
+{--------------}
 
 {*
   Crée une instance de TWall
@@ -174,9 +174,9 @@ begin
   Cancel := True;
 end;
 
-/////////////////////
-/// Classe TWater ///
-/////////////////////
+{---------------}
+{ Classe TWater }
+{---------------}
 
 {*
   Crée une instance de TWater
@@ -262,9 +262,9 @@ begin
   end;
 end;
 
-////////////////////
-/// Classe THole ///
-////////////////////
+{--------------}
+{ Classe THole }
+{--------------}
 
 {*
   Crée une instance de THole
@@ -309,9 +309,9 @@ begin
   end;
 end;
 
-///////////////////
-/// Classe TSky ///
-///////////////////
+{-------------}
+{ Classe TSky }
+{-------------}
 
 {*
   Crée une instance de TSky

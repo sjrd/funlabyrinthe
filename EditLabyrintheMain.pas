@@ -118,9 +118,9 @@ uses NewLabDialog, NewLiftDialog, DescriptionDialog, ButtonActions,
 
 {$R *.DFM}
 
-////////////////////////////////////////
-/// Procédures et fonctions globales ///
-////////////////////////////////////////
+{----------------------------------}
+{ Procédures et fonctions globales }
+{----------------------------------}
 
 function GetRect(X, Y : integer) : TRect;
 begin
@@ -200,9 +200,9 @@ begin
   end;
 end;
 
-//////////////////////////////////////////////////
-/// Procédures et fonctions de TFormPrincipale ///
-//////////////////////////////////////////////////
+{--------------------------------------------}
+{ Procédures et fonctions de TFormPrincipale }
+{--------------------------------------------}
 
 function TFormPrincipale.GetEcran(X, Y : integer) : integer;
 begin

@@ -25,9 +25,9 @@ type
 
 implementation
 
-///////////////////////////
-/// Classe TBPLUnitFile ///
-///////////////////////////
+{---------------------}
+{ Classe TBPLUnitFile }
+{---------------------}
 
 const {don't localize}
   BPLMIMEType = 'application/bpl';

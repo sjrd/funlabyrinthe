@@ -214,9 +214,9 @@ type
 
 implementation
 
-/////////////////////
-/// Classe TArrow ///
-/////////////////////
+{---------------}
+{ Classe TArrow }
+{---------------}
 
 {*
   Crée une instance de TArrow
@@ -257,9 +257,9 @@ begin
   GoOnMoving := True;
 end;
 
-///////////////////////////
-/// Classe TTransporter ///
-///////////////////////////
+{---------------------}
+{ Classe TTransporter }
+{---------------------}
 
 {*
   Crée une instance de TTransporter
@@ -435,9 +435,9 @@ begin
   Player.Position := Other;
 end;
 
-//////////////////////
-/// Classe TStairs ///
-//////////////////////
+{----------------}
+{ Classe TStairs }
+{----------------}
 
 {*
   Crée une instance de TStairs
@@ -482,9 +482,9 @@ begin
   Player.Position := Other;
 end;
 
-///////////////////////////////
-/// Classe TDirectTurnstile ///
-///////////////////////////////
+{-------------------------}
+{ Classe TDirectTurnstile }
+{-------------------------}
 
 {*
   Crée une instance de TDirectTurnstile
@@ -545,9 +545,9 @@ begin
   Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idIndirectTurnstile);
 end;
 
-/////////////////////////////////
-/// Classe TIndirectTurnstile ///
-/////////////////////////////////
+{---------------------------}
+{ Classe TIndirectTurnstile }
+{---------------------------}
 
 {*
   Crée une instance de TIndirectTurnstile
@@ -608,9 +608,9 @@ begin
   Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idDirectTurnstile);
 end;
 
-///////////////////////
-/// Classe TOutside ///
-///////////////////////
+{-----------------}
+{ Classe TOutside }
+{-----------------}
 
 {*
   Crée une instance de TOutside
@@ -642,9 +642,9 @@ begin
   Player.Controller.ShowDialog(sWon, sGotOutsideMaze);
 end;
 
-////////////////////////
-/// Classe TTreasure ///
-////////////////////////
+{------------------}
+{ Classe TTreasure }
+{------------------}
 
 {*
   Crée une instance de TTreasure

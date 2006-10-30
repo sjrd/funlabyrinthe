@@ -78,9 +78,9 @@ type
 
 implementation
 
-///////////////////////////
-/// Classe TSilverBlock ///
-///////////////////////////
+{---------------------}
+{ Classe TSilverBlock }
+{---------------------}
 
 {*
   Crée une instance de TSilverBlock
@@ -124,9 +124,9 @@ begin
   end;
 end;
 
-///////////////////////////
-/// Classe TGoldenBlock ///
-///////////////////////////
+{---------------------}
+{ Classe TGoldenBlock }
+{---------------------}
 
 {*
   Crée une instance de TGoldenBlock
@@ -170,9 +170,9 @@ begin
   end;
 end;
 
-/////////////////////////
-/// Classe TSecretWay ///
-/////////////////////////
+{-------------------}
+{ Classe TSecretWay }
+{-------------------}
 
 {*
   Crée une instance de TSecretWay

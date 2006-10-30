@@ -122,9 +122,9 @@ const
 
 implementation
 
-///////////////////////////
-/// Classe TPlankPlugin ///
-///////////////////////////
+{---------------------}
+{ Classe TPlankPlugin }
+{---------------------}
 
 {*
   Dessine sous le joueur
@@ -166,9 +166,9 @@ begin
   end;
 end;
 
-//////////////////////
-/// Classe TPlanks ///
-//////////////////////
+{----------------}
+{ Classe TPlanks }
+{----------------}
 
 {*
   Crée une instance de TPlanks
@@ -231,9 +231,9 @@ begin
   end else inherited;
 end;
 
-//////////////////////////
-/// Classe TPlankField ///
-//////////////////////////
+{--------------------}
+{ Classe TPlankField }
+{--------------------}
 
 {*
   Exécuté lorsque le joueur tente de venir sur la case
@@ -254,9 +254,9 @@ begin
     Cancel := True;
 end;
 
-///////////////////////////
-/// Classe TPlankEffect ///
-///////////////////////////
+{---------------------}
+{ Classe TPlankEffect }
+{---------------------}
 
 {*
   Exécuté lorsque le joueur est arrivé sur la case
@@ -290,9 +290,9 @@ begin
   Player.Map[Pos].Free;
 end;
 
-//////////////////////////
-/// Classe TPlankScrew ///
-//////////////////////////
+{--------------------}
+{ Classe TPlankScrew }
+{--------------------}
 
 {*
   Crée une instance de TPlankScrew
@@ -309,9 +309,9 @@ begin
   FPlayer := APlayer;
 end;
 
-/////////////////////
-/// Classe TPlank ///
-/////////////////////
+{---------------}
+{ Classe TPlank }
+{---------------}
 
 {*
   Crée une instance de TPlank

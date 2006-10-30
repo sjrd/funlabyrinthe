@@ -281,9 +281,9 @@ function CaseRect(CodeCase : integer; StyleBouton : TStyleBouton) : TRect;
 
 implementation
 
-///////////////////////////////////////
-/// Procédures et foncions globales ///
-///////////////////////////////////////
+{---------------------------------}
+{ Procédures et foncions globales }
+{---------------------------------}
 
 procedure FixeInt(Src : TScStrings; Name : string; var Value : integer);
 var Index : integer;
@@ -426,9 +426,9 @@ begin
   if Result < 128 then Dec(Result, 32) else Dec(Result, 145);
 end;
 
-//////////////////////////
-/// Classe TCaseActive ///
-//////////////////////////
+{--------------------}
+{ Classe TCaseActive }
+{--------------------}
 
 constructor TCaseActive.Create(Owner : TLabyrinthe);
 begin
@@ -1483,9 +1483,9 @@ begin
   If Str <> '' then Result := ExecuteInformation('Gagné !', Str, MB_ICONINFORMATION or MB_OK);
 end;
 
-///////////////////////////////////////////
-/// Classes descendantes de TCaseActive ///
-///////////////////////////////////////////
+{-------------------------------------}
+{ Classes descendantes de TCaseActive }
+{-------------------------------------}
 
 constructor TCaseBouton.Create(Owner : TLabyrinthe);
 begin
@@ -1574,9 +1574,9 @@ begin
   end;
 end;
 
-//////////////////////////
-/// Classe TLabyrinthe ///
-//////////////////////////
+{--------------------}
+{ Classe TLabyrinthe }
+{--------------------}
 
 constructor TLabyrinthe.CreateOpen(FileName : string);
 var SL, EnTete : TScStrings;

@@ -734,9 +734,9 @@ begin
   EmptyRect(Canvas, ScrewRect(X, Y));
 end;
 
-////////////////////////////
-/// Classe TImagesMaster ///
-////////////////////////////
+{----------------------}
+{ Classe TImagesMaster }
+{----------------------}
 
 {*
   Crée une instance de TImagesMaster
@@ -811,9 +811,9 @@ begin
   Draw(IndexOf(ImgName), Canvas, X, Y);
 end;
 
-///////////////////////
-/// Classe TPainter ///
-///////////////////////
+{-----------------}
+{ Classe TPainter }
+{-----------------}
 
 {*
   Crée une instance de TPainter
@@ -875,9 +875,9 @@ begin
   Canvas.BrushCopy(ScrewRect(X, Y), FCachedImg, ScrewRect, clTransparent);
 end;
 
-////////////////////////////////
-/// Classe TFunLabyComponent ///
-////////////////////////////////
+{--------------------------}
+{ Classe TFunLabyComponent }
+{--------------------------}
 
 {*
   Crée une instance de TFunLabyComponent
@@ -902,9 +902,9 @@ begin
   inherited;
 end;
 
-///////////////////////////////
-/// Classe TVisualComponent ///
-///////////////////////////////
+{-------------------------}
+{ Classe TVisualComponent }
+{-------------------------}
 
 {*
   Crée une instance de TVisualComponent
@@ -954,9 +954,9 @@ begin
   FPainter.Draw(Canvas, X, Y);
 end;
 
-//////////////////////
-/// Classe TPlugin ///
-//////////////////////
+{----------------}
+{ Classe TPlugin }
+{----------------}
 
 {*
   Crée une instance de TPlugin
@@ -1067,9 +1067,9 @@ begin
   Result := False;
 end;
 
-/////////////////////////
-/// Classe TObjectDef ///
-/////////////////////////
+{-------------------}
+{ Classe TObjectDef }
+{-------------------}
 
 {*
   Nombre d'objets de ce type possédés par un joueur
@@ -1127,9 +1127,9 @@ procedure TObjectDef.UseFor(Player : TPlayer; const Action : TPlayerAction);
 begin
 end;
 
-/////////////////////
-/// Classe TField ///
-/////////////////////
+{---------------}
+{ Classe TField }
+{---------------}
 
 {*
   Crée une instance de TField
@@ -1206,9 +1206,9 @@ procedure TField.Exiting(Player : TPlayer; OldDirection : TDirection;
 begin
 end;
 
-//////////////////////
-/// Classe TEffect ///
-//////////////////////
+{----------------}
+{ Classe TEffect }
+{----------------}
 
 {*
   Exécuté lorsque le joueur est arrivé sur la case
@@ -1235,9 +1235,9 @@ procedure TEffect.Exited(Player : TPlayer; KeyPressed : boolean;
 begin
 end;
 
-////////////////////////////////
-/// Classe TDecorativeEffect ///
-////////////////////////////////
+{--------------------------}
+{ Classe TDecorativeEffect }
+{--------------------------}
 
 {*
   Crée une instance de TDecorativeEffect
@@ -1253,9 +1253,9 @@ begin
   Painter.ImgNames.Add(AImgName);
 end;
 
-////////////////////////
-/// Classe TObstacle ///
-////////////////////////
+{------------------}
+{ Classe TObstacle }
+{------------------}
 
 {*
   Exécuté lorsque le joueur pousse sur l'obstacle
@@ -1278,9 +1278,9 @@ begin
   Cancel := True;
 end;
 
-/////////////////////
-/// Classe TScrew ///
-/////////////////////
+{---------------}
+{ Classe TScrew }
+{---------------}
 
 {*
   Crée une instance de TScrew
@@ -1359,9 +1359,9 @@ begin
   Result := Master.Screw[Field.ID+'-'+EffectID+'-'+NewObstacle];
 end;
 
-///////////////////////////////
-/// Classe TOverriddenScrew ///
-///////////////////////////////
+{-------------------------}
+{ Classe TOverriddenScrew }
+{-------------------------}
 
 {*
   Crée une instance de TOverriddenScrew
@@ -1410,9 +1410,9 @@ begin
   inherited;
 end;
 
-///////////////////
-/// Classe TMap ///
-///////////////////
+{-------------}
+{ Classe TMap }
+{-------------}
 
 {*
   Crée une instance de TMap
@@ -1553,9 +1553,9 @@ begin
     (Position.Z >= 0) and (Position.Z < FDimensions.Z);
 end;
 
-//////////////////////
-/// Classe TPlayer ///
-//////////////////////
+{----------------}
+{ Classe TPlayer }
+{----------------}
 
 {*
   Crée une instance de TPlayer
@@ -1898,9 +1898,9 @@ begin
   Master.Terminate;
 end;
 
-//////////////////////
-/// Classe TMaster ///
-//////////////////////
+{----------------}
+{ Classe TMaster }
+{----------------}
 
 {*
   Crée une instance de TMaster
