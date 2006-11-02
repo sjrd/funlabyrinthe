@@ -45,8 +45,8 @@ type
   *}
   TPlankPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
   end;
 
   {*
@@ -131,12 +131,13 @@ implementation
   DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
   effectué dans DrawBefore se retrouve donc sous le joueur.
   @param Player   Joueur qui est dessiné
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TPlankPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TPlankPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   inherited;
 

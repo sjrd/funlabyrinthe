@@ -68,8 +68,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
+    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
@@ -189,12 +189,13 @@ end;
 
 {*
   Dessine le passage secret sur le canevas indiqué
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TSecretWay.Draw(Canvas : TCanvas; X : integer = 0;
-  Y : integer = 0);
+procedure TSecretWay.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 begin
   inherited;
 

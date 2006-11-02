@@ -235,7 +235,7 @@ var ImageIndex : integer;
 begin
   // Ajout de l'image du composant dans la liste d'images
   EmptyScrewRect(ScrewBmp.Canvas);
-  Template.Draw(ScrewBmp.Canvas);
+  Template.Draw(NoQPos, ScrewBmp.Canvas);
   ImageIndex := ScrewsImages.AddMasked(ScrewBmp, clTransparent);
 
   // Choix de la catégorie
@@ -674,6 +674,7 @@ procedure TFormMain.PaintBoxMapPaint(Sender: TObject);
 var Left, Top, Right, Bottom : integer;
     LeftZone, TopZone, RightZone, BottomZone : integer;
     I, X, Y : integer;
+    QPos : TQualifiedPos;
 begin
   if CurrentMap = nil then exit;
 
@@ -689,9 +690,11 @@ begin
   BottomZone := TopZone  + Bottom div CurrentMap.ZoneHeight;
 
   // Dessin des cases
+  QPos.Map := CurrentMap;
   for X := Left to Right do for Y := Top to Bottom do
   begin
-    CurrentMap[Point3D(X, Y, CurrentFloor)].Draw(PaintBoxMap.Canvas,
+    QPos.Position := Point3D(X, Y, CurrentFloor);
+    CurrentMap[QPos.Position].Draw(QPos, PaintBoxMap.Canvas,
       (MinViewSize+X) * ScrewSize, (MinViewSize+Y) * ScrewSize);
   end;
 
@@ -700,7 +703,7 @@ begin
   begin
     if (Map = CurrentMap) and (Position.Z = CurrentFloor) then
     begin
-      Draw(PaintBoxMap.Canvas, (MinViewSize+Position.X) * ScrewSize,
+      DrawInPlace(PaintBoxMap.Canvas, (MinViewSize+Position.X) * ScrewSize,
         (MinViewSize+Position.Y) * ScrewSize);
     end;
   end;

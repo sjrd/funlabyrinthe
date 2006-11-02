@@ -126,8 +126,8 @@ type
       const AName : string; ANumber : integer;
       AKind : TTransporterKind = tkInactive);
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
+    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
 
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
@@ -385,12 +385,13 @@ end;
 
 {*
   Dessine le téléporteur sur le canevas indiqué
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TTransporter.Draw(Canvas : TCanvas; X : integer = 0;
-  Y : integer = 0);
+procedure TTransporter.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 begin
   inherited;
 

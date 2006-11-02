@@ -41,8 +41,8 @@ type
   *}
   TBoatPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
 
     procedure Moving(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Dest : T3DPoint;
@@ -65,8 +65,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ANumber : integer);
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
+    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
 
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
       Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
@@ -89,12 +89,13 @@ implementation
   DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
   effectué dans DrawBefore se retrouve donc sous le joueur.
   @param Player   Joueur qui est dessiné
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TBoatPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TBoatPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   inherited;
   with Canvas do
@@ -245,12 +246,13 @@ end;
 
 {*
   Dessine la barque sur le canevas indiqué
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TBoat.Draw(Canvas : TCanvas; X : integer = 0;
-  Y : integer = 0);
+procedure TBoat.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 begin
   inherited;
 

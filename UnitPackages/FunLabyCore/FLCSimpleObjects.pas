@@ -61,8 +61,8 @@ type
   *}
   TBuoyPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
 
     procedure Moved(Player : TPlayer; KeyPressed : boolean;
       Src, Dest : T3DPoint); override;
@@ -169,12 +169,13 @@ implementation
   DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
   effectué dans DrawBefore se retrouve donc sous le joueur.
   @param Player   Joueur qui est dessiné
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TBuoyPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TBuoyPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   inherited;
   with Canvas do

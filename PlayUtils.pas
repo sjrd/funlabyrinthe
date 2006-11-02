@@ -463,6 +463,7 @@ var Map : TMap;
     Size, Width, Height : integer;
     OrigX, OrigY : integer;
     X, Y, Z, I : integer;
+    QPos : TQualifiedPos;
 begin
   // Mettre à jour le tick count de la partie avant de dessiner
   Master.UpdateTickCount;
@@ -493,14 +494,23 @@ begin
   dec(OrigY, Size);
 
   // Dessin des cases
+  QPos.Map := Map;
   Z := Player.Position.Z;
   for X := 0 to Width-1 do for Y := 0 to Height-1 do
-    Map[Point3D(OrigX+X, OrigY+Y, Z)].Draw(Canvas, X*ScrewSize, Y*ScrewSize);
+  begin
+    QPos.Position := Point3D(OrigX+X, OrigY+Y, Z);
+    Map[QPos.Position].Draw(QPos, Canvas, X*ScrewSize, Y*ScrewSize);
+  end;
 
   // Dessin des joueurs
   for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
+  begin
     if (Map = Player.Map) and (Position.Z = Z) then
-      Draw(Canvas, (Position.X-OrigX)*ScrewSize, (Position.Y-OrigY)*ScrewSize);
+    begin
+      DrawInPlace(Canvas, (Position.X-OrigX)*ScrewSize,
+        (Position.Y-OrigY)*ScrewSize);
+    end;
+  end;
 end;
 
 end.

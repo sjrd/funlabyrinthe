@@ -51,7 +51,7 @@ begin
         if Infos <> '' then
         begin
           EmptyScrewRect(Bitmap.Canvas);
-          Draw(Bitmap.Canvas);
+          Draw(NoQPos, Bitmap.Canvas);
 
           with ListViewObjects.Items.Add do
           begin

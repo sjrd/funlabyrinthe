@@ -63,6 +63,14 @@ type
   TMaster = class;
 
   {*
+    Position qualifiée, composée d'une carte et d'une position sur la carte
+  *}
+  TQualifiedPos = record
+    Map : TMap;          /// Carte, ou nil pour une position nulle
+    Position : T3DPoint; /// Position sur la carte, si Map <> nil
+  end;
+
+  {*
     Type de méthode call-back pour l'enregistrement d'un unique composant
     @param Component   Le composant à enregistrer
   *}
@@ -164,7 +172,8 @@ type
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0); virtual;
+    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); virtual;
 
     property Name : string read FName;
   end;
@@ -189,10 +198,10 @@ type
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
-    procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); virtual;
-    procedure DrawAfter(Player : TPlayer; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); virtual;
+    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+      Canvas : TCanvas; X : integer = 0; Y : integer = 0); virtual;
+    procedure DrawAfter(Player : TPlayer; const QPos : TQualifiedPos;
+      Canvas : TCanvas; X : integer = 0; Y : integer = 0); virtual;
 
     procedure Moving(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Dest : T3DPoint;
@@ -240,14 +249,14 @@ type
   private
     FDelegateDrawTo : TField; /// Terrain délégué pour l'affichage
   protected
-    procedure DrawField(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); virtual;
+    procedure DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); virtual;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ADelegateDrawTo : TField = nil);
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
+    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; Src, Pos : T3DPoint;
@@ -308,8 +317,8 @@ type
       const AName : string; AField : TField; AEffect : TEffect;
       AObstacle : TObstacle);
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
+    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
 
     function ChangeField(NewField : TComponentID) : TScrew;
     function ChangeEffect(NewEffect : TComponentID = '') : TScrew;
@@ -337,8 +346,8 @@ type
       AObstacle : TObstacle);
     destructor Destroy; override;
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
+    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
 
     property Map : TMap read FMap;
     property Position : T3DPoint read FPosition;
@@ -483,8 +492,10 @@ type
     procedure GetAttributes(Attributes : TStrings);
     procedure GetPluginIDs(PluginIDs : TStrings);
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
+    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
+    procedure DrawInPlace(Canvas : TCanvas; X : integer = 0;
+      Y : integer = 0);
 
     procedure AddPlugin(Plugin : TPlugin);
     procedure RemovePlugin(Plugin : TPlugin);
@@ -610,6 +621,9 @@ const {don't localize}
   /// Fichier INI de FunLabyrinthe
   fIniFileName = 'FunLabyrinthe.ini';
 
+  /// Position qualifiée nulle
+  NoQPos : TQualifiedPos = (Map : nil; Position : (X : 0; Y : 0; Z : 0));
+
 var {don't localize}
   /// Dossier de FunLabyrinthe dans Application Data
   fFunLabyAppData : string = '';
@@ -637,10 +651,15 @@ function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
 procedure EmptyRect(Canvas : TCanvas; Rect : TRect);
 procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 
+function IsNoQPos(const QPos : TQualifiedPos) : boolean;
+
 implementation
 
 {*
   Vérifie que FunLabyrinthe a été lancé de façon valide
+  FunLabyrinthe est lancé de façon valide lorsque l'exécutable se situe sur
+  l'ordinateur local. Il est en effet impossible, sinon, d'accéder aux
+  packages Delphi et autres ressources non partageables.
   @return True si FunLabyrinthe a été lancé de façon valide, False sinon
 *}
 function CheckValidLaunch : boolean;
@@ -732,6 +751,16 @@ end;
 procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   EmptyRect(Canvas, ScrewRect(X, Y));
+end;
+
+{*
+  Détermine si une position qualifiée est nulle
+  @param QPos   Position à tester
+  @return True si la position qualifiée QPos est nulle, False sinon
+*}
+function IsNoQPos(const QPos : TQualifiedPos) : boolean;
+begin
+  Result := QPos.Map = nil;
 end;
 
 {----------------------}
@@ -944,12 +973,13 @@ end;
 {*
   Dessine le composant sur un canevas
   Draw dessine le composant sur un canevas à la position indiquée.
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le composant
   @param X        Coordonnée X du point à partir duquel dessiner le composant
   @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TVisualComponent.Draw(Canvas : TCanvas; X : integer = 0;
-  Y : integer = 0);
+procedure TVisualComponent.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 begin
   FPainter.Draw(Canvas, X, Y);
 end;
@@ -999,12 +1029,13 @@ end;
   DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
   effectué dans DrawBefore se retrouve donc sous le joueur.
   @param Player   Joueur qui est dessiné
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   FPainterBefore.Draw(Canvas, X, Y);
 end;
@@ -1014,12 +1045,13 @@ end;
   DrawAfter est exécuté lors du dessin du joueur, après celui-ci. Le dessin
   effectué dans DrawAfter se retrouve donc sur le joueur.
   @param Player   Joueur qui est dessiné
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TPlugin.DrawAfter(Player : TPlayer; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TPlugin.DrawAfter(Player : TPlayer; const QPos : TQualifiedPos;
+  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   FPainterAfter.Draw(Canvas, X, Y);
 end;
@@ -1148,30 +1180,32 @@ end;
 {*
   Dessine le terrain sur le canevas indiqué
   Les descendants de TField doivent réimplémenter DrawField plutôt que Draw.
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TField.DrawField(Canvas : TCanvas; X : integer = 0;
-  Y : integer = 0);
+procedure TField.DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 begin
-  inherited Draw(Canvas, X, Y);
+  inherited Draw(QPos, Canvas, X, Y);
 end;
 
 {*
   Dessine le terrain sur le canevas indiqué, ou délègue le dessin
   Les descendants de TField ne doivent pas réimplémenter Draw, mais DrawField
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TField.Draw(Canvas : TCanvas; X : integer = 0;
-  Y : integer = 0);
+procedure TField.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 begin
   if FDelegateDrawTo = nil then
-    DrawField(Canvas, X, Y)
+    DrawField(QPos, Canvas, X, Y)
   else
-    FDelegateDrawTo.Draw(Canvas, X, Y);
+    FDelegateDrawTo.Draw(QPos, Canvas, X, Y);
 end;
 
 {*
@@ -1303,17 +1337,19 @@ end;
 
 {*
   Dessine la case sur un canevas
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TScrew.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TScrew.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 begin
-  Field.Draw(Canvas, X, Y);
+  Field.Draw(QPos, Canvas, X, Y);
   if Assigned(Effect) then
-    Effect.Draw(Canvas, X, Y);
+    Effect.Draw(QPos, Canvas, X, Y);
   if Assigned(Obstacle) then
-    Obstacle.Draw(Canvas, X, Y);
+    Obstacle.Draw(QPos, Canvas, X, Y);
 
   inherited;
 end;
@@ -1399,14 +1435,15 @@ end;
 
 {*
   Dessine la case sur un canevas
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TOverriddenScrew.Draw(Canvas : TCanvas; X : integer = 0;
-  Y : integer = 0);
+procedure TOverriddenScrew.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 begin
-  OriginalScrew.Draw(Canvas, X, Y);
+  OriginalScrew.Draw(QPos, Canvas, X, Y);
   inherited;
 end;
 
@@ -1671,21 +1708,24 @@ end;
 {*
   Dessine le joueur sur un canevas
   Draw dessine le joueur sur un canevas à la position indiquée.
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le joueur
   @param X        Coordonnée X du point à partir duquel dessiner le joueur
   @param Y        Coordonnée Y du point à partir duquel dessiner le joueur
 *}
-procedure TPlayer.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TPlayer.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 var I : integer;
 begin
   // Dessine les plug-in en-dessous du joueur
   for I := 0 to PluginCount-1 do
-    Plugins[I].DrawBefore(Self, Canvas, X, Y);
+    Plugins[I].DrawBefore(Self, QPos, Canvas, X, Y);
 
   // Dessine le peintre correspondant à la direction...
   if FColor = clDefault then
   begin
-    if (FDirection = diNone) or (not Assigned(FDirPainters[FDirection])) then
+    if IsNoQPos(QPos) or (FDirection = diNone) or
+       (not Assigned(FDirPainters[FDirection])) then
       Painter.Draw(Canvas, X, Y)
     else
       FDirPainters[FDirection].Draw(Canvas, X, Y);
@@ -1703,7 +1743,24 @@ begin
 
   // Dessine les plug-in au-dessus du joueur
   for I := 0 to PluginCount-1 do
-    Plugins[I].DrawAfter(Self, Canvas, X, Y);
+    Plugins[I].DrawAfter(Self, QPos, Canvas, X, Y);
+end;
+
+{*
+  Dessine le joueur sur un canevas
+  DrawInPlace dessine le joueur sur un canevas à la position indiquée, avec pour
+  position qualifiée sa position actuelle.
+  @param Canvas   Canevas sur lequel dessiner le joueur
+  @param X        Coordonnée X du point à partir duquel dessiner le joueur
+  @param Y        Coordonnée Y du point à partir duquel dessiner le joueur
+*}
+procedure TPlayer.DrawInPlace(Canvas : TCanvas; X : integer = 0;
+  Y : integer = 0);
+var QPos : TQualifiedPos;
+begin
+  QPos.Map := Map;
+  QPos.Position := Position;
+  Draw(QPos, Canvas, X, Y);
 end;
 
 {*

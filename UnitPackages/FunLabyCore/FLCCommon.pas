@@ -40,10 +40,10 @@ type
       AMask : TBitmap = nil);
     destructor Destroy; override;
 
-    procedure DrawBefore(Player : TPlayer; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
-    procedure DrawAfter(Player : TPlayer; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
+    procedure DrawAfter(Player : TPlayer; const QPos : TQualifiedPos;
+      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
 
     property Mask : TBitmap read FMask;
     property Before : TBitmap read FBefore;
@@ -143,12 +143,13 @@ end;
   DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
   effectué dans DrawBefore se retrouve donc sous le joueur.
   @param Player   Joueur qui est dessiné
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TMaskPlugin.DrawBefore(Player : TPlayer; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TMaskPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
+  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   Before.Canvas.CopyRect(ScrewRect, Canvas, ScrewRect(X, Y));
   Before.Canvas.Draw(0, 0, Mask);
@@ -159,12 +160,13 @@ end;
   DrawAfter est exécuté lors du dessin du joueur, après celui-ci. Le dessin
   effectué dans DrawAfter se retrouve donc sur le joueur.
   @param Player   Joueur qui est dessiné
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TMaskPlugin.DrawAfter(Player : TPlayer; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TMaskPlugin.DrawAfter(Player : TPlayer; const QPos : TQualifiedPos;
+  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
   Canvas.Draw(X, Y, Before);
 end;

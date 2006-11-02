@@ -74,8 +74,8 @@ type
   private
     FAlternatePainter : TPainter;
   protected
-    procedure DrawField(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0); override;
+    procedure DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
 
     property AlternatePainter : TPainter read FAlternatePainter;
   public
@@ -219,11 +219,13 @@ end;
 {*
   Dessine le terrain sur le canevas indiqué
   Les descendants de TField doivent réimplémenter DrawField plutôt que Draw.
+  @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TWater.DrawField(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TWater.DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
 begin
   if (Master.TickCount mod 2000) < 1000 then
     Painter.Draw(Canvas, X, Y)
