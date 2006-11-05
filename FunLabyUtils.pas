@@ -115,6 +115,7 @@ type
   public
     constructor Create; override;
 
+    procedure EmptyScrew;
     procedure DrawScrew(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
   end;
 
@@ -870,6 +871,14 @@ begin
 
   Width := ScrewSize;
   Height := ScrewSize;
+  EmptyScrew;
+end;
+
+{*
+  Efface le contenu de la case
+*}
+procedure TScrewBitmap.EmptyScrew;
+begin
   EmptyScrewRect(Canvas);
 end;
 
@@ -927,7 +936,7 @@ end;
 procedure TPainter.ImgNamesChange(Sender : TObject);
 var I : integer;
 begin
-  EmptyScrewRect(FCachedImg.Canvas);
+  FCachedImg.EmptyScrew;
   for I := 0 to FImgNames.Count-1 do
     FMaster.Draw(FImgNames[I], FCachedImg.Canvas);
 end;
