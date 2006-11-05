@@ -34,7 +34,8 @@ requires
 contains
   C4xMain in 'C4xMain.pas',
   C4xScrews in 'C4xScrews.pas',
-  C4xCommon in 'C4xCommon.pas';
+  C4xCommon in 'C4xCommon.pas',
+  C4xInterpreter in 'C4xInterpreter.pas';
 
 end.
 
