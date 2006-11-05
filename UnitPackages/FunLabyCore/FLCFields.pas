@@ -61,7 +61,7 @@ type
       const AName : string; ADelegateDrawTo : TField = nil);
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel : boolean); override;
   end;
 
@@ -85,7 +85,7 @@ type
     procedure AfterConstruction; override;
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel : boolean); override;
   end;
 
@@ -100,7 +100,7 @@ type
       const AName : string; ADelegateDrawTo : TField = nil);
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel : boolean); override;
   end;
 
@@ -114,7 +114,7 @@ type
       const AName : string; ADelegateDrawTo : TField = nil);
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel : boolean); override;
   end;
 
@@ -168,7 +168,7 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure TWall.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 begin
   Cancel := True;
@@ -248,7 +248,7 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure TWater.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 var Behind : T3DPoint;
 begin
@@ -297,7 +297,7 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure THole.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 var Behind : T3DPoint;
 begin
@@ -344,7 +344,7 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure TSky.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 begin
   if KeyPressed then

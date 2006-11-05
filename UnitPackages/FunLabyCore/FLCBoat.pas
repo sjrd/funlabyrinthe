@@ -68,8 +68,8 @@ type
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
 
     property Number : integer read FNumber;
   end;
@@ -261,16 +261,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TBoat.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TBoat.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 var ObstacleID : TComponentID;
 begin
   inherited;

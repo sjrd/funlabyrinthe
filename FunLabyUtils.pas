@@ -277,11 +277,16 @@ type
       X : integer = 0; Y : integer = 0); override;
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel : boolean); virtual;
     procedure Exiting(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Pos, Dest : T3DPoint;
+      KeyPressed : boolean; const Pos, Dest : T3DPoint;
       var Cancel : boolean); virtual;
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      const Src, Pos : T3DPoint); virtual;
+    procedure Exited(Player : TPlayer; KeyPressed : boolean;
+      const Pos, Dest : T3DPoint); virtual;
   end;
 
   {*
@@ -292,9 +297,12 @@ type
   TEffect = class(TScrewComponent)
   public
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); virtual;
+      const Src, Pos : T3DPoint); virtual;
     procedure Exited(Player : TPlayer; KeyPressed : boolean;
-      Pos, Dest : T3DPoint); virtual;
+      const Pos, Dest : T3DPoint); virtual;
+
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); virtual;
   end;
 
   {*
@@ -316,8 +324,8 @@ type
   TObstacle = class(TScrewComponent)
   public
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); virtual;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
+      var Cancel, AbortExecute : boolean); virtual;
   end;
 
   {*
@@ -337,6 +345,25 @@ type
 
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
+
+    procedure Entering(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
+      var Cancel : boolean);
+    procedure Exiting(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; const Pos, Dest : T3DPoint;
+      var Cancel : boolean);
+
+    procedure Entered(Player : TPlayer; KeyPressed : boolean;
+      const Src, Pos : T3DPoint);
+    procedure Exited(Player : TPlayer; KeyPressed : boolean;
+      const Pos, Dest : T3DPoint);
+
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean);
+
+    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
+      var Cancel, AbortExecute : boolean);
 
     function ChangeField(NewField : TComponentID) : TScrew;
     function ChangeEffect(NewEffect : TComponentID = '') : TScrew;
@@ -1301,7 +1328,7 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure TField.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint; var Cancel : boolean);
+  KeyPressed : boolean; const Src, Pos : T3DPoint; var Cancel : boolean);
 begin
 end;
 
@@ -1317,7 +1344,31 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure TField.Exiting(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Pos, Dest : T3DPoint; var Cancel : boolean);
+  KeyPressed : boolean; const Pos, Dest : T3DPoint; var Cancel : boolean);
+begin
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+*}
+procedure TField.Entered(Player : TPlayer; KeyPressed : boolean;
+  const Src, Pos : T3DPoint);
+begin
+end;
+
+{*
+  Exécuté lorsque le joueur est sorti de la case
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param Dest         Case de destination
+*}
+procedure TField.Exited(Player : TPlayer; KeyPressed : boolean;
+  const Pos, Dest : T3DPoint);
 begin
 end;
 
@@ -1331,10 +1382,9 @@ end;
   @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Src          Case de provenance
   @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
 procedure TEffect.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+  const Src, Pos : T3DPoint);
 begin
 end;
 
@@ -1346,7 +1396,19 @@ end;
   @param Dest         Case de destination
 *}
 procedure TEffect.Exited(Player : TPlayer; KeyPressed : boolean;
-  Pos, Dest : T3DPoint);
+  const Pos, Dest : T3DPoint);
+begin
+end;
+
+{*
+  Exécute l'effet
+  @param Player       Joueur concerné
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TEffect.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
 end;
 
@@ -1361,8 +1423,8 @@ end;
   @param AName      Nom de la case
   @param AImgName   Nom du fichier image
 *}
-constructor TDecorativeEffect.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName, AImgName : string);
+constructor TDecorativeEffect.Create(AMaster : TMaster;
+  const AID : TComponentID; const AName, AImgName : string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(AImgName);
@@ -1384,11 +1446,11 @@ end;
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
+  @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
 procedure TObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
+  var Cancel, AbortExecute : boolean);
 begin
   Cancel := True;
 end;
@@ -1438,6 +1500,109 @@ begin
     Obstacle.DoDraw(QPos, Canvas, X, Y);
 
   inherited;
+end;
+
+{*
+  Exécuté lorsque le joueur tente de venir sur la case
+  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
+  annuler le déplacement, il faut positionner Cancel à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de provenance
+  @param Pos            Position de la case
+  @param Cancel         À positionner à True pour annuler le déplacement
+*}
+procedure TScrew.Entering(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; const Src, Pos : T3DPoint; var Cancel : boolean);
+begin
+  Field.Entering(Player, OldDirection, KeyPressed, Src, Pos, Cancel);
+end;
+
+{*
+  Exécuté lorsque le joueur tente de sortir de la case
+  Exiting est exécuté lorsque le joueur tente de sortir de la case. Pour
+  annuler le déplacement, il faut positionner Cancel à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Pos            Position de la case
+  @param Dest           Case de destination
+  @param Cancel         À positionner à True pour annuler le déplacement
+*}
+procedure TScrew.Exiting(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; const Pos, Dest : T3DPoint; var Cancel : boolean);
+begin
+  Field.Exiting(Player, OldDirection, KeyPressed, Pos, Dest, Cancel);
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Src          Case de provenance
+  @param Pos          Position de la case
+*}
+procedure TScrew.Entered(Player : TPlayer; KeyPressed : boolean;
+  const Src, Pos : T3DPoint);
+begin
+  Field.Entered(Player, KeyPressed, Src, Pos);
+  if Assigned(Effect) then
+    Effect.Entered(Player, KeyPressed, Src, Pos);
+end;
+
+{*
+  Exécuté lorsque le joueur est sorti de la case
+  @param Player       Joueur qui se déplace
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param Dest         Case de destination
+*}
+procedure TScrew.Exited(Player : TPlayer; KeyPressed : boolean;
+  const Pos, Dest : T3DPoint);
+begin
+  Field.Exited(Player, KeyPressed, Pos, Dest);
+  if Assigned(Effect) then
+    Effect.Exited(Player, KeyPressed, Pos, Dest);
+end;
+
+{*
+  Exécute l'effet
+  @param Player       Joueur concerné
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TScrew.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
+begin
+  if Assigned(Effect) then
+    Effect.Execute(Player, KeyPressed, Pos, GoOnMoving);
+end;
+
+{*
+  Exécuté lorsque le joueur pousse sur l'obstacle
+  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
+  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
+  la méthode Entered de la case ne soit exécutée, il faut positionner
+  AbortEntered à True.
+  @param Player         Joueur qui se déplace
+  @param OldDirection   Direction du joueur avant ce déplacement
+  @param KeyPressed     True si une touche a été pressée pour le déplacement
+  @param Src            Case de provenance
+  @param Pos            Position de la case
+  @param Cancel         À positionner à True pour annuler le déplacement
+  @param AbortExecute   À positionner à True pour empêcher le Execute
+*}
+procedure TScrew.Pushing(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
+  var Cancel, AbortExecute : boolean);
+begin
+  if Assigned(Obstacle) then
+  begin
+    Obstacle.Pushing(Player, OldDirection, KeyPressed,
+      Src, Pos, Cancel, AbortExecute);
+  end;
 end;
 
 {*
@@ -1941,7 +2106,7 @@ function TPlayer.Move(Dir : TDirection; KeyPressed : boolean;
 var I : integer;
     Src, Dest : T3DPoint;
     OldDir : TDirection;
-    Cancel, AbortEntered : boolean;
+    Cancel, AbortExecute : boolean;
 begin
   // Initialisation des variables
   Result := False;
@@ -1951,7 +2116,7 @@ begin
   OldDir := FDirection;
   FDirection := Dir;
   Cancel := False;
-  AbortEntered := False;
+  AbortExecute := False;
 
   // Le joueur est-il toujours en train de jouer
   if PlayState <> psPlaying then exit;
@@ -1959,19 +2124,21 @@ begin
   // Premier passage : le déplacement est-il permis ?
   begin
     // Case source : exiting
-    Map[Src].Field.Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
+    Map[Src].Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
+
     // Plug-in : moving
     for I := 0 to PluginCount-1 do
       Plugins[I].Moving(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
+
     // Case destination : entering
-    Map[Dest].Field.Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel);
+    Map[Dest].Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel);
     if Cancel then exit;
+
     // Case destination : pushing
-    if Assigned(Map[Dest].Obstacle) then
-      Map[Dest].Obstacle.Pushing(Self, OldDir, KeyPressed, Src, Dest, Cancel,
-        AbortEntered);
+    Map[Dest].Pushing(Self, OldDir, KeyPressed, Src, Dest, Cancel,
+      AbortExecute);
     if Cancel then exit;
   end;
 
@@ -1985,14 +2152,18 @@ begin
   // Second passage : le déplacement a été fait
   begin
     // Case source : exited
-    if Assigned(Map[Src].Effect) then
-      Map[Src].Effect.Exited(Self, KeyPressed, Src, Dest);
+    Map[Src].Exited(Self, KeyPressed, Src, Dest);
+
     // Plug-in : moved
     for I := 0 to PluginCount-1 do
       Plugins[I].Moved(Self, KeyPressed, Src, Dest);
-    // Case destination : entered (sauf si AbortEntered a été positionné à True)
-    if Assigned(Map[Dest].Effect) and (not AbortEntered) then
-      Map[Dest].Effect.Entered(Self, KeyPressed, Src, Dest, Redo);
+
+    // Case destination : entered
+    Map[Dest].Entered(Self, KeyPressed, Src, Dest);
+
+    // Case destination : execute (sauf si AbortExecute a été positionné à True)
+    if not AbortExecute then
+      Map[Dest].Execute(Self, KeyPressed, Dest, Redo);
   end;
 end;
 

@@ -103,8 +103,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ADirection : TDirection);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
 
     property Direction : TDirection read FDirection;
   end;
@@ -129,8 +129,8 @@ type
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
 
     property Number : integer read FNumber;
     property Kind : TTransporterKind read FKind;
@@ -147,8 +147,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; AUp : boolean);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
 
     property Up : boolean read FUp;
   end;
@@ -163,10 +163,11 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
     procedure Exited(Player : TPlayer; KeyPressed : boolean;
-      Pos, Dest : T3DPoint); override;
+      const Pos, Dest : T3DPoint); override;
+
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
   {*
@@ -179,10 +180,11 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
     procedure Exited(Player : TPlayer; KeyPressed : boolean;
-      Pos, Dest : T3DPoint); override;
+      const Pos, Dest : T3DPoint); override;
+
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
   {*
@@ -195,8 +197,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
   {*
@@ -208,8 +210,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
 implementation
@@ -240,16 +242,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TArrow.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TArrow.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
   if FDirection <> diNone then
@@ -406,16 +406,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TTransporter.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TTransporter.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 var Other : T3DPoint;
 begin
   inherited;
@@ -459,16 +457,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TStairs.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TStairs.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 var Other : T3DPoint;
 begin
   inherited;
@@ -501,16 +497,29 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  Exécuté lorsque le joueur est sorti de la case
+  Exiting est exécuté lorsque le joueur est sorti de la case.
   @param Player       Joueur qui se déplace
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param Dest         Case de destination
+*}
+procedure TDirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
+  const Pos, Dest : T3DPoint);
+begin
+  inherited;
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idIndirectTurnstile);
+end;
+
+{*
+  Exécute l'effet
+  @param Player       Joueur concerné
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TDirectTurnstile.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TDirectTurnstile.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 var Dir : TDirection;
 begin
   inherited;
@@ -531,21 +540,6 @@ begin
   end;
 end;
 
-{*
-  Exécuté lorsque le joueur est sorti de la case
-  Exiting est exécuté lorsque le joueur est sorti de la case.
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
-  @param Dest         Case de destination
-*}
-procedure TDirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
-  Pos, Dest : T3DPoint);
-begin
-  inherited;
-  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idIndirectTurnstile);
-end;
-
 {---------------------------}
 { Classe TIndirectTurnstile }
 {---------------------------}
@@ -564,16 +558,29 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
+  Exécuté lorsque le joueur est sorti de la case
+  Exiting est exécuté lorsque le joueur est sorti de la case.
   @param Player       Joueur qui se déplace
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
+  @param Pos          Position de la case
+  @param Dest         Case de destination
+*}
+procedure TIndirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
+  const Pos, Dest : T3DPoint);
+begin
+  inherited;
+  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idDirectTurnstile);
+end;
+
+{*
+  Exécute l'effet
+  @param Player       Joueur concerné
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TIndirectTurnstile.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TIndirectTurnstile.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 var Dir : TDirection;
 begin
   inherited;
@@ -594,21 +601,6 @@ begin
   end;
 end;
 
-{*
-  Exécuté lorsque le joueur est sorti de la case
-  Exiting est exécuté lorsque le joueur est sorti de la case.
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
-  @param Dest         Case de destination
-*}
-procedure TIndirectTurnstile.Exited(Player : TPlayer; KeyPressed : boolean;
-  Pos, Dest : T3DPoint);
-begin
-  inherited;
-  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idDirectTurnstile);
-end;
-
 {-----------------}
 { Classe TOutside }
 {-----------------}
@@ -627,16 +619,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TOutside.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TOutside.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
   Player.Win;
@@ -661,16 +651,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TTreasure.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TTreasure.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
   Player.Win;

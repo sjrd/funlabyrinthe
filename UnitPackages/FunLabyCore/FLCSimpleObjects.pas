@@ -128,8 +128,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
   {*
@@ -141,8 +141,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
   {*
@@ -154,8 +154,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
 implementation
@@ -424,16 +424,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TBuoy.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TBuoy.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
 
@@ -465,16 +463,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TSilverKey.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TSilverKey.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
 
@@ -506,16 +502,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TGoldenKey.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TGoldenKey.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
 
@@ -530,3 +524,4 @@ begin
 end;
 
 end.
+

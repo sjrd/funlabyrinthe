@@ -40,7 +40,7 @@ type
   TEngagedLiftField = class(TField)
   public
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel : boolean); override;
   end;
 
@@ -52,7 +52,7 @@ type
   TEngagedLiftEffect = class(TEffect)
   public
     procedure Exited(Player : TPlayer; KeyPressed : boolean;
-      Pos, Dest : T3DPoint); override;
+      const Pos, Dest : T3DPoint); override;
   end;
 
   {*
@@ -75,8 +75,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
 implementation
@@ -97,7 +97,7 @@ implementation
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure TEngagedLiftField.Entering(Player : TPlayer;
-  OldDirection : TDirection; KeyPressed : boolean; Src, Pos : T3DPoint;
+  OldDirection : TDirection; KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 begin
   if KeyPressed then
@@ -119,7 +119,7 @@ end;
   @param Dest         Case de destination
 *}
 procedure TEngagedLiftEffect.Exited(Player : TPlayer; KeyPressed : boolean;
-  Pos, Dest : T3DPoint);
+  const Pos, Dest : T3DPoint);
 var Other : T3DPoint;
 begin
   inherited;
@@ -191,16 +191,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TLift.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TLift.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 var Other : T3DPoint;
     MinFloor, MaxFloor : integer;
 begin

@@ -73,7 +73,7 @@ type
   TPlankField = class(TField)
   public
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel : boolean); override;
   end;
 
@@ -84,10 +84,11 @@ type
   *}
   TPlankEffect = class(TEffect)
   public
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
     procedure Exited(Player : TPlayer; KeyPressed : boolean;
-      Pos, Dest : T3DPoint); override;
+      const Pos, Dest : T3DPoint); override;
+
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
   {*
@@ -113,8 +114,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
 const
@@ -248,7 +249,7 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure TPlankField.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 begin
   if Player <> (Player.Map[Src] as TPlankScrew).Player then
@@ -260,22 +261,6 @@ end;
 {---------------------}
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
-*}
-procedure TPlankEffect.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
-begin
-  inherited;
-  GoOnMoving := True;
-end;
-
-{*
   Exécuté lorsque le joueur est sorti de la case
   Exiting est exécuté lorsque le joueur est sorti de la case.
   @param Player       Joueur qui se déplace
@@ -284,11 +269,25 @@ end;
   @param Dest         Case de destination
 *}
 procedure TPlankEffect.Exited(Player : TPlayer; KeyPressed : boolean;
-  Pos, Dest : T3DPoint);
+  const Pos, Dest : T3DPoint);
 begin
   inherited;
   Player.RemovePlugin(Master.Plugin[idPlankPlugin]);
   Player.Map[Pos].Free;
+end;
+
+{*
+  Exécute l'effet
+  @param Player       Joueur concerné
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TPlankEffect.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
+begin
+  inherited;
+  GoOnMoving := True;
 end;
 
 {--------------------}
@@ -328,16 +327,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TPlank.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TPlank.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
 

@@ -41,7 +41,7 @@ type
       const AName : string);
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel, AbortEntered : boolean); override;
   end;
 
@@ -55,7 +55,7 @@ type
       const AName : string);
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel, AbortEntered : boolean); override;
   end;
 
@@ -72,7 +72,7 @@ type
       X : integer = 0; Y : integer = 0); override;
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel, AbortEntered : boolean); override;
   end;
 
@@ -110,7 +110,7 @@ end;
   @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
 procedure TSilverBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
   inherited;
@@ -156,7 +156,7 @@ end;
   @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
 procedure TGoldenBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
   inherited;
@@ -225,7 +225,7 @@ end;
   @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
 procedure TSecretWay.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
   inherited;

@@ -49,8 +49,8 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ANumber : integer);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      Src, Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint; var GoOnMoving : boolean); override;
   end;
 
   {*
@@ -65,7 +65,7 @@ type
       const AName : string; ANumber : integer);
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Pos : T3DPoint;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel, AbortEntered : boolean); override;
   end;
 
@@ -89,16 +89,14 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur est arrivé sur la case
-  Entered est exécuté lorsque le joueur est arrivé sur la case.
-  @param Player       Joueur qui se déplace
+  Exécute l'effet
+  @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TActionsEffect.Entered(Player : TPlayer; KeyPressed : boolean;
-  Src, Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TActionsEffect.Execute(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
   inherited;
 end;
@@ -135,7 +133,7 @@ end;
   @param AbortEntered   À positionner à True pour empêcher le Entered
 *}
 procedure TActionsObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel, AbortEntered : boolean);
 begin
   inherited;
