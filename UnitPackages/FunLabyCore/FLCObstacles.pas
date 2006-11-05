@@ -68,7 +68,7 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
@@ -194,7 +194,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TSecretWay.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+procedure TSecretWay.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   inherited;

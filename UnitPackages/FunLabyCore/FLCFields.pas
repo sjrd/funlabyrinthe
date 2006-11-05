@@ -189,6 +189,9 @@ constructor TWater.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string; ADelegateDrawTo : TField = nil);
 begin
   inherited Create(AMaster, AID, AName, ADelegateDrawTo);
+
+  FStaticDraw := Master.Editing;
+
   FAlternatePainter := TPainter.Create(Master.ImagesMaster);
   FAlternatePainter.ImgNames.BeginUpdate;
 

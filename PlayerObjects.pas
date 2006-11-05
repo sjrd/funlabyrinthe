@@ -13,9 +13,9 @@ type
     ButtonOK: TButton;
     ObjectsImages: TImageList;
   private
-    { Déclarations privées }
+    { Dclarations prives }
   public
-    { Déclarations publiques }
+    { Dclarations publiques }
     class procedure ShowObjects(Player : TPlayer);
   end;
 
@@ -28,7 +28,7 @@ implementation
 
 {*
   Affiche les objets d'un joueur
-  @param Player   Joueur concerné
+  @param Player   Joueur concern
 *}
 class procedure TFormObjects.ShowObjects(Player : TPlayer);
 var Bitmap : TBitmap;

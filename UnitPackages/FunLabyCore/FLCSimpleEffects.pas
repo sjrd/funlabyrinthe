@@ -126,7 +126,7 @@ type
       const AName : string; ANumber : integer;
       AKind : TTransporterKind = tkInactive);
 
-    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
     procedure Entered(Player : TPlayer; KeyPressed : boolean;
@@ -390,7 +390,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TTransporter.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+procedure TTransporter.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   inherited;

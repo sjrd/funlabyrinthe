@@ -109,15 +109,25 @@ type
   end;
 
   {*
+    Bitmap de la taille d'une case, gérant automatiquement la transparence
+  *}
+  TScrewBitmap = class(TBitmap)
+  public
+    constructor Create; override;
+
+    procedure DrawScrew(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+  end;
+
+  {*
     Enregistre est affiche par superposition une liste d'images
     TPainter enregistre une liste d'images par leur noms et propose une méthode
     pour les dessiner les unes sur les autres, par transparence.
   *}
   TPainter = class
   private
-    FMaster : TImagesMaster; /// Maître d'images
-    FImgNames : TStrings;    /// Liste des noms des images
-    FCachedImg : TBitmap;    /// Copie cache de l'image résultante
+    FMaster : TImagesMaster;   /// Maître d'images
+    FImgNames : TStrings;      /// Liste des noms des images
+    FCachedImg : TScrewBitmap; /// Copie cache de l'image résultante
 
     procedure ImgNamesChange(Sender : TObject);
   public
@@ -162,9 +172,15 @@ type
   *}
   TVisualComponent = class(TFunLabyComponent)
   private
-    FName : string;      /// Nom du composant
-    FPainter : TPainter; /// Peintre par défaut
+    FName : string;            /// Nom du composant
+    FPainter : TPainter;       /// Peintre par défaut
+    FCachedImg : TScrewBitmap; /// Image en cache (pour les dessins invariants)
   protected
+    FStaticDraw : boolean; /// Indique si le dessin du composant est invariant
+
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); virtual;
+
     property Painter : TPainter read FPainter;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
@@ -173,9 +189,10 @@ type
     procedure AfterConstruction; override;
 
     procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); virtual;
+      X : integer = 0; Y : integer = 0);
 
     property Name : string read FName;
+    property StaticDraw : boolean read FStaticDraw;
   end;
 
   {*
@@ -255,7 +272,7 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ADelegateDrawTo : TField = nil);
 
-    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
@@ -317,7 +334,7 @@ type
       const AName : string; AField : TField; AEffect : TEffect;
       AObstacle : TObstacle);
 
-    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
     function ChangeField(NewField : TComponentID) : TScrew;
@@ -346,7 +363,7 @@ type
       AObstacle : TObstacle);
     destructor Destroy; override;
 
-    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
     property Map : TMap read FMap;
@@ -492,7 +509,7 @@ type
     procedure GetAttributes(Attributes : TStrings);
     procedure GetPluginIDs(PluginIDs : TStrings);
 
-    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
     procedure DrawInPlace(Canvas : TCanvas; X : integer = 0;
       Y : integer = 0);
@@ -840,6 +857,38 @@ begin
   Draw(IndexOf(ImgName), Canvas, X, Y);
 end;
 
+{---------------------}
+{ Classe TScrewBitmap }
+{---------------------}
+
+{*
+  Crée une instance de TScrewBitmap
+*}
+constructor TScrewBitmap.Create;
+begin
+  inherited;
+
+  Width := ScrewSize;
+  Height := ScrewSize;
+  EmptyScrewRect(Canvas);
+end;
+
+{*
+  Dessine l'image de case sur un canevas
+  @param Canvas   Canevas sur lequel dessiner l'image
+  @param X        Coordonnée X du point à partir duquel dessiner l'image
+  @param Y        Coordonnée Y du point à partir duquel dessiner l'image
+*}
+procedure TScrewBitmap.DrawScrew(Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+var OldBrushStyle : TBrushStyle;
+begin
+  OldBrushStyle := Canvas.Brush.Style;
+  Canvas.Brush.Style := bsClear;
+  Canvas.BrushCopy(ScrewRect(X, Y), Self, ScrewRect, clTransparent);
+  Canvas.Brush.Style := OldBrushStyle;
+end;
+
 {-----------------}
 { Classe TPainter }
 {-----------------}
@@ -851,17 +900,11 @@ end;
 constructor TPainter.Create(AMaster : TImagesMaster);
 begin
   inherited Create;
+
   FMaster := AMaster;
   FImgNames := TStringList.Create;
   TStringList(FImgNames).OnChange := ImgNamesChange;
-  FCachedImg := TBitmap.Create;
-  with FCachedImg do
-  begin
-    Width := ScrewSize;
-    Height := ScrewSize;
-    Canvas.Brush.Color := clTransparent;
-    Canvas.Pen.Color := clTransparent;
-  end;
+  FCachedImg := TScrewBitmap.Create;
   ImgNamesChange(nil);
 end;
 
@@ -884,7 +927,7 @@ end;
 procedure TPainter.ImgNamesChange(Sender : TObject);
 var I : integer;
 begin
-  FCachedImg.Canvas.Rectangle(0, 0, ScrewSize, ScrewSize);
+  EmptyScrewRect(FCachedImg.Canvas);
   for I := 0 to FImgNames.Count-1 do
     FMaster.Draw(FImgNames[I], FCachedImg.Canvas);
 end;
@@ -900,8 +943,7 @@ end;
 *}
 procedure TPainter.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 begin
-  Canvas.Brush.Style := bsClear;
-  Canvas.BrushCopy(ScrewRect(X, Y), FCachedImg, ScrewRect, clTransparent);
+  FCachedImg.DrawScrew(Canvas, X, Y);
 end;
 
 {--------------------------}
@@ -945,9 +987,12 @@ constructor TVisualComponent.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string);
 begin
   inherited Create(AMaster, AID);
+
   FName := AName;
   FPainter := TPainter.Create(FMaster.ImagesMaster);
   FPainter.ImgNames.BeginUpdate;
+  FCachedImg := nil;
+  FStaticDraw := True;
 end;
 
 {*
@@ -955,6 +1000,8 @@ end;
 *}
 destructor TVisualComponent.Destroy;
 begin
+  if Assigned(FCachedImg) then
+    FCachedImg.Free;
   FPainter.Free;
   inherited;
 end;
@@ -968,10 +1015,30 @@ procedure TVisualComponent.AfterConstruction;
 begin
   inherited;
   FPainter.ImgNames.EndUpdate;
+
+  if StaticDraw then
+  begin
+    FCachedImg := TScrewBitmap.Create;
+    DoDraw(NoQPos, FCachedImg.Canvas);
+  end;
 end;
 
 {*
   Dessine le composant sur un canevas
+  DoDraw dessine le composant sur un canevas à la position indiquée.
+  @param QPos     Position qualifiée de l'emplacement de dessin
+  @param Canvas   Canevas sur lequel dessiner le composant
+  @param X        Coordonnée X du point à partir duquel dessiner le composant
+  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+*}
+procedure TVisualComponent.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+begin
+  FPainter.Draw(Canvas, X, Y);
+end;
+
+{*
+  Dessine de façon optimisée le composant sur un canevas
   Draw dessine le composant sur un canevas à la position indiquée.
   @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le composant
@@ -981,7 +1048,10 @@ end;
 procedure TVisualComponent.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
-  FPainter.Draw(Canvas, X, Y);
+  if StaticDraw then
+    FCachedImg.DrawScrew(Canvas, X, Y)
+  else
+    DoDraw(QPos, Canvas, X, Y);
 end;
 
 {----------------}
@@ -1175,11 +1245,13 @@ constructor TField.Create(AMaster : TMaster; const AID : TComponentID;
 begin
   inherited Create(AMaster, AID, AName);
   FDelegateDrawTo := ADelegateDrawTo;
+  if Assigned(FDelegateDrawTo) then
+    FStaticDraw := FDelegateDrawTo.StaticDraw;
 end;
 
 {*
   Dessine le terrain sur le canevas indiqué
-  Les descendants de TField doivent réimplémenter DrawField plutôt que Draw.
+  Les descendants de TField doivent réimplémenter DrawField plutôt que DoDraw.
   @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
@@ -1188,18 +1260,18 @@ end;
 procedure TField.DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
-  inherited Draw(QPos, Canvas, X, Y);
+  inherited DoDraw(QPos, Canvas, X, Y);
 end;
 
 {*
   Dessine le terrain sur le canevas indiqué, ou délègue le dessin
-  Les descendants de TField ne doivent pas réimplémenter Draw, mais DrawField
+  Les descendants de TField ne doivent pas réimplémenter DoDraw, mais DrawField
   @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le terrain
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TField.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+procedure TField.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   if FDelegateDrawTo = nil then
@@ -1330,9 +1402,14 @@ constructor TScrew.Create(AMaster : TMaster; const AID : TComponentID;
   AObstacle : TObstacle);
 begin
   inherited Create(AMaster, AID, AName);
+  FStaticDraw := False;
   FField := AField;
   FEffect := AEffect;
   FObstacle := AObstacle;
+
+  FStaticDraw := FField.StaticDraw and
+    ((not Assigned(FEffect)) or FEffect.StaticDraw) and
+    ((not Assigned(FObstacle)) or FObstacle.StaticDraw);
 end;
 
 {*
@@ -1342,14 +1419,14 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TScrew.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+procedure TScrew.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
-  Field.Draw(QPos, Canvas, X, Y);
+  Field.DoDraw(QPos, Canvas, X, Y);
   if Assigned(Effect) then
-    Effect.Draw(QPos, Canvas, X, Y);
+    Effect.DoDraw(QPos, Canvas, X, Y);
   if Assigned(Obstacle) then
-    Obstacle.Draw(QPos, Canvas, X, Y);
+    Obstacle.DoDraw(QPos, Canvas, X, Y);
 
   inherited;
 end;
@@ -1417,6 +1494,9 @@ begin
   AOriginalScrew := AMap[APosition];
   inherited Create(AMaster, AID, AOriginalScrew.Name,
     AField, AEffect, AObstacle);
+
+  if not AOriginalScrew.StaticDraw then
+    FStaticDraw := False;
   FMap := AMap;
   FPosition := APosition;
   FOriginalScrew := AOriginalScrew;
@@ -1440,7 +1520,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TOverriddenScrew.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+procedure TOverriddenScrew.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   OriginalScrew.Draw(QPos, Canvas, X, Y);
@@ -1607,6 +1687,8 @@ constructor TPlayer.Create(AMaster : TMaster; const AID : TComponentID;
 var Dir : TDirection;
 begin
   inherited Create(AMaster, AID, AName);
+
+  FStaticDraw := False;
   FMap := AMap;
   FPosition := APosition;
   FDirection := diNone;
@@ -1713,7 +1795,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le joueur
   @param Y        Coordonnée Y du point à partir duquel dessiner le joueur
 *}
-procedure TPlayer.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
+procedure TPlayer.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 var I : integer;
 begin
@@ -1840,7 +1922,7 @@ end;
   Déplace le joueur dans la direction indiquée
   Move déplace le joueur dans la direction indiquée, en appliquant les
   comportements conjugués des cases et plug-in.
-  @param Dir   Direction du déplacement
+  @param Dir          Direction du déplacement
   @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Redo         Indique s'il faut réitérer le déplacement
   @return True si le déplacement a réussi, False sinon

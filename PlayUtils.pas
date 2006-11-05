@@ -11,7 +11,7 @@ const {don't localize}
 
 type
   {*
-    Thread de déplacement du pion
+    Thread de dplacement du pion
   *}
   TMoveThread = class(TThread, IPlayerController)
   private
@@ -48,8 +48,8 @@ type
   *}
   TPlayerView = class
   private
-    FMaster : TMaster; /// Maître FunLabyrinthe
-    FPlayer : TPlayer; /// Joueur lié
+    FMaster : TMaster; /// Matre FunLabyrinthe
+    FPlayer : TPlayer; /// Joueur li
 
     function GetMinSize : integer;
     function GetMaxSize : integer;
@@ -130,7 +130,7 @@ var Form : TForm;
     I, MaxWidth, OldWidth : integer;
     Button : TButton;
 begin
-  // Création de la boite de dialogue
+  // Cration de la boite de dialogue
   Form := CreateMessageDialog(Text, DlgType, DlgButtons);
 
   with Form do
@@ -139,7 +139,7 @@ begin
     // On augmente la taille de la boite de dialogue
     Height := Height + Length(RadioTitles) * 25;
 
-    // Création des boutons radio et détermination de la largeur minimale
+    // Cration des boutons radio et dtermination de la largeur minimale
     MaxWidth := 0;
     for I := High(RadioTitles) downto Low(RadioTitles) do
     with TRadioButton.Create(Form) do
@@ -161,7 +161,7 @@ begin
         Top := Form.Height - 50 - (High(RadioTitles) - I) * 25;
     end;
 
-    // Il faut aussi vérifier que la fiche peut afficher les textes des RadioBox
+    // Il faut aussi vrifier que la fiche peut afficher les textes des RadioBox
     // en entier
     OldWidth := 0;
     if (MaxWidth + 40) > Width then
@@ -172,20 +172,20 @@ begin
 
     for I := 0 to ComponentCount-1 do
     begin
-      // On récupère chaque bouton
+      // On rcupre chaque bouton
       if Components[I] is TButton then
       begin
         Button := TButton(Components[I]);
 
-        // On met le bon bouton par défaut et on le sélectionne
+        // On met le bon bouton par dfaut et on le slectionne
         Button.Default := Button.ModalResult = DefButton;
         if Button.Default then ActiveControl := Button;
 
-        // S'il le faut, décaler tous les boutons vers le bas
+        // S'il le faut, dcaler tous les boutons vers le bas
         if OverButtons then
           Button.Top := Button.Top + Length(RadioTitles) * 25;
 
-        // S'il le faut, décaler tous les boutons vers la droite
+        // S'il le faut, dcaler tous les boutons vers la droite
         if OldWidth > 0 then
           Button.Left := Button.Left + (Width - OldWidth) div 2;
       end;
@@ -194,10 +194,10 @@ begin
     // On centre la boite de dialogue
     Position := poScreenCenter;
 
-    // Affichage de la boîte de dialogue
+    // Affichage de la bote de dialogue
     Result := ShowModal;
 
-    // Récupération du choix de l'utilisateur
+    // Rcupration du choix de l'utilisateur
     Selected := -1;
     for I := 0 to ControlCount-1 do
     begin
@@ -220,10 +220,10 @@ end;
 {--------------------}
 
 {*
-  Crée une instance de TMoveThread
-  @param APlayer        Joueur à déplacer
-  @param ADir           Direction dans laquelle déplacer le joueur
-  @param AOnTerminate   Gestionnaire d'événement OnTerminate
+  Cre une instance de TMoveThread
+  @param APlayer        Joueur  dplacer
+  @param ADir           Direction dans laquelle dplacer le joueur
+  @param AOnTerminate   Gestionnaire d'vnement OnTerminate
 *}
 constructor TMoveThread.Create(APlayer : TPlayer; ADir : TDirection;
   AOnTerminate : TNotifyEvent);
@@ -236,7 +236,7 @@ begin
 end;
 
 {*
-  Méthode d'exécution du thread
+  Mthode d'excution du thread
 *}
 procedure TMoveThread.Execute;
 var Redo : boolean;
@@ -271,14 +271,14 @@ begin
 end;
 
 {*
-  Affiche une boîte de dialogue
-  @param Title        Titre de la boîte de dialogue
-  @param Text         Texte de la boîte de dialogue
-  @param DlgType      Type de boîte de dialogue
-  @param DlgButtons   Boutons présents dans la boîte de dialogue
-  @param DefButton    Bouton sélectionné par défaut
+  Affiche une bote de dialogue
+  @param Title        Titre de la bote de dialogue
+  @param Text         Texte de la bote de dialogue
+  @param DlgType      Type de bote de dialogue
+  @param DlgButtons   Boutons prsents dans la bote de dialogue
+  @param DefButton    Bouton slectionn par dfaut
   @param AddFlags     Flags additionnels pour MessageBox
-  @return Code de résultat du bouton cliqué
+  @return Code de rsultat du bouton cliqu
 *}
 function TMoveThread.ShowDialog(const Title, Text : string;
   DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
@@ -303,18 +303,18 @@ begin
 end;
 
 {*
-  Affiche une boîte de dialogue avec des boutons radio
+  Affiche une bote de dialogue avec des boutons radio
   ShowDialogRadio est une variante de ShowDialog qui affiche des boutons radio
   pour chaque choix possible.
-  @param Title         Titre de la boîte de dialogue
-  @param Text          Texte de la boîte de dialogue
-  @param DlgType       Type de boîte de dialogue
-  @param DlgButtons    Boutons présents dans la boîte de dialogue
-  @param DefButton     Bouton sélectionné par défaut
-  @param RadioTitles   Libellés des différents boutons radio
-  @param Selected      Bouton radio sélectionné
-  @param OverButtons   Boutons radio placés au-dessus des boutons si True
-  @return Code de résultat du bouton cliqué
+  @param Title         Titre de la bote de dialogue
+  @param Text          Texte de la bote de dialogue
+  @param DlgType       Type de bote de dialogue
+  @param DlgButtons    Boutons prsents dans la bote de dialogue
+  @param DefButton     Bouton slectionn par dfaut
+  @param RadioTitles   Libells des diffrents boutons radio
+  @param Selected      Bouton radio slectionn
+  @param OverButtons   Boutons radio placs au-dessus des boutons si True
+  @return Code de rsultat du bouton cliqu
 *}
 function TMoveThread.ShowDialogRadio(const Title, Text : string;
   DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
@@ -349,9 +349,9 @@ end;
 
 {*
   Affiche une invite au joueur lui demandant de choisir un nombre
-  @param Title     Titre de la boîte de dialogue
+  @param Title     Titre de la bote de dialogue
   @param Prompt    Invite
-  @param Default   Valeur par défaut affichée
+  @param Default   Valeur par dfaut affiche
   @param Min       Valeur minimale que peut choisir le joueur
   @param Max       Valeur maximale que peut choisir le joueur
   @return La valeur qu'a choisie le joueur
@@ -377,7 +377,7 @@ begin
 end;
 
 {*
-  Le joueur a changé de carte
+  Le joueur a chang de carte
 *}
 procedure TMoveThread.MapChanged;
 begin
@@ -388,8 +388,8 @@ end;
 {--------------------}
 
 {*
-  Crée une instance de TPlayerView
-  @param APlayer   Joueur lié
+  Cre une instance de TPlayerView
+  @param APlayer   Joueur li
 *}
 constructor TPlayerView.Create(APlayer : TPlayer);
 begin
@@ -437,8 +437,8 @@ begin
 end;
 
 {*
-  Nombre de cases affichées en largeur par la vue
-  @return Nombre de cases affichées en largeur par la vue
+  Nombre de cases affiches en largeur par la vue
+  @return Nombre de cases affiches en largeur par la vue
 *}
 function TPlayerView.GetWidth : integer;
 begin
@@ -446,8 +446,8 @@ begin
 end;
 
 {*
-  Nombre de cases affichées en hauteur par la vue
-  @return Nombre de cases affichées en hauteur par la vue
+  Nombre de cases affiches en hauteur par la vue
+  @return Nombre de cases affiches en hauteur par la vue
 *}
 function TPlayerView.GetHeight : integer;
 begin
@@ -465,16 +465,16 @@ var Map : TMap;
     X, Y, Z, I : integer;
     QPos : TQualifiedPos;
 begin
-  // Mettre à jour le tick count de la partie avant de dessiner
+  // Mettre  jour le tick count de la partie avant de dessiner
   Master.UpdateTickCount;
 
-  // Simplifier et accélérer les accès aux informations
+  // Simplifier et acclrer les accs aux informations
   Map := Player.Map;
   Size := GetSize;
   Width := GetWidth;
   Height := GetHeight;
 
-  // Origine à la position du joueur
+  // Origine  la position du joueur
   OrigX := Player.Position.X;
   OrigY := Player.Position.Y;
   { Si le joueur a fini de jouer et qu'on est en bordure de carte, on affiche la
@@ -499,7 +499,7 @@ begin
   for X := 0 to Width-1 do for Y := 0 to Height-1 do
   begin
     QPos.Position := Point3D(OrigX+X, OrigY+Y, Z);
-    Map[QPos.Position].Draw(QPos, Canvas, X*ScrewSize, Y*ScrewSize);
+    Map[QPos.Position].DoDraw(QPos, Canvas, X*ScrewSize, Y*ScrewSize);
   end;
 
   // Dessin des joueurs

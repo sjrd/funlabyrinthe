@@ -10,7 +10,7 @@ uses
   PlayerPlugins, PlayerAttributes, PlayerObjects, FileProperties, AddMap;
 
 resourcestring
-  sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
+  sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implmente';
 
   sDefaultPlayerName = 'Joueur';
 
@@ -21,21 +21,21 @@ resourcestring
   sShowObjects = 'Objets...';
 
   sConfirmExitTitle = 'Enregistrer le fichier';
-  sConfirmExit = 'Le fichier a été modifé. Voulez-vous l''enregistrer ?';
+  sConfirmExit = 'Le fichier a t modif. Voulez-vous l''enregistrer ?';
 
   sCantSave = 'Impossible d''enregistrer';
   sCantSaveUnplacedPlayer =
-    'Impossible d''enregistrer car le joueur d''ID %s n''a pas été placé';
+    'Impossible d''enregistrer car le joueur d''ID %s n''a pas t plac';
 
   sCantCenterToPosition = 'Impossible de centrer le joueur';
   sCantCenterToUnplacedPlayer =
-    'Impossible de centrer sur ce joueur car il n''a pas été placé';
+    'Impossible de centrer sur ce joueur car il n''a pas t plac';
 
-  sReplaceOutsideTitle = 'Remplacer l''extérieur de la carte';
-  sReplaceOutside = 'Voulez-vous vraiment modifier l''extérieur de la carte ?';
+  sReplaceOutsideTitle = 'Remplacer l''extrieur de la carte';
+  sReplaceOutside = 'Voulez-vous vraiment modifier l''extrieur de la carte ?';
 
   sRemoveMapTitle = 'Retirer une carte';
-  sRemoveMap = 'Êtes-vous certain de vouloir retirer cette carte du projet ?';
+  sRemoveMap = 'tes-vous certain de vouloir retirer cette carte du projet ?';
 
 const
   opMask = $07;
@@ -51,8 +51,8 @@ type
     FMinIndex : integer;                    /// Index minimal
     FMaxIndex : integer;                    /// Index maximal
     FComponents : array of TScrewComponent; /// Ensemble des composants
-    FDialogTitle : string;                  /// Titre de la boîte de dialogue
-    FDialogPrompt : string;                 /// Invite de la boîte de dialogue
+    FDialogTitle : string;                  /// Titre de la bote de dialogue
+    FDialogPrompt : string;                 /// Invite de la bote de dialogue
   public
     constructor Create(const AComponents : array of TScrewComponent;
       BaseIndex : integer; const ADialogTitle, ADialogPrompt : string);
@@ -124,18 +124,18 @@ type
   private
     { Composants non disponibles dans Turbo Explorer }
     EditFloor : TSpinEdit;
-    { Déclarations privées }
-    ScrewBmp : TBitmap;           /// Bitmap à tout faire de la taille d'une case
+    { Dclarations prives }
+    ScrewBmp : TBitmap;           /// Bitmap  tout faire de la taille d'une case
     LastCompIndex : integer;      /// Dernier index de composant choisi
 
-    Modified : boolean;           /// Indique si le fichier a été modifié
-    MasterFile : TMasterFile;     /// Fichier maître
-    Master : TMaster;             /// Maître FunLabyrinthe
+    Modified : boolean;           /// Indique si le fichier a t modifi
+    MasterFile : TMasterFile;     /// Fichier matre
+    Master : TMaster;             /// Matre FunLabyrinthe
     CurrentMap : TMap;            /// Carte courante
 
-    FCurrentFloor : integer;      /// Étage courant
+    FCurrentFloor : integer;      /// tage courant
 
-    Component : TVisualComponent; /// Composant à placer
+    Component : TVisualComponent; /// Composant  placer
 
     procedure SetCurrentFloor(Value : integer);
 
@@ -159,7 +159,7 @@ type
 
     property CurrentFloor : integer read FCurrentFloor write SetCurrentFloor;
   public
-    { Déclarations publiques }
+    { Dclarations publiques }
   end;
 
 const {don't localize}
@@ -179,10 +179,10 @@ implementation
 {----------------------}
 
 {*
-  Crée une instance de TComponentSet
+  Cre une instance de TComponentSet
   @param AComponents     Ensemble de composants
-  @param ADialogTitle    Titre de la boîte de dialogue
-  @param ADialogPrompt   Invite de la boîte de dialogue
+  @param ADialogTitle    Titre de la bote de dialogue
+  @param ADialogPrompt   Invite de la bote de dialogue
 *}
 constructor TComponentSet.Create(const AComponents : array of TScrewComponent;
   BaseIndex : integer; const ADialogTitle, ADialogPrompt : string);
@@ -215,8 +215,8 @@ end;
 {------------------}
 
 {*
-  Modifie l'étage courant
-  @param Value   Nouvel étage
+  Modifie l'tage courant
+  @param Value   Nouvel tage
 *}
 procedure TFormMain.SetCurrentFloor(Value : integer);
 begin
@@ -225,9 +225,9 @@ begin
 end;
 
 {*
-  Ajoute un bouton de case à partir d'un modèle de case et le renvoie
-  @param Template   Modèle de case, pour l'image et le hint du bouton
-  @return Le bouton nouvellement créé
+  Ajoute un bouton de case  partir d'un modle de case et le renvoie
+  @param Template   Modle de case, pour l'image et le hint du bouton
+  @return Le bouton nouvellement cr
 *}
 function TFormMain.AddScrewButton(Template : TVisualComponent) : TButtonItem;
 var ImageIndex : integer;
@@ -238,7 +238,7 @@ begin
   Template.Draw(NoQPos, ScrewBmp.Canvas);
   ImageIndex := ScrewsImages.AddMasked(ScrewBmp, clTransparent);
 
-  // Choix de la catégorie
+  // Choix de la catgorie
   if Template is TField    then Category := ScrewsContainer.Categories[0] else
   if Template is TEffect   then Category := ScrewsContainer.Categories[1] else
   if Template is TObstacle then Category := ScrewsContainer.Categories[2] else
@@ -253,7 +253,7 @@ end;
 
 {*
   Enregistre un unique composant
-  @param Component   Le composant à enregistrer
+  @param Component   Le composant  enregistrer
 *}
 procedure TFormMain.RegisterSingleComponent(Component : TScrewComponent);
 var Button : TButtonItem;
@@ -264,10 +264,10 @@ end;
 
 {*
   Enregistre un ensemble de composants
-  @param Template       Composant modèle pour l'image et le nom à afficher
+  @param Template       Composant modle pour l'image et le nom  afficher
   @param Components     Liste des composants faisant partie de l'ensemble
-  @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
-  @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
+  @param DialogTitle    Titre de la bote de dialogue du choix du numro
+  @param DialogPrompt   Invite de la bote de dialogue du choix du numro
 *}
 procedure TFormMain.RegisterComponentSet(Template : TScrewComponent;
   const Components : array of TScrewComponent; BaseIndex : integer;
@@ -329,14 +329,14 @@ begin
 end;
 
 {*
-  Charge le MasterFile créé
-  Charge le MasterFile créé dans les autres variables et dans l'interface
+  Charge le MasterFile cr
+  Charge le MasterFile cr dans les autres variables et dans l'interface
   graphique
 *}
 procedure TFormMain.LoadFile;
 var I : integer;
 begin
-  // Un fichier nouvellement chargé n'est modifié que s'il vient d'être créé
+  // Un fichier nouvellement charg n'est modifi que s'il vient d'tre cr
   Modified := MasterFile.FileName = '';
 
   // Autres variables
@@ -351,7 +351,7 @@ begin
   MainMenuBar.ActionClient.Items[1].Visible := True; // menu des cartes
   ActionAddMap.Enabled := True;
 
-  // Recensement des composants d'édition
+  // Recensement des composants d'dition
   MasterFile.RegisterComponents(RegisterSingleComponent, RegisterComponentSet);
 
   // Chargement des infos des joueurs
@@ -366,8 +366,8 @@ begin
 end;
 
 {*
-  Déharge le MasterFile
-  Déharge le MasterFile de l'interface graphique
+  Dharge le MasterFile
+  Dharge le MasterFile de l'interface graphique
 *}
 procedure TFormMain.UnloadFile;
 var I : integer;
@@ -379,7 +379,7 @@ begin
   // Vider les onglets des joueurs
   PlayersContainer.Categories.Clear;
 
-  // Vider les composants d'édition
+  // Vider les composants d'dition
   with ScrewsContainer do
   begin
     for I := 0 to Categories.Count-1 do with Categories[I] do
@@ -394,7 +394,7 @@ begin
   end;
   ScrewsImages.Clear;
 
-  // Désactivation de l'interface utilisateur
+  // Dsactivation de l'interface utilisateur
   ActionSaveFile.Enabled := False;
   ActionSaveFileAs.Enabled := False;
   ActionCloseFile.Enabled := False;
@@ -409,7 +409,7 @@ begin
 end;
 
 {*
-  Crée un nouveau fichier et le charge
+  Cre un nouveau fichier et le charge
 *}
 procedure TFormMain.NewFile;
 begin
@@ -429,7 +429,7 @@ end;
 
 {*
   Ouvre un fichier et le charge
-  @param FileName   Nom du fichier maître à charger
+  @param FileName   Nom du fichier matre  charger
 *}
 procedure TFormMain.OpenFile(FileName : TFileName);
 begin
@@ -440,7 +440,7 @@ end;
 {*
   Enregistre le fichier
   @param FileName   Fichier dans lequel enregistrer, ou vide pour demander
-  @return True si l'enregistrement a bien été effectué, False sinon
+  @return True si l'enregistrement a bien t effectu, False sinon
 *}
 function TFormMain.SaveFile(FileName : TFileName = '') : boolean;
 var DirName : TFileName;
@@ -496,7 +496,7 @@ end;
 
 {*
   Ferme le fichier
-  @return True si le fichier a bien été fermé, False sinon
+  @return True si le fichier a bien t ferm, False sinon
 *}
 function TFormMain.CloseFile : boolean;
 begin
@@ -523,7 +523,7 @@ end;
 
 {*
   Centre l'affichage sur le joueur
-  @param Player   Joueur à visionner
+  @param Player   Joueur  visionner
 *}
 procedure TFormMain.CenterToPlayerPosition(Player : TPlayer);
 var TabIndex : integer;
@@ -553,7 +553,7 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  // Création dynamique des composants non disponibles dans Turbo Explorer
+  // Cration dynamique des composants non disponibles dans Turbo Explorer
   EditFloor := TSpinEdit.Create(Self);
   with EditFloor do
   begin
@@ -678,7 +678,7 @@ var Left, Top, Right, Bottom : integer;
 begin
   if CurrentMap = nil then exit;
 
-  // Calcul des coordonnées à afficher
+  // Calcul des coordonnes  afficher
   Left := ScrollBoxMap.HorzScrollBar.Position div ScrewSize - MinViewSize;
   Top  := ScrollBoxMap.VertScrollBar.Position div ScrewSize - MinViewSize;
   Right  := Left + ScrollBoxMap.ClientWidth  div ScrewSize + 1;
@@ -694,7 +694,7 @@ begin
   for X := Left to Right do for Y := Top to Bottom do
   begin
     QPos.Position := Point3D(X, Y, CurrentFloor);
-    CurrentMap[QPos.Position].Draw(QPos, PaintBoxMap.Canvas,
+    CurrentMap[QPos.Position].DoDraw(QPos, PaintBoxMap.Canvas,
       (MinViewSize+X) * ScrewSize, (MinViewSize+Y) * ScrewSize);
   end;
 
@@ -708,7 +708,7 @@ begin
     end;
   end;
 
-  // Dessin des lignes de séparation des zones
+  // Dessin des lignes de sparation des zones
   with PaintBoxMap.Canvas do
   begin
     Pen.Color := clBlack;

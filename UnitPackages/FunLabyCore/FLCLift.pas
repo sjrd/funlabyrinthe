@@ -96,8 +96,8 @@ implementation
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TEngagedLiftField.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Pos : T3DPoint;
+procedure TEngagedLiftField.Entering(Player : TPlayer;
+  OldDirection : TDirection; KeyPressed : boolean; Src, Pos : T3DPoint;
   var Cancel : boolean);
 begin
   if KeyPressed then
