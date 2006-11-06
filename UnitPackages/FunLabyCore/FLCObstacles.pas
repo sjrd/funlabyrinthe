@@ -1,6 +1,6 @@
 {*
   Décrit les obstacles standart de Funlabyrinthe
-  L'unité Obstacles regroupe les définitions des obstacles standart de
+  L'unité FLCObstacles regroupe les définitions des obstacles standart de
   FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
@@ -42,7 +42,7 @@ type
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); override;
+      var Cancel, AbortExecute : boolean); override;
   end;
 
   {*
@@ -56,7 +56,7 @@ type
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); override;
+      var Cancel, AbortExecute : boolean); override;
   end;
 
   {*
@@ -73,7 +73,7 @@ type
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortEntered : boolean); override;
+      var Cancel, AbortExecute : boolean); override;
   end;
 
 implementation
@@ -99,19 +99,19 @@ end;
   Exécuté lorsque le joueur pousse sur l'obstacle
   Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
   annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
+  la méthode Execute de la case ne soit exécutée, il faut positionner
+  AbortExecute à True.
   @param Player         Joueur qui se déplace
   @param OldDirection   Direction du joueur avant ce déplacement
   @param KeyPressed     True si une touche a été pressée pour le déplacement
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
+  @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
 procedure TSilverBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
+  var Cancel, AbortExecute : boolean);
 begin
   inherited;
 
@@ -145,19 +145,19 @@ end;
   Exécuté lorsque le joueur pousse sur l'obstacle
   Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
   annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
+  la méthode Execute de la case ne soit exécutée, il faut positionner
+  AbortExecute à True.
   @param Player         Joueur qui se déplace
   @param OldDirection   Direction du joueur avant ce déplacement
   @param KeyPressed     True si une touche a été pressée pour le déplacement
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
+  @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
 procedure TGoldenBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
+  var Cancel, AbortExecute : boolean);
 begin
   inherited;
 
@@ -214,19 +214,19 @@ end;
   Exécuté lorsque le joueur pousse sur l'obstacle
   Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
   annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
+  la méthode Execute de la case ne soit exécutée, il faut positionner
+  AbortExecute à True.
   @param Player         Joueur qui se déplace
   @param OldDirection   Direction du joueur avant ce déplacement
   @param KeyPressed     True si une touche a été pressée pour le déplacement
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
+  @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
 procedure TSecretWay.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortEntered : boolean);
+  var Cancel, AbortExecute : boolean);
 begin
   inherited;
 

@@ -1,6 +1,6 @@
 {*
   Décrit les effets simples (se suffisant à eux-mêmes)
-  L'unité SimpleEffects regroupe les différents effets qui se suffisent à
+  L'unité FLCSimpleEffects regroupe les différents effets qui se suffisent à
   eux-mêmes, c'est-à-dire qui n'ont pas besoin de composants annexes pour
   fonctionner.
   @author Sébastien Jean Robert Doeraene

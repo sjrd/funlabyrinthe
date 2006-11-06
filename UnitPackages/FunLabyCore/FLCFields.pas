@@ -1,6 +1,7 @@
 {*
   Décrit les terrains de base de Funlabyrinthe
-  L'unité Fields regroupe les définitions des terrains de base de FunLabyrinthe.
+  L'unité FLCFields regroupe les définitions des terrains de base de
+  FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}

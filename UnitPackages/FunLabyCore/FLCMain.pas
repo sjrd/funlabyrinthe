@@ -1,7 +1,7 @@
 {*
   Recense les composants au coeur de Funlabyrinthe
-  L'unité FunLabyCoreMain recense tous les composants du package FunLabyCore,
-  ceux qui sont au coeur de FunLabyrinthe.
+  L'unité FLCMain recense tous les composants du package FunLabyCore, ceux qui
+  sont au coeur de FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}

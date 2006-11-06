@@ -238,10 +238,10 @@ type
     Les objets peuvent rendre un joueur capable d'effectuer certaines actions.
   *}
   TObjectDef = class(TVisualComponent)
-  private
-    function GetCount(Player : TPlayer) : integer;
-    procedure SetCount(Player : TPlayer; Value : integer);
   protected
+    function GetCount(Player : TPlayer) : integer; virtual;
+    procedure SetCount(Player : TPlayer; Value : integer); virtual;
+
     function GetShownInfos(Player : TPlayer) : string; virtual;
   public
     function CanYou(Player : TPlayer;
@@ -1438,8 +1438,8 @@ end;
   Exécuté lorsque le joueur pousse sur l'obstacle
   Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
   annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Entered de la case ne soit exécutée, il faut positionner
-  AbortEntered à True.
+  la méthode Execute de la case ne soit exécutée, il faut positionner
+  AbortExecute à True.
   @param Player         Joueur qui se déplace
   @param OldDirection   Direction du joueur avant ce déplacement
   @param KeyPressed     True si une touche a été pressée pour le déplacement
@@ -2227,6 +2227,7 @@ end;
 constructor TMaster.Create(AEditing : boolean);
 begin
   inherited Create;
+
   FImagesMaster := TImagesMaster.Create;
   FComponents := THashedStringList.Create;
   with TStringList(FComponents) do
@@ -2253,9 +2254,10 @@ end;
   Détruit l'instance
 *}
 destructor TMaster.Destroy;
+var I : integer;
 begin
-  while FComponents.Count > 0 do
-    FComponents.Objects[0].Free;
+  for I := FComponents.Count-1 downto 0 do
+    FComponents.Objects[I].Free;
 
   FPlayers.Free;
   FMaps.Free;
@@ -2268,6 +2270,7 @@ begin
 
   FComponents.Free;
   FImagesMaster.Free;
+
   inherited;
 end;
 
@@ -2583,23 +2586,17 @@ end;
   @param Component   Le composant à ajouter
 *}
 procedure TMaster.AddComponent(Component : TFunLabyComponent);
-var Index : integer;
 begin
-  Index := FComponents.AddObject(Component.ID, Component);
-  try
-    if Component is TPlugin    then FPlugins   .Add(Component) else
-    if Component is TObjectDef then FObjectDefs.Add(Component) else
-    if Component is TField     then FFields    .Add(Component) else
-    if Component is TEffect    then FEffects   .Add(Component) else
-    if Component is TObstacle  then FObstacles .Add(Component) else
-    if Component is TScrew     then FScrews    .Add(Component) else
-    if Component is TMap       then FMaps      .Add(Component) else
-    if Component is TPlayer    then FPlayers   .Add(Component) else
-    assert(False);
-  except
-    FComponents.Delete(Index);
-    raise;
-  end;
+  FComponents.AddObject(Component.ID, Component);
+
+  if Component is TPlugin    then FPlugins   .Add(Component) else
+  if Component is TObjectDef then FObjectDefs.Add(Component) else
+  if Component is TField     then FFields    .Add(Component) else
+  if Component is TEffect    then FEffects   .Add(Component) else
+  if Component is TObstacle  then FObstacles .Add(Component) else
+  if Component is TScrew     then FScrews    .Add(Component) else
+  if Component is TMap       then FMaps      .Add(Component) else
+  if Component is TPlayer    then FPlayers   .Add(Component);
 end;
 
 {*
@@ -2608,8 +2605,6 @@ end;
 *}
 procedure TMaster.RemoveComponent(Component : TFunLabyComponent);
 begin
-  FComponents.Delete(FComponents.IndexOf(Component.ID));
-
   if Component is TPlugin    then FPlugins   .Remove(Component) else
   if Component is TObjectDef then FObjectDefs.Remove(Component) else
   if Component is TField     then FFields    .Remove(Component) else
@@ -2617,8 +2612,9 @@ begin
   if Component is TObstacle  then FObstacles .Remove(Component) else
   if Component is TScrew     then FScrews    .Remove(Component) else
   if Component is TMap       then FMaps      .Remove(Component) else
-  if Component is TPlayer    then FPlayers   .Remove(Component) else
-  assert(False);
+  if Component is TPlayer    then FPlayers   .Remove(Component);
+
+  FComponents.Delete(FComponents.IndexOf(Component.ID));
 end;
 
 {*

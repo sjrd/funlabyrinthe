@@ -1,6 +1,6 @@
 {*
   Décrit les objets simples de FunLabyrinthe
-  L'unité SimpleObjects regroupe les définitions des objets simples de
+  L'unité FLCSimpleObjects regroupe les définitions des objets simples de
   FunLabyrinthe, c'est-à-dire ceux qui n'ont besoin que de la définition d'objet
   et de l'effet permettant de les obtenir, avec éventuellement un plug-in
   d'affichage.

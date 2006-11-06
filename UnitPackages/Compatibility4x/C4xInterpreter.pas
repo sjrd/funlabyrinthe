@@ -1,3 +1,10 @@
+{*
+  Interprétation des actions
+  L'unité C4xInterpreter décrit la classe TActionsInterpreter, qui se charge
+  d'interpréter les actions.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit C4xInterpreter;
 
 interface
@@ -6,17 +13,26 @@ uses
   Classes, ScUtils, FunLabyUtils;
 
 type
+  {*
+    Interprète des actions
+  *}
   TActionsInterpreter = class
   private
-    FMaster : TMaster;   /// Maître FunLabyrinthe
-    FActions : TStrings; /// Actions à exécuter
+    Actions : TStrings;    /// Actions à exécuter
+    Master : TMaster;      /// Maître FunLabyrinthe
+    Phase : integer;       /// Phase courante (phPushing ou phExecute)
+    Player : TPlayer;      /// Joueur concerné
+    KeyPressed : boolean;  /// True si une touche a été pressée
+    Position : T3DPoint;   /// Position de la case
+    DoNextPhase : boolean; /// Indique s'il faut exécuter la phase suivante
 
-    procedure SetActions(New : TStrings);
+    procedure ExecuteActions;
   public
-    constructor Create(AMaster : TMaster; AActions : TStrings);
-    destructor Destroy; override;
+    constructor Create;
 
-    property Actions : TStrings read FActions write SetActions;
+    class procedure Execute(AActions : TStrings; AMaster : TMaster;
+      APhase : integer; APlayer : TPlayer; AKeyPressed : boolean;
+      const APos : T3DPoint; var ADoNextPhase : boolean);
   end;
 
 implementation
@@ -27,33 +43,57 @@ implementation
 
 {*
   Crée une instance de TActionsInterpreter
-  @param AMaster    Maître FunLabyrinthe
-  @param AActions   Actions à exécuter
 *}
-constructor TActionsInterpreter.Create(AMaster : TMaster; AActions : TStrings);
+constructor TActionsInterpreter.Create;
 begin
   inherited Create;
-  FMaster := AMaster;
-  FActions := TStringList.Create;
-  FActions.Assign(AActions);
+
+  Actions := nil;
+  Master := nil;
+  Phase := 0;
+  Player := nil;
+  KeyPressed := False;
+  Position := No3DPoint;
+  DoNextPhase := False;
 end;
 
 {*
-  Détruit l'instance
+  Exécute les actions dans le contexte donné
 *}
-destructor TActionsInterpreter.Destroy;
+procedure TActionsInterpreter.ExecuteActions;
 begin
-  FActions.Free;
-  inherited Destroy;
 end;
 
 {*
-  Modifie les actions à exécuter
-  @param New   Nouvelles actions
+  Exécute une liste d'actions
+  @param AActions       Actions à exécuter
+  @param AMaster        Maître FunLabyrinthe
+  @param APhase         Phase courante (phPushing ou phExecute)
+  @param APlayer        Joueur concerné
+  @param AKeyPressed    True si une touche a été pressée pour le déplacement
+  @param APos           Position de la case
+  @param ADoNextPhase   Indique s'il faut exécuter la phase suivante
 *}
-procedure TActionsInterpreter.SetActions(New : TStrings);
+class procedure TActionsInterpreter.Execute(AActions : TStrings;
+  AMaster : TMaster; APhase : integer; APlayer : TPlayer; AKeyPressed : boolean;
+  const APos : T3DPoint; var ADoNextPhase : boolean);
 begin
-  FActions.Assign(New);
+  with Create do
+  try
+    Actions := AActions;
+    Master := AMaster;
+    Phase := APhase;
+    Player := APlayer;
+    KeyPressed := AKeyPressed;
+    Position := APos;
+    DoNextPhase := ADoNextPhase;
+
+    ExecuteActions;
+
+    ADoNextPhase := DoNextPhase;
+  finally
+    Free;
+  end;
 end;
 
 end.

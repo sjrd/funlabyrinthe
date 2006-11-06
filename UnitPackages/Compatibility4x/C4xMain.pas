@@ -1,6 +1,6 @@
 {*
   Recense les composants de compatibilité 4.x de FunLabyrinthe
-  L'unité FunLabyCoreMain recense tous les composants du package
+  L'unité C4xMain recense tous les composants du package
   Compatibility4x, ceux qui décrivent les composants de compatibilité 4.x de
   FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
@@ -11,7 +11,7 @@ unit C4xMain;
 interface
 
 uses
-  Classes, SysUtils, FunLabyUtils, C4xCommon, C4xScrews;
+  Classes, SysUtils, FunLabyUtils, C4xCommon, C4xComponents;
 
 procedure LoadComponents(Master : TMaster; Params : TStrings); stdcall;
 
@@ -31,17 +31,15 @@ var I : integer;
 begin
   // Effets
 
-  for I := 1 to 75 do
-    TActionsEffect.Create(Master, idActionsEffect, sButton, I);
   TDecorativeEffect.Create(Master, idButtonTemplate, sButtonTemplate, fButton);
 
   TDecorativeEffect.Create(Master, idSunkenButton,
     sSunkenButton, fSunkenButton);
 
-  // Obstacles
+  // Actions
 
   for I := 1 to 75 do
-    TActionsObstacle.Create(Master, idActionsObstacle, sButton, I);
+    TActions.Create(Master, I);
 end;
 
 {*

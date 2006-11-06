@@ -1,7 +1,7 @@
 {*
   Décrit le comportement complet de l'ascenseur
-  L'unité Lift regroupe tous les composants intervenant dans le fonctionnement
-  de l'ascenseur.
+  L'unité FLCLift regroupe tous les composants intervenant dans le
+  fonctionnement de l'ascenseur.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}

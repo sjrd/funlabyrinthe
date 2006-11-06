@@ -1,8 +1,8 @@
 {*
   Constantes et classes communes
-  L'unité Common décrit les constantes et classes qui sont communes aux autres
-  parties, ce qui inclut essentiellement les constantes d'actions et les plug-in
-  « polyvalents ».
+  L'unité FLCCommon décrit les constantes et classes qui sont communes aux
+  autres parties, ce qui inclut essentiellement les constantes d'actions et les
+  plug-in « polyvalents ».
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}

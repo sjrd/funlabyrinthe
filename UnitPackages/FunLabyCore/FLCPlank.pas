@@ -1,7 +1,7 @@
 {*
   Décrit le comportement complet de la planche
-  L'unité Plank regroupe tous les composants intervenant dans le fonctionnement
-  de la planche.
+  L'unité FLCPlank regroupe tous les composants intervenant dans le
+  fonctionnement de la planche.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
