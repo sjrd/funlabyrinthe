@@ -21,6 +21,8 @@ type
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
       RegisterComponentSetProc : TRegisterComponentSetProc); override;
+
+    procedure GetParams(Params : TStrings); override;
   end;
 
 implementation
@@ -33,6 +35,7 @@ const {don't localize}
   BPLMIMEType = 'application/bpl';
   LoadComponentsProc = 'LoadComponents';
   RegisterComponentsProc = 'RegisterComponents';
+  GetParamsProc = 'GetParams';
 
 {*
   Crée une instance de TBPLUnitFile
@@ -92,6 +95,21 @@ begin
   if Assigned(RegisterComponents) then
     RegisterComponents(Master,
       RegisterSingleComponentProc, RegisterComponentSetProc);
+end;
+
+{*
+  Dresse la liste des paramètres à enregistrer
+  @param Params   Liste des paramètres
+*}
+procedure TBPLUnitFile.GetParams(Params : TStrings);
+type
+  TGetParamsProc = procedure(Master : TMaster; Params : TStrings); stdcall;
+var GetParams : TGetParamsProc;
+begin
+  GetParams := TGetParamsProc(GetProcAddress(FHandle, GetParamsProc));
+
+  if Assigned(GetParams) then
+    GetParams(Master, Params);
 end;
 
 initialization
