@@ -1,3 +1,10 @@
+{*
+  Boîte de dialogue affichant les objets possédés par un joueur
+  L'unité PlayerObjects propose une boîte de dialogue affichant les objets
+  possédés par un joueur.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit PlayerObjects;
 
 interface
@@ -7,15 +14,20 @@ uses
   Dialogs, ImgList, StdCtrls, ComCtrls, FunLabyUtils;
 
 type
+  {*
+    Boîte de dialogue affichant les objets possédés par un joueur
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TFormObjects = class(TForm)
     LabelObjects: TLabel;
     ListViewObjects: TListView;
     ButtonOK: TButton;
     ObjectsImages: TImageList;
   private
-    { Dclarations prives }
+    { Déclarations prives }
   public
-    { Dclarations publiques }
+    { Déclarations publiques }
     class procedure ShowObjects(Player : TPlayer);
   end;
 
@@ -28,7 +40,7 @@ implementation
 
 {*
   Affiche les objets d'un joueur
-  @param Player   Joueur concern
+  @param Player   Joueur concerné
 *}
 class procedure TFormObjects.ShowObjects(Player : TPlayer);
 var Bitmap : TBitmap;

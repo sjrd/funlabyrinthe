@@ -11,11 +11,12 @@ unit C4xMain;
 interface
 
 uses
-  Classes, SysUtils, FunLabyUtils, C4xCommon, C4xComponents;
+  Classes, SysUtils, FunLabyUtils, UnitFiles, C4xCommon, C4xComponents;
 
-procedure LoadComponents(Master : TMaster; Params : TStrings); stdcall;
+procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
+  Params : TStrings); stdcall;
 
-procedure RegisterComponents(Master : TMaster;
+procedure RegisterComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   RegisterSingleComponentProc : TRegisterSingleComponentProc;
   RegisterComponentSetProc : TRegisterComponentSetProc); stdcall;
 
@@ -23,10 +24,12 @@ implementation
 
 {*
   Charge tous les composants de compatibilité 4.x de FunLabyrinthe
-  @param Master   Maître FunLabyrinthe dans lequel charger les composants
-  @param Params   Paramètres envoyés au fichier unité
+  @param UnitFile   Fichier unité appelant
+  @param Master     Maître FunLabyrinthe dans lequel charger les composants
+  @param Params     Paramètres envoyés au fichier unité
 *}
-procedure LoadComponents(Master : TMaster; Params : TStrings);
+procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
+  Params : TStrings);
 var I : integer;
 begin
   // Effets
@@ -44,11 +47,12 @@ end;
 
 {*
   Enregistre les différents composants à placer dans la palette d'édition
+  @param UnitFile                      Fichier unité appelant
   @param Master                        Maître FunLabyrinthe
   @param RegisterSingleComponentProc   Call-back pour un unique composant
   @param RegisterComponentSetProc      Call-back pour un ensemble de composants
 *}
-procedure RegisterComponents(Master : TMaster;
+procedure RegisterComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   RegisterSingleComponentProc : TRegisterSingleComponentProc;
   RegisterComponentSetProc : TRegisterComponentSetProc);
 

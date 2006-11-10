@@ -1,3 +1,10 @@
+ {*
+  Gestion des fichiers unité de base de FunLabyrinthe
+  L'unité UnitFiles décrit les classes de gestion des fichiers unité de base de
+  FunLabyrinthe.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit UnitFiles;
 
 interface
@@ -9,20 +16,30 @@ resourcestring
   sCantLoadPackage = 'Impossible de charger le paquet "%s"';
 
 type
+  {*
+    Représente un fichier unité de type paquet Borland
+    TBPLUnitFile représente un fichier unité qui charge un paquet Borland
+    définissant les nouveaux éléments.
+  *}
   TBPLUnitFile = class(TUnitFile)
   private
-    FHandle : HMODULE; /// Module du package chargé
+    FHandle : HMODULE;      /// Module du package chargé
+    FAttributes : TStrings; /// Attributs libres pour le package
   public
     constructor Create(AMasterFile : TMasterFile; const AHRef : string;
       const AFileName : TFileName; const AMIMEType : string;
       Params : TStrings); override;
     destructor Destroy; override;
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
 
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
       RegisterComponentSetProc : TRegisterComponentSetProc); override;
 
     procedure GetParams(Params : TStrings); override;
+
+    property Attributes : TStrings read FAttributes;
   end;
 
 implementation
@@ -34,6 +51,7 @@ implementation
 const {don't localize}
   BPLMIMEType = 'application/bpl';
   LoadComponentsProc = 'LoadComponents';
+  UnloadComponentsProc = 'UnloadComponents';
   RegisterComponentsProc = 'RegisterComponents';
   GetParamsProc = 'GetParams';
 
@@ -46,22 +64,15 @@ const {don't localize}
 *}
 constructor TBPLUnitFile.Create(AMasterFile : TMasterFile; const AHRef : string;
   const AFileName : TFileName; const AMIMEType : string; Params : TStrings);
-type
-  TLoadComponentsProc = procedure(Master : TMaster; Params : TStrings); stdcall;
-var LoadComponents : TLoadComponentsProc;
 begin
   inherited;
+
+  FAttributes := TStringList.Create;
+  FAttributes.Assign(Params);
 
   FHandle := LoadPackage(FileName);
   if FHandle = 0 then
     raise EFileError.CreateFmt(sCantLoadPackage, [FileName]);
-
-  LoadComponents := TLoadComponentsProc(
-    GetProcAddress(FHandle, LoadComponentsProc));
-  if not Assigned(LoadComponents) then
-    raise EFileError.CreateFmt(sCantLoadPackage, [FileName]);
-
-  LoadComponents(Master, Params);
 end;
 
 {*
@@ -71,6 +82,59 @@ destructor TBPLUnitFile.Destroy;
 begin
   if FHandle <> 0 then
     UnloadPackage(FHandle);
+
+  FAttributes.Free;
+
+  inherited;
+end;
+
+{*
+  Exécuté après la construction de l'objet
+  AfterConstruction est appelé après l'exécution du dernier constructeur.
+  N'appelez pas directement AfterConstruction.
+*}
+procedure TBPLUnitFile.AfterConstruction;
+type
+  TLoadComponentsProc = procedure(UnitFile : TBPLUnitFile; Master : TMaster;
+    Params : TStrings); stdcall;
+var LoadComponents : TLoadComponentsProc;
+    Params : TStrings;
+begin
+  inherited;
+
+  LoadComponents := TLoadComponentsProc(
+    GetProcAddress(FHandle, LoadComponentsProc));
+
+  if Assigned(LoadComponents) then
+  begin
+    Params := TStringList.Create;
+    try
+      Params.Assign(FAttributes);
+      FAttributes.Clear;
+
+      LoadComponents(Self, Master, Params);
+    finally
+      Params.Free;
+    end;
+  end else FAttributes.Clear;
+end;
+
+{*
+  Exécuté avant la destruction de l'objet
+  BeforeDestruction est appelé avant l'exécution du premier destructeur.
+  N'appelez pas directement BeforeDestruction.
+*}
+procedure TBPLUnitFile.BeforeDestruction;
+type
+  TUnloadComponentsProc = procedure(UnitFile : TBPLUnitFile;
+    Master : TMaster); stdcall;
+var UnloadComponents : TUnloadComponentsProc;
+begin
+  UnloadComponents := TUnloadComponentsProc(
+    GetProcAddress(FHandle, UnloadComponentsProc));
+
+  if Assigned(UnloadComponents) then
+    UnloadComponents(Self, Master);
 
   inherited;
 end;
@@ -84,7 +148,7 @@ procedure TBPLUnitFile.RegisterComponents(
   RegisterSingleComponentProc : TRegisterSingleComponentProc;
   RegisterComponentSetProc : TRegisterComponentSetProc);
 type
-  TRegisterComponentsProc = procedure(Master : TMaster;
+  TRegisterComponentsProc = procedure(UnitFile : TBPLUnitFile; Master : TMaster;
     RegisterSingleComponentProc : TRegisterSingleComponentProc;
     RegisterComponentSetProc : TRegisterComponentSetProc); stdcall;
 var RegisterComponents : TRegisterComponentsProc;
@@ -93,7 +157,7 @@ begin
     GetProcAddress(FHandle, RegisterComponentsProc));
 
   if Assigned(RegisterComponents) then
-    RegisterComponents(Master,
+    RegisterComponents(Self, Master,
       RegisterSingleComponentProc, RegisterComponentSetProc);
 end;
 
@@ -103,13 +167,14 @@ end;
 *}
 procedure TBPLUnitFile.GetParams(Params : TStrings);
 type
-  TGetParamsProc = procedure(Master : TMaster; Params : TStrings); stdcall;
+  TGetParamsProc = procedure(UnitFile : TBPLUnitFile; Master : TMaster;
+    Params : TStrings); stdcall;
 var GetParams : TGetParamsProc;
 begin
   GetParams := TGetParamsProc(GetProcAddress(FHandle, GetParamsProc));
 
   if Assigned(GetParams) then
-    GetParams(Master, Params);
+    GetParams(Self, Master, Params);
 end;
 
 initialization

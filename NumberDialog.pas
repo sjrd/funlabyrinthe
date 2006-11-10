@@ -1,3 +1,10 @@
+{*
+  Boîte de dialogue demandant un nombre à l'utilisateur
+  L'unité NumberDialog propose une boîte de dialogue permettant de demander un
+  nombre à l'utilisateur.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit NumberDialog;
 
 interface
@@ -7,6 +14,11 @@ uses
   StdCtrls, Spin;
 
 type
+  {*
+    Boîte de dialogue demandant un nombre à l'utilisateur
+    @author Sébastien Jean Robert Doeraene
+    @version 1.0
+  *}
   TFormNumber = class(TForm)
     LabelPrompt: TLabel;
     ButtonOK: TButton;
@@ -66,6 +78,10 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnCreate
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormNumber.FormCreate(Sender: TObject);
 begin
   // Création dynamique des composants non disponibles dans Turbo Explorer
