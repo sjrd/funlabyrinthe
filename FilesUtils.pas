@@ -66,12 +66,14 @@ type
   *}
   TUnitFile = class(TDependantFile)
   private
-    FMIMEType : string;/// Type MIME du fichier unité
+    FMIMEType : string; /// Type MIME du fichier unité
   public
     constructor Create(AMasterFile : TMasterFile; const AHRef : string;
       const AFileName : TFileName; const AMIMEType : string;
       Params : TStrings); virtual;
     procedure AfterConstruction; override;
+
+    procedure GameLoaded(FirstTime : boolean); virtual;
 
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
@@ -149,6 +151,8 @@ type
     destructor Destroy; override;
 
     class procedure RegisterUnitFileClass(const MIMEType : string;
+      UnitFileClass : TUnitFileClass);
+    class procedure UnregisterUnitFileClass(const MIMEType : string;
       UnitFileClass : TUnitFileClass);
     class function FindUnitFileClass(const MIMEType : string) : TUnitFileClass;
 
@@ -278,6 +282,17 @@ procedure TUnitFile.AfterConstruction;
 begin
   inherited;
   MasterFile.FUnitFiles.Add(Self);
+end;
+
+{*
+  Exécuté lorsque la partie vient juste d'être chargée
+  GameLoaded est appelée lorsque la partie vient juste d'être chargée (en mode
+  jeu, donc pas en mode édition), que ce soit pour la première fois ou à la
+  suite du chargement d'une sauvegarde.
+  @param FirstTime   Indique si c'est la première fois que la partie est chargée
+*}
+procedure TUnitFile.GameLoaded(FirstTime : boolean);
+begin
 end;
 
 {*
@@ -471,6 +486,7 @@ end;
 *}
 constructor TMasterFile.Create(const AFileName : TFileName; AMode : TFileMode);
 var Document : IXMLDOMDocument;
+    I : integer;
 begin
   inherited Create;
   FFileName := AFileName;
@@ -498,6 +514,12 @@ begin
 
   Load(Document);
   TestOpeningValidity;
+
+  if Mode = fmPlay then
+  begin
+    for I := 0 to UnitFileCount-1 do
+      UnitFiles[I].GameLoaded(not IsSaveguard);
+  end;
 end;
 
 {*
@@ -751,6 +773,8 @@ end;
 
 {*
   Enregistre un gestionnaire d'unité
+  Si il existait déjà un gestionnaire pour le type MIME indiqué, celui-ci est
+  remplacé.
   @param MIMEType       Type MIME géré par la classe
   @param MapFileClass   Classe gestionnaire du type MIME
 *}
@@ -764,6 +788,24 @@ begin
     UnitFileClasses.AddObject(MIMEType, TObject(UnitFileClass))
   else
     UnitFileClasses.Objects[Index] := TObject(UnitFileClass);
+end;
+
+{*
+  Supprime un gestionnaire d'unité
+  UnregisterUnitFileClass vérifie d'abord que le gestionnaire que l'on veut
+  effacer est bien celui affecté au type MIME indiqué.
+  @param MIMEType       Type MIME géré par la classe
+  @param MapFileClass   Classe gestionnaire du type MIME
+*}
+class procedure TMasterFile.UnregisterUnitFileClass(const MIMEType : string;
+  UnitFileClass : TUnitFileClass);
+var Index : integer;
+begin
+  EnsureClassListCreated;
+  Index := UnitFileClasses.IndexOf(MIMEType);
+  if (Index >= 0) and
+     (UnitFileClasses.Objects[Index] = TObject(UnitFileClass)) then
+    UnitFileClasses.Delete(Index);
 end;
 
 {*

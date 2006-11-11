@@ -30,8 +30,8 @@ type
       const AFileName : TFileName; const AMIMEType : string;
       Params : TStrings); override;
     destructor Destroy; override;
-    procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
+
+    procedure GameLoaded(FirstTime : boolean); override;
 
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
@@ -58,6 +58,9 @@ const {don't localize}
   /// Procédure de déchargement des composants
   UnloadComponentsProc = 'UnloadComponents';
 
+  /// Procédure de chargement de la partie
+  GameLoadedProc = 'GameLoaded';
+
   /// Procédure d'enregistrement des composants
   RegisterComponentsProc = 'RegisterComponents';
 
@@ -73,6 +76,10 @@ const {don't localize}
 *}
 constructor TBPLUnitFile.Create(AMasterFile : TMasterFile; const AHRef : string;
   const AFileName : TFileName; const AMIMEType : string; Params : TStrings);
+type
+  TLoadComponentsProc = procedure(UnitFile : TBPLUnitFile; Master : TMaster;
+    Params : TStrings); stdcall;
+var LoadComponents : TLoadComponentsProc;
 begin
   inherited;
 
@@ -82,58 +89,18 @@ begin
   FHandle := LoadPackage(FileName);
   if FHandle = 0 then
     raise EFileError.CreateFmt(sCantLoadPackage, [FileName]);
+
+  LoadComponents := TLoadComponentsProc(
+    GetProcAddress(FHandle, LoadComponentsProc));
+
+  if Assigned(LoadComponents) then
+    LoadComponents(Self, Master, Params);
 end;
 
 {*
   Détruit l'instance
 *}
 destructor TBPLUnitFile.Destroy;
-begin
-  if FHandle <> 0 then
-    UnloadPackage(FHandle);
-
-  FAttributes.Free;
-
-  inherited;
-end;
-
-{*
-  Exécuté après la construction de l'objet
-  AfterConstruction est appelé après l'exécution du dernier constructeur.
-  N'appelez pas directement AfterConstruction.
-*}
-procedure TBPLUnitFile.AfterConstruction;
-type
-  TLoadComponentsProc = procedure(UnitFile : TBPLUnitFile; Master : TMaster;
-    Params : TStrings); stdcall;
-var LoadComponents : TLoadComponentsProc;
-    Params : TStrings;
-begin
-  inherited;
-
-  LoadComponents := TLoadComponentsProc(
-    GetProcAddress(FHandle, LoadComponentsProc));
-
-  if Assigned(LoadComponents) then
-  begin
-    Params := TStringList.Create;
-    try
-      Params.Assign(FAttributes);
-      FAttributes.Clear;
-
-      LoadComponents(Self, Master, Params);
-    finally
-      Params.Free;
-    end;
-  end else FAttributes.Clear;
-end;
-
-{*
-  Exécuté avant la destruction de l'objet
-  BeforeDestruction est appelé avant l'exécution du premier destructeur.
-  N'appelez pas directement BeforeDestruction.
-*}
-procedure TBPLUnitFile.BeforeDestruction;
 type
   TUnloadComponentsProc = procedure(UnitFile : TBPLUnitFile;
     Master : TMaster); stdcall;
@@ -145,7 +112,32 @@ begin
   if Assigned(UnloadComponents) then
     UnloadComponents(Self, Master);
 
+  if FHandle <> 0 then
+    UnloadPackage(FHandle);
+
+  FAttributes.Free;
+
   inherited;
+end;
+
+{*
+  Exécuté lorsque la partie vient juste d'être chargée
+  GameLoaded est appelée lorsque la partie vient juste d'être chargée (en mode
+  jeu, donc pas en mode édition), que ce soit pour la première fois ou à la
+  suite du chargement d'une sauvegarde.
+  @param FirstTime   Indique si c'est la première fois que la partie est chargée
+*}
+procedure TBPLUnitFile.GameLoaded(FirstTime : boolean);
+type
+  TGameLoadedProc = procedure(UnitFile : TBPLUnitFile; Master : TMaster;
+    FirstTime : boolean); stdcall;
+var GameLoaded : TGameLoadedProc;
+begin
+  GameLoaded := TGameLoadedProc(
+    GetProcAddress(FHandle, GameLoadedProc));
+
+  if Assigned(GameLoaded) then
+    GameLoaded(Self, Master, FirstTime);
 end;
 
 {*
@@ -188,5 +180,7 @@ end;
 
 initialization
   TMasterFile.RegisterUnitFileClass(BPLMIMEType, TBPLUnitFile);
+finalization
+  TMasterFile.UnregisterUnitFileClass(BPLMIMEType, TBPLUnitFile);
 end.
 
