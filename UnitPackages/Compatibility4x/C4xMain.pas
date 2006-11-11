@@ -42,7 +42,7 @@ begin
   // Actions
 
   for I := 1 to 75 do
-    TActions.Create(Master, I);
+    TActions.Create(Master, I, akPushButton, Format(sButton, [I]));
 end;
 
 {*

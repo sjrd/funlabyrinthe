@@ -41,11 +41,22 @@ resourcestring
   sButtonPrompt = 'Numéro du bouton (1 à 75) :';
 
 type
+  {*
+    Représente le type d'un ensemble d'actions
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TActionsKind = (akPushButton, akInfo, akSwitch, akHidden, akTransporterNext,
+    akTransporterPrevious, akTransporterRandom, akCustom, akObject, akObstacle,
+    akDirection);
+
   TActions = class;
 
   {*
     Définition d'objet lié à des actions
     Les nombre des objets liés à des actions est le compteur de ces actions.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TActionsObject = class(TObjectDef)
   private
@@ -53,6 +64,8 @@ type
   protected
     function GetCount(Player : TPlayer) : integer; override;
     procedure SetCount(Player : TPlayer; Value : integer); override;
+
+    function GetShownInfos(Player : TPlayer) : string; override;
   public
     constructor Create(AActions : TActions);
 
@@ -62,6 +75,8 @@ type
   {*
     Effet à actions
     Un effet à actions exécute une série d'actions lorsqu'on arrive dessus.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TActionsEffect = class(TEffect)
   private
@@ -78,6 +93,8 @@ type
   {*
     Obstacle à actions
     Un obstacle à actions exécute une série d'actions lorsqu'on pousse dessus.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TActionsObstacle = class(TObstacle)
   private
@@ -94,31 +111,41 @@ type
 
   {*
     Représente un ensemble d'actions pour une case active particulière
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TActions = class(TFunLabyComponent)
   private
     FNumber : integer;            /// Numéro d'actions
+    FKind : TActionsKind;         /// Type d'actions
+    FName : string;               /// Nom
     FActions : TStrings;          /// Actions à exécuter
     FCounter : integer;           /// Compteur d'exécution
     FObjectDef : TActionsObject;  /// Objet correspondant
     FEffect : TActionsEffect;     /// Effet correspondant
     FObstacle : TActionsObstacle; /// Obstacle correspondant
-
-    procedure SetActions(Value : TStrings);
   public
-    constructor Create(AMaster : TMaster; ANumber : integer);
+    constructor Create(AMaster : TMaster; ANumber : integer;
+      AKind : TActionsKind; const AName : string);
     destructor Destroy; override;
 
     procedure Execute(Phase : integer; Player : TPlayer; KeyPressed : boolean;
       const Pos : T3DPoint; var DoNextPhase : boolean);
 
     property Number : integer read FNumber;
-    property Actions : TStrings read FActions write SetActions;
+    property Kind : TActionsKind read FKind;
+    property Name : string read FName;
+    property Actions : TStrings read FActions;
     property Counter : integer read FCounter write FCounter;
     property ObjectDef : TActionsObject read FObjectDef;
     property Effect : TActionsEffect read FEffect;
     property Obstacle : TActionsObstacle read FObstacle;
   end;
+
+const
+  /// Ensemble des types d'actions personnalisés
+  CustomActionsKind : set of TActionsKind =
+    [akCustom, akObject, akObstacle, akDirection];
 
 implementation
 
@@ -155,6 +182,18 @@ end;
 procedure TActionsObject.SetCount(Player : TPlayer; Value : integer);
 begin
   Actions.Counter := Value;
+end;
+
+{*
+  Informations textuelles sur l'objet
+  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
+  @param Player   Joueur pour lequel on veut obtenir les infos
+  @return Informations textuelles, ou une chaîne vide si rien à afficher
+*}
+function TActionsObject.GetShownInfos(Player : TPlayer) : string;
+begin
+  if Actions.Kind <> akObject then Result := '' else
+    Result := Format(sDefaultObjectInfos, [Name, Count[Player]]);
 end;
 
 {-----------------------}
@@ -232,11 +271,14 @@ end;
   @param AMaster   Maître FunLabyrinthe
   @param ANumber   Numéro d'actions
 *}
-constructor TActions.Create(AMaster : TMaster; ANumber : integer);
+constructor TActions.Create(AMaster : TMaster; ANumber : integer;
+  AKind : TActionsKind; const AName : string);
 begin
   inherited Create(AMaster, Format(idActions, [ANumber]));
 
   FNumber := ANumber;
+  FKind := AKind;
+  FName := AName;
   FActions := TStringList.Create;
   FCounter := 0;
   FObjectDef := TActionsObject.Create(Self);
@@ -251,15 +293,6 @@ destructor TActions.Destroy;
 begin
   FActions.Free;
   inherited Destroy;
-end;
-
-{*
-  Modifie les actions à exécuter
-  @param Value   Nouvelles actions
-*}
-procedure TActions.SetActions(Value : TStrings);
-begin
-  FActions.Assign(Value);
 end;
 
 {*

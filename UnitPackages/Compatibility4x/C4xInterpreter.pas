@@ -15,6 +15,8 @@ uses
 type
   {*
     Interprète des actions
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TActionsInterpreter = class
   private

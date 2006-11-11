@@ -42,6 +42,8 @@ type
   {*
     Plug-in planche
     Affiche une planche à côté du joueur ou sous celui-ci.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPlankPlugin = class(TPlugin)
   public
@@ -52,6 +54,8 @@ type
   {*
     Définition de l'objet planche
     La planche permet de passer au-dessus des cases
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPlanks = class(TObjectDef)
   protected
@@ -69,6 +73,8 @@ type
     Terrain spécial planche
     Ce terrain ne doit pas être utilisé normalement. Il n'est utilisé que par la
     case spéciale planche.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPlankField = class(TField)
   public
@@ -81,6 +87,8 @@ type
     Effet spécial planche
     Cet effet ne doit pas être utilisé normalement. Il n'est utilisé que par la
     case spéciale planche.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPlankEffect = class(TEffect)
   public
@@ -94,6 +102,8 @@ type
   {*
     Case spéciale planche
     Cette case est utilisée pour le déplacement particulier de la planche.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPlankScrew = class(TOverriddenScrew)
   private
@@ -108,6 +118,8 @@ type
   {*
     Planche
     La planche donne au joueur un objet planche
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPlank = class(TEffect)
   public

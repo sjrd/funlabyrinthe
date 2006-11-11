@@ -36,6 +36,8 @@ type
     Terrain spécial ascenseur occupé
     Ce terrain ne doit pas être utilisé normalement. Il n'est utilisé que par la
     case spéciale ascenseur occupé.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TEngagedLiftField = class(TField)
   public
@@ -48,6 +50,8 @@ type
     Effet spécial ascenseur occupé
     Cet effet ne doit pas être utilisé normalement. Il n'est utilisé que par la
     case spécial ascenseur occupé.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TEngagedLiftEffect = class(TEffect)
   public
@@ -58,6 +62,8 @@ type
   {*
     Case spéciale ascenseur occupé
     Cette case est utilisée pour l'effet particulier de l'ascenseur.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TEngagedLiftScrew = class(TOverriddenScrew)
   public
@@ -69,6 +75,8 @@ type
   {*
     Ascenseur
     Un ascenseur permet au joueur de décider de l'étage où aller.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TLift = class(TEffect)
   public

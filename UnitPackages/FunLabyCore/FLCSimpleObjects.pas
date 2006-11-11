@@ -58,6 +58,8 @@ type
   {*
     Plug-in bouée
     Affiche une bouée sous le joueur, et permet d'aller dans l'eau.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TBuoyPlugin = class(TPlugin)
   public
@@ -74,6 +76,8 @@ type
   {*
     Définition de l'objet bouée
     La bouée permet d'aller dans l'eau.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TBuoys = class(TObjectDef)
   protected
@@ -90,6 +94,8 @@ type
   {*
     Définition de l'objet clef d'argent
     La clef d'argent permet d'ouvrir une serrure en argent
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TSilverKeys = class(TObjectDef)
   protected
@@ -106,6 +112,8 @@ type
   {*
     Définition de l'objet clef d'or
     La clef d'or permet d'ouvrir une serrure en or
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TGoldenKeys = class(TObjectDef)
   protected
@@ -122,6 +130,8 @@ type
   {*
     Bouée
     La bouée donne au joueur un objet bouée
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TBuoy = class(TEffect)
   public
@@ -135,6 +145,8 @@ type
   {*
     Clef d'argent
     La clef d'argent donne au joueur un objet clef d'argent
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TSilverKey = class(TEffect)
   public
@@ -148,6 +160,8 @@ type
   {*
     Clef d'or
     La clef d'or donne au joueur un objet clef d'or
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TGoldenKey = class(TEffect)
   public

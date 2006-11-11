@@ -45,6 +45,8 @@ type
   {*
     Herbe
     L'herbe est le terrain de base de FunLabyrinthe. Il n'a pas de condition.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TGrass = class(TField)
   public
@@ -55,6 +57,8 @@ type
   {*
     Mur
     Le mur est un terrain qui bloque systématiquement le joueur.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TWall = class(TField)
   public
@@ -70,6 +74,8 @@ type
     Eau
     L'eau est un terrain sur lequel on peut aller avec une bouée ou une barque,
     et au-dessus duquel on peut passer avec une planche.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TWater = class(TField)
   private
@@ -94,6 +100,8 @@ type
     Trou
     Le trou est un terrain au-dessus duquel on peut passer avec une planche, et
     sinon inaccessible.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   THole = class(TField)
   public
@@ -108,6 +116,8 @@ type
   {*
     Ciel
     Le ciel est toujours inaccessible.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TSky = class(TField)
   public

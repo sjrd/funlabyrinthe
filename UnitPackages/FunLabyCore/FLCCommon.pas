@@ -30,6 +30,8 @@ type
   {*
     Plug-in masque
     Filtre l'affichage du joueur au moyen d'un masque monochrome.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TMaskPlugin = class(TPlugin)
   private

@@ -34,6 +34,8 @@ type
   {*
     Bloc en argent
     Le bloc en argent peut être détruit au moyen d'une clef en argent.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TSilverBlock = class(TObstacle)
   public
@@ -48,6 +50,8 @@ type
   {*
     Bloc en or
     Le bloc en or peut être détruit au moyen d'une clef en or.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TGoldenBlock = class(TObstacle)
   public
@@ -62,6 +66,8 @@ type
   {*
     Passage secret
     Le passage secret a l'apparence d'un mur mais peut être ouvert sans rien.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TSecretWay = class(TObstacle)
   public

@@ -16,7 +16,7 @@ uses
   PlayerPlugins, PlayerAttributes, PlayerObjects, FileProperties, AddMap;
 
 resourcestring
-  sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implmentée';
+  sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
 
   sDefaultPlayerName = 'Joueur';
 
@@ -591,6 +591,7 @@ begin
     Anchors := [akTop, akRight];
     EditorEnabled := False;
     Enabled := False;
+    OnChange := EditFloorChange;
   end;
 
   ScrewBmp := TScrewBitmap.Create;

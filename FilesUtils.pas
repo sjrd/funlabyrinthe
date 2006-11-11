@@ -136,7 +136,6 @@ type
 
     procedure InvalidFormat;
 
-    function ResolveHRef(const HRef, DefaultDir : string) : TFileName;
     procedure Load(Document : IXMLDOMDocument);
     procedure TestOpeningValidity;
 
@@ -152,6 +151,8 @@ type
     class procedure RegisterUnitFileClass(const MIMEType : string;
       UnitFileClass : TUnitFileClass);
     class function FindUnitFileClass(const MIMEType : string) : TUnitFileClass;
+
+    function ResolveHRef(const HRef, DefaultDir : string) : TFileName;
 
     function AddUnitFile(const MIMEType, HRef : string;
       Params : TStrings = nil) : TUnitFile;
@@ -570,22 +571,6 @@ begin
 end;
 
 {*
-  Résoud l'adresse HRef en cherchant dans les dossiers correspondants
-  @param HRef         Adresse HRef du fichier
-  @param DefaultDir   Dossier par défaut du type de fichier attendu
-  @return Nom du fichier qualifié de son chemin d'accès
-  @throws EFileError : Le fichier n'existe pas
-*}
-function TMasterFile.ResolveHRef(const HRef, DefaultDir : string) : TFileName;
-begin
-  if FileExists(DefaultDir+Href) then Result := DefaultDir+HRef else
-  if FileExists(ExtractFileDir(FFileName)+HRef) then
-    Result := ExtractFileDir(FFileName)+HRef else
-  if FileExists(HRef) then Result := HRef else
-    raise EFileError.CreateFmt(sFileNotFound, [HRef]);
-end;
-
-{*
   Charge le contenu du document
   @param Document   Document XML DOM contenu du fichier
   @throws EFileError : Un fichier à charger n'existe pas ou n'est pas valide
@@ -797,6 +782,22 @@ begin
     raise EFileError.CreateFmt(sUnknownUnitType, [MIMEType])
   else
     Result := TUnitFileClass(UnitFileClasses.Objects[Index]);
+end;
+
+{*
+  Résoud l'adresse HRef en cherchant dans les dossiers correspondants
+  @param HRef         Adresse HRef du fichier
+  @param DefaultDir   Dossier par défaut du type de fichier attendu
+  @return Nom du fichier qualifié de son chemin d'accès
+  @throws EFileError : Le fichier n'existe pas
+*}
+function TMasterFile.ResolveHRef(const HRef, DefaultDir : string) : TFileName;
+begin
+  if FileExists(DefaultDir+Href) then Result := DefaultDir+HRef else
+  if FileExists(ExtractFileDir(FFileName)+HRef) then
+    Result := ExtractFileDir(FFileName)+HRef else
+  if FileExists(HRef) then Result := HRef else
+    raise EFileError.CreateFmt(sFileNotFound, [HRef]);
 end;
 
 {*

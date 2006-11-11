@@ -38,6 +38,8 @@ type
     Plug-in barque
     Affiche une barque sous le joueur, et permet d'aller dans l'eau. De plus,
     ce plug-in bloque un mouvement si la direction a changé.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TBoatPlugin = class(TPlugin)
   public
@@ -57,6 +59,8 @@ type
   {*
     Barque
     La barque est un moyen de transport permettant d'aller sur l'eau.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TBoat = class(TEffect)
   private
