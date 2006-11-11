@@ -79,7 +79,7 @@ type
   *}
   TWater = class(TField)
   private
-    FAlternatePainter : TPainter;
+    FAlternatePainter : TPainter; /// Peintre alternatif
   protected
     procedure DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;

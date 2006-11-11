@@ -35,6 +35,11 @@ const {don't localize}
 const {don't localize}
   fSunkenButton = 'SunkenButton'; /// Fichier du bouton enfoncé
   fButton = 'Button';             /// Fichier du bouton
+  fSwitchOff = 'SwitchOff';       /// Fichier de l'interrupteur éteint
+  fSwitchOn = 'SwitchOn';         /// Fichier de l'interrupteur allumé
+  fInfoStone = 'InfoStone';       /// Fichier de la borne info
+  fTransporter = 'Transporter';   /// Fichier du téléporteur
+  fOutside = 'Outside';           /// Fichier du dehors
 
 resourcestring
   sButtonTitle = 'Numéro du bouton';
@@ -46,9 +51,9 @@ type
     @author Sébastien Jean Robert Doeraene
     @version 5.0
   *}
-  TActionsKind = (akPushButton, akInfo, akSwitch, akHidden, akTransporterNext,
-    akTransporterPrevious, akTransporterRandom, akCustom, akObject, akObstacle,
-    akDirection);
+  TActionsKind = (akPushButton, akSwitch, akInfoStone, akHidden,
+    akTransporterNext, akTransporterPrevious, akTransporterRandom, akOutside,
+    akCustom, akObject, akObstacle, akDirection);
 
   TActions = class;
 
@@ -64,8 +69,6 @@ type
   protected
     function GetCount(Player : TPlayer) : integer; override;
     procedure SetCount(Player : TPlayer; Value : integer); override;
-
-    function GetShownInfos(Player : TPlayer) : string; override;
   public
     constructor Create(AActions : TActions);
 
@@ -80,9 +83,16 @@ type
   *}
   TActionsEffect = class(TEffect)
   private
-    FActions : TActions; /// Actions propriétaires
+    FActions : TActions;          /// Actions propriétaires
+    FAlternatePainter : TPainter; /// Peintre alternatif
+  protected
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
+
+    property AlternatePainter : TPainter read FAlternatePainter;
   public
     constructor Create(AActions : TActions);
+    procedure AfterConstruction; override;
 
     procedure Execute(Player : TPlayer; KeyPressed : boolean;
       const Pos : T3DPoint; var GoOnMoving : boolean); override;
@@ -118,7 +128,7 @@ type
   private
     FNumber : integer;            /// Numéro d'actions
     FKind : TActionsKind;         /// Type d'actions
-    FName : string;               /// Nom
+    FFileName : string;           /// Nom du fichier de graphismes
     FActions : TStrings;          /// Actions à exécuter
     FCounter : integer;           /// Compteur d'exécution
     FObjectDef : TActionsObject;  /// Objet correspondant
@@ -126,7 +136,7 @@ type
     FObstacle : TActionsObstacle; /// Obstacle correspondant
   public
     constructor Create(AMaster : TMaster; ANumber : integer;
-      AKind : TActionsKind; const AName : string);
+      AKind : TActionsKind; const AFileName : string);
     destructor Destroy; override;
 
     procedure Execute(Phase : integer; Player : TPlayer; KeyPressed : boolean;
@@ -134,7 +144,7 @@ type
 
     property Number : integer read FNumber;
     property Kind : TActionsKind read FKind;
-    property Name : string read FName;
+    property FileName : string read FFileName;
     property Actions : TStrings read FActions;
     property Counter : integer read FCounter write FCounter;
     property ObjectDef : TActionsObject read FObjectDef;
@@ -142,10 +152,13 @@ type
     property Obstacle : TActionsObstacle read FObstacle;
   end;
 
-const
+const {don't localize}
   /// Ensemble des types d'actions personnalisés
   CustomActionsKind : set of TActionsKind =
     [akCustom, akObject, akObstacle, akDirection];
+
+  /// Sous-répertoire des images gardées pour compatibilité
+  fCompatibility = 'Compatibility4x\';
 
 implementation
 
@@ -160,8 +173,10 @@ implementation
 constructor TActionsObject.Create(AActions : TActions);
 begin
   inherited Create(AActions.Master, Format(idActionsObject, [AActions.Number]),
-    Format(sButton, [AActions.Number]));
+    AActions.FileName);
   FActions := AActions;
+
+  Painter.ImgNames.Add(fCompatibility + Name);
 end;
 
 {*
@@ -184,18 +199,6 @@ begin
   Actions.Counter := Value;
 end;
 
-{*
-  Informations textuelles sur l'objet
-  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
-  @param Player   Joueur pour lequel on veut obtenir les infos
-  @return Informations textuelles, ou une chaîne vide si rien à afficher
-*}
-function TActionsObject.GetShownInfos(Player : TPlayer) : string;
-begin
-  if Actions.Kind <> akObject then Result := '' else
-    Result := Format(sDefaultObjectInfos, [Name, Count[Player]]);
-end;
-
 {-----------------------}
 { Classe TActionsEffect }
 {-----------------------}
@@ -209,6 +212,71 @@ begin
   inherited Create(AActions.Master, Format(idActionsEffect, [AActions.Number]),
     Format(sButton, [AActions.Number]));
   FActions := AActions;
+
+  FAlternatePainter := TPainter.Create(Master.ImagesMaster);
+  FAlternatePainter.ImgNames.BeginUpdate;
+
+  case Actions.Kind of
+    akPushButton :
+    begin
+      Painter.ImgNames.Add(fButton);
+      AlternatePainter.ImgNames.Add(fSunkenButton);
+      FStaticDraw := False;
+    end;
+    akSwitch :
+    begin
+      Painter.ImgNames.Add(fSwitchOff);
+      AlternatePainter.ImgNames.Add(fSwitchOn);
+      FStaticDraw := False;
+    end;
+    akInfoStone :
+      Painter.ImgNames.Add(fInfoStone);
+    akTransporterNext..akTransporterRandom :
+      Painter.ImgNames.Add(fTransporter);
+    akOutside :
+      Painter.ImgNames.Add(fOutside);
+    akCustom..akDirection :
+      Painter.ImgNames.Add(fCompatibility + Actions.FileName);
+  end;
+end;
+
+{*
+  Exécuté après la construction de l'objet
+  AfterConstruction est appelé après l'exécution du dernier constructeur.
+  N'appelez pas directement AfterConstruction.
+*}
+procedure TActionsEffect.AfterConstruction;
+begin
+  inherited;
+  FAlternatePainter.ImgNames.EndUpdate;
+end;
+
+{*
+  Dessine le composant sur un canevas
+  DoDraw dessine le composant sur un canevas à la position indiquée.
+  @param QPos     Position qualifiée de l'emplacement de dessin
+  @param Canvas   Canevas sur lequel dessiner le composant
+  @param X        Coordonnée X du point à partir duquel dessiner le composant
+  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+*}
+procedure TActionsEffect.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+begin
+  if Actions.Kind = akPushButton then
+  begin
+    if QPos.Map.PlayersOn(QPos.Position) = 0 then
+      Painter.Draw(Canvas, X, Y)
+    else
+      AlternatePainter.Draw(Canvas, X, Y);
+  end else
+  if Actions.Kind = akSwitch then
+  begin
+    if Odd(Actions.Counter) then
+      AlternatePainter.Draw(Canvas, X, Y)
+    else
+      Painter.Draw(Canvas, X, Y);
+  end else
+  inherited;
 end;
 
 {*
@@ -268,20 +336,24 @@ end;
 
 {*
   Crée une instance de TActionsInterpreter
-  @param AMaster   Maître FunLabyrinthe
-  @param ANumber   Numéro d'actions
+  @param AMaster     Maître FunLabyrinthe
+  @param ANumber     Numéro d'actions
+  @param AKind       Type d'actions
+  @param AFileName   Nom du fichier de graphismes
 *}
 constructor TActions.Create(AMaster : TMaster; ANumber : integer;
-  AKind : TActionsKind; const AName : string);
+  AKind : TActionsKind; const AFileName : string);
 begin
   inherited Create(AMaster, Format(idActions, [ANumber]));
 
   FNumber := ANumber;
   FKind := AKind;
-  FName := AName;
+  FFileName := AFileName;
   FActions := TStringList.Create;
   FCounter := 0;
-  FObjectDef := TActionsObject.Create(Self);
+
+  if Kind <> akObject then FObjectDef := nil else
+    FObjectDef := TActionsObject.Create(Self);
   FEffect := TActionsEffect.Create(Self);
   FObstacle := TActionsObstacle.Create(Self);
 end;

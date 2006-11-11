@@ -415,8 +415,8 @@ type
 
     procedure SetMaxViewSize(Value : integer);
 
-    function GetMap(Position : T3DPoint) : TScrew;
-    procedure SetMap(Position : T3DPoint; Value : TScrew);
+    function GetMap(const Position : T3DPoint) : TScrew;
+    procedure SetMap(const Position : T3DPoint; Value : TScrew);
 
     function GetOutside(Floor : integer) : TScrew;
     procedure SetOutside(Floor : integer; Value : TScrew);
@@ -428,14 +428,16 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       ADimensions : T3DPoint; AZoneWidth, AZoneHeight : integer);
 
-    function InMap(Position : T3DPoint) : boolean;
+    function InMap(const Position : T3DPoint) : boolean;
+
+    function PlayersOn(const Position : T3DPoint) : integer;
 
     property Dimensions : T3DPoint read FDimensions;
     property ZoneWidth : integer read FZoneWidth;
     property ZoneHeight : integer read FZoneHeight;
     property MaxViewSize : integer read FMaxViewSize write SetMaxViewSize;
 
-    property Map[Position : T3DPoint] : TScrew
+    property Map[const Position : T3DPoint] : TScrew
       read GetMap write SetMap; default;
 
     property Outside[Floor : integer] : TScrew
@@ -1745,7 +1747,7 @@ end;
   @param Position   Position sur la carte
   @return La case à la position spécifiée
 *}
-function TMap.GetMap(Position : T3DPoint) : TScrew;
+function TMap.GetMap(const Position : T3DPoint) : TScrew;
 var Index : integer;
 begin
   if InMap(Position) then
@@ -1765,7 +1767,7 @@ end;
   @param Position   Position sur la carte
   @param Value      Nouvelle case
 *}
-procedure TMap.SetMap(Position : T3DPoint; Value : TScrew);
+procedure TMap.SetMap(const Position : T3DPoint; Value : TScrew);
 var Index : integer;
 begin
   if not InMap(Position) then exit;
@@ -1836,12 +1838,30 @@ end;
   @param Position   Coordonnée à tester
   @return True si la coordonnée est dans la carte, False sinon
 *}
-function TMap.InMap(Position : T3DPoint) : boolean;
+function TMap.InMap(const Position : T3DPoint) : boolean;
 begin
   Result :=
     (Position.X >= 0) and (Position.X < FDimensions.X) and
     (Position.Y >= 0) and (Position.Y < FDimensions.Y) and
     (Position.Z >= 0) and (Position.Z < FDimensions.Z);
+end;
+
+{*
+  Détermine le nombre de joueurs qui se trouvent à un point de la carte
+  @param Position   Position de la carte où chercher les joueurs
+  @return Nombre de joueurs qui se trouvent au point Position de la carte
+*}
+function TMap.PlayersOn(const Position : T3DPoint) : integer;
+var I : integer;
+begin
+  Result := 0;
+  if IsNo3DPoint(Position) then exit;
+  for I := 0 to Master.PlayerCount-1 do
+  begin
+    if (Master.Players[I].Map = Self) and
+       Same3DPoint(Master.Players[I].Position, Position) then
+      inc(Result);
+  end;
 end;
 
 {----------------}
