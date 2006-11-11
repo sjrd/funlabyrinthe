@@ -1,7 +1,7 @@
 {*
   Unité principale de GeneLaby.exe
   Cette unité contient la fiche principale de GeneLaby.exe.
-  @author Sébastien Jean Robert Doeraene
+  @author Jean-Paul Doeraene
   @version 5.0
 *}
 unit LabyGene;
@@ -15,7 +15,7 @@ uses
 type
   {*
     Fiche principale de GeneLaby.exe
-    @author Sébastien Jean Robert Doeraene
+    @author Jean-Paul Doeraene
     @version 5.0
   *}
   TFormPrincipale = class(TForm)
@@ -61,10 +61,12 @@ type
 
   {*
     Représente une case du labyrinthe
+    @author Jean-Paul Doeraene
+    @version 5.0
   *}
   TCase = class
   private
-    X, Y, Z : integer ;
+    X, Y, Z : integer;
     bEsca, bBoucle, bDoitCombler : boolean;
     ordre : array[0..5] of smallint;
   public
