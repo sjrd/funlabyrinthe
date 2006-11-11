@@ -1,3 +1,10 @@
+{*
+  Boîte de dialogue des propriétés d'un fichier
+  L'unité FileProperties définit une boîte de dialogue des propriétés d'un
+  fichier.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit FileProperties;
 
 interface
@@ -11,6 +18,11 @@ resourcestring
   sUnfilledTitle = 'Vous devez indiquer le titre';
 
 type
+  {*
+    Boîte de dialogue des propriétés d'un fichier
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TFormFileProperties = class(TForm)
     LabelTitle: TLabel;
     EditTitle: TEdit;
@@ -32,9 +44,6 @@ type
     { Déclarations publiques }
     class function ManageProperties(MasterFile : TMasterFile) : boolean;
   end;
-
-var
-  FormFileProperties: TFormFileProperties;
 
 implementation
 
@@ -71,11 +80,19 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnExit de la zone d'édition de l'ID de l'auteur
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormFileProperties.EditAuthorIDExit(Sender: TObject);
 begin
   EditAuthorID.Text := IntToStr(StrToIntDef(EditAuthorID.Text, 0));
 end;
 
+{*
+  Gestionnaire d'événement OnClick du bouton OK
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormFileProperties.ButtonOKClick(Sender: TObject);
 begin
   EditAuthorIDExit(Sender);

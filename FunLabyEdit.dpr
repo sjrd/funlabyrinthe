@@ -18,8 +18,6 @@ begin
   Application.Initialize;
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.CreateForm(TFormMain, FormMain);
-  Application.CreateForm(TFormAddMap, FormAddMap);
-  Application.CreateForm(TFormMapBase, FormMapBase);
   Application.Run;
 end.
 

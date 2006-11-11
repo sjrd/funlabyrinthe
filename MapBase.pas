@@ -1,3 +1,9 @@
+{*
+  Génération du base de carte
+  L'unité MapBase définit une boîte de dialogue créant une base de carte.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit MapBase;
 
 interface
@@ -7,11 +13,16 @@ uses
   Dialogs, ScUtils, FunLabyUtils;
 
 type
+  {*
+    Boîte de dialogue créant une base de carte
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TFormMapBase = class(TForm)
   private
     { Déclarations privées }
-    Master : TMaster;
-    Map : TMap;
+    Master : TMaster; /// Maître FunLabyrinthe
+    Map : TMap;       /// Carte à créer
 
     procedure GenerateBasicMap;
   public
@@ -27,9 +38,9 @@ implementation
 {$R *.dfm}
 
 const
-  idOutsideScrew = 'Grass-Outside-';
-  idWallScrew = 'Wall--';
-  idGrassScrew = 'Grass--';
+  idOutsideScrew = 'Grass-Outside-'; /// ID de la case d'extérieur
+  idWallScrew = 'Wall--';            /// ID de la case de mur
+  idGrassScrew = 'Grass--';          /// ID de la case d'herbe
 
 {*
   Génère la carte basique faite d'herbe et d'une ceinture de murs

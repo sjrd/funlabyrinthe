@@ -1,6 +1,8 @@
 {*
   Unité principale de Labyrinthe.exe
   Cette unité contient la fiche principale de Labyrinthe.exe.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
 *}
 unit LabyrintheMain;
 
@@ -21,6 +23,8 @@ resourcestring
 type
   {*
     Classe de la fiche principale
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TFormMain = class(TForm)
     Image: TImage;
@@ -95,9 +99,6 @@ var
 implementation
 
 {$R *.DFM}
-
-uses
-  PropertiesDialog;
 
 {------------------}
 { Classe TFormMain }
@@ -275,11 +276,19 @@ begin
     NewGame(ParamStr(1));
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Quitter
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuExitClick(Sender: TObject);
 begin
   Close;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Nouvelle partie
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuNewGameClick(Sender: TObject);
 begin
   if CloseGame then
@@ -293,6 +302,10 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Charger
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuLoadGameClick(Sender: TObject);
 begin
   if CloseGame then
@@ -306,41 +319,73 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Rubriques d'aide
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuHelpTopicsClick(Sender: TObject);
 begin
   Application.HelpContext(1);
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu À propos
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuAboutClick(Sender: TObject);
 begin
   ShowFunLabyAbout;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Sauver
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuSaveGameClick(Sender: TObject);
 begin
   SaveGame;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Description
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuDescriptionClick(Sender: TObject);
 begin
   ShowDialog(sDescription, MasterFile.Description);
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Propriétés de la carte
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuMapPropertiesClick(Sender: TObject);
 begin
-  FormProperties.ShowMapProps(View.Player.Map);
+// Don't delete this comment
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Propriétés du joueur
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuPlayerPropertiesClick(Sender: TObject);
 begin
   TFormObjects.ShowObjects(View.Player);
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Indices
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuTipsClick(Sender: TObject);
 begin
   MenuTips.Checked := not MenuTips.Checked;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du menu Recommencer
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.MenuReloadGameClick(Sender: TObject);
 begin
   CloseGame(True);

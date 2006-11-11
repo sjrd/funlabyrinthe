@@ -1,3 +1,10 @@
+{*
+  Boîte de dialogue affichant et modifiant les propriétés d'un joueur
+  L'unité PlayerAttributes propose une boîte de dialogue affichant les attributs
+  d'un joueur, et permettant de les modifier.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit PlayerAttributes;
 
 interface
@@ -11,6 +18,11 @@ resourcestring
     'lettres non accentuées et de chiffres';
 
 type
+  {*
+    Boîte de dialogue affichant et modifiant les propriétés d'un joueur
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TFormAttributes = class(TForm)
     LabelAttributes: TLabel;
     ValueListAttributes: TValueListEditor;
@@ -24,9 +36,6 @@ type
     { Déclarations publiques }
     class function ManageAttributes(Player : TPlayer) : boolean;
   end;
-
-var
-  FormAttributes: TFormAttributes;
 
 implementation
 
@@ -70,6 +79,14 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnValidate de la liste de valeurs
+  @param Sender     Objet qui a déclenché l'événement
+  @param ACol       Index de colonne de la cellule à valider
+  @param ARow       Index de ligne de la cellule à valider
+  @param KeyName    Nom de la clef à valider
+  @param KeyValue   Valeur de la clef à valider
+*}
 procedure TFormAttributes.ValueListAttributesValidate(Sender: TObject;
   ACol, ARow: Integer; const KeyName, KeyValue: string);
 begin

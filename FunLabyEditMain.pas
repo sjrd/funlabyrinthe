@@ -1,3 +1,9 @@
+{*
+  Unité principale de FunLabyEdit.exe
+  Cette unité contient la fiche principale de FunLabyEdit.exe.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit FunLabyEditMain;
 
 interface
@@ -38,14 +44,19 @@ resourcestring
   sRemoveMap = 'Êtes-vous certain de vouloir retirer cette carte du projet ?';
 
 const
-  opMask = $07;
-  opShift = 3;
-  opCenterToPosition = 1;
-  opShowPlugins = 2;
-  opShowAttributes = 3;
-  opShowObjects = 4;
+  opMask = $07;           /// Masque d'opération
+  opShift = 3;            /// Décalage de l'information d'opération
+  opCenterToPosition = 1; /// Opération centrer sur la position
+  opShowPlugins = 2;      /// Opération montrer les plug-in
+  opShowAttributes = 3;   /// Opération montrer les attributs
+  opShowObjects = 4;      /// Opération montrer les objets
 
 type
+  {*
+    Représente un ensemble de composants enregistré
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TComponentSet = class
   private
     FMinIndex : integer;                    /// Index minimal
@@ -60,6 +71,11 @@ type
     function ChooseComponent(var LastIndex : integer) : TScrewComponent;
   end;
 
+  {*
+    Fiche principale de FunLabyEdit.exe
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TFormMain = class(TForm)
     Images: TImageList;
     ActionManager: TActionManager;
@@ -124,6 +140,7 @@ type
   private
     { Composants non disponibles dans Turbo Explorer }
     EditFloor : TSpinEdit;
+
     { Déclarations privées }
     ScrewBmp : TScrewBitmap;      /// Bitmap de case à tout faire
     LastCompIndex : integer;      /// Dernier index de composant choisi
@@ -163,12 +180,12 @@ type
   end;
 
 const {don't localize}
-  FunLabyCoreMIMEType = 'application/bpl';
-  FunLabyCoreHRef = 'FunLabyCore.bpl';
-  idPlayer = 'Player';
+  FunLabyCoreMIMEType = 'application/bpl'; /// Type MIME de l'unité FunLabyCore
+  FunLabyCoreHRef = 'FunLabyCore.bpl';     /// HRef de l'unité FunLabyCore
+  idPlayer = 'Player';                     /// ID de l'unique joueur
 
 var
-  FormMain: TFormMain;
+  FormMain: TFormMain; /// Instance de la fiche principale
 
 implementation
 
@@ -202,6 +219,11 @@ begin
   FDialogPrompt := ADialogPrompt;
 end;
 
+{*
+  Demande à l'utilisateur de choisir un composant dans l'ensemble de composants
+  @param LastIndex   Dernier index entré, contient le nouvel index en sortie
+  @return Référence au composant choisi
+*}
 function TComponentSet.ChooseComponent(
   var LastIndex : integer) : TScrewComponent;
 begin
@@ -551,6 +573,10 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnCreate
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   // Création dynamique des composants non disponibles dans Turbo Explorer
@@ -580,21 +606,38 @@ begin
   Component := nil;
 end;
 
+{*
+  Gestionnaire d'événement OnDestroy
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
   ScrewBmp.Free;
 end;
 
+{*
+  Gestionnaire d'événement OnCloseQuery
+  @param Sender     Objet qui a déclenché l'événement
+  @param CanClose   Indique si la fenêtre peut être fermée
+*}
 procedure TFormMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := CloseFile;
 end;
 
+{*
+  Gestionnaire d'événement OnExecute de l'action Nouveau fichier
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.ActionNewFileExecute(Sender: TObject);
 begin
   if CloseFile then NewFile;
 end;
 
+{*
+  Gestionnaire d'événement OnExecute de l'action Ouvrir un fichier
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.ActionOpenFileExecute(Sender: TObject);
 begin
   if not CloseFile then exit;
@@ -606,32 +649,58 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnExecute de l'action Enregistrer
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.ActionSaveFileExecute(Sender: TObject);
 begin
   SaveFile(MasterFile.FileName);
 end;
 
+{*
+  Gestionnaire d'événement OnExecute de l'action Enregistrer sous
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.ActionSaveFileAsExecute(Sender: TObject);
 begin
   SaveFile;
 end;
 
+{*
+  Gestionnaire d'événement OnExecute de l'action Fermer
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.ActionCloseFileExecute(Sender: TObject);
 begin
   CloseFile;
 end;
 
+{*
+  Gestionnaire d'événement OnExecute de l'action Propriétés du fichier
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.ActionFilePropertiesExecute(Sender: TObject);
 begin
   if TFormFileProperties.ManageProperties(MasterFile) then
     Modified := True;
 end;
 
+{*
+  Gestionnaire d'événement OnExecute de l'action Quitter
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.ActionExitExecute(Sender: TObject);
 begin
   Close;
 end;
 
+{*
+  Gestionnaire d'événement OnChange du tab-set des cartes
+  @param Sender        Objet qui a déclenché l'événement
+  @param NewTab        Index de l'onglet nouvellement sélectionné
+  @param AllowChange   Indique si le changement peut être effectué
+*}
 procedure TFormMain.MapTabSetChange(Sender: TObject; NewTab: Integer;
   var AllowChange: Boolean);
 begin
@@ -668,6 +737,10 @@ begin
   PaintBoxMap.Invalidate;
 end;
 
+{*
+  Gestionnaire d'événement OnPaint de la paint-box de la carte
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.PaintBoxMapPaint(Sender: TObject);
 var Left, Top, Right, Bottom : integer;
     LeftZone, TopZone, RightZone, BottomZone : integer;
@@ -731,12 +804,21 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnChange de la zone d'édition de l'étage
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.EditFloorChange(Sender: TObject);
 begin
   FCurrentFloor := EditFloor.Value;
   PaintBoxMap.Invalidate;
 end;
 
+{*
+  Gestionnaire d'événement OnButtonClicked des boutons de case
+  @param Sender   Objet qui a déclenché l'événement
+  @param Button   Référence au bouton cliqué
+*}
 procedure TFormMain.ScrewsContainerButtonClicked(Sender: TObject;
   const Button: TButtonItem);
 begin
@@ -746,6 +828,11 @@ begin
     Component := TScrewComponent(Button.Data);
 end;
 
+{*
+  Gestionnaire d'événement OnButtonClicked des boutons de joueur
+  @param Sender   Objet qui a déclenché l'événement
+  @param Button   Référence au bouton cliqué
+*}
 procedure TFormMain.PlayersContainerButtonClicked(Sender: TObject;
   const Button: TButtonItem);
 var Player : TPlayer;
@@ -770,6 +857,14 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnMouseDown de la paint-box de la carte
+  @param Sender   Objet qui a déclenché l'événement
+  @param Button   Boutonde la souris qui a été enfoncé
+  @param Shift    État des touches système
+  @param X        Abscisse du point cliqué
+  @param Y        Ordonnée du point cliqué
+*}
 procedure TFormMain.PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var Position : T3DPoint;
@@ -807,6 +902,13 @@ begin
   PaintBoxMap.Invalidate;
 end;
 
+{*
+  Gestionnaire d'événement OnMouseMove de la paint-box de la carte
+  @param Sender   Objet qui a déclenché l'événement
+  @param Shift    État des touches système
+  @param X        Abscisse du point cliqué
+  @param Y        Ordonnée du point cliqué
+*}
 procedure TFormMain.PaintBoxMapMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 var Position : T3DPoint;
@@ -826,6 +928,10 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnExecute de l'action Ajouter une carte
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.ActionAddMapExecute(Sender: TObject);
 var MapID : TComponentID;
 begin
@@ -837,6 +943,10 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnExecute de l'action Retirer une carte
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormMain.ActionRemoveMapExecute(Sender: TObject);
 var Map : TMap;
     I, Index : integer;

@@ -194,12 +194,21 @@ uses
   UnitFiles;
 
 const {don't localize}
-  FLMFormatCode : LongInt = $6D6C662E; // Correspond à '.flm'
-  FLMVersion = 1;
+  /// Code de format d'un fichier FLM (correspond à '.flm')
+  FLMFormatCode : LongInt = $6D6C662E;
+
+  FLMVersion = 1; /// Version courante du format FLM
 
 var
   UnitFileClasses : TStrings = nil; /// Type MIME -> Classe unité
 
+{*
+  Compare deux numéros de versions représentés textuellement
+  @param Version1   Premier numéro de version
+  @param Version2   Second numéro de version
+  @return 0 si les versions sont égales, 1 si la première est supérieure à la
+          seconde, et -1 dans le cas contraire
+*}
 function CompareVersions(Version1, Version2 : string) : integer;
 var SubVer1, SubVer2 : string;
 begin
@@ -212,6 +221,9 @@ begin
   until (Result <> 0) or ((Version1 = '') and (Version2 = ''));
 end;
 
+{*
+  S'assure que la liste des classes d'unités est créée
+*}
 procedure EnsureClassListCreated;
 begin
   if UnitFileClasses = nil then

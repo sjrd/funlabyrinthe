@@ -1,3 +1,9 @@
+{*
+  Boîte de dialogue d'ajout d'une carte
+  L'unité AddMap définit une boîte de dialogue d'ajout de carte.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit AddMap;
 
 interface
@@ -19,6 +25,11 @@ resourcestring
   sWrongZoneSize = 'La taille de zone doit être strictement positive';
 
 type
+  {*
+    Boîte de dialogue d'ajout d'une carte
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TFormAddMap = class(TForm)
     LabelID: TLabel;
     EditID: TEdit;
@@ -39,18 +50,12 @@ type
     procedure RadioExistingMapClick(Sender: TObject);
   private
     { Déclarations privées }
-    Dimensions : T3DPoint;
-    ZoneSize : TPoint;
+    Dimensions : T3DPoint; /// Dimensions de la care
+    ZoneSize : TPoint;     /// Dimensions d'une zone
   public
     { Déclarations publiques }
     class function AddMap(MasterFile : TMasterFile) : TComponentID;
   end;
-
-const {don't localize}
-  FLMMIMEType = 'application/flm';
-
-var
-  FormAddMap: TFormAddMap;
 
 implementation
 
@@ -84,6 +89,10 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du bouton radio d'une carte existante
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormAddMap.RadioExistingMapClick(Sender: TObject);
 begin
   EditFileName.Enabled := True;
@@ -93,12 +102,20 @@ begin
   EditZoneSize.Enabled := False;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du bouton Parcourir
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormAddMap.ButtonBrowseClick(Sender: TObject);
 begin
   if OpenDialog.Execute then
     EditFileName.Text := OpenDialog.FileName;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du bouton radio d'une nouvelle carte
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormAddMap.RadioNewMapClick(Sender: TObject);
 begin
   EditFileName.Enabled := False;
@@ -108,6 +125,10 @@ begin
   EditZoneSize.Enabled := True;
 end;
 
+{*
+  Gestionnaire d'événement OnClick du bouton OK
+  @param Sender   Objet qui a déclenché l'événement
+*}
 procedure TFormAddMap.ButtonOKClick(Sender: TObject);
 var Str : string;
 begin

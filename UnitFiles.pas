@@ -1,4 +1,4 @@
- {*
+{*
   Gestion des fichiers unité de base de FunLabyrinthe
   L'unité UnitFiles décrit les classes de gestion des fichiers unité de base de
   FunLabyrinthe.
@@ -49,10 +49,19 @@ implementation
 {---------------------}
 
 const {don't localize}
+  /// Type MIME des unités de type package Borland
   BPLMIMEType = 'application/bpl';
+
+  /// Procédure de chargement des composants
   LoadComponentsProc = 'LoadComponents';
+
+  /// Procédure de déchargement des composants
   UnloadComponentsProc = 'UnloadComponents';
+
+  /// Procédure d'enregistrement des composants
   RegisterComponentsProc = 'RegisterComponents';
+
+  /// Procédure de récupération des paramètres
   GetParamsProc = 'GetParams';
 
 {*

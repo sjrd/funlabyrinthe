@@ -36,9 +36,6 @@ type
       Default, Min, Max : integer) : integer;
   end;
 
-var
-  FormNumber: TFormNumber;
-
 implementation
 
 {$R *.DFM}

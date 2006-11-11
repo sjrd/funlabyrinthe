@@ -1,3 +1,8 @@
+{*
+  Classes métier de jeu
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit PlayUtils;
 
 interface
@@ -11,12 +16,14 @@ const {don't localize}
 
 type
   {*
-    Thread de dplacement du pion
+    Thread de déplacement du pion
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TMoveThread = class(TThread, IPlayerController)
   private
-    Player : TPlayer;
-    Dir : TDirection;
+    Player : TPlayer; /// Joueur concerné
+    Dir : TDirection; /// Direction dans laquelle faire bouger le joueur
   protected
     procedure Execute; override;
   public
@@ -45,11 +52,13 @@ type
 
   {*
     Vue du joueur
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPlayerView = class
   private
-    FMaster : TMaster; /// Matre FunLabyrinthe
-    FPlayer : TPlayer; /// Joueur li
+    FMaster : TMaster; /// Maître FunLabyrinthe
+    FPlayer : TPlayer; /// Joueur lié
 
     function GetMinSize : integer;
     function GetMaxSize : integer;
@@ -75,42 +84,57 @@ type
 implementation
 
 type
+  {*
+    Classe thread-safe qui affiche une boîte de dialogue
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TShowDialog = class
   public
-    Title : string;
-    Text : string;
-    DlgType : TDialogType;
-    DlgButtons : TDialogButtons;
-    DefButton : Byte;
-    AddFlags : LongWord;
-    Result : TDialogResult;
+    Title : string;              /// Titre
+    Text : string;               /// Texte
+    DlgType : TDialogType;       /// Type de boîte de dialogue
+    DlgButtons : TDialogButtons; /// Boutons présents
+    DefButton : Byte;            /// Bouton par défaut
+    AddFlags : LongWord;         /// Flags additionnels
+    Result : TDialogResult;      /// Bouton choisi par l'utilisateur
 
     procedure Execute;
   end;
 
+  {*
+    Classe thread-safe qui affiche une boîte de dialogue avec des boutons radio
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TShowDialogRadio = class
   public
-    Title : string;
-    Text : string;
-    DlgType : TMsgDlgType;
-    DlgButtons : TMsgDlgButtons;
-    DefButton : TModalResult;
-    RadioTitles : array of string;
-    Selected : integer;
-    OverButtons : boolean;
-    Result : Word;
+    Title : string;                /// Titre
+    Text : string;                 /// Texte
+    DlgType : TMsgDlgType;         /// Type de boîte de dialogue
+    DlgButtons : TMsgDlgButtons;   /// Boutons présents
+    DefButton : TModalResult;      /// Bouton par défaut
+    RadioTitles : array of string; /// Texte des boutons radio
+    Selected : integer;            /// Index du bouton sélectionné
+    OverButtons : boolean;         /// Indique la position des boutons
+    Result : Word;                 /// Bouton choisi par l'utilisateur
 
     procedure Execute;
   end;
 
+  {*
+    Classe thread-safe qui demande au joueur de choisir un nombre
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TChooseNumber = class
   public
-    Title : string;
-    Prompt : string;
-    Default : integer;
-    Min : integer;
-    Max : integer;
-    Result : integer;
+    Title : string;    /// Titre
+    Prompt : string;   /// Invite
+    Default : integer; /// Nombre par défaut
+    Min : integer;     /// Nombre minimum
+    Max : integer;     /// Nombre maximum
+    Result : integer;  /// Nombre choisi par l'utilisateur
 
     procedure Execute;
   end;
@@ -119,27 +143,33 @@ type
 { Classes de dialogues thread-safe }
 {----------------------------------}
 
+{*
+  Affiche la boîte de dialogue
+*}
 procedure TShowDialog.Execute;
 begin
   Result := ScUtils.ShowDialog(Title, Text, DlgType, DlgButtons,
     DefButton, AddFlags);
 end;
 
+{*
+  Affiche la boîte de dialogue
+*}
 procedure TShowDialogRadio.Execute;
 var Form : TForm;
     I, MaxWidth, OldWidth : integer;
     Button : TButton;
 begin
-  // Cration de la boite de dialogue
+  // Création de la boîte de dialogue
   Form := CreateMessageDialog(Text, DlgType, DlgButtons);
 
   with Form do
   try
     Caption := Title;
-    // On augmente la taille de la boite de dialogue
+    // On augmente la taille de la boîte de dialogue
     Height := Height + Length(RadioTitles) * 25;
 
-    // Cration des boutons radio et dtermination de la largeur minimale
+    // Création des boutons radio et détermination de la largeur minimale
     MaxWidth := 0;
     for I := High(RadioTitles) downto Low(RadioTitles) do
     with TRadioButton.Create(Form) do
@@ -161,7 +191,7 @@ begin
         Top := Form.Height - 50 - (High(RadioTitles) - I) * 25;
     end;
 
-    // Il faut aussi vrifier que la fiche peut afficher les textes des RadioBox
+    // Il faut aussi vérifier que la fiche peut afficher les textes des RadioBox
     // en entier
     OldWidth := 0;
     if (MaxWidth + 40) > Width then
@@ -172,32 +202,32 @@ begin
 
     for I := 0 to ComponentCount-1 do
     begin
-      // On rcupre chaque bouton
+      // On récupère chaque bouton
       if Components[I] is TButton then
       begin
         Button := TButton(Components[I]);
 
-        // On met le bon bouton par dfaut et on le slectionne
+        // On met le bon bouton par défaut et on le sélectionne
         Button.Default := Button.ModalResult = DefButton;
         if Button.Default then ActiveControl := Button;
 
-        // S'il le faut, dcaler tous les boutons vers le bas
+        // S'il le faut, décaler tous les boutons vers le bas
         if OverButtons then
           Button.Top := Button.Top + Length(RadioTitles) * 25;
 
-        // S'il le faut, dcaler tous les boutons vers la droite
+        // S'il le faut, décaler tous les boutons vers la droite
         if OldWidth > 0 then
           Button.Left := Button.Left + (Width - OldWidth) div 2;
       end;
     end;
 
-    // On centre la boite de dialogue
+    // On centre la boîte de dialogue
     Position := poScreenCenter;
 
-    // Affichage de la bote de dialogue
+    // Affichage de la boîte de dialogue
     Result := ShowModal;
 
-    // Rcupration du choix de l'utilisateur
+    // Récupération du choix de l'utilisateur
     Selected := -1;
     for I := 0 to ControlCount-1 do
     begin
@@ -210,6 +240,9 @@ begin
   end;
 end;
 
+{*
+  Affiche la boîte de dialogue
+*}
 procedure TChooseNumber.Execute;
 begin
   Result := TFormNumber.ChooseNumber(Title, Prompt, Default, Min, Max);
@@ -220,10 +253,10 @@ end;
 {--------------------}
 
 {*
-  Cre une instance de TMoveThread
-  @param APlayer        Joueur  dplacer
-  @param ADir           Direction dans laquelle dplacer le joueur
-  @param AOnTerminate   Gestionnaire d'vnement OnTerminate
+  Crée une instance de TMoveThread
+  @param APlayer        Joueur à déplacer
+  @param ADir           Direction dans laquelle déplacer le joueur
+  @param AOnTerminate   Gestionnaire d'événement OnTerminate
 *}
 constructor TMoveThread.Create(APlayer : TPlayer; ADir : TDirection;
   AOnTerminate : TNotifyEvent);
@@ -236,7 +269,7 @@ begin
 end;
 
 {*
-  Mthode d'excution du thread
+  Méthode d'exécution du thread
 *}
 procedure TMoveThread.Execute;
 var Redo : boolean;
@@ -255,30 +288,45 @@ begin
   end;
 end;
 
-function TMoveThread.QueryInterface(const IID: TGUID; out Obj): HResult;
+{*
+  Renvoie une référence à l'interface spécifiée
+  QueryInterface renvoie une référence à l'interface spécifiée, si l'objet
+  supporte cette interface.
+  @param IID   GUID de l'interface à obtenir
+  @param Obj   Référence à l'interface spécifiée
+*}
+function TMoveThread.QueryInterface(const IID : TGUID; out Obj) : HResult;
 begin
-  Result := 0;
+  Result := E_NoInterface;
 end;
 
+{*
+  Incrémente le compteur de référence
+  @return Nouvelle valeur du compteur de référence
+*}
 function TMoveThread._AddRef : integer;
 begin
   Result := 1;
 end;
 
+{*
+  Décrémente le compteur de référence
+  @return Nouvelle valeur du compteur de référence
+*}
 function TMoveThread._Release : integer;
 begin
   Result := 1;
 end;
 
 {*
-  Affiche une bote de dialogue
-  @param Title        Titre de la bote de dialogue
-  @param Text         Texte de la bote de dialogue
-  @param DlgType      Type de bote de dialogue
-  @param DlgButtons   Boutons prsents dans la bote de dialogue
-  @param DefButton    Bouton slectionn par dfaut
+  Affiche une boîte de dialogue
+  @param Title        Titre de la boîte de dialogue
+  @param Text         Texte de la boîte de dialogue
+  @param DlgType      Type de boîte de dialogue
+  @param DlgButtons   Boutons présents dans la boîte de dialogue
+  @param DefButton    Bouton sélectionné par défaut
   @param AddFlags     Flags additionnels pour MessageBox
-  @return Code de rsultat du bouton cliqu
+  @return Code de résultat du bouton cliqué
 *}
 function TMoveThread.ShowDialog(const Title, Text : string;
   DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
@@ -303,18 +351,18 @@ begin
 end;
 
 {*
-  Affiche une bote de dialogue avec des boutons radio
+  Affiche une boîte de dialogue avec des boutons radio
   ShowDialogRadio est une variante de ShowDialog qui affiche des boutons radio
   pour chaque choix possible.
-  @param Title         Titre de la bote de dialogue
-  @param Text          Texte de la bote de dialogue
-  @param DlgType       Type de bote de dialogue
-  @param DlgButtons    Boutons prsents dans la bote de dialogue
-  @param DefButton     Bouton slectionn par dfaut
-  @param RadioTitles   Libells des diffrents boutons radio
-  @param Selected      Bouton radio slectionn
-  @param OverButtons   Boutons radio placs au-dessus des boutons si True
-  @return Code de rsultat du bouton cliqu
+  @param Title         Titre de la boîte de dialogue
+  @param Text          Texte de la boîte de dialogue
+  @param DlgType       Type de boîte de dialogue
+  @param DlgButtons    Boutons présents dans la boîte de dialogue
+  @param DefButton     Bouton sélectionné par défaut
+  @param RadioTitles   Libellés des différents boutons radio
+  @param Selected      Bouton radio sélectionné
+  @param OverButtons   Boutons radio placés au-dessus des boutons si True
+  @return Code de résultat du bouton cliqué
 *}
 function TMoveThread.ShowDialogRadio(const Title, Text : string;
   DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
@@ -349,9 +397,9 @@ end;
 
 {*
   Affiche une invite au joueur lui demandant de choisir un nombre
-  @param Title     Titre de la bote de dialogue
+  @param Title     Titre de la boîte de dialogue
   @param Prompt    Invite
-  @param Default   Valeur par dfaut affiche
+  @param Default   Valeur par défaut affichée
   @param Min       Valeur minimale que peut choisir le joueur
   @param Max       Valeur maximale que peut choisir le joueur
   @return La valeur qu'a choisie le joueur
@@ -377,7 +425,7 @@ begin
 end;
 
 {*
-  Le joueur a chang de carte
+  Le joueur a changé de carte
 *}
 procedure TMoveThread.MapChanged;
 begin
@@ -388,8 +436,8 @@ end;
 {--------------------}
 
 {*
-  Cre une instance de TPlayerView
-  @param APlayer   Joueur li
+  Crée une instance de TPlayerView
+  @param APlayer   Joueur lié
 *}
 constructor TPlayerView.Create(APlayer : TPlayer);
 begin
@@ -437,8 +485,8 @@ begin
 end;
 
 {*
-  Nombre de cases affiches en largeur par la vue
-  @return Nombre de cases affiches en largeur par la vue
+  Nombre de cases affichées en largeur par la vue
+  @return Nombre de cases affichées en largeur par la vue
 *}
 function TPlayerView.GetWidth : integer;
 begin
@@ -446,8 +494,8 @@ begin
 end;
 
 {*
-  Nombre de cases affiches en hauteur par la vue
-  @return Nombre de cases affiches en hauteur par la vue
+  Nombre de cases affichées en hauteur par la vue
+  @return Nombre de cases affichées en hauteur par la vue
 *}
 function TPlayerView.GetHeight : integer;
 begin
@@ -465,20 +513,20 @@ var Map : TMap;
     X, Y, Z, I : integer;
     QPos : TQualifiedPos;
 begin
-  // Mettre  jour le tick count de la partie avant de dessiner
+  // Mettre à jour le tick count de la partie avant de dessiner
   Master.UpdateTickCount;
 
-  // Simplifier et acclrer les accs aux informations
+  // Simplifier et accélrer les accès aux informations
   Map := Player.Map;
   Size := GetSize;
   Width := GetWidth;
   Height := GetHeight;
 
-  // Origine  la position du joueur
+  // Origine à la position du joueur
   OrigX := Player.Position.X;
   OrigY := Player.Position.Y;
   { Si le joueur a fini de jouer et qu'on est en bordure de carte, on affiche la
-    la zone la plus proche dans la carte. }
+    zone la plus proche dans la carte. }
   if Player.PlayState <> psPlaying then
   begin
     if OrigX = -1 then OrigX := 0 else

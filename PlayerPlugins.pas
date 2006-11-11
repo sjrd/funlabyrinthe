@@ -1,3 +1,10 @@
+{*
+  Boîte de dialogue affichant et modifiant les plug-in d'un joueur
+  L'unité PlayerAttributes propose une boîte de dialogue affichant les plug-in
+  d'un joueur, et permettant de les modifier.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit PlayerPlugins;
 
 interface
@@ -7,6 +14,11 @@ uses
   StdCtrls, Buttons, FunLabyUtils;
 
 type
+  {*
+    Boîte de dialogue affichant et modifiant les plug-in d'un joueur
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TFormPlugins = class(TForm)
     LabelAvailablePlugins: TLabel;
     ListBoxAvailablePlugins: TListBox;
@@ -32,9 +44,6 @@ type
     { Déclarations publiques }
     class function ManagePlugins(Player : TPlayer) : boolean;
   end;
-
-var
-  FormPlugins: TFormPlugins;
 
 implementation
 

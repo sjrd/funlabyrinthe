@@ -31,9 +31,6 @@ type
     class procedure ShowObjects(Player : TPlayer);
   end;
 
-var
-  FormObjects: TFormObjects;
-
 implementation
 
 {$R *.dfm}

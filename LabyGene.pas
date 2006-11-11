@@ -1,3 +1,9 @@
+{*
+  Unité principale de GeneLaby.exe
+  Cette unité contient la fiche principale de GeneLaby.exe.
+  @author Sébastien Jean Robert Doeraene
+  @version 5.0
+*}
 unit LabyGene;
 
 interface
@@ -7,6 +13,11 @@ uses
   StdCtrls, Spin, Math, ExtCtrls, ComCtrls, ScUtils;
 
 type
+  {*
+    Fiche principale de GeneLaby.exe
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
   TFormPrincipale = class(TForm)
     PageControl1: TPageControl;
     TabSheet1: TTabSheet;
@@ -48,6 +59,9 @@ type
     { Déclarations publiques }
   end; //TForm1
 
+  {*
+    Représente une case du labyrinthe
+  *}
   TCase = class
   private
     X, Y, Z : integer ;
@@ -67,7 +81,8 @@ type
   end;
 
 var
-  FormPrincipale: TFormPrincipale;
+  FormPrincipale: TFormPrincipale; /// Instance de la fiche principale
+
   laby : array [0..29,0..29,0..9] of TCase;
   NLig, NCol, NEta : Integer;
   NLigZ, NColZ, NEtaZ : Integer;
@@ -79,15 +94,14 @@ var
   bCarrefours : boolean;
   NomComplet : String;
 
-
 procedure Principale;
-
 
 implementation
 
 {$R *.DFM}
 
-const
+const {don't localize}
+  /// Contenu générique du fichier projet d'un labyrinthe généré
   sMasterFileContents =
   '<?xml version="1.0" encoding="UTF-8"?>'#10+
   '<funlabyrinthe version="%s">'#10+
@@ -103,17 +117,22 @@ const
   '    </player>'#10+
   '  </players>'#10+
   '</funlabyrinthe>'#10;
+
+  /// Représentation textuelle de la version actuelle
   sCurrentVersion = '5.0';
 
-  FLMFormatCode : LongInt = $6D6C662E; // Correspond à '.flm'
-  FLMVersion = 1;
+  /// Code de format d'un fichier FLM (correspond à '.flm')
+  FLMFormatCode : LongInt = $6D6C662E;
+
+  FLMVersion = 1; /// Version courante du format FLM
 
 function WDir : string;
 //var PS : string;
 begin
 //  PS := ParamStr(0);
 //  Result := ExtractFilePath(PS);
-  Result := 'C:\Documents and Settings\All Users\Application Data\SJRDoeraene\FunLabyrinthe\';
+  Result := 'C:\Documents and Settings\All Users\Application Data\' +
+    'SJRDoeraene\FunLabyrinthe\';
 end;
 
 procedure CreeSortie(Labyrinthe : TStrings;
@@ -474,3 +493,4 @@ begin
 end;
 
 end.
+

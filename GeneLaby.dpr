@@ -14,3 +14,4 @@ begin
   Application.CreateForm(TFormPrincipale, FormPrincipale);
   Application.Run;
 end.
+
