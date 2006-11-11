@@ -801,7 +801,7 @@ class procedure TMasterFile.UnregisterUnitFileClass(const MIMEType : string;
   UnitFileClass : TUnitFileClass);
 var Index : integer;
 begin
-  EnsureClassListCreated;
+  if not Assigned(UnitFileClasses) then exit;
   Index := UnitFileClasses.IndexOf(MIMEType);
   if (Index >= 0) and
      (UnitFileClasses.Objects[Index] = TObject(UnitFileClass)) then
@@ -1110,5 +1110,6 @@ initialization
   EnsureClassListCreated;
 finalization
   UnitFileClasses.Free;
+  UnitFileClasses := nil;
 end.
 
