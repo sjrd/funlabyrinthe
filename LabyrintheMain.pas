@@ -10,8 +10,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, NumberDialog,
-  SdDialogs, ShellAPI, FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects;
+  Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, SdDialogs, ShellAPI,
+  FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects;
 
 resourcestring
   sViewSize = 'Taille de la vue';
@@ -458,7 +458,7 @@ end;
 *}
 procedure TFormMain.MenuViewSizeClick(Sender: TObject);
 begin
-  View.Size := TFormNumber.ChooseNumber(sViewSize, sViewSizePrompt,
+  View.Size := QueryNumber(sViewSize, sViewSizePrompt,
     View.Size, View.MinSize, View.MaxSize);
   AdaptSizeToView;
 end;

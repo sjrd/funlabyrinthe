@@ -9,7 +9,7 @@ interface
 
 uses
   Windows, Forms, Classes, Controls, Graphics, Dialogs, StdCtrls, Math, ScUtils,
-  FunLabyUtils, NumberDialog;
+  FunLabyUtils, SdDialogs;
 
 const {don't localize}
   attrViewSize = 'ViewSize'; /// Nom d'attribut pour la taille de la vue
@@ -245,7 +245,7 @@ end;
 *}
 procedure TChooseNumber.Execute;
 begin
-  Result := TFormNumber.ChooseNumber(Title, Prompt, Default, Min, Max);
+  Result := QueryNumber(Title, Prompt, Default, Min, Max);
 end;
 
 {--------------------}

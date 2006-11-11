@@ -12,8 +12,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ActnList, XPStyleActnCtrls, ActnMan, Menus, ImgList, StdCtrls,
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
-  StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, NumberDialog,
-  PlayerPlugins, PlayerAttributes, PlayerObjects, FileProperties, AddMap;
+  StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, PlayerPlugins,
+  PlayerAttributes, PlayerObjects, FileProperties, AddMap, SdDialogs;
 
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
@@ -227,7 +227,7 @@ end;
 function TComponentSet.ChooseComponent(
   var LastIndex : integer) : TScrewComponent;
 begin
-  LastIndex := TFormNumber.ChooseNumber(FDialogTitle, FDialogPrompt,
+  LastIndex := QueryNumber(FDialogTitle, FDialogPrompt,
     MinMax(LastIndex, FMinIndex, FMaxIndex), FMinIndex, FMaxIndex);
   Result := FComponents[LastIndex - FMinIndex];
 end;
