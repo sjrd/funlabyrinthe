@@ -51,7 +51,7 @@ type
     @author Sébastien Jean Robert Doeraene
     @version 5.0
   *}
-  TActionsKind = (akPushButton, akSwitch, akInfoStone, akHidden,
+  TActionsKind = (akGameStarted, akPushButton, akSwitch, akInfoStone, akHidden,
     akTransporterNext, akTransporterPrevious, akTransporterRandom, akOutside,
     akCustom, akObject, akObstacle, akDirection);
 
@@ -136,7 +136,7 @@ type
     FObstacle : TActionsObstacle; /// Obstacle correspondant
   public
     constructor Create(AMaster : TMaster; ANumber : integer;
-      AKind : TActionsKind; const AFileName : string);
+      AKind : TActionsKind; const AFileName : string; AActions : TStrings);
     destructor Destroy; override;
 
     procedure Execute(Phase : integer; Player : TPlayer; KeyPressed : boolean;
@@ -342,7 +342,7 @@ end;
   @param AFileName   Nom du fichier de graphismes
 *}
 constructor TActions.Create(AMaster : TMaster; ANumber : integer;
-  AKind : TActionsKind; const AFileName : string);
+  AKind : TActionsKind; const AFileName : string; AActions : TStrings);
 begin
   inherited Create(AMaster, Format(idActions, [ANumber]));
 
@@ -350,12 +350,21 @@ begin
   FKind := AKind;
   FFileName := AFileName;
   FActions := TStringList.Create;
+  FActions.Assign(AActions);
   FCounter := 0;
 
-  if Kind <> akObject then FObjectDef := nil else
-    FObjectDef := TActionsObject.Create(Self);
-  FEffect := TActionsEffect.Create(Self);
-  FObstacle := TActionsObstacle.Create(Self);
+  if Kind = akGameStarted then
+  begin
+    FObjectDef := nil;
+    FEffect := nil;
+    FObstacle := nil;
+  end else
+  begin
+    if Kind <> akObject then FObjectDef := nil else
+      FObjectDef := TActionsObject.Create(Self);
+    FEffect := TActionsEffect.Create(Self);
+    FObstacle := TActionsObstacle.Create(Self);
+  end;
 end;
 
 {*
