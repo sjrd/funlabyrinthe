@@ -26,7 +26,8 @@ const {don't localize}
   idButtonTemplate = 'ButtonTemplate';     /// ID du bouton modèle
 
   /// ID de la case à actions
-  idActionsScrew = idGrass+'-ActionsEffect%d-ActionsObstacle%0:d';
+  idActionsScrew = idGrass+'-ActionsEffect%d-';
+  idActionsScrewWithObstacle = idGrass+'-ActionsEffect%d-ActionsObstacle%0:d';
   /// ID de la case à actions modèle
   idActionsScrewTemplate = idGrass+'-'+idButtonTemplate+'-';
 
@@ -363,7 +364,8 @@ begin
     if Kind <> akObject then FObjectDef := nil else
       FObjectDef := TActionsObject.Create(Self);
     FEffect := TActionsEffect.Create(Self);
-    FObstacle := TActionsObstacle.Create(Self);
+    if Kind <> akObstacle then FObstacle := nil else
+      FObstacle := TActionsObstacle.Create(Self);
   end;
 end;
 

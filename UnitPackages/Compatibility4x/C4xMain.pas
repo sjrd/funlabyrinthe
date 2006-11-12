@@ -196,11 +196,15 @@ begin
 
     for I := 0 to Count-1 do
     begin
-      if TActions(Master.Component[Format(idActions, [I])]).Kind =
-           akGameStarted then
-        Components[I] := nil
-      else
-        Components[I] := Master.Screw[Format(idActionsScrew, [I])];
+      case TActions(Master.Component[Format(idActions, [I])]).Kind of
+        akGameStarted : Components[I] := nil;
+        akObstacle :
+        begin
+          Components[I] :=
+            Master.Screw[Format(idActionsScrewWithObstacle, [I])];
+        end;
+        else Components[I] := Master.Screw[Format(idActionsScrew, [I])];
+      end;
     end;
 
     RegSet(idActionsScrewTemplate, Components, 0,
