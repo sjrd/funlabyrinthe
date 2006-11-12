@@ -24,6 +24,9 @@ procedure RegisterComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   RegisterSingleComponentProc : TRegisterSingleComponentProc;
   RegisterComponentSetProc : TRegisterComponentSetProc); stdcall;
 
+procedure GetParams(UnitFile : TBPLUnitFile; Master : TMaster;
+  Params : TStrings); stdcall;
+
 implementation
 
 const {don't localize}
@@ -39,10 +42,10 @@ const {don't localize}
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings);
 const {don't localize}
-  KindStrings : array[0..11] of string = (
-    'PushButton', 'Switch', 'InfoStone', 'Hidden', 'TransporterNext',
-    'TransporterPrevious', 'TransporterRandom', 'Outside', 'Custom', 'Object',
-    'Obstacle', 'Direction'
+  KindStrings : array[0..12] of string = (
+    'GameStarted', 'PushButton', 'Switch', 'InfoStone', 'Hidden',
+    'TransporterNext', 'TransporterPrevious', 'TransporterRandom', 'Outside',
+    'Custom', 'Object', 'Obstacle', 'Direction'
   );
 var FileName : TFileName;
     FileContents, SubContents : TStrings;
@@ -113,6 +116,10 @@ begin
         // Création des actions en question
 
         TActions.Create(Master, Number, Kind, Graphics, SubContents);
+
+        // Passage à l'itération suivante
+
+        inc(Number);
       end;
     finally
       SubContents.Free;
@@ -129,6 +136,7 @@ end;
   jeu, donc pas en mode édition), que ce soit pour la première fois ou à la
   suite du chargement d'une sauvegarde.
   @param UnitFile    Fichier unité appelant
+  @param Master      Maître FunLabyrinthe
   @param FirstTime   Indique si c'est la première fois que la partie est chargée
 *}
 procedure GameLoaded(UnitFile : TBPLUnitFile; Master : TMaster;
@@ -200,10 +208,23 @@ begin
   end;
 end;
 
+{*
+  Dresse la liste des paramètres à enregistrer
+  @param UnitFile   Fichier unité appelant
+  @param Master     Maître FunLabyrinthe
+  @param Params     Liste des paramètres
+*}
+procedure GetParams(UnitFile : TBPLUnitFile; Master : TMaster;
+  Params : TStrings);
+begin
+  Params.Values[attrFileName] := UnitFile.Attributes.Values[attrFileName];
+end;
+
 exports
   LoadComponents name 'LoadComponents',
   GameLoaded name 'GameLoaded',
-  RegisterComponents name 'RegisterComponents';
+  RegisterComponents name 'RegisterComponents',
+  GetParams name 'GetParams';
 
 end.
 
