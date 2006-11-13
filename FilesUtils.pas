@@ -607,6 +607,7 @@ var Params : TStrings;
     ID, FileType, HRef, Name, MapID : string;
     Position : T3DPoint;
     Player : TPlayer;
+    Node : IXMLDOMNode;
 begin
   { Don't localize strings in this method }
 
@@ -634,9 +635,13 @@ begin
       FAuthor := NullToEmptyStr(text);
     end;
 
-    // Attributs supplémentaires
-    Master.Temporization := StrToIntDef(
-      NullToEmptyStr(getAttribute('temporization')), 0);
+    // Attributs du maître
+    with selectSingleNode('./master') do
+    begin
+      Node := selectSingleNode('./temporization');
+      if Node <> nil then
+        Master.Temporization := StrToIntDef(NullToEmptyStr(Node.text), 0);
+    end;
 
     // Unités utilisées
     Params := THashedStringList.Create;
@@ -990,9 +995,18 @@ begin
         Element.setAttribute('id', AuthorID);
       appendChild(Element);
 
-      // Attributs supplémentaires
-      if Master.Temporization <> DefaultTemporization then
-        Element.setAttribute('temporization', Master.Temporization);
+      // Attributs du maître
+      Element := Document.createElement('master');
+      with Element do
+      begin
+        if Master.Temporization <> DefaultTemporization then
+        begin
+          Element := Document.createElement('temporization');
+          Element.text := IntToStr(Master.Temporization);
+          appendChild(Element);
+        end;
+      end;
+      appendChild(Element);
 
       // Unités
       Units := Document.createElement('units');

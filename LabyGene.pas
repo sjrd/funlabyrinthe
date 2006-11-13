@@ -111,6 +111,7 @@ const {don't localize}
   '  <description>Labyrinthe genere</description>'#10+
   '  <difficulty>Moyen</difficulty>'#10+
   '  <author id="2">Jean-Paul Doeraene</author>'#10+
+  '  <master/>'#10+
   '  <units><unit type="application/bpl" href="FunLabyCore.bpl"/></units>'#10+
   '  <maps><map id="MainMap" type="application/flm" href="%s" maxviewsize="%d"/></maps>'#10+
   '  <players>'#10+
