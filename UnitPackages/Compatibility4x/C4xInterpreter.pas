@@ -16,6 +16,10 @@ resourcestring
   sUnknownLabel = 'Le label %s n''a pas pu être trouvé';
   sUnknownCommand = 'Commande inconnue à la ligne %d';
 
+const
+  /// Version de l'interpréteur d'actions
+  InterpreterVersion = 50;
+
 type
   {*
     Générée lorsqu'une action est invalide
@@ -44,6 +48,13 @@ type
     HasShownMsg : boolean; /// Indique si un message a été affiché
     Inactive : string;     /// Case à utiliser lors d'un Desactiver
 
+    ActionsCount : integer; /// Nombre d'actions que possède le maître
+    StrHere : string;       /// Case courante
+    StrBefore : string;     /// Case devant
+    StrBehind : string;     /// Case derrière
+    Answer : integer;       /// Réponse d'un Choix
+    Boat : integer;         /// Numéro de la barque qu'a le joueur
+
     procedure TreatIfStatement(var Line : string);
     procedure TreatVariables(var Line : string);
 
@@ -54,6 +65,7 @@ type
     procedure DecrementCmd  (var Params : string);
     procedure MultiplyCmd   (var Params : string);
     procedure MessageCmd    (var Params : string);
+    procedure TipCmd        (var Params : string);
     procedure FailureCmd    (var Params : string);
     procedure BlindAlleyCmd (var Params : string);
     procedure ChoiceCmd     (var Params : string);
@@ -66,7 +78,6 @@ type
     procedure ContinueCmd   (var Params : string);
     procedure DescriptionCmd(var Params : string);
     procedure WinCmd        (var Params : string);
-    procedure TipCmd        (var Params : string);
 
     procedure ExecuteActions;
   public
@@ -82,30 +93,34 @@ implementation
 
 { Don't localize any of the strings in this implementation! }
 
-const
-  cReplace     = 0;
-  cMove        = 1;
-  cDeactivate  = 2;
-  cIncrement   = 3;
-  cDecrement   = 4;
-  cMultiply    = 5;
-  cMessage     = 6;
-  cTip         = 7;
-  cFailure     = 8;
-  cBlindAlley  = 9;
-  cChoice      = 10;
-  cSound       = 11;
-  cGoTo        = 12;
-  cLetPass     = 13;
-  cAllowPlank  = 14;
-  cDontGoOn    = 15;
-  cGoOn        = 16;
-  cContinue    = 17;
-  cDescription = 18;
-  cWin         = 19;
-  cJump        = 20;
-  cStop        = 21;
+uses
+  C4xComponents;
 
+const
+  cReplace     = 0;  /// Commande Remplacer
+  cMove        = 1;  /// Commande Deplacer
+  cDeactivate  = 2;  /// Commande Desactiver
+  cIncrement   = 3;  /// Commande Incrementer
+  cDecrement   = 4;  /// Commande Decrementer
+  cMultiply    = 5;  /// Commande Multiplier
+  cMessage     = 6;  /// Commande Message
+  cTip         = 7;  /// Commande Indice
+  cFailure     = 8;  /// Commande Echec
+  cBlindAlley  = 9;  /// Commande Impasse
+  cChoice      = 10; /// Commande Choix
+  cSound       = 11; /// Commande Son
+  cGoTo        = 12; /// Commande AllerA
+  cLetPass     = 13; /// Commande LaisserPasser
+  cAllowPlank  = 14; /// Commande AutoriserPlanche
+  cDontGoOn    = 15; /// Commande Arreter
+  cGoOn        = 16; /// Commande Poursuivre
+  cContinue    = 17; /// Commande Continuer
+  cDescription = 18; /// Commande Description
+  cWin         = 19; /// Commande Gagner
+  cJump        = 20; /// Commande Saute
+  cStop        = 21; /// Commande Stop
+
+  /// Tableaux des chaînes de commandes
   CommandStrings : array[cReplace..cStop] of string = (
     'Remplacer', 'Deplacer', 'Desactiver', 'Incrementer', 'Decrementer',
     'Multiplier', 'Message', 'Indice', 'Echec', 'Impasse', 'Choix', 'Son',
@@ -114,10 +129,120 @@ const
   );
 
 type
+  {*
+    Type d'une procédure qui recherche une sous-chaîne dans un chaîne
+    @param SubStr   Sous-chaîne à rechercher
+    @param Str      Chaîne dans laquelle chercher SubStr
+    @return Index de la première occurence de SubStr dans Str (0 si non trouvée)
+  *}
+  TPosProc = function(const SubStr, Str : string) : integer;
+
+  {*
+    Type procédural correspondant aux méthodes d'exécution de commande
+    @param Self     Référence à l'objet courant
+    @param Params   Paramètres de la commande
+  *}
   TCommandProc = procedure(Self : TObject; var Params : string);
 
 var
+  /// Tableau des méthodes d'exécution de commande
   CommandProcs : array[cReplace..cWin] of TCommandProc;
+
+{-------------------}
+{ Routines globales }
+{-------------------}
+
+{*
+  Recherche une variable dans une instruction
+  Une variable doit être entourée d'espaces ou de crochets, et ne pas se trouver
+  entre une paire d'accolades, pour être reconnue comme telle.
+  @param Variable   Variable à chercher
+  @param Str        Chaîne dans laquelle chercher Variable
+  @return Index de la première occurence de Variable dans Str (0 si non trouvée)
+*}
+function PosVariable(const Variable, Str : string) : integer;
+var Str2 : string;
+    I : integer;
+begin
+  Str2 := ' '+Str+' ';
+  I := 2;
+  while I < Length(Str2) do case Str2[I] of
+    '[', ']' :
+    begin
+      Str2[I] := ' ';
+      inc(I);
+    end;
+    '{' :
+    begin
+      while (I < Length(Str2)) and (Str2[I] <> '}') do
+      begin
+        Str2[I] := ' ';
+        inc(I);
+      end;
+    end;
+  end;
+
+  Result := Pos(' '+Variable+' ', Str2);
+end;
+
+{*
+  Remplace toutes les occurences d'une sous-chaîne par une autre
+  @param Str        Chaîne à modifier
+  @param FromText   Texte à chercher
+  @param ToText     Texte à insérer à la place de FromText
+  @param PosProc    Routine de recherche à utiliser
+*}
+procedure GenericReplace(var Str : string; const FromText, ToText : string;
+  PosProc : TPosProc);
+var Len, Index : integer;
+begin
+  Len := Length(FromText);
+  repeat
+    Index := PosProc(FromText, Str);
+    if Index > 0 then
+    begin
+      Delete(Str, Index, Len);
+      Insert(ToText, Str, Index);
+    end;
+  until Index = 0;
+end;
+
+{*
+  Remplace toutes les occurences d'une sous-chaîne donnée par une autre
+  @param Str        Chaîne dans laquelle remplacer les sous-chaîne
+  @param FromText   Sous-chaîne à remplacer
+  @param ToText     Texte à insérer à la place de FromText
+*}
+procedure Replace(var Str : string; const FromText, ToText : string);
+begin
+  GenericReplace(Str, FromText, ToText, Pos);
+end;
+
+{*
+  Remplace toutes les occurences d'une variable donnée par sa valeur
+  @param Str        Chaîne dans laquelle remplacer les variables
+  @param Variable   Variable à remplacer
+  @param Value      Valeur de la variable
+  @see PosVariable
+*}
+procedure ReplaceVariable(var Str : string;
+  const Variable, Value : string); overload;
+begin
+  GenericReplace(Str, Variable, Value, PosVariable);
+end;
+
+{*
+  Remplace toutes les occurences d'une variable donnée par sa valeur entière
+  @param Str        Chaîne dans laquelle remplacer les variables
+  @param Variable   Variable à remplacer
+  @param Value      Valeur entière de la variable
+  @see PosVariable
+*}
+procedure ReplaceVariable(var Str : string; const Variable : string;
+  Value : integer); overload;
+begin
+  GenericReplace(Str, Variable, IntToStr(Value), PosVariable);
+end;
 
 {----------------------------}
 { Classe TActionsInterpreter }
@@ -141,6 +266,12 @@ begin
   DoNextPhase := False;
   HasMoved := False;
   HasShownMsg := False;
+  Inactive := '';
+
+  StrHere := '';
+  StrBefore := '';
+  StrBehind := '';
+  Answer := 0;
 end;
 
 {*
@@ -156,7 +287,61 @@ end;
   @param Line   Instruction à traiter
 *}
 procedure TActionsInterpreter.TreatVariables(var Line : string);
+var I : integer;
 begin
+  ReplaceVariable(Line, 'Ici', StrHere);
+  ReplaceVariable(Line, 'Devant', StrBefore);
+  ReplaceVariable(Line, 'Derriere', StrBehind);
+
+  ReplaceVariable(Line, 'X'        , Position.X);
+  ReplaceVariable(Line, 'Y'        , Position.Y);
+  ReplaceVariable(Line, 'Z'        , Position.Z);
+  ReplaceVariable(Line, 'Direction', integer(Player.Direction));
+  ReplaceVariable(Line, 'Reponse'  , Answer);
+  ReplaceVariable(Line, 'Reussite' , 1);
+  ReplaceVariable(Line, 'Touche'   , integer(KeyPressed));
+  ReplaceVariable(Line, 'Phase'    , Phase);
+
+  with Master.ObjectDef[idBuoys] do
+  begin
+    ReplaceVariable(Line, 'Bouees', Count[Player]);
+    ReplaceVariable(Line, 'Bouee', Count[Player]);
+  end;
+  with Master.ObjectDef[idPlanks] do
+  begin
+    ReplaceVariable(Line, 'Planches', Count[Player]);
+    ReplaceVariable(Line, 'Planche', Count[Player]);
+  end;
+  with Master.ObjectDef[idSilverKeys] do
+    ReplaceVariable(Line, 'ClesArgent', Count[Player]);
+  with Master.ObjectDef[idGoldenKeys] do
+    ReplaceVariable(Line, 'ClesOr', Count[Player]);
+  ReplaceVariable(Line, 'Barque', Boat);
+
+  ReplaceVariable(Line, 'VersionInterpreteur', InterpreterVersion);
+  ReplaceVariable(Line, 'Couleur', Player.Color);
+
+  if Pos('CompteurActions_', Line) > 0 then
+  begin
+    for I := 0 to ActionsCount-1 do
+    begin
+      ReplaceVariable(Line, Format('CompteurActions_%d', [I]),
+        TActions(Master.Component[Format(idActions, [I])]).Counter);
+    end;
+  end;
+
+  ReplaceVariable(Line, 'Compteur', Counter^);
+
+  if Pos('CompteurActions ', Line) > 0 then
+  begin
+    for I := 0 to ActionsCount-1 do
+    begin
+      ReplaceVariable(Line, Format('CompteurActions %d', [I]),
+        TActions(Master.Component[Format(idActions, [I])]).Counter);
+    end;
+  end;
+
+  Replace(Line, '&CompteurActions ', '&CompteurActions_');
 end;
 
 {*
@@ -385,11 +570,13 @@ end;
   @param ADoNextPhase   Indique s'il faut exécuter la phase suivante
   @param AHasMoved      Indique si un AllerA a été fait
   @param AHasShownMsg   Indique si un message a été affiché
+  @parma AInactive      Effet à utiliser lors d'un Desactiver
 *}
 class procedure TActionsInterpreter.Execute(ACounter : PInteger;
   AActions : TStrings; AMaster : TMaster; APhase : integer; APlayer : TPlayer;
   AKeyPressed : boolean; const APos : T3DPoint; var ADoNextPhase : boolean;
   out AHasMoved, AHasShownMsg : boolean; AInactive : TComponentID);
+var PluginIDs : TStrings;
 begin
   with Create do
   try
@@ -403,6 +590,38 @@ begin
     Position := APos;
     DoNextPhase := ADoNextPhase;
     Inactive := idGrass+'-'+AInactive+'-';
+
+    // On détermine le nombre d'actions en testant leur existence
+    ActionsCount := 0;
+    try
+      while Master.Component[Format(idActions, [ActionsCount])] <> nil do
+        inc(ActionsCount);
+    except
+      on Error : EComponentNotFound do;
+    end;
+
+    // Détermination des Ici, Devant et Derriere
+    StrHere := 'Case '+Point3DToString(Position);
+    StrBefore := 'Case '+
+      Point3DToString(PointBehind(Position, NegDir[Player.Direction]));
+    StrBehind := 'Case '+
+      Point3DToString(PointBehind(Position, Player.Direction));
+
+    // Détermination du numéro de la barque
+    PluginIDs := TStringList.Create;
+    try
+      Player.GetPluginIDs(PluginIDs);
+      Boat := 10;
+      while Boat > 0 do
+      begin
+        if PluginIDs.IndexOf(Format(idBoat, [Boat])) < 0 then
+          dec(Boat)
+        else
+          Break;
+      end;
+    finally
+      PluginIDs.Free;
+    end;
 
     ExecuteActions;
 

@@ -679,6 +679,11 @@ const {don't localize}
   /// Temporisation par défaut
   DefaultTemporization = 500;
 
+  /// Application d'une direction vers la direction opposée
+  NegDir : array[TDirection] of TDirection = (
+    diNone, diSouth, diWest, diNorth, diEast
+  );
+
 var {don't localize}
   /// Dossier de FunLabyrinthe dans Application Data
   fFunLabyAppData : string = '';

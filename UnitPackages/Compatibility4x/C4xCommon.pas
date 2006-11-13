@@ -16,6 +16,12 @@ const {don't localize}
   idGrass = 'Grass';                             /// ID de l'herbe
   idInactiveTransporter = 'InactiveTransporter'; /// ID du téléporteur inactif
 
+  idBuoys = 'Buoys';           /// ID des bouées
+  idPlanks = 'Planks';         /// ID des planches
+  idSilverKeys = 'SilverKeys'; /// ID des clefs d'argent
+  idGoldenKeys = 'GoldenKeys'; /// ID des clefs d'or
+  idBoat = 'Boat%d';           /// ID de la barque
+
 implementation
 
 end.
