@@ -12,6 +12,8 @@ const
   phPushing = 1; /// Phase "pushing"
   phExecute = 2; /// Phase "execute"
 
+  MaxVar = 20; /// Indice maximal de variable
+
 const {don't localize}
   idGrass = 'Grass';                             /// ID de l'herbe
   idInactiveTransporter = 'InactiveTransporter'; /// ID du téléporteur inactif

@@ -11,7 +11,7 @@ unit C4xMain;
 interface
 
 uses
-  Classes, SysUtils, StrUtils, ScUtils, ScLists, ScStrUtils, FunLabyUtils,
+  Classes, SysUtils, StrUtils, Math, ScUtils, ScLists, ScStrUtils, FunLabyUtils,
   UnitFiles, C4xCommon, C4xComponents;
 
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
@@ -30,9 +30,9 @@ procedure GetParams(UnitFile : TBPLUnitFile; Master : TMaster;
 implementation
 
 const {don't localize}
-  attrFileName = 'FileName';         /// Attribut pour le nom de fichier
-  attrCounters = 'Counters';         /// Enregistrement des compteurs
-  attrActionsCount = 'ActionsCount'; /// Nombre d'actions créées
+  attrFileName = 'FileName';   /// Attribut pour le nom de fichier
+  attrCounters = 'Counters';   /// Enregistrement des compteurs
+  attrVariables = 'Variables'; /// Enregistrement des variables
 
 {*
   Charge tous les composants de compatibilité 4.x de FunLabyrinthe
@@ -53,6 +53,8 @@ var FileName : TFileName;
     Number, FirstLine, LastLine : integer;
     StrNumber, InfoLine, Graphics : string;
     Kind : TActionsKind;
+    Infos : TC4xInfos;
+    I : integer;
 begin
   { Don't localize any of the strings in this procedure. }
 
@@ -73,17 +75,18 @@ begin
 
   // Actions : elles sont stockées dans le fichier donné par FileName
 
-  if FileName = '' then exit;
-  FileContents := TStringList.Create;
+  Counters := TStringList.Create;
   try
-    FileContents.LoadFromFile(FileName);
-    FileContents.Add('[]');
-    Number := 0;
-    SubContents := TStringList.Create;
+    Counters.Delimiter := ' ';
+
+    if FileName = '' then exit;
+    FileContents := TStringList.Create;
     try
-      Counters := TStringList.Create;
+      FileContents.LoadFromFile(FileName);
+      FileContents.Add('[]');
+      Number := 0;
+      SubContents := TStringList.Create;
       try
-        Counters.Delimiter := ' ';
         Counters.DelimitedText := UnitFile.Attributes.Values[attrCounters];
         while True do
         begin
@@ -130,15 +133,20 @@ begin
 
           inc(Number);
         end;
+
+        Infos := TC4xInfos.Create(Master, Number);
       finally
-        Counters.Free;
+        SubContents.Free;
       end;
     finally
-      SubContents.Free;
-      UnitFile.Attributes.Values[attrActionsCount] := IntToStr(Number);
+      FileContents.Free;
     end;
+
+    Counters.DelimitedText := UnitFile.Attributes.Values[attrVariables];
+    for I := 1 to Min(Counters.Count, MaxVar) do
+      Infos.Variables[I] := StrToIntDef(Counters[I-1], 0);
   finally
-    FileContents.Free;
+    Counters.Free;
   end;
 end;
 
@@ -153,19 +161,18 @@ end;
 *}
 procedure GameLoaded(UnitFile : TBPLUnitFile; Master : TMaster;
   FirstTime : boolean);
-var Count, I : integer;
-    Actions : TActions;
+var Infos : TC4xInfos;
+    I : integer;
     DoNextPhase, HasMoved, HasShownMsg : boolean;
 begin
-  Count := StrToIntDef(UnitFile.Attributes.Values[attrActionsCount], 0);
+  Infos := Master.Component[idC4xInfos] as TC4xInfos;
   DoNextPhase := False;
 
-  for I := 0 to Count-1 do
+  for I := 0 to Infos.ActionsCount-1 do
   begin
-    Actions := TActions(Master.Component[Format(idActions, [I])]);
-    if Actions.Kind = akGameStarted then
+    with Infos.Actions[I] do if Kind = akGameStarted then
     begin
-      Actions.Execute(phExecute, Master.Players[0], False, No3DPoint,
+      Execute(phExecute, Master.Players[0], False, No3DPoint,
         DoNextPhase, HasMoved, HasShownMsg);
     end;
   end;
@@ -195,7 +202,8 @@ procedure RegisterComponents(UnitFile : TBPLUnitFile; Master : TMaster;
       Components, BaseIndex, DialogTitle, DialogPrompt);
   end;
 
-var Count, I : integer;
+var Infos : TC4xInfos;
+    I : integer;
     Components : array of TScrewComponent;
 begin
   // Effets
@@ -204,14 +212,14 @@ begin
 
   // Cases
 
-  Count := StrToIntDef(UnitFile.Attributes.Values[attrActionsCount], 0);
-  if Count > 0 then
+  Infos := Master.Component[idC4xInfos] as TC4xInfos;
+  if Infos.ActionsCount > 0 then
   begin
-    SetLength(Components, Count);
+    SetLength(Components, Infos.ActionsCount);
 
-    for I := 0 to Count-1 do
+    for I := 0 to Infos.ActionsCount-1 do
     begin
-      case TActions(Master.Component[Format(idActions, [I])]).Kind of
+      case Infos.Actions[I].Kind of
         akGameStarted : Components[I] := nil;
         akObstacle :
         begin
@@ -235,23 +243,27 @@ end;
 *}
 procedure GetParams(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings);
-var Count, I : integer;
+var Infos : TC4xInfos;
+    I : integer;
     Counters : TStrings;
 begin
   Params.Values[attrFileName] := UnitFile.Attributes.Values[attrFileName];
 
-  Count := StrToIntDef(UnitFile.Attributes.Values[attrActionsCount], 0);
-  if Count > 0 then
+  Infos := Master.Component[idC4xInfos] as TC4xInfos;
+  if Infos.ActionsCount > 0 then
   begin
     Counters := TStringList.Create;
     try
       Counters.Delimiter := ' ';
-      for I := 0 to Count-1 do
-      begin
-        Counters.Add(IntToStr(
-          TActions(Master.Component[Format(idActions, [I])]).Counter));
-      end;
+
+      for I := 0 to Infos.ActionsCount-1 do
+        Counters.Add(IntToStr(Infos.Actions[I].Counter));
       Params.Values[attrCounters] := Counters.DelimitedText;
+
+      Counters.Clear;
+      for I := 1 to MaxVar do
+        Counters.Add(IntToStr(Infos.Variables[I]));
+      Params.Values[attrVariables] := Counters.DelimitedText;
     finally
       Counters.Free;
     end;

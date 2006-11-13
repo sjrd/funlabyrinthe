@@ -10,8 +10,7 @@ unit C4xComponents;
 interface
 
 uses
-  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FunLabyTools, C4xCommon,
-  C4xInterpreter;
+  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FunLabyTools, C4xCommon;
 
 resourcestring
   sSunkenButton = 'Bouton enfoncé'; /// Nom du bouton enfoncé
@@ -33,6 +32,8 @@ const {don't localize}
   idActionsScrewTemplate = idGrass+'-'+idButtonTemplate+'-';
 
   idActions = 'Actions%d'; /// ID d'un ensemble d'actions
+
+  idC4xInfos = 'C4xInfos'; /// ID des infos sur C4x
 
 const {don't localize}
   fSunkenButton = 'SunkenButton'; /// Fichier du bouton enfoncé
@@ -161,6 +162,30 @@ type
     property Obstacle : TActionsObstacle read FObstacle;
   end;
 
+  {*
+    Composant unique par parties conservant les infos de ce package
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TC4xInfos = class(TFunLabyComponent)
+  private
+    FActionsCount : integer;                  /// Nombres d'actions
+    FVariables : array[1..MaxVar] of integer; /// Variables
+
+    function GetActions(Index : integer) : TActions;
+
+    function GetVariables(Index : integer) : integer;
+    procedure SetVariables(Index, Value : integer);
+  public
+    constructor Create(AMaster : TMaster; AActionsCount : integer);
+
+    property ActionsCount : integer read FActionsCount;
+    property Actions[index : integer] : TActions read GetActions;
+
+    property Variables[index : integer] : integer
+      read GetVariables write SetVariables;
+  end;
+
 const {don't localize}
   /// Ensemble des types d'actions personnalisés
   CustomActionsKind : set of TActionsKind =
@@ -170,6 +195,9 @@ const {don't localize}
   fCompatibility = 'Compatibility4x\';
 
 implementation
+
+uses
+  C4xInterpreter;
 
 {-----------------------}
 { Classe TActionsObject }
@@ -385,12 +413,12 @@ begin
   Cancel := Same3DPoint(Src, Player.Position);
 end;
 
-{----------------------------}
-{ Classe TActionsInterpreter }
-{----------------------------}
+{-----------------}
+{ Classe TActions }
+{-----------------}
 
 {*
-  Crée une instance de TActionsInterpreter
+  Crée une instance de TActions
   @param AMaster     Maître FunLabyrinthe
   @param ANumber     Numéro d'actions
   @param AKind       Type d'actions
@@ -455,6 +483,56 @@ begin
   inc(FCounter);
   TActionsInterpreter.Execute(@FCounter, FActions, Master, Phase, Player,
     KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg, Inactive);
+end;
+
+{------------------}
+{ Classe TC4xInfos }
+{------------------}
+
+{*
+  Crée une instance de TC4xInfos
+  @param AMaster         Maître FunLabyrinthe
+  @param AActionsCount   Nombre d'actions
+*}
+constructor TC4xInfos.Create(AMaster : TMaster; AActionsCount : integer);
+var I : integer;
+begin
+  inherited Create(AMaster, idC4xInfos);
+  FActionsCount := AActionsCount;
+  for I := 1 to MaxVar do
+    FVariables[I] := 0;
+end;
+
+{*
+  Tableau zero-based des actions
+  @param Index   Index des actions
+  @return Les actions à l'index spécifié
+*}
+function TC4xInfos.GetActions(Index : integer) : TActions;
+begin
+  Result := Master.Component[Format(idActions, [Index])] as TActions;
+end;
+
+{*
+  Tableau indexé par des entiers de 1 à MaxVar des variables
+  @param Index   Index de la variable à récupérer
+  @return Valeur de la variable d'index Index
+  @see MaxVar
+*}
+function TC4xInfos.GetVariables(Index : integer) : integer;
+begin
+  Result := FVariables[Index];
+end;
+
+{*
+  Tableau indexé par des entiers de 1 à MaxVar des variables
+  @param Index   Index de la variable à récupérer
+  @param Value   Nouvelle valeur de la variable d'index Index
+  @see MaxVar
+*}
+procedure TC4xInfos.SetVariables(Index, Value : integer);
+begin
+  FVariables[Index] := Value;
 end;
 
 end.

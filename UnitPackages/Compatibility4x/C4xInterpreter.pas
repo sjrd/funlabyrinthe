@@ -10,7 +10,8 @@ unit C4xInterpreter;
 interface
 
 uses
-  SysUtils, Classes, StrUtils, ScUtils, ScStrUtils, FunLabyUtils, C4xCommon;
+  SysUtils, Classes, StrUtils, ScUtils, ScStrUtils, FunLabyUtils, C4xComponents,
+  C4xCommon;
 
 resourcestring
   sUnknownLabel = 'Le label %s n''a pas pu être trouvé';
@@ -38,6 +39,7 @@ type
     Counter : PInteger;    /// Pointeur vers le compteur des actions courantes
     Actions : TStrings;    /// Actions à exécuter
     Master : TMaster;      /// Maître FunLabyrinthe
+    Infos : TC4xInfos;     /// Infos C4x
     Phase : integer;       /// Phase courante (phPushing ou phExecute)
     Player : TPlayer;      /// Joueur concerné
     Map : TMap;            /// Carte courante
@@ -48,7 +50,6 @@ type
     HasShownMsg : boolean; /// Indique si un message a été affiché
     Inactive : string;     /// Case à utiliser lors d'un Desactiver
 
-    ActionsCount : integer; /// Nombre d'actions que possède le maître
     StrHere : string;       /// Case courante
     StrBefore : string;     /// Case devant
     StrBehind : string;     /// Case derrière
@@ -92,9 +93,6 @@ type
 implementation
 
 { Don't localize any of the strings in this implementation! }
-
-uses
-  C4xComponents;
 
 const
   cReplace     = 0;  /// Commande Remplacer
@@ -180,6 +178,7 @@ begin
         inc(I);
       end;
     end;
+    else inc(I);
   end;
 
   Result := Pos(' '+Variable+' ', Str2);
@@ -323,22 +322,34 @@ begin
 
   if Pos('CompteurActions_', Line) > 0 then
   begin
-    for I := 0 to ActionsCount-1 do
+    for I := 0 to Infos.ActionsCount-1 do
     begin
       ReplaceVariable(Line, Format('CompteurActions_%d', [I]),
-        TActions(Master.Component[Format(idActions, [I])]).Counter);
+        Infos.Actions[I].Counter);
     end;
+  end;
+
+  if Pos('Variable_', Line) > 0 then
+  begin
+    for I := 0 to Infos.ActionsCount-1 do
+      ReplaceVariable(Line, Format('Variable_%d', [I]), Infos.Variables[I]);
   end;
 
   ReplaceVariable(Line, 'Compteur', Counter^);
 
   if Pos('CompteurActions ', Line) > 0 then
   begin
-    for I := 0 to ActionsCount-1 do
+    for I := 0 to Infos.ActionsCount-1 do
     begin
       ReplaceVariable(Line, Format('CompteurActions %d', [I]),
-        TActions(Master.Component[Format(idActions, [I])]).Counter);
+        Infos.Actions[I].Counter);
     end;
+  end;
+
+  if Pos('Variable ', Line) > 0 then
+  begin
+    for I := 0 to Infos.ActionsCount-1 do
+      ReplaceVariable(Line, Format('Variable %d', [I]), Infos.Variables[I]);
   end;
 
   Replace(Line, '&CompteurActions ', '&CompteurActions_');
@@ -583,6 +594,7 @@ begin
     Counter := ACounter;
     Actions := AActions;
     Master := AMaster;
+    Infos := Master.Component[idC4xInfos] as TC4xInfos;
     Phase := APhase;
     Player := APlayer;
     Map := Player.Map;
@@ -590,15 +602,6 @@ begin
     Position := APos;
     DoNextPhase := ADoNextPhase;
     Inactive := idGrass+'-'+AInactive+'-';
-
-    // On détermine le nombre d'actions en testant leur existence
-    ActionsCount := 0;
-    try
-      while Master.Component[Format(idActions, [ActionsCount])] <> nil do
-        inc(ActionsCount);
-    except
-      on Error : EComponentNotFound do;
-    end;
 
     // Détermination des Ici, Devant et Derriere
     StrHere := 'Case '+Point3DToString(Position);
