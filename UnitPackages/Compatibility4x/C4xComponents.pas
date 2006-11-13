@@ -300,6 +300,7 @@ procedure TActionsEffect.Execute(Player : TPlayer; KeyPressed : boolean;
 var HasMoved, HasShownMsg : boolean;
     Other : T3DPoint;
 begin
+  GoOnMoving := Actions.Kind = akDirection;
   FActions.Execute(phExecute, Player, KeyPressed, Pos, GoOnMoving,
     HasMoved, HasShownMsg);
 
