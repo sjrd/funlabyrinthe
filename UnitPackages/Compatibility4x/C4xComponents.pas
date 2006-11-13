@@ -444,7 +444,7 @@ procedure TActions.Execute(Phase : integer; Player : TPlayer;
   out HasMoved, HasShownMsg : boolean);
 begin
   inc(FCounter);
-  TActionsInterpreter.Execute(FActions, Master, Phase, Player,
+  TActionsInterpreter.Execute(@FCounter, FActions, Master, Phase, Player,
     KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg);
 end;
 
