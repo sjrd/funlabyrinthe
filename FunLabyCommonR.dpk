@@ -37,7 +37,8 @@ contains
   FunLabyUtils in 'FunLabyUtils.pas',
   FilesUtils in 'FilesUtils.pas',
   UnitFiles in 'UnitFiles.pas',
-  PlayerObjects in 'PlayerObjects.pas';
+  PlayerObjects in 'PlayerObjects.pas',
+  FunLabyTools in 'FunLabyTools.pas';
 
 end.
 

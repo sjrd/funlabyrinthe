@@ -42,10 +42,10 @@ const {don't localize}
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings);
 const {don't localize}
-  KindStrings : array[0..12] of string = (
+  KindStrings : array[0..13] of string = (
     'GameStarted', 'PushButton', 'Switch', 'InfoStone', 'Hidden',
     'TransporterNext', 'TransporterPrevious', 'TransporterRandom', 'Outside',
-    'Custom', 'Object', 'Obstacle', 'Direction'
+    'Treasure', 'Custom', 'Object', 'Obstacle', 'Direction'
   );
 var FileName : TFileName;
     FileContents, SubContents : TStrings;
@@ -143,16 +143,19 @@ procedure GameLoaded(UnitFile : TBPLUnitFile; Master : TMaster;
   FirstTime : boolean);
 var Count, I : integer;
     Actions : TActions;
-    Bool : boolean;
+    DoNextPhase, HasMoved, HasShownMsg : boolean;
 begin
   Count := StrToIntDef(UnitFile.Attributes.Values[attrActionsCount], 0);
-  Bool := False;
+  DoNextPhase := False;
 
   for I := 0 to Count-1 do
   begin
     Actions := TActions(Master.Component[Format(idActions, [I])]);
     if Actions.Kind = akGameStarted then
-      Actions.Execute(phExecute, Master.Players[0], False, No3DPoint, Bool);
+    begin
+      Actions.Execute(phExecute, Master.Players[0], False, No3DPoint,
+        DoNextPhase, HasMoved, HasShownMsg);
+    end;
   end;
 end;
 

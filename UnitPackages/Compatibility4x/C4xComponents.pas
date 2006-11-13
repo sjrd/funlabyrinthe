@@ -10,7 +10,8 @@ unit C4xComponents;
 interface
 
 uses
-  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, C4xCommon, C4xInterpreter;
+  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FunLabyTools, C4xCommon,
+  C4xInterpreter;
 
 resourcestring
   sSunkenButton = 'Bouton enfoncé'; /// Nom du bouton enfoncé
@@ -41,8 +42,12 @@ const {don't localize}
   fInfoStone = 'InfoStone';       /// Fichier de la borne info
   fTransporter = 'Transporter';   /// Fichier du téléporteur
   fOutside = 'Outside';           /// Fichier du dehors
+  fTreasure = 'Treasure';         /// Fichier du trésor
 
 resourcestring
+  sGotOutsideMaze = 'BRAVO ! Tu as réussi à sortir du labyrinthe !';
+  sFoundTreasure  = 'BRAVO ! Tu as trouvé le trésor !';
+
   sButtonTitle = 'Numéro du bouton';
   sButtonPrompt = 'Numéro du bouton (1 à 75) :';
 
@@ -54,7 +59,7 @@ type
   *}
   TActionsKind = (akGameStarted, akPushButton, akSwitch, akInfoStone, akHidden,
     akTransporterNext, akTransporterPrevious, akTransporterRandom, akOutside,
-    akCustom, akObject, akObstacle, akDirection);
+    akTreasure, akCustom, akObject, akObstacle, akDirection);
 
   TActions = class;
 
@@ -141,7 +146,8 @@ type
     destructor Destroy; override;
 
     procedure Execute(Phase : integer; Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint; var DoNextPhase : boolean);
+      const Pos : T3DPoint; var DoNextPhase : boolean;
+      out HasMoved, HasShownMsg : boolean);
 
     property Number : integer read FNumber;
     property Kind : TActionsKind read FKind;
@@ -236,6 +242,8 @@ begin
       Painter.ImgNames.Add(fTransporter);
     akOutside :
       Painter.ImgNames.Add(fOutside);
+    akTreasure :
+      Painter.ImgNames.Add(fTreasure);
     akCustom..akDirection :
       Painter.ImgNames.Add(fCompatibility + Actions.FileName);
   end;
@@ -289,8 +297,48 @@ end;
 *}
 procedure TActionsEffect.Execute(Player : TPlayer; KeyPressed : boolean;
   const Pos : T3DPoint; var GoOnMoving : boolean);
+var HasMoved, HasShownMsg : boolean;
+    Other : T3DPoint;
 begin
-  FActions.Execute(phExecute, Player, KeyPressed, Pos, GoOnMoving);
+  FActions.Execute(phExecute, Player, KeyPressed, Pos, GoOnMoving,
+    HasMoved, HasShownMsg);
+
+  if Actions.Kind in [akTransporterNext..akTransporterRandom] then
+  begin
+    if (not HasMoved) and (Player.Map[Pos].Effect = Self) then
+    begin
+      // Action par défaut des actions de type téléporteur
+
+      Other := Pos;
+
+      // Recherche de la case de destination
+      case Actions.Kind of
+        akTransporterNext     : FindNextScrew    (Player.Map, Other, Self);
+        akTransporterPrevious : FindPreviousScrew(Player.Map, Other, Self);
+        akTransporterRandom   : FindScrewAtRandom(Player.Map, Other, Self);
+      end;
+
+      // Si l'on a trouvé une autre case, on déplace le joueur
+      if Same3DPoint(Other, Pos) then exit;
+      Sleep(500);
+      Player.Position := Other;
+    end;
+  end else
+  if Actions.Kind in [akOutside..akTreasure] then
+  begin
+    if Player.Map[Pos].Effect = Self then
+    begin
+      // Action par défaut des actions de type case de fin
+      Player.Win;
+      if not HasShownMsg then
+      begin
+        if Actions.Kind = akOutside then
+          Player.Controller.ShowDialog(sWon, sGotOutsideMaze)
+        else
+          Player.Controller.ShowDialog(sWon, sFoundTreasure);
+      end;
+    end;
+  end;
 end;
 
 {-------------------------}
@@ -325,10 +373,13 @@ end;
 procedure TActionsObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel, AbortExecute : boolean);
+var HasMoved, HasShownMsg : boolean;
 begin
   AbortExecute := not AbortExecute;
-  FActions.Execute(phPushing, Player, KeyPressed, Pos, AbortExecute);
+  FActions.Execute(phPushing, Player, KeyPressed, Pos, AbortExecute,
+    HasMoved, HasShownMsg);
   AbortExecute := not AbortExecute;
+  Cancel := Same3DPoint(Src, Player.Position);
 end;
 
 {----------------------------}
@@ -385,12 +436,15 @@ end;
   @param KeyPressed    True si une touche a été pressée pour le déplacement
   @param Pos           Position de la case
   @param DoNextPhase   Indique s'il faut exécuter la phase suivante
+  @param HasMoved      Indique si un AllerA a été fait
+  @param HasShownMsg   Indique si un message a été affiché
 *}
 procedure TActions.Execute(Phase : integer; Player : TPlayer;
-  KeyPressed : boolean; const Pos : T3DPoint; var DoNextPhase : boolean);
+  KeyPressed : boolean; const Pos : T3DPoint; var DoNextPhase : boolean;
+  out HasMoved, HasShownMsg : boolean);
 begin
   TActionsInterpreter.Execute(FActions, Master, Phase, Player,
-    KeyPressed, Pos, DoNextPhase);
+    KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg);
 end;
 
 end.

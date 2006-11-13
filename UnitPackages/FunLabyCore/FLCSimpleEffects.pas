@@ -11,7 +11,7 @@ unit FLCSimpleEffects;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon, FLCFields;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FunLabyTools, FLCCommon, FLCFields;
 
 resourcestring
   sNorthArrow = 'Flèche nord';                /// Nom de la flèche nord
@@ -123,10 +123,6 @@ type
   private
     FNumber : integer;        /// Numéro du téléporteur
     FKind : TTransporterKind; /// Type de téléporteur
-
-    procedure FindNext(Map : TMap; var Pos : T3DPoint);
-    procedure FindPrevious(Map : TMap; var Pos : T3DPoint);
-    procedure FindRandom(Map : TMap; var Pos : T3DPoint);
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ANumber : integer;
@@ -295,111 +291,6 @@ begin
 end;
 
 {*
-  Trouve le téléporteur suivant sur la carte
-  @param Map   Carte sur laquelle chercher
-  @param Pos   Position du téléporteur initiale en entrée et finale en sortie
-*}
-procedure TTransporter.FindNext(Map : TMap; var Pos : T3DPoint);
-var DimX, DimY, DimZ : integer;
-begin
-  with Map.Dimensions do
-  begin
-    DimX := X;
-    DimY := Y;
-    DimZ := Z;
-  end;
-
-  repeat
-    inc(Pos.X);
-    if Pos.X >= DimX then
-    begin
-      Pos.X := 0;
-      inc(Pos.Y);
-      if Pos.Y >= DimY then
-      begin
-        Pos.Y := 0;
-        inc(Pos.Z);
-        if Pos.Z >= DimZ then
-          Pos.Z := 0;
-      end;
-    end;
-  until Map[Pos].Effect = Self;
-end;
-
-{*
-  Trouve le téléporteur précédent sur la carte
-  @param Map   Carte sur laquelle chercher
-  @param Pos   Position du téléporteur initiale en entrée et finale en sortie
-*}
-procedure TTransporter.FindPrevious(Map : TMap; var Pos : T3DPoint);
-var DimX, DimY, DimZ : integer;
-begin
-  with Map.Dimensions do
-  begin
-    DimX := X;
-    DimY := Y;
-    DimZ := Z;
-  end;
-
-  repeat
-    dec(Pos.X);
-    if Pos.X < 0 then
-    begin
-      Pos.X := DimX-1;
-      dec(Pos.Y);
-      if Pos.Y < 0 then
-      begin
-        Pos.Y := DimY-1;
-        dec(Pos.Z);
-        if Pos.Z < 0 then
-          Pos.Z := DimZ-1;
-      end;
-    end;
-  until Map[Pos].Effect = Self;
-end;
-
-{*
-  Trouve un autre téléporteur aléatoirement sur la carte
-  @param Map   Carte sur laquelle chercher
-  @param Pos   Position du téléporteur initiale en entrée et finale en sortie
-*}
-procedure TTransporter.FindRandom(Map : TMap; var Pos : T3DPoint);
-const
-  AllocBy = 10;
-var DimX, DimY, DimZ : integer;
-    Others : array of T3DPoint;
-    Count, X, Y, Z : integer;
-    Other : T3DPoint;
-begin
-  with Map.Dimensions do
-  begin
-    DimX := X;
-    DimY := Y;
-    DimZ := Z;
-  end;
-
-  // Recensement de toutes les cases identiques, à l'exception de l'originale
-  Count := 0;
-  SetLength(Others, AllocBy);
-  for X := 0 to DimX-1 do for Y := 0 to DimY-1 do for Z := 0 to DimZ-1 do
-  begin
-    Other := Point3D(X, Y, Z);
-    if (Map[Other].Effect = Self) and (not Same3DPoint(Other, Pos)) then
-    begin
-      if Count >= Length(Others) then
-        SetLength(Others, Count+AllocBy);
-      Others[Count] := Other;
-      inc(Count);
-    end;
-  end;
-  SetLength(Others, Count);
-
-  // À moins que la liste soit vide, on en pêche un au hasard
-  if Count > 0 then
-    Pos := Others[Random(Count)];
-end;
-
-{*
   Dessine le téléporteur sur le canevas indiqué
   @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner le terrain
@@ -438,9 +329,9 @@ begin
 
   // Recherche de la case de destination
   case FKind of
-    tkNext     : FindNext    (Player.Map, Other);
-    tkPrevious : FindPrevious(Player.Map, Other);
-    tkRandom   : FindRandom  (Player.Map, Other);
+    tkNext     : FindNextScrew    (Player.Map, Other, Self);
+    tkPrevious : FindPreviousScrew(Player.Map, Other, Self);
+    tkRandom   : FindScrewAtRandom(Player.Map, Other, Self);
     else exit; // on évite des tests inutiles pour un inactif
   end;
 

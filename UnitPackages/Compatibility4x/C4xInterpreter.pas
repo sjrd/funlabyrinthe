@@ -27,6 +27,8 @@ type
     KeyPressed : boolean;  /// True si une touche a été pressée
     Position : T3DPoint;   /// Position de la case
     DoNextPhase : boolean; /// Indique s'il faut exécuter la phase suivante
+    HasMoved : boolean;    /// Indique si un AllerA a été fait
+    HasShownMsg : boolean; /// Indique si un message a été affiché
 
     procedure ExecuteActions;
   public
@@ -34,7 +36,8 @@ type
 
     class procedure Execute(AActions : TStrings; AMaster : TMaster;
       APhase : integer; APlayer : TPlayer; AKeyPressed : boolean;
-      const APos : T3DPoint; var ADoNextPhase : boolean);
+      const APos : T3DPoint; var ADoNextPhase : boolean;
+      out AHasMoved, AHasShownMsg : boolean);
   end;
 
 implementation
@@ -57,6 +60,8 @@ begin
   KeyPressed := False;
   Position := No3DPoint;
   DoNextPhase := False;
+  HasMoved := False;
+  HasShownMsg := False;
 end;
 
 {*
@@ -75,10 +80,13 @@ end;
   @param AKeyPressed    True si une touche a été pressée pour le déplacement
   @param APos           Position de la case
   @param ADoNextPhase   Indique s'il faut exécuter la phase suivante
+  @param AHasMoved      Indique si un AllerA a été fait
+  @param AHasShownMsg   Indique si un message a été affiché
 *}
 class procedure TActionsInterpreter.Execute(AActions : TStrings;
   AMaster : TMaster; APhase : integer; APlayer : TPlayer; AKeyPressed : boolean;
-  const APos : T3DPoint; var ADoNextPhase : boolean);
+  const APos : T3DPoint; var ADoNextPhase : boolean;
+  out AHasMoved, AHasShownMsg : boolean);
 begin
   with Create do
   try
@@ -93,6 +101,8 @@ begin
     ExecuteActions;
 
     ADoNextPhase := DoNextPhase;
+    AHasMoved := HasMoved;
+    AHasShownMsg := HasShownMsg;
   finally
     Free;
   end;
