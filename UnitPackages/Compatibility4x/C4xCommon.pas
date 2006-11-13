@@ -13,7 +13,8 @@ const
   phExecute = 2; /// Phase "execute"
 
 const {don't localize}
-  idGrass = 'Grass'; /// ID de l'herbe de FunLabyCore
+  idGrass = 'Grass';                             /// ID de l'herbe
+  idInactiveTransporter = 'InactiveTransporter'; /// ID du téléporteur inactif
 
 implementation
 

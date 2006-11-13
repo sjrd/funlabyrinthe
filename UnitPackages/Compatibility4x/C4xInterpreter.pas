@@ -10,7 +10,7 @@ unit C4xInterpreter;
 interface
 
 uses
-  SysUtils, Classes, StrUtils, ScUtils, ScStrUtils, FunLabyUtils;
+  SysUtils, Classes, StrUtils, ScUtils, ScStrUtils, FunLabyUtils, C4xCommon;
 
 resourcestring
   sUnknownLabel = 'Le label %s n''a pas pu être trouvé';
@@ -36,17 +36,20 @@ type
     Master : TMaster;      /// Maître FunLabyrinthe
     Phase : integer;       /// Phase courante (phPushing ou phExecute)
     Player : TPlayer;      /// Joueur concerné
+    Map : TMap;            /// Carte courante
     KeyPressed : boolean;  /// True si une touche a été pressée
     Position : T3DPoint;   /// Position de la case
     DoNextPhase : boolean; /// Indique s'il faut exécuter la phase suivante
     HasMoved : boolean;    /// Indique si un AllerA a été fait
     HasShownMsg : boolean; /// Indique si un message a été affiché
+    Inactive : string;     /// Case à utiliser lors d'un Desactiver
 
     procedure TreatIfStatement(var Line : string);
     procedure TreatVariables(var Line : string);
 
     procedure ReplaceCmd    (var Params : string);
     procedure MoveCmd       (var Params : string);
+    procedure DeactivateCmd (var Params : string);
     procedure IncrementCmd  (var Params : string);
     procedure DecrementCmd  (var Params : string);
     procedure MultiplyCmd   (var Params : string);
@@ -72,7 +75,7 @@ type
     class procedure Execute(ACounter : PInteger; AActions : TStrings;
       AMaster : TMaster; APhase : integer; APlayer : TPlayer;
       AKeyPressed : boolean; const APos : T3DPoint; var ADoNextPhase : boolean;
-      out AHasMoved, AHasShownMsg : boolean);
+      out AHasMoved, AHasShownMsg : boolean; AInactive : TComponentID);
   end;
 
 implementation
@@ -82,38 +85,39 @@ implementation
 const
   cReplace     = 0;
   cMove        = 1;
-  cIncrement   = 2;
-  cDecrement   = 3;
-  cMultiply    = 4;
-  cMessage     = 5;
-  cFailure     = 6;
-  cBlindAlley  = 7;
-  cChoice      = 8;
-  cSound       = 9;
-  cGoTo        = 10;
-  cLetPass     = 11;
-  cAllowPlank  = 12;
-  cDontGoOn    = 13;
-  cGoOn        = 14;
-  cContinue    = 15;
-  cDescription = 16;
-  cWin         = 17;
-  cTip         = 18;
-  cJump        = 19;
-  cStop        = 20;
+  cDeactivate  = 2;
+  cIncrement   = 3;
+  cDecrement   = 4;
+  cMultiply    = 5;
+  cMessage     = 6;
+  cTip         = 7;
+  cFailure     = 8;
+  cBlindAlley  = 9;
+  cChoice      = 10;
+  cSound       = 11;
+  cGoTo        = 12;
+  cLetPass     = 13;
+  cAllowPlank  = 14;
+  cDontGoOn    = 15;
+  cGoOn        = 16;
+  cContinue    = 17;
+  cDescription = 18;
+  cWin         = 19;
+  cJump        = 20;
+  cStop        = 21;
 
   CommandStrings : array[cReplace..cStop] of string = (
-    'Remplacer', 'Deplacer', 'Incrementer', 'Decrementer', 'Multiplier',
-    'Message', 'Echec', 'Impasse', 'Choix', 'Son', 'AllerA', 'LaisserPasser',
-    'AutoriserPlanche', 'Arreter', 'Poursuivre', 'Continuer', 'Description',
-    'Gagner', 'Indice', 'Saute', 'Stop'
+    'Remplacer', 'Deplacer', 'Desactiver', 'Incrementer', 'Decrementer',
+    'Multiplier', 'Message', 'Indice', 'Echec', 'Impasse', 'Choix', 'Son',
+    'AllerA', 'LaisserPasser', 'AutoriserPlanche', 'Arreter', 'Poursuivre',
+    'Continuer', 'Description', 'Gagner', 'Saute', 'Stop'
   );
 
 type
   TCommandProc = procedure(Self : TObject; var Params : string);
 
 var
-  CommandProcs : array[cReplace..cTip] of TCommandProc;
+  CommandProcs : array[cReplace..cWin] of TCommandProc;
 
 {----------------------------}
 { Classe TActionsInterpreter }
@@ -131,6 +135,7 @@ begin
   Master := nil;
   Phase := 0;
   Player := nil;
+  Map := nil;
   KeyPressed := False;
   Position := No3DPoint;
   DoNextPhase := False;
@@ -171,6 +176,14 @@ begin
 end;
 
 {*
+  Commande 'Desactiver'
+  @param Params   Paramètres de la commande
+*}
+procedure TActionsInterpreter.DeactivateCmd(var Params : string);
+begin
+end;
+
+{*
   Commande 'Incrementer'
   @param Params   Paramètres de la commande
 *}
@@ -199,6 +212,14 @@ end;
   @param Params   Paramètres de la commande
 *}
 procedure TActionsInterpreter.MessageCmd(var Params : string);
+begin
+end;
+
+{*
+  Commande 'Indice'
+  @param Params   Paramètres de la commande
+*}
+procedure TActionsInterpreter.TipCmd(var Params : string);
 begin
 end;
 
@@ -299,14 +320,6 @@ begin
 end;
 
 {*
-  Commande 'Indice'
-  @param Params   Paramètres de la commande
-*}
-procedure TActionsInterpreter.TipCmd(var Params : string);
-begin
-end;
-
-{*
   Exécute les actions dans le contexte donné
 *}
 procedure TActionsInterpreter.ExecuteActions;
@@ -376,7 +389,7 @@ end;
 class procedure TActionsInterpreter.Execute(ACounter : PInteger;
   AActions : TStrings; AMaster : TMaster; APhase : integer; APlayer : TPlayer;
   AKeyPressed : boolean; const APos : T3DPoint; var ADoNextPhase : boolean;
-  out AHasMoved, AHasShownMsg : boolean);
+  out AHasMoved, AHasShownMsg : boolean; AInactive : TComponentID);
 begin
   with Create do
   try
@@ -385,9 +398,11 @@ begin
     Master := AMaster;
     Phase := APhase;
     Player := APlayer;
+    Map := Player.Map;
     KeyPressed := AKeyPressed;
     Position := APos;
     DoNextPhase := ADoNextPhase;
+    Inactive := idGrass+'-'+AInactive+'-';
 
     ExecuteActions;
 
@@ -402,10 +417,12 @@ end;
 initialization
   CommandProcs[cReplace]     := @TActionsInterpreter.ReplaceCmd;
   CommandProcs[cMove]        := @TActionsInterpreter.MoveCmd;
+  CommandProcs[cDeactivate]  := @TActionsInterpreter.DeactivateCmd;
   CommandProcs[cIncrement]   := @TActionsInterpreter.IncrementCmd;
   CommandProcs[cDecrement]   := @TActionsInterpreter.DecrementCmd;
   CommandProcs[cMultiply]    := @TActionsInterpreter.MultiplyCmd;
   CommandProcs[cMessage]     := @TActionsInterpreter.MessageCmd;
+  CommandProcs[cTip]         := @TActionsInterpreter.TipCmd;
   CommandProcs[cFailure]     := @TActionsInterpreter.FailureCmd;
   CommandProcs[cBlindAlley]  := @TActionsInterpreter.BlindAlleyCmd;
   CommandProcs[cChoice]      := @TActionsInterpreter.ChoiceCmd;
@@ -418,6 +435,5 @@ initialization
   CommandProcs[cContinue]    := @TActionsInterpreter.ContinueCmd;
   CommandProcs[cDescription] := @TActionsInterpreter.DescriptionCmd;
   CommandProcs[cWin]         := @TActionsInterpreter.WinCmd;
-  CommandProcs[cTip]         := @TActionsInterpreter.TipCmd;
 end.
 

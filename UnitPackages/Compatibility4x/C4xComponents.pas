@@ -137,6 +137,7 @@ type
     FFileName : string;           /// Nom du fichier de graphismes
     FActions : TStrings;          /// Actions à exécuter
     FCounter : integer;           /// Compteur d'exécution
+    FInactive : TComponentID;     /// Effet inactif correspondant
     FObjectDef : TActionsObject;  /// Objet correspondant
     FEffect : TActionsEffect;     /// Effet correspondant
     FObstacle : TActionsObstacle; /// Obstacle correspondant
@@ -154,6 +155,7 @@ type
     property FileName : string read FFileName;
     property Actions : TStrings read FActions;
     property Counter : integer read FCounter write FCounter;
+    property Inactive : TComponentID read FInactive;
     property ObjectDef : TActionsObject read FObjectDef;
     property Effect : TActionsEffect read FEffect;
     property Obstacle : TActionsObstacle read FObstacle;
@@ -406,6 +408,12 @@ begin
   FActions.Assign(AActions);
   FCounter := 0;
 
+  case Kind of
+    akPushButton : FInactive := idSunkenButton;
+    akTransporterNext..akTransporterRandom : FInactive := idInactiveTransporter;
+    else FInactive := '';
+  end;
+
   if Kind = akGameStarted then
   begin
     FObjectDef := nil;
@@ -446,7 +454,7 @@ procedure TActions.Execute(Phase : integer; Player : TPlayer;
 begin
   inc(FCounter);
   TActionsInterpreter.Execute(@FCounter, FActions, Master, Phase, Player,
-    KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg);
+    KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg, Inactive);
 end;
 
 end.
