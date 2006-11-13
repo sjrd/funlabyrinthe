@@ -320,7 +320,7 @@ begin
 
       // Si l'on a trouvé une autre case, on déplace le joueur
       if Same3DPoint(Other, Pos) then exit;
-      Sleep(500);
+      Master.Temporize;
       Player.Position := Other;
     end;
   end else

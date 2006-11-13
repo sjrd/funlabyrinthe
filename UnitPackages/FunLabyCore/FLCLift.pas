@@ -233,7 +233,7 @@ begin
   // Affichage de l'ascenseur ouvert pendant un temps
   with TEngagedLiftScrew.Create(Master, Player.Map, Pos, Player, True) do
   try
-    Sleep(500);
+    Master.Temporize;
   finally
     Free;
   end;
@@ -250,7 +250,7 @@ begin
   Player.Position := Other;
 
   // Après un temps, ouvrir l'ascenseur et remontrer le joueur
-  Sleep(500);
+  Master.Temporize;
   Player.Map[Other].Free;
   TEngagedLiftScrew.Create(Master, Player.Map, Other, Player, True, True);
   Player.RemovePlugin(Master.Plugin[idAvoidShowPlugin]);

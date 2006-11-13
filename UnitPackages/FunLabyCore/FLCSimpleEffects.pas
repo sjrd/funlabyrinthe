@@ -337,7 +337,7 @@ begin
 
   // Si l'on a trouvé une autre case, on déplace le joueur
   if Same3DPoint(Other, Pos) then exit;
-  Sleep(500);
+  Master.Temporize;
   Player.Position := Other;
 end;
 
@@ -382,7 +382,7 @@ begin
   else
     dec(Other.Z);
 
-  Sleep(500);
+  Master.Temporize;
   Player.Position := Other;
 end;
 
@@ -431,7 +431,7 @@ var Dir : TDirection;
 begin
   inherited;
 
-  Sleep(500);
+  Master.Temporize;
 
   if Player.Direction = diWest then
     Dir := diNorth
@@ -492,7 +492,7 @@ var Dir : TDirection;
 begin
   inherited;
 
-  Sleep(500);
+  Master.Temporize;
 
   if Player.Direction = diNorth then
     Dir := diWest

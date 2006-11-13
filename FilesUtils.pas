@@ -634,6 +634,10 @@ begin
       FAuthor := NullToEmptyStr(text);
     end;
 
+    // Attributs supplémentaires
+    Master.Temporization := StrToIntDef(
+      NullToEmptyStr(getAttribute('temporization')), 0);
+
     // Unités utilisées
     Params := THashedStringList.Create;
     try
@@ -985,6 +989,10 @@ begin
       if AuthorID > 0 then
         Element.setAttribute('id', AuthorID);
       appendChild(Element);
+
+      // Attributs supplémentaires
+      if Master.Temporization <> DefaultTemporization then
+        Element.setAttribute('temporization', Master.Temporization);
 
       // Unités
       Units := Document.createElement('units');

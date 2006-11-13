@@ -241,7 +241,7 @@ begin
   begin
     TPlankScrew.Create(Master, Map, PointBehind(Position, Direction), Player);
     AddPlugin(Master.Plugin[idPlankPlugin]);
-    Sleep(500);
+    Master.Temporize;
   end else inherited;
 end;
 

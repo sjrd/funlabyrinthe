@@ -279,7 +279,7 @@ begin
     Player.Move(Dir, True, Redo);
     while Redo do
     begin
-      Sleep(500);
+      Player.Master.Temporize;
       Dir := Player.Direction;
       Player.Move(Dir, False, Redo);
     end;

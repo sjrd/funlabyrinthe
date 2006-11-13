@@ -584,6 +584,7 @@ type
     FPlayers : TObjectList;        /// Liste des joueurs
 
     FEditing : boolean;            /// Indique si on est en mode édition
+    FTemporization : integer;      /// Temporisation en millisecondes
     FBeginTickCount : Cardinal;    /// Tick count système au lancement
     FTickCount : Cardinal;         /// Tick count de la partie
     FTerminated : boolean;         /// Indique si la partie est terminée
@@ -617,6 +618,8 @@ type
     function GetPlayerCount : integer;
     function GetPlayers(Index : integer) : TPlayer;
 
+    procedure SetTemporization(Value : integer);
+
     procedure AddComponent(Component : TFunLabyComponent);
     procedure RemoveComponent(Component : TFunLabyComponent);
 
@@ -625,6 +628,7 @@ type
     constructor Create(AEditing : boolean);
     destructor Destroy; override;
 
+    procedure Temporize;
     procedure UpdateTickCount;
 
     property ImagesMaster : TImagesMaster read FImagesMaster;
@@ -660,6 +664,7 @@ type
     property Players[index : integer] : TPlayer read GetPlayers;
 
     property Editing : boolean read FEditing;
+    property Temporization : integer read FTemporization write SetTemporization;
     property TickCount : Cardinal read FTickCount;
     property Terminated : boolean read FTerminated;
   end;
@@ -670,6 +675,9 @@ const {don't localize}
 
   /// Position qualifiée nulle
   NoQPos : TQualifiedPos = (Map : nil; Position : (X : 0; Y : 0; Z : 0));
+
+  /// Temporisation par défaut
+  DefaultTemporization = 500;
 
 var {don't localize}
   /// Dossier de FunLabyrinthe dans Application Data
@@ -2266,6 +2274,7 @@ begin
   FPlayers    := TObjectList.Create(False);
 
   FEditing := AEditing;
+  FTemporization := DefaultTemporization;
   FBeginTickCount := Windows.GetTickCount;
   FTerminated := False;
 end;
@@ -2602,6 +2611,16 @@ begin
 end;
 
 {*
+  Modifie la temporisation
+  @param Value   Nouvelle temporisation en millisecondes
+*}
+procedure TMaster.SetTemporization(Value : integer);
+begin
+  if Value > 0 then
+    FTemporization := Value;
+end;
+
+{*
   Ajoute un composant
   @param Component   Le composant à ajouter
 *}
@@ -2643,6 +2662,14 @@ end;
 procedure TMaster.Terminate;
 begin
   FTerminated := True;
+end;
+
+{*
+  Temporise l'exécution
+*}
+procedure TMaster.Temporize;
+begin
+  Sleep(Temporization);
 end;
 
 {*
