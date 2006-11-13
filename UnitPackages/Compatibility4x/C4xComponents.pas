@@ -443,6 +443,7 @@ procedure TActions.Execute(Phase : integer; Player : TPlayer;
   KeyPressed : boolean; const Pos : T3DPoint; var DoNextPhase : boolean;
   out HasMoved, HasShownMsg : boolean);
 begin
+  inc(FCounter);
   TActionsInterpreter.Execute(FActions, Master, Phase, Player,
     KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg);
 end;

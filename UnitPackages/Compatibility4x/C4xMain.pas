@@ -31,6 +31,7 @@ implementation
 
 const {don't localize}
   attrFileName = 'FileName';         /// Attribut pour le nom de fichier
+  attrCounters = 'Counters';         /// Enregistrement des compteurs
   attrActionsCount = 'ActionsCount'; /// Nombre d'actions créées
 
 {*
@@ -48,7 +49,7 @@ const {don't localize}
     'Treasure', 'Custom', 'Object', 'Obstacle', 'Direction'
   );
 var FileName : TFileName;
-    FileContents, SubContents : TStrings;
+    FileContents, SubContents, Counters : TStrings;
     Number, FirstLine, LastLine : integer;
     StrNumber, InfoLine, Graphics : string;
     Kind : TActionsKind;
@@ -80,46 +81,57 @@ begin
     Number := 0;
     SubContents := TStringList.Create;
     try
-      while True do
-      begin
-        // Ici on lit une série d'actions, dans l'ordre de Number
+      Counters := TStringList.Create;
+      try
+        Counters.Delimiter := ' ';
+        Counters.DelimitedText := UnitFile.Attributes.Values[attrCounters];
+        while True do
+        begin
+          // Ici on lit une série d'actions, dans l'ordre de Number
 
-        StrNumber := Format('[%d;', [Number]);
-        FirstLine := StringsOps.FindAtPos(FileContents, StrNumber);
-        if FirstLine < 0 then Break;
+          StrNumber := Format('[%d;', [Number]);
+          FirstLine := StringsOps.FindAtPos(FileContents, StrNumber);
+          if FirstLine < 0 then Break;
 
-        InfoLine := FileContents[FirstLine];
-        inc(FirstLine);
-        LastLine := StringsOps.FindAtPos(FileContents, '[', 1, FirstLine);
+          InfoLine := FileContents[FirstLine];
+          inc(FirstLine);
+          LastLine := StringsOps.FindAtPos(FileContents, '[', 1, FirstLine);
 
-        // Maintenant les actions sont dans les lignes [FirstLine ; LastLine[
+          // Maintenant les actions sont dans les lignes [FirstLine ; LastLine[
 
-        Delete(InfoLine, 1, Length(StrNumber));
-        if InfoLine[Length(InfoLine)] <> ']' then Break;
-        Delete(InfoLine, Length(InfoLine), 1);
+          Delete(InfoLine, 1, Length(StrNumber));
+          if InfoLine[Length(InfoLine)] <> ']' then Break;
+          Delete(InfoLine, Length(InfoLine), 1);
 
-        // Maintenant InfoLine est du gabarit 'Kind' ou 'Kind;Graphics'
+          // Maintenant InfoLine est du gabarit 'Kind' ou 'Kind;Graphics'
 
-        Kind := TActionsKind(AnsiIndexStr(
-          GetFirstToken(InfoLine, ';'), KindStrings));
-        if Ord(Kind) < 0 then Break;
-        if Kind in CustomActionsKind then
-          Graphics := GetLastToken(InfoLine, ';')
-        else
-          Graphics := '';
+          Kind := TActionsKind(AnsiIndexStr(
+            GetFirstToken(InfoLine, ';'), KindStrings));
+          if Ord(Kind) < 0 then Break;
+          if Kind in CustomActionsKind then
+            Graphics := GetLastToken(InfoLine, ';')
+          else
+            Graphics := '';
 
-        // Récupération des actions proprement dites
+          // Récupération des actions proprement dites
 
-        StringsOps.CopyFrom(SubContents, FileContents,
-          FirstLine, LastLine-FirstLine);
+          StringsOps.CopyFrom(SubContents, FileContents,
+            FirstLine, LastLine-FirstLine);
 
-        // Création des actions en question
+          // Création des actions en question
 
-        TActions.Create(Master, Number, Kind, Graphics, SubContents);
+          with TActions.Create(Master, Number, Kind, Graphics, SubContents) do
+          begin
+            if Counters.Count > Number then
+              Counter := StrToIntDef(Counters[Number], 0);
+          end;
 
-        // Passage à l'itération suivante
+          // Passage à l'itération suivante
 
-        inc(Number);
+          inc(Number);
+        end;
+      finally
+        Counters.Free;
       end;
     finally
       SubContents.Free;
@@ -223,8 +235,27 @@ end;
 *}
 procedure GetParams(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings);
+var Count, I : integer;
+    Counters : TStrings;
 begin
   Params.Values[attrFileName] := UnitFile.Attributes.Values[attrFileName];
+
+  Count := StrToIntDef(UnitFile.Attributes.Values[attrActionsCount], 0);
+  if Count > 0 then
+  begin
+    Counters := TStringList.Create;
+    try
+      Counters.Delimiter := ' ';
+      for I := 0 to Count-1 do
+      begin
+        Counters.Add(IntToStr(
+          TActions(Master.Component[Format(idActions, [I])]).Counter));
+      end;
+      Params.Values[attrCounters] := Counters.DelimitedText;
+    finally
+      Counters.Free;
+    end;
+  end;
 end;
 
 exports
