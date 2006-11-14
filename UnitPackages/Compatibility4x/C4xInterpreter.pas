@@ -10,10 +10,12 @@ unit C4xInterpreter;
 interface
 
 uses
-  SysUtils, Classes, StrUtils, ScUtils, ScStrUtils, FunLabyUtils, C4xComponents,
-  C4xCommon;
+  SysUtils, Classes, StrUtils, ScUtils, ScStrUtils, FunLabyUtils, FunLabyTools,
+  C4xComponents, C4xCommon;
 
 resourcestring
+  sBadNextPreviousRandom = 'Mauvais arguments de sous-commande %s';
+
   sUnknownLabel = 'Le label %s n''a pas pu être trouvé';
   sUnknownCommand = 'Commande inconnue à la ligne %d';
 
@@ -50,11 +52,11 @@ type
     HasShownMsg : boolean; /// Indique si un message a été affiché
     Inactive : string;     /// Case à utiliser lors d'un Desactiver
 
-    StrHere : string;       /// Case courante
-    StrBefore : string;     /// Case devant
-    StrBehind : string;     /// Case derrière
-    Answer : integer;       /// Réponse d'un Choix
-    Boat : integer;         /// Numéro de la barque qu'a le joueur
+    StrHere : string;   /// Case courante
+    StrBefore : string; /// Case devant
+    StrBehind : string; /// Case derrière
+    Answer : integer;   /// Réponse d'un Choix
+    Boat : integer;     /// Numéro de la barque qu'a le joueur
 
     procedure TreatIfStatement(var Line : string);
     procedure TreatVariables(var Line : string);
@@ -286,11 +288,43 @@ end;
   @param Line   Instruction à traiter
 *}
 procedure TActionsInterpreter.TreatVariables(var Line : string);
+
+  procedure TreatNextPreviousRandom(var Line : string; const Kind : string;
+    FindProc : TFindScrewProc);
+  var Len, ExprStart, IDStart, IDEnd : integer;
+      ID : TComponentID;
+      Dest : T3DPoint;
+  begin
+    Len := Length(Kind);
+    repeat
+      ExprStart := PosVariable(Kind, Line);
+      IDStart := ExprStart+Len+1;
+      IDEnd := IDStart;
+      while (IDEnd <= Length(Line)) and
+            (not (Line[IDEnd] in [' ', '[', ']'])) do
+        inc(IDEnd);
+
+      if IDEnd = IDStart then
+        raise EInvalidAction.CreateFmt(sBadNextPreviousRandom, [Kind]);
+
+      ID := Copy(Line, IDStart, IDEnd-IDStart);
+      Dest := Position;
+      FindProc(Map, Dest, Master.ScrewComponent[ID]);
+
+      Delete(Line, ExprStart, IDEnd-ExprStart);
+      Insert('Case ' + Point3DToString(Dest), Line, ExprStart);
+    until ExprStart = 0;
+  end;
+
 var I : integer;
 begin
   ReplaceVariable(Line, 'Ici', StrHere);
   ReplaceVariable(Line, 'Devant', StrBefore);
   ReplaceVariable(Line, 'Derriere', StrBehind);
+
+  TreatNextPreviousRandom(Line, 'Suivant', FindNextScrew);
+  TreatNextPreviousRandom(Line, 'Precedent', FindPreviousScrew);
+  TreatNextPreviousRandom(Line, 'Aleatoire', FindScrewAtRandom);
 
   ReplaceVariable(Line, 'X'        , Position.X);
   ReplaceVariable(Line, 'Y'        , Position.Y);

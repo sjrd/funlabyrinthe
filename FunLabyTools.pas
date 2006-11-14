@@ -12,6 +12,16 @@ interface
 uses
   ScUtils, FunLabyUtils;
 
+type
+  {*
+    Procédure recherchant un composant de case sur une carte
+    @param Map         Carte sur laquelle chercher
+    @param Pos         Début de la recherche en entrée et résultat en sortie
+    @param Component   Composant à rechercher
+  *}
+  TFindScrewProc = procedure(Map : TMap; var Pos : T3DPoint;
+    Component : TScrewComponent);
+
 procedure FindNextScrew(Map : TMap; var Pos : T3DPoint;
   Component : TScrewComponent);
 procedure FindPreviousScrew(Map : TMap; var Pos : T3DPoint;
