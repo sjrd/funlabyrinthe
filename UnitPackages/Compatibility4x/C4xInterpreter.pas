@@ -58,8 +58,8 @@ type
     Answer : integer;   /// Réponse d'un Choix
     Boat : integer;     /// Numéro de la barque qu'a le joueur
 
-    procedure TreatIfStatement(var Line : string);
     procedure TreatVariables(var Line : string);
+    procedure TreatIfStatement(var Line : string);
 
     procedure ReplaceCmd    (var Params : string);
     procedure MoveCmd       (var Params : string);
@@ -153,20 +153,21 @@ var
 {-------------------}
 
 {*
-  Recherche une variable dans une instruction
+  Recherche une variable hors d'une chaîne dans une instruction
   Une variable doit être entourée d'espaces ou de crochets, et ne pas se trouver
   entre une paire d'accolades, pour être reconnue comme telle.
   @param Variable   Variable à chercher
   @param Str        Chaîne dans laquelle chercher Variable
   @return Index de la première occurence de Variable dans Str (0 si non trouvée)
 *}
-function PosVariable(const Variable, Str : string) : integer;
+function PosNonStrVariable(const Variable, Str : string) : integer;
 var Str2 : string;
-    I : integer;
+    I, Len : integer;
 begin
   Str2 := ' '+Str+' ';
   I := 2;
-  while I < Length(Str2) do case Str2[I] of
+  Len := Length(Str2);
+  while I < Len do case Str2[I] of
     '[', ']' :
     begin
       Str2[I] := ' ';
@@ -174,7 +175,7 @@ begin
     end;
     '{' :
     begin
-      while (I < Length(Str2)) and (Str2[I] <> '}') do
+      while (I < Len) and (Str2[I] <> '}') do
       begin
         Str2[I] := ' ';
         inc(I);
@@ -184,6 +185,29 @@ begin
   end;
 
   Result := Pos(' '+Variable+' ', Str2);
+end;
+
+{*
+  Recherche une variable dans une chaîne d'une instruction
+  Une variable dans une chaîne est englobée dans des accolades.
+  @param Variable   Variable à chercher
+  @param Str        Chaîne dans laquelle chercher Variable
+  @return Index de la première occurence de Variable dans Str (0 si non trouvée)
+*}
+function PosStrVariable(const Variable, Str : string) : integer;
+var Str2 : string;
+    I, Len : integer;
+begin
+  Str2 := '}'+Str;
+
+  I := 1;
+  Len := Length(Str2);
+  while I <= Len do case Str2[I] of
+    '}' : while (I <= Len) and (Str2[I] <> '{') do inc(I);
+    else inc(I);
+  end;
+
+  Result := Pos(Variable, Str)-1;
 end;
 
 {*
@@ -220,29 +244,84 @@ begin
 end;
 
 {*
-  Remplace toutes les occurences d'une variable donnée par sa valeur
+  Remplace les occurences d'une variable par sa valeur (hors chaînes)
   @param Str        Chaîne dans laquelle remplacer les variables
   @param Variable   Variable à remplacer
   @param Value      Valeur de la variable
-  @see PosVariable
+  @see PosNonStrVariable
+*}
+procedure ReplaceNonStrVariable(var Str : string;
+  const Variable, Value : string); overload;
+begin
+  GenericReplace(Str, Variable, Value, PosNonStrVariable);
+end;
+
+{*
+  Remplace les occurences d'une variable par sa valeur entière (hors chaînes)
+  @param Str        Chaîne dans laquelle remplacer les variables
+  @param Variable   Variable à remplacer
+  @param Value      Valeur entière de la variable
+  @see PosNonStrVariable
+*}
+procedure ReplaceNonStrVariable(var Str : string; const Variable : string;
+  Value : integer); overload;
+begin
+  GenericReplace(Str, Variable, IntToStr(Value), PosNonStrVariable);
+end;
+
+{*
+  Remplace les occurences d'une variable par sa valeur (en chaînes)
+  @param Str        Chaîne dans laquelle remplacer les variables
+  @param Variable   Variable à remplacer
+  @param Value      Valeur de la variable
+  @see PosStrVariable
+*}
+procedure ReplaceStrVariable(var Str : string;
+  const Variable, Value : string); overload;
+begin
+  GenericReplace(Str, Variable, Value, PosStrVariable);
+end;
+
+{*
+  Remplace les occurences d'une variable par sa valeur entière (en chaînes)
+  @param Str        Chaîne dans laquelle remplacer les variables
+  @param Variable   Variable à remplacer
+  @param Value      Valeur entière de la variable
+  @see PosStrVariable
+*}
+procedure ReplaceStrVariable(var Str : string; const Variable : string;
+  Value : integer); overload;
+begin
+  GenericReplace(Str, Variable, IntToStr(Value), PosStrVariable);
+end;
+
+{*
+  Remplace les occurences d'une variable par sa valeur (partout)
+  @param Str        Chaîne dans laquelle remplacer les variables
+  @param Variable   Variable à remplacer
+  @param Value      Valeur de la variable
+  @see ReplaceNonStrVariable
+  @see ReplaceStrVariable
 *}
 procedure ReplaceVariable(var Str : string;
   const Variable, Value : string); overload;
 begin
-  GenericReplace(Str, Variable, Value, PosVariable);
+  ReplaceNonStrVariable(Str, Variable, Value);
+  ReplaceStrVariable(Str, '$'+Variable, Value);
 end;
 
 {*
-  Remplace toutes les occurences d'une variable donnée par sa valeur entière
+  Remplace les occurences d'une variable par sa valeur entière (partout)
   @param Str        Chaîne dans laquelle remplacer les variables
   @param Variable   Variable à remplacer
   @param Value      Valeur entière de la variable
-  @see PosVariable
+  @see ReplaceNonStrVariable
+  @see ReplaceStrVariable
 *}
 procedure ReplaceVariable(var Str : string; const Variable : string;
   Value : integer); overload;
 begin
-  GenericReplace(Str, Variable, IntToStr(Value), PosVariable);
+  ReplaceVariable(Str, Variable, IntToStr(Value));
 end;
 
 {----------------------------}
@@ -276,19 +355,17 @@ begin
 end;
 
 {*
-  Traite une éventuelle condition dans l'instruction
-  @param Line   Instruction à traiter
-*}
-procedure TActionsInterpreter.TreatIfStatement(var Line : string);
-begin
-end;
-
-{*
   Traite les valeurs de variables dans l'instruction
   @param Line   Instruction à traiter
 *}
 procedure TActionsInterpreter.TreatVariables(var Line : string);
 
+  {*
+    Traite toutes les sous-expressions de type Suivant/Precedent/Aleatoire
+    @param Line       Instruction à traiter
+    @param Kind       Nom de la sous-instruction à traiter
+    @param FindProc   Routine de recherche de la case à utiliser
+  *}
   procedure TreatNextPreviousRandom(var Line : string; const Kind : string;
     FindProc : TFindScrewProc);
   var Len, ExprStart, IDStart, IDEnd : integer;
@@ -297,7 +374,7 @@ procedure TActionsInterpreter.TreatVariables(var Line : string);
   begin
     Len := Length(Kind);
     repeat
-      ExprStart := PosVariable(Kind, Line);
+      ExprStart := PosNonStrVariable(Kind, Line);
       IDStart := ExprStart+Len+1;
       IDEnd := IDStart;
       while (IDEnd <= Length(Line)) and
@@ -318,45 +395,45 @@ procedure TActionsInterpreter.TreatVariables(var Line : string);
 
 var I : integer;
 begin
-  ReplaceVariable(Line, 'Ici', StrHere);
-  ReplaceVariable(Line, 'Devant', StrBefore);
-  ReplaceVariable(Line, 'Derriere', StrBehind);
+  ReplaceNonStrVariable(Line, 'Ici', StrHere);
+  ReplaceNonStrVariable(Line, 'Devant', StrBefore);
+  ReplaceNonStrVariable(Line, 'Derriere', StrBehind);
 
   TreatNextPreviousRandom(Line, 'Suivant', FindNextScrew);
   TreatNextPreviousRandom(Line, 'Precedent', FindPreviousScrew);
   TreatNextPreviousRandom(Line, 'Aleatoire', FindScrewAtRandom);
 
-  ReplaceVariable(Line, 'X'        , Position.X);
-  ReplaceVariable(Line, 'Y'        , Position.Y);
-  ReplaceVariable(Line, 'Z'        , Position.Z);
-  ReplaceVariable(Line, 'Direction', integer(Player.Direction));
-  ReplaceVariable(Line, 'Reponse'  , Answer);
-  ReplaceVariable(Line, 'Reussite' , 1);
-  ReplaceVariable(Line, 'Touche'   , integer(KeyPressed));
-  ReplaceVariable(Line, 'Phase'    , Phase);
+  ReplaceNonStrVariable(Line, 'X'        , Position.X);
+  ReplaceNonStrVariable(Line, 'Y'        , Position.Y);
+  ReplaceNonStrVariable(Line, 'Z'        , Position.Z);
+  ReplaceNonStrVariable(Line, 'Direction', integer(Player.Direction));
+  ReplaceNonStrVariable(Line, 'Reponse'  , Answer);
+  ReplaceNonStrVariable(Line, 'Reussite' , 1);
+  ReplaceNonStrVariable(Line, 'Touche'   , integer(KeyPressed));
+  ReplaceNonStrVariable(Line, 'Phase'    , Phase);
 
   with Master.ObjectDef[idBuoys] do
   begin
     ReplaceVariable(Line, 'Bouees', Count[Player]);
-    ReplaceVariable(Line, 'Bouee', Count[Player]);
+    ReplaceNonStrVariable(Line, 'Bouee', Count[Player]);
   end;
   with Master.ObjectDef[idPlanks] do
   begin
     ReplaceVariable(Line, 'Planches', Count[Player]);
-    ReplaceVariable(Line, 'Planche', Count[Player]);
+    ReplaceNonStrVariable(Line, 'Planche', Count[Player]);
   end;
   with Master.ObjectDef[idSilverKeys] do
     ReplaceVariable(Line, 'ClesArgent', Count[Player]);
   with Master.ObjectDef[idGoldenKeys] do
     ReplaceVariable(Line, 'ClesOr', Count[Player]);
-  ReplaceVariable(Line, 'Barque', Boat);
+  ReplaceNonStrVariable(Line, 'Barque', Boat);
 
-  ReplaceVariable(Line, 'VersionInterpreteur', InterpreterVersion);
-  ReplaceVariable(Line, 'Couleur', Player.Color);
+  ReplaceNonStrVariable(Line, 'VersionInterpreteur', InterpreterVersion);
+  ReplaceNonStrVariable(Line, 'Couleur', Player.Color);
 
   if Pos('CompteurActions_', Line) > 0 then
   begin
-    for I := 0 to Infos.ActionsCount-1 do
+    for I := Infos.ActionsCount-1 downto 0 do
     begin
       ReplaceVariable(Line, Format('CompteurActions_%d', [I]),
         Infos.Actions[I].Counter);
@@ -365,7 +442,7 @@ begin
 
   if Pos('Variable_', Line) > 0 then
   begin
-    for I := 0 to Infos.ActionsCount-1 do
+    for I := Infos.ActionsCount-1 downto 0 do
       ReplaceVariable(Line, Format('Variable_%d', [I]), Infos.Variables[I]);
   end;
 
@@ -373,9 +450,9 @@ begin
 
   if Pos('CompteurActions ', Line) > 0 then
   begin
-    for I := 0 to Infos.ActionsCount-1 do
+    for I := Infos.ActionsCount-1 downto 0 do
     begin
-      ReplaceVariable(Line, Format('CompteurActions %d', [I]),
+      ReplaceNonStrVariable(Line, Format('CompteurActions %d', [I]),
         Infos.Actions[I].Counter);
     end;
   end;
@@ -383,10 +460,21 @@ begin
   if Pos('Variable ', Line) > 0 then
   begin
     for I := 0 to Infos.ActionsCount-1 do
-      ReplaceVariable(Line, Format('Variable %d', [I]), Infos.Variables[I]);
+    begin
+      ReplaceNonStrVariable(Line, Format('Variable %d', [I]),
+        Infos.Variables[I]);
+    end;
   end;
 
   Replace(Line, '&CompteurActions ', '&CompteurActions_');
+end;
+
+{*
+  Traite une éventuelle condition dans l'instruction
+  @param Line   Instruction à traiter
+*}
+procedure TActionsInterpreter.TreatIfStatement(var Line : string);
+begin
 end;
 
 {*
@@ -567,6 +655,9 @@ begin
     if (Line = '') or (Line[1] = '#') or (GetXWord(Line, 1) = 'Remarque') then
       Continue;
 
+    // Traitement des valeurs des variables
+    TreatVariables(Line);
+
     // Traitement de l'éventuelle condition
     TreatIfStatement(Line);
 
@@ -580,9 +671,6 @@ begin
     // Séparation de la commande du reste de la ligne
     Command := GetXWord(Line, 1);
     Delete(Line, 1, Length(Command)+1);
-
-    // Traitement des valeurs des variables
-    TreatVariables(Line);
 
     // Exécution de la commande
     IntCommand := AnsiIndexStr(Command, CommandStrings);
