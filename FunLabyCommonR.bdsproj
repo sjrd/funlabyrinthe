@@ -170,7 +170,7 @@
 			<VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys>
 			<VersionInfoKeys Name="FileDescription">Common units for FunLabyrinthe</VersionInfoKeys>
 			<VersionInfoKeys Name="InternalName">FunLabyCommonR</VersionInfoKeys>
-			<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2006 (c) Sébastien Doeraene</VersionInfoKeys>
+			<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2006 (c) SJRDoeraene</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
 			<VersionInfoKeys Name="OriginalFilename">FunLabyCommonR.bpl</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>

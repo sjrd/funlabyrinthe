@@ -10,8 +10,8 @@ unit C4xInterpreter;
 interface
 
 uses
-  SysUtils, Classes, StrUtils, Contnrs, ScUtils, ScStrUtils, FunLabyUtils,
-  FunLabyTools, C4xComponents, C4xCommon;
+  SysUtils, Classes, StrUtils, Contnrs, ScUtils, ScStrUtils, ScExtra,
+  FunLabyUtils, FilesUtils, FunLabyTools, C4xComponents, C4xCommon;
 
 resourcestring
   sInvalidParameter = 'Paramètre de commande invalide';
@@ -64,6 +64,7 @@ type
     HasMoved : boolean;    /// Indique si un AllerA a été fait
     HasShownMsg : boolean; /// Indique si un message a été affiché
     Inactive : TScrew;     /// Case à utiliser lors d'un Desactiver
+    AllowPlank : boolean;  /// Indique si un AutoriserPlanche a été fait
 
     StrHere : string;   /// Case courante
     StrBefore : string; /// Case devant
@@ -80,6 +81,10 @@ type
       ModificationKind : TModificationKind);
     procedure ConvertScrews(FromScrew, ToScrew : TScrew);
 
+    function Information(var Params : string; const Title : string;
+      DlgType : TDialogType;
+      DlgButtons : TDialogButtons = dbOK) : TDialogResult;
+
     procedure ReplaceCmd    (var Params : string);
     procedure ConvertCmd    (var Params : string);
     procedure MoveCmd       (var Params : string);
@@ -92,15 +97,14 @@ type
     procedure FailureCmd    (var Params : string);
     procedure BlindAlleyCmd (var Params : string);
     procedure ChoiceCmd     (var Params : string);
+    procedure DescriptionCmd(var Params : string);
+    procedure WinCmd        (var Params : string);
     procedure SoundCmd      (var Params : string);
     procedure GoToCmd       (var Params : string);
     procedure LetPassCmd    (var Params : string);
     procedure AllowPlankCmd (var Params : string);
     procedure DontGoOnCmd   (var Params : string);
     procedure GoOnCmd       (var Params : string);
-    procedure ContinueCmd   (var Params : string);
-    procedure DescriptionCmd(var Params : string);
-    procedure WinCmd        (var Params : string);
 
     procedure ExecuteActions;
   public
@@ -130,15 +134,15 @@ const
   cFailure     = 9;  /// Commande Echec
   cBlindAlley  = 10; /// Commande Impasse
   cChoice      = 11; /// Commande Choix
-  cSound       = 12; /// Commande Son
-  cGoTo        = 13; /// Commande AllerA
-  cLetPass     = 14; /// Commande LaisserPasser
-  cAllowPlank  = 15; /// Commande AutoriserPlanche
-  cDontGoOn    = 16; /// Commande Arreter
-  cGoOn        = 17; /// Commande Poursuivre
-  cContinue    = 18; /// Commande Continuer
-  cDescription = 19; /// Commande Description
-  cWin         = 20; /// Commande Gagner
+  cDescription = 12; /// Commande Description
+  cWin         = 13; /// Commande Gagner
+  cSound       = 14; /// Commande Son
+  cGoTo        = 15; /// Commande AllerA
+  cLetPass     = 16; /// Commande LaisserPasser
+  cAllowPlank  = 17; /// Commande AutoriserPlanche
+  cDontGoOn    = 18; /// Commande Arreter
+  cGoOn        = 19; /// Commande Poursuivre
+  cContinue    = 20; /// Commande Continuer
   cClassicEnd  = 20; /// Fin des commandes classiques
   cJump        = 21; /// Commande Saute
   cStop        = 22; /// Commande Stop
@@ -148,8 +152,8 @@ const
   CommandStrings : array[cBegin..cEnd] of string = (
     'Remplacer', 'Convertir', 'Deplacer', 'Desactiver', 'Incrementer',
     'Decrementer', 'Multiplier', 'Message', 'Indice', 'Echec', 'Impasse',
-    'Choix', 'Son', 'AllerA', 'LaisserPasser', 'AutoriserPlanche', 'Arreter',
-    'Poursuivre', 'Continuer', 'Description', 'Gagner', 'Saute', 'Stop'
+    'Choix', 'Description', 'Gagner', 'Son', 'AllerA', 'LaisserPasser',
+    'AutoriserPlanche', 'Arreter', 'Poursuivre', 'Continuer', 'Saute', 'Stop'
   );
 
   srBegin         = 0;  /// Début des références simples
@@ -201,7 +205,7 @@ type
 
 var
   /// Tableau des méthodes d'exécution de commande
-  CommandProcs : array[cReplace..cWin] of TCommandProc;
+  CommandProcs : array[cBegin..cClassicEnd] of TCommandProc;
 
 {-------------------}
 { Routines globales }
@@ -566,6 +570,7 @@ begin
   HasMoved := False;
   HasShownMsg := False;
   Inactive := nil;
+  AllowPlank := False;
 
   StrHere := '';
   StrBefore := '';
@@ -786,6 +791,17 @@ begin
           Map[Point3D(X, Y, Z)] := ToScrew;
 end;
 
+function TActionsInterpreter.Information(var Params : string;
+  const Title : string; DlgType : TDialogType;
+  DlgButtons : TDialogButtons = dbOK) : TDialogResult;
+var Text : string;
+begin
+  Text := GetStringParam(Params);
+  if Text = '' then Result := drOK else
+    Result := Player.Controller.ShowDialog(Title, Text, DlgType, DlgButtons);
+  HasShownMsg := True;
+end;
+
 {*
   Commande 'Remplacer'
   @param Params   Paramètres de la commande
@@ -927,6 +943,7 @@ end;
 *}
 procedure TActionsInterpreter.MessageCmd(var Params : string);
 begin
+  Information(Params, sMessage, dtInformation);
 end;
 
 {*
@@ -935,6 +952,7 @@ end;
 *}
 procedure TActionsInterpreter.TipCmd(var Params : string);
 begin
+  Information(Params, sTip, dtWarning);
 end;
 
 {*
@@ -943,6 +961,7 @@ end;
 *}
 procedure TActionsInterpreter.FailureCmd(var Params : string);
 begin
+  Information(Params, sFailure, dtError);
 end;
 
 {*
@@ -951,6 +970,8 @@ end;
 *}
 procedure TActionsInterpreter.BlindAlleyCmd(var Params : string);
 begin
+  if not KeyPressed then
+    Information(Params, sBlindAlley, dtError);
 end;
 
 {*
@@ -958,63 +979,20 @@ end;
   @param Params   Paramètres de la commande
 *}
 procedure TActionsInterpreter.ChoiceCmd(var Params : string);
+var DlgButtons : TDialogButtons;
 begin
-end;
+  case GetSubCommandIndex(Params,
+         ['Oui-Non', 'Oui-Non-Annuler', 'OK-Annuler']) of
+    0 : DlgButtons := dbYesNo;
+    1 : DlgButtons := dbYesNoCancel;
+    else DlgButtons := dbOKCancel;
+  end;
 
-{*
-  Commande 'Son'
-  @param Params   Paramètres de la commande
-*}
-procedure TActionsInterpreter.SoundCmd(var Params : string);
-begin
-end;
-
-{*
-  Commande 'AllerA'
-  @param Params   Paramètres de la commande
-*}
-procedure TActionsInterpreter.GoToCmd(var Params : string);
-begin
-end;
-
-{*
-  Commande 'LaisserPasser'
-  @param Params   Paramètres de la commande
-*}
-procedure TActionsInterpreter.LetPassCmd(var Params : string);
-begin
-end;
-
-{*
-  Commande 'AutoriserPlanche'
-  @param Params   Paramètres de la commande
-*}
-procedure TActionsInterpreter.AllowPlankCmd(var Params : string);
-begin
-end;
-
-{*
-  Commande 'Arreter'
-  @param Params   Paramètres de la commande
-*}
-procedure TActionsInterpreter.DontGoOnCmd(var Params : string);
-begin
-end;
-
-{*
-  Commande 'Poursuivre'
-  @param Params   Paramètres de la commande
-*}
-procedure TActionsInterpreter.GoOnCmd(var Params : string);
-begin
-end;
-
-{*
-  Commande 'Continuer'
-  @param Params   Paramètres de la commande
-*}
-procedure TActionsInterpreter.ContinueCmd(var Params : string);
-begin
+  case Information(Params, sChoice, dtConfirmation, DlgButtons) of
+    drNo : Answer := 0;
+    drOK, drYes : Answer := 1;
+    drCancel : Answer := 2;
+  end;
 end;
 
 {*
@@ -1023,6 +1001,7 @@ end;
 *}
 procedure TActionsInterpreter.DescriptionCmd(var Params : string);
 begin
+  { TODO 1 : Afficher la description du labyrinthe }
 end;
 
 {*
@@ -1031,6 +1010,87 @@ end;
 *}
 procedure TActionsInterpreter.WinCmd(var Params : string);
 begin
+  Player.Win;
+  if Params <> '' then
+    Information(Params, sWon, dtInformation);
+end;
+
+{*
+  Commande 'Son'
+  @param Params   Paramètres de la commande
+  @throws EBadParam : Le son en paramètre n'a pas pu être joué
+*}
+{$WARNINGS OFF}
+procedure TActionsInterpreter.SoundCmd(var Params : string);
+var Sound : string;
+begin
+  Sound := GetStringParam(Params);
+  if Sound = 'Information' then Sound := 'SystemAsterisk'    else
+  if Sound = 'Question'    then Sound := 'SystemQuestion'    else
+  if Sound = 'Danger'      then Sound := 'SystemExclamation' else
+  if Sound = 'Erreur'      then Sound := 'SystemHand';
+
+  try
+    if not ExecuteSound(Sound, stSysSound) then
+      ExecuteSound(Infos.MasterFile.ResolveHRef(Sound, fSoundsDir));
+  except
+    on Error : EFileError do
+      raise EBadParam.Create(Error.Message);
+  end;
+end;
+{$WARNINGS ON}
+
+{*
+  Commande 'AllerA'
+  @param Params   Paramètres de la commande
+*}
+procedure TActionsInterpreter.GoToCmd(var Params : string);
+var ScrewRef : T3DPoint;
+begin
+  ScrewRef := GetScrewReference(Params, True);
+  if not IsNo3DPoint(ScrewRef) then
+  begin
+    Master.Temporize;
+    Player.Position := ScrewRef;
+  end;
+  HasMoved := True;
+end;
+
+{*
+  Commande 'LaisserPasser'
+  @param Params   Paramètres de la commande
+*}
+procedure TActionsInterpreter.LetPassCmd(var Params : string);
+begin
+  Player.Position := Position;
+  { TODO 1 : Mettre Reussite à 1 }
+end;
+
+{*
+  Commande 'AutoriserPlanche'
+  @param Params   Paramètres de la commande
+*}
+procedure TActionsInterpreter.AllowPlankCmd(var Params : string);
+begin
+  AllowPlank := True;
+end;
+
+{*
+  Commande 'Arreter'
+  @param Params   Paramètres de la commande
+*}
+procedure TActionsInterpreter.DontGoOnCmd(var Params : string);
+begin
+  DoNextPhase := False;
+end;
+
+{*
+  Commandes 'Poursuivre' et 'Continuer'
+  @param Params   Paramètres de la commande
+*}
+procedure TActionsInterpreter.GoOnCmd(var Params : string);
+begin
+  DoNextPhase := True;
 end;
 
 {*
@@ -1071,7 +1131,7 @@ begin
     // Exécution de la commande
     IntCommand := AnsiIndexStr(Command, CommandStrings);
     case IntCommand of
-      cReplace..cTip : CommandProcs[IntCommand](Self, Line);
+      cBegin..cClassicEnd : CommandProcs[IntCommand](Self, Line);
       cJump :
       begin
         Index := Actions.IndexOf('#'+Line);
@@ -1085,6 +1145,9 @@ begin
   except
     on Error : EInvalidAction do;
   end;
+
+  if AllowPlank and Same3DPoint(Player.Position, Position) then
+    Player.CanYou(actPassOverScrew);
 end;
 
 {*
@@ -1181,14 +1244,14 @@ initialization
   CommandProcs[cFailure]     := @TActionsInterpreter.FailureCmd;
   CommandProcs[cBlindAlley]  := @TActionsInterpreter.BlindAlleyCmd;
   CommandProcs[cChoice]      := @TActionsInterpreter.ChoiceCmd;
+  CommandProcs[cDescription] := @TActionsInterpreter.DescriptionCmd;
+  CommandProcs[cWin]         := @TActionsInterpreter.WinCmd;
   CommandProcs[cSound]       := @TActionsInterpreter.SoundCmd;
   CommandProcs[cGoTo]        := @TActionsInterpreter.GoToCmd;
   CommandProcs[cLetPass]     := @TActionsInterpreter.LetPassCmd;
   CommandProcs[cAllowPlank]  := @TActionsInterpreter.AllowPlankCmd;
   CommandProcs[cDontGoOn]    := @TActionsInterpreter.DontGoOnCmd;
   CommandProcs[cGoOn]        := @TActionsInterpreter.GoOnCmd;
-  CommandProcs[cContinue]    := @TActionsInterpreter.ContinueCmd;
-  CommandProcs[cDescription] := @TActionsInterpreter.DescriptionCmd;
-  CommandProcs[cWin]         := @TActionsInterpreter.WinCmd;
+  CommandProcs[cContinue]    := @TActionsInterpreter.GoOnCmd;
 end.
 

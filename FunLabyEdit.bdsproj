@@ -170,7 +170,7 @@
 			<VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys>
 			<VersionInfoKeys Name="FileDescription">Editeur FunLabyrinthe</VersionInfoKeys>
 			<VersionInfoKeys Name="InternalName">FunLabyEdit</VersionInfoKeys>
-			<VersionInfoKeys Name="LegalCopyright">Copyright (c) 2000-2006 Sébastien Doeraene</VersionInfoKeys>
+			<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2006 (c) SJRDoeraene</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
 			<VersionInfoKeys Name="OriginalFilename">FunLabyEdit.exe</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>

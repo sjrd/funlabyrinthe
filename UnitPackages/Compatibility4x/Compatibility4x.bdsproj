@@ -131,7 +131,7 @@
 		</Directories>
 		<Parameters>
 			<Parameters Name="RunParams"></Parameters>
-			<Parameters Name="HostApplication">.\..\..\FunLabyEdit.exe</Parameters>
+			<Parameters Name="HostApplication">.\..\..\Labyrinthe.exe</Parameters>
 			<Parameters Name="Launcher"></Parameters>
 			<Parameters Name="UseLauncher">False</Parameters>
 			<Parameters Name="DebugCWD"></Parameters>
@@ -169,7 +169,7 @@
 			<VersionInfoKeys Name="FileDescription">FunLabyrinthe components for 4.x compatibility</VersionInfoKeys>
 			<VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys>
 			<VersionInfoKeys Name="InternalName">FunLabyButtons</VersionInfoKeys>
-			<VersionInfoKeys Name="LegalCopyright">Copyright (c) 2000-2006 Sébastien Doeraene</VersionInfoKeys>
+			<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2006 (c) SJRDoeraene</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
 			<VersionInfoKeys Name="OriginalFilename">FunLabyButtons.bpl</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>

@@ -10,7 +10,8 @@ unit C4xComponents;
 interface
 
 uses
-  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FunLabyTools, C4xCommon;
+  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FilesUtils, FunLabyTools,
+  C4xCommon;
 
 resourcestring
   sSunkenButton = 'Bouton enfoncé'; /// Nom du bouton enfoncé
@@ -169,6 +170,7 @@ type
   *}
   TC4xInfos = class(TFunLabyComponent)
   private
+    FMasterFile : TMasterFile;                /// Fichier maître
     FActionsCount : integer;                  /// Nombres d'actions
     FVariables : array[1..MaxVar] of integer; /// Variables
 
@@ -177,7 +179,9 @@ type
     function GetVariables(Index : integer) : integer;
     procedure SetVariables(Index, Value : integer);
   public
-    constructor Create(AMaster : TMaster; AActionsCount : integer);
+    constructor Create(AMasterFile : TMasterFile; AActionsCount : integer);
+
+    property MasterFile : TMasterFile read FMasterFile;
 
     property ActionsCount : integer read FActionsCount;
     property Actions[index : integer] : TActions read GetActions;
@@ -404,12 +408,12 @@ end;
 procedure TActionsObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel, AbortExecute : boolean);
-var HasMoved, HasShownMsg : boolean;
+var DoNextPhase, HasMoved, HasShownMsg : boolean;
 begin
-  AbortExecute := not AbortExecute;
-  FActions.Execute(phPushing, Player, KeyPressed, Pos, AbortExecute,
+  DoNextPhase := False;
+  FActions.Execute(phPushing, Player, KeyPressed, Pos, DoNextPhase,
     HasMoved, HasShownMsg);
-  AbortExecute := not AbortExecute;
+  AbortExecute := not DoNextPhase;
   Cancel := Same3DPoint(Src, Player.Position);
 end;
 
@@ -491,13 +495,15 @@ end;
 
 {*
   Crée une instance de TC4xInfos
-  @param AMaster         Maître FunLabyrinthe
+  @param AMasterFile     Fichier maître
   @param AActionsCount   Nombre d'actions
 *}
-constructor TC4xInfos.Create(AMaster : TMaster; AActionsCount : integer);
+constructor TC4xInfos.Create(AMasterFile : TMasterFile;
+  AActionsCount : integer);
 var I : integer;
 begin
-  inherited Create(AMaster, idC4xInfos);
+  inherited Create(AMasterFile.Master, idC4xInfos);
+  FMasterFile := AMasterFile;
   FActionsCount := AActionsCount;
   for I := 1 to MaxVar do
     FVariables[I] := 0;

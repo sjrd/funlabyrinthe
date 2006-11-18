@@ -134,7 +134,7 @@ begin
           inc(Number);
         end;
 
-        Infos := TC4xInfos.Create(Master, Number);
+        Infos := TC4xInfos.Create(UnitFile.MasterFile, Number);
       finally
         SubContents.Free;
       end;

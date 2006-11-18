@@ -28,6 +28,9 @@ const {don't localize}
   idGoldenKeys = 'GoldenKeys'; /// ID des clefs d'or
   idBoat = 'Boat%d';           /// ID de la barque
 
+  /// Action de passer au-dessus d'une case
+  actPassOverScrew = 'PassOverScrew';
+
 implementation
 
 end.
