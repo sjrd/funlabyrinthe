@@ -33,6 +33,8 @@ type
 
     procedure GameLoaded(FirstTime : boolean); override;
 
+    procedure GameStarted; override;
+
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
       RegisterComponentSetProc : TRegisterComponentSetProc); override;
@@ -60,6 +62,9 @@ const {don't localize}
 
   /// Procédure de chargement de la partie
   GameLoadedProc = 'GameLoaded';
+
+  /// Procédure de commencement de la partie
+  GameStartedProc = 'GameStarted';
 
   /// Procédure d'enregistrement des composants
   RegisterComponentsProc = 'RegisterComponents';
@@ -138,6 +143,24 @@ begin
 
   if Assigned(GameLoaded) then
     GameLoaded(Self, Master, FirstTime);
+end;
+
+{*
+  Exécuté lorsque la partie vient juste d'être commencée
+  GameStarted est appelée lorsque la partie vient juste d'être commencée (en
+  mode jeu, donc pas en mode édition).
+*}
+procedure TBPLUnitFile.GameStarted;
+type
+  TGameStartedProc = procedure(UnitFile : TBPLUnitFile;
+    Master : TMaster); stdcall;
+var GameStarted : TGameStartedProc;
+begin
+  GameStarted := TGameStartedProc(
+    GetProcAddress(FHandle, GameStartedProc));
+
+  if Assigned(GameStarted) then
+    GameStarted(Self, Master);
 end;
 
 {*

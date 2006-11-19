@@ -17,8 +17,7 @@ uses
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings); stdcall;
 
-procedure GameLoaded(UnitFile : TBPLUnitFile; Master : TMaster;
-  FirstTime : boolean); stdcall;
+procedure GameStarted(UnitFile : TBPLUnitFile; Master : TMaster); stdcall;
 
 procedure RegisterComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   RegisterSingleComponentProc : TRegisterSingleComponentProc;
@@ -151,16 +150,13 @@ begin
 end;
 
 {*
-  Exécuté lorsque la partie vient juste d'être chargée
-  GameLoaded est appelée lorsque la partie vient juste d'être chargée (en mode
-  jeu, donc pas en mode édition), que ce soit pour la première fois ou à la
-  suite du chargement d'une sauvegarde.
-  @param UnitFile    Fichier unité appelant
-  @param Master      Maître FunLabyrinthe
-  @param FirstTime   Indique si c'est la première fois que la partie est chargée
+  Exécuté lorsque la partie vient juste d'être commencée
+  GameStarted est appelée lorsque la partie vient juste d'être commencée (en
+  mode jeu, donc pas en mode édition).
+  @param UnitFile   Fichier unité appelant
+  @param Master     Maître FunLabyrinthe
 *}
-procedure GameLoaded(UnitFile : TBPLUnitFile; Master : TMaster;
-  FirstTime : boolean);
+procedure GameStarted(UnitFile : TBPLUnitFile; Master : TMaster);
 var Infos : TC4xInfos;
     I : integer;
     DoNextPhase, HasMoved, HasShownMsg : boolean;
@@ -273,7 +269,7 @@ end;
 {$IFNDEF DCTD}
 exports
   LoadComponents name 'LoadComponents',
-  GameLoaded name 'GameLoaded',
+  GameStarted name 'GameStarted',
   RegisterComponents name 'RegisterComponents',
   GetParams name 'GetParams';
 {$ENDIF}

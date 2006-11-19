@@ -130,6 +130,8 @@ begin
 
   OnKeyDown := MovePlayer;
   TimerUpdateImage.Enabled := True;
+
+  MasterFile.GameStarted;
 end;
 
 {*

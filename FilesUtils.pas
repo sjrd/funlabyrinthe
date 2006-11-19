@@ -75,6 +75,8 @@ type
 
     procedure GameLoaded(FirstTime : boolean); virtual;
 
+    procedure GameStarted; virtual;
+
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
       RegisterComponentSetProc : TRegisterComponentSetProc); virtual;
@@ -165,6 +167,8 @@ type
     function AddNewMapFile(const ID : TComponentID; const Dimensions : T3DPoint;
       ZoneWidth, ZoneHeight : integer;
       MaxViewSize : integer = 1) : TMapFile;
+
+    procedure GameStarted;
 
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
@@ -292,6 +296,15 @@ end;
   @param FirstTime   Indique si c'est la première fois que la partie est chargée
 *}
 procedure TUnitFile.GameLoaded(FirstTime : boolean);
+begin
+end;
+
+{*
+  Exécuté lorsque la partie vient juste d'être commencée
+  GameStarted est appelée lorsque la partie vient juste d'être commencée (en
+  mode jeu, donc pas en mode édition).
+*}
+procedure TUnitFile.GameStarted;
 begin
 end;
 
@@ -904,6 +917,16 @@ function TMasterFile.AddNewMapFile(const ID : TComponentID;
 begin
   Result := TMapFile.CreateNew(Self, ID, Dimensions, ZoneWidth, ZoneHeight);
   Result.Map.MaxViewSize := MaxViewSize;
+end;
+
+{*
+  Commence la partie
+*}
+procedure TMasterFile.GameStarted;
+var I : integer;
+begin
+  for I := 0 to UnitFileCount-1 do
+    UnitFiles[I].GameStarted;
 end;
 
 {*
