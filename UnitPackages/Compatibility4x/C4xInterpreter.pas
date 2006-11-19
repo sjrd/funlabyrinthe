@@ -1086,9 +1086,12 @@ end;
   @param Params   Paramètres de la commande
 *}
 procedure TActionsInterpreter.IncrementCmd(var Params : string);
+var Reference, Value : integer;
 begin
-  ModifyReference(GetCommandIndex(Params, ReferencesStrings),
-    GetIntParam(Params), mkAdd);
+  Reference := GetCommandIndex(Params, ReferencesStrings);
+  if Params = '' then Value := 1 else
+    Value := GetIntParam(Params);
+  ModifyReference(Reference, Value, mkAdd);
 end;
 
 {*
@@ -1096,9 +1099,12 @@ end;
   @param Params   Paramètres de la commande
 *}
 procedure TActionsInterpreter.DecrementCmd(var Params : string);
+var Reference, Value : integer;
 begin
-  ModifyReference(GetCommandIndex(Params, ReferencesStrings),
-    GetIntParam(Params), mkSubstract);
+  Reference := GetCommandIndex(Params, ReferencesStrings);
+  if Params = '' then Value := 1 else
+    Value := GetIntParam(Params);
+  ModifyReference(Reference, Value, mkSubstract);
 end;
 
 {*
@@ -1144,7 +1150,7 @@ end;
 *}
 procedure TActionsInterpreter.BlindAlleyCmd(var Params : string);
 begin
-  if not KeyPressed then
+  if KeyPressed then
     Information(Params, sBlindAlley, dtError);
 end;
 
@@ -1317,7 +1323,7 @@ begin
       cBegin..cClassicEnd : CommandProcs[IntCommand](Self, Line);
       cJump :
       begin
-        Index := Actions.IndexOf('#'+Line);
+        Index := Actions.IndexOf('#'+Trim(Line));
         if Index < 0 then
           raise EInvalidAction.CreateFmt(sUnknownLabel, [Line]);
         Current := Index;
