@@ -14,6 +14,13 @@ uses
   FunLabyUtils, FilesUtils, FunLabyTools, C4xComponents, C4xCommon;
 
 resourcestring
+  sIfStatCannotMixAndOr = 'Ne peut mélanger les Et et les Ou';
+
+  sIfStatMustBeIfAndThen = 'Une instruction Si doit avoir un Si et un Sinon';
+  sIfStatBadOrder = 'Les opérateurs doivent dans l''ordre Si-Alors-Sinon-FinSi';
+  sIfStatInvalidThenClause = 'Clause Alors invalide';
+  sIfStatInvalidElseClause = 'Clause Sinon invalide';
+
   sInvalidParameter = 'Paramètre de commande invalide';
   sInvalidSubCommand = 'Sous-commande invalide';
   sInvalidRandomParameter = 'Paramètre de Aleatoire invalide';
@@ -33,6 +40,13 @@ type
     @version 5.0
   *}
   EInvalidAction = class(Exception);
+
+  {*
+    Générée lorsqu'une instruction Si est invalide
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  EInvalidIf = class(EInvalidAction);
 
   {*
     Générée lorsqu'un paramètre d'une action est invalide
@@ -75,6 +89,9 @@ type
     ReferencesStrings : array of string; /// Tableau des références
 
     procedure TreatVariables(var Line : string);
+
+    function EvalBool(var Condition : string) : boolean;
+    function EvalBoolExpression(var Condition : string) : boolean;
     procedure TreatIfStatement(var Line : string);
 
     procedure ModifyReference(Reference, Value : integer;
@@ -697,11 +714,113 @@ begin
 end;
 
 {*
+  Évalue une condition formée d'un seul booléen
+  @param Condition   Condition à évaluer
+  @return Résultat booléen de l'évaluation
+*}
+function TActionsInterpreter.EvalBool(var Condition : string) : boolean;
+begin
+  Result := True;
+end;
+
+{*
+  Évalue une condition formée de plusieurs booléens liés par des Et ou des Ou
+  @param Condition   Condition à évaluer
+  @return Résultat booléen de l'évaluation
+*}
+function TActionsInterpreter.EvalBoolExpression(
+  var Condition : string) : boolean;
+var Operation : (ckAnd, ckOr);
+    StrOp, SimpleCond : string;
+    OpPos : integer;
+begin
+  // Vérifier qu'il y a soit des Et, soit des Ou, mais pas les deux
+  if PosNonStrVariable('Et', Condition) > 0 then
+  begin
+    Operation := ckAnd;
+    StrOp := 'Et';
+  end else
+  begin
+    Operation := ckOr;
+    StrOp := 'Ou';
+  end;
+  if (Operation = ckAnd) and (PosNonStrVariable('Ou', Condition) > 0) then
+    raise EInvalidIf.Create(sIfStatCannotMixAndOr);
+
+  // Boucle sur les évaluation successives
+  Result := Operation = ckOr;
+  repeat
+    OpPos := PosNonStrVariable(StrOp, Condition);
+    if OpPos = 0 then OpPos := Length(Condition) + 1;
+
+    SimpleCond := Trim(Copy(Condition, 1, OpPos-1));
+    Delete(Condition, 1, OpPos+1);
+    Condition := TrimLeft(Condition);
+
+    if EvalBool(SimpleCond) = Result then exit;
+  until Condition = '';
+  Result := not Result;
+end;
+
+{*
   Traite une éventuelle condition dans l'instruction
   @param Line   Instruction à traiter
 *}
 procedure TActionsInterpreter.TreatIfStatement(var Line : string);
+var IfPos, ThenPos, ElsePos, EndIfPos : integer;
+    BeforeIf, Condition, TrueStatement, FalseStatement, AfterIf : string;
 begin
+  // Récupération des positions des opérateurs du Si
+  IfPos    := PosNonStrVariable('Si'   , Line);
+  ThenPos  := PosNonStrVariable('Alors', Line);
+  ElsePos  := PosNonStrVariable('Sinon', Line);
+  EndIfPos := PosNonStrVariable('FinSi', Line);
+
+  // Contrôle de la présence correcte de Si et de Alors
+  if (IfPos = 0) and (ThenPos = 0) and (ElsePos = 0) and (EndIfPos = 0) then
+    exit;
+  if (IfPos = 0) or (ThenPos = 0) then
+    raise EInvalidIf.Create(sIfStatMustBeIfAndThen);
+
+  // Les opérateurs Sinon et FinSi sont optionnels
+  if ElsePos = 0  then ElsePos  := Length(Line) + 1;
+  if EndIfPos = 0 then EndIfPos := Length(Line) + 2;
+
+  // Contrôle de l'ordre des opérateurs
+  if (IfPos >= ThenPos) or (ThenPos >= ElsePos) or (ElsePos >= EndIfPos) then
+    raise EInvalidIf.Create(sIfStatBadOrder);
+
+  // Séparation du Si en ses sous-expression
+  BeforeIf       := Trim(Copy(Line,            1, IfPos              - 1));
+  Condition      := Trim(Copy(Line, IfPos    + 2, ThenPos  - IfPos   - 2));
+  TrueStatement  := Trim(Copy(Line, ThenPos  + 5, ElsePos  - ThenPos - 5));
+  FalseStatement := Trim(Copy(Line, ElsePos  + 5, EndIfPos - ElsePos - 5));
+  AfterIf        := Trim(Copy(Line, EndIfPos + 5, MaxInt));
+
+  // Contrôle de l'intégrité des instructions pour vrai et faux
+  if (TrueStatement = '') or
+     (TrueStatement[1] <> '[') or (TrueStatement[2] <> ']') then
+    raise EInvalidIf.Create(sIfStatInvalidThenClause);
+  if (FalseStatement <> '') and
+     ((FalseStatement[1] <> '[') or (FalseStatement[2] <> ']')) then
+    raise EInvalidIf.Create(sIfStatInvalidElseClause);
+
+  // Suppression des crochets des instructions pour vrai et faux
+  TrueStatement := Trim(Copy(TrueStatement, 1, Length(TrueStatement)-1));
+  if FalseStatement <> '' then
+    FalseStatement := Trim(Copy(FalseStatement, 1, Length(FalseStatement)-1));
+
+  // Evaluation de la condition et modification de la ligne en conséquence
+  if EvalBoolExpression(Condition) then
+    Line := TrueStatement
+  else
+    Line := FalseStatement;
+
+  // Ajout des éventuels bouts d'instruction avant et après
+  if BeforeIf <> '' then
+    Line := BeforeIf + ' ' + Line;
+  if AfterIf <> '' then
+    Line := Line + ' ' + AfterIf;
 end;
 
 {*
@@ -1000,8 +1119,18 @@ end;
   @param Params   Paramètres de la commande
 *}
 procedure TActionsInterpreter.DescriptionCmd(var Params : string);
+var Text : string;
 begin
-  { TODO 1 : Afficher la description du labyrinthe }
+  with Infos.MasterFile do
+  begin
+    Text := Description;
+    if Difficulty <> '' then
+      Text := Text + #10#10'Difficulté : ' + Difficulty;
+    if Author <> '' then
+      Text := Text + #10#10'Auteur : ' + Author;
+
+    Player.Controller.ShowDialog(Title, Text);
+  end;
 end;
 
 {*
