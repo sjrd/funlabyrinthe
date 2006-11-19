@@ -270,11 +270,13 @@ begin
   end;
 end;
 
+{$IFNDEF DCTD}
 exports
   LoadComponents name 'LoadComponents',
   GameLoaded name 'GameLoaded',
   RegisterComponents name 'RegisterComponents',
   GetParams name 'GetParams';
+{$ENDIF}
 
 end.
 

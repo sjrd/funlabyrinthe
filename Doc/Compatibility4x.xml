@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<DelphiCodeToDoc_Project>
+  <TechnicalLevel>4</TechnicalLevel>
+  <ClassName>TDOCOptions</ClassName>
+  <TDOCOptions>
+    <BoolsAsChecks>TRUE</BoolsAsChecks>
+    <LaunchBrowser>FALSE</LaunchBrowser>
+    <Name>Compatibility4x</Name>
+    <Title>Insert your project&apos;s title here</Title>
+    <Summary>Composants de compatibilit&#xE9; pour FunLabyrinthe 4.x</Summary>
+    <Description>
+      <Count>2</Count>
+      <Item0>Compatiblity4x d&#xE9;crit les composants de compatiblit&#xE9; pour les labyrinthes cr&#xE9;&#xE9;s avec FunLabyrinthe 4.x.</Item0>
+      <Item1>Cela se &quot;r&#xE9;sume&quot; en fait aux boutons, mais avec tout ce qui tourne autour (surtout l&apos;interpr&#xE9;teur d&apos;actions).</Item1>
+    </Description>
+    <Author>S&#xE9;bastien Jean Robert Doeraene</Author>
+    <HTMLlink>http://sjrd.developpez.com/programmes/funlaby/</HTMLlink>
+    <Copyright>S&#xE9;bastien Doeraene - 2000-2006 - Sous license GNU GPL</Copyright>
+    <RecurseDirectory>FALSE</RecurseDirectory>
+    <ConditionalDefines>
+      <Count>4</Count>
+      <Item0>MSWINDOWS</Item0>
+      <Item1>WIN32</Item1>
+      <Item2>VER170</Item2>
+      <Item3>DCTD</Item3>
+    </ConditionalDefines>
+    <ParseImplementationSection>TRUE</ParseImplementationSection>
+    <CustomHeader>UNDER CONSTRUCTION</CustomHeader>
+    <CustomFooter>UNDER CONSTRUCTION</CustomFooter>
+    <Language>lEnglish</Language>
+    <OutputFormat>ofCHM</OutputFormat>
+    <OutputFolder>.\Plugins\Compatibility4x\</OutputFolder>
+    <VisibilitySet>
+      <mvPrivate>TRUE</mvPrivate>
+      <mvProtected>TRUE</mvProtected>
+      <mvPublic>TRUE</mvPublic>
+      <mvPublished>TRUE</mvPublished>
+      <mvAutomated>TRUE</mvAutomated>
+    </VisibilitySet>
+    <TagCommentSet>
+      <tcINLINE>TRUE</tcINLINE>
+      <tcJAVADOC>TRUE</tcJAVADOC>
+      <tcJEDI>FALSE</tcJEDI>
+      <tcXMLDoc>FALSE</tcXMLDoc>
+    </TagCommentSet>
+    <AlphaSort>TRUE</AlphaSort>
+    <WarnEmptyTAG>FALSE</WarnEmptyTAG>
+    <HideEmptyTAGSection>FALSE</HideEmptyTAGSection>
+    <HideEmptyOutputBlock>TRUE</HideEmptyOutputBlock>
+    <OutputFilteringCategory>
+      <ocConstants>TRUE</ocConstants>
+      <ocTypes>TRUE</ocTypes>
+      <ocVariables>TRUE</ocVariables>
+      <ocFunctions>TRUE</ocFunctions>
+      <ocClasses>TRUE</ocClasses>
+      <ocFields>TRUE</ocFields>
+      <ocMethods>TRUE</ocMethods>
+      <ocProperties>TRUE</ocProperties>
+      <ocEvents>TRUE</ocEvents>
+    </OutputFilteringCategory>
+    <SkipFirstTAGLine>TRUE</SkipFirstTAGLine>
+    <SkipLastTAGLine>TRUE</SkipLastTAGLine>
+    <InLineJavaDocCharPrefix>47</InLineJavaDocCharPrefix>
+    <CurlyJavaDocCharPrefix>42</CurlyJavaDocCharPrefix>
+    <BracketStarJavaDocCharPrefix>42</BracketStarJavaDocCharPrefix>
+    <FilesIncludeList>
+      <Count>1</Count>
+      <Item0>.\..\UnitPackages\Compatibility4x\</Item0>
+    </FilesIncludeList>
+    <FilesExcludeList>
+      <Count>0</Count>
+    </FilesExcludeList>
+    <AllowHtmlInDescription>FALSE</AllowHtmlInDescription>
+    <PropertyCommentFromAssessors>TRUE</PropertyCommentFromAssessors>
+    <DisplayHiddenItems>FALSE</DisplayHiddenItems>
+  </TDOCOptions>
+</DelphiCodeToDoc_Project>

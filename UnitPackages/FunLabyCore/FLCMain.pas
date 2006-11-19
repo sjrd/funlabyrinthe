@@ -191,9 +191,11 @@ begin
   RegSingle(idOutsideScrew);
 end;
 
+{$IFNDEF DCTD}
 exports
   LoadComponents name 'LoadComponents',
   RegisterComponents name 'RegisterComponents';
+{$ENDIF}
 
 end.
 
