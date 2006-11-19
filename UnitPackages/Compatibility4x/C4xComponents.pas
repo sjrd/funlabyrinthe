@@ -361,7 +361,7 @@ begin
   end else
   if Actions.Kind in [akOutside..akTreasure] then
   begin
-    if Player.Map[Pos].Effect = Self then
+    if Player.Map[Player.Position].Effect = Self then
     begin
       // Action par défaut des actions de type case de fin
       Player.Win;

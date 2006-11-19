@@ -22,12 +22,11 @@ resourcestring
   sIfStatInvalidElseClause = 'Clause Sinon invalide';
 
   sInvalidParameter = 'Paramètre de commande invalide';
-  sInvalidSubCommand = 'Sous-commande invalide';
+  sInvalidCommand = 'Commande inconnue';
   sInvalidRandomParameter = 'Paramètre de Aleatoire invalide';
-  sBadNextPreviousRandom = 'Mauvais arguments de sous-commande %s';
+  sBadNextPreviousRandom = 'Mauvais argument de sous-commande %s';
 
   sUnknownLabel = 'Le label %s n''a pas pu être trouvé';
-  sUnknownCommand = 'Commande inconnue à la ligne %d';
 
 const
   /// Version de l'interpréteur d'actions
@@ -429,15 +428,15 @@ begin
 end;
 
 {*
-  Récupère une sous-commande dans la liste des paramètres
+  Récupère une commande dans la liste des paramètres
   @param Params           Liste des paramètres
-  @param SubCommands      Liste des sous-commandes valides
+  @param Commands         Liste des sous-commandes valides
   @param RaiseException   Déclencher une exception si sous-commande invalide
   @return Sous-commande lue, ou -1 si la sous-commande est invalide
   @throws EBadParam : Le premier paramètre n'est pas une sous-commande valide
 *}
-function GetSubCommandIndex(var Params : string;
-  const SubCommands : array of string;
+function GetCommandIndex(var Params : string;
+  const Commands : array of string;
   RaiseException : boolean = True) : integer;
 var StartIndex, EndIndex : integer;
 begin
@@ -445,11 +444,11 @@ begin
   EndIndex := ToNextChar(Params, StartIndex, ' ');
 
   Result := AnsiIndexStr(
-    Copy(Params, StartIndex, EndIndex-StartIndex), SubCommands);
+    Copy(Params, StartIndex, EndIndex-StartIndex), Commands);
 
   if Result >= 0 then Delete(Params, 1, EndIndex-1) else
   if RaiseException then
-    raise EBadParam.Create(sInvalidSubCommand);
+    raise EBadParam.Create(sInvalidCommand);
 end;
 
 {*
@@ -462,7 +461,7 @@ function GetIntParam(var Params : string) : integer;
 var IsRandom : boolean;
     StartIndex, EndIndex : integer;
 begin
-  IsRandom := GetSubCommandIndex(Params, ['Aleatoire'], False) = 0;
+  IsRandom := GetCommandIndex(Params, ['Aleatoire'], False) = 0;
 
   StartIndex := SkipSpaces(Params);
   EndIndex := ToNextChar(Params, StartIndex, ' ');
@@ -497,7 +496,7 @@ end;
 function GetStringParam(var Params : string) : string;
 var Len, StartIndex, EndIndex : integer;
 begin
-  if GetSubCommandIndex(Params, ['Rien'], False) = 0 then
+  if GetCommandIndex(Params, ['Rien'], False) = 0 then
   begin
     Result := '';
     exit;
@@ -519,28 +518,6 @@ begin
 end;
 
 {*
-  Récupère un paramètre de type case dans la liste des paramètres
-  @param Params   Liste des paramètres
-  @param Master   Maître FunLabyrinthe
-  @return Valeur case lue
-  @throws EBadParam : Le type du premier paramètre n'est pas une case
-*}
-function GetScrewParam(var Params : string; Master : TMaster) : TScrew;
-var StartIndex, EndIndex : integer;
-begin
-  StartIndex := SkipSpaces(Params);
-  EndIndex := ToNextChar(Params, StartIndex, ' ');
-
-  try
-    Result := Master.Screw[Copy(Params, StartIndex, EndIndex-StartIndex)];
-    Delete(Params, 1, EndIndex-1);
-  except
-    on Error : EComponentNotFound do
-      raise EBadParam.Create(Error.Message);
-  end;
-end;
-
-{*
   Récupère une référence à une case dans la liste des paramètres
   Attention ! GetScrewReference avance sur les sous-paramètres au fur et à
   mesure : si le premier sous-paramètre est bien Case, mais que les suivants
@@ -554,13 +531,50 @@ end;
 function GetScrewReference(var Params : string;
   NoneAllowed : boolean = False) : T3DPoint;
 begin
-  if NoneAllowed and (GetSubCommandIndex(Params, ['Rien'], False) = 0) then
+  if NoneAllowed and (GetCommandIndex(Params, ['Rien'], False) = 0) then
     Result := No3DPoint else
   begin
-    GetSubCommandIndex(Params, ['Case']);
+    GetCommandIndex(Params, ['Case']);
     Result.X := GetIntParam(Params);
     Result.Y := GetIntParam(Params);
     Result.Z := GetIntParam(Params);
+  end;
+end;
+
+{*
+  Récupère un paramètre de type case dans la liste des paramètres
+  @param Params   Liste des paramètres
+  @param Master   Maître FunLabyrinthe
+  @return Valeur case lue
+  @throws EBadParam : Le type du premier paramètre n'est pas une case
+*}
+function GetScrewParam(var Params : string; Map : TMap) : TScrew;
+var Master : TMaster;
+    StartIndex, EndIndex : integer;
+    Param : string;
+begin
+  Master := Map.Master;
+  StartIndex := SkipSpaces(Params);
+
+  if (StartIndex < Length(Params)) and (Params[StartIndex] = '[') then
+  begin
+    // Case référencée par une position de la carte
+    inc(StartIndex);
+    EndIndex := ToNextChar(Params, StartIndex, ']');
+    Param := Copy(Params, StartIndex, EndIndex-StartIndex);
+    Result := Map[GetScrewReference(Param)];
+    Delete(Params, 1, EndIndex);
+  end else
+  begin
+    // Case donnée par son ID
+    EndIndex := ToNextChar(Params, StartIndex, ' ');
+    try
+      Result := Master.Screw[Copy(Params, StartIndex, EndIndex-StartIndex)];
+      Delete(Params, 1, EndIndex-1);
+    except
+      on Error : EComponentNotFound do
+        raise EBadParam.Create(Error.Message);
+    end;
   end;
 end;
 
@@ -719,8 +733,49 @@ end;
   @return Résultat booléen de l'évaluation
 *}
 function TActionsInterpreter.EvalBool(var Condition : string) : boolean;
+var IsIntComparison : boolean;
+    Operation : integer;
+    IntOp1, IntOp2 : integer;
+    ScrewOp1, ScrewOp2 : TScrew;
 begin
-  Result := True;
+  Result := False;
+
+  try
+    IntOp1 := GetIntParam(Condition);
+    IsIntComparison := True;
+  except
+    IntOp1 := 0; // to avoid compiler warning
+    IsIntComparison := False;
+  end;
+
+  if IsIntComparison then
+  begin
+    // Comparaison d'entiers
+
+    Operation := GetCommandIndex(Condition,
+      ['=', '<>', '<', '>', 'DivisiblePar']);
+    IntOp2 := GetIntParam(Condition);
+
+    case Operation of
+      0 : Result := IntOp1 =  IntOp2;
+      1 : Result := IntOp1 <> IntOp2;
+      2 : Result := IntOp1 <  IntOp2;
+      3 : Result := IntOp1 >  IntOp2;
+      4 : Result := IntOp1 mod IntOp2 = 0;
+    end;
+  end else
+  begin
+    // Comparaison de cases
+
+    ScrewOp1 := GetScrewParam(Condition, Map);
+    Operation := GetCommandIndex(Condition, ['=', '<>']);
+    ScrewOp2 := GetScrewParam(Condition, Map);
+
+    case Operation of
+      0 : Result := ScrewOp1 =  ScrewOp2;
+      1 : Result := ScrewOp1 <> ScrewOp2;
+    end;
+  end;
 end;
 
 {*
@@ -798,17 +853,17 @@ begin
   AfterIf        := Trim(Copy(Line, EndIfPos + 5, MaxInt));
 
   // Contrôle de l'intégrité des instructions pour vrai et faux
-  if (TrueStatement = '') or
-     (TrueStatement[1] <> '[') or (TrueStatement[2] <> ']') then
+  if (TrueStatement = '') or (TrueStatement[1] <> '[') or
+     (TrueStatement[Length(TrueStatement)] <> ']') then
     raise EInvalidIf.Create(sIfStatInvalidThenClause);
-  if (FalseStatement <> '') and
-     ((FalseStatement[1] <> '[') or (FalseStatement[2] <> ']')) then
+  if (FalseStatement <> '') and ((FalseStatement[1] <> '[') or
+     (FalseStatement[Length(FalseStatement)] <> ']')) then
     raise EInvalidIf.Create(sIfStatInvalidElseClause);
 
   // Suppression des crochets des instructions pour vrai et faux
-  TrueStatement := Trim(Copy(TrueStatement, 1, Length(TrueStatement)-1));
+  TrueStatement := Trim(Copy(TrueStatement, 2, Length(TrueStatement)-2));
   if FalseStatement <> '' then
-    FalseStatement := Trim(Copy(FalseStatement, 1, Length(FalseStatement)-1));
+    FalseStatement := Trim(Copy(FalseStatement, 2, Length(FalseStatement)-2));
 
   // Evaluation de la condition et modification de la ligne en conséquence
   if EvalBoolExpression(Condition) then
@@ -931,18 +986,18 @@ var Reference, Floor, Index : integer;
     ScrewRef : T3DPoint;
     Replacements : TObjectList;
 begin
-  Reference := GetSubCommandIndex(Params, ReferencesStrings, False);
+  Reference := GetCommandIndex(Params, ReferencesStrings, False);
 
   // Référence à un entier
   if Reference >= 0 then
     ModifyReference(Reference, GetIntParam(Params), mkSet) else
 
   // Bord
-  if GetSubCommandIndex(Params, ['Bord'], False) = 0 then
+  if GetCommandIndex(Params, ['Bord'], False) = 0 then
   begin
     Floor := 1;
     repeat
-      Screw := GetScrewParam(Params, Master);
+      Screw := GetScrewParam(Params, Map);
       Map.Outside[Floor] := Screw;
       inc(Floor);
     until Params = '';
@@ -960,7 +1015,7 @@ begin
     Replacements := TObjectList.Create(False);
     try
       repeat
-        Replacements.Add(GetScrewParam(Params, Master));
+        Replacements.Add(GetScrewParam(Params, Map));
       until Params = '';
 
       if Replacements.Count = 1 then
@@ -986,8 +1041,8 @@ end;
 procedure TActionsInterpreter.ConvertCmd(var Params : string);
 var FromScrew, ToScrew : TScrew;
 begin
-  FromScrew := GetScrewParam(Params, Master);
-  ToScrew := GetScrewParam(Params, Master);
+  FromScrew := GetScrewParam(Params, Map);
+  ToScrew := GetScrewParam(Params, Map);
   ConvertScrews(ToScrew, FromScrew);
 end;
 
@@ -999,7 +1054,7 @@ procedure TActionsInterpreter.MoveCmd(var Params : string);
 var Screw, Replacement : TScrew;
     ScrewRef : T3DPoint;
 begin
-  Screw := GetScrewParam(Params, Master);
+  Screw := GetScrewParam(Params, Map);
   ScrewRef := GetScrewReference(Params, True);
 
   if Screw.ID = idBoatScrew then
@@ -1020,7 +1075,7 @@ procedure TActionsInterpreter.DeactivateCmd(var Params : string);
 var Screw : TScrew;
 begin
   if Params = '' then Screw := Inactive else
-    Screw := GetScrewParam(Params, Master);
+    Screw := GetScrewParam(Params, Map);
 
   Map[Position] := Screw;
   { TODO 1 : Reussite à 1 }
@@ -1032,7 +1087,7 @@ end;
 *}
 procedure TActionsInterpreter.IncrementCmd(var Params : string);
 begin
-  ModifyReference(GetSubCommandIndex(Params, ReferencesStrings),
+  ModifyReference(GetCommandIndex(Params, ReferencesStrings),
     GetIntParam(Params), mkAdd);
 end;
 
@@ -1042,7 +1097,7 @@ end;
 *}
 procedure TActionsInterpreter.DecrementCmd(var Params : string);
 begin
-  ModifyReference(GetSubCommandIndex(Params, ReferencesStrings),
+  ModifyReference(GetCommandIndex(Params, ReferencesStrings),
     GetIntParam(Params), mkSubstract);
 end;
 
@@ -1052,7 +1107,7 @@ end;
 *}
 procedure TActionsInterpreter.MultiplyCmd(var Params : string);
 begin
-  ModifyReference(GetSubCommandIndex(Params, ReferencesStrings),
+  ModifyReference(GetCommandIndex(Params, ReferencesStrings),
     GetIntParam(Params), mkMultiply);
 end;
 
@@ -1100,7 +1155,7 @@ end;
 procedure TActionsInterpreter.ChoiceCmd(var Params : string);
 var DlgButtons : TDialogButtons;
 begin
-  case GetSubCommandIndex(Params,
+  case GetCommandIndex(Params,
          ['Oui-Non', 'Oui-Non-Annuler', 'OK-Annuler']) of
     0 : DlgButtons := dbYesNo;
     1 : DlgButtons := dbYesNoCancel;
@@ -1227,7 +1282,7 @@ end;
 *}
 procedure TActionsInterpreter.ExecuteActions;
 var Current : integer;
-    Line, Command : string;
+    Line : string;
     IntCommand, Index : integer;
 begin
   Current := 0;
@@ -1253,12 +1308,11 @@ begin
         Delete(Line, 1, 7);
     end;
 
-    // Séparation de la commande du reste de la ligne
-    Command := GetXWord(Line, 1);
-    Delete(Line, 1, Length(Command));
+    // Les conditions peuvent avoir rendu la ligne vide
+    if Line = '' then Continue;
 
     // Exécution de la commande
-    IntCommand := AnsiIndexStr(Command, CommandStrings);
+    IntCommand := GetCommandIndex(Line, CommandStrings);
     case IntCommand of
       cBegin..cClassicEnd : CommandProcs[IntCommand](Self, Line);
       cJump :
@@ -1269,7 +1323,6 @@ begin
         Current := Index;
       end;
       cStop : Break;
-      else raise EInvalidAction.CreateFmt(sUnknownCommand, [Current]);
     end;
   except
     on Error : EInvalidAction do;
