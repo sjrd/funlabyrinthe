@@ -22,13 +22,29 @@ package FunLabyBase;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'FunLabyrinthe core components'}
+{$DESCRIPTION 'FunLabyrinthe base components'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
-  vcl;
+  vcl,
+  SCL90,
+  VclSmp,
+  vclx,
+  vclshlctrls,
+  FunLabyCore;
+
+contains
+  FLBBoat in 'FLBBoat.pas',
+  FLBCommon in 'FLBCommon.pas',
+  FLBFields in 'FLBFields.pas',
+  FLBLift in 'FLBLift.pas',
+  FLBMain in 'FLBMain.pas',
+  FLBObstacles in 'FLBObstacles.pas',
+  FLBPlank in 'FLBPlank.pas',
+  FLBSimpleEffects in 'FLBSimpleEffects.pas',
+  FLBSimpleObjects in 'FLBSimpleObjects.pas';
 
 end.
 

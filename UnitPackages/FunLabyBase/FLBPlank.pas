@@ -1,16 +1,16 @@
 {*
   Décrit le comportement complet de la planche
-  L'unité FLCPlank regroupe tous les composants intervenant dans le
+  L'unité FLBPlank regroupe tous les composants intervenant dans le
   fonctionnement de la planche.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FLCPlank;
+unit FLBPlank;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon;
 
 const {don't localize}
   idPlankPlugin = 'PlankPlugin'; /// ID du plug-in planche

@@ -1,16 +1,16 @@
 {*
   Décrit les obstacles standart de Funlabyrinthe
-  L'unité FLCObstacles regroupe les définitions des obstacles standart de
+  L'unité FLBObstacles regroupe les définitions des obstacles standart de
   FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FLCObstacles;
+unit FLBObstacles;
 
 interface
 
 uses
-  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FLCCommon, FLCFields;
+  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FLBCommon, FLBFields;
 
 resourcestring
   sSilverBlock = 'Bloc en argent'; /// Nom du bloc en argent

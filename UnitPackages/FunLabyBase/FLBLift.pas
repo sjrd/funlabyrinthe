@@ -1,16 +1,16 @@
 {*
   Décrit le comportement complet de l'ascenseur
-  L'unité FLCLift regroupe tous les composants intervenant dans le
+  L'unité FLBLift regroupe tous les composants intervenant dans le
   fonctionnement de l'ascenseur.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FLCLift;
+unit FLBLift;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon;
 
 resourcestring
   sLift = 'Ascenseur'; /// Nom de l'ascenseur

@@ -1,16 +1,16 @@
 {*
   Décrit le comportement complet de la barque
-  L'unité FLCBoat regroupe tous les composants intervenant dans le
+  L'unité FLBBoat regroupe tous les composants intervenant dans le
   fonctionnement de la barque.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FLCBoat;
+unit FLBBoat;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon, FLCFields;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon, FLBFields;
 
 const {don't localize}
   idBoatPlugin = 'BoatPlugin'; /// ID du plug-in barque

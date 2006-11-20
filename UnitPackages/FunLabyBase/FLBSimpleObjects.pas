@@ -1,18 +1,18 @@
 {*
   Décrit les objets simples de FunLabyrinthe
-  L'unité FLCSimpleObjects regroupe les définitions des objets simples de
+  L'unité FLBSimpleObjects regroupe les définitions des objets simples de
   FunLabyrinthe, c'est-à-dire ceux qui n'ont besoin que de la définition d'objet
   et de l'effet permettant de les obtenir, avec éventuellement un plug-in
   d'affichage.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FLCSimpleObjects;
+unit FLBSimpleObjects;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLCCommon, FLCFields;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon, FLBFields;
 
 const {don't localize}
   idBuoyPlugin = 'BuoyPlugin'; /// ID du plug-in bouée

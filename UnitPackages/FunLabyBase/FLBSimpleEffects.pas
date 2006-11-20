@@ -1,17 +1,17 @@
 {*
   Décrit les effets simples (se suffisant à eux-mêmes)
-  L'unité FLCSimpleEffects regroupe les différents effets qui se suffisent à
+  L'unité FLBSimpleEffects regroupe les différents effets qui se suffisent à
   eux-mêmes, c'est-à-dire qui n'ont pas besoin de composants annexes pour
   fonctionner.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FLCSimpleEffects;
+unit FLBSimpleEffects;
 
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FunLabyTools, FLCCommon, FLCFields;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FunLabyTools, FLBCommon, FLBFields;
 
 resourcestring
   sNorthArrow = 'Flèche nord';                /// Nom de la flèche nord

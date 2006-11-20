@@ -1,16 +1,16 @@
 {*
   Décrit les terrains de base de Funlabyrinthe
-  L'unité FLCFields regroupe les définitions des terrains de base de
+  L'unité FLBFields regroupe les définitions des terrains de base de
   FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FLCFields;
+unit FLBFields;
 
 interface
 
 uses
-  Graphics, ScUtils, FunLabyUtils, FLCCommon;
+  Graphics, ScUtils, FunLabyUtils, FLBCommon;
 
 resourcestring
   sGrass = 'Herbe'; /// Nom de l'herbe

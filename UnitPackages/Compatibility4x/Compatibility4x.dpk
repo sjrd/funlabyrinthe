@@ -28,8 +28,8 @@ package Compatibility4x;
 
 requires
   rtl,
-  FunLabyCommonR,
-  vcl;
+  vcl,
+  FunLabyCore;
 
 contains
   C4xMain in 'C4xMain.pas',

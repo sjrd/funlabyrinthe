@@ -5,12 +5,12 @@
   <TDOCOptions>
     <BoolsAsChecks>TRUE</BoolsAsChecks>
     <LaunchBrowser>FALSE</LaunchBrowser>
-    <Name>FunLabyCore</Name>
+    <Name>FunLabyBase</Name>
     <Title>Insert your project&apos;s title here</Title>
-    <Summary>Composants au coeur de FunLabyrinthe</Summary>
+    <Summary>Composants de base de FunLabyrinthe</Summary>
     <Description>
       <Count>2</Count>
-      <Item0>FunLabyCore d&#xE9;crit tous les composants et comportements de base de FunLabyrinthe.</Item0>
+      <Item0>FunLabyBase d&#xE9;crit tous les composants et comportements de base de FunLabyrinthe.</Item0>
       <Item1>Cela inclut notamment toutes les cases pr&#xE9;sentes jusqu&apos;&#xE0; la version 4.x, except&#xE9; les boutons, qui sont obsol&#xE8;tes.</Item1>
     </Description>
     <Author>S&#xE9;bastien Jean Robert Doeraene</Author>
@@ -29,7 +29,7 @@
     <CustomFooter>UNDER CONSTRUCTION</CustomFooter>
     <Language>lEnglish</Language>
     <OutputFormat>ofCHM</OutputFormat>
-    <OutputFolder>.\Plugins\FunLabyCore\</OutputFolder>
+    <OutputFolder>.\Plugins\FunLabyBase\</OutputFolder>
     <VisibilitySet>
       <mvPrivate>TRUE</mvPrivate>
       <mvProtected>TRUE</mvProtected>
@@ -65,7 +65,7 @@
     <BracketStarJavaDocCharPrefix>42</BracketStarJavaDocCharPrefix>
     <FilesIncludeList>
       <Count>1</Count>
-      <Item0>.\..\UnitPackages\FunLabyCore\</Item0>
+      <Item0>.\..\UnitPackages\FunLabyBase\</Item0>
     </FilesIncludeList>
     <FilesExcludeList>
       <Count>0</Count>

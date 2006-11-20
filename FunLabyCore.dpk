@@ -22,7 +22,7 @@ package FunLabyCore;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Common units for FunLabyrinthe'}
+{$DESCRIPTION 'Core units for FunLabyrinthe'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 

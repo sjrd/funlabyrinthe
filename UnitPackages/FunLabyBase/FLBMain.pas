@@ -1,17 +1,17 @@
 {*
-  Recense les composants au coeur de Funlabyrinthe
-  L'unité FLCMain recense tous les composants du package FunLabyCore, ceux qui
-  sont au coeur de FunLabyrinthe.
+  Recense les composants de base de Funlabyrinthe
+  L'unité FLBMain recense tous les composants du package FunLabyBase, ceux qui
+  sont à la base de FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FLCMain;
+unit FLBMain;
 
 interface
 
 uses
-  SysUtils, Classes, FunLabyUtils, UnitFiles, FLCCommon, FLCFields,
-  FLCSimpleEffects, FLCSimpleObjects, FLCPlank, FLCBoat, FLCLift, FLCObstacles;
+  SysUtils, Classes, FunLabyUtils, UnitFiles, FLBCommon, FLBFields,
+  FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBBoat, FLBLift, FLBObstacles;
 
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings); stdcall;

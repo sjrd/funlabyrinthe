@@ -115,7 +115,7 @@
 			<Linker Name="MinStackSize">16384</Linker>
 			<Linker Name="MaxStackSize">1048576</Linker>
 			<Linker Name="ImageBase">4194304</Linker>
-			<Linker Name="ExeDescription">Common units for FunLabyrinthe</Linker>
+			<Linker Name="ExeDescription">Core units for FunLabyrinthe</Linker>
 			<Linker Name="GenerateHpps">False</Linker>
 		</Linker>
 		<Directories>
@@ -168,11 +168,11 @@
 			<VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductVersion">5.0</VersionInfoKeys>
 			<VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys>
-			<VersionInfoKeys Name="FileDescription">Common units for FunLabyrinthe</VersionInfoKeys>
-			<VersionInfoKeys Name="InternalName">FunLabyCommonR</VersionInfoKeys>
+			<VersionInfoKeys Name="FileDescription">Core units for FunLabyrinthe</VersionInfoKeys>
+			<VersionInfoKeys Name="InternalName">FunLabyCore</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2006 (c) SJRDoeraene</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
-			<VersionInfoKeys Name="OriginalFilename">FunLabyCommonR.bpl</VersionInfoKeys>
+			<VersionInfoKeys Name="OriginalFilename">FunLabyCore.bpl</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
 		</VersionInfoKeys>
 	</Delphi.Personality>
