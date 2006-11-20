@@ -28,11 +28,7 @@ package FunLabyBase;
 
 requires
   rtl,
-  vcl,
   SCL90,
-  VclSmp,
-  vclx,
-  vclshlctrls,
   FunLabyCore;
 
 contains

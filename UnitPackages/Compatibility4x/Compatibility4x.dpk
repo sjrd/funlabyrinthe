@@ -28,7 +28,6 @@ package Compatibility4x;
 
 requires
   rtl,
-  vcl,
   FunLabyCore;
 
 contains

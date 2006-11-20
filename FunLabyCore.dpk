@@ -29,7 +29,6 @@ package FunLabyCore;
 requires
   rtl,
   vcl,
-  VclSmp,
   SVCL90,
   SCL90,
   SDL90;
