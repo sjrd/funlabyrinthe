@@ -29,9 +29,10 @@ package FunLabyCommonR;
 requires
   rtl,
   vcl,
-  SCLR,
-  SVCLR,
-  SDLR;
+  VclSmp,
+  SVCL90,
+  SCL90,
+  SDL90;
 
 contains
   FunLabyUtils in 'FunLabyUtils.pas',
