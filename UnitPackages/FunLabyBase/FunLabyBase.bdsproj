@@ -5,12 +5,12 @@
 			<Option Name="Personality">Delphi.Personality</Option>
 			<Option Name="ProjectType"></Option>
 			<Option Name="Version">1.0</Option>
-			<Option Name="GUID">{8F76AFBD-9844-49FB-B6E5-1EAFC106C8CD}</Option>
+			<Option Name="GUID">{8D03C4C6-A5DF-4419-A1D5-E45CB16BDC40}</Option>
 		</Option>
 	</PersonalityInfo>
 	<Delphi.Personality>
 		<Source>
-			<Source Name="MainSource">FunLabyCommonR.dpk</Source>
+			<Source Name="MainSource">FunLabyBase.dpk</Source>
 		</Source>
 		<FileVersion>
 			<FileVersion Name="Version">7.0</FileVersion>
@@ -115,13 +115,13 @@
 			<Linker Name="MinStackSize">16384</Linker>
 			<Linker Name="MaxStackSize">1048576</Linker>
 			<Linker Name="ImageBase">4194304</Linker>
-			<Linker Name="ExeDescription">Common units for FunLabyrinthe</Linker>
+			<Linker Name="ExeDescription">FunLabyrinthe core components</Linker>
 			<Linker Name="GenerateHpps">False</Linker>
 		</Linker>
 		<Directories>
 			<Directories Name="OutputDir"></Directories>
 			<Directories Name="UnitOutputDir"></Directories>
-			<Directories Name="PackageDLLOutputDir"></Directories>
+			<Directories Name="PackageDLLOutputDir">C:\Documents and Settings\All Users\Application Data\SJRDoeraene\FunLabyrinthe\Units</Directories>
 			<Directories Name="PackageDCPOutputDir"></Directories>
 			<Directories Name="SearchPath"></Directories>
 			<Directories Name="Packages"></Directories>
@@ -131,7 +131,7 @@
 		</Directories>
 		<Parameters>
 			<Parameters Name="RunParams"></Parameters>
-			<Parameters Name="HostApplication"></Parameters>
+			<Parameters Name="HostApplication">.\..\..\Labyrinthe.exe</Parameters>
 			<Parameters Name="Launcher"></Parameters>
 			<Parameters Name="UseLauncher">False</Parameters>
 			<Parameters Name="DebugCWD"></Parameters>
@@ -168,11 +168,11 @@
 			<VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductVersion">5.0</VersionInfoKeys>
 			<VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys>
-			<VersionInfoKeys Name="FileDescription">Common units for FunLabyrinthe</VersionInfoKeys>
-			<VersionInfoKeys Name="InternalName">FunLabyCommonR</VersionInfoKeys>
+			<VersionInfoKeys Name="FileDescription">FunLabyrinthe core components</VersionInfoKeys>
+			<VersionInfoKeys Name="InternalName">FunLabyCore</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2006 (c) SJRDoeraene</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
-			<VersionInfoKeys Name="OriginalFilename">FunLabyCommonR.bpl</VersionInfoKeys>
+			<VersionInfoKeys Name="OriginalFilename">FunLabyCore.bpl</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
 		</VersionInfoKeys>
 	</Delphi.Personality>

@@ -1,4 +1,4 @@
-package FunLabyCore;
+package FunLabyBase;
 
 {$R *.res}
 {$ALIGN 8}
@@ -28,19 +28,7 @@ package FunLabyCore;
 
 requires
   rtl,
-  vcl,
-  FunLabyCommonR;
-
-contains
-  FLCMain in 'FLCMain.pas',
-  FLCCommon in 'FLCCommon.pas',
-  FLCFields in 'FLCFields.pas',
-  FLCSimpleEffects in 'FLCSimpleEffects.pas',
-  FLCSimpleObjects in 'FLCSimpleObjects.pas',
-  FLCPlank in 'FLCPlank.pas',
-  FLCBoat in 'FLCBoat.pas',
-  FLCLift in 'FLCLift.pas',
-  FLCObstacles in 'FLCObstacles.pas';
+  vcl;
 
 end.
 

@@ -1,7 +1,7 @@
-package FunLabyCommonD;
+package FunLabyCore;
 
 {$R *.res}
-{$ALIGN 4}
+{$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO ON}
@@ -22,19 +22,24 @@ package FunLabyCommonD;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Common units for FunLabyrinthe (design)'}
-{$DESIGNONLY}
+{$DESCRIPTION 'Common units for FunLabyrinthe'}
+{$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  designide,
-  vclactnband,
-  vclx,
-  FunLabyCommonR;
+  VclSmp,
+  SVCL90,
+  SCL90,
+  SDL90;
 
 contains
-  RegFunLabyCommon in 'RegFunLabyCommon.pas';
+  FunLabyUtils in 'FunLabyUtils.pas',
+  FilesUtils in 'FilesUtils.pas',
+  UnitFiles in 'UnitFiles.pas',
+  PlayerObjects in 'PlayerObjects.pas',
+  FunLabyTools in 'FunLabyTools.pas';
 
 end.
+
