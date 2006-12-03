@@ -70,6 +70,8 @@ fr.RegFLM=Fichiers carte (.flm)
 ; Enregistrement des extensions
 
 fr.FunLabyProject=Projet FunLabyrinthe
+fr.FunLabyMap=Carte FunLabyrinthe
+
 fr.Open=&Ouvrir
 fr.Edit=&Éditer
 
@@ -87,7 +89,7 @@ fr.AppDataSelectDirPrompt=Choisissez le répertoire où enregistrer les labyrinthe
 fr.PageImportOldTitle=Importer les labyrinthes depuis une ancienne version
 fr.PageImportOldDescription=Vous pouvez importer les labyrinthes que vous aviez créés avec une ancienne version de {cm:AppName}.
 
-fr.OldVersionInstalled=Une ancienne version de {cm:AppName} est installée sur votre ordinateur (v{code:oldversioninfo|version}), dans le dossier suivant :
+fr.OldVersionInstalled=Une ancienne version de {cm:AppName} est installée sur votre ordinateur (v{code:OldVersionInfo|version}), dans le dossier suivant :
 fr.OldVersionWillBeUninstalled=Celle-ci sera automatiquement désinstallée avant d'installer {cm:AppVerName}.%nCependant, vous pouvez demander à {cm:AppVerName} d'importer automatiquement les labyrinthes que vous aviez créés avec cette ancienne version.
 
 fr.ImportOldLabyrinthsPrompt=Si vous aviez installé précédemment une ancienne version de {cm:AppName}, puis désinstallée, vous avez peut-être conservé les labyrinthes que vous aviez créés. Si c'est le cas, il vous est maintenant possible d'importer ces anciens labyrinthes dans {cm:AppVerName}.
@@ -98,6 +100,31 @@ fr.OldVersionInstallDirPrompt=Veuillez sélectionner l'ancien répertoire d'instal
 fr.SelectOldVersionInstallDirPrompt=Ancien répertoire d'installation de {cm:AppName}
 
 fr.ImportInfos=Les labyrinthes pré-installés ne peuvent pas être importés : ils sont déjà inclus dans cette nouvelle installation, avec, pour la plupart, des améliorations. De même, les labyrinthes disponibles sur le site Web de {cm:AppName} ont tous déjà été importés : vous pouvez les retélécharger. L'importation sert uniquement pour les labyrinthes que VOUS avez créés.
+
+fr.InvalidOldInstallDirWhenInstalled=Dossier invalide
+fr.InvalidOldInstallDirWhenNotInstalled=Dossier invalide
+
+; Page de sélection des labyrinthes à importer
+
+fr.PageSelectImportsTitle=Sélection des labyrinthes à importer
+fr.PageSelectImportsDescription=Veuillez sélectionner parmi les labyrinthes disponibles ci-dessous ceux que vous souhaitez importer.
+fr.PageSelectImportsPrompt=Veuillez sélectionner les labyrinthes à importer
+
+; Désinstallation de l'ancienne version
+
+fr.PageUninstallOldVersionTitle=Désinstallation de {cm:AppName} {code:OldVersionInfo|version} en cours
+fr.PageUninstallOldVersionDescription=Veuillez patienter pendant que l'assistant désinstalle votre ancienne version de {cm:AppName}.
+
+fr.UninstallingOldVersion=Désinstallation de {cm:AppName} {code:OldVersionInfo|version}...
+
+fr.CouldntUninstallOldVersion=L'ancienne version n'a pas pu être désinstallée correctement. Il vous est possible néanmoins de continuer l'installation, mais c'est déconseillé. Essayez d'abord de désinstaller {cm:AppName} {code:OldVersionInfo|version} depuis le panneau de configuration.%nVoulez-vous tout de même poursuivre l'installation ?
+
+; Import des anciens labyrinthes
+
+fr.PageImportingOldTitle=Import des anciens labyrinthes en cours
+fr.PageImportingOldDescription=L'assistant importe maintenant les anciens labyrinthes que vous avez sélectionnés.
+
+fr.ImportingOld=Import des anciens labyrinthes...
 
 [Types]
 Name: "full"    ; Description: {cm:FullInstall}
@@ -119,14 +146,14 @@ Name: "help\masteringedit"; Description: {cm:CompMasteringEdit}; Types: full
 Name: "appdata"; Description: {cm:CompAppData}; Types: full playonly custom; Flags: fixed
 
 [Tasks]
-Name: "desktopicon"            ; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "desktopicon\labyrinthe" ; Description: "{cm:IconLabyrinthe}" ; Components: programs\labyrinthe
-Name: "desktopicon\genelaby"   ; Description: "{cm:IconGeneLaby}"   ; Components: programs\genelaby
-Name: "desktopicon\funlabyedit"; Description: "{cm:IconFunLabyEdit}"; Components: programs\funlabyedit; Flags: unchecked
+Name: "desktopicon"            ; Description: "{cm:CreateDesktopIcon}"                                ; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon\labyrinthe" ; Description: "{cm:IconLabyrinthe}" ; Components: programs\labyrinthe ; GroupDescription: "{cm:AdditionalIcons}"
+Name: "desktopicon\genelaby"   ; Description: "{cm:IconGeneLaby}"   ; Components: programs\genelaby   ; GroupDescription: "{cm:AdditionalIcons}"
+Name: "desktopicon\funlabyedit"; Description: "{cm:IconFunLabyEdit}"; Components: programs\funlabyedit; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 Name: "regext"    ; Description: "{cm:RegExtensions}"; GroupDescription: {cm:AdditionalTasks}
-Name: "regext\flp"; Description: "{cm:RegFLP}"
-Name: "regext\flm"; Description: "{cm:RegFLM}"
+Name: "regext\flp"; Description: "{cm:RegFLP}"       ; GroupDescription: {cm:AdditionalTasks}
+Name: "regext\flm"; Description: "{cm:RegFLM}"       ; GroupDescription: {cm:AdditionalTasks}
 
 [Files]
 Source: "..\Labyrinthe.exe";  DestDir: "{app}"; Components: programs\labyrinthe ; Flags: ignoreversion
@@ -136,25 +163,29 @@ Source: "..\FunLabyEdit.exe"; DestDir: "{app}"; Components: programs\funlabyedit
 Source: "Runtime\FunLabyCore.bpl"               ; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: replacesameversion uninsneveruninstall
 Source: "Runtime\*"; Excludes: "FunLabyCore.bpl"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile
 
-Source: "AppData\*"; DestDir: "{code:appdata}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
+Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 
 ; Fichiers temporaires pour l'installation
 
 Source: "Images\*"; flags: dontcopy
 
 [INI]
-Filename: "{app}\FunLabyrinthe.ini"; Section: "Directories"; Key: "AppData"; String: "{code:appdata}"
+Filename: "{app}\FunLabyrinthe.ini"; Section: "Directories"; Key: "AppData"; String: "{code:AppData}"
 
 [Registry]
 Root: HKCR; SubKey: ".flp"                                    ; ValueType: string; ValueName: ""; ValueData: "FunLabyrinthe.Project"           ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project"                   ; ValueType: string; ValueName: ""; ValueData: "{cm:FunLabyProject}"             ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\DefaultIcon"       ; ValueType: string; ValueName: ""; ValueData: "{app}\Labyrinthe.exe,0"          ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell"             ; ValueType: string; ValueName: ""; ValueData: "open,edit"                       ; Tasks: regext\flp; Components: not programs\funlabyedit; Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Project\shell"             ; ValueType: string; ValueName: ""; ValueData: "open,edit"                       ; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Project\shell"             ; ValueType: string; ValueName: ""; ValueData: "open"                            ; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\open"        ; ValueType: string; ValueName: ""; ValueData: "{cm:Open}"                       ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\Labyrinthe.exe"" ""%1""" ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit"        ; ValueType: string; ValueName: ""; ValueData: "{cm:Edit}"                       ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FunLabyEdit.exe"" ""%1"""; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit"        ; ValueType: string; ValueName: ""; ValueData: "{cm:Edit}"                       ; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FunLabyEdit.exe"" ""%1"""; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
+
+Root: HKCR; SubKey: ".flm"                         ; ValueType: string; ValueName: ""; ValueData: "FunLabyrinthe.Map"     ; Tasks: regext\flm;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Map"            ; ValueType: string; ValueName: ""; ValueData: "{cm:FunLabyMap}"       ; Tasks: regext\flm;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Map\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\Labyrinthe.exe,0"; Tasks: regext\flm;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
 
 [Icons]
 Name: "{group}\{cm:IconLabyrinthe}" ; Filename: "{app}\Labyrinthe.exe" ; Components: programs\labyrinthe
@@ -167,6 +198,9 @@ Name: "{commondesktop}\{cm:IconFunLabyEdit}"; Filename: "{app}\FunLabyEdit.exe";
 
 [Run]
 Filename: "{app}\Labyrinthe.exe"; Description: "{cm:LaunchProgram,FunLabyrinthe}"; Flags: nowait postinstall skipifsilent
+
+[UninstallDelete]
+Type: files; Name: "{app}\FunLabyrinthe.ini"
 
 [Code]
 const
@@ -191,18 +225,26 @@ var
   PageImportOld : TWizardPage;
   CheckBoxImportOld : TCheckBox;
   EditOldInstallDir : TEdit;
+  ImportDir : string;
   
+  PageSelectImports : TWizardPage;
+  CheckListBoxImports : TNewCheckListBox;
+  LabyrinthsToImport : TStrings;
+  
+  PageUninstallOldVersion : TOutputProgressWizardPage;
+  PageImportingOld : TOutputProgressWizardPage;
+
 function FunLabyAppData : string;
 begin
   Result := EditFunLabyAppData.Text;
 end;
 
-function appdata(Param : string) : string;
+function AppData(Param : string) : string;
 begin
   Result := FunLabyAppData;
 end;
 
-function oldversioninfo(Param : string) : string;
+function OldVersionInfo(Param : string) : string;
 begin
   if Param = 'version' then
     Result := OldVersionDisplayVersion
@@ -339,7 +381,6 @@ end;
 
 function AddDirEdit(AParent : TNewNotebookPage; var Bottom : integer;
   const DefaultDir, Prompt : string) : TEdit;
-var Index : integer;
 begin
   Result := AddEdit(AParent, Bottom, DefaultDir);
   Result.Width := WizardForm.DirEdit.Width;
@@ -454,8 +495,172 @@ begin
     ExpandConstants('{cm:ImportInfos}'));
 end;
 
+function CheckValidImportDir : boolean;
+var OldImportDir : string;
+begin
+  OldImportDir := ImportDir;
+  
+  if not CheckBoxImportOld.Checked then
+  begin
+    ImportDir := '';
+    Result := True;
+  end else
+  begin
+    ImportDir := EditOldInstallDir.Text;
+    if (ImportDir <> '') and (ImportDir[Length(ImportDir)] <> '\') then
+      ImportDir := ImportDir + '\';
+    Result := DirExists(ImportDir + 'Labyrinthes')
+    if not Result then
+    begin
+      if HasOldVersion then
+      begin
+        MsgBox(ExpandConstants(
+          '{cm:InvalidOldInstallDirWhenInstalled}'), mbError, MB_OK);
+      end else
+      begin
+        MsgBox(ExpandConstants(
+          '{cm:InvalidOldInstallDirWhenNotInstalled}'), mbError, MB_OK);
+      end;
+    end;
+  end;
+end;
+
+procedure AddSelectImportsPage;
+var Surface : TNewNotebookPage;
+    Bottom : integer;
+begin
+  PageSelectImports := CreateCustomPage(PageImportOld.ID,
+    ExpandConstants('{cm:PageSelectImportsTitle}'),
+    ExpandConstants('{cm:PageSelectImportsDescription}'));
+  Surface := PageSelectImports.Surface;
+  Bottom := -8;
+  
+  AddLabel(Surface, Bottom,
+    ExpandConstants('{cm:PageSelectImportsPrompt}'));
+    
+  CheckListBoxImports := TNewCheckListBox.Create(Surface);
+  with CheckListBoxImports do
+  begin
+    Width := PageWidth;
+    Top := Bottom + 8;
+    Bottom := PageSelectImports.SurfaceHeight - 8;
+    Height := Bottom - Top;
+    Parent := Surface;
+  end;
+end;
+
+procedure PageSelectImportsShow;
+var OldUnchecked : TStrings;
+    I : integer;
+    FindRec : TFindRec;
+    FileName : string;
+begin
+  OldUnchecked := TStringList.Create;
+  try
+    with CheckListBoxImports do for I := 0 to Items.Count-1 do
+      if not Checked[I] then OldUnchecked.Add(Items[I]);
+  
+    CheckListBoxImports.Items.Clear;
+    if FindFirst(ImportDir + 'Labyrinthes\*.lab', FindRec) then
+    try
+      repeat
+        FileName := FindRec.Name;
+        CheckListBoxImports.AddCheckBox(FileName, '', 0,
+          OldUnchecked.IndexOf(FileName) < 0, True, False, False, nil);
+      until not FindNext(FindRec);
+    finally
+      FindClose(FindRec);
+    end;
+  finally
+    OldUnchecked.Free;
+  end;
+
+  if LabyrinthsToImport <> nil then
+  begin
+    LabyrinthsToImport.Free;
+    LabyrinthsToImport := nil;
+  end;
+end;
+
+function PageSelectImportsValidate : boolean;
+var I : integer;
+begin
+  LabyrinthsToImport := TStringList.Create;
+  with CheckListBoxImports do for I := 0 to Items.Count-1 do
+    if Checked[I] then LabyrinthsToImport.Add(Items[I]);
+  Result := True;
+end;
+
+procedure AddUninstallOldVersionPage;
+begin
+  PageUninstallOldVersion := CreateOutputProgressPage(
+    ExpandConstants('{cm:PageUninstallOldVersionTitle}'),
+    ExpandConstants('{cm:PageUninstallOldVersionDescription}'));
+end;
+
+procedure UninstallOldVersion;
+var FileName, Params : string;
+    I : integer;
+    ResultCode : integer;
+begin
+  PageUninstallOldVersion.Show;
+
+  PageUninstallOldVersion.SetText(
+    ExpandConstants('{cm:UninstallingOldVersion}'), '');
+    
+  FileName := OldVersionUninstallString;
+  if FileName[1] = '"' then
+  begin
+    Delete(FileName, 1, 1);
+    I := Pos('"', FileName);
+    Params := Copy(FileName, I+2, MaxInt);
+    Delete(FileName, I, MaxInt);
+  end else
+  begin
+    I := Pos(' ', FileName);
+    Params := Copy(FileName, I+1, MaxInt);
+    Delete(FileName, I, MaxInt);
+  end;
+    
+  if (not Exec(FileName, Params, '', SW_HIDE,
+    ewWaitUntilTerminated, ResultCode)) or (ResultCode <> 0) then
+  begin
+    if MsgBox(ExpandConstants('{cm:CouldntUninstallOldVersion}'),
+      mbError, MB_YESNO or MB_DEFBUTTON2) <> IDYES then
+      Abort;
+  end;
+
+  PageUninstallOldVersion.Hide;
+end;
+
+procedure AddImportingOldPage;
+begin
+  PageImportingOld := CreateOutputProgressPage(
+    ExpandConstants('{cm:PageImportingOldTitle}'),
+    ExpandConstants('{cm:PageImportingOldDescription}'));
+end;
+
+procedure ImportOld;
+var I : integer;
+    FileName : string;
+begin
+  PageImportingOld.Show;
+  try
+    for I := 0 to LabyrinthsToImport.Count-1 do
+    begin
+      FileName := LabyrinthsToImport[I];
+      PageImportingOld.SetText(
+        ExpandConstants('{cm:ImportingOld}'), FileName);
+      PageImportingOld.SetProgress(I, LabyrinthsToImport.Count);
+
+      Sleep(200);
+    end;
+  finally
+    PageImportingOld.Hide;
+  end;
+end;
+
 function CreateBitmap(const FileName : string) : TBitmap;
-var TmpFile : string;
 begin
   ExtractTemporaryFile(FileName);
   Result := TBitmap.Create;
@@ -467,6 +672,9 @@ begin
   InfoBitmap := CreateBitmap(InfoBitmapFileName);
   DirEdits := TStringList.Create;
   
+  ImportDir := '';
+  LabyrinthsToImport := nil;
+  
   CheckOldVersion;
 
   Result := True;
@@ -474,6 +682,9 @@ end;
 
 procedure DeinitializeSetup;
 begin
+  if LabyrinthsToImport <> nil then
+    LabyrinthsToImport.Free;
+    
   DirEdits.Free;
   InfoBitmap.Free;
 end;
@@ -484,18 +695,42 @@ begin
   
   AddFunLabyAppDataField;
   AddImportOldPage;
+  AddSelectImportsPage;
+  AddUninstallOldVersionPage;
+  AddImportingOldPage;
 end;
 
 function ShouldSkipPage(PageID : integer) : boolean;
 begin
-  Result := False;
+  if PageID = PageSelectImports.ID then
+    Result := ImportDir = ''
+  else
+    Result := False;
 end;
 
-function NextButtonClick(CurPageID : Integer): Boolean;
+function NextButtonClick(CurPageID : integer) : boolean;
 begin
   if CurPageID = wpSelectDir then
     Result := CheckValidAppData
+  else if CurPageID = PageImportOld.ID then
+    Result := CheckValidImportDir
+  else if CurPageID = PageSelectImports.ID then
+    Result := PageSelectImportsValidate
   else
     Result := True;
+end;
+
+procedure CurPageChanged(CurPageID : integer);
+begin
+  if CurPageID = PageSelectImports.ID then
+    PageSelectImportsShow;
+end;
+
+procedure CurStepChanged(CurStep : TSetupStep);
+begin
+  case CurStep of
+    ssInstall : if HasOldVersion then UninstallOldVersion;
+    ssPostInstall : if ImportDir <> '' then ImportOld;
+  end;
 end;
 
