@@ -160,7 +160,7 @@ Source: "..\Labyrinthe.exe";  DestDir: "{app}"; Components: programs\labyrinthe 
 Source: "..\GeneLaby.exe";    DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
 Source: "..\FunLabyEdit.exe"; DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
 
-Source: "Runtime\FunLabyCore.bpl"               ; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: replacesameversion uninsneveruninstall
+Source: "Runtime\FunLabyCore.bpl"               ; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: replacesameversion
 Source: "Runtime\*"; Excludes: "FunLabyCore.bpl"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile
 
 Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
