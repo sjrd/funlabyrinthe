@@ -16,11 +16,11 @@ const
 
 const {don't localize}
   idGrass = 'Grass';                             /// ID de l'herbe
+  idGrassWater = 'GrassWater';                   /// ID de l'eau effet herbe
   idInactiveTransporter = 'InactiveTransporter'; /// ID du téléporteur inactif
 
-  idGrassScrew = 'Grass--';         /// ID de la case herbe
-  idWaterScrew = 'Water--';         /// ID de la case eau
-  idBoatScrew = 'GrassWater-Boat-'; /// ID de la case barque
+  idGrassScrew = 'Grass---';           /// ID de la case herbe
+  idWaterScrew = 'Water---';           /// ID de la case eau
 
   idBuoys = 'Buoys';           /// ID des bouées
   idPlanks = 'Planks';         /// ID des planches

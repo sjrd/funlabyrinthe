@@ -94,7 +94,7 @@ var
   PBlocage, PBlocEscaliers, PBlocBoucles : integer;
   IIModulation : integer;
   bCarrefours : boolean;
-  NomComplet : String;
+  NomLabyrinthe : String;
 
 procedure Principale;
 
@@ -169,13 +169,13 @@ begin
 
     Value := 7; // taille de palette
     WriteBuffer(Value, 4);
-    WriteStrToStream(Stream, 'Grass--');
-    WriteStrToStream(Stream, 'Wall--');
-    WriteStrToStream(Stream, 'Grass-Crossroads-');
-    WriteStrToStream(Stream, 'Grass-UpStairs-');
-    WriteStrToStream(Stream, 'Grass-DownStairs-');
-    WriteStrToStream(Stream, 'Grass-Treasure-');
-    WriteStrToStream(Stream, 'Grass-Outside-');
+    WriteStrToStream(Stream, 'Grass---');
+    WriteStrToStream(Stream, 'Wall---');
+    WriteStrToStream(Stream, 'Grass-Crossroads--');
+    WriteStrToStream(Stream, 'Grass-UpStairs--');
+    WriteStrToStream(Stream, 'Grass-DownStairs--');
+    WriteStrToStream(Stream, 'Grass-Treasure--');
+    WriteStrToStream(Stream, 'Grass-Outside--');
 
     for Z := 0 to DimZ-1 do for Y := 0 to DimY-1 do for X := 0 to DimX-1 do
     begin
@@ -419,10 +419,10 @@ begin
   Labyrinthe.Insert(0, '[Dimensions]');
   {$I-} MkDir(WDir+'Labyrinthes'); {$I+}*)
   Labyrinthe.Delete(0);
-  NomComplet := WDir+'Labyrinths\'+FormPrincipale.EditNomFichier.Text;
-  CreeSortie(Labyrinthe, NomComplet+'.flg',
-    FormPrincipale.EditNomFichier.Text+'\MainMap.flm',
-    NomComplet+'\MainMap.flm',
+  NomLabyrinthe := FormPrincipale.EditNomFichier.Text;
+  CreeSortie(Labyrinthe, WDir+'Labyrinths\'+NomLabyrinthe+'.flp',
+    NomLabyrinthe+'\MainMap.flm',
+    WDir+'Maps\'+NomLabyrinthe+'\MainMap.flm',
     NColZ*7, NLigZ*7, NEtaZ);
 //  Labyrinthe.SaveToFile(NomComplet);
   Labyrinthe.Free;
@@ -459,7 +459,7 @@ end;
 procedure TFormPrincipale.BQuitterClick(Sender: TObject);
 begin
   if FileExists(WDir+'Labyrinthe.exe') then
-    WinExec(PChar(WDir+'Labyrinthe.exe "'+NomComplet+'"'), SW_ShowNormal);
+    WinExec(PChar(WDir+'Labyrinthe.exe "'+NomLabyrinthe+'"'), SW_ShowNormal);
   Close;
 end;
 

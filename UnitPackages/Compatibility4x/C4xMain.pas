@@ -227,7 +227,7 @@ begin
     end;
 
     RegSet(idActionsScrewTemplate, Components, 0,
-      sButtonTitle, sButtonPrompt);
+      sButtonTitle, Format(sButtonPrompt, [Infos.ActionsCount-1]));
   end;
 end;
 

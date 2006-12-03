@@ -44,6 +44,7 @@ begin
   Screw := Map[Pos];
   if Component is TField    then Result := Screw.Field    = Component else
   if Component is TEffect   then Result := Screw.Effect   = Component else
+  if Component is TTool     then Result := Screw.Tool     = Component else
   if Component is TObstacle then Result := Screw.Obstacle = Component else
   Result := Screw = Component;
 end;

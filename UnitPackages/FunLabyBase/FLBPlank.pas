@@ -115,21 +115,6 @@ type
     property Player : TPlayer read FPlayer;
   end;
 
-  {*
-    Planche
-    La planche donne au joueur un objet planche
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TPlank = class(TEffect)
-  public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
-
-    procedure Execute(Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint; var GoOnMoving : boolean); override;
-  end;
-
 const
   clPlank = $00004080; /// Couleur de la planche
 
@@ -317,47 +302,8 @@ constructor TPlankScrew.Create(AMaster : TMaster; AMap : TMap;
   APosition : T3DPoint; APlayer : TPlayer);
 begin
   inherited Create(AMaster, Format(idPlankScrew, [APlayer.ID]), AMap, APosition,
-    AMaster.Field[idPlankField], AMaster.Effect[idPlankEffect], nil);
+    AMaster.Field[idPlankField], AMaster.Effect[idPlankEffect], nil, nil);
   FPlayer := APlayer;
-end;
-
-{---------------}
-{ Classe TPlank }
-{---------------}
-
-{*
-  Crée une instance de TPlank
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
-*}
-constructor TPlank.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
-begin
-  inherited Create(AMaster, AID, AName);
-  Painter.ImgNames.Add(fPlank);
-end;
-
-{*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
-*}
-procedure TPlank.Execute(Player : TPlayer; KeyPressed : boolean;
-  const Pos : T3DPoint; var GoOnMoving : boolean);
-begin
-  inherited;
-
-  // Désactivation de la case
-  Player.Map[Pos] := Player.Map[Pos].ChangeEffect;
-
-  // Incrémentation du nombre de bouées du joueur
-  with Master.ObjectDef[idPlanks] do Count[Player] := Count[Player]+1;
-
-  // Affichage d'un message de notification
-  Player.Controller.ShowDialog(sMessage, sFoundPlank);
 end;
 
 end.

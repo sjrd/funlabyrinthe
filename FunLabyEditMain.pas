@@ -263,9 +263,10 @@ begin
   // Choix de la catégorie
   if Template is TField    then Category := ScrewsContainer.Categories[0] else
   if Template is TEffect   then Category := ScrewsContainer.Categories[1] else
-  if Template is TObstacle then Category := ScrewsContainer.Categories[2] else
-  if Template is TScrew    then Category := ScrewsContainer.Categories[3] else
-  Category := ScrewsContainer.Categories[4];
+  if Template is TTool     then Category := ScrewsContainer.Categories[2] else
+  if Template is TObstacle then Category := ScrewsContainer.Categories[3] else
+  if Template is TScrew    then Category := ScrewsContainer.Categories[4] else
+  Category := ScrewsContainer.Categories[5];
 
   // Ajout du bouton
   Result := Category.Items.Add;
@@ -869,7 +870,7 @@ end;
 procedure TFormMain.PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var Position : T3DPoint;
-    NewID : TComponentID;
+    FieldID, EffectID, ToolID, NewID : TComponentID;
 begin
   if (Button <> mbLeft) or (CurrentMap = nil) or (Component = nil) then exit;
 
@@ -883,9 +884,18 @@ begin
     NewID := Component.ID;
     with CurrentMap[Position] do
     begin
-      if Component is TField    then NewID := NewID+'--' else
-      if Component is TEffect   then NewID := Field.ID+'-'+NewID+'-' else
-      if Component is TObstacle then NewID := ChangeObstacle(NewID).ID;
+      FieldID := Field.ID;
+      if Effect = nil then EffectID := '' else EffectID := Effect.ID;
+      if Tool   = nil then ToolID   := '' else ToolID   := Tool.ID;
+
+      if Component is TField then
+        NewID := NewID+'---' else
+      if Component is TEffect then
+        NewID := FieldID+'-'+NewID+'--' else
+      if Component is TTool then
+        NewID := FieldID+'-'+EffectID+'-'+NewID+'-' else
+      if Component is TObstacle then
+        NewID := FieldID+'-'+EffectID+'-'+ToolID+'-'+NewID;
     end;
 
     if CurrentMap.InMap(Position) then

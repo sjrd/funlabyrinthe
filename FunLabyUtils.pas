@@ -15,6 +15,7 @@ uses
 resourcestring
   sDefaultObjectInfos = '%s : %d';
   sEffectName = '%1:s sur %0:s';
+  sToolName = '%s avec %s';
   sObstacleName = '%s obstrué par %s';
   sWhichObject = 'Quel objet voulez-vous utiliser ?';
   sComponentNotFound = 'Le composant d''ID %s n''existe pas';
@@ -64,6 +65,8 @@ type
 
   {*
     Position qualifiée, composée d'une carte et d'une position sur la carte
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TQualifiedPos = record
     Map : TMap;          /// Carte, ou nil pour une position nulle
@@ -92,6 +95,8 @@ type
     Gère le chargement des images d'après leur nom
     TImagesMaster s'occupe de charger automatiquement les images qu'on lui
     demande d'afficher. Il les conserve dans une liste d'image.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TImagesMaster = class
   private
@@ -110,6 +115,8 @@ type
 
   {*
     Bitmap de la taille d'une case, gérant automatiquement la transparence
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TScrewBitmap = class(TBitmap)
   public
@@ -123,6 +130,8 @@ type
     Enregistre est affiche par superposition une liste d'images
     TPainter enregistre une liste d'images par leur noms et propose une méthode
     pour les dessiner les unes sur les autres, par transparence.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPainter = class
   private
@@ -145,6 +154,8 @@ type
     TFunLabyComponent est la classe de base pour tous les composants de
     FunLabyrinthe. Elle fournit des propriétés et des méthodes pour repérer le
     maître FunLabyrinthe et pour identifier le composant.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TFunLabyComponent = class
   private
@@ -170,6 +181,8 @@ type
     Classe de base pour les composants devant être affichés
     TVisualComponent étend la classe TFunLabyComponent pour lui ajouter un
     traitement standart et simple de nommage et de dessin.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TVisualComponent = class(TFunLabyComponent)
   private
@@ -203,6 +216,8 @@ type
     - Dessiner sous et sur le joueur ;
     - Empêcher le déplacement du joueur et réagir à son déplacement effectif ;
     - Indiquer au joueur qu'il a la capacité de faire certaines actions.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPlugin = class(TFunLabyComponent)
   private
@@ -236,6 +251,8 @@ type
     TObjectDef est la classe de base pour les définitions d'objets que possède
     le joueur.
     Les objets peuvent rendre un joueur capable d'effectuer certaines actions.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TObjectDef = class(TVisualComponent)
   protected
@@ -254,6 +271,8 @@ type
 
   {*
     Classe de base pour les composants de case
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TScrewComponent = class(TVisualComponent)
   end;
@@ -262,6 +281,8 @@ type
     Classe de base pour les terrains
     TField est la classe de base pour la création de terrains. Les terrains
     sont la première composante d'une case.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TField = class(TScrewComponent)
   private
@@ -293,6 +314,8 @@ type
     Classe de base pour les effets de case
     TEffect est la classe de base pour la création d'effets de case. Les effets
     sont la deuxième composante d'une case.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TEffect = class(TScrewComponent)
   public
@@ -309,6 +332,8 @@ type
     Effet décoratif
     La classe TDecorativeEffect permet de créer facilement un effet qui ne fait
     rien, qui ajoute juste une touche décorative.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TDecorativeEffect = class(TEffect)
   public
@@ -317,9 +342,48 @@ type
   end;
 
   {*
+    Classe de base pour les outils
+    TTool est la classe de base pour la création d'outils. Les outils sont la
+    troisième composante d'une case.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TTool = class(TScrewComponent)
+  public
+    procedure Find(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint); virtual;
+  end;
+
+  {*
+    Outil lié à une définition d'objet
+    La classe TObjectTool permet de créer facilement un outil qui est lié à une
+    définition d'objet. C'est-à-dire que trouver cet outil incrémente le nombre
+    de tels objets que possède le joueur
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TObjectTool = class(TTool)
+  private
+    FObjectDef : TObjectDef; /// Définition d'objet liée
+    FFindMessage : string;   /// Message apparaissant lorsqu'on trouve l'outil
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      AObjectDef : TObjectDef; const AFindMessage : string;
+      const AName : string = ''; const AImgName : string = '');
+
+    procedure Find(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint); override;
+
+    property ObjectDef : TObjectDef read FObjectDef;
+    property FindMessage : string read FFindMessage;
+  end;
+
+  {*
     Classe de base pour les obstacles
     TObstacle est la classe de base pour la création d'obstacles. Les obstacles
-    sont la troisième composante d'une case.
+    sont la quatrième composante d'une case.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TObstacle = class(TScrewComponent)
   public
@@ -332,15 +396,18 @@ type
     Représente une case du jeu
     TScrew représente une case du jeu. Une case possède deux parties : le
     terrain et l'effet.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TScrew = class(TScrewComponent)
   private
     FField : TField;       /// Terrain
     FEffect : TEffect;     /// Effet
+    FTool : TTool;         /// Outil
     FObstacle : TObstacle; /// Obstacle
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; AField : TField; AEffect : TEffect;
+      const AName : string; AField : TField; AEffect : TEffect; ATool : TTool;
       AObstacle : TObstacle);
 
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
@@ -367,10 +434,12 @@ type
 
     function ChangeField(NewField : TComponentID) : TScrew;
     function ChangeEffect(NewEffect : TComponentID = '') : TScrew;
+    function ChangeTool(NewTool : TComponentID = '') : TScrew;
     function ChangeObstacle(NewObstacle : TComponentID = '') : TScrew;
 
     property Field : TField read FField;
     property Effect : TEffect read FEffect;
+    property Tool : TTool read FTool;
     property Obstacle : TObstacle read FObstacle;
   end;
 
@@ -379,6 +448,8 @@ type
     TOverriddenScrew est la classe de base pour les cases spéciales qui
     surchargent momentanément une autre case. Elle fournit des propriétés et
     méthodes pour identifier la case en question et la dessiner.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TOverriddenScrew = class(TScrew)
   private
@@ -388,7 +459,7 @@ type
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       AMap : TMap; APosition : T3DPoint; AField : TField; AEffect : TEffect;
-      AObstacle : TObstacle);
+      ATool : TTool; AObstacle : TObstacle);
     destructor Destroy; override;
 
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
@@ -403,6 +474,8 @@ type
     Représente la carte du jeu
     TMap gère et représente la carte du jeu. Elle offre des propriétés et
     méthodes pour lire et modifier cette carte.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TMap = class(TFunLabyComponent)
   private
@@ -450,6 +523,8 @@ type
 
   {*
     Interface de contrôle thread-safe d'un joueur
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   IPlayerController = interface
     {*
@@ -469,8 +544,8 @@ type
 
     {*
       Affiche une boîte de dialogue avec des boutons radio
-      ShowDialogRadio est une variante de ShowDialog qui affiche des boutons radio
-      pour chaque choix possible.
+      ShowDialogRadio est une variante de ShowDialog qui affiche des boutons
+      radio pour chaque choix possible.
       @param Title         Titre de la boîte de dialogue
       @param Text          Texte de la boîte de dialogue
       @param DlgType       Type de boîte de dialogue
@@ -509,6 +584,8 @@ type
     TPlayer représente un joueur. Elle possède de nombreuses propriétés et
     méthodes permettant d'afficher le joueur, de le déplacer, de lui greffer
     des plug-in, etc.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TPlayer = class(TVisualComponent)
   private
@@ -569,6 +646,8 @@ type
   {*
     Maître FunLabyrinthe
     TMaster gère les différents composants de FunLabyrinthe.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TMaster = class
   private
@@ -578,6 +657,7 @@ type
     FObjectDefs : TObjectList;     /// Liste des définitions d'objet
     FFields : TObjectList;         /// Liste des terrains
     FEffects : TObjectList;        /// Liste des effets
+    FTools : TObjectList;          /// Liste des outils
     FObstacles : TObjectList;      /// Liste des obstacles
     FScrews : TObjectList;         /// Liste des cases
     FMaps : TObjectList;           /// Liste des cartes
@@ -596,6 +676,7 @@ type
     function GetObjectDef(const ID : TComponentID) : TObjectDef;
     function GetField    (const ID : TComponentID) : TField;
     function GetEffect   (const ID : TComponentID) : TEffect;
+    function GetTool     (const ID : TComponentID) : TTool;
     function GetObstacle (const ID : TComponentID) : TObstacle;
     function GetScrew    (const ID : TComponentID) : TScrew;
     function GetMap      (const ID : TComponentID) : TMap;
@@ -609,6 +690,8 @@ type
     function GetFields(Index : integer) : TField;
     function GetEffectCount : integer;
     function GetEffects(Index : integer) : TEffect;
+    function GetToolCount : integer;
+    function GetTools(Index : integer) : TTool;
     function GetObstacleCount : integer;
     function GetObstacles(Index : integer) : TObstacle;
     function GetScrewCount : integer;
@@ -641,6 +724,7 @@ type
     property ObjectDef[const ID : TComponentID] : TObjectDef read GetObjectDef;
     property Field    [const ID : TComponentID] : TField     read GetField;
     property Effect   [const ID : TComponentID] : TEffect    read GetEffect;
+    property Tool     [const ID : TComponentID] : TTool      read GetTool;
     property Obstacle [const ID : TComponentID] : TObstacle  read GetObstacle;
     property Screw    [const ID : TComponentID] : TScrew     read GetScrew;
     property Map      [const ID : TComponentID] : TMap       read GetMap;
@@ -654,6 +738,8 @@ type
     property Fields[index : integer] : TField read GetFields;
     property EffectCount : integer read GetEffectCount;
     property Effects[index : integer] : TEffect read GetEffects;
+    property ToolCount : integer read GetToolCount;
+    property Tools[index : integer] : TTool read GetTools;
     property ObstacleCount : integer read GetObstacleCount;
     property Obstacles[index : integer] : TObstacle read GetObstacles;
     property ScrewCount : integer read GetScrewCount;
@@ -1435,7 +1521,7 @@ end;
   Crée une instance de TDecorativeEffect
   @param AMaster    Maître FunLabyrinthe
   @param AID        ID de l'effet de case
-  @param AName      Nom de la case
+  @param AName      Nom de l'effet de case
   @param AImgName   Nom du fichier image
 *}
 constructor TDecorativeEffect.Create(AMaster : TMaster;
@@ -1443,6 +1529,69 @@ constructor TDecorativeEffect.Create(AMaster : TMaster;
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(AImgName);
+end;
+
+{--------------}
+{ Classe TTool }
+{--------------}
+
+{*
+  Exécuté lorsque le joueur trouve l'outil
+  Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
+  arrive sur une case sur laquelle se trouve l'outil.
+  @param Player       Joueur qui a trouvé l'outil
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+*}
+procedure TTool.Find(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint);
+begin
+end;
+
+{--------------------}
+{ Classe TObjectTool }
+{--------------------}
+
+{*
+  Crée une instance de TObjectTool
+  Les nom d'outil et du fichier image peuvent être vide. Dans ce cas, l'outil
+  prend les mêmes que la définition d'objet à laquelle il est lié.
+  @param AMaster        Maître FunLabyrinthe
+  @param AID            ID de l'outil
+  @param AObjectDef     Définition d'objet liée
+  @param AFindMessage   Message apparaissant lorsqu'on trouve l'outil
+  @param AName          Nom de l'outil
+  @param AImgName       Nom du fichier image
+*}
+constructor TObjectTool.Create(AMaster : TMaster; const AID : TComponentID;
+  AObjectDef : TObjectDef; const AFindMessage : string;
+  const AName : string = ''; const AImgName : string = '');
+begin
+  inherited Create(AMaster, AID, IIF(AName = '', AObjectDef.Name, AName));
+  FObjectDef := AObjectDef;
+  FFindMessage := AFindMessage;
+
+  if AImgName = '' then
+    FPainter.ImgNames.Assign(FObjectDef.Painter.ImgNames)
+  else
+    FPainter.ImgNames.Add(AImgName);
+end;
+
+{*
+  Exécuté lorsque le joueur trouve l'outil
+  Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
+  arrive sur une case sur laquelle se trouve l'outil.
+  @param Player       Joueur qui a trouvé l'outil
+  @param KeyPressed   True si une touche a été pressée pour le déplacement
+  @param Pos          Position de la case
+*}
+procedure TObjectTool.Find(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint);
+begin
+  Player.Map[Pos] := Player.Map[Pos].ChangeTool;
+  ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
+  if FindMessage <> '' then
+    Player.Controller.ShowDialog(sMessage, FindMessage);
 end;
 
 {------------------}
@@ -1481,20 +1630,23 @@ end;
   @param AName       Nom de la case
   @param AField      Terrain
   @param AEffect     Effet
+  @param ATool       Outil
   @param AObstacle   Obstacle
 *}
 constructor TScrew.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; AField : TField; AEffect : TEffect;
+  const AName : string; AField : TField; AEffect : TEffect; ATool : TTool;
   AObstacle : TObstacle);
 begin
   inherited Create(AMaster, AID, AName);
   FStaticDraw := False;
   FField := AField;
   FEffect := AEffect;
+  FTool := ATool;
   FObstacle := AObstacle;
 
   FStaticDraw := FField.StaticDraw and
     ((not Assigned(FEffect)) or FEffect.StaticDraw) and
+    ((not Assigned(FTool)) or FTool.StaticDraw) and
     ((not Assigned(FObstacle)) or FObstacle.StaticDraw);
 end;
 
@@ -1508,11 +1660,13 @@ end;
 procedure TScrew.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
-  Field.DoDraw(QPos, Canvas, X, Y);
+  Field.Draw(QPos, Canvas, X, Y);
   if Assigned(Effect) then
-    Effect.DoDraw(QPos, Canvas, X, Y);
+    Effect.Draw(QPos, Canvas, X, Y);
+  if Assigned(Tool) then
+    Tool.Draw(QPos, Canvas, X, Y);
   if Assigned(Obstacle) then
-    Obstacle.DoDraw(QPos, Canvas, X, Y);
+    Obstacle.Draw(QPos, Canvas, X, Y);
 
   inherited;
 end;
@@ -1582,7 +1736,7 @@ begin
 end;
 
 {*
-  Exécute l'effet
+  Trouve l'objet et exécute l'effet
   @param Player       Joueur concerné
   @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Pos          Position de la case
@@ -1591,6 +1745,8 @@ end;
 procedure TScrew.Execute(Player : TPlayer; KeyPressed : boolean;
   const Pos : T3DPoint; var GoOnMoving : boolean);
 begin
+  if Assigned(Tool) then
+    Tool.Find(Player, KeyPressed, Pos);
   if Assigned(Effect) then
     Effect.Execute(Player, KeyPressed, Pos, GoOnMoving);
 end;
@@ -1626,13 +1782,15 @@ end;
   @return Une case identique à celle-ci mais avec le terrain indiqué
 *}
 function TScrew.ChangeField(NewField : TComponentID) : TScrew;
-var EffectID, ObstacleID : TComponentID;
+var EffectID, ToolID, ObstacleID : TComponentID;
 begin
   if Effect = nil then EffectID := '' else
     EffectID := Effect.ID;
+  if Tool = nil then ToolID := '' else
+    ToolID := Tool.ID;
   if Obstacle = nil then ObstacleID := '' else
     ObstacleID := Obstacle.ID;
-  Result := Master.Screw[NewField+'-'+EffectID+'-'+ObstacleID];
+  Result := Master.Screw[NewField+'-'+EffectID+'-'+ToolID+'-'+ObstacleID];
 end;
 
 {*
@@ -1641,11 +1799,28 @@ end;
   @return Une case identique à celle-ci mais avec l'effet indiqué
 *}
 function TScrew.ChangeEffect(NewEffect : TComponentID = '') : TScrew;
-var ObstacleID : TComponentID;
+var ToolID, ObstacleID : TComponentID;
 begin
+  if Tool = nil then ToolID := '' else
+    ToolID := Tool.ID;
   if Obstacle = nil then ObstacleID := '' else
     ObstacleID := Obstacle.ID;
-  Result := Master.Screw[Field.ID+'-'+NewEffect+'-'+ObstacleID];
+  Result := Master.Screw[Field.ID+'-'+NewEffect+'-'+ToolID+'-'+ObstacleID];
+end;
+
+{*
+  Change l'outil d'une case et renvoie la case modifiée
+  @param NewTool   ID du nouvel outil
+  @return Une case identique à celle-ci mais avec l'outil indiqué
+*}
+function TScrew.ChangeTool(NewTool : TComponentID = '') : TScrew;
+var EffectID, ObstacleID : TComponentID;
+begin
+  if Effect = nil then EffectID := '' else
+    EffectID := Effect.ID;
+  if Obstacle = nil then ObstacleID := '' else
+    ObstacleID := Obstacle.ID;
+  Result := Master.Screw[Field.ID+'-'+EffectID+'-'+NewTool+'-'+ObstacleID];
 end;
 
 {*
@@ -1654,11 +1829,13 @@ end;
   @return Une case identique à celle-ci mais avec l'obstacle indiqué
 *}
 function TScrew.ChangeObstacle(NewObstacle : TComponentID = '') : TScrew;
-var EffectID : TComponentID;
+var EffectID, ToolID : TComponentID;
 begin
   if Effect = nil then EffectID := '' else
     EffectID := Effect.ID;
-  Result := Master.Screw[Field.ID+'-'+EffectID+'-'+NewObstacle];
+  if Tool = nil then ToolID := '' else
+    ToolID := Tool.ID;
+  Result := Master.Screw[Field.ID+'-'+EffectID+'-'+ToolID+'-'+NewObstacle];
 end;
 
 {-------------------------}
@@ -1673,16 +1850,17 @@ end;
   @param APosition   Position
   @param AField      Terrain
   @param AEffect     Effet
+  @param ATool       Outil
   @param AObstacle   Obstacle
 *}
 constructor TOverriddenScrew.Create(AMaster : TMaster; const AID : TComponentID;
   AMap : TMap; APosition : T3DPoint; AField : TField; AEffect : TEffect;
-  AObstacle : TObstacle);
+  ATool : TTool; AObstacle : TObstacle);
 var AOriginalScrew : TScrew;
 begin
   AOriginalScrew := AMap[APosition];
   inherited Create(AMaster, AID, AOriginalScrew.Name,
-    AField, AEffect, AObstacle);
+    AField, AEffect, ATool, AObstacle);
 
   if not AOriginalScrew.StaticDraw then
     FStaticDraw := False;
@@ -2273,6 +2451,7 @@ begin
   FObjectDefs := TObjectList.Create(False);
   FFields     := TObjectList.Create(False);
   FEffects    := TObjectList.Create(False);
+  FTools      := TObjectList.Create(False);
   FObstacles  := TObjectList.Create(False);
   FScrews     := TObjectList.Create(False);
   FMaps       := TObjectList.Create(False);
@@ -2297,6 +2476,7 @@ begin
   FMaps.Free;
   FScrews.Free;
   FObstacles.Free;
+  FTools.Free;
   FEffects.Free;
   FFields.Free;
   FObjectDefs.Free;
@@ -2329,6 +2509,7 @@ end;
   @param ID   ID du composant à trouver
   @return Le composant dont l'ID a été spécifié
   @throws EComponentNotFound : Aucun composant ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas de case
 *}
 function TMaster.GetScrewComponent(const ID : TComponentID) : TScrewComponent;
 begin
@@ -2337,7 +2518,7 @@ begin
   except
     on Error : EComponentNotFound do
     begin
-      if NberCharInStr('-', ID) = 2 then
+      if NberCharInStr('-', ID) = 3 then
         Result := Screw[ID]
       else
         raise;
@@ -2350,6 +2531,7 @@ end;
   @param ID   ID du plug-in à trouver
   @return Le plug-in dont l'ID a été spécifié
   @throws EComponentNotFound : Aucun plug-in ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un plug-in
 *}
 function TMaster.GetPlugin(const ID : TComponentID) : TPlugin;
 begin
@@ -2361,6 +2543,7 @@ end;
   @param ID   ID de la définition d'objet à trouver
   @return La définition d'objet dont l'ID a été spécifié
   @throws EComponentNotFound : Aucune définition ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas une def d'objet
 *}
 function TMaster.GetObjectDef(const ID : TComponentID) : TObjectDef;
 begin
@@ -2372,6 +2555,7 @@ end;
   @param ID   ID du terrain à trouver
   @return Le terrain dont l'ID a été spécifié
   @throws EComponentNotFound : Aucun terrain ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un terrain
 *}
 function TMaster.GetField(const ID : TComponentID) : TField;
 begin
@@ -2383,6 +2567,7 @@ end;
   @param ID   ID de l'effet à trouver
   @return L'effet dont l'ID a été spécifié
   @throws EComponentNotFound : Aucun effet ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un effet
 *}
 function TMaster.GetEffect(const ID : TComponentID) : TEffect;
 begin
@@ -2391,10 +2576,24 @@ begin
 end;
 
 {*
+  Tableau des outils indexé par leur ID
+  @param ID   ID de l'outil à trouver
+  @return L'outil dont l'ID a été spécifié
+  @throws EComponentNotFound : Aucun outil ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un outil
+*}
+function TMaster.GetTool(const ID : TComponentID) : TTool;
+begin
+  if ID = '' then Result := nil else
+    Result := Component[ID] as TTool;
+end;
+
+{*
   Tableau des obstacles indexé par leur ID
   @param ID   ID de l'obstacle à trouver
   @return L'obstacle dont l'ID a été spécifié
   @throws EComponentNotFound : Aucun obstacle ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un obstacle
 *}
 function TMaster.GetObstacle(const ID : TComponentID) : TObstacle;
 begin
@@ -2409,10 +2608,12 @@ end;
   @param ID   ID de la case à trouver
   @return La case dont l'ID a été spécifié
   @throws EComponentNotFound : Aucune case ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas une case
 *}
 function TMaster.GetScrew(const ID : TComponentID) : TScrew;
 var AField : TField;
     AEffect : TEffect;
+    ATool : TTool;
     AObstacle : TObstacle;
     AName : string;
 begin
@@ -2422,20 +2623,27 @@ begin
     on Error : EComponentNotFound do
     begin
       Result := nil;
+
+      if NberCharInStr('-', ID) = 3 then
       try
         AField := Field[GetXToken(ID, '-', 1)];
         AEffect := Effect[GetXToken(ID, '-', 2)];
-        AObstacle := Obstacle[GetXToken(ID, '-', 3)];
+        ATool := Tool[GetXToken(ID, '-', 3)];
+        AObstacle := Obstacle[GetXToken(ID, '-', 4)];
 
         AName := AField.Name;
         if Assigned(AEffect) then
           AName := Format(sEffectName, [AName, AEffect.Name]);
+        if Assigned(ATool) then
+          AName := Format(sToolName, [AName, ATool.Name]);
         if Assigned(AObstacle) then
           AName := Format(sObstacleName, [AName, AObstacle.Name]);
 
-        Result := TScrew.Create(Self, ID, AName, AField, AEffect, AObstacle);
+        Result := TScrew.Create(Self, ID, AName,
+          AField, AEffect, ATool, AObstacle);
       except
       end;
+
       if Result = nil then raise;
     end;
   end;
@@ -2446,6 +2654,7 @@ end;
   @param ID   ID de la carte à trouver
   @return La carte dont l'ID a été spécifié
   @throws EComponentNotFound : Aucune carte ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas une carte
 *}
 function TMaster.GetMap(const ID : TComponentID) : TMap;
 begin
@@ -2457,6 +2666,7 @@ end;
   @param ID   ID du joueur à trouver
   @return Le joueur dont l'ID a été spécifié
   @throws EComponentNotFound : Aucun joueur ne correspond à l'ID spécifié
+  @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un joueur
 *}
 function TMaster.GetPlayer(const ID : TComponentID) : TPlayer;
 begin
@@ -2537,6 +2747,25 @@ end;
 function TMaster.GetEffects(Index : integer) : TEffect;
 begin
   Result := TEffect(FEffects[Index]);
+end;
+
+{*
+  Nombre d'outils
+  @return Nombre d'outils
+*}
+function TMaster.GetToolCount : integer;
+begin
+  Result := FTools.Count;
+end;
+
+{*
+  Tableau zero-based des outils
+  @param Index   Index de l'outil
+  @return L'outil à la position spécifiée
+*}
+function TMaster.GetTools(Index : integer) : TTool;
+begin
+  Result := TTool(FTools[Index]);
 end;
 
 {*
@@ -2637,6 +2866,7 @@ begin
   if Component is TObjectDef then FObjectDefs.Add(Component) else
   if Component is TField     then FFields    .Add(Component) else
   if Component is TEffect    then FEffects   .Add(Component) else
+  if Component is TTool      then FTools     .Add(Component) else
   if Component is TObstacle  then FObstacles .Add(Component) else
   if Component is TScrew     then FScrews    .Add(Component) else
   if Component is TMap       then FMaps      .Add(Component) else
@@ -2653,6 +2883,7 @@ begin
   if Component is TObjectDef then FObjectDefs.Remove(Component) else
   if Component is TField     then FFields    .Remove(Component) else
   if Component is TEffect    then FEffects   .Remove(Component) else
+  if Component is TTool      then FTools     .Remove(Component) else
   if Component is TObstacle  then FObstacles .Remove(Component) else
   if Component is TScrew     then FScrews    .Remove(Component) else
   if Component is TMap       then FMaps      .Remove(Component) else

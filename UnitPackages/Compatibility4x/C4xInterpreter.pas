@@ -1057,7 +1057,7 @@ begin
   Screw := GetScrewParam(Params, Map);
   ScrewRef := GetScrewReference(Params, True);
 
-  if Screw.ID = idBoatScrew then
+  if Copy(Screw.ID, 1, Length(idGrassWater)) = idGrassWater then
     Replacement := Master.Screw[idWaterScrew]
   else
     Replacement := Master.Screw[idGrassScrew];
@@ -1371,7 +1371,7 @@ begin
     KeyPressed := AKeyPressed;
     Position := APos;
     DoNextPhase := ADoNextPhase;
-    Inactive := Master.Screw[idGrass+'-'+AInactive+'-'];
+    Inactive := Master.Screw[idGrass+'-'+AInactive+'--'];
 
     // Détermination des Ici, Devant et Derriere
     StrHere := 'Case '+Point3DToString(Position);

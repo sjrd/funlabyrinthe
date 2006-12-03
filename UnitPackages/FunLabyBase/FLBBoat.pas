@@ -23,8 +23,8 @@ const {don't localize}
   idBoat = 'Boat%d';               /// ID de la barque
   idBoatTemplate = 'BoatTemplate'; /// ID de la barque modèle
 
-  idBoatScrew = idGrassWater+'-'+idBoat+'-'; /// ID de la case barque
-  idBoatScrewTemplate = idGrassWater+'-'+idBoatTemplate+'-'; /// Barque modèle
+  idBoatScrew = idGrassWater+'--'+idBoat+'-'; /// ID de la case barque
+  idBoatScrewTemplate = idGrassWater+'--'+idBoatTemplate+'-'; /// Barque modèle
 
 const {don't localize}
   fBoat = 'Boat'; /// Fichier de la barque
@@ -62,7 +62,7 @@ type
     @author Sébastien Jean Robert Doeraene
     @version 5.0
   *}
-  TBoat = class(TEffect)
+  TBoat = class(TTool)
   private
     FNumber : integer; /// Numéro de la barque
   public
@@ -72,8 +72,8 @@ type
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
-    procedure Execute(Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Find(Player : TPlayer; KeyPressed : boolean;
+      const Pos : T3DPoint); override;
 
     property Number : integer read FNumber;
   end;
@@ -197,19 +197,15 @@ end;
 *}
 procedure TBoatPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
   Src, Dest : T3DPoint);
-var ScrewID : TComponentID;
 begin
   with Player do if not (Map[Dest].Field is TWater) then
   begin
     // Retirer le plug-in barque
     RemovePlugin(Self);
 
-    // Placer un effet barque sur la case source
-    if not Assigned(Map[Src].Obstacle) then ScrewID := '' else
-      ScrewID := Map[Src].Obstacle.ID;
-    ScrewID := Format(idGrassWater+'-'+idBoat+'-'+ScrewID,
-      [Attribute[idBoatPlugin]]);
-    Map[Src] := Master.Screw[ScrewID];
+    // Placer un outil barque sur la case source
+    Map[Src] := Map[Src].ChangeField(idGrassWater).ChangeTool(
+      Format(idBoat, [Attribute[idBoatPlugin]]));
 
     // Remettre à 0 l'attribut du joueur concernant la barque
     Attribute[idBoatPlugin] := 0;
@@ -237,8 +233,9 @@ end;
 {*
   Crée une instance de TBoat
   @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
+  @param AID       ID de l'outil
+  @param AName     Nom de l'outil
+  @param ANumber   Numéro de la barque
 *}
 constructor TBoat.Create(AMaster : TMaster; const AID : TComponentID;
   const AName : string; ANumber : integer);
@@ -265,24 +262,22 @@ begin
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
+  Exécuté lorsque le joueur trouve l'outil
+  Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
+  arrive sur une case sur laquelle se trouve l'outil.
+  @param Player       Joueur qui a trouvé l'outil
   @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TBoat.Execute(Player : TPlayer; KeyPressed : boolean;
-  const Pos : T3DPoint; var GoOnMoving : boolean);
-var ObstacleID : TComponentID;
+procedure TBoat.Find(Player : TPlayer; KeyPressed : boolean;
+  const Pos : T3DPoint);
 begin
   inherited;
 
   with Player do
   begin
     // Remplacement de la case par de l'eau simple
-    if not Assigned(Map[Pos].Obstacle) then ObstacleID := '' else
-      ObstacleID := Map[Pos].Obstacle.ID;
-    Map[Pos] := Master.Screw[idWater+'--'+ObstacleID];
+    Map[Pos] := Map[Pos].ChangeField(idWater).ChangeTool;
 
     // Indication du numéro de la barque dans l'attribut correspondant
     Attribute[idBoatPlugin] := Number;

@@ -175,7 +175,7 @@ begin
     Effect := AMaster.Effect[idEngagedLiftEffect];
   inherited Create(AMaster,
     Format(idEngagedLiftScrew, [APlayer.ID, APosition.Z]), AMap, APosition,
-    AMaster.Field[idEngagedLiftField], Effect, nil);
+    AMaster.Field[idEngagedLiftField], Effect, nil, nil);
 
   if Opened then
     Painter.ImgNames.Add(fOpenedLift);

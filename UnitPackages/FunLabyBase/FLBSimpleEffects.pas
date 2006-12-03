@@ -57,7 +57,7 @@ const {don't localize}
   idOutside = 'Outside';                         /// ID du dehors
   idTreasure = 'Treasure';                       /// ID du trésor
 
-  idOutsideScrew = idGrass+'-'+idOutside+'-';    /// ID de la case dehors
+  idOutsideScrew = idGrass+'-'+idOutside+'--';   /// ID de la case dehors
 
 const {don't localize}
   fNorthArrow = 'NorthArrow';               /// Fichier de la flèche nord

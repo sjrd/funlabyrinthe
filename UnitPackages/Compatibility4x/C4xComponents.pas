@@ -27,10 +27,10 @@ const {don't localize}
   idButtonTemplate = 'ButtonTemplate';     /// ID du bouton modèle
 
   /// ID de la case à actions
-  idActionsScrew = idGrass+'-ActionsEffect%d-';
-  idActionsScrewWithObstacle = idGrass+'-ActionsEffect%d-ActionsObstacle%0:d';
+  idActionsScrew = idGrass+'-ActionsEffect%d--';
+  idActionsScrewWithObstacle = idGrass+'-ActionsEffect%d--ActionsObstacle%0:d';
   /// ID de la case à actions modèle
-  idActionsScrewTemplate = idGrass+'-'+idButtonTemplate+'-';
+  idActionsScrewTemplate = idGrass+'-'+idButtonTemplate+'--';
 
   idActions = 'Actions%d'; /// ID d'un ensemble d'actions
 
@@ -51,7 +51,7 @@ resourcestring
   sFoundTreasure  = 'BRAVO ! Tu as trouvé le trésor !';
 
   sButtonTitle = 'Numéro du bouton';
-  sButtonPrompt = 'Numéro du bouton (1 à 75) :';
+  sButtonPrompt = 'Numéro du bouton (0 à %d) :';
 
 type
   {*

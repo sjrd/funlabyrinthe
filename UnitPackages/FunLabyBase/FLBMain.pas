@@ -30,7 +30,8 @@ implementation
 *}
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings);
-var I : integer;
+var Buoys, Planks, SilverKeys, GoldenKeys : TObjectDef;
+    I : integer;
 begin
   // Plug-in
   TMaskPlugin.Create(Master, idAvoidShowPlugin);
@@ -39,10 +40,10 @@ begin
   TBoatPlugin.Create(Master, idBoatPlugin);
 
   // Défintions d'objet
-  TBuoys.Create(Master, idBuoys, sBuoys);
-  TPlanks.Create(Master, idPlanks, sPlanks);
-  TSilverKeys.Create(Master, idSilverKeys, sSilverKeys);
-  TGoldenKeys.Create(Master, idGoldenKeys, sGoldenKeys);
+  Buoys := TBuoys.Create(Master, idBuoys, sBuoys);
+  Planks := TPlanks.Create(Master, idPlanks, sPlanks);
+  SilverKeys := TSilverKeys.Create(Master, idSilverKeys, sSilverKeys);
+  GoldenKeys := TGoldenKeys.Create(Master, idGoldenKeys, sGoldenKeys);
 
   // Terrain et effet spécial planche
   TPlankField.Create(Master, idPlankField, '');
@@ -92,14 +93,18 @@ begin
   TOutside.Create(Master, idOutside, sOutside);
   TTreasure.Create(Master, idTreasure, sTreasure);
 
-  TBuoy.Create(Master, idBuoy, sBuoy);
-  TPlank.Create(Master, idPlank, sPlank);
-  TSilverKey.Create(Master, idSilverKey, sSilverKey);
-  TGoldenKey.Create(Master, idGoldenKey, sGoldenKey);
-
   for I := 1 to 10 do
     TBoat.Create(Master, idBoat, sBoat, I);
   TBoat.Create(Master, idBoatTemplate, sBoatTemplate, 0);
+
+  // Outils
+
+  TObjectTool.Create(Master, idBuoy, Buoys, sFoundBuoy, sBuoy);
+  TObjectTool.Create(Master, idPlank, Planks, sFoundPlank, sPlank);
+  TObjectTool.Create(Master, idSilverKey, SilverKeys,
+    sFoundSilverKey, sSilverKey);
+  TObjectTool.Create(Master, idGoldenKey, GoldenKeys,
+    sFoundGoldenKey, sGoldenKey);
 
   // Obstacles
 

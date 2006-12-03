@@ -103,6 +103,12 @@ object FormMain: TFormMain
         Items = <>
       end
       item
+        Caption = 'Outils'
+        Color = 15252386
+        Collapsed = False
+        Items = <>
+      end
+      item
         Caption = 'Obstacles'
         Color = 15252386
         Collapsed = False
