@@ -237,10 +237,9 @@ type
       Canvas : TCanvas; X : integer = 0; Y : integer = 0); virtual;
 
     procedure Moving(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Dest : T3DPoint;
+      KeyPressed : boolean; const Src, Dest : T3DPoint;
       var Cancel : boolean); virtual;
-    procedure Moved(Player : TPlayer; KeyPressed : boolean;
-      Src, Dest : T3DPoint); virtual;
+    procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); virtual;
 
     function CanYou(Player : TPlayer;
       const Action : TPlayerAction) : boolean; virtual;
@@ -304,10 +303,8 @@ type
       KeyPressed : boolean; const Pos, Dest : T3DPoint;
       var Cancel : boolean); virtual;
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      const Src, Pos : T3DPoint); virtual;
-    procedure Exited(Player : TPlayer; KeyPressed : boolean;
-      const Pos, Dest : T3DPoint); virtual;
+    procedure Entered(Player : TPlayer; const Src, Pos : T3DPoint); virtual;
+    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); virtual;
   end;
 
   {*
@@ -319,13 +316,11 @@ type
   *}
   TEffect = class(TScrewComponent)
   public
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      const Src, Pos : T3DPoint); virtual;
-    procedure Exited(Player : TPlayer; KeyPressed : boolean;
-      const Pos, Dest : T3DPoint); virtual;
+    procedure Entered(Player : TPlayer; const Src, Pos : T3DPoint); virtual;
+    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); virtual;
 
-    procedure Execute(Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint; var GoOnMoving : boolean); virtual;
+    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
+      var GoOnMoving : boolean); virtual;
   end;
 
   {*
@@ -350,8 +345,7 @@ type
   *}
   TTool = class(TScrewComponent)
   public
-    procedure Find(Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint); virtual;
+    procedure Find(Player : TPlayer; const Pos : T3DPoint); virtual;
   end;
 
   {*
@@ -371,8 +365,7 @@ type
       AObjectDef : TObjectDef; const AFindMessage : string;
       const AName : string = ''; const AImgName : string = '');
 
-    procedure Find(Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint); override;
+    procedure Find(Player : TPlayer; const Pos : T3DPoint); override;
 
     property ObjectDef : TObjectDef read FObjectDef;
     property FindMessage : string read FFindMessage;
@@ -420,13 +413,11 @@ type
       KeyPressed : boolean; const Pos, Dest : T3DPoint;
       var Cancel : boolean);
 
-    procedure Entered(Player : TPlayer; KeyPressed : boolean;
-      const Src, Pos : T3DPoint);
-    procedure Exited(Player : TPlayer; KeyPressed : boolean;
-      const Pos, Dest : T3DPoint);
+    procedure Entered(Player : TPlayer; const Src, Pos : T3DPoint);
+    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
 
-    procedure Execute(Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint; var GoOnMoving : boolean);
+    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
+      var GoOnMoving : boolean);
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
@@ -1275,20 +1266,18 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure TPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Dest : T3DPoint; var Cancel : boolean);
+  KeyPressed : boolean; const Src, Dest : T3DPoint; var Cancel : boolean);
 begin
 end;
 
 {*
   Un joueur s'est déplacé
   Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de départ
-  @param Dest         Case d'arrivée
+  @param Player   Joueur qui se déplace
+  @param Src      Case de départ
+  @param Dest     Case d'arrivée
 *}
-procedure TPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
-  Src, Dest : T3DPoint);
+procedure TPlugin.Moved(Player : TPlayer; const Src, Dest : T3DPoint);
 begin
 end;
 
@@ -1451,25 +1440,21 @@ end;
 
 {*
   Exécuté lorsque le joueur est arrivé sur la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
-  @param Pos          Position de la case
+  @param Player   Joueur qui se déplace
+  @param Src      Case de provenance
+  @param Pos      Position de la case
 *}
-procedure TField.Entered(Player : TPlayer; KeyPressed : boolean;
-  const Src, Pos : T3DPoint);
+procedure TField.Entered(Player : TPlayer; const Src, Pos : T3DPoint);
 begin
 end;
 
 {*
   Exécuté lorsque le joueur est sorti de la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
-  @param Dest         Case de destination
+  @param Player   Joueur qui se déplace
+  @param Pos      Position de la case
+  @param Dest     Case de destination
 *}
-procedure TField.Exited(Player : TPlayer; KeyPressed : boolean;
-  const Pos, Dest : T3DPoint);
+procedure TField.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
 begin
 end;
 
@@ -1479,37 +1464,32 @@ end;
 
 {*
   Exécuté lorsque le joueur est arrivé sur la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
-  @param Pos          Position de la case
+  @param Player   Joueur qui se déplace
+  @param Src      Case de provenance
+  @param Pos      Position de la case
 *}
-procedure TEffect.Entered(Player : TPlayer; KeyPressed : boolean;
-  const Src, Pos : T3DPoint);
+procedure TEffect.Entered(Player : TPlayer; const Src, Pos : T3DPoint);
 begin
 end;
 
 {*
   Exécuté lorsque le joueur est sorti de la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
-  @param Dest         Case de destination
+  @param Player   Joueur qui se déplace
+  @param Pos      Position de la case
+  @param Dest     Case de destination
 *}
-procedure TEffect.Exited(Player : TPlayer; KeyPressed : boolean;
-  const Pos, Dest : T3DPoint);
+procedure TEffect.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
 begin
 end;
 
 {*
   Exécute l'effet
   @param Player       Joueur concerné
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TEffect.Execute(Player : TPlayer; KeyPressed : boolean;
-  const Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TEffect.Execute(Player : TPlayer; const Pos : T3DPoint;
+  var GoOnMoving : boolean);
 begin
 end;
 
@@ -1539,13 +1519,12 @@ end;
   Exécuté lorsque le joueur trouve l'outil
   Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
   arrive sur une case sur laquelle se trouve l'outil.
-  @param Player       Joueur qui a trouvé l'outil
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
+  @param Player   Joueur qui a trouvé l'outil
+  @param Pos      Position de la case
 *}
-procedure TTool.Find(Player : TPlayer; KeyPressed : boolean;
-  const Pos : T3DPoint);
+procedure TTool.Find(Player : TPlayer; const Pos : T3DPoint);
 begin
+  Player.Map[Pos] := Player.Map[Pos].ChangeTool;
 end;
 
 {--------------------}
@@ -1581,14 +1560,12 @@ end;
   Exécuté lorsque le joueur trouve l'outil
   Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
   arrive sur une case sur laquelle se trouve l'outil.
-  @param Player       Joueur qui a trouvé l'outil
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
+  @param Player   Joueur qui a trouvé l'outil
+  @param Pos      Position de la case
 *}
-procedure TObjectTool.Find(Player : TPlayer; KeyPressed : boolean;
-  const Pos : T3DPoint);
+procedure TObjectTool.Find(Player : TPlayer; const Pos : T3DPoint);
 begin
-  Player.Map[Pos] := Player.Map[Pos].ChangeTool;
+  inherited;
   ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
   if FindMessage <> '' then
     Player.Controller.ShowDialog(sMessage, FindMessage);
@@ -1707,48 +1684,43 @@ end;
 
 {*
   Exécuté lorsque le joueur est arrivé sur la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de provenance
-  @param Pos          Position de la case
+  @param Player   Joueur qui se déplace
+  @param Src      Case de provenance
+  @param Pos      Position de la case
 *}
-procedure TScrew.Entered(Player : TPlayer; KeyPressed : boolean;
-  const Src, Pos : T3DPoint);
+procedure TScrew.Entered(Player : TPlayer; const Src, Pos : T3DPoint);
 begin
-  Field.Entered(Player, KeyPressed, Src, Pos);
+  Field.Entered(Player, Src, Pos);
   if Assigned(Effect) then
-    Effect.Entered(Player, KeyPressed, Src, Pos);
+    Effect.Entered(Player, Src, Pos);
 end;
 
 {*
   Exécuté lorsque le joueur est sorti de la case
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
-  @param Dest         Case de destination
+  @param Player   Joueur qui se déplace
+  @param Pos      Position de la case
+  @param Dest     Case de destination
 *}
-procedure TScrew.Exited(Player : TPlayer; KeyPressed : boolean;
-  const Pos, Dest : T3DPoint);
+procedure TScrew.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
 begin
-  Field.Exited(Player, KeyPressed, Pos, Dest);
+  Field.Exited(Player, Pos, Dest);
   if Assigned(Effect) then
-    Effect.Exited(Player, KeyPressed, Pos, Dest);
+    Effect.Exited(Player, Pos, Dest);
 end;
 
 {*
   Trouve l'objet et exécute l'effet
   @param Player       Joueur concerné
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TScrew.Execute(Player : TPlayer; KeyPressed : boolean;
-  const Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TScrew.Execute(Player : TPlayer; const Pos : T3DPoint;
+  var GoOnMoving : boolean);
 begin
   if Assigned(Tool) then
-    Tool.Find(Player, KeyPressed, Pos);
+    Tool.Find(Player, Pos);
   if Assigned(Effect) then
-    Effect.Execute(Player, KeyPressed, Pos, GoOnMoving);
+    Effect.Execute(Player, Pos, GoOnMoving);
 end;
 
 {*
@@ -2363,18 +2335,18 @@ begin
   // Second passage : le déplacement a été fait
   begin
     // Case source : exited
-    Map[Src].Exited(Self, KeyPressed, Src, Dest);
+    Map[Src].Exited(Self, Src, Dest);
 
     // Plug-in : moved
     for I := 0 to PluginCount-1 do
-      Plugins[I].Moved(Self, KeyPressed, Src, Dest);
+      Plugins[I].Moved(Self, Src, Dest);
 
     // Case destination : entered
-    Map[Dest].Entered(Self, KeyPressed, Src, Dest);
+    Map[Dest].Entered(Self, Src, Dest);
 
     // Case destination : execute (sauf si AbortExecute a été positionné à True)
     if not AbortExecute then
-      Map[Dest].Execute(Self, KeyPressed, Dest, Redo);
+      Map[Dest].Execute(Self, Dest, Redo);
   end;
 end;
 

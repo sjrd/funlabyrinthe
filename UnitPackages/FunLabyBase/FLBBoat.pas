@@ -47,10 +47,9 @@ type
       Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
 
     procedure Moving(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; Src, Dest : T3DPoint;
+      KeyPressed : boolean; const Src, Dest : T3DPoint;
       var Cancel : boolean); override;
-    procedure Moved(Player : TPlayer; KeyPressed : boolean;
-      Src, Dest : T3DPoint); override;
+    procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); override;
 
     function CanYou(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
@@ -72,8 +71,7 @@ type
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
-    procedure Find(Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint); override;
+    procedure Find(Player : TPlayer; const Pos : T3DPoint); override;
 
     property Number : integer read FNumber;
   end;
@@ -181,7 +179,7 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
 procedure TBoatPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; Src, Dest : T3DPoint; var Cancel : boolean);
+  KeyPressed : boolean; const Src, Dest : T3DPoint; var Cancel : boolean);
 begin
   if Player.Direction <> OldDirection then
     Cancel := True;
@@ -190,13 +188,11 @@ end;
 {*
   Un joueur s'est déplacé
   Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de départ
-  @param Dest         Case d'arrivée
+  @param Player   Joueur qui se déplace
+  @param Src      Case de départ
+  @param Dest     Case d'arrivée
 *}
-procedure TBoatPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
-  Src, Dest : T3DPoint);
+procedure TBoatPlugin.Moved(Player : TPlayer; const Src, Dest : T3DPoint);
 begin
   with Player do if not (Map[Dest].Field is TWater) then
   begin
@@ -265,19 +261,17 @@ end;
   Exécuté lorsque le joueur trouve l'outil
   Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
   arrive sur une case sur laquelle se trouve l'outil.
-  @param Player       Joueur qui a trouvé l'outil
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Pos          Position de la case
+  @param Player   Joueur qui a trouvé l'outil
+  @param Pos      Position de la case
 *}
-procedure TBoat.Find(Player : TPlayer; KeyPressed : boolean;
-  const Pos : T3DPoint);
+procedure TBoat.Find(Player : TPlayer; const Pos : T3DPoint);
 begin
   inherited;
 
   with Player do
   begin
     // Remplacement de la case par de l'eau simple
-    Map[Pos] := Map[Pos].ChangeField(idWater).ChangeTool;
+    Map[Pos] := Map[Pos].ChangeField(idWater);
 
     // Indication du numéro de la barque dans l'attribut correspondant
     Attribute[idBoatPlugin] := Number;

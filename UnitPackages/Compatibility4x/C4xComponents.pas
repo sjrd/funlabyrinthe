@@ -102,8 +102,8 @@ type
     constructor Create(AActions : TActions);
     procedure AfterConstruction; override;
 
-    procedure Execute(Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint; var GoOnMoving : boolean); override;
+    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
+      var GoOnMoving : boolean); override;
 
     property Actions : TActions read FActions;
   end;
@@ -325,17 +325,16 @@ end;
 {*
   Exécute l'effet
   @param Player       Joueur concerné
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TActionsEffect.Execute(Player : TPlayer; KeyPressed : boolean;
-  const Pos : T3DPoint; var GoOnMoving : boolean);
+procedure TActionsEffect.Execute(Player : TPlayer; const Pos : T3DPoint;
+  var GoOnMoving : boolean);
 var HasMoved, HasShownMsg : boolean;
     Other : T3DPoint;
 begin
   GoOnMoving := Actions.Kind = akDirection;
-  FActions.Execute(phExecute, Player, KeyPressed, Pos, GoOnMoving,
+  FActions.Execute(phExecute, Player, True, Pos, GoOnMoving,
     HasMoved, HasShownMsg);
 
   if Actions.Kind in [akTransporterNext..akTransporterRandom] then

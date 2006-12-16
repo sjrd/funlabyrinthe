@@ -66,8 +66,7 @@ type
     procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
       Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
 
-    procedure Moved(Player : TPlayer; KeyPressed : boolean;
-      Src, Dest : T3DPoint); override;
+    procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); override;
 
     function CanYou(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
@@ -160,13 +159,11 @@ end;
 {*
   Un joueur s'est déplacé
   Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
-  @param Player       Joueur qui se déplace
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Src          Case de départ
-  @param Dest         Case d'arrivée
+  @param Player   Joueur qui se déplace
+  @param Src      Case de départ
+  @param Dest     Case d'arrivée
 *}
-procedure TBuoyPlugin.Moved(Player : TPlayer; KeyPressed : boolean;
-  Src, Dest : T3DPoint);
+procedure TBuoyPlugin.Moved(Player : TPlayer; const Src, Dest : T3DPoint);
 begin
   if not (Player.Map[Dest].Field is TWater) then
     Player.RemovePlugin(Self);
