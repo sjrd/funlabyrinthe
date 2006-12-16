@@ -113,6 +113,8 @@ type
     SaveMapDialog: TSaveDialog;
     ActionAddMap: TAction;
     ActionRemoveMap: TAction;
+    StaticTool: TStaticText;
+    LabelTool: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -709,6 +711,7 @@ begin
   StaticPosition.Caption := '';
   StaticField.Caption := '';
   StaticEffect.Caption := '';
+  StaticTool.Caption := '';
   StaticObstacle.Caption := '';
 
   if NewTab < 0 then
@@ -934,6 +937,8 @@ begin
     StaticField.Caption := Field.Name;
     if Effect = nil then StaticEffect.Caption := '' else
       StaticEffect.Caption := Effect.Name;
+    if Tool = nil then StaticTool.Caption := '' else
+      StaticTool.Caption := Tool.Name;
     if Obstacle = nil then StaticObstacle.Caption := '' else
       StaticObstacle.Caption := Obstacle.Name;
   end;

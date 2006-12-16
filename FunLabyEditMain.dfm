@@ -2,7 +2,7 @@ object FormMain: TFormMain
   Left = 0
   Top = 0
   Width = 678
-  Height = 507
+  Height = 524
   Caption = #201'diteur FunLabyrinthe'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -31,13 +31,13 @@ object FormMain: TFormMain
   object SplitterScrews: TSplitter
     Left = 150
     Top = 50
-    Height = 404
+    Height = 421
     MinSize = 100
   end
   object SplitterPlayers: TSplitter
     Left = 517
     Top = 50
-    Height = 404
+    Height = 421
     Align = alRight
     MinSize = 100
   end
@@ -73,7 +73,7 @@ object FormMain: TFormMain
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 454
+    Top = 471
     Width = 670
     Height = 19
     Panels = <>
@@ -82,7 +82,7 @@ object FormMain: TFormMain
     Left = 0
     Top = 50
     Width = 150
-    Height = 404
+    Height = 421
     Align = alLeft
     ButtonFlow = cbfVertical
     ButtonHeight = 36
@@ -137,7 +137,7 @@ object FormMain: TFormMain
     Left = 520
     Top = 50
     Width = 150
-    Height = 404
+    Height = 421
     Align = alRight
     ButtonFlow = cbfVertical
     ButtonOptions = [boFullSize, boGradientFill, boShowCaptions, boBoldCaptions, boCaptionOnlyBorder]
@@ -153,7 +153,7 @@ object FormMain: TFormMain
     Left = 153
     Top = 50
     Width = 364
-    Height = 404
+    Height = 421
     Align = alClient
     BevelKind = bkTile
     BevelOuter = bvNone
@@ -177,13 +177,13 @@ object FormMain: TFormMain
       Left = 0
       Top = 311
       Width = 360
-      Height = 89
+      Height = 106
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
       DesignSize = (
         360
-        89)
+        106)
       object LabelPosition: TLabel
         Left = 8
         Top = 8
@@ -207,7 +207,7 @@ object FormMain: TFormMain
       end
       object LabelObstacle: TLabel
         Left = 8
-        Top = 64
+        Top = 80
         Width = 49
         Height = 13
         Caption = 'Obstacle :'
@@ -219,6 +219,13 @@ object FormMain: TFormMain
         Height = 13
         Anchors = [akTop, akRight]
         Caption = #201'tage :'
+      end
+      object LabelTool: TLabel
+        Left = 8
+        Top = 64
+        Width = 29
+        Height = 13
+        Caption = 'Outil :'
       end
       object StaticPosition: TStaticText
         Left = 64
@@ -247,9 +254,18 @@ object FormMain: TFormMain
         BorderStyle = sbsSunken
         TabOrder = 2
       end
-      object StaticObstacle: TStaticText
+      object StaticTool: TStaticText
         Left = 64
         Top = 64
+        Width = 160
+        Height = 17
+        AutoSize = False
+        BorderStyle = sbsSunken
+        TabOrder = 4
+      end
+      object StaticObstacle: TStaticText
+        Left = 64
+        Top = 80
         Width = 160
         Height = 17
         AutoSize = False
