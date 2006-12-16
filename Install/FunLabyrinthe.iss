@@ -168,6 +168,7 @@ Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension igno
 ; Fichiers temporaires pour l'installation
 
 Source: "Images\*"; flags: dontcopy
+Source: "Import4x.dll"; flags: dontcopy
 
 [INI]
 Filename: "{app}\FunLabyrinthe.ini"; Section: "Directories"; Key: "AppData"; String: "{code:AppData}"
@@ -640,6 +641,9 @@ begin
     ExpandConstants('{cm:PageImportingOldDescription}'));
 end;
 
+function ImportLabyrinth(FileName, AppData : PChar) : boolean;
+  external 'ImportLabyrinth@files:Import4x.dll stdcall delayload setuponly';
+
 procedure ImportOld;
 var I : integer;
     FileName : string;
@@ -653,7 +657,8 @@ begin
         ExpandConstants('{cm:ImportingOld}'), FileName);
       PageImportingOld.SetProgress(I, LabyrinthsToImport.Count);
 
-      Sleep(200);
+      ImportLabyrinth(PChar(ImportDir + 'Labyrinthes\' + FileName),
+        PChar(FunLabyAppData));
     end;
   finally
     PageImportingOld.Hide;
