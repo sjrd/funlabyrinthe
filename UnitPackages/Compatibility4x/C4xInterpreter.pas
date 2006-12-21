@@ -129,7 +129,7 @@ type
     class procedure Execute(ACounter : PInteger; AActions : TStrings;
       AMaster : TMaster; APhase : integer; APlayer : TPlayer;
       AKeyPressed : boolean; const APos : T3DPoint; var ADoNextPhase : boolean;
-      out AHasMoved, AHasShownMsg : boolean; AInactive : TComponentID);
+      out AHasMoved, AHasShownMsg : boolean; const AInactive : TComponentID);
   end;
 
 implementation
@@ -162,14 +162,16 @@ const
   cClassicEnd  = 20; /// Fin des commandes classiques
   cJump        = 21; /// Commande Saute
   cStop        = 22; /// Commande Stop
-  cEnd         = 22; /// Fin des commandes
+  cRemark      = 23; /// Remarque
+  cEnd         = 23; /// Fin des commandes
 
   /// Tableaux des chaînes de commandes
   CommandStrings : array[cBegin..cEnd] of string = (
     'Remplacer', 'Convertir', 'Deplacer', 'Desactiver', 'Incrementer',
     'Decrementer', 'Multiplier', 'Message', 'Indice', 'Echec', 'Impasse',
     'Choix', 'Description', 'Gagner', 'Son', 'AllerA', 'LaisserPasser',
-    'AutoriserPlanche', 'Arreter', 'Poursuivre', 'Continuer', 'Saute', 'Stop'
+    'AutoriserPlanche', 'Arreter', 'Poursuivre', 'Continuer', 'Saute', 'Stop',
+    'Remarque'
   );
 
   srBegin         = 0;  /// Début des références simples
@@ -187,21 +189,37 @@ const
   srZ             = 11; /// Référence à Z
   srDirection     = 12; /// Référence à Direction
   srSuccess       = 13; /// Référence à Reussite
-  srEnd           = 13; /// Fin des références simples
+  srEndCounter    = 14; /// Référence au compteur du dehors
+  srEnd           = 14; /// Fin des références simples
 
   /// Tableaux des références simples
   SimpleReferencesStrings : array[srBegin..srEnd] of string = (
     '&Compteur', '&Bouee', '&Bouees', '&Planche', '&Planches', '&ClesArgent',
     '&ClesOr', '&Couleur', '&Temporisation', '&X', '&Y', '&Z', '&Direction',
-    '&Reussite'
+    '&Reussite', '&CompteurFin'
   );
 
+  /// Début des références indicées aux boutons
+  irButtonsBegin = srEnd + 1;
+  /// Fin des références indicées aux boutons
+  irButtonsEnd = irButtonsBegin + 45 - 1;
+
+  /// Début des références indicées aux téléporteurs
+  irTransportersBegin = irButtonsEnd + 1;
+  /// Fin des références indicées aux téléporteurs
+  irTransportersEnd = irTransportersBegin + 30 - 1;
+
   /// Début des références indicées aux variables
-  irVariablesBegin = srEnd + 1;
+  irVariablesBegin = irTransportersEnd + 1;
   /// Fin des références indicées aux variables
-  irVariablesEnd   = irVariablesBegin + MaxVar - 1;
+  irVariablesEnd = irVariablesBegin + MaxVar - 1;
+
   /// Début des références indicées aux compteurs des actions
-  irActionsCounterBegin = irVariablesBegin + MaxVar;
+  irActionsCounterBegin = irVariablesEnd + 1;
+
+  EndCounterIndex = 76;          /// Index du compteur de fin
+  ButtonCounterOffset = 1;       /// Décalage des index des boutons
+  TransporterCounterOffset = 46; /// Décalage des index des téléporteurs
 
 type
   {*
@@ -211,6 +229,16 @@ type
     @return Index de la première occurence de SubStr dans Str (0 si non trouvée)
   *}
   TPosProc = function(const SubStr, Str : string) : integer;
+
+  {*
+    Type d'une procédure qui remplace toutes les occurences d'une variable par
+    sa valeur
+    @param Str        Chaîne dans laquelle remplacer les variables
+    @param Variable   Variable à remplacer
+    @param Value      Valeur entière de la variable
+  *}
+  TReplaceVarProc = procedure(var Str : string; const Variable : string;
+    Value : integer);
 
   {*
     Type procédural correspondant aux méthodes d'exécution de commande
@@ -651,6 +679,28 @@ procedure TActionsInterpreter.TreatVariables(var Line : string);
     end;
   end;
 
+  {*
+    Remplace toutes les occurences de compteurs indexés
+    @param Prefix          Préfixe à rechercher
+    @param Count           Nombre de compteurs
+    @param IndexOffset     Index du premier compteur tel qu'écrit
+    @param ActionsOffset   Index du premier compteur dans les actions
+    @param Replace         Routine de remplacement à utiliser
+  *}
+  procedure ReplaceIndexedCounter(const Prefix : string;
+    Count, IndexOffset, ActionsOffset : integer; ReplaceVar : TReplaceVarProc);
+  var I : integer;
+  begin
+    if Pos(Prefix, Line) > 0 then
+    begin
+      for I := Count-1 downto 0 do
+      begin
+        ReplaceVar(Line, Prefix + IntToStr(I + IndexOffset),
+          Infos.Actions[I + ActionsOffset].Counter);
+      end;
+    end;
+  end;
+
 var I : integer;
 begin
   ReplaceNonStrVariable(Line, 'Ici', StrHere);
@@ -689,14 +739,12 @@ begin
   ReplaceNonStrVariable(Line, 'VersionInterpreteur', InterpreterVersion);
   ReplaceNonStrVariable(Line, 'Couleur', Player.Color);
 
-  if Pos('CompteurActions_', Line) > 0 then
-  begin
-    for I := Infos.ActionsCount-1 downto 0 do
-    begin
-      ReplaceVariable(Line, Format('CompteurActions_%d', [I]),
-        Infos.Actions[I].Counter);
-    end;
-  end;
+  ReplaceIndexedCounter('CompteurActions_',
+    Infos.ActionsCount, 0, 0, ReplaceVariable);
+  ReplaceIndexedCounter('CompteurBouton_',
+    45, 1, ButtonCounterOffset, ReplaceVariable);
+  ReplaceIndexedCounter('CompteurTeleporteur_',
+    30, 1, TransporterCounterOffset, ReplaceVariable);
 
   if Pos('Variable_', Line) > 0 then
   begin
@@ -704,16 +752,15 @@ begin
       ReplaceVariable(Line, Format('Variable_%d', [I]), Infos.Variables[I]);
   end;
 
+  ReplaceVariable(Line, 'CompteurFin', Infos.Actions[EndCounterIndex].Counter);
   ReplaceVariable(Line, 'Compteur', Counter^);
 
-  if Pos('CompteurActions ', Line) > 0 then
-  begin
-    for I := Infos.ActionsCount-1 downto 0 do
-    begin
-      ReplaceNonStrVariable(Line, Format('CompteurActions %d', [I]),
-        Infos.Actions[I].Counter);
-    end;
-  end;
+  ReplaceIndexedCounter('CompteurActions ',
+    Infos.ActionsCount, 0, 0, ReplaceNonStrVariable);
+  ReplaceIndexedCounter('CompteurBouton ',
+    45, 1, ButtonCounterOffset, ReplaceNonStrVariable);
+  ReplaceIndexedCounter('CompteurTeleporteur ',
+    30, 1, TransporterCounterOffset, ReplaceNonStrVariable);
 
   if Pos('Variable ', Line) > 0 then
   begin
@@ -903,7 +950,10 @@ procedure TActionsInterpreter.ModifyReference(Reference, Value : integer;
   end;
 
 var NewPos : T3DPoint;
+    ActionsIndex : integer;
 begin
+  ActionsIndex := -1;
+
   case Reference of
     srCounter : Counter^ := TransformValue(Counter^);
 
@@ -940,14 +990,24 @@ begin
 
     srSuccess : { TODO 1 : Modification de Reussite };
 
+    srEndCounter : ActionsIndex := EndCounterIndex;
+
+    irButtonsBegin..irButtonsEnd :
+      ActionsIndex := Reference-irButtonsBegin+ButtonCounterOffset;
+
+    irTransportersBegin..irTransportersEnd :
+      ActionsIndex := Reference-irButtonsBegin+TransporterCounterOffset;
+
     irVariablesBegin..irVariablesEnd :
       Infos.Variables[Reference-irVariablesBegin+1] :=
         TransformValue(Infos.Variables[Reference-irVariablesBegin+1]);
 
-    else
-      Infos.Actions[Reference-irActionsCounterBegin].Counter :=
-        TransformValue(Infos.Actions[Reference-irActionsCounterBegin].Counter);
+    else ActionsIndex := Reference-irActionsCounterBegin;
   end;
+
+  if ActionsIndex >= 0 then
+    Infos.Actions[ActionsIndex].Counter :=
+      TransformValue(Infos.Actions[ActionsIndex].Counter);
 end;
 
 {*
@@ -1329,6 +1389,7 @@ begin
         Current := Index;
       end;
       cStop : Break;
+      cRemark : ;
     end;
   except
     on Error : EInvalidAction do;
@@ -1355,7 +1416,7 @@ end;
 class procedure TActionsInterpreter.Execute(ACounter : PInteger;
   AActions : TStrings; AMaster : TMaster; APhase : integer; APlayer : TPlayer;
   AKeyPressed : boolean; const APos : T3DPoint; var ADoNextPhase : boolean;
-  out AHasMoved, AHasShownMsg : boolean; AInactive : TComponentID);
+  out AHasMoved, AHasShownMsg : boolean; const AInactive : TComponentID);
 var PluginIDs : TStrings;
     I : integer;
 begin
