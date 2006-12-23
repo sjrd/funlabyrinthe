@@ -159,7 +159,7 @@ end;
 procedure GameStarted(UnitFile : TBPLUnitFile; Master : TMaster);
 var Infos : TC4xInfos;
     I : integer;
-    DoNextPhase, HasMoved, HasShownMsg : boolean;
+    DoNextPhase, HasMoved, HasShownMsg, Successful : boolean;
 begin
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   DoNextPhase := False;
@@ -169,7 +169,7 @@ begin
     with Infos.Actions[I] do if Kind = akGameStarted then
     begin
       Execute(phExecute, Master.Players[0], False, No3DPoint,
-        DoNextPhase, HasMoved, HasShownMsg);
+        DoNextPhase, HasMoved, HasShownMsg, Successful);
     end;
   end;
 end;

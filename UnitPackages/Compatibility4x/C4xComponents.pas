@@ -149,7 +149,7 @@ type
 
     procedure Execute(Phase : integer; Player : TPlayer; KeyPressed : boolean;
       const Pos : T3DPoint; var DoNextPhase : boolean;
-      out HasMoved, HasShownMsg : boolean);
+      out HasMoved, HasShownMsg, Successful : boolean);
 
     property Number : integer read FNumber;
     property Kind : TActionsKind read FKind;
@@ -329,12 +329,12 @@ end;
 *}
 procedure TActionsEffect.Execute(Player : TPlayer; const Pos : T3DPoint;
   var GoOnMoving : boolean);
-var HasMoved, HasShownMsg : boolean;
+var HasMoved, HasShownMsg, Successful : boolean;
     Other : T3DPoint;
 begin
   GoOnMoving := Actions.Kind = akDirection;
   FActions.Execute(phExecute, Player, True, Pos, GoOnMoving,
-    HasMoved, HasShownMsg);
+    HasMoved, HasShownMsg, Successful);
 
   if Actions.Kind in [akTransporterNext..akTransporterRandom] then
   begin
@@ -401,19 +401,19 @@ end;
   @param Src            Case de provenance
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortEntered   À positionner à True pour empêcher le Entered
+  @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
 procedure TActionsObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel, AbortExecute : boolean);
-var DoNextPhase, HasMoved, HasShownMsg : boolean;
+var DoNextPhase, HasMoved, HasShownMsg, Successful : boolean;
 begin
   if FActions.Kind <> akObstacle then exit;
   DoNextPhase := False;
   FActions.Execute(phPushing, Player, KeyPressed, Pos, DoNextPhase,
-    HasMoved, HasShownMsg);
+    HasMoved, HasShownMsg, Successful);
   AbortExecute := not DoNextPhase;
-  Cancel := Same3DPoint(Src, Player.Position);
+  Cancel := Same3DPoint(Src, Player.Position) and (not Successful);
 end;
 
 {-----------------}
@@ -477,14 +477,15 @@ end;
   @param DoNextPhase   Indique s'il faut exécuter la phase suivante
   @param HasMoved      Indique si un AllerA a été fait
   @param HasShownMsg   Indique si un message a été affiché
+  @param Successful    Indique si la manoeuvre est réussie
 *}
 procedure TActions.Execute(Phase : integer; Player : TPlayer;
   KeyPressed : boolean; const Pos : T3DPoint; var DoNextPhase : boolean;
-  out HasMoved, HasShownMsg : boolean);
+  out HasMoved, HasShownMsg, Successful : boolean);
 begin
   inc(FCounter);
   TActionsInterpreter.Execute(@FCounter, FActions, Master, Phase, Player,
-    KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg, Inactive);
+    KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg, Successful, Inactive);
 end;
 
 {------------------}

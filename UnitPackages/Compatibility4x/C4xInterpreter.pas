@@ -11,7 +11,8 @@ interface
 
 uses
   SysUtils, Classes, StrUtils, Contnrs, ScUtils, ScStrUtils, ScExtra,
-  FunLabyUtils, FilesUtils, FunLabyTools, C4xComponents, C4xCommon;
+  FunLabyUtils, FilesUtils, FunLabyTools, C4xComponents, C4xScrewsTable,
+  C4xCommon;
 
 resourcestring
   sIfStatCannotMixAndOr = 'Ne peut mélanger les Et et les Ou';
@@ -70,12 +71,14 @@ type
     Infos : TC4xInfos;     /// Infos C4x
     Phase : integer;       /// Phase courante (phPushing ou phExecute)
     Player : TPlayer;      /// Joueur concerné
+    PlayerPos : T3DPoint;  /// Position du joueur
     Map : TMap;            /// Carte courante
     KeyPressed : boolean;  /// True si une touche a été pressée
     Position : T3DPoint;   /// Position de la case
     DoNextPhase : boolean; /// Indique s'il faut exécuter la phase suivante
     HasMoved : boolean;    /// Indique si un AllerA a été fait
     HasShownMsg : boolean; /// Indique si un message a été affiché
+    Successful : boolean;  /// État de réussite
     Inactive : TScrew;     /// Case à utiliser lors d'un Desactiver
     AllowPlank : boolean;  /// Indique si un AutoriserPlanche a été fait
 
@@ -129,7 +132,8 @@ type
     class procedure Execute(ACounter : PInteger; AActions : TStrings;
       AMaster : TMaster; APhase : integer; APlayer : TPlayer;
       AKeyPressed : boolean; const APos : T3DPoint; var ADoNextPhase : boolean;
-      out AHasMoved, AHasShownMsg : boolean; const AInactive : TComponentID);
+      out AHasMoved, AHasShownMsg, ASuccessful : boolean;
+      const AInactive : TComponentID);
   end;
 
 implementation
@@ -586,19 +590,21 @@ begin
 
   if (StartIndex < Length(Params)) and (Params[StartIndex] = '[') then
   begin
-    // Case référencée par une position de la carte
+    // Case référencée par une position de la carte ou par son caractère
     inc(StartIndex);
     EndIndex := ToNextChar(Params, StartIndex, ']');
     Param := Copy(Params, StartIndex, EndIndex-StartIndex);
-    Result := Map[GetScrewReference(Param)];
+    if Length(Param) = 1 then
+      Result := Master.Screw[ScrewsTable[Param[1]]]
+    else
+      Result := Map[GetScrewReference(Param)];
     Delete(Params, 1, EndIndex);
   end else
   begin
-    // Case donnée par son ID
-    EndIndex := ToNextChar(Params, StartIndex, ' ');
+    // Case donnée par son caractère
     try
-      Result := Master.Screw[Copy(Params, StartIndex, EndIndex-StartIndex)];
-      Delete(Params, 1, EndIndex-1);
+      Result := Master.Screw[ScrewsTable[Params[StartIndex]]];
+      Delete(Params, 1, StartIndex);
     except
       on Error : EComponentNotFound do
         raise EBadParam.Create(Error.Message);
@@ -711,12 +717,12 @@ begin
   TreatNextPreviousRandom(Line, 'Precedent', FindPreviousScrew);
   TreatNextPreviousRandom(Line, 'Aleatoire', FindScrewAtRandom);
 
-  ReplaceNonStrVariable(Line, 'X'        , Player.Position.X);
-  ReplaceNonStrVariable(Line, 'Y'        , Player.Position.Y);
-  ReplaceNonStrVariable(Line, 'Z'        , Player.Position.Z);
+  ReplaceNonStrVariable(Line, 'X'        , PlayerPos.X);
+  ReplaceNonStrVariable(Line, 'Y'        , PlayerPos.Y);
+  ReplaceNonStrVariable(Line, 'Z'        , PlayerPos.Z);
   ReplaceNonStrVariable(Line, 'Direction', integer(Player.Direction));
   ReplaceNonStrVariable(Line, 'Reponse'  , Answer);
-  ReplaceNonStrVariable(Line, 'Reussite' , 1 { TODO 1 : Lecture de Reussite });
+  ReplaceNonStrVariable(Line, 'Reussite' , integer(Successful));
   ReplaceNonStrVariable(Line, 'Touche'   , integer(KeyPressed));
   ReplaceNonStrVariable(Line, 'Phase'    , Phase);
 
@@ -949,8 +955,7 @@ procedure TActionsInterpreter.ModifyReference(Reference, Value : integer;
     end;
   end;
 
-var NewPos : T3DPoint;
-    ActionsIndex : integer;
+var ActionsIndex : integer;
 begin
   ActionsIndex := -1;
 
@@ -976,13 +981,13 @@ begin
 
     srX, srY, srZ :
     begin
-      NewPos := Player.Position;
+      Master.Temporize;
       case Reference of
-        srX : NewPos.X := TransformValue(NewPos.X);
-        srY : NewPos.Y := TransformValue(NewPos.Y);
-        srZ : NewPos.Z := TransformValue(NewPos.Z);
+        srX : PlayerPos.X := TransformValue(PlayerPos.X);
+        srY : PlayerPos.Y := TransformValue(PlayerPos.Y);
+        srZ : PlayerPos.Z := TransformValue(PlayerPos.Z);
       end;
-      Player.Position := NewPos;
+      HasMoved := True;
     end;
 
     srDirection :
@@ -1138,7 +1143,7 @@ begin
     Screw := GetScrewParam(Params, Map);
 
   Map[Position] := Screw;
-  { TODO 1 : Reussite à 1 }
+  Successful := True;
 end;
 
 {*
@@ -1301,7 +1306,7 @@ begin
   if not IsNo3DPoint(ScrewRef) then
   begin
     Master.Temporize;
-    Player.Position := ScrewRef;
+    PlayerPos := ScrewRef;
   end;
   HasMoved := True;
 end;
@@ -1312,8 +1317,8 @@ end;
 *}
 procedure TActionsInterpreter.LetPassCmd(var Params : string);
 begin
-  Player.Position := Position;
-  { TODO 1 : Mettre Reussite à 1 }
+  PlayerPos := Position;
+  Successful := True;
 end;
 
 {*
@@ -1322,7 +1327,8 @@ end;
 *}
 procedure TActionsInterpreter.AllowPlankCmd(var Params : string);
 begin
-  AllowPlank := True;
+  if Phase = phPushing then
+    AllowPlank := True;
 end;
 
 {*
@@ -1395,8 +1401,17 @@ begin
     on Error : EInvalidAction do;
   end;
 
-  if AllowPlank and Same3DPoint(Player.Position, Position) then
-    Player.CanYou(actPassOverScrew);
+  if AllowPlank and Same3DPoint(PlayerPos, Position) and (not Successful) then
+  begin
+    if Player.CanYou(actPassOverScrew) then
+    begin
+      Successful := True;
+      DoNextPhase := True;
+    end;
+  end;
+
+  if HasMoved then
+    Player.Position := PlayerPos;
 end;
 
 {*
@@ -1411,12 +1426,14 @@ end;
   @param ADoNextPhase   Indique s'il faut exécuter la phase suivante
   @param AHasMoved      Indique si un AllerA a été fait
   @param AHasShownMsg   Indique si un message a été affiché
+  @param ASuccessful    Indique si la manoeuvre est réussie
   @parma AInactive      Effet à utiliser lors d'un Desactiver
 *}
 class procedure TActionsInterpreter.Execute(ACounter : PInteger;
   AActions : TStrings; AMaster : TMaster; APhase : integer; APlayer : TPlayer;
   AKeyPressed : boolean; const APos : T3DPoint; var ADoNextPhase : boolean;
-  out AHasMoved, AHasShownMsg : boolean; const AInactive : TComponentID);
+  out AHasMoved, AHasShownMsg, ASuccessful : boolean;
+  const AInactive : TComponentID);
 var PluginIDs : TStrings;
     I : integer;
 begin
@@ -1428,6 +1445,7 @@ begin
     Infos := Master.Component[idC4xInfos] as TC4xInfos;
     Phase := APhase;
     Player := APlayer;
+    PlayerPos := APos;
     Map := Player.Map;
     KeyPressed := AKeyPressed;
     Position := APos;
@@ -1462,6 +1480,18 @@ begin
       irActionsCounterBegin + Infos.ActionsCount);
     for I := srBegin to srEnd do
       ReferencesStrings[I] := SimpleReferencesStrings[I];
+
+    for I := irButtonsBegin to irButtonsEnd do
+    begin
+      ReferencesStrings[I] :=
+        '&CompteurBouton_' + IntToStr(I - irButtonsBegin + 1);
+    end;
+    for I := irTransportersBegin to irTransportersEnd do
+    begin
+      ReferencesStrings[I] :=
+        '&CompteurTeleporteur_' + IntToStr(I - irTransportersBegin + 1);
+    end;
+
     for I := irVariablesBegin to irVariablesEnd do
       ReferencesStrings[I] := '&Variable_' + IntToStr(I - irVariablesBegin + 1);
     for I := irActionsCounterBegin to Length(ReferencesStrings)-1 do
@@ -1475,6 +1505,7 @@ begin
     ADoNextPhase := DoNextPhase;
     AHasMoved := HasMoved;
     AHasShownMsg := HasShownMsg;
+    ASuccessful := Successful;
   finally
     Free;
   end;
