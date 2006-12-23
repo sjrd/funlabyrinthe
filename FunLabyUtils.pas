@@ -908,10 +908,19 @@ end;
   Crée une instance de TImagesMaster
 *}
 constructor TImagesMaster.Create;
+var EmptyScrew : TBitmap;
 begin
   inherited Create;
   FImgList := TImageList.CreateSize(ScrewSize, ScrewSize);
   FImgNames := THashedStringList.Create;
+
+  EmptyScrew := TScrewBitmap.Create;
+  try
+    FImgList.AddMasked(EmptyScrew, clTransparent);
+    FImgNames.Add('');
+  finally
+    EmptyScrew.Free;
+  end;
 end;
 
 {*
@@ -940,9 +949,15 @@ begin
   begin
     NewImg := TBitmap.Create;
     try
-      NewImg.LoadFromFile(Format(fScrewFileName, [ImgName]));
-      FImgList.AddMasked(NewImg, clTransparent);
-      Result := FImgNames.Add(ImgName);
+      try
+        NewImg.LoadFromFile(Format(fScrewFileName, [ImgName]));
+        FImgList.AddMasked(NewImg, clTransparent);
+        Result := FImgNames.Add(ImgName);
+      except
+        if FImgList.Count > FImgNames.Count then
+          FImgList.Delete(FImgList.Count-1);
+        Result := 0; // Image vide
+      end;
     finally
       NewImg.Free;
     end;
