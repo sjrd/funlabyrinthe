@@ -269,15 +269,17 @@ var
 *}
 function PosNonStrVariable(const Variable, Str : string) : integer;
 var Str2 : string;
+    ReplaceBrackets : boolean;
     I, Len : integer;
 begin
   Str2 := ' '+Str+' ';
+  ReplaceBrackets := Pos('[', Variable) = 0;
   I := 2;
   Len := Length(Str2);
   while I < Len do case Str2[I] of
     '[', ']' :
     begin
-      Str2[I] := ' ';
+      if ReplaceBrackets then Str2[I] := ' ';
       inc(I);
     end;
     '{' :
@@ -310,11 +312,18 @@ begin
   I := 1;
   Len := Length(Str2);
   while I <= Len do case Str2[I] of
-    '}' : while (I <= Len) and (Str2[I] <> '{') do inc(I);
+    '}' :
+    begin
+      while (I <= Len) and (Str2[I] <> '{') do
+      begin
+        Str2[I] := ' ';
+        inc(I);
+      end;
+    end;
     else inc(I);
   end;
 
-  Result := Pos(Variable, Str);
+  Result := Pos(Variable, Str2);
   if Result > 0 then dec(Result);
 end;
 
@@ -693,15 +702,15 @@ procedure TActionsInterpreter.TreatVariables(var Line : string);
     @param ActionsOffset   Index du premier compteur dans les actions
     @param Replace         Routine de remplacement à utiliser
   *}
-  procedure ReplaceIndexedCounter(const Prefix : string;
+  procedure ReplaceIndexedCounter(const Pattern : string;
     Count, IndexOffset, ActionsOffset : integer; ReplaceVar : TReplaceVarProc);
   var I : integer;
   begin
-    if Pos(Prefix, Line) > 0 then
+    if Pos(GetFirstToken(Pattern, '%'), Line) > 0 then
     begin
       for I := Count-1 downto 0 do
       begin
-        ReplaceVar(Line, Prefix + IntToStr(I + IndexOffset),
+        ReplaceVar(Line, Format(Pattern, [I + IndexOffset]),
           Infos.Actions[I + ActionsOffset].Counter);
       end;
     end;
@@ -745,11 +754,11 @@ begin
   ReplaceNonStrVariable(Line, 'VersionInterpreteur', InterpreterVersion);
   ReplaceNonStrVariable(Line, 'Couleur', Player.Color);
 
-  ReplaceIndexedCounter('CompteurActions_',
+  ReplaceIndexedCounter('CompteurActions_%d',
     Infos.ActionsCount, 0, 0, ReplaceVariable);
-  ReplaceIndexedCounter('CompteurBouton_',
+  ReplaceIndexedCounter('CompteurBouton_%d',
     45, 1, ButtonCounterOffset, ReplaceVariable);
-  ReplaceIndexedCounter('CompteurTeleporteur_',
+  ReplaceIndexedCounter('CompteurTeleporteur_%d',
     30, 1, TransporterCounterOffset, ReplaceVariable);
 
   if Pos('Variable_', Line) > 0 then
@@ -761,23 +770,25 @@ begin
   ReplaceVariable(Line, 'CompteurFin', Infos.Actions[EndCounterIndex].Counter);
   ReplaceVariable(Line, 'Compteur', Counter^);
 
-  ReplaceIndexedCounter('CompteurActions ',
+  ReplaceIndexedCounter('[CompteurActions %d]',
     Infos.ActionsCount, 0, 0, ReplaceNonStrVariable);
-  ReplaceIndexedCounter('CompteurBouton ',
+  ReplaceIndexedCounter('[CompteurBouton %d]',
     45, 1, ButtonCounterOffset, ReplaceNonStrVariable);
-  ReplaceIndexedCounter('CompteurTeleporteur ',
+  ReplaceIndexedCounter('[CompteurTeleporteur %d]',
     30, 1, TransporterCounterOffset, ReplaceNonStrVariable);
 
   if Pos('Variable ', Line) > 0 then
   begin
     for I := 0 to Infos.ActionsCount-1 do
     begin
-      ReplaceNonStrVariable(Line, Format('Variable %d', [I]),
+      ReplaceNonStrVariable(Line, Format('[Variable %d]', [I]),
         Infos.Variables[I]);
     end;
   end;
 
   Replace(Line, '&CompteurActions ', '&CompteurActions_');
+  Replace(Line, '&CompteurBouton ', '&CompteurBouton_');
+  Replace(Line, '&CompteurTeleporteur ', '&CompteurTeleporteur_');
 end;
 
 {*
