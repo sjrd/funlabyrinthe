@@ -107,15 +107,15 @@ const {don't localize}
   sMasterFileContents =
   '<?xml version="1.0" encoding="UTF-8"?>'#10+
   '<funlabyrinthe version="%s">'#10+
-  '  <title>Labyrinthe genere</title>'#10+
-  '  <description>Labyrinthe genere</description>'#10+
+  '  <title>Labyrinthe généré</title>'#10+
+  '  <description>Labyrinthe généré</description>'#10+
   '  <difficulty>Moyen</difficulty>'#10+
   '  <author id="2">Jean-Paul Doeraene</author>'#10+
   '  <master/>'#10+
   '  <units><unit type="application/bpl" href="FunLabyBase.bpl"/></units>'#10+
   '  <maps><map id="MainMap" type="application/flm" href="%s" maxviewsize="%d"/></maps>'#10+
   '  <players>'#10+
-  '    <player id="Player1">'#10+
+  '    <player id="Player">'#10+
   '      <position map="MainMap" posx="%d" posy="%d" posz="%d"/>'#10+
   '    </player>'#10+
   '  </players>'#10+
@@ -206,8 +206,8 @@ begin
 
   with TStringList.Create do
   try
-    Text := Format(sMasterFileContents,
-      [sCurrentVersion, UTF8Encode(MapHRef), MaxViewSize, PosX, PosY, PosZ]);
+    Text := UTF8Encode(Format(sMasterFileContents,
+      [sCurrentVersion, MapHRef, MaxViewSize, PosX, PosY, PosZ]));
     SaveToFile(MasterFileName);
   finally
     Free;
