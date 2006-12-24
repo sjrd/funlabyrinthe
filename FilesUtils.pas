@@ -140,7 +140,8 @@ type
 
     procedure InvalidFormat;
 
-    procedure Load(Document : IXMLDOMDocument);
+    procedure Load(Document : IXMLDOMDocument;
+      CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
     procedure TestOpeningValidity;
 
     function GetUnitFileCount : integer;
@@ -148,7 +149,8 @@ type
     function GetMapFileCount : integer;
     function GetMapFiles(Index : integer) : TMapFile;
   public
-    constructor Create(const AFileName : TFileName; AMode : TFileMode);
+    constructor Create(const AFileName : TFileName; AMode : TFileMode;
+      CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
     constructor CreateNew(FileContents : TStrings = nil);
     destructor Destroy; override;
 
@@ -497,7 +499,8 @@ end;
   @param AMode       Mode sous lequel ouvrir le fichier
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
-constructor TMasterFile.Create(const AFileName : TFileName; AMode : TFileMode);
+constructor TMasterFile.Create(const AFileName : TFileName; AMode : TFileMode;
+  CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
 var Document : IXMLDOMDocument;
     I : integer;
 begin
@@ -525,7 +528,7 @@ begin
   if not Document.load(FFileName) then
     InvalidFormat;
 
-  Load(Document);
+  Load(Document, CreatePlayerControllerProc);
   TestOpeningValidity;
 
   if Mode = fmPlay then
@@ -610,15 +613,19 @@ end;
   @param Document   Document XML DOM contenu du fichier
   @throws EFileError : Un fichier à charger n'existe pas ou n'est pas valide
 *}
-procedure TMasterFile.Load(Document : IXMLDOMDocument);
+procedure TMasterFile.Load(Document : IXMLDOMDocument;
+  CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
+
   function NullToEmptyStr(Value : Variant) : Variant;
   begin
     if VarIsNull(Value) then Result := '' else Result := Value;
   end;
+
 var Params : TStrings;
     I, J, MaxViewSize : integer;
     ID, FileType, HRef, Name, MapID : string;
     Position : T3DPoint;
+    PlayerController : TPlayerController;
     Player : TPlayer;
     Node : IXMLDOMNode;
 begin
@@ -716,7 +723,13 @@ begin
           Position.Z := getAttribute('posz');
         end;
 
-        Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position);
+        if Assigned(CreatePlayerControllerProc) then
+          PlayerController := CreatePlayerControllerProc(I)
+        else
+          PlayerController := nil;
+
+        Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position,
+          PlayerController);
 
         if NullToEmptyStr(getAttribute('lost')) = 'yes' then
           Player.Lose;

@@ -81,6 +81,8 @@ type
 
     MoveThread : TMoveThread;
 
+    function CreatePlayerController(Index : integer) : TPlayerController;
+
     procedure NewGame(FileName : TFileName);
     function SaveGame : boolean;
     function CloseGame(DontSave : boolean = False) : boolean;
@@ -105,12 +107,21 @@ implementation
 {------------------}
 
 {*
+  Crée un contrôleur de joueur
+  @param Index   Index du joueur associé
+*}
+function TFormMain.CreatePlayerController(Index : integer) : TPlayerController;
+begin
+  Result := TThreadedPlayerController.Create;
+end;
+
+{*
   Commence une nouvelle partie
   @param FileName   Nom du fichier maître à charger
 *}
 procedure TFormMain.NewGame(FileName : TFileName);
 begin
-  MasterFile := TMasterFile.Create(FileName, fmPlay);
+  MasterFile := TMasterFile.Create(FileName, fmPlay, CreatePlayerController);
   Master := MasterFile.Master;
   View := TPlayerView.Create(Master.Players[0]);
   LastFileName := FileName;

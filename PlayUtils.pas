@@ -16,11 +16,36 @@ const {don't localize}
 
 type
   {*
+    Contrôleur de joueur thread-safe
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TThreadedPlayerController = class(TPlayerController)
+  private
+    FThread : TThread;
+  public
+    function ShowDialog(const Title, Text : string;
+      DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
+      DefButton : Byte = 1;
+      AddFlags : LongWord = 0) : TDialogResult; override;
+
+    function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
+      DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
+      const RadioTitles : array of string; var Selected : integer;
+      OverButtons : boolean = False) : Word; override;
+
+    function ChooseNumber(const Title, Prompt : string;
+      Default, Min, Max : integer) : integer; override;
+
+    property Thread : TThread read FThread write FThread;
+  end;
+
+  {*
     Thread de déplacement du pion
     @author Sébastien Jean Robert Doeraene
     @version 5.0
   *}
-  TMoveThread = class(TThread, IPlayerController)
+  TMoveThread = class(TThread)
   private
     Player : TPlayer; /// Joueur concerné
     Dir : TDirection; /// Direction dans laquelle faire bouger le joueur
@@ -29,25 +54,6 @@ type
   public
     constructor Create(APlayer : TPlayer; ADir : TDirection;
       AOnTerminate : TNotifyEvent);
-
-    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
-
-    function ShowDialog(const Title, Text : string;
-      DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
-      DefButton : Byte = 1;
-      AddFlags : LongWord = 0) : TDialogResult;
-
-    function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
-      DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
-      const RadioTitles : array of string; var Selected : integer;
-      OverButtons : boolean = False) : Word;
-
-    function ChooseNumber(const Title, Prompt : string;
-      Default, Min, Max : integer) : integer;
-
-    procedure MapChanged;
   end;
 
   {*
@@ -156,88 +162,9 @@ end;
   Affiche la boîte de dialogue
 *}
 procedure TShowDialogRadio.Execute;
-var Form : TForm;
-    I, MaxWidth, OldWidth : integer;
-    Button : TButton;
 begin
-  // Création de la boîte de dialogue
-  Form := CreateMessageDialog(Text, DlgType, DlgButtons);
-
-  with Form do
-  try
-    Caption := Title;
-    // On augmente la taille de la boîte de dialogue
-    Height := Height + Length(RadioTitles) * 25;
-
-    // Création des boutons radio et détermination de la largeur minimale
-    MaxWidth := 0;
-    for I := High(RadioTitles) downto Low(RadioTitles) do
-    with TRadioButton.Create(Form) do
-    begin
-      FreeNotification(Form);
-      Parent := Form;
-      Width := Canvas.TextWidth(RadioTitles[I]) + 20;
-      MaxWidth := Max(MaxWidth, Width-20);
-      Caption := RadioTitles[I];
-      Checked := I = Selected;
-      Tag := I;
-      Left := 8;
-
-      // OverButtons indique si les RadioBox sont au-dessus ou en-dessous des
-      // boutons
-      if OverButtons then
-        Top := Form.Height - 90 - (High(RadioTitles) - I) * 25
-      else
-        Top := Form.Height - 50 - (High(RadioTitles) - I) * 25;
-    end;
-
-    // Il faut aussi vérifier que la fiche peut afficher les textes des RadioBox
-    // en entier
-    OldWidth := 0;
-    if (MaxWidth + 40) > Width then
-    begin
-      OldWidth := Width;
-      Width := MaxWidth +40;
-    end;
-
-    for I := 0 to ComponentCount-1 do
-    begin
-      // On récupère chaque bouton
-      if Components[I] is TButton then
-      begin
-        Button := TButton(Components[I]);
-
-        // On met le bon bouton par défaut et on le sélectionne
-        Button.Default := Button.ModalResult = DefButton;
-        if Button.Default then ActiveControl := Button;
-
-        // S'il le faut, décaler tous les boutons vers le bas
-        if OverButtons then
-          Button.Top := Button.Top + Length(RadioTitles) * 25;
-
-        // S'il le faut, décaler tous les boutons vers la droite
-        if OldWidth > 0 then
-          Button.Left := Button.Left + (Width - OldWidth) div 2;
-      end;
-    end;
-
-    // On centre la boîte de dialogue
-    Position := poScreenCenter;
-
-    // Affichage de la boîte de dialogue
-    Result := ShowModal;
-
-    // Récupération du choix de l'utilisateur
-    Selected := -1;
-    for I := 0 to ControlCount-1 do
-    begin
-      if (Controls[I] is TRadioButton) and
-         TRadioButton(Controls[I]).Checked then
-        Selected := Controls[I].Tag;
-    end;
-  finally
-    Free;
-  end;
+  Result := ScUtils.ShowDialogRadio(Title, Text, DlgType, DlgButtons,
+    DefButton, RadioTitles, Selected, OverButtons);
 end;
 
 {*
@@ -246,6 +173,101 @@ end;
 procedure TChooseNumber.Execute;
 begin
   Result := QueryNumber(Title, Prompt, Default, Min, Max);
+end;
+
+{----------------------------------}
+{ Classe TThreadedPlayerController }
+{----------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TThreadedPlayerController.ShowDialog(const Title, Text : string;
+  DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
+  DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
+var Dialog : TShowDialog;
+begin
+  Dialog := TShowDialog.Create;
+  try
+    Dialog.Title := Title;
+    Dialog.Text := Text;
+    Dialog.DlgType := DlgType;
+    Dialog.DlgButtons := DlgButtons;
+    Dialog.DefButton := DefButton;
+    Dialog.AddFlags := AddFlags;
+
+    if Assigned(Thread) then
+      TThread.StaticSynchronize(Thread, Dialog.Execute)
+    else
+      Dialog.Execute;
+
+    Result := Dialog.Result;
+  finally
+    Dialog.Free;
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TThreadedPlayerController.ShowDialogRadio(const Title, Text : string;
+  DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
+  const RadioTitles : array of string; var Selected : integer;
+  OverButtons : boolean = False) : Word;
+var Dialog : TShowDialogRadio;
+    I : integer;
+begin
+  Dialog := TShowDialogRadio.Create;
+  try
+    Dialog.Title := Title;
+    Dialog.Text := Text;
+    Dialog.DlgType := DlgType;
+    Dialog.DlgButtons := DlgButtons;
+    Dialog.DefButton := DefButton;
+
+    SetLength(Dialog.RadioTitles, Length(RadioTitles));
+    for I := 0 to Length(RadioTitles)-1 do
+      Dialog.RadioTitles[I] := RadioTitles[I];
+
+    Dialog.Selected := Selected;
+    Dialog.OverButtons := OverButtons;
+
+    if Assigned(Thread) then
+      TThread.StaticSynchronize(Thread, Dialog.Execute)
+    else
+      Dialog.Execute;
+
+    Selected := Dialog.Selected;
+    Result := Dialog.Result;
+  finally
+    Dialog.Free;
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TThreadedPlayerController.ChooseNumber(const Title, Prompt : string;
+  Default, Min, Max : integer) : integer;
+var Dialog : TChooseNumber;
+begin
+  Dialog := TChooseNumber.Create;
+  try
+    Dialog.Title := Title;
+    Dialog.Prompt := Prompt;
+    Dialog.Default := Default;
+    Dialog.Min := Min;
+    Dialog.Max := Max;
+
+    if Assigned(Thread) then
+      TThread.StaticSynchronize(Thread, Dialog.Execute)
+    else
+      Dialog.Execute;
+
+    Result := Dialog.Result;
+  finally
+    Dialog.Free;
+  end;
 end;
 
 {--------------------}
@@ -274,157 +296,14 @@ end;
 procedure TMoveThread.Execute;
 var Redo : boolean;
 begin
-  Player.Controller := Self;
+  TThreadedPlayerController(Player.Controller).Thread := Self;
   try
     Player.Move(Dir, True, Redo);
     if Redo then
       Player.NaturalMoving;
   finally
-    Player.Controller := nil;
+    TThreadedPlayerController(Player.Controller).Thread := nil;
   end;
-end;
-
-{*
-  Renvoie une référence à l'interface spécifiée
-  QueryInterface renvoie une référence à l'interface spécifiée, si l'objet
-  supporte cette interface.
-  @param IID   GUID de l'interface à obtenir
-  @param Obj   Référence à l'interface spécifiée
-*}
-function TMoveThread.QueryInterface(const IID : TGUID; out Obj) : HResult;
-begin
-  Result := E_NoInterface;
-end;
-
-{*
-  Incrémente le compteur de référence
-  @return Nouvelle valeur du compteur de référence
-*}
-function TMoveThread._AddRef : integer;
-begin
-  Result := 1;
-end;
-
-{*
-  Décrémente le compteur de référence
-  @return Nouvelle valeur du compteur de référence
-*}
-function TMoveThread._Release : integer;
-begin
-  Result := 1;
-end;
-
-{*
-  Affiche une boîte de dialogue
-  @param Title        Titre de la boîte de dialogue
-  @param Text         Texte de la boîte de dialogue
-  @param DlgType      Type de boîte de dialogue
-  @param DlgButtons   Boutons présents dans la boîte de dialogue
-  @param DefButton    Bouton sélectionné par défaut
-  @param AddFlags     Flags additionnels pour MessageBox
-  @return Code de résultat du bouton cliqué
-*}
-function TMoveThread.ShowDialog(const Title, Text : string;
-  DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
-  DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
-var Dialog : TShowDialog;
-begin
-  Dialog := TShowDialog.Create;
-  try
-    Dialog.Title := Title;
-    Dialog.Text := Text;
-    Dialog.DlgType := DlgType;
-    Dialog.DlgButtons := DlgButtons;
-    Dialog.DefButton := DefButton;
-    Dialog.AddFlags := AddFlags;
-
-    Synchronize(Dialog.Execute);
-
-    Result := Dialog.Result;
-  finally
-    Dialog.Free;
-  end;
-end;
-
-{*
-  Affiche une boîte de dialogue avec des boutons radio
-  ShowDialogRadio est une variante de ShowDialog qui affiche des boutons radio
-  pour chaque choix possible.
-  @param Title         Titre de la boîte de dialogue
-  @param Text          Texte de la boîte de dialogue
-  @param DlgType       Type de boîte de dialogue
-  @param DlgButtons    Boutons présents dans la boîte de dialogue
-  @param DefButton     Bouton sélectionné par défaut
-  @param RadioTitles   Libellés des différents boutons radio
-  @param Selected      Bouton radio sélectionné
-  @param OverButtons   Boutons radio placés au-dessus des boutons si True
-  @return Code de résultat du bouton cliqué
-*}
-function TMoveThread.ShowDialogRadio(const Title, Text : string;
-  DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
-  const RadioTitles : array of string; var Selected : integer;
-  OverButtons : boolean = False) : Word;
-var Dialog : TShowDialogRadio;
-    I : integer;
-begin
-  Dialog := TShowDialogRadio.Create;
-  try
-    Dialog.Title := Title;
-    Dialog.Text := Text;
-    Dialog.DlgType := DlgType;
-    Dialog.DlgButtons := DlgButtons;
-    Dialog.DefButton := DefButton;
-
-    SetLength(Dialog.RadioTitles, Length(RadioTitles));
-    for I := 0 to Length(RadioTitles)-1 do
-      Dialog.RadioTitles[I] := RadioTitles[I];
-
-    Dialog.Selected := Selected;
-    Dialog.OverButtons := OverButtons;
-
-    Synchronize(Dialog.Execute);
-
-    Selected := Dialog.Selected;
-    Result := Dialog.Result;
-  finally
-    Dialog.Free;
-  end;
-end;
-
-{*
-  Affiche une invite au joueur lui demandant de choisir un nombre
-  @param Title     Titre de la boîte de dialogue
-  @param Prompt    Invite
-  @param Default   Valeur par défaut affichée
-  @param Min       Valeur minimale que peut choisir le joueur
-  @param Max       Valeur maximale que peut choisir le joueur
-  @return La valeur qu'a choisie le joueur
-*}
-function TMoveThread.ChooseNumber(const Title, Prompt : string;
-  Default, Min, Max : integer) : integer;
-var Dialog : TChooseNumber;
-begin
-  Dialog := TChooseNumber.Create;
-  try
-    Dialog.Title := Title;
-    Dialog.Prompt := Prompt;
-    Dialog.Default := Default;
-    Dialog.Min := Min;
-    Dialog.Max := Max;
-
-    Synchronize(Dialog.Execute);
-
-    Result := Dialog.Result;
-  finally
-    Dialog.Free;
-  end;
-end;
-
-{*
-  Le joueur a changé de carte
-*}
-procedure TMoveThread.MapChanged;
-begin
 end;
 
 {--------------------}

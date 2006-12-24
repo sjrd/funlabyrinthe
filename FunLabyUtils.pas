@@ -59,6 +59,7 @@ type
   EComponentNotFound = class(Exception);
 
   TScrewComponent = class;
+  TPlayerController = class;
   TPlayer = class;
   TMap = class;
   TMaster = class;
@@ -72,6 +73,15 @@ type
     Map : TMap;          /// Carte, ou nil pour une position nulle
     Position : T3DPoint; /// Position sur la carte, si Map <> nil
   end;
+
+  {*
+    Type de méthode call-back pour la création d'un contrôleur de joueur
+    Lors de l'appel à une telle méthode, le joueur associé n'est pas encore
+    créé. Il ne faut donc pas y faire référence.
+    @param Index   Index du joueur associé
+  *}
+  TCreatePlayerControllerProc =
+    function(Index : integer) : TPlayerController of object;
 
   {*
     Type de méthode call-back pour l'enregistrement d'un unique composant
@@ -513,61 +523,26 @@ type
   end;
 
   {*
-    Interface de contrôle thread-safe d'un joueur
+    Contrôleur d'un joueur
     @author Sébastien Jean Robert Doeraene
     @version 5.0
   *}
-  IPlayerController = interface
-    {*
-      Affiche une boîte de dialogue
-      @param Title        Titre de la boîte de dialogue
-      @param Text         Texte de la boîte de dialogue
-      @param DlgType      Type de boîte de dialogue
-      @param DlgButtons   Boutons présents dans la boîte de dialogue
-      @param DefButton    Bouton sélectionné par défaut
-      @param AddFlags     Flags additionnels pour MessageBox
-      @return Code de résultat du bouton cliqué
-    *}
+  TPlayerController = class
+  public
     function ShowDialog(const Title, Text : string;
       DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
       DefButton : Byte = 1;
-      AddFlags : LongWord = 0) : TDialogResult;
+      AddFlags : LongWord = 0) : TDialogResult; virtual;
 
-    {*
-      Affiche une boîte de dialogue avec des boutons radio
-      ShowDialogRadio est une variante de ShowDialog qui affiche des boutons
-      radio pour chaque choix possible.
-      @param Title         Titre de la boîte de dialogue
-      @param Text          Texte de la boîte de dialogue
-      @param DlgType       Type de boîte de dialogue
-      @param DlgButtons    Boutons présents dans la boîte de dialogue
-      @param DefButton     Bouton sélectionné par défaut
-      @param RadioTitles   Libellés des différents boutons radio
-      @param Selected      Bouton radio sélectionné
-      @param OverButtons   Boutons radio placés au-dessus des boutons si True
-      @return Code de résultat du bouton cliqué
-    *}
     function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
       DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
       const RadioTitles : array of string; var Selected : integer;
-      OverButtons : boolean = False) : Word;
+      OverButtons : boolean = False) : Word; virtual;
 
-    {*
-      Affiche une invite au joueur lui demandant de choisir un nombre
-      @param Title     Titre de la boîte de dialogue
-      @param Prompt    Invite
-      @param Default   Valeur par défaut affichée
-      @param Min       Valeur minimale que peut choisir le joueur
-      @param Max       Valeur maximale que peut choisir le joueur
-      @return La valeur qu'a choisie le joueur
-    *}
     function ChooseNumber(const Title, Prompt : string;
-      Default, Min, Max : integer) : integer;
+      Default, Min, Max : integer) : integer; virtual;
 
-    {*
-      Le joueur a changé de carte
-    *}
-    procedure MapChanged;
+    procedure MapChanged; virtual;
   end;
 
   {*
@@ -588,7 +563,7 @@ type
     FColor : TColor;                 /// Couleur
     FPlugins : TObjectList;          /// Liste des plug-in
     FAttributes : TStrings;          /// Liste des attributs
-    FController : IPlayerController; /// Contrôleur
+    FController : TPlayerController; /// Contrôleur
     FPlayState : TPlayState;         /// État de victoire/défaite
 
     procedure PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
@@ -607,7 +582,8 @@ type
       X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; AMap : TMap; APosition : T3DPoint);
+      const AName : string; AMap : TMap; APosition : T3DPoint;
+      AController : TPlayerController = nil);
     destructor Destroy; override;
 
     procedure GetAttributes(Attributes : TStrings);
@@ -644,7 +620,7 @@ type
     property Color : TColor read FColor write FColor;
     property Attribute[const AttrName : string] : integer
       read GetAttribute write SetAttribute;
-    property Controller : IPlayerController read FController write FController;
+    property Controller : TPlayerController read FController;
     property PlayState : TPlayState read FPlayState;
   end;
 
@@ -2056,6 +2032,73 @@ begin
   end;
 end;
 
+{--------------------------}
+{ Classe TPlayerController }
+{--------------------------}
+
+{*
+  Affiche une boîte de dialogue
+  @param Title        Titre de la boîte de dialogue
+  @param Text         Texte de la boîte de dialogue
+  @param DlgType      Type de boîte de dialogue
+  @param DlgButtons   Boutons présents dans la boîte de dialogue
+  @param DefButton    Bouton sélectionné par défaut
+  @param AddFlags     Flags additionnels pour MessageBox
+  @return Bouton sur lequel l'utilisateur a cliqué
+*}
+function TPlayerController.ShowDialog(const Title, Text : string;
+  DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
+  DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
+begin
+  Result := ScUtils.ShowDialog(Title, Text, DlgType, DlgButtons,
+    DefButton, AddFlags);
+end;
+
+{*
+  Affiche une boîte de dialogue avec des boutons radio
+  ShowDialogRadio est une variante de ShowDialog qui affiche des boutons radio
+  pour chaque choix possible.
+  @param Title         Titre de la boîte de dialogue
+  @param Text          Texte de la boîte de dialogue
+  @param DlgType       Type de boîte de dialogue
+  @param DlgButtons    Boutons présents dans la boîte de dialogue
+  @param DefButton     Bouton sélectionné par défaut
+  @param RadioTitles   Libellés des différents boutons radio
+  @param Selected      Bouton radio sélectionné
+  @param OverButtons   Boutons radio placés au-dessus des boutons si True
+  @return Bouton sur lequel l'utilisateur a cliqué
+*}
+function TPlayerController.ShowDialogRadio(const Title, Text : string;
+  DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
+  const RadioTitles : array of string; var Selected : integer;
+  OverButtons : boolean = False) : Word;
+begin
+  Result := ScUtils.ShowDialogRadio(Title, Text, DlgType, DlgButtons,
+    DefButton, RadioTitles, Selected, OverButtons);
+end;
+
+{*
+  Affiche une invite au joueur lui demandant de choisir un nombre
+  @param Title     Titre de la boîte de dialogue
+  @param Prompt    Invite
+  @param Default   Valeur par défaut affichée
+  @param Min       Valeur minimale que peut choisir le joueur
+  @param Max       Valeur maximale que peut choisir le joueur
+  @return La valeur qu'a choisie le joueur
+*}
+function TPlayerController.ChooseNumber(const Title, Prompt : string;
+  Default, Min, Max : integer) : integer;
+begin
+  Result := QueryNumber(Title, Prompt, Default, Min, Max);
+end;
+
+{*
+  Le joueur a changé de carte
+*}
+procedure TPlayerController.MapChanged;
+begin
+end;
+
 {----------------}
 { Classe TPlayer }
 {----------------}
@@ -2069,7 +2112,8 @@ end;
   @param APosition   Position de départ
 *}
 constructor TPlayer.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; AMap : TMap; APosition : T3DPoint);
+  const AName : string; AMap : TMap; APosition : T3DPoint;
+  AController : TPlayerController = nil);
 var Dir : TDirection;
 begin
   inherited Create(AMaster, AID, AName);
@@ -2084,6 +2128,7 @@ begin
   FPlugins := TObjectList.Create(False);
   FAttributes := THashedStringList.Create;
   TStringList(FAttributes).CaseSensitive := True;
+  FController := AController;
   FPlayState := psPlaying;
 end;
 
@@ -2093,6 +2138,7 @@ end;
 destructor TPlayer.Destroy;
 var Dir : TDirection;
 begin
+  FController.Free;
   FAttributes.Free;
   FPlugins.Free;
   for Dir in [diNorth..diWest] do if Assigned(FDirPainters[Dir]) then
@@ -2441,8 +2487,7 @@ begin
   // Déplacement
   FMap := DestMap;
   FPosition := Dest;
-  if Assigned(Controller) then
-    Controller.MapChanged;
+  Controller.MapChanged;
 
   if Assigned(Map) then
   begin
