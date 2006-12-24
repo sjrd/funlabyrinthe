@@ -547,7 +547,7 @@ begin
   for X := 0 to Width-1 do for Y := 0 to Height-1 do
   begin
     QPos.Position := Point3D(OrigX+X, OrigY+Y, Z);
-    Map[QPos.Position].DoDraw(QPos, Canvas, X*ScrewSize, Y*ScrewSize);
+    Map[QPos.Position].Draw(QPos, Canvas, X*ScrewSize, Y*ScrewSize);
   end;
 
   // Dessin des joueurs

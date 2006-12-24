@@ -64,12 +64,12 @@ type
   TBoat = class(TTool)
   private
     FNumber : integer; /// Numéro de la barque
+  protected
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ANumber : integer);
-
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
 
     procedure Find(Player : TPlayer; const Pos : T3DPoint); override;
 

@@ -81,7 +81,7 @@ type
   private
     FAlternatePainter : TPainter; /// Peintre alternatif
   protected
-    procedure DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
 
     property AlternatePainter : TPainter read FAlternatePainter;
@@ -238,7 +238,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TWater.DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
+procedure TWater.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   if (Master.TickCount mod 2000) < 1000 then

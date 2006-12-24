@@ -189,6 +189,9 @@ type
     FName : string;            /// Nom du composant
     FPainter : TPainter;       /// Peintre par défaut
     FCachedImg : TScrewBitmap; /// Image en cache (pour les dessins invariants)
+
+    procedure PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); virtual;
   protected
     FStaticDraw : boolean; /// Indique si le dessin du composant est invariant
 
@@ -286,15 +289,12 @@ type
   TField = class(TScrewComponent)
   private
     FDelegateDrawTo : TField; /// Terrain délégué pour l'affichage
-  protected
-    procedure DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); virtual;
+
+    procedure PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ADelegateDrawTo : TField = nil);
-
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
@@ -398,13 +398,13 @@ type
     FEffect : TEffect;     /// Effet
     FTool : TTool;         /// Outil
     FObstacle : TObstacle; /// Obstacle
+  protected
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; AField : TField; AEffect : TEffect; ATool : TTool;
       AObstacle : TObstacle);
-
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
@@ -447,14 +447,14 @@ type
     FMap : TMap;             /// Carte
     FPosition : T3DPoint;    /// Position
     FOriginalScrew : TScrew; /// Case originale
+  protected
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       AMap : TMap; APosition : T3DPoint; AField : TField; AEffect : TEffect;
       ATool : TTool; AObstacle : TObstacle);
     destructor Destroy; override;
-
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
 
     property Map : TMap read FMap;
     property Position : T3DPoint read FPosition;
@@ -591,6 +591,9 @@ type
     FController : IPlayerController; /// Contrôleur
     FPlayState : TPlayState;         /// État de victoire/défaite
 
+    procedure PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
+
     function GetPluginCount : integer;
     function GetPlugins(Index : integer) : TPlugin;
 
@@ -599,6 +602,9 @@ type
 
     property PluginCount : integer read GetPluginCount;
     property Plugins[index : integer] : TPlugin read GetPlugins;
+  protected
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; AMap : TMap; APosition : T3DPoint);
@@ -607,8 +613,6 @@ type
     procedure GetAttributes(Attributes : TStrings);
     procedure GetPluginIDs(PluginIDs : TStrings);
 
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
     procedure DrawInPlace(Canvas : TCanvas; X : integer = 0;
       Y : integer = 0);
 
@@ -1162,8 +1166,22 @@ begin
   if StaticDraw then
   begin
     FCachedImg := TScrewBitmap.Create;
-    DoDraw(NoQPos, FCachedImg.Canvas);
+    PrivDraw(NoQPos, FCachedImg.Canvas);
   end;
+end;
+
+{*
+  Dessine le composant sur un canevas
+  PrivDraw dessine le composant sur un canevas à la position indiquée.
+  @param QPos     Position qualifiée de l'emplacement de dessin
+  @param Canvas   Canevas sur lequel dessiner le composant
+  @param X        Coordonnée X du point à partir duquel dessiner le composant
+  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+*}
+procedure TVisualComponent.PrivDraw(const QPos : TQualifiedPos;
+  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+begin
+  DoDraw(QPos, Canvas, X, Y);
 end;
 
 {*
@@ -1194,7 +1212,7 @@ begin
   if StaticDraw then
     FCachedImg.DrawScrew(Canvas, X, Y)
   else
-    DoDraw(QPos, Canvas, X, Y);
+    PrivDraw(QPos, Canvas, X, Y);
 end;
 
 {----------------}
@@ -1391,32 +1409,18 @@ begin
 end;
 
 {*
-  Dessine le terrain sur le canevas indiqué
-  Les descendants de TField doivent réimplémenter DrawField plutôt que DoDraw.
+  Dessine le composant sur un canevas
+  PrivDraw dessine le composant sur un canevas à la position indiquée.
   @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le terrain
-  @param X        Coordonnée X du point à partir duquel dessiner le terrain
-  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+  @param Canvas   Canevas sur lequel dessiner le composant
+  @param X        Coordonnée X du point à partir duquel dessiner le composant
+  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TField.DrawField(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
-begin
-  inherited DoDraw(QPos, Canvas, X, Y);
-end;
-
-{*
-  Dessine le terrain sur le canevas indiqué, ou délègue le dessin
-  Les descendants de TField ne doivent pas réimplémenter DoDraw, mais DrawField
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le terrain
-  @param X        Coordonnée X du point à partir duquel dessiner le terrain
-  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
-*}
-procedure TField.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+procedure TField.PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
   if FDelegateDrawTo = nil then
-    DrawField(QPos, Canvas, X, Y)
+    inherited
   else
     FDelegateDrawTo.Draw(QPos, Canvas, X, Y);
 end;
@@ -2087,6 +2091,30 @@ begin
 end;
 
 {*
+  Dessine le composant sur un canevas
+  PrivDraw dessine le composant sur un canevas à la position indiquée.
+  @param QPos     Position qualifiée de l'emplacement de dessin
+  @param Canvas   Canevas sur lequel dessiner le composant
+  @param X        Coordonnée X du point à partir duquel dessiner le composant
+  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+*}
+procedure TPlayer.PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+var I : integer;
+begin
+  // Dessine les plug-in en-dessous du joueur
+  for I := 0 to PluginCount-1 do
+    Plugins[I].DrawBefore(Self, QPos, Canvas, X, Y);
+
+  // Dessin du joueur lui-même
+  inherited;
+
+  // Dessine les plug-in au-dessus du joueur
+  for I := 0 to PluginCount-1 do
+    Plugins[I].DrawAfter(Self, QPos, Canvas, X, Y);
+end;
+
+{*
   Nombre de plug-in greffés au joueur
   @return Nombre de plug-in
 *}
@@ -2139,27 +2167,6 @@ begin
 end;
 
 {*
-  Dresse la liste des attributs du joueur
-  @param Attributes   Liste de chaînes dans laquelle enregistrer les attributs
-*}
-procedure TPlayer.GetAttributes(Attributes : TStrings);
-begin
-  Attributes.Assign(FAttributes);
-end;
-
-{*
-  Dresse la liste des ID des plug-in du joueur
-  @param Plugins   Liste de chaînes dans laquelle enregistrer les ID des plug-in
-*}
-procedure TPlayer.GetPluginIDs(PluginIDs : TStrings);
-var I : integer;
-begin
-  PluginIDs.Clear;
-  for I := 0 to PluginCount-1 do
-    PluginIDs.AddObject(Plugins[I].ID, Plugins[I]);
-end;
-
-{*
   Dessine le joueur sur un canevas
   Draw dessine le joueur sur un canevas à la position indiquée.
   @param QPos     Position qualifiée de l'emplacement de dessin
@@ -2169,12 +2176,7 @@ end;
 *}
 procedure TPlayer.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
-var I : integer;
 begin
-  // Dessine les plug-in en-dessous du joueur
-  for I := 0 to PluginCount-1 do
-    Plugins[I].DrawBefore(Self, QPos, Canvas, X, Y);
-
   // Dessine le peintre correspondant à la direction...
   if FColor = clDefault then
   begin
@@ -2194,10 +2196,27 @@ begin
       Ellipse(X+6, Y+6, X+ScrewSize-6, Y+ScrewSize-6);
     end;
   end;
+end;
 
-  // Dessine les plug-in au-dessus du joueur
+{*
+  Dresse la liste des attributs du joueur
+  @param Attributes   Liste de chaînes dans laquelle enregistrer les attributs
+*}
+procedure TPlayer.GetAttributes(Attributes : TStrings);
+begin
+  Attributes.Assign(FAttributes);
+end;
+
+{*
+  Dresse la liste des ID des plug-in du joueur
+  @param Plugins   Liste de chaînes dans laquelle enregistrer les ID des plug-in
+*}
+procedure TPlayer.GetPluginIDs(PluginIDs : TStrings);
+var I : integer;
+begin
+  PluginIDs.Clear;
   for I := 0 to PluginCount-1 do
-    Plugins[I].DrawAfter(Self, QPos, Canvas, X, Y);
+    PluginIDs.AddObject(Plugins[I].ID, Plugins[I]);
 end;
 
 {*

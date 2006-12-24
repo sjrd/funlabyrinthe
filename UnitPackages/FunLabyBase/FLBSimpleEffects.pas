@@ -123,13 +123,13 @@ type
   private
     FNumber : integer;        /// Numéro du téléporteur
     FKind : TTransporterKind; /// Type de téléporteur
+  protected
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ANumber : integer;
       AKind : TTransporterKind = tkInactive);
-
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
 
     procedure Execute(Player : TPlayer; const Pos : T3DPoint;
       var GoOnMoving : boolean); override;

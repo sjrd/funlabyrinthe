@@ -70,12 +70,12 @@ type
     @version 5.0
   *}
   TSecretWay = class(TObstacle)
+  protected
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
-
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;

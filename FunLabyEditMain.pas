@@ -770,7 +770,7 @@ begin
   for X := Left to Right do for Y := Top to Bottom do
   begin
     QPos.Position := Point3D(X, Y, CurrentFloor);
-    CurrentMap[QPos.Position].DoDraw(QPos, PaintBoxMap.Canvas,
+    CurrentMap[QPos.Position].Draw(QPos, PaintBoxMap.Canvas,
       (MinViewSize+X) * ScrewSize, (MinViewSize+Y) * ScrewSize);
   end;
 
