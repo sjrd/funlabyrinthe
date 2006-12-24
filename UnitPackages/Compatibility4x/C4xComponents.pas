@@ -14,11 +14,17 @@ uses
   C4xCommon;
 
 resourcestring
+  sStairs = 'Escalier';             /// Nom de l'escalier
+
   sSunkenButton = 'Bouton enfoncé'; /// Nom du bouton enfoncé
   sButton = 'Bouton n°%d';          /// Nom du bouton
   sButtonTemplate = 'Bouton';       /// Nom du bouton modèle
 
 const {don't localize}
+  idUpStairs = 'UpStairs';                 /// ID de l'escalier montant
+  idDownStairs = 'DownStairs';             /// ID de l'escalier descendant
+  idOldStairs = 'OldStairs%d';             /// ID des escaliers de la v1.0
+
   idActionsObject = 'ActionsObject%d';     /// ID de l'objet lié à des actions
   idActionsEffect = 'ActionsEffect%d';     /// ID de l'effet à actions
   idActionsObstacle = 'ActionsObstacle%d'; /// ID de l'obstacle à actions
@@ -63,6 +69,24 @@ type
     akTreasure, akCustom, akObject, akObstacle, akDirection);
 
   TActions = class;
+
+  {*
+    Escaliers de la v1.0
+    Les escaliers permettent de monter ou descendre d'un étage
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TOldStairs = class(TEffect)
+  protected
+    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+      X : integer = 0; Y : integer = 0); override;
+  public
+    constructor Create(AMaster : TMaster; const AID : TComponentID;
+      const AName : string);
+
+    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
+      var GoOnMoving : boolean); override;
+  end;
 
   {*
     Définition d'objet lié à des actions
@@ -201,6 +225,75 @@ implementation
 
 uses
   C4xInterpreter;
+
+{----------------}
+{ Classe TStairs }
+{----------------}
+
+{*
+  Crée une instance de TOldStairs
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'effet de case
+  @param AName     Nom de la case
+*}
+constructor TOldStairs.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string);
+begin
+  inherited Create(AMaster, AID, AName);
+  FStaticDraw := False;
+end;
+
+{*
+  Dessine les escaliers sur le canevas indiqué
+  @param QPos     Position qualifiée de l'emplacement de dessin
+  @param Canvas   Canevas sur lequel dessiner le terrain
+  @param X        Coordonnée X du point à partir duquel dessiner le terrain
+  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+*}
+procedure TOldStairs.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
+  X : integer = 0; Y : integer = 0);
+var StairsID : TComponentID;
+    Pos, Other : T3DPoint;
+begin
+  inherited;
+
+  if IsNoQPos(QPos) then StairsID := idUpStairs else
+  begin
+    Pos := QPos.Position;
+    Other := Pos;
+    FindNextScrew(QPos.Map, Other, Self);
+
+    if (Other.Z < Pos.Z) or ( (Other.Z = Pos.Z) and
+       (Other.Y < Pos.Y) or ( (Other.Y = Pos.Y) and (Other.X < Pos.X) ) ) then
+      StairsID := idDownStairs
+    else
+      StairsID := idUpStairs;
+  end;
+
+  Master.Effect[StairsID].Draw(QPos, Canvas, X, Y)
+end;
+
+{*
+  Exécute l'effet
+  @param Player       Joueur concerné
+  @param Pos          Position de la case
+  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+*}
+procedure TOldStairs.Execute(Player : TPlayer; const Pos : T3DPoint;
+  var GoOnMoving : boolean);
+var Other : T3DPoint;
+begin
+  inherited;
+
+  Other := Pos;
+  FindNextScrew(Player.Map, Other, Self);
+
+  if not Same3DPoint(Pos, Other) then
+  begin
+    Master.Temporize;
+    Player.MoveTo(Other);
+  end;
+end;
 
 {-----------------------}
 { Classe TActionsObject }

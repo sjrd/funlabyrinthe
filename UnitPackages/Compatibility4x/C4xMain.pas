@@ -67,6 +67,9 @@ begin
 
   // Effets
 
+  for I := 1 to 20 do
+    TOldStairs.Create(Master, Format(idOldStairs, [I]), sStairs);
+
   TDecorativeEffect.Create(Master, idButtonTemplate, sButtonTemplate, fButton);
 
   TDecorativeEffect.Create(Master, idSunkenButton,
