@@ -881,7 +881,7 @@ begin
 
   if Component is TPlayer then
   begin
-    TPlayer(Component).ChangeMap(CurrentMap, Position);
+    TPlayer(Component).ChangePosition(CurrentMap, Position);
   end else
   begin
     NewID := Component.ID;
@@ -976,7 +976,7 @@ begin
   for I := 0 to Master.PlayerCount-1 do
   begin
     if Master.Players[I].Map = Map then
-      Master.Players[I].ChangeMap(nil, Point3D(0, 0, 0));
+      Master.Players[I].ChangePosition(nil, No3DPoint);
   end;
 
   Index := MapTabSet.TabIndex;

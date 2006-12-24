@@ -334,7 +334,7 @@ begin
   // Si l'on a trouvé une autre case, on déplace le joueur
   if Same3DPoint(Other, Pos) then exit;
   Master.Temporize;
-  Player.Position := Other;
+  Player.MoveTo(Other);
 end;
 
 {----------------}
@@ -378,7 +378,7 @@ begin
     dec(Other.Z);
 
   Master.Temporize;
-  Player.Position := Other;
+  Player.MoveTo(Other);
 end;
 
 {-------------------------}

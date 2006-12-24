@@ -965,7 +965,6 @@ begin
 
     srX, srY, srZ :
     begin
-      Master.Temporize;
       case Reference of
         srX : PlayerPos.X := TransformValue(PlayerPos.X);
         srY : PlayerPos.Y := TransformValue(PlayerPos.Y);
@@ -1135,7 +1134,6 @@ begin
     Screw := GetScrewParam(Params, Map);
 
   Map[Position] := Screw;
-  Successful := True;
 end;
 
 {*
@@ -1296,10 +1294,7 @@ var ScrewRef : T3DPoint;
 begin
   ScrewRef := GetScrewReference(Params, True);
   if not IsNo3DPoint(ScrewRef) then
-  begin
-    Master.Temporize;
     PlayerPos := ScrewRef;
-  end;
   HasMoved := True;
 end;
 
@@ -1402,8 +1397,11 @@ begin
     end;
   end;
 
-  if HasMoved then
-    Player.Position := PlayerPos;
+  if HasMoved and (not Same3DPoint(Player.Position, PlayerPos)) then
+  begin
+    Master.Temporize;
+    Player.MoveTo(PlayerPos);
+  end;
 end;
 
 {*

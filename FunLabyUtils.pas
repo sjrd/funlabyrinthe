@@ -623,13 +623,23 @@ type
 
     function Move(Dir : TDirection; KeyPressed : boolean;
       out Redo : boolean) : boolean;
-    procedure ChangeMap(AMap : TMap; APosition : T3DPoint);
+
+    procedure MoveTo(const Dest : T3DPoint;
+      Execute : boolean; out Redo : boolean); overload;
+    procedure MoveTo(const Dest : T3DPoint); overload;
+    procedure MoveTo(DestMap : TMap; const Dest : T3DPoint;
+      Execute : boolean; out Redo : boolean); overload;
+    procedure MoveTo(DestMap : TMap; const Dest : T3DPoint); overload;
+
+    procedure NaturalMoving;
+
+    procedure ChangePosition(AMap : TMap; const APosition : T3DPoint);
 
     procedure Win;
     procedure Lose;
 
     property Map : TMap read FMap;
-    property Position : T3DPoint read FPosition write FPosition;
+    property Position : T3DPoint read FPosition;
     property Direction : TDirection read FDirection write FDirection;
     property Color : TColor read FColor write FColor;
     property Attribute[const AttrName : string] : integer
@@ -2338,7 +2348,7 @@ begin
   // Le joueur est-il toujours en train de jouer
   if PlayState <> psPlaying then exit;
 
-  // Premier passage : le déplacement est-il permis ?
+  // Le déplacement est-il permis ?
   begin
     // Case source : exiting
     Map[Src].Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
@@ -2361,41 +2371,129 @@ begin
 
   // Déplacement du joueur (à moins qu'il ait été déplacé par ailleurs)
   if Same3DPoint(FPosition, Src) then
-    FPosition := Dest
-  else
-    Dest := FPosition;
-  Result := True;
+    MoveTo(Dest, not AbortExecute, Redo);
+end;
 
-  // Second passage : le déplacement a été fait
+{*
+  Déplace le joueur, sans changement de carte
+  @param Dest      Position de destination
+  @param Execute   Indique s'il faut exécuter la case d'arrivée
+  @param Redo      Indique s'il faut réitérer le déplacement
+*}
+procedure TPlayer.MoveTo(const Dest : T3DPoint; Execute : boolean;
+  out Redo : boolean);
+var Src : T3DPoint;
+    I : integer;
+begin
+  Src := Position;
+  FPosition := Dest;
+
+  // Case source : exited
+  Map[Src].Exited(Self, Src, Dest);
+
+  // Plug-in : moved
+  for I := 0 to PluginCount-1 do
+    Plugins[I].Moved(Self, Src, Dest);
+
+  // Case destination : entered
+  Map[Dest].Entered(Self, Src, Dest);
+
+  // Case destination : execute (seulement si Execute vaut True)
+  if Execute then
+    Map[Position].Execute(Self, Position, Redo);
+end;
+
+{*
+  Déplace le joueur, sans changement de carte
+  Cette variante de MoveTo n'exécute pas la case d'arrivée
+  @param Dest   Position de destination
+*}
+procedure TPlayer.MoveTo(const Dest : T3DPoint);
+var Redo : boolean;
+begin
+  MoveTo(Dest, False, Redo);
+end;
+
+{*
+  Déplace le joueur, avec changement de carte
+  @param DestMap   Carte de destination
+  @param Dest      Position de destination
+  @param Execute   Indique s'il faut exécuter la case d'arrivée
+  @param Redo      Indique s'il faut réitérer le déplacement
+*}
+procedure TPlayer.MoveTo(DestMap : TMap; const Dest : T3DPoint;
+  Execute : boolean; out Redo : boolean);
+var Src : T3DPoint;
+    I : integer;
+begin
+  Src := Position;
+
+  if Assigned(Map) then
   begin
     // Case source : exited
-    Map[Src].Exited(Self, Src, Dest);
+    Map[Src].Exited(Self, Src, No3DPoint);
 
     // Plug-in : moved
     for I := 0 to PluginCount-1 do
-      Plugins[I].Moved(Self, Src, Dest);
+      Plugins[I].Moved(Self, Src, No3DPoint);
+  end;
+
+  // Déplacement
+  FMap := DestMap;
+  FPosition := Dest;
+  if Assigned(Controller) then
+    Controller.MapChanged;
+
+  if Assigned(Map) then
+  begin
+    // Plug-in : moved
+    for I := 0 to PluginCount-1 do
+      Plugins[I].Moved(Self, No3DPoint, Dest);
 
     // Case destination : entered
-    Map[Dest].Entered(Self, Src, Dest);
+    Map[Dest].Entered(Self, No3DPoint, Dest);
 
-    // Case destination : execute (sauf si AbortExecute a été positionné à True)
-    if not AbortExecute then
-      Map[Dest].Execute(Self, Dest, Redo);
+    // Case destination : execute (seulement si Execute vaut True)
+    if Execute then
+      Map[Position].Execute(Self, Position, Redo);
   end;
 end;
 
 {*
-  Fait changer le joueur de carte
-  @param AMap        Nouvelle carte
-  @param APosition   Nouvelle position
+  Déplace le joueur, avec changement de carte
+  Cette variante de MoveTo n'exécute pas la case d'arrivée
+  @param DestMap   Carte de destination
+  @param Dest      Position de destination
 *}
-procedure TPlayer.ChangeMap(AMap : TMap; APosition : T3DPoint);
+procedure TPlayer.MoveTo(DestMap : TMap; const Dest : T3DPoint);
+var Redo : boolean;
+begin
+  MoveTo(DestMap, Dest, False, Redo);
+end;
+
+{*
+  Déplacement naturel, selon le mouvement déjà entamé (sorte d'inertie)
+  Après un mouvement donné expressément, si Redo vaut True, il suffit d'appeler
+  NaturalMoving pour continuer le mouvement normalement.
+*}
+procedure TPlayer.NaturalMoving;
+var Redo : boolean;
+begin
+  repeat
+    Master.Temporize;
+    Move(Self.Direction, False, Redo);
+  until not Redo;
+end;
+
+{*
+  Modifie la position sans interragir avec les cases
+  ChangePosition ne doit être utilisée qu'en mode édition, ou sous réserve
+  d'être certain de ce qu'on fait.
+*}
+procedure TPlayer.ChangePosition(AMap : TMap; const APosition : T3DPoint);
 begin
   FMap := AMap;
   FPosition := APosition;
-
-  if Assigned(Controller) then
-    Controller.MapChanged;
 end;
 
 {*

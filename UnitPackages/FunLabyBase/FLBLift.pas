@@ -244,7 +244,7 @@ begin
     Pos.Z, MinFloor, MaxFloor);
 
   // Déplacement du joueur
-  Player.Position := Other;
+  Player.MoveTo(Other);
 
   // Après un temps, ouvrir l'ascenseur et remontrer le joueur
   Master.Temporize;

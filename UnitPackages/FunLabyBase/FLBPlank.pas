@@ -280,7 +280,8 @@ procedure TPlankEffect.Execute(Player : TPlayer; const Pos : T3DPoint;
   var GoOnMoving : boolean);
 begin
   inherited;
-  GoOnMoving := True;
+  Master.Temporize;
+  Player.MoveTo(PointBehind(Pos, Player.Direction), True, GoOnMoving);
 end;
 
 {--------------------}

@@ -277,12 +277,8 @@ begin
   Player.Controller := Self;
   try
     Player.Move(Dir, True, Redo);
-    while Redo do
-    begin
-      Player.Master.Temporize;
-      Dir := Player.Direction;
-      Player.Move(Dir, False, Redo);
-    end;
+    if Redo then
+      Player.NaturalMoving;
   finally
     Player.Controller := nil;
   end;
