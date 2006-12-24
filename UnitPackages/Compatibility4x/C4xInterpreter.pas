@@ -1030,6 +1030,14 @@ begin
           Map[Point3D(X, Y, Z)] := ToScrew;
 end;
 
+{*
+  Affiche une boîte de dialogue dont le texte est récupéré en paramètre
+  @param Params       Paramètres de la commande
+  @param Title        Titre de la boîte de dialogue
+  @param DlgType      Type de boîte de dialogue
+  @param DlgButtons   Boutons
+  @return Code de résultat du bouton cliqué
+*}
 function TActionsInterpreter.Information(var Params : string;
   const Title : string; DlgType : TDialogType;
   DlgButtons : TDialogButtons = dbOK) : TDialogResult;
@@ -1108,7 +1116,7 @@ var FromScrew, ToScrew : TScrew;
 begin
   FromScrew := GetScrewParam(Params, Map);
   ToScrew := GetScrewParam(Params, Map);
-  ConvertScrews(ToScrew, FromScrew);
+  ConvertScrews(FromScrew, ToScrew);
 end;
 
 {*
