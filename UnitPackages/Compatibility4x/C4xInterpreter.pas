@@ -786,48 +786,32 @@ end;
   @return Résultat booléen de l'évaluation
 *}
 function TActionsInterpreter.EvalBool(var Condition : string) : boolean;
-var IsIntComparison : boolean;
-    Operation : integer;
+var Operation : integer;
     IntOp1, IntOp2 : integer;
-    ScrewOp1, ScrewOp2 : TScrew;
 begin
   Result := False;
 
   try
     IntOp1 := GetIntParam(Condition);
-    IsIntComparison := True;
   except
-    IntOp1 := 0; // to avoid compiler warning
-    IsIntComparison := False;
+    IntOp1 := AnsiIndexText(GetScrewParam(Condition, Map).ID, ScrewsTable);
   end;
 
-  if IsIntComparison then
-  begin
-    // Comparaison d'entiers
+  Operation := GetCommandIndex(Condition,
+    ['=', '<>', '<', '>', 'DivisiblePar']);
 
-    Operation := GetCommandIndex(Condition,
-      ['=', '<>', '<', '>', 'DivisiblePar']);
+  try
     IntOp2 := GetIntParam(Condition);
+  except
+    IntOp2 := AnsiIndexText(GetScrewParam(Condition, Map).ID, ScrewsTable);
+  end;
 
-    case Operation of
-      0 : Result := IntOp1 =  IntOp2;
-      1 : Result := IntOp1 <> IntOp2;
-      2 : Result := IntOp1 <  IntOp2;
-      3 : Result := IntOp1 >  IntOp2;
-      4 : Result := IntOp1 mod IntOp2 = 0;
-    end;
-  end else
-  begin
-    // Comparaison de cases
-
-    ScrewOp1 := GetScrewParam(Condition, Map);
-    Operation := GetCommandIndex(Condition, ['=', '<>']);
-    ScrewOp2 := GetScrewParam(Condition, Map);
-
-    case Operation of
-      0 : Result := ScrewOp1 =  ScrewOp2;
-      1 : Result := ScrewOp1 <> ScrewOp2;
-    end;
+  case Operation of
+    0 : Result := IntOp1 =  IntOp2;
+    1 : Result := IntOp1 <> IntOp2;
+    2 : Result := IntOp1 <  IntOp2;
+    3 : Result := IntOp1 >  IntOp2;
+    4 : Result := IntOp1 mod IntOp2 = 0;
   end;
 end;
 

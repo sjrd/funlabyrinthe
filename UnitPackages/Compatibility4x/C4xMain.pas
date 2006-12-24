@@ -168,7 +168,7 @@ begin
   begin
     with Infos.Actions[I] do if Kind = akGameStarted then
     begin
-      Execute(phExecute, Master.Players[0], False, No3DPoint,
+      Execute(phExecute, Master.Players[0], False, Master.Players[0].Position,
         DoNextPhase, HasMoved, HasShownMsg, Successful);
     end;
   end;
