@@ -2243,6 +2243,7 @@ begin
       FDirPainters[FDirection].Draw(Canvas, X, Y);
   end else
   // ... ou le traditionnel disque coloré
+  if FColor <> clTransparent then
   begin
     with Canvas do
     begin
@@ -2418,6 +2419,8 @@ begin
   // Déplacement du joueur (à moins qu'il ait été déplacé par ailleurs)
   if Same3DPoint(FPosition, Src) then
     MoveTo(Dest, not AbortExecute, Redo);
+
+  Result := True;
 end;
 
 {*

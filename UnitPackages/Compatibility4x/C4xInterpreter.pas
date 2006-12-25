@@ -10,7 +10,7 @@ unit C4xInterpreter;
 interface
 
 uses
-  SysUtils, Classes, StrUtils, Contnrs, ScUtils, ScStrUtils, ScExtra,
+  SysUtils, Classes, Graphics, StrUtils, Contnrs, ScUtils, ScStrUtils, ScExtra,
   FunLabyUtils, FilesUtils, FunLabyTools, C4xComponents, C4xScrewsTable,
   C4xCommon;
 
@@ -224,6 +224,15 @@ const
   EndCounterIndex = 76;          /// Index du compteur de fin
   ButtonCounterOffset = 1;       /// Décalage des index des boutons
   TransporterCounterOffset = 46; /// Décalage des index des téléporteurs
+
+  /// Nom des couleurs
+  ColorStrings : array[0..6] of string = (
+    'Bleu', 'Rouge', 'Vert', 'Jaune', 'Noir', 'Blanc', 'Invisible'
+  );
+  /// Valeur des couleurs
+  ColorValues : array[0..6] of integer = (
+    clBlue, clRed, clLime, clYellow, clBlack, clWhite, clTransparent
+  );
 
 type
   {*
@@ -499,10 +508,18 @@ end;
   @throws EBadParam : Le type du premier paramètre n'est pas un entier
 *}
 function GetIntParam(var Params : string) : integer;
-var IsRandom : boolean;
+var ColorIndex : integer;
+    IsRandom : boolean;
     StartIndex, EndIndex : integer;
 begin
-  IsRandom := GetCommandIndex(Params, ['Aleatoire'], False) = 0;
+  ColorIndex := GetCommandIndex(Params, ColorStrings, False);
+  if ColorIndex >= 0 then
+  begin
+    Result := ColorValues[ColorIndex];
+    exit;
+  end;
+
+  IsRandom := GetCommandIndex(Params, ['EntierAleatoire'], False) = 0;
 
   StartIndex := SkipSpaces(Params);
   EndIndex := ToNextChar(Params, StartIndex, ' ');
@@ -523,7 +540,7 @@ begin
         raise EBadParam.Create(Error.Message);
     end;
   except
-    if IsRandom then Params := 'Aleatoire' + Params;
+    if IsRandom then Params := 'EntierAleatoire' + Params;
     raise;
   end;
 end;
@@ -1396,7 +1413,12 @@ begin
       cRemark : ;
     end;
   except
-    on Error : EInvalidAction do;
+    on Error : Exception do
+    begin
+      ShowDialog(Error.ClassName,
+        Actions[Current-1]+#10+Error.Message, dtError);
+      if not (Error is EInvalidAction) then exit;
+    end;
   end;
 
   if AllowPlank and Same3DPoint(PlayerPos, Position) and (not Successful) then
