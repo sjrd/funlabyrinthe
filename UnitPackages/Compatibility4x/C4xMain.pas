@@ -108,7 +108,7 @@ begin
             inc(FirstLine);
             LastLine := StringsOps.FindAtPos(FileContents, '[', 1, FirstLine);
 
-            // Maintenant les actions sont dans les lignes [FirstLine ; LastLine[
+            // Les actions sont dans les lignes [FirstLine ; LastLine[
 
             Delete(InfoLine, 1, Length(StrNumber));
             if InfoLine[Length(InfoLine)] <> ']' then Break;
@@ -244,7 +244,9 @@ begin
 
     for I := 0 to Infos.ActionsCount-1 do
     begin
-      if Infos.Actions[I].Kind = akGameStarted then Components[I] := nil else
+      if Infos.Actions[I].Kind in ActionsKindsWithoutScrew then
+        Components[I] := nil
+      else
         Components[I] := Master.Screw[Format(idActionsScrew, [I])];
     end;
 
