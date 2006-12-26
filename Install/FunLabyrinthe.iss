@@ -238,6 +238,8 @@ var
 function FunLabyAppData : string;
 begin
   Result := EditFunLabyAppData.Text;
+  if (Result <> '') and (Result[Length(Result)] <> '\') then
+    Result := Result+'\';
 end;
 
 function AppData(Param : string) : string;
