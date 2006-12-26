@@ -116,6 +116,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    function Add(const ImgName : string; Bitmap : TBitmap) : integer;
+
     function IndexOf(const ImgName : string) : integer;
     procedure Draw(Index : integer; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); overload;
@@ -906,8 +908,7 @@ begin
 
   EmptyScrew := TScrewBitmap.Create;
   try
-    FImgList.AddMasked(EmptyScrew, clTransparent);
-    FImgNames.Add('');
+    Add('', EmptyScrew);
   finally
     EmptyScrew.Free;
   end;
@@ -924,10 +925,36 @@ begin
 end;
 
 {*
+  Ajoute une image à partir d'un bitmap au maître d'images
+  Si une image de même nom existe déjà, l'ajout est ignoré.
+  En cas d'erreur, l'index 0 - de l'image vide - est renvoyé.
+  @param ImgName   Nom de l'image
+  @param Bitmap    Bitmap contenant l'image à ajouter
+  @return Index de l'image nouvellement ajoutée, ou existante
+*}
+function TImagesMaster.Add(const ImgName : string; Bitmap : TBitmap) : integer;
+begin
+  Result := FImgNames.IndexOf(ImgName);
+  if Result < 0 then
+  try
+    FImgList.AddMasked(Bitmap, clTransparent);
+    try
+      Result := FImgNames.Add(ImgName);
+    except
+      FImgList.Delete(FImgList.Count-1);
+      raise;
+    end;
+  except
+    Result := 0; // Image vide
+  end;
+end;
+
+{*
   Renvoie l'index de l'image dont le nom est spécifié
   IndexOf renvoie l'index de l'image dont le nom est spécifié dans la
   liste d'images interne. Si l'image n'a pas encore été chargée, IndexOf
   la charge.
+  En cas d'erreur, l'index 0 - de l'image vide - est renvoyé.
   @param ImgName   Nom de l'image
   @return Index de l'image
 *}
@@ -941,11 +968,8 @@ begin
     try
       try
         NewImg.LoadFromFile(Format(fScrewFileName, [ImgName]));
-        FImgList.AddMasked(NewImg, clTransparent);
-        Result := FImgNames.Add(ImgName);
+        Result := Add(ImgName, NewImg);
       except
-        if FImgList.Count > FImgNames.Count then
-          FImgList.Delete(FImgList.Count-1);
         Result := 0; // Image vide
       end;
     finally
