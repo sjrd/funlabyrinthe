@@ -11,8 +11,8 @@ unit C4xMain;
 interface
 
 uses
-  Classes, SysUtils, StrUtils, Math, ScUtils, ScLists, ScStrUtils, FunLabyUtils,
-  UnitFiles, C4xCommon, C4xComponents;
+  Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
+  FunLabyUtils, UnitFiles, C4xCommon, C4xComponents;
 
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings); stdcall;
@@ -42,18 +42,22 @@ const {don't localize}
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings);
 const {don't localize}
-  KindStrings : array[0..13] of string = (
+  KindStrings : array[0..14] of string = (
     'GameStarted', 'PushButton', 'Switch', 'InfoStone', 'Hidden',
     'TransporterNext', 'TransporterPrevious', 'TransporterRandom', 'Outside',
-    'Treasure', 'Custom', 'Object', 'Obstacle', 'Direction'
+    'Treasure', 'Custom', 'Object', 'Obstacle', 'Direction', 'Zone'
   );
 var FileName : TFileName;
     FileContents, SubContents, Counters : TStrings;
+    ActionsList : TObjectList;
     Number, FirstLine, LastLine : integer;
     StrNumber, InfoLine, Graphics : string;
     Kind : TActionsKind;
     Infos : TC4xInfos;
     I : integer;
+    Zone : T3DPoint;
+    ActionsID : TComponentID;
+    Actions : TActions;
 begin
   { Don't localize any of the strings in this procedure. }
 
@@ -89,54 +93,70 @@ begin
       Number := 0;
       SubContents := TStringList.Create;
       try
-        Counters.DelimitedText := UnitFile.Attributes.Values[attrCounters];
-        while True do
-        begin
-          // Ici on lit une série d'actions, dans l'ordre de Number
-
-          StrNumber := Format('[%d;', [Number]);
-          FirstLine := StringsOps.FindAtPos(FileContents, StrNumber);
-          if FirstLine < 0 then Break;
-
-          InfoLine := FileContents[FirstLine];
-          inc(FirstLine);
-          LastLine := StringsOps.FindAtPos(FileContents, '[', 1, FirstLine);
-
-          // Maintenant les actions sont dans les lignes [FirstLine ; LastLine[
-
-          Delete(InfoLine, 1, Length(StrNumber));
-          if InfoLine[Length(InfoLine)] <> ']' then Break;
-          Delete(InfoLine, Length(InfoLine), 1);
-
-          // Maintenant InfoLine est du gabarit 'Kind' ou 'Kind;Graphics'
-
-          Kind := TActionsKind(AnsiIndexStr(
-            GetFirstToken(InfoLine, ';'), KindStrings));
-          if Ord(Kind) < 0 then Break;
-          if Kind in CustomActionsKind then
-            Graphics := GetLastToken(InfoLine, ';')
-          else
-            Graphics := '';
-
-          // Récupération des actions proprement dites
-
-          StringsOps.CopyFrom(SubContents, FileContents,
-            FirstLine, LastLine-FirstLine);
-
-          // Création des actions en question
-
-          with TActions.Create(Master, Number, Kind, Graphics, SubContents) do
+        ActionsList := TObjectList.Create(False);
+        try
+          Counters.DelimitedText := UnitFile.Attributes.Values[attrCounters];
+          while True do
           begin
+            // Ici on lit une série d'actions, dans l'ordre de Number
+
+            StrNumber := Format('[%d;', [Number]);
+            FirstLine := StringsOps.FindAtPos(FileContents, StrNumber);
+            if FirstLine < 0 then Break;
+
+            InfoLine := FileContents[FirstLine];
+            inc(FirstLine);
+            LastLine := StringsOps.FindAtPos(FileContents, '[', 1, FirstLine);
+
+            // Maintenant les actions sont dans les lignes [FirstLine ; LastLine[
+
+            Delete(InfoLine, 1, Length(StrNumber));
+            if InfoLine[Length(InfoLine)] <> ']' then Break;
+            Delete(InfoLine, Length(InfoLine), 1);
+
+            // Maintenant InfoLine est du gabarit 'Kind' ou 'Kind;Graphics'
+
+            Kind := TActionsKind(AnsiIndexStr(
+              GetFirstToken(InfoLine, ';'), KindStrings));
+            if Ord(Kind) < 0 then Break;
+            if Kind in CustomActionsKind then
+              Graphics := GetLastToken(InfoLine, ';')
+            else
+              Graphics := '';
+
+            // Déterminer l'ID des actions à créer
+
+            if Kind <> akZone then ActionsID := '' else
+            begin
+              Zone.X := StrToIntDef(GetXToken(InfoLine, ';', 2), -1);
+              Zone.Y := StrToIntDef(GetXToken(InfoLine, ';', 3), -1);
+              Zone.Z := StrToIntDef(GetXToken(InfoLine, ';', 4), -1);
+              if (Zone.X < 0) or (Zone.Y < 0) or (Zone.Z < 0) then Break;
+              ActionsID := Format(idZoneActions, [Zone.X, Zone.Y, Zone.Z]);
+            end;
+
+            // Récupération des actions proprement dites
+
+            StringsOps.CopyFrom(SubContents, FileContents,
+              FirstLine, LastLine-FirstLine);
+
+            // Création des actions en question
+
+            Actions := TActions.Create(Master, Number, Kind,
+              Graphics, SubContents, ActionsID);
+            ActionsList.Add(Actions);
             if Counters.Count > Number then
-              Counter := StrToIntDef(Counters[Number], 0);
+              Actions.Counter := StrToIntDef(Counters[Number], 0);
+
+            // Passage à l'itération suivante
+
+            inc(Number);
           end;
 
-          // Passage à l'itération suivante
-
-          inc(Number);
+          Infos := TC4xInfos.Create(UnitFile.MasterFile, ActionsList);
+        finally
+          ActionsList.Free;
         end;
-
-        Infos := TC4xInfos.Create(UnitFile.MasterFile, Number);
       finally
         SubContents.Free;
       end;
@@ -162,19 +182,25 @@ end;
 procedure GameStarted(UnitFile : TBPLUnitFile; Master : TMaster);
 var Infos : TC4xInfos;
     I : integer;
-    DoNextPhase, HasMoved, HasShownMsg, Successful : boolean;
+    DoNextPhase, HasMoved, HasShownMsg, Successful, WereZones : boolean;
 begin
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   DoNextPhase := False;
+  WereZones := False;
 
-  for I := 0 to Infos.ActionsCount-1 do
+  for I := 0 to Infos.ActionsCount-1 do with Infos.Actions[I] do
   begin
-    with Infos.Actions[I] do if Kind = akGameStarted then
+    if Kind = akGameStarted then
     begin
       Execute(phExecute, Master.Players[0], False, Master.Players[0].Position,
         DoNextPhase, HasMoved, HasShownMsg, Successful);
-    end;
+    end else
+    if Kind = akZone then
+      WereZones := True;
   end;
+
+  if WereZones then
+    Master.Players[0].AddPlugin(TZonesPlugin.Create(Master, idZonesPlugin));
 end;
 
 {*

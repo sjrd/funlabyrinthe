@@ -768,7 +768,7 @@ begin
     ReplaceVariable(Line, 'ClesOr', Count[Player]);
   ReplaceNonStrVariable(Line, 'Barque', Boat);
 
-  ReplaceNonStrVariable(Line, 'VersionInterpreteur', InterpreterVersion);
+  ReplaceNonStrVariable(Line, 'Version', InterpreterVersion);
   ReplaceNonStrVariable(Line, 'Couleur', Player.Color);
 
   ReplaceIndexedCounter('CompteurActions_%d',

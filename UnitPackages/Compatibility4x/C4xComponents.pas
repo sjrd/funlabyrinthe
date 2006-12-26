@@ -10,8 +10,8 @@ unit C4xComponents;
 interface
 
 uses
-  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FilesUtils, FunLabyTools,
-  C4xCommon;
+  SysUtils, Classes, Graphics, Contnrs, ScUtils, FunLabyUtils, FilesUtils,
+  FunLabyTools, C4xCommon;
 
 resourcestring
   sStairs = 'Escalier';             /// Nom de l'escalier
@@ -21,6 +21,8 @@ resourcestring
   sButtonTemplate = 'Bouton';       /// Nom du bouton modèle
 
 const {don't localize}
+  idZonesPlugin = 'ZonesPlugin';           /// ID du plug-in des zones
+
   idUpStairs = 'UpStairs';                 /// ID de l'escalier montant
   idDownStairs = 'DownStairs';             /// ID de l'escalier descendant
   idOldStairs = 'OldStairs%d';             /// ID des escaliers de la v1.0
@@ -37,7 +39,8 @@ const {don't localize}
   /// ID de la case à actions modèle
   idActionsScrewTemplate = idGrass+'-'+idButtonTemplate+'--';
 
-  idActions = 'Actions%d'; /// ID d'un ensemble d'actions
+  idActions = 'Actions%d';                /// ID d'un ensemble d'actions
+  idZoneActions = 'ZoneActions:%d:%d:%d'; /// ID d'un ensemble d'actions de zone
 
   idC4xInfos = 'C4xInfos'; /// ID des infos sur C4x
 
@@ -66,9 +69,21 @@ type
   *}
   TActionsKind = (akGameStarted, akPushButton, akSwitch, akInfoStone, akHidden,
     akTransporterNext, akTransporterPrevious, akTransporterRandom, akOutside,
-    akTreasure, akCustom, akObject, akObstacle, akDirection);
+    akTreasure, akCustom, akObject, akObstacle, akDirection, akZone);
 
   TActions = class;
+
+  {*
+    Plug-in de joueur de gestion des zones
+    Ce plug-in assure la compatibilité des actions de zones de
+    FunLabyrinthe 4.x.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TZonesPlugin = class(TPlugin)
+  public
+    procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); override;
+  end;
 
   {*
     Escaliers de la v1.0
@@ -168,7 +183,8 @@ type
     FObstacle : TActionsObstacle; /// Obstacle correspondant
   public
     constructor Create(AMaster : TMaster; ANumber : integer;
-      AKind : TActionsKind; const AFileName : string; AActions : TStrings);
+      AKind : TActionsKind; const AFileName : string; AActions : TStrings;
+      const AID : TComponentID = '');
     destructor Destroy; override;
 
     procedure Execute(Phase : integer; Player : TPlayer; KeyPressed : boolean;
@@ -195,6 +211,7 @@ type
   private
     FMasterFile : TMasterFile;                /// Fichier maître
     FActionsCount : integer;                  /// Nombres d'actions
+    FActions : array of TActions;             /// Liste des actions
     FVariables : array[1..MaxVar] of integer; /// Variables
 
     function GetActions(Index : integer) : TActions;
@@ -202,7 +219,7 @@ type
     function GetVariables(Index : integer) : integer;
     procedure SetVariables(Index, Value : integer);
   public
-    constructor Create(AMasterFile : TMasterFile; AActionsCount : integer);
+    constructor Create(AMasterFile : TMasterFile; AActions : TObjectList);
 
     property MasterFile : TMasterFile read FMasterFile;
 
@@ -214,6 +231,10 @@ type
   end;
 
 const {don't localize}
+  /// Ensemble des types d'actions qui ne sont pas associées à une case
+  ActionsKindsWithoutScrew : set of TActionsKind =
+    [akGameStarted, akZone];
+
   /// Ensemble des types d'actions personnalisés
   CustomActionsKind : set of TActionsKind =
     [akCustom, akObject, akObstacle, akDirection];
@@ -225,6 +246,46 @@ implementation
 
 uses
   C4xInterpreter;
+
+{---------------------}
+{ Classe TZonesPlugin }
+{---------------------}
+
+procedure TZonesPlugin.Moved(Player : TPlayer; const Src, Dest : T3DPoint);
+var Zone : T3DPoint;
+    ActionsID : TComponentID;
+    Actions : TActions;
+    DoNextPhase, HasMoved, HasShownMsg, Successful, Redo : boolean;
+begin
+  Zone.X := Dest.X div 7;
+  Zone.Y := Dest.Y div 7;
+  Zone.Z := Dest.Z;
+
+  if (Src.X div 7 = Zone.X) and (Src.Y div 7 = Zone.Y) and (Src.Z = Zone.Z) then
+    exit;
+
+  ActionsID := Format(idZoneActions, [Zone.X, Zone.Y, Zone.Z]);
+  Actions := nil;
+  try
+    Actions := Master.Component[ActionsID] as TActions;
+  except
+    on Error : EComponentNotFound do;
+    on Error : EInvalidCast do;
+  end;
+
+  if Actions <> nil then
+  begin
+    DoNextPhase := False;
+    Actions.Execute(phExecute, Player, True, Dest,
+      DoNextPhase, HasMoved, HasShownMsg, Successful);
+    if DoNextPhase then
+    begin
+      Player.MoveTo(Player.Position, True, Redo);
+      if Redo then
+        Player.NaturalMoving;
+    end;
+  end;
+end;
 
 {----------------}
 { Classe TStairs }
@@ -519,11 +580,13 @@ end;
   @param ANumber     Numéro d'actions
   @param AKind       Type d'actions
   @param AFileName   Nom du fichier de graphismes
+  @param AID         ID des actions, ou vide pour utiliser un ID par défaut
 *}
 constructor TActions.Create(AMaster : TMaster; ANumber : integer;
-  AKind : TActionsKind; const AFileName : string; AActions : TStrings);
+  AKind : TActionsKind; const AFileName : string; AActions : TStrings;
+  const AID : TComponentID = '');
 begin
-  inherited Create(AMaster, Format(idActions, [ANumber]));
+  inherited Create(AMaster, IIF(AID = '', Format(idActions, [ANumber]), AID));
 
   FNumber := ANumber;
   FKind := AKind;
@@ -538,7 +601,7 @@ begin
     else FInactive := '';
   end;
 
-  if Kind = akGameStarted then
+  if Kind in ActionsKindsWithoutScrew then
   begin
     FObjectDef := nil;
     FEffect := nil;
@@ -587,16 +650,19 @@ end;
 
 {*
   Crée une instance de TC4xInfos
-  @param AMasterFile     Fichier maître
-  @param AActionsCount   Nombre d'actions
+  @param AMasterFile   Fichier maître
+  @param AActions      Liste des actions
 *}
 constructor TC4xInfos.Create(AMasterFile : TMasterFile;
-  AActionsCount : integer);
+  AActions : TObjectList);
 var I : integer;
 begin
   inherited Create(AMasterFile.Master, idC4xInfos);
   FMasterFile := AMasterFile;
-  FActionsCount := AActionsCount;
+  FActionsCount := AActions.Count;
+  SetLength(FActions, FActionsCount);
+  for I := 0 to FActionsCount-1 do
+    FActions[I] := TActions(AActions[I]);
   for I := 1 to MaxVar do
     FVariables[I] := 0;
 end;
@@ -608,7 +674,7 @@ end;
 *}
 function TC4xInfos.GetActions(Index : integer) : TActions;
 begin
-  Result := Master.Component[Format(idActions, [Index])] as TActions;
+  Result := FActions[Index];
 end;
 
 {*
