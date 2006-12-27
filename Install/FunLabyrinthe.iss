@@ -184,9 +184,9 @@ Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\open\command"; ValueType: strin
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit"        ; ValueType: string; ValueName: ""; ValueData: "{cm:Edit}"                       ; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FunLabyEdit.exe"" ""%1"""; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
 
-Root: HKCR; SubKey: ".flm"                         ; ValueType: string; ValueName: ""; ValueData: "FunLabyrinthe.Map"     ; Tasks: regext\flm;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Map"            ; ValueType: string; ValueName: ""; ValueData: "{cm:FunLabyMap}"       ; Tasks: regext\flm;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Map\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\Labyrinthe.exe,0"; Tasks: regext\flm;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: ".flm"                         ; ValueType: string; ValueName: ""; ValueData: "FunLabyrinthe.Map"     ; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Map"            ; ValueType: string; ValueName: ""; ValueData: "{cm:FunLabyMap}"       ; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Map\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\Labyrinthe.exe,0"; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
 
 [Icons]
 Name: "{group}\{cm:IconLabyrinthe}" ; Filename: "{app}\Labyrinthe.exe" ; Components: programs\labyrinthe
@@ -739,5 +739,10 @@ begin
     ssInstall : if HasOldVersion then UninstallOldVersion;
     ssPostInstall : if ImportDir <> '' then ImportOld;
   end;
+end;
+
+procedure RegisterPreviousData(PreviousDataKey : integer);
+begin
+  SetPreviousData(PreviousDataKey; 'AppData', FunLabyAppData);
 end;
 
