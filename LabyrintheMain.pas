@@ -45,7 +45,6 @@ type
     Sep1: TMenuItem;
     MenuDescription: TMenuItem;
     BigMenuOptions: TMenuItem;
-    MenuTips: TMenuItem;
     MenuProperties: TMenuItem;
     MenuMapProperties: TMenuItem;
     MenuPlayerProperties: TMenuItem;
@@ -68,7 +67,6 @@ type
     procedure MenuDescriptionClick(Sender: TObject);
     procedure MenuMapPropertiesClick(Sender: TObject);
     procedure MenuPlayerPropertiesClick(Sender: TObject);
-    procedure MenuTipsClick(Sender: TObject);
     procedure MenuReloadGameClick(Sender: TObject);
   private
     { Déclarations privées }
@@ -134,7 +132,6 @@ begin
   MenuDescription.Enabled := True;
   MenuProperties.Enabled := True;
   MenuViewSize.Enabled := True;
-  MenuTips.Checked := False;
   ShowStatus;
 
   AdaptSizeToView;
@@ -385,15 +382,6 @@ end;
 procedure TFormMain.MenuPlayerPropertiesClick(Sender: TObject);
 begin
   TFormObjects.ShowObjects(View.Player);
-end;
-
-{*
-  Gestionnaire d'événement OnClick du menu Indices
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormMain.MenuTipsClick(Sender: TObject);
-begin
-  MenuTips.Checked := not MenuTips.Checked;
 end;
 
 {*

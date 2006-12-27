@@ -122,10 +122,6 @@ object FormMain: TFormMain
         Enabled = False
         OnClick = MenuViewSizeClick
       end
-      object MenuTips: TMenuItem
-        Caption = 'Montrer les indices'
-        OnClick = MenuTipsClick
-      end
     end
     object BigMenuHelp: TMenuItem
       Caption = '&Aide'
@@ -138,7 +134,7 @@ object FormMain: TFormMain
         Caption = '-'
       end
       object MenuAbout: TMenuItem
-        Caption = 'A propos...'
+        Caption = #192' propos...'
         OnClick = MenuAboutClick
       end
     end

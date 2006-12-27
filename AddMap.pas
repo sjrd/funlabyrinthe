@@ -23,6 +23,8 @@ resourcestring
   sWrongDimensions = 'Les dimensions doivent être strictement positives';
   sWrongZoneSizeTitle = 'Taille de zone incorrecte';
   sWrongZoneSize = 'La taille de zone doit être strictement positive';
+  sZoneSizeMustDivideDimensions =
+    'La taille de zone doit être un diviseur des dimensions en X et en Y';
 
 type
   {*
@@ -161,6 +163,9 @@ begin
       ShowDialog(sWrongDimensionsTitle, sWrongDimensions, dtError)
     else if (ZoneSize.X <= 0) or (ZoneSize.Y <= 0) then
       ShowDialog(sWrongZoneSizeTitle, sWrongZoneSize, dtError)
+    else if (Dimensions.X mod ZoneSize.X <> 0) or
+            (Dimensions.Y mod ZoneSize.Y <> 0) then
+      ShowDialog(sWrongZoneSizeTitle, sZoneSizeMustDivideDimensions, dtError)
     else
       ModalResult := mrOK;
   end;

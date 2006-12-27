@@ -12,7 +12,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ActnList, XPStyleActnCtrls, ActnMan, Menus, ImgList, StdCtrls,
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
-  StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, PlayerPlugins,
+  StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, ShellAPI, PlayerPlugins,
   PlayerAttributes, PlayerObjects, FileProperties, AddMap, SdDialogs;
 
 resourcestring
@@ -115,6 +115,10 @@ type
     ActionRemoveMap: TAction;
     StaticTool: TStaticText;
     LabelTool: TLabel;
+    ActionHelpTopics: TAction;
+    ActionAbout: TAction;
+    ActionTest: TAction;
+    procedure ActionTestExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -139,6 +143,8 @@ type
       X, Y: Integer);
     procedure ActionAddMapExecute(Sender: TObject);
     procedure ActionRemoveMapExecute(Sender: TObject);
+    procedure ActionHelpTopicsExecute(Sender: TObject);
+    procedure ActionAboutExecute(Sender: TObject);
   private
     { Composants non disponibles dans Turbo Explorer }
     EditFloor : TSpinEdit;
@@ -182,8 +188,8 @@ type
   end;
 
 const {don't localize}
-  FunLabyCoreMIMEType = 'application/bpl'; /// Type MIME de l'unité FunLabyCore
-  FunLabyCoreHRef = 'FunLabyCore.bpl';     /// HRef de l'unité FunLabyCore
+  FunLabyBaseMIMEType = 'application/bpl'; /// Type MIME de l'unité FunLabyCore
+  FunLabyBaseHRef = 'FunLabyBase.bpl';     /// HRef de l'unité FunLabyCore
   idPlayer = 'Player';                     /// ID de l'unique joueur
 
 var
@@ -372,6 +378,7 @@ begin
   ActionSaveFileAs.Enabled := True;
   ActionCloseFile.Enabled := True;
   ActionFileProperties.Enabled := True;
+  ActionTest.Enabled := True;
 
   MainMenuBar.ActionClient.Items[1].Visible := True; // menu des cartes
   ActionAddMap.Enabled := True;
@@ -424,6 +431,7 @@ begin
   ActionSaveFileAs.Enabled := False;
   ActionCloseFile.Enabled := False;
   ActionFileProperties.Enabled := False;
+  ActionTest.Enabled := False;
 
   MainMenuBar.ActionClient.Items[1].Visible := False; // menu des cartes
   ActionAddMap.Enabled := False;
@@ -441,7 +449,7 @@ begin
   MasterFile := TMasterFile.CreateNew;
   if TFormFileProperties.ManageProperties(MasterFile) then
   begin
-    MasterFile.AddUnitFile(FunLabyCoreMIMEType, FunLabyCoreHRef);
+    MasterFile.AddUnitFile(FunLabyBaseMIMEType, FunLabyBaseHRef);
     TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName,
       nil, Point3D(0, 0, 0));
     LoadFile;
@@ -608,6 +616,9 @@ begin
   CurrentMap := nil;
 
   Component := nil;
+
+  if ParamCount > 0 then
+    OpenFile(ParamStr(1));
 end;
 
 {*
@@ -688,6 +699,18 @@ procedure TFormMain.ActionFilePropertiesExecute(Sender: TObject);
 begin
   if TFormFileProperties.ManageProperties(MasterFile) then
     Modified := True;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Tester
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionTestExecute(Sender: TObject);
+begin
+  {don't localize}
+  if (not Modified) or SaveFile(MasterFile.FileName) then
+    ShellExecute(0, 'open', PChar(Dir+'Labyrinthe.exe'),
+      PChar('"'+MasterFile.FileName+'"'), nil, SW_SHOWNORMAL);
 end;
 
 {*
@@ -989,6 +1012,24 @@ begin
   Map.Free;
 
   Modified := True;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Rubriques d'aide
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionHelpTopicsExecute(Sender: TObject);
+begin
+//
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action À propos...
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionAboutExecute(Sender: TObject);
+begin
+  ShowFunLabyAbout;
 end;
 
 end.
