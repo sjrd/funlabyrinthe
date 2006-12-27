@@ -142,7 +142,8 @@ begin
   OnKeyDown := MovePlayer;
   TimerUpdateImage.Enabled := True;
 
-  MasterFile.GameStarted;
+  if not MasterFile.IsSaveguard then
+    MasterFile.GameStarted;
 end;
 
 {*
@@ -187,8 +188,6 @@ begin
 
     if not Result then exit;
   end;
-
-  MasterFile.GameEnded;
 
   TimerUpdateImage.Enabled := False;
   OnKeyDown := nil;
@@ -457,13 +456,19 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.UpdateImage(Sender: TObject);
+var GameEnded : boolean;
 begin
+  // Vérification de terminaison
+  GameEnded := Master.Terminated and (MoveThread = nil);
+
+  if GameEnded then
+    MasterFile.GameEnded;
+
   View.Draw(HiddenBitmap.Canvas);
   Image.Picture.Assign(HiddenBitmap);
   ShowStatus;
 
-  // Vérification de terminaison
-  if Master.Terminated and (MoveThread = nil) then
+  if GameEnded then
     CloseGame(True);
 end;
 

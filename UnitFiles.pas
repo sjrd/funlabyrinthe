@@ -25,13 +25,16 @@ type
   private
     FHandle : HMODULE;      /// Module du package chargé
     FAttributes : TStrings; /// Attributs libres pour le package
+
+    procedure Notify(const ProcName : string);
   public
     constructor Create(AMasterFile : TMasterFile; const AHRef : string;
       const AFileName : TFileName; const AMIMEType : string;
       Params : TStrings); override;
     destructor Destroy; override;
 
-    procedure GameLoaded(FirstTime : boolean); override;
+    procedure Loaded; override;
+    procedure Unloading; override;
 
     procedure GameStarted; override;
     procedure GameEnded; override;
@@ -61,8 +64,11 @@ const {don't localize}
   /// Procédure de déchargement des composants
   UnloadComponentsProc = 'UnloadComponents';
 
-  /// Procédure de chargement de la partie
-  GameLoadedProc = 'GameLoaded';
+  /// Procédure de chargement du projet
+  LoadedProc = 'Loaded';
+
+  /// Procédure de déchargement du projet
+  UnloadingProc = 'Unloading';
 
   /// Procédure de commencement de la partie
   GameStartedProc = 'GameStarted';
@@ -130,23 +136,43 @@ begin
 end;
 
 {*
-  Exécuté lorsque la partie vient juste d'être chargée
-  GameLoaded est appelée lorsque la partie vient juste d'être chargée (en mode
-  jeu, donc pas en mode édition), que ce soit pour la première fois ou à la
-  suite du chargement d'une sauvegarde.
-  @param FirstTime   Indique si c'est la première fois que la partie est chargée
+  Appelle une routine de notification du paquet sous-jacent
+  @param ProcName   Nom de la routine à appeler
 *}
-procedure TBPLUnitFile.GameLoaded(FirstTime : boolean);
+procedure TBPLUnitFile.Notify(const ProcName : string);
 type
-  TGameLoadedProc = procedure(UnitFile : TBPLUnitFile; Master : TMaster;
-    FirstTime : boolean); stdcall;
-var GameLoaded : TGameLoadedProc;
+  TNotifyProc = procedure(UnitFile : TBPLUnitFile; Master : TMaster); stdcall;
+var Notify : TNotifyProc;
 begin
-  GameLoaded := TGameLoadedProc(
-    GetProcAddress(FHandle, GameLoadedProc));
+  Notify := TNotifyProc(
+    GetProcAddress(FHandle, PChar(ProcName)));
 
-  if Assigned(GameLoaded) then
-    GameLoaded(Self, Master, FirstTime);
+  if Assigned(Notify) then
+    Notify(Self, Master);
+end;
+
+{*
+  Exécuté lorsque le projet a été complètement chargé
+  Loaded est appelée une fois que le projet a été complètement chargé. À ce
+  moment, toutes les unités sont chargées, les cartes également, et tous les
+  joueurs de même, à leurs positions respectives, et avec leurs attributs et/ou
+  plug-in.
+  Loaded est appelée aussi bien en mode édition qu'en mode jeu.
+*}
+procedure TBPLUnitFile.Loaded;
+begin
+  Notify(LoadedProc);
+end;
+
+{*
+  Exécuté lorsque le projet est sur le point d'être déchargé
+  Unloading est appelée lorsque le projet est sur le point d'être déchargé. À ce
+  moment, tous les objets sont encore accessibles, pour la dernière fois.
+  Unloading est appelée aussi bien en mode édition qu'en mode jeu.
+*}
+procedure TBPLUnitFile.Unloading;
+begin
+  Notify(UnloadingProc);
 end;
 
 {*
@@ -155,16 +181,8 @@ end;
   mode jeu, donc pas en mode édition).
 *}
 procedure TBPLUnitFile.GameStarted;
-type
-  TGameStartedProc = procedure(UnitFile : TBPLUnitFile;
-    Master : TMaster); stdcall;
-var GameStarted : TGameStartedProc;
 begin
-  GameStarted := TGameStartedProc(
-    GetProcAddress(FHandle, GameStartedProc));
-
-  if Assigned(GameStarted) then
-    GameStarted(Self, Master);
+  Notify(GameStartedProc);
 end;
 
 {*
@@ -172,19 +190,11 @@ end;
   GameEnded est appelée lorsque la partie vient juste d'être terminée (en mode
   jeu, donc pas en mode édition), avant que le maître FunLabyrinthe ne soit
   libéré.
-  Une partie est terminée lorsque plus aucun n'est dans l'état psPlaying.
+  Une partie est terminée lorsque plus aucun joueur n'est dans l'état psPlaying.
 *}
 procedure TBPLUnitFile.GameEnded;
-type
-  TGameEndedProc = procedure(UnitFile : TBPLUnitFile;
-    Master : TMaster); stdcall;
-var GameEnded : TGameEndedProc;
 begin
-  GameEnded := TGameEndedProc(
-    GetProcAddress(FHandle, GameEndedProc));
-
-  if Assigned(GameEnded) then
-    GameEnded(Self, Master);
+  Notify(GameEndedProc);
 end;
 
 {*

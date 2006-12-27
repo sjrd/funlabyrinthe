@@ -73,7 +73,8 @@ type
       Params : TStrings); virtual;
     procedure AfterConstruction; override;
 
-    procedure GameLoaded(FirstTime : boolean); virtual;
+    procedure Loaded; virtual;
+    procedure Unloading; virtual;
 
     procedure GameStarted; virtual;
     procedure GameEnded; virtual;
@@ -154,6 +155,9 @@ type
       CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
     constructor CreateNew(FileContents : TStrings = nil);
     destructor Destroy; override;
+
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
 
     class procedure RegisterUnitFileClass(const MIMEType : string;
       UnitFileClass : TUnitFileClass);
@@ -293,13 +297,24 @@ begin
 end;
 
 {*
-  Exécuté lorsque la partie vient juste d'être chargée
-  GameLoaded est appelée lorsque la partie vient juste d'être chargée (en mode
-  jeu, donc pas en mode édition), que ce soit pour la première fois ou à la
-  suite du chargement d'une sauvegarde.
-  @param FirstTime   Indique si c'est la première fois que la partie est chargée
+  Exécuté lorsque le projet a été complètement chargé
+  Loaded est appelée une fois que le projet a été complètement chargé. À ce
+  moment, toutes les unités sont chargées, les cartes également, et tous les
+  joueurs de même, à leurs positions respectives, et avec leurs attributs et/ou
+  plug-in.
+  Loaded est appelée aussi bien en mode édition qu'en mode jeu.
 *}
-procedure TUnitFile.GameLoaded(FirstTime : boolean);
+procedure TUnitFile.Loaded;
+begin
+end;
+
+{*
+  Exécuté lorsque le projet est sur le point d'être déchargé
+  Unloading est appelée lorsque le projet est sur le point d'être déchargé. À ce
+  moment, tous les objets sont encore accessibles, pour la dernière fois.
+  Unloading est appelée aussi bien en mode édition qu'en mode jeu.
+*}
+procedure TUnitFile.Unloading;
 begin
 end;
 
@@ -317,7 +332,7 @@ end;
   GameEnded est appelée lorsque la partie vient juste d'être terminée (en mode
   jeu, donc pas en mode édition), avant que le maître FunLabyrinthe ne soit
   libéré.
-  Une partie est terminée lorsque plus aucun n'est dans l'état psPlaying.
+  Une partie est terminée lorsque plus aucun joueur n'est dans l'état psPlaying.
 *}
 procedure TUnitFile.GameEnded;
 begin
@@ -515,7 +530,6 @@ end;
 constructor TMasterFile.Create(const AFileName : TFileName; AMode : TFileMode;
   CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
 var Document : IXMLDOMDocument;
-    I : integer;
 begin
   inherited Create;
   FFileName := AFileName;
@@ -543,12 +557,6 @@ begin
 
   Load(Document, CreatePlayerControllerProc);
   TestOpeningValidity;
-
-  if Mode = fmPlay then
-  begin
-    for I := 0 to UnitFileCount-1 do
-      UnitFiles[I].GameLoaded(not IsSaveguard);
-  end;
 end;
 
 {*
@@ -610,6 +618,34 @@ begin
   FUnitFiles.Free;
 
   inherited;
+end;
+
+{*
+  Exécuté après la construction de l'objet
+  AfterConstruction est appelé après l'exécution du dernier constructeur.
+  N'appelez pas directement AfterConstruction.
+*}
+procedure TMasterFile.AfterConstruction;
+var I : integer;
+begin
+  inherited;
+
+  for I := 0 to UnitFileCount-1 do
+    UnitFiles[I].Loaded;
+end;
+
+{*
+  Exécuté avant la destruction de l'objet
+  BeforeDestruction est appelé avant l'exécution du premier destructeur.
+  N'appelez pas directement BeforeDestruction.
+*}
+procedure TMasterFile.BeforeDestruction;
+var I : integer;
+begin
+  inherited;
+
+  for I := UnitFileCount-1 downto 0 do
+    UnitFiles[I].Unloading;
 end;
 
 {*

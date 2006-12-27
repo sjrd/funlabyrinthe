@@ -75,6 +75,10 @@ begin
     FileName := '';
   end;
 
+  // Plug-in
+
+  TZonesPlugin.Create(Master, idZonesPlugin);
+
   // Effets
 
   for I := 1 to 20 do
@@ -209,7 +213,7 @@ begin
   end;
 
   if WereZones then
-    Master.Players[0].AddPlugin(TZonesPlugin.Create(Master, idZonesPlugin));
+    Master.Players[0].AddPlugin(Master.Plugin[idZonesPlugin]);
 
   if not Infos.KnowShowTips then
   begin
