@@ -34,6 +34,7 @@ type
     procedure GameLoaded(FirstTime : boolean); override;
 
     procedure GameStarted; override;
+    procedure GameEnded; override;
 
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
@@ -65,6 +66,9 @@ const {don't localize}
 
   /// Procédure de commencement de la partie
   GameStartedProc = 'GameStarted';
+
+  /// Procédure de terminaison de la partie
+  GameEndedProc = 'GameEnded';
 
   /// Procédure d'enregistrement des composants
   RegisterComponentsProc = 'RegisterComponents';
@@ -161,6 +165,26 @@ begin
 
   if Assigned(GameStarted) then
     GameStarted(Self, Master);
+end;
+
+{*
+  Exécuté lorsque la partie vient juste de se terminer
+  GameEnded est appelée lorsque la partie vient juste d'être terminée (en mode
+  jeu, donc pas en mode édition), avant que le maître FunLabyrinthe ne soit
+  libéré.
+  Une partie est terminée lorsque plus aucun n'est dans l'état psPlaying.
+*}
+procedure TBPLUnitFile.GameEnded;
+type
+  TGameEndedProc = procedure(UnitFile : TBPLUnitFile;
+    Master : TMaster); stdcall;
+var GameEnded : TGameEndedProc;
+begin
+  GameEnded := TGameEndedProc(
+    GetProcAddress(FHandle, GameEndedProc));
+
+  if Assigned(GameEnded) then
+    GameEnded(Self, Master);
 end;
 
 {*

@@ -76,6 +76,7 @@ type
     procedure GameLoaded(FirstTime : boolean); virtual;
 
     procedure GameStarted; virtual;
+    procedure GameEnded; virtual;
 
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
@@ -171,6 +172,7 @@ type
       MaxViewSize : integer = 1) : TMapFile;
 
     procedure GameStarted;
+    procedure GameEnded;
 
     procedure RegisterComponents(
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
@@ -307,6 +309,17 @@ end;
   mode jeu, donc pas en mode édition).
 *}
 procedure TUnitFile.GameStarted;
+begin
+end;
+
+{*
+  Exécuté lorsque la partie vient juste de se terminer
+  GameEnded est appelée lorsque la partie vient juste d'être terminée (en mode
+  jeu, donc pas en mode édition), avant que le maître FunLabyrinthe ne soit
+  libéré.
+  Une partie est terminée lorsque plus aucun n'est dans l'état psPlaying.
+*}
+procedure TUnitFile.GameEnded;
 begin
 end;
 
@@ -940,6 +953,16 @@ var I : integer;
 begin
   for I := 0 to UnitFileCount-1 do
     UnitFiles[I].GameStarted;
+end;
+
+{*
+  Termine la partie
+*}
+procedure TMasterFile.GameEnded;
+var I : integer;
+begin
+  for I := 0 to UnitFileCount-1 do
+    UnitFiles[I].GameEnded;
 end;
 
 {*

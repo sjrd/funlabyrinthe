@@ -188,6 +188,8 @@ begin
     if not Result then exit;
   end;
 
+  MasterFile.GameEnded;
+
   TimerUpdateImage.Enabled := False;
   OnKeyDown := nil;
 
