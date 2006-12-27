@@ -683,7 +683,7 @@ procedure TActionsInterpreter.TreatVariables(var Line : string);
   *}
   procedure TreatNextPreviousRandom(var Line : string; const Kind : string;
     FindProc : TFindScrewProc);
-  var Len, ExprStart, IDStart, IDEnd : integer;
+  var Len, ExprStart, IDPos : integer;
       ID : TComponentID;
       Dest : T3DPoint;
   begin
@@ -693,20 +693,18 @@ procedure TActionsInterpreter.TreatVariables(var Line : string);
       ExprStart := PosNonStrVariable(Kind, Line);
       if ExprStart = 0 then Break;
 
-      IDStart := ExprStart+Len+1;
-      IDEnd := IDStart;
-      while (IDEnd <= Length(Line)) and
-            (not (Line[IDEnd] in [' ', '[', ']'])) do
-        inc(IDEnd);
+      IDPos := ExprStart+Len+1;
+      while (IDPos <= Length(Line)) and (Line[IDPos] in [' ', '[', ']']) do
+        inc(IDPos);
 
-      if IDEnd = IDStart then
+      if IDPos > Length(Line) then
         raise EInvalidAction.CreateFmt(sBadNextPreviousRandom, [Kind]);
 
-      ID := Copy(Line, IDStart, IDEnd-IDStart);
+      ID := ScrewsTable[Line[IDPos]];
       Dest := Position;
       FindProc(Map, Dest, Master.ScrewComponent[ID]);
 
-      Delete(Line, ExprStart, IDEnd-ExprStart);
+      Delete(Line, ExprStart, IDPos-ExprStart+1);
       Insert('Case ' + Point3DToString(Dest), Line, ExprStart);
     end;
   end;
@@ -1215,7 +1213,8 @@ end;
 *}
 procedure TActionsInterpreter.TipCmd(var Params : string);
 begin
-  Information(Params, sTip, dtWarning);
+  if Infos.ShowTips then
+    Information(Params, sTip, dtWarning);
 end;
 
 {*

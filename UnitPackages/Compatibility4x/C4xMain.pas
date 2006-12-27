@@ -14,6 +14,11 @@ uses
   Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
   FunLabyUtils, UnitFiles, C4xCommon, C4xComponents;
 
+resourcestring
+  sAskForTipsTitle = 'Activation des indices';
+  sAskForTips = 'Ce labyrinthe propose certains indices : '+
+    'voulez-vous les activer ?';
+
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings); stdcall;
 
@@ -32,6 +37,7 @@ const {don't localize}
   attrFileName = 'FileName';   /// Attribut pour le nom de fichier
   attrCounters = 'Counters';   /// Enregistrement des compteurs
   attrVariables = 'Variables'; /// Enregistrement des variables
+  attrShowTips = 'ShowTips';   /// Affichage des indices
 
 {*
   Charge tous les composants de compatibilité 4.x de FunLabyrinthe
@@ -170,6 +176,9 @@ begin
   finally
     Counters.Free;
   end;
+
+  if Params.Values[attrShowTips] <> '' then
+    Infos.ShowTips := Params.Values[attrShowTips] = 'yes';
 end;
 
 {*
@@ -182,11 +191,34 @@ end;
 procedure GameStarted(UnitFile : TBPLUnitFile; Master : TMaster);
 var Infos : TC4xInfos;
     I : integer;
-    DoNextPhase, HasMoved, HasShownMsg, Successful, WereZones : boolean;
+    DoNextPhase, HasMoved, HasShownMsg, Successful : boolean;
+    WereZones, WereTips : boolean;
 begin
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   DoNextPhase := False;
   WereZones := False;
+  WereTips := False;
+
+  for I := 0 to Infos.ActionsCount-1 do with Infos.Actions[I] do
+  begin
+    if Kind = akZone then
+      WereZones := True;
+
+    if StringsOps.FindText(Actions, 'Indice') >= 0 then
+      WereTips := True;
+  end;
+
+  if WereZones then
+    Master.Players[0].AddPlugin(TZonesPlugin.Create(Master, idZonesPlugin));
+
+  if not Infos.KnowShowTips then
+  begin
+    if not WereTips then Infos.ShowTips := False else
+    begin
+      Infos.ShowTips := Master.Players[0].Controller.ShowDialog(
+        sAskForTipsTitle, sAskForTips, dtConfirmation, dbYesNo) = drYes;
+    end;
+  end;
 
   for I := 0 to Infos.ActionsCount-1 do with Infos.Actions[I] do
   begin
@@ -194,13 +226,8 @@ begin
     begin
       Execute(phExecute, Master.Players[0], False, Master.Players[0].Position,
         DoNextPhase, HasMoved, HasShownMsg, Successful);
-    end else
-    if Kind = akZone then
-      WereZones := True;
+    end;
   end;
-
-  if WereZones then
-    Master.Players[0].AddPlugin(TZonesPlugin.Create(Master, idZonesPlugin));
 end;
 
 {*
@@ -288,6 +315,8 @@ begin
       Counters.Free;
     end;
   end;
+
+  Params.Values[attrShowTips] := IIF(Infos.ShowTips, 'yes', 'no');
 end;
 
 {$IFNDEF DCTD}

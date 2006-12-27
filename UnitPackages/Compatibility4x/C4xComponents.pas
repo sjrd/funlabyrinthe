@@ -210,9 +210,13 @@ type
   TC4xInfos = class(TFunLabyComponent)
   private
     FMasterFile : TMasterFile;                /// Fichier maître
+    FKnowShowTips : boolean;                  /// Affichage des indices fixé
+    FShowTips : boolean;                      /// Affichage les indices
     FActionsCount : integer;                  /// Nombres d'actions
     FActions : array of TActions;             /// Liste des actions
     FVariables : array[1..MaxVar] of integer; /// Variables
+
+    procedure SetShowTips(Value : boolean);
 
     function GetActions(Index : integer) : TActions;
 
@@ -222,6 +226,9 @@ type
     constructor Create(AMasterFile : TMasterFile; AActions : TObjectList);
 
     property MasterFile : TMasterFile read FMasterFile;
+
+    property KnowShowTips : boolean read FKnowShowTips;
+    property ShowTips : boolean read FShowTips write SetShowTips;
 
     property ActionsCount : integer read FActionsCount;
     property Actions[index : integer] : TActions read GetActions;
@@ -659,12 +666,24 @@ var I : integer;
 begin
   inherited Create(AMasterFile.Master, idC4xInfos);
   FMasterFile := AMasterFile;
+  FKnowShowTips := False;
+  FShowTips := False;
   FActionsCount := AActions.Count;
   SetLength(FActions, FActionsCount);
   for I := 0 to FActionsCount-1 do
     FActions[I] := TActions(AActions[I]);
   for I := 1 to MaxVar do
     FVariables[I] := 0;
+end;
+
+{*
+  Définit l'affichage des indices
+  @param Value   Nouvelle valeur de l'affichage des indices
+*}
+procedure TC4xInfos.SetShowTips(Value : boolean);
+begin
+  FKnowShowTips := True;
+  FShowTips := Value;
 end;
 
 {*
