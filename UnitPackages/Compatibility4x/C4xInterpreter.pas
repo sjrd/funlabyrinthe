@@ -1404,9 +1404,8 @@ begin
       cJump :
       begin
         Index := Actions.IndexOf('#'+Trim(Line));
-        if Index < 0 then
-          raise EInvalidAction.CreateFmt(sUnknownLabel, [Line]);
-        Current := Index;
+        if Index >= 0 then
+          Current := Index;
       end;
       cStop : Break;
       cRemark : ;
@@ -1433,6 +1432,8 @@ begin
   begin
     Master.Temporize;
     Player.MoveTo(PlayerPos);
+    if DoNextPhase then
+      Player.Direction := diNone;
   end;
 end;
 
