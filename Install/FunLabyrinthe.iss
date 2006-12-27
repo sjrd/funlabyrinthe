@@ -438,7 +438,7 @@ begin
     ExpandConstants('{cm:AppDataDirPrompt}'));
 
   EditFunLabyAppData := AddDirEdit(SelectDirPage, Bottom,
-    GetPreviousData('FunLabyAppData',
+    GetPreviousData('AppData',
       ExpandConstant('{commonappdata}\SJRDoeraene\FunLabyrinthe\')),
     ExpandConstants('{cm:AppDataSelectDirPrompt}'));
 end;
@@ -743,6 +743,6 @@ end;
 
 procedure RegisterPreviousData(PreviousDataKey : integer);
 begin
-  SetPreviousData(PreviousDataKey; 'AppData', FunLabyAppData);
+  SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
 
