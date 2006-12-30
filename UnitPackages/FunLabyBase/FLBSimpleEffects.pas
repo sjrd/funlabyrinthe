@@ -11,7 +11,7 @@ unit FLBSimpleEffects;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FunLabyTools, FLBCommon, FLBFields;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, MapTools, FLBCommon, FLBFields;
 
 resourcestring
   sNorthArrow = 'Flèche nord';                /// Nom de la flèche nord

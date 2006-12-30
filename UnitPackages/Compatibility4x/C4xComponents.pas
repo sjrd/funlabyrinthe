@@ -11,7 +11,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, Contnrs, ScUtils, FunLabyUtils, FilesUtils,
-  FunLabyTools, C4xCommon;
+  MapTools, C4xCommon;
 
 resourcestring
   sStairs = 'Escalier';             /// Nom de l'escalier

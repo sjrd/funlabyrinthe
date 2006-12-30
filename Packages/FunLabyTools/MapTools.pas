@@ -5,7 +5,7 @@
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}
-unit FunLabyTools;
+unit MapTools;
 
 interface
 

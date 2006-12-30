@@ -156,12 +156,13 @@ Name: "regext\flp"; Description: "{cm:RegFLP}"       ; GroupDescription: {cm:Add
 Name: "regext\flm"; Description: "{cm:RegFLM}"       ; GroupDescription: {cm:AdditionalTasks}
 
 [Files]
-Source: "..\Labyrinthe.exe";  DestDir: "{app}"; Components: programs\labyrinthe ; Flags: ignoreversion
-Source: "..\GeneLaby.exe";    DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
-Source: "..\FunLabyEdit.exe"; DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
+Source: "..\FunLabyCore.bpl";  DestDir: "{app}"; Components: programs\runtime;     Flags: ignoreversion
+Source: "..\FunLabyTools.bpl"; DestDir: "{app}"; Components: programs\runtime;     Flags: ignoreversion
+Source: "..\Labyrinthe.exe";   DestDir: "{app}"; Components: programs\labyrinthe ; Flags: ignoreversion
+Source: "..\GeneLaby.exe";     DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
+Source: "..\FunLabyEdit.exe";  DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
 
-Source: "Runtime\FunLabyCore.bpl"               ; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: replacesameversion
-Source: "Runtime\*"; Excludes: "FunLabyCore.bpl"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile
+Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile
 
 Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 

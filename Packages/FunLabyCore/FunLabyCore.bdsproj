@@ -121,7 +121,7 @@
 		<Directories>
 			<Directories Name="OutputDir"></Directories>
 			<Directories Name="UnitOutputDir"></Directories>
-			<Directories Name="PackageDLLOutputDir"></Directories>
+			<Directories Name="PackageDLLOutputDir">.\..\..\</Directories>
 			<Directories Name="PackageDCPOutputDir"></Directories>
 			<Directories Name="SearchPath"></Directories>
 			<Directories Name="Packages"></Directories>

@@ -9,13 +9,14 @@
 		</Option>
 	</PersonalityInfo>
 	<Default.Personality>  <Projects>
-      <Projects Name="FunLabyCore.bpl">FunLabyCore.bdsproj</Projects>
+      <Projects Name="FunLabyCore.bpl">Packages\FunLabyCore\FunLabyCore.bdsproj</Projects>
+      <Projects Name="FunLabyTools.bpl">Packages\FunLabyTools\FunLabyTools.bdsproj</Projects>
       <Projects Name="Labyrinthe.exe">Labyrinthe.bdsproj</Projects>
       <Projects Name="FunLabyEdit.exe">FunLabyEdit.bdsproj</Projects>
       <Projects Name="GeneLaby.exe">GeneLaby.bdsproj</Projects>
       <Projects Name="FunLabyBase.bpl">UnitPackages\FunLabyBase\FunLabyBase.bdsproj</Projects>
       <Projects Name="Compatibility4x.bpl">UnitPackages\Compatibility4x\Compatibility4x.bdsproj</Projects>
-      <Projects Name="Targets">FunLabyCore.bpl Labyrinthe.exe FunLabyEdit.exe GeneLaby.exe FunLabyBase.bpl Compatibility4x.bpl</Projects>
+      <Projects Name="Targets">FunLabyCore.bpl FunLabyTools.bpl Labyrinthe.exe FunLabyEdit.exe GeneLaby.exe FunLabyBase.bpl Compatibility4x.bpl</Projects>
     </Projects>
     <Dependencies/>
   </Default.Personality>

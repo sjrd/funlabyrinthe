@@ -11,7 +11,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, StrUtils, Contnrs, ScUtils, ScStrUtils, ScExtra,
-  FunLabyUtils, FilesUtils, FunLabyTools, C4xComponents, C4xScrewsTable,
+  FunLabyUtils, FilesUtils, MapTools, C4xComponents, C4xScrewsTable,
   C4xCommon;
 
 resourcestring

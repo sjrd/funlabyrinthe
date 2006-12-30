@@ -1,4 +1,4 @@
-package FunLabyBase;
+package FunLabyCore;
 
 {$R *.res}
 {$ALIGN 8}
@@ -22,26 +22,21 @@ package FunLabyBase;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'FunLabyrinthe base components'}
+{$DESCRIPTION 'Core units for FunLabyrinthe'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
+  vcl,
+  SVCL90,
   SCL90,
-  FunLabyCore,
-  FunLabyTools;
+  SDL90;
 
 contains
-  FLBBoat in 'FLBBoat.pas',
-  FLBCommon in 'FLBCommon.pas',
-  FLBFields in 'FLBFields.pas',
-  FLBLift in 'FLBLift.pas',
-  FLBMain in 'FLBMain.pas',
-  FLBObstacles in 'FLBObstacles.pas',
-  FLBPlank in 'FLBPlank.pas',
-  FLBSimpleEffects in 'FLBSimpleEffects.pas',
-  FLBSimpleObjects in 'FLBSimpleObjects.pas';
+  FunLabyUtils in 'FunLabyUtils.pas',
+  FilesUtils in 'FilesUtils.pas',
+  UnitFiles in 'UnitFiles.pas';
 
 end.
 

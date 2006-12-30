@@ -1,4 +1,4 @@
-package FunLabyCore;
+package FunLabyTools;
 
 {$R *.res}
 {$ALIGN 8}
@@ -22,23 +22,18 @@ package FunLabyCore;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Core units for FunLabyrinthe'}
-{$RUNONLY}
+{$DESCRIPTION 'FunLabyrinthe core components'}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  SVCL90,
-  SCL90,
-  SDL90;
+  VclSmp,
+  FunLabyCore;
 
 contains
-  FunLabyUtils in 'FunLabyUtils.pas',
-  FilesUtils in 'FilesUtils.pas',
-  UnitFiles in 'UnitFiles.pas',
-  PlayerObjects in 'PlayerObjects.pas',
-  FunLabyTools in 'FunLabyTools.pas';
+  MapTools in 'MapTools.pas',
+  PlayerObjects in 'PlayerObjects.pas';
 
 end.
 
