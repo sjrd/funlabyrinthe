@@ -543,8 +543,6 @@ type
 
     function ChooseNumber(const Title, Prompt : string;
       Default, Min, Max : integer) : integer; virtual;
-
-    procedure MapChanged; virtual;
   end;
 
   {*
@@ -602,12 +600,12 @@ type
     function Move(Dir : TDirection; KeyPressed : boolean;
       out Redo : boolean) : boolean;
 
-    procedure MoveTo(const Dest : T3DPoint;
-      Execute : boolean; out Redo : boolean); overload;
+    procedure MoveTo(const Dest : T3DPoint; Execute : boolean;
+      out Redo : boolean); overload;
     procedure MoveTo(const Dest : T3DPoint); overload;
-    procedure MoveTo(DestMap : TMap; const Dest : T3DPoint;
-      Execute : boolean; out Redo : boolean); overload;
-    procedure MoveTo(DestMap : TMap; const Dest : T3DPoint); overload;
+    procedure MoveTo(const Dest : TQualifiedPos; Execute : boolean;
+      out Redo : boolean); overload;
+    procedure MoveTo(const Dest : TQualifiedPos); overload;
 
     procedure NaturalMoving;
 
@@ -2116,13 +2114,6 @@ begin
   Result := QueryNumber(Title, Prompt, Default, Min, Max);
 end;
 
-{*
-  Le joueur a changé de carte
-*}
-procedure TPlayerController.MapChanged;
-begin
-end;
-
 {----------------}
 { Classe TPlayer }
 {----------------}
@@ -2448,7 +2439,7 @@ begin
 end;
 
 {*
-  Déplace le joueur, sans changement de carte
+  Déplace le joueur
   @param Dest      Position de destination
   @param Execute   Indique s'il faut exécuter la case d'arrivée
   @param Redo      Indique s'il faut réitérer le déplacement
@@ -2477,7 +2468,7 @@ begin
 end;
 
 {*
-  Déplace le joueur, sans changement de carte
+  Déplace le joueur
   Cette variante de MoveTo n'exécute pas la case d'arrivée
   @param Dest   Position de destination
 *}
@@ -2488,17 +2479,22 @@ begin
 end;
 
 {*
-  Déplace le joueur, avec changement de carte
-  @param DestMap   Carte de destination
+  Déplace le joueur
   @param Dest      Position de destination
   @param Execute   Indique s'il faut exécuter la case d'arrivée
   @param Redo      Indique s'il faut réitérer le déplacement
 *}
-procedure TPlayer.MoveTo(DestMap : TMap; const Dest : T3DPoint;
-  Execute : boolean; out Redo : boolean);
+procedure TPlayer.MoveTo(const Dest : TQualifiedPos; Execute : boolean;
+  out Redo : boolean);
 var Src : T3DPoint;
     I : integer;
 begin
+  if Dest.Map = Map then
+  begin
+    MoveTo(Dest.Position, Execute, Redo);
+    exit;
+  end;
+
   Src := Position;
 
   if Assigned(Map) then
@@ -2512,18 +2508,17 @@ begin
   end;
 
   // Déplacement
-  FMap := DestMap;
-  FPosition := Dest;
-  Controller.MapChanged;
+  FMap := Dest.Map;
+  FPosition := Dest.Position;
 
   if Assigned(Map) then
   begin
     // Plug-in : moved
     for I := 0 to PluginCount-1 do
-      Plugins[I].Moved(Self, No3DPoint, Dest);
+      Plugins[I].Moved(Self, No3DPoint, Dest.Position);
 
     // Case destination : entered
-    Map[Dest].Entered(Self, No3DPoint, Dest);
+    Map[Dest.Position].Entered(Self, No3DPoint, Dest.Position);
 
     // Case destination : execute (seulement si Execute vaut True)
     if Execute then
@@ -2532,15 +2527,14 @@ begin
 end;
 
 {*
-  Déplace le joueur, avec changement de carte
+  Déplace le joueur
   Cette variante de MoveTo n'exécute pas la case d'arrivée
-  @param DestMap   Carte de destination
-  @param Dest      Position de destination
+  @param Dest   Position de destination
 *}
-procedure TPlayer.MoveTo(DestMap : TMap; const Dest : T3DPoint);
+procedure TPlayer.MoveTo(const Dest : TQualifiedPos);
 var Redo : boolean;
 begin
-  MoveTo(DestMap, Dest, False, Redo);
+  MoveTo(Dest, False, Redo);
 end;
 
 {*
@@ -2553,7 +2547,7 @@ var Redo : boolean;
 begin
   repeat
     Master.Temporize;
-    Move(Self.Direction, False, Redo);
+    Move(Direction, False, Redo);
   until not Redo;
 end;
 

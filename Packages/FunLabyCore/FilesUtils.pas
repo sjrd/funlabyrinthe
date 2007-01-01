@@ -205,6 +205,9 @@ type
     property MapFiles[index : integer] : TMapFile read GetMapFiles;
   end;
 
+const {don't localize}
+  HRefDelim = '/'; /// Délimiteur dans les href
+
 implementation
 
 uses
@@ -930,8 +933,8 @@ function TMasterFile.ResolveHRef(const HRef, DefaultDir : string) : TFileName;
   var FilePath, SubDir, SubFile : string;
 begin
   FilePath := ExtractFilePath(FileName);
-  SubDir := ChangeFileExt(ExtractFileName(FileName), '');
-  SubFile := StringReplace(HRef, '/', PathDelim, [rfReplaceAll]);
+  SubDir := ChangeFileExt(ExtractFileName(FileName), '') + PathDelim;
+  SubFile := StringReplace(HRef, HRefDelim, PathDelim, [rfReplaceAll]);
 
   if (not TestAndReturn(FilePath   + SubDir + SubFile, Result)) and
      (not TestAndReturn(DefaultDir + SubDir + SubFile, Result)) and
@@ -1064,7 +1067,7 @@ begin
     end else MapHRef := MapHRef + '-files' + PathDelim;
 
     MapFileName := ExtractFilePath(AFileName) + MapHRef;
-    MapHRef := StringReplace(MapHRef, PathDelim, '/', [rfReplaceAll]);
+    MapHRef := StringReplace(MapHRef, PathDelim, HRefDelim, [rfReplaceAll]);
 
     ForceDirectories(MapFileName);
   end else
