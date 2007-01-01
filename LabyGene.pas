@@ -421,7 +421,7 @@ begin
   Labyrinthe.Delete(0);
   NomLabyrinthe := FormPrincipale.EditNomFichier.Text;
   CreeSortie(Labyrinthe, WDir+'Labyrinths\'+NomLabyrinthe+'.flp',
-    NomLabyrinthe+'\MainMap.flm',
+    'MainMap.flm',
     WDir+'Maps\'+NomLabyrinthe+'\MainMap.flm',
     NColZ*7, NLigZ*7, NEtaZ);
 //  Labyrinthe.SaveToFile(NomComplet);

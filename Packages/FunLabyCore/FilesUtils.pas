@@ -918,11 +918,26 @@ end;
   @throws EFileError : Le fichier n'existe pas
 *}
 function TMasterFile.ResolveHRef(const HRef, DefaultDir : string) : TFileName;
+
+  function TestAndReturn(const Path : string;
+    out FileName : TFileName) : boolean;
+  begin
+    Result := FileExists(Path);
+    if Result then
+      FileName := Path;
+  end;
+
+  var FilePath, SubDir, SubFile : string;
 begin
-  if FileExists(DefaultDir+Href) then Result := DefaultDir+HRef else
-  if FileExists(ExtractFileDir(FFileName)+HRef) then
-    Result := ExtractFileDir(FFileName)+HRef else
-  if FileExists(HRef) then Result := HRef else
+  FilePath := ExtractFilePath(FileName);
+  SubDir := ChangeFileExt(ExtractFileName(FileName), '');
+  SubFile := StringReplace(HRef, '/', PathDelim, [rfReplaceAll]);
+
+  if (not TestAndReturn(FilePath   + SubDir + SubFile, Result)) and
+     (not TestAndReturn(DefaultDir + SubDir + SubFile, Result)) and
+     (not TestAndReturn(FilePath   +          SubFile, Result)) and
+     (not TestAndReturn(DefaultDir +          SubFile, Result)) and
+     (not TestAndReturn(                      SubFile, Result)) then
     raise EFileError.CreateFmt(sFileNotFound, [HRef]);
 end;
 
@@ -1049,6 +1064,7 @@ begin
     end else MapHRef := MapHRef + '-files' + PathDelim;
 
     MapFileName := ExtractFilePath(AFileName) + MapHRef;
+    MapHRef := StringReplace(MapHRef, PathDelim, '/', [rfReplaceAll]);
 
     ForceDirectories(MapFileName);
   end else
@@ -1141,8 +1157,7 @@ begin
         for I := 0 to MapFileCount-1 do with MapFiles[I] do
         begin
           if Mode <> fmPlay then Save else
-            Save(MapHRef+ExtractFileName(FileName),
-              MapFileName+ExtractFileName(FileName));
+            Save(MapHRef+MapID+'.flm', MapFileName+MapID+'.flm');
 
           Element := Document.createElement('map');
           Element.setAttribute('id', Map.ID);
