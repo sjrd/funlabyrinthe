@@ -774,10 +774,6 @@ begin
         if NullToEmptyStr(getAttribute('lost')) = 'yes' then
           Player.Lose;
 
-        Node := selectSingleNode('./color');
-        if Node <> nil then
-          Player.Color := StrToIntDef(NullToEmptyStr(Node.text), Player.Color);
-
         with selectNodes('./attributes/attribute') do
         begin
           for J := 0 to length-1 do with item[J] as IXMLDOMElement do
@@ -1184,13 +1180,6 @@ begin
               Element.setAttribute('posy', Position.Y);
               Element.setAttribute('posz', Position.Z);
               appendChild(Element);
-
-              if Color <> DefaultPlayerColor then
-              begin
-                Element := Document.createElement('color');
-                Element.text := '$'+IntToHex(Color, 8);
-                appendChild(Element);
-              end;
 
               Element := Document.createElement('attributes');
               with Element do

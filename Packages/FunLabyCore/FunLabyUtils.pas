@@ -9,8 +9,9 @@ unit FunLabyUtils;
 interface
 
 uses
-  Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, ScUtils,
-  Forms, Dialogs, StdCtrls, Math, TypInfo, ScStrUtils, ScExtra, SdDialogs;
+  Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, StrUtils,
+  Forms, Dialogs, StdCtrls, Math, TypInfo, ScUtils, ScStrUtils, ScExtra,
+  SdDialogs;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
@@ -42,6 +43,9 @@ const {don't localize}
   ScrewSize = 30;         /// Taille (en largeur et hauteur) d'une case
   MinViewSize = 1;        /// Taille minimale d'une vue
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
+
+  attrColor = 'Color';             /// Attribut de joueur pour Color
+  attrShowCounter = 'ShowCounter'; /// Attribut de joueur pour ShowCounter
 
   CommandShowDialog = 'ShowDialog';           /// Commande ShowDialog
   CommandShowDialogRadio = 'ShowDialogRadio'; /// Commande ShowDialogRadio
@@ -561,20 +565,20 @@ type
     function GetPluginCount : integer;
     function GetPlugins(Index : integer) : TPlugin;
 
-    function GetAttribute(const AttrName : string) : integer;
-    procedure SetAttribute(const AttrName : string; Value : integer);
-
     property PluginCount : integer read GetPluginCount;
     property Plugins[index : integer] : TPlugin read GetPlugins;
   protected
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
+
+    function GetAttribute(const AttrName : string) : integer; virtual;
+    procedure SetAttribute(const AttrName : string; Value : integer); virtual;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; AMap : TMap; const APosition : T3DPoint);
     destructor Destroy; override;
 
-    procedure GetAttributes(Attributes : TStrings);
+    procedure GetAttributes(Attributes : TStrings); virtual;
     procedure GetPluginIDs(PluginIDs : TStrings);
 
     procedure DrawInPlace(Canvas : TCanvas; X : integer = 0;
@@ -2154,39 +2158,6 @@ begin
 end;
 
 {*
-  Tableau indexé par chaîne des attributs du joueur
-  @param AttrName   Nom de l'attribut à récupérer
-  @return Attribut dont le nom a été spécifié
-*}
-function TPlayer.GetAttribute(const AttrName : string) : integer;
-var Index : integer;
-begin
-  Index := FAttributes.IndexOf(AttrName);
-  if Index < 0 then Result := 0 else
-    Result := integer(FAttributes.Objects[Index]);
-end;
-
-{*
-  Modifie le tableau indexé par chaîne des attributs du joueur
-  @param AttrName   Nom de l'attribut à modifier
-  @param Value      Nouvelle valeur de l'attribut
-*}
-procedure TPlayer.SetAttribute(const AttrName : string; Value : integer);
-var Index : integer;
-begin
-  Index := FAttributes.IndexOf(AttrName);
-  if Index < 0 then
-  begin
-    if Value <> 0 then
-      FAttributes.AddObject(AttrName, TObject(Value));
-  end else
-  begin
-    if Value = 0 then FAttributes.Delete(Index) else
-      FAttributes.Objects[Index] := TObject(Value);
-  end;
-end;
-
-{*
   Dessine le joueur sur un canevas
   Draw dessine le joueur sur un canevas à la position indiquée.
   @param QPos     Position qualifiée de l'emplacement de dessin
@@ -2210,12 +2181,66 @@ begin
 end;
 
 {*
+  Tableau indexé par chaîne des attributs du joueur
+  @param AttrName   Nom de l'attribut à récupérer
+  @return Attribut dont le nom a été spécifié
+*}
+function TPlayer.GetAttribute(const AttrName : string) : integer;
+var Index : integer;
+begin
+  case AnsiIndexStr(AttrName, [attrColor, attrShowCounter]) of
+    0 : Result := FColor;
+    1 : Result := FShowCounter;
+    else
+    begin
+      Index := FAttributes.IndexOf(AttrName);
+      if Index < 0 then Result := 0 else
+        Result := integer(FAttributes.Objects[Index]);
+    end;
+  end;
+end;
+
+{*
+  Modifie le tableau indexé par chaîne des attributs du joueur
+  @param AttrName   Nom de l'attribut à modifier
+  @param Value      Nouvelle valeur de l'attribut
+*}
+procedure TPlayer.SetAttribute(const AttrName : string; Value : integer);
+var Index : integer;
+begin
+  case AnsiIndexStr(AttrName, [attrColor, attrShowCounter]) of
+    0 : FColor := Value;
+    1 : FShowCounter := Value;
+    else
+    begin
+      Index := FAttributes.IndexOf(AttrName);
+      if Index < 0 then
+      begin
+        if Value <> 0 then
+          FAttributes.AddObject(AttrName, TObject(Value));
+      end else
+      begin
+        if Value = 0 then FAttributes.Delete(Index) else
+          FAttributes.Objects[Index] := TObject(Value);
+      end;
+    end;
+  end;
+end;
+
+{*
   Dresse la liste des attributs du joueur
   @param Attributes   Liste de chaînes dans laquelle enregistrer les attributs
 *}
 procedure TPlayer.GetAttributes(Attributes : TStrings);
 begin
-  Attributes.Assign(FAttributes);
+  with Attributes do
+  begin
+    Assign(FAttributes);
+    if FColor <> DefaultPlayerColor then
+      AddObject(attrColor, TObject(FColor));
+    if FShowCounter <> 0 then
+      AddObject(attrShowCounter, TObject(FShowCounter));
+  end;
 end;
 
 {*

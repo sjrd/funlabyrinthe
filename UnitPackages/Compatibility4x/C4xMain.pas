@@ -296,31 +296,38 @@ procedure GetParams(UnitFile : TBPLUnitFile; Master : TMaster;
   Params : TStrings);
 var Infos : TC4xInfos;
     I : integer;
-    Counters : TStrings;
+    Counters : string;
 begin
   Params.Values[attrFileName] := UnitFile.Attributes.Values[attrFileName];
 
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   if Infos.ActionsCount > 0 then
   begin
-    Counters := TStringList.Create;
-    try
-      Counters.Delimiter := ' ';
-
-      for I := 0 to Infos.ActionsCount-1 do
-        Counters.Add(IntToStr(Infos.Actions[I].Counter));
-      Params.Values[attrCounters] := Counters.DelimitedText;
-
-      Counters.Clear;
-      for I := 1 to MaxVar do
-        Counters.Add(IntToStr(Infos.Variables[I]));
-      Params.Values[attrVariables] := Counters.DelimitedText;
-    finally
-      Counters.Free;
+    Counters := '';
+    I := Infos.ActionsCount-1;
+    while (I >= 0) and (Infos.Actions[I].Counter = 0) do dec(I);
+    while I >= 0 do
+    begin
+      Counters := IntToStr(Infos.Actions[I].Counter) + ' ' + Counters;
+      dec(I);
     end;
+    if Counters <> '' then
+      Params.Values[attrCounters] := Copy(Counters, 1, Length(Counters)-1);
+
+    Counters := '';
+    I := MaxVar;
+    while (I > 0) and (Infos.Variables[I] = 0) do dec(I);
+    while I > 0 do
+    begin
+      Counters := IntToStr(Infos.Variables[I]) + ' ' + Counters;
+      dec(I);
+    end;
+    if Counters <> '' then
+      Params.Values[attrVariables] := Copy(Counters, 1, Length(Counters)-1);
   end;
 
-  Params.Values[attrShowTips] := IIF(Infos.ShowTips, 'yes', 'no');
+  if Infos.KnowShowTips then
+    Params.Values[attrShowTips] := IIF(Infos.ShowTips, 'yes', 'no');
 end;
 
 {$IFNDEF DCTD}
