@@ -1054,7 +1054,7 @@ var Text : string;
 begin
   Text := GetStringParam(Params);
   if Text = '' then Result := drOK else
-    Result := Player.Controller.ShowDialog(Title, Text, DlgType, DlgButtons);
+    Result := Player.ShowDialog(Title, Text, DlgType, DlgButtons);
   HasShownMsg := True;
 end;
 
@@ -1272,7 +1272,7 @@ begin
     if Author <> '' then
       Text := Text + #10#10'Auteur : ' + Author;
 
-    Player.Controller.ShowDialog(Title, Text);
+    Player.ShowDialog(Title, Text);
   end;
 end;
 

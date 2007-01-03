@@ -273,7 +273,7 @@ begin
        CanYou(actPassOverScrew) then exit;
 
     if KeyPressed then
-      Player.Controller.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
+      Player.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
     Cancel := True;
   end;
 end;
@@ -320,7 +320,7 @@ begin
        CanYou(actPassOverScrew) then exit;
 
     if KeyPressed then
-      Player.Controller.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
+      Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
     Cancel := True;
   end;
 end;
@@ -359,7 +359,7 @@ procedure TSky.Entering(Player : TPlayer; OldDirection : TDirection;
   var Cancel : boolean);
 begin
   if KeyPressed then
-    Player.Controller.ShowDialog(sBlindAlley, sCantGoOnSky, dtError);
+    Player.ShowDialog(sBlindAlley, sCantGoOnSky, dtError);
   Cancel := True;
 end;
 

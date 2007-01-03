@@ -10,7 +10,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, ScUtils,
-  Forms, Dialogs, StdCtrls, Math, ScStrUtils, SdDialogs;
+  Forms, Dialogs, StdCtrls, Math, TypInfo, ScStrUtils, ScExtra, SdDialogs;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
@@ -19,6 +19,7 @@ resourcestring
   sObstacleName = '%s obstrué par %s';
   sWhichObject = 'Quel objet voulez-vous utiliser ?';
   sComponentNotFound = 'Le composant d''ID %s n''existe pas';
+  sUnsupportedCommand = 'La commande %s n''est pas supportée';
   sCantLaunchThroughNetwork = 'FunLabyrinthe doit être installé sur '+
     'l''ordinateur local pour fonctionner';
 
@@ -42,6 +43,10 @@ const {don't localize}
   MinViewSize = 1;        /// Taille minimale d'une vue
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
 
+  CommandShowDialog = 'ShowDialog';           /// Commande ShowDialog
+  CommandShowDialogRadio = 'ShowDialogRadio'; /// Commande ShowDialogRadio
+  CommandChooseNumber = 'ChooseNumber';       /// Commande ChooseNumber
+
 type
   /// Identificateur de composant FunLabyrinthe
   TComponentID = type string;
@@ -58,8 +63,10 @@ type
   /// Générée si un composant recherché n'est pas trouvé
   EComponentNotFound = class(Exception);
 
+  /// Générée si une commande n'est pas supportée
+  EUnsupportedCommand = class(Exception);
+
   TScrewComponent = class;
-  TPlayerController = class;
   TPlayer = class;
   TMap = class;
   TMaster = class;
@@ -75,13 +82,15 @@ type
   end;
 
   {*
-    Type de méthode call-back pour la création d'un contrôleur de joueur
-    Lors de l'appel à une telle méthode, le joueur associé n'est pas encore
-    créé. Il ne faut donc pas y faire référence.
-    @param Index   Index du joueur associé
+    Type des gestionnaires d'événements OnSendCommand de TPlayer
+    @param Sender    Joueur concerné
+    @param Command   Commande à effectuer
+    @param Params    Paramètres de la commande
+    @return Résultat de la commande
+    @throws EUnsupportedCommand : La commande demandée n'est pas supportée
   *}
-  TCreatePlayerControllerProc =
-    function(Index : integer) : TPlayerController of object;
+  TSendCommandEvent = function(Sender : TPlayer;
+    const Command : string; const Params : string = '') : string of object;
 
   {*
     Type de méthode call-back pour l'enregistrement d'un unique composant
@@ -525,27 +534,6 @@ type
   end;
 
   {*
-    Contrôleur d'un joueur
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TPlayerController = class
-  public
-    function ShowDialog(const Title, Text : string;
-      DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
-      DefButton : Byte = 1;
-      AddFlags : LongWord = 0) : TDialogResult; virtual;
-
-    function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
-      DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
-      const RadioTitles : array of string; var Selected : integer;
-      OverButtons : boolean = False) : Word; virtual;
-
-    function ChooseNumber(const Title, Prompt : string;
-      Default, Min, Max : integer) : integer; virtual;
-  end;
-
-  {*
     Classe représentant un joueur
     TPlayer représente un joueur. Elle possède de nombreuses propriétés et
     méthodes permettant d'afficher le joueur, de le déplacer, de lui greffer
@@ -555,19 +543,20 @@ type
   *}
   TPlayer = class(TVisualComponent)
   private
-    FMap : TMap;                     /// Carte
-    FPosition : T3DPoint;            /// Position
-    FDirection : TDirection;         /// Direction
-    /// Peintres selon la direction du joueur
-    FDirPainters : array[diNorth..diWest] of TPainter;
-    FColor : TColor;                 /// Couleur
-    FPlugins : TObjectList;          /// Liste des plug-in
-    FAttributes : TStrings;          /// Liste des attributs
-    FController : TPlayerController; /// Contrôleur
-    FPlayState : TPlayState;         /// État de victoire/défaite
+    FMap : TMap;                        /// Carte
+    FPosition : T3DPoint;               /// Position
+    FDirection : TDirection;            /// Direction
+    FShowCounter : integer;             /// Compteur de visibilité
+    FColor : TColor;                    /// Couleur
+    FPlugins : TObjectList;             /// Liste des plug-in
+    FAttributes : TStrings;             /// Liste des attributs
+    FOnSendCommand : TSendCommandEvent; /// Événement d'exécution de commande
+    FPlayState : TPlayState;            /// État de victoire/défaite
 
     procedure PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
+
+    function GetVisible : boolean;
 
     function GetPluginCount : integer;
     function GetPlugins(Index : integer) : TPlugin;
@@ -582,8 +571,7 @@ type
       X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; AMap : TMap; APosition : T3DPoint;
-      AController : TPlayerController = nil);
+      const AName : string; AMap : TMap; const APosition : T3DPoint);
     destructor Destroy; override;
 
     procedure GetAttributes(Attributes : TStrings);
@@ -611,16 +599,35 @@ type
 
     procedure ChangePosition(AMap : TMap; const APosition : T3DPoint);
 
+    procedure Show;
+    procedure Hide;
+
+    function SendCommand(const Command : string;
+      const Params : string = '') : string;
+
+    function ShowDialog(const Title, Text : string;
+      DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
+      DefButton : Byte = 1;
+      AddFlags : LongWord = 0) : TDialogResult;
+    function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
+      DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
+      const RadioTitles : array of string; var Selected : integer;
+      OverButtons : boolean = False) : Word;
+    function ChooseNumber(const Title, Prompt : string;
+      Default, Min, Max : integer) : integer;
+
     procedure Win;
     procedure Lose;
 
     property Map : TMap read FMap;
     property Position : T3DPoint read FPosition;
     property Direction : TDirection read FDirection write FDirection;
+    property Visible : boolean read GetVisible;
     property Color : TColor read FColor write FColor;
     property Attribute[const AttrName : string] : integer
       read GetAttribute write SetAttribute;
-    property Controller : TPlayerController read FController;
+    property OnSendCommand : TSendCommandEvent
+      read FOnSendCommand write FOnSendCommand;
     property PlayState : TPlayState read FPlayState;
   end;
 
@@ -745,6 +752,9 @@ const {don't localize}
 
   /// Temporisation par défaut
   DefaultTemporization = 500;
+
+  /// Couleur par défaut d'un joueur
+  DefaultPlayerColor = clBlue;
 
   /// Application d'une direction vers la direction opposée
   NegDir : array[TDirection] of TDirection = (
@@ -1595,7 +1605,7 @@ begin
   inherited;
   ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
   if FindMessage <> '' then
-    Player.Controller.ShowDialog(sMessage, FindMessage);
+    Player.ShowDialog(sMessage, FindMessage);
 end;
 
 {------------------}
@@ -2054,66 +2064,6 @@ begin
   end;
 end;
 
-{--------------------------}
-{ Classe TPlayerController }
-{--------------------------}
-
-{*
-  Affiche une boîte de dialogue
-  @param Title        Titre de la boîte de dialogue
-  @param Text         Texte de la boîte de dialogue
-  @param DlgType      Type de boîte de dialogue
-  @param DlgButtons   Boutons présents dans la boîte de dialogue
-  @param DefButton    Bouton sélectionné par défaut
-  @param AddFlags     Flags additionnels pour MessageBox
-  @return Bouton sur lequel l'utilisateur a cliqué
-*}
-function TPlayerController.ShowDialog(const Title, Text : string;
-  DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
-  DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
-begin
-  Result := ScUtils.ShowDialog(Title, Text, DlgType, DlgButtons,
-    DefButton, AddFlags);
-end;
-
-{*
-  Affiche une boîte de dialogue avec des boutons radio
-  ShowDialogRadio est une variante de ShowDialog qui affiche des boutons radio
-  pour chaque choix possible.
-  @param Title         Titre de la boîte de dialogue
-  @param Text          Texte de la boîte de dialogue
-  @param DlgType       Type de boîte de dialogue
-  @param DlgButtons    Boutons présents dans la boîte de dialogue
-  @param DefButton     Bouton sélectionné par défaut
-  @param RadioTitles   Libellés des différents boutons radio
-  @param Selected      Bouton radio sélectionné
-  @param OverButtons   Boutons radio placés au-dessus des boutons si True
-  @return Bouton sur lequel l'utilisateur a cliqué
-*}
-function TPlayerController.ShowDialogRadio(const Title, Text : string;
-  DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
-  const RadioTitles : array of string; var Selected : integer;
-  OverButtons : boolean = False) : Word;
-begin
-  Result := ScUtils.ShowDialogRadio(Title, Text, DlgType, DlgButtons,
-    DefButton, RadioTitles, Selected, OverButtons);
-end;
-
-{*
-  Affiche une invite au joueur lui demandant de choisir un nombre
-  @param Title     Titre de la boîte de dialogue
-  @param Prompt    Invite
-  @param Default   Valeur par défaut affichée
-  @param Min       Valeur minimale que peut choisir le joueur
-  @param Max       Valeur maximale que peut choisir le joueur
-  @return La valeur qu'a choisie le joueur
-*}
-function TPlayerController.ChooseNumber(const Title, Prompt : string;
-  Default, Min, Max : integer) : integer;
-begin
-  Result := QueryNumber(Title, Prompt, Default, Min, Max);
-end;
-
 {----------------}
 { Classe TPlayer }
 {----------------}
@@ -2127,9 +2077,7 @@ end;
   @param APosition   Position de départ
 *}
 constructor TPlayer.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; AMap : TMap; APosition : T3DPoint;
-  AController : TPlayerController = nil);
-var Dir : TDirection;
+  const AName : string; AMap : TMap; const APosition : T3DPoint);
 begin
   inherited Create(AMaster, AID, AName);
 
@@ -2137,13 +2085,12 @@ begin
   FMap := AMap;
   FPosition := APosition;
   FDirection := diNone;
-  for Dir in [diNorth..diWest] do
-    FDirPainters[Dir] := nil;
-  FColor := clBlue;
+  FShowCounter := 0;
+  FColor := DefaultPlayerColor;
   FPlugins := TObjectList.Create(False);
   FAttributes := THashedStringList.Create;
   TStringList(FAttributes).CaseSensitive := True;
-  FController := AController;
+  FOnSendCommand := nil;
   FPlayState := psPlaying;
 end;
 
@@ -2151,13 +2098,9 @@ end;
   Détruit l'instance
 *}
 destructor TPlayer.Destroy;
-var Dir : TDirection;
 begin
-  FController.Free;
   FAttributes.Free;
   FPlugins.Free;
-  for Dir in [diNorth..diWest] do if Assigned(FDirPainters[Dir]) then
-    FDirPainters[Dir].Free;
   inherited;
 end;
 
@@ -2177,12 +2120,18 @@ begin
   for I := 0 to PluginCount-1 do
     Plugins[I].DrawBefore(Self, QPos, Canvas, X, Y);
 
-  // Dessin du joueur lui-même
-  inherited;
+  // Dessin du joueur lui-même, à moins d'être invisible
+  if Visible then
+    inherited;
 
   // Dessine les plug-in au-dessus du joueur
   for I := 0 to PluginCount-1 do
     Plugins[I].DrawAfter(Self, QPos, Canvas, X, Y);
+end;
+
+function TPlayer.GetVisible : boolean;
+begin
+  Result := FShowCounter >= 0;
 end;
 
 {*
@@ -2248,16 +2197,6 @@ end;
 procedure TPlayer.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
-  // Dessine le peintre correspondant à la direction...
-  if FColor = clDefault then
-  begin
-    if IsNoQPos(QPos) or (FDirection = diNone) or
-       (not Assigned(FDirPainters[FDirection])) then
-      Painter.Draw(Canvas, X, Y)
-    else
-      FDirPainters[FDirection].Draw(Canvas, X, Y);
-  end else
-  // ... ou le traditionnel disque coloré
   if FColor <> clTransparent then
   begin
     with Canvas do
@@ -2372,7 +2311,7 @@ begin
     for I := 0 to GoodObjectCount-1 do
       RadioTitles[I] := GoodObjects[I].Name;
     I := 0;
-    Controller.ShowDialogRadio(sWhichObject, sWhichObject, mtConfirmation,
+    ShowDialogRadio(sWhichObject, sWhichObject, mtConfirmation,
       [mbOK], mrOK, RadioTitles, I, True);
     GoodObject := GoodObjects[I];
   end;
@@ -2408,7 +2347,11 @@ begin
   AbortExecute := False;
 
   // Le joueur est-il toujours en train de jouer
-  if PlayState <> psPlaying then exit;
+  if PlayState <> psPlaying then
+  begin
+    Result := True;
+    exit;
+  end;
 
   // Le déplacement est-il permis ?
   begin
@@ -2560,6 +2503,125 @@ procedure TPlayer.ChangePosition(AMap : TMap; const APosition : T3DPoint);
 begin
   FMap := AMap;
   FPosition := APosition;
+end;
+
+{*
+  Affiche le joueur
+*}
+procedure TPlayer.Show;
+begin
+  inc(FShowCounter);
+end;
+
+{*
+  Cache le joueur
+*}
+procedure TPlayer.Hide;
+begin
+  dec(FShowCounter);
+end;
+
+{*
+  Envoie une commande au joueur
+  @param Command   Commande à envoyer
+  @param Params    Paramètres de la commande
+  @return Résultat de la commande
+  @throws EUnsupportedCommand : La commande demandée n'est pas supportée
+*}
+function TPlayer.SendCommand(const Command : string;
+  const Params : string = '') : string;
+begin
+  if Assigned(FOnSendCommand) then
+    Result := FOnSendCommand(Self, Command, Params)
+  else
+    Result := '';
+end;
+
+{*
+  Affiche une boîte de dialogue
+  @param Title        Titre de la boîte de dialogue
+  @param Text         Texte de la boîte de dialogue
+  @param DlgType      Type de boîte de dialogue
+  @param DlgButtons   Boutons présents dans la boîte de dialogue
+  @param DefButton    Bouton sélectionné par défaut
+  @param AddFlags     Flags additionnels pour MessageBox
+  @return Bouton sur lequel l'utilisateur a cliqué
+*}
+function TPlayer.ShowDialog(const Title, Text : string;
+  DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
+  DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
+var Params : string;
+begin
+  Params := StrToStrRepres(Title);
+  Params := Params + #10 + StrToStrRepres(Text);
+  Params := Params + #10 + GetEnumName(
+    TypeInfo(TDialogType), integer(DlgType));
+  Params := Params + #10 + GetEnumName(
+    TypeInfo(TDialogButtons), integer(DlgButtons));
+  Params := Params + #10 + IntToStr(DefButton);
+  Params := Params + #10 + IntToStr(AddFlags);
+
+  Result := TDialogResult(GetEnumValue(TypeInfo(TDialogResult),
+    SendCommand(CommandShowDialog, Params)));
+end;
+
+{*
+  Affiche une boîte de dialogue avec des boutons radio
+  ShowDialogRadio est une variante de ShowDialog qui affiche des boutons radio
+  pour chaque choix possible.
+  @param Title         Titre de la boîte de dialogue
+  @param Text          Texte de la boîte de dialogue
+  @param DlgType       Type de boîte de dialogue
+  @param DlgButtons    Boutons présents dans la boîte de dialogue
+  @param DefButton     Bouton sélectionné par défaut
+  @param RadioTitles   Libellés des différents boutons radio
+  @param Selected      Bouton radio sélectionné
+  @param OverButtons   Boutons radio placés au-dessus des boutons si True
+  @return Bouton sur lequel l'utilisateur a cliqué
+*}
+function TPlayer.ShowDialogRadio(const Title, Text : string;
+  DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
+  const RadioTitles : array of string; var Selected : integer;
+  OverButtons : boolean = False) : Word;
+var Params, CmdResult : string;
+    I : integer;
+begin
+  Params := StrToStrRepres(Title);
+  Params := Params + #10 + StrToStrRepres(Text);
+  Params := Params + #10 + GetEnumName(TypeInfo(TMsgDlgType), integer(DlgType));
+  Params := Params + #10 + EnumSetToStr(DlgButtons, TypeInfo(TMsgDlgButtons));
+  Params := Params + #10 + IntToStr(DefButton);
+  Params := Params + #10 + IntToStr(Length(RadioTitles));
+  for I := Low(RadioTitles) to High(RadioTitles) do
+    Params := Params + #10 + StrToStrRepres(RadioTitles[I]);
+  Params := Params + #10 + IntToStr(Selected);
+  Params := Params + #10 + GetEnumName(TypeInfo(boolean), integer(OverButtons));
+
+  CmdResult := SendCommand(CommandShowDialogRadio, Params);
+  Selected := StrToInt(GetFirstToken(CmdResult, ' '));
+  Result := StrToInt(GetLastToken(CmdResult, ' '));
+end;
+
+{*
+  Affiche une invite au joueur lui demandant de choisir un nombre
+  @param Title     Titre de la boîte de dialogue
+  @param Prompt    Invite
+  @param Default   Valeur par défaut affichée
+  @param Min       Valeur minimale que peut choisir le joueur
+  @param Max       Valeur maximale que peut choisir le joueur
+  @return La valeur qu'a choisie le joueur
+*}
+function TPlayer.ChooseNumber(const Title, Prompt : string;
+  Default, Min, Max : integer) : integer;
+var Params : string;
+begin
+  Params := StrToStrRepres(Title);
+  Params := Params + #10 + StrToStrRepres(Prompt);
+  Params := Params + #10 + IntToStr(Default);
+  Params := Params + #10 + IntToStr(Min);
+  Params := Params + #10 + IntToStr(Max);
+
+  Result := StrToInt(SendCommand(CommandChooseNumber, Params));
 end;
 
 {*

@@ -75,11 +75,8 @@ type
     MasterFile : TMasterFile;
     Master : TMaster;
     View : TPlayerView;
+    Controller : TPlayerController;
     LastFileName : TFileName;
-
-    MoveThread : TMoveThread;
-
-    function CreatePlayerController(Index : integer) : TPlayerController;
 
     procedure NewGame(FileName : TFileName);
     function SaveGame : boolean;
@@ -87,8 +84,6 @@ type
 
     procedure AdaptSizeToView;
     procedure ShowStatus;
-
-    procedure MovingTerminated(Sender : TObject);
   public
     { Déclarations publiques }
   end;
@@ -105,26 +100,16 @@ implementation
 {------------------}
 
 {*
-  Crée un contrôleur de joueur
-  @param Index   Index du joueur associé
-*}
-function TFormMain.CreatePlayerController(Index : integer) : TPlayerController;
-begin
-  Result := TThreadedPlayerController.Create;
-end;
-
-{*
   Commence une nouvelle partie
   @param FileName   Nom du fichier maître à charger
 *}
 procedure TFormMain.NewGame(FileName : TFileName);
 begin
-  MasterFile := TMasterFile.Create(FileName, fmPlay, CreatePlayerController);
+  MasterFile := TMasterFile.Create(FileName, fmPlay);
   Master := MasterFile.Master;
   View := TPlayerView.Create(Master.Players[0]);
+  Controller := TPlayerController.Create(Master.Players[0]);
   LastFileName := FileName;
-
-  MoveThread := nil;
 
   Caption := MasterFile.Title;
   MenuReloadGame.Enabled := True;
@@ -174,7 +159,7 @@ begin
     exit;
   end;
 
-  if DontSave then Result := True else
+  if DontSave or Master.Terminated then Result := True else
   begin
     case ShowDialog(sExitConfirmTitle, sExitConfirm,
                     dtConfirmation, dbYesNoCancel) of
@@ -186,6 +171,9 @@ begin
     if not Result then exit;
   end;
 
+  Controller.Terminate;
+  Controller.WaitFor;
+
   TimerUpdateImage.Enabled := False;
   OnKeyDown := nil;
 
@@ -194,9 +182,11 @@ begin
   MenuProperties.Enabled := False;
   MenuViewSize.Enabled := False;
 
+  Controller.Free;
   View.Free;
   MasterFile.Free;
 
+  Controller := nil;
   View := nil;
   Master := nil;
   MasterFile := nil;
@@ -246,17 +236,6 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement pour MoveThread.OnTerminated
-*}
-procedure TFormMain.MovingTerminated(Sender : TObject);
-begin
-  if MoveThread.FatalException <> nil then
-    with Exception(MoveThread.FatalException) do
-      ShowDialog(ClassName, Message, dtError);
-  MoveThread := nil;
-end;
-
-{*
   Gestionnaire d'événement OnCreate
   @param Sender   Object qui a déclenché l'événement
 *}
@@ -267,11 +246,11 @@ begin
   LoadGameDialog.InitialDir := fSaveguardsDir;
   SaveGameDialog.InitialDir := fSaveguardsDir;
 
-  LastFileName := '';
-
   MasterFile := nil;
   Master := nil;
   View := nil;
+  Controller := nil;
+  LastFileName := '';
 
   HiddenBitmap := TBitmap.Create;
   AdaptSizeToView;
@@ -413,19 +392,8 @@ end;
 *}
 procedure TFormMain.MovePlayer(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var Dir : TDirection;
 begin
-  if (MasterFile = nil) or (MoveThread <> nil) then exit;
-
-  case Key of
-    VK_UP    : Dir := diNorth;
-    VK_RIGHT : Dir := diEast;
-    VK_DOWN  : Dir := diSouth;
-    VK_LEFT  : Dir := diWest;
-    else exit;
-  end;
-
-  MoveThread := TMoveThread.Create(View.Player, Dir, MovingTerminated);
+  Controller.PressKey(Key);
 end;
 
 {*
@@ -444,20 +412,12 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.UpdateImage(Sender: TObject);
-var GameEnded : boolean;
 begin
-  // Vérification de terminaison
-  GameEnded := Master.Terminated and (MoveThread = nil);
-
-  if GameEnded then
-    MasterFile.GameEnded;
+  { TODO 3 : Vérification de terminaison de partie pour appeler GameEnded }
 
   View.Draw(HiddenBitmap.Canvas);
   Image.Picture.Assign(HiddenBitmap);
   ShowStatus;
-
-  if GameEnded then
-    CloseGame(True);
 end;
 
 {*

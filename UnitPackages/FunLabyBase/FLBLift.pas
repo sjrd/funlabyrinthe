@@ -108,7 +108,7 @@ procedure TEngagedLiftField.Entering(Player : TPlayer;
   var Cancel : boolean);
 begin
   if KeyPressed then
-    Player.Controller.ShowDialog(sBlindAlley, sLiftIsEngaged, dtError);
+    Player.ShowDialog(sBlindAlley, sLiftIsEngaged, dtError);
 
   Cancel := True;
 end;
@@ -240,7 +240,7 @@ begin
   Player.AddPlugin(Master.Plugin[idAvoidShowPlugin]);
 
   // Demande au joueur de l'étage auquel il souhaite aller
-  Other.Z := Player.Controller.ChooseNumber(sChooseFloorTitle, sChooseFloor,
+  Other.Z := Player.ChooseNumber(sChooseFloorTitle, sChooseFloor,
     Pos.Z, MinFloor, MaxFloor);
 
   // Déplacement du joueur

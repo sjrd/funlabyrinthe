@@ -219,7 +219,7 @@ begin
   begin
     if not WereTips then Infos.ShowTips := False else
     begin
-      Infos.ShowTips := Master.Players[0].Controller.ShowDialog(
+      Infos.ShowTips := Master.Players[0].ShowDialog(
         sAskForTipsTitle, sAskForTips, dtConfirmation, dbYesNo) = drYes;
     end;
   end;

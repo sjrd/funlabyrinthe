@@ -20,7 +20,6 @@ resourcestring
     'de FunLabyrinthe (v%s). Il ne peut être ouvert.';
   sFileNotFound = 'Le fichier spécifié "%s" n''existe pas';
   sUnknownUnitType = 'Type d''unité ''%s'' inconnu';
-  sUnknownMapType = 'Type de carte ''%s'' inconnu';
   sThereMustBeOnePlayer = 'Il doit y avoir un et un seul joueur par fichier';
   sEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
   sCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
@@ -142,8 +141,7 @@ type
 
     procedure InvalidFormat;
 
-    procedure Load(Document : IXMLDOMDocument;
-      CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
+    procedure Load(Document : IXMLDOMDocument);
     procedure TestOpeningValidity;
 
     function GetUnitFileCount : integer;
@@ -151,8 +149,7 @@ type
     function GetMapFileCount : integer;
     function GetMapFiles(Index : integer) : TMapFile;
   public
-    constructor Create(const AFileName : TFileName; AMode : TFileMode;
-      CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
+    constructor Create(const AFileName : TFileName; AMode : TFileMode);
     constructor CreateNew(FileContents : TStrings = nil);
     destructor Destroy; override;
 
@@ -530,8 +527,7 @@ end;
   @param AMode       Mode sous lequel ouvrir le fichier
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
-constructor TMasterFile.Create(const AFileName : TFileName; AMode : TFileMode;
-  CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
+constructor TMasterFile.Create(const AFileName : TFileName; AMode : TFileMode);
 var Document : IXMLDOMDocument;
 begin
   inherited Create;
@@ -558,7 +554,7 @@ begin
   if not Document.load(FFileName) then
     InvalidFormat;
 
-  Load(Document, CreatePlayerControllerProc);
+  Load(Document);
   TestOpeningValidity;
 end;
 
@@ -665,8 +661,7 @@ end;
   @param Document   Document XML DOM contenu du fichier
   @throws EFileError : Un fichier à charger n'existe pas ou n'est pas valide
 *}
-procedure TMasterFile.Load(Document : IXMLDOMDocument;
-  CreatePlayerControllerProc : TCreatePlayerControllerProc = nil);
+procedure TMasterFile.Load(Document : IXMLDOMDocument);
 
   function NullToEmptyStr(Value : Variant) : Variant;
   begin
@@ -677,7 +672,6 @@ var Params : TStrings;
     I, J, MaxViewSize : integer;
     ID, FileType, HRef, Name, MapID : string;
     Position : T3DPoint;
-    PlayerController : TPlayerController;
     Player : TPlayer;
     Node : IXMLDOMNode;
 begin
@@ -775,16 +769,14 @@ begin
           Position.Z := getAttribute('posz');
         end;
 
-        if Assigned(CreatePlayerControllerProc) then
-          PlayerController := CreatePlayerControllerProc(I)
-        else
-          PlayerController := nil;
-
-        Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position,
-          PlayerController);
+        Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position);
 
         if NullToEmptyStr(getAttribute('lost')) = 'yes' then
           Player.Lose;
+
+        Node := selectSingleNode('./color');
+        if Node <> nil then
+          Player.Color := StrToIntDef(NullToEmptyStr(Node.text), Player.Color);
 
         with selectNodes('./attributes/attribute') do
         begin
@@ -797,8 +789,6 @@ begin
           for J := 0 to length-1 do with item[J] as IXMLDOMElement do
             Player.AddPlugin(Master.Plugin[getAttribute('id')]);
         end;
-
-        { TODO 1 : Ajouter le support du dessin du joueur }
       end;
     end;
   end;
@@ -1194,6 +1184,13 @@ begin
               Element.setAttribute('posy', Position.Y);
               Element.setAttribute('posz', Position.Z);
               appendChild(Element);
+
+              if Color <> DefaultPlayerColor then
+              begin
+                Element := Document.createElement('color');
+                Element.text := '$'+IntToHex(Color, 8);
+                appendChild(Element);
+              end;
 
               Element := Document.createElement('attributes');
               with Element do

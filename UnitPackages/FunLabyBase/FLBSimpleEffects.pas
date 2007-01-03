@@ -526,7 +526,7 @@ procedure TOutside.Execute(Player : TPlayer; const Pos : T3DPoint;
 begin
   inherited;
   Player.Win;
-  Player.Controller.ShowDialog(sWon, sGotOutsideMaze);
+  Player.ShowDialog(sWon, sGotOutsideMaze);
 end;
 
 {------------------}
@@ -557,7 +557,7 @@ procedure TTreasure.Execute(Player : TPlayer; const Pos : T3DPoint;
 begin
   inherited;
   Player.Win;
-  Player.Controller.ShowDialog(sWon, sFoundTreasure);
+  Player.ShowDialog(sWon, sFoundTreasure);
 end;
 
 end.

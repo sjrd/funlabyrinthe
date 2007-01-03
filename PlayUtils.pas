@@ -8,52 +8,47 @@ unit PlayUtils;
 interface
 
 uses
-  Windows, Forms, Classes, Controls, Graphics, Dialogs, StdCtrls, Math, ScUtils,
-  FunLabyUtils, SdDialogs;
+  Windows, SysUtils, Forms, Classes, Controls, Graphics, Dialogs, StdCtrls,
+  StrUtils, Math, TypInfo, ScUtils, ScLists, ScExtra, SdDialogs, FunLabyUtils;
 
 const {don't localize}
   attrViewSize = 'ViewSize'; /// Nom d'attribut pour la taille de la vue
 
 type
+  /// Type de boîte de dialogue
+  TDialogKind = (dkShowDialog, dkShowDialogRadio, dkChooseNumber);
+
   {*
-    Contrôleur de joueur thread-safe
+    Données d'une boîte de dialogue standart à afficher
     @author Sébastien Jean Robert Doeraene
     @version 5.0
   *}
-  TThreadedPlayerController = class(TPlayerController)
-  private
-    FThread : TThread;
-  public
-    function ShowDialog(const Title, Text : string;
-      DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
-      DefButton : Byte = 1;
-      AddFlags : LongWord = 0) : TDialogResult; override;
-
-    function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
-      DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
-      const RadioTitles : array of string; var Selected : integer;
-      OverButtons : boolean = False) : Word; override;
-
-    function ChooseNumber(const Title, Prompt : string;
-      Default, Min, Max : integer) : integer; override;
-
-    property Thread : TThread read FThread write FThread;
-  end;
-
-  {*
-    Thread de déplacement du pion
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TMoveThread = class(TThread)
-  private
-    Player : TPlayer; /// Joueur concerné
-    Dir : TDirection; /// Direction dans laquelle faire bouger le joueur
-  protected
-    procedure Execute; override;
-  public
-    constructor Create(APlayer : TPlayer; ADir : TDirection;
-      AOnTerminate : TNotifyEvent);
+  TStdDialogInfos = record
+    DialogKind : TDialogKind;           /// Type de boîte de dialogue
+    Title : string;                     /// Titre de la boîte de dialogue
+    Text : string;                      /// Texte de la boîte de dialogue
+    RadioTitles : array of string;      /// Libellés des boutons radio
+    case TDialogKind of
+      dkShowDialog : (
+        DialogType : TDialogType;       /// Type de ShowDialog
+        DialogButtons : TDialogButtons; /// Boutons de ShowDialog
+        DefButton : Byte;               /// Bouton par défaut de ShowDialog
+        AddFlags : LongWord;            /// Flags supplémentaires de ShowDialog
+        DialogResult : TDialogResult;   /// Résultat de ShowDialog
+      );
+      dkShowDialogRadio : (
+        MsgDlgType : TMsgDlgType;       /// Type de ShowDialogRadio
+        MsgDlgButtons : TMsgDlgButtons; /// Boutons de ShowDialogRadio
+        DefResult : TModalResult;       /// Bouton par défaut de ShowDialogRadio
+        Selected : integer;             /// Bouton radio sélectionné
+        OverButtons : boolean;          /// Indiques si les radio sont au-dessus
+        ModalResult : TModalResult;     /// Résultat de ShowDialogRadio
+      );
+      dkChooseNumber : (
+        Value : integer;                /// Valeur sélectionnée de ChooseNumber
+        MinValue : integer;             /// Valeur minimale de ChooseNumber
+        MaxValue : integer;             /// Valeur maximale de ChooseNumber
+      );
   end;
 
   {*
@@ -87,224 +82,36 @@ type
     property Height : integer read GetHeight;
   end;
 
+  {*
+    Contrôleur de joueur
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TPlayerController = class(TThread)
+  private
+    FPlayer : TPlayer;              /// Joueur contrôlé
+    FNextDir : TDirection;          /// Prochaine direction à prendre
+    FDialogInfos : TStdDialogInfos; /// Infos de la boîte de dialogue à afficher
+
+    procedure ExecuteDialog;
+    function ShowDialogCommand(const Params : string) : string;
+    function ShowDialogRadioCommand(const Params : string) : string;
+    function ChooseNumberCommand(const Params : string) : string;
+
+    function PlayerCommand(Sender : TPlayer;
+      const Command, Params : string) : string;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(APlayer : TPlayer);
+    destructor Destroy; override;
+
+    procedure PressKey(Key : Word);
+
+    property Player : TPlayer read FPlayer;
+  end;
+
 implementation
-
-type
-  {*
-    Classe thread-safe qui affiche une boîte de dialogue
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TShowDialog = class
-  public
-    Title : string;              /// Titre
-    Text : string;               /// Texte
-    DlgType : TDialogType;       /// Type de boîte de dialogue
-    DlgButtons : TDialogButtons; /// Boutons présents
-    DefButton : Byte;            /// Bouton par défaut
-    AddFlags : LongWord;         /// Flags additionnels
-    Result : TDialogResult;      /// Bouton choisi par l'utilisateur
-
-    procedure Execute;
-  end;
-
-  {*
-    Classe thread-safe qui affiche une boîte de dialogue avec des boutons radio
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TShowDialogRadio = class
-  public
-    Title : string;                /// Titre
-    Text : string;                 /// Texte
-    DlgType : TMsgDlgType;         /// Type de boîte de dialogue
-    DlgButtons : TMsgDlgButtons;   /// Boutons présents
-    DefButton : TModalResult;      /// Bouton par défaut
-    RadioTitles : array of string; /// Texte des boutons radio
-    Selected : integer;            /// Index du bouton sélectionné
-    OverButtons : boolean;         /// Indique la position des boutons
-    Result : Word;                 /// Bouton choisi par l'utilisateur
-
-    procedure Execute;
-  end;
-
-  {*
-    Classe thread-safe qui demande au joueur de choisir un nombre
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TChooseNumber = class
-  public
-    Title : string;    /// Titre
-    Prompt : string;   /// Invite
-    Default : integer; /// Nombre par défaut
-    Min : integer;     /// Nombre minimum
-    Max : integer;     /// Nombre maximum
-    Result : integer;  /// Nombre choisi par l'utilisateur
-
-    procedure Execute;
-  end;
-
-{----------------------------------}
-{ Classes de dialogues thread-safe }
-{----------------------------------}
-
-{*
-  Affiche la boîte de dialogue
-*}
-procedure TShowDialog.Execute;
-begin
-  Result := ScUtils.ShowDialog(Title, Text, DlgType, DlgButtons,
-    DefButton, AddFlags);
-end;
-
-{*
-  Affiche la boîte de dialogue
-*}
-procedure TShowDialogRadio.Execute;
-begin
-  Result := ScUtils.ShowDialogRadio(Title, Text, DlgType, DlgButtons,
-    DefButton, RadioTitles, Selected, OverButtons);
-end;
-
-{*
-  Affiche la boîte de dialogue
-*}
-procedure TChooseNumber.Execute;
-begin
-  Result := QueryNumber(Title, Prompt, Default, Min, Max);
-end;
-
-{----------------------------------}
-{ Classe TThreadedPlayerController }
-{----------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-function TThreadedPlayerController.ShowDialog(const Title, Text : string;
-  DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
-  DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
-var Dialog : TShowDialog;
-begin
-  Dialog := TShowDialog.Create;
-  try
-    Dialog.Title := Title;
-    Dialog.Text := Text;
-    Dialog.DlgType := DlgType;
-    Dialog.DlgButtons := DlgButtons;
-    Dialog.DefButton := DefButton;
-    Dialog.AddFlags := AddFlags;
-
-    if Assigned(Thread) then
-      TThread.StaticSynchronize(Thread, Dialog.Execute)
-    else
-      Dialog.Execute;
-
-    Result := Dialog.Result;
-  finally
-    Dialog.Free;
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TThreadedPlayerController.ShowDialogRadio(const Title, Text : string;
-  DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
-  const RadioTitles : array of string; var Selected : integer;
-  OverButtons : boolean = False) : Word;
-var Dialog : TShowDialogRadio;
-    I : integer;
-begin
-  Dialog := TShowDialogRadio.Create;
-  try
-    Dialog.Title := Title;
-    Dialog.Text := Text;
-    Dialog.DlgType := DlgType;
-    Dialog.DlgButtons := DlgButtons;
-    Dialog.DefButton := DefButton;
-
-    SetLength(Dialog.RadioTitles, Length(RadioTitles));
-    for I := 0 to Length(RadioTitles)-1 do
-      Dialog.RadioTitles[I] := RadioTitles[I];
-
-    Dialog.Selected := Selected;
-    Dialog.OverButtons := OverButtons;
-
-    if Assigned(Thread) then
-      TThread.StaticSynchronize(Thread, Dialog.Execute)
-    else
-      Dialog.Execute;
-
-    Selected := Dialog.Selected;
-    Result := Dialog.Result;
-  finally
-    Dialog.Free;
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TThreadedPlayerController.ChooseNumber(const Title, Prompt : string;
-  Default, Min, Max : integer) : integer;
-var Dialog : TChooseNumber;
-begin
-  Dialog := TChooseNumber.Create;
-  try
-    Dialog.Title := Title;
-    Dialog.Prompt := Prompt;
-    Dialog.Default := Default;
-    Dialog.Min := Min;
-    Dialog.Max := Max;
-
-    if Assigned(Thread) then
-      TThread.StaticSynchronize(Thread, Dialog.Execute)
-    else
-      Dialog.Execute;
-
-    Result := Dialog.Result;
-  finally
-    Dialog.Free;
-  end;
-end;
-
-{--------------------}
-{ Classe TMoveThread }
-{--------------------}
-
-{*
-  Crée une instance de TMoveThread
-  @param APlayer        Joueur à déplacer
-  @param ADir           Direction dans laquelle déplacer le joueur
-  @param AOnTerminate   Gestionnaire d'événement OnTerminate
-*}
-constructor TMoveThread.Create(APlayer : TPlayer; ADir : TDirection;
-  AOnTerminate : TNotifyEvent);
-begin
-  inherited Create(True);
-  Player := APlayer;
-  Dir := ADir;
-  OnTerminate := AOnTerminate;
-  Resume;
-end;
-
-{*
-  Méthode d'exécution du thread
-*}
-procedure TMoveThread.Execute;
-var Redo : boolean;
-begin
-  TThreadedPlayerController(Player.Controller).Thread := Self;
-  try
-    Player.Move(Dir, True, Redo);
-    if Redo then
-      Player.NaturalMoving;
-  finally
-    TThreadedPlayerController(Player.Controller).Thread := nil;
-  end;
-end;
 
 {--------------------}
 { Classe TPlayerView }
@@ -433,6 +240,197 @@ begin
       DrawInPlace(Canvas, (Position.X-OrigX)*ScrewSize,
         (Position.Y-OrigY)*ScrewSize);
     end;
+  end;
+end;
+
+{--------------------------}
+{ Classe TPlayerController }
+{--------------------------}
+
+{*
+  Crée une instance de TPlayerController
+  @param APlayer   Joueur à contrôler
+*}
+constructor TPlayerController.Create(APlayer : TPlayer);
+begin
+  inherited Create(False);
+  FPlayer := APlayer;
+  FNextDir := diNone;
+  FPlayer.OnSendCommand := PlayerCommand;
+end;
+
+{*
+  Détruit l'instance
+*}
+destructor TPlayerController.Destroy;
+begin
+  FPlayer.OnSendCommand := nil;
+  inherited;
+end;
+
+{*
+  Affiche la boîte de dialogue programmée dans FDialogInfos
+*}
+procedure TPlayerController.ExecuteDialog;
+begin
+  with FDialogInfos do case DialogKind of
+    dkShowDialog :
+    begin
+      DialogResult := ShowDialog(Title, Text, DialogType, DialogButtons,
+        DefButton, AddFlags);
+    end;
+    dkShowDialogRadio :
+    begin
+      ModalResult := ShowDialogRadio(Title, Text, MsgDlgType, MsgDlgButtons,
+        DefResult, RadioTitles, Selected, OverButtons);
+    end;
+    dkChooseNumber :
+    begin
+      Value := QueryNumber(Title, Text, Value, MinValue, MaxValue);
+    end;
+  end;
+end;
+
+{*
+  Commande ShowDialog
+  @param Params   Paramètres de la commande
+  @return Résultat de la commande
+*}
+function TPlayerController.ShowDialogCommand(const Params : string) : string;
+begin
+  with TScStrings.CreateFromString(Params, #10), FDialogInfos do
+  try
+    DialogKind := dkShowDialog;
+    Title := StrRepresToStr(NextString);
+    Text := StrRepresToStr(NextString);
+    DialogType := TDialogType(
+      GetEnumValue(TypeInfo(TDialogType), NextString));
+    DialogButtons := TDialogButtons(
+      GetEnumValue(TypeInfo(TDialogButtons), NextString));
+    DefButton := StrToInt(NextString);
+    AddFlags := StrToInt(NextString);
+
+    Synchronize(ExecuteDialog);
+
+    Result := GetEnumName(TypeInfo(TDialogResult), integer(DialogResult));
+  finally
+    Free;
+  end;
+end;
+
+{*
+  Commande ShowDialog
+  @param Params   Paramètres de la commande
+  @return Résultat de la commande
+*}
+function TPlayerController.ShowDialogRadioCommand(
+  const Params : string) : string;
+var I : integer;
+begin
+  with TScStrings.CreateFromString(Params, #10), FDialogInfos do
+  try
+    DialogKind := dkShowDialogRadio;
+    Title := StrRepresToStr(NextString);
+    Text := StrRepresToStr(NextString);
+    MsgDlgType := TMsgDlgType(
+      GetEnumValue(TypeInfo(TMsgDlgType), NextString));
+    StrToEnumSet(NextString, TypeInfo(TMsgDlgButtons), MsgDlgButtons);
+    DefResult := StrToInt(NextString);
+
+    SetLength(RadioTitles, StrToInt(NextString));
+    for I := 0 to Length(RadioTitles)-1 do
+      RadioTitles[I] := StrRepresToStr(NextString);
+
+    Selected := StrToInt(NextString);
+    StrToEnumSet(NextString, TypeInfo(boolean), OverButtons);
+
+    Synchronize(ExecuteDialog);
+
+    Result := IntToStr(Selected) + ' ' + IntToStr(ModalResult);
+  finally
+    Free;
+  end;
+end;
+
+{*
+  Commande ShowDialog
+  @param Params   Paramètres de la commande
+  @return Résultat de la commande
+*}
+function TPlayerController.ChooseNumberCommand(const Params : string) : string;
+begin
+  with TScStrings.CreateFromString(Params, #10), FDialogInfos do
+  try
+    DialogKind := dkChooseNumber;
+    Title := StrRepresToStr(NextString);
+    Text := StrRepresToStr(NextString);
+    Value := StrToInt(NextString);
+    MinValue := StrToInt(NextString);
+    MaxValue := StrToInt(NextString);
+
+    Synchronize(ExecuteDialog);
+
+    Result := IntToStr(Value);
+  finally
+    Free;
+  end;
+end;
+
+{*
+  Gestionnaire d'événement OnSendCommand du joueur
+  @param Sender    Joueur concerné
+  @param Command   Commande à effectuer
+  @param Params    Paramètres de la commande
+  @return Résultat de la commande
+  @throws EUnsupportedCommand : La commande demandée n'est pas supportée
+*}
+function TPlayerController.PlayerCommand(Sender : TPlayer;
+  const Command, Params : string) : string;
+begin
+  case AnsiIndexStr(Command,
+    [CommandShowDialog, CommandShowDialogRadio, CommandChooseNumber]) of
+    0 : Result := ShowDialogCommand(Params);
+    1 : Result := ShowDialogRadioCommand(Params);
+    2 : Result := ChooseNumberCommand(Params);
+    else raise EUnsupportedCommand.CreateFmt(sUnsupportedCommand, [Command]);
+  end;
+end;
+
+{*
+  Méthode d'exécution du thread
+*}
+procedure TPlayerController.Execute;
+var Redo : boolean;
+begin
+  while not Terminated do
+  begin
+    if FNextDir = diNone then Sleep(50) else
+    begin
+      try
+        Player.Move(FNextDir, True, Redo);
+        if Redo then
+          Player.NaturalMoving;
+      except
+        on Error : Exception do
+          Player.ShowDialog(Error.ClassName, Error.Message, dtError);
+      end;
+      FNextDir := diNone;
+    end;
+  end;
+end;
+
+{*
+  Presse une touche
+  @param Key   Code de la touche pressée
+*}
+procedure TPlayerController.PressKey(Key : Word);
+begin
+  if FNextDir <> diNone then exit;
+  case Key of
+    VK_UP    : FNextDir := diNorth;
+    VK_RIGHT : FNextDir := diEast;
+    VK_DOWN  : FNextDir := diSouth;
+    VK_LEFT  : FNextDir := diWest;
   end;
 end;
 

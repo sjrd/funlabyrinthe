@@ -527,9 +527,9 @@ begin
       if not HasShownMsg then
       begin
         if Actions.Kind = akOutside then
-          Player.Controller.ShowDialog(sWon, sGotOutsideMaze)
+          Player.ShowDialog(sWon, sGotOutsideMaze)
         else
-          Player.Controller.ShowDialog(sWon, sFoundTreasure);
+          Player.ShowDialog(sWon, sFoundTreasure);
       end;
     end;
   end;
