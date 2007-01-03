@@ -10,7 +10,8 @@ unit FLBBoat;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon, FLBFields;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, GraphicsTools, FLBCommon,
+  FLBFields;
 
 const {don't localize}
   idBoatPlugin = 'BoatPlugin'; /// ID du plug-in barque

@@ -1,7 +1,8 @@
 {*
-  Donne quelques outils de traitements sur FunLabyrinthe
-  L'unité FunLabyTools donne quelques routines utilitaires permettant
-  d'effectuer facilement des traitements récurrents dans FunLabyrinthe.
+  Donne quelques outils de traitements des cartes de FunLabyrinthe
+  L'unité MapTools donne quelques routines utilitaires permettant
+  d'effectuer facilement des traitements récurrents sur les cartes de
+  FunLabyrinthe.
   @author Sébastien Jean Robert Doeraene
   @version 5.0
 *}

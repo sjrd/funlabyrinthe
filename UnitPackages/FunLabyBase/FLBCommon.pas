@@ -23,9 +23,6 @@ const {don't localize}
   /// Action d'ouvrir une serrure en or
   actOpenGoldenLock = 'OpenGoldenLock';
 
-const {don't localize}
-  idAvoidShowPlugin = 'AvoidShowPlugin'; /// ID du plug-in masquant le joueur
-
 type
   {*
     Plug-in masque
@@ -39,7 +36,7 @@ type
     FBefore : TBitmap; /// Ce qu'il y avait avant le joueur
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      AMask : TBitmap = nil);
+      AMask : TBitmap);
     destructor Destroy; override;
 
     procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
@@ -51,30 +48,7 @@ type
     property Before : TBitmap read FBefore;
   end;
 
-procedure DrawScrewNumber(Canvas : TCanvas; X, Y, Number : integer;
-  FontColor : TColor = clBlack);
-
 implementation
-
-{*
-  Dessine un numéro sur un canevas de case
-  @param Canvas      Canevas sur lequel dessiner le numéro
-  @param X           Bord gauche de la case
-  @param Y           Bord supérieur de la case
-  @param Number      Numéro à écrire
-  @param FontColor   Couleur du texte
-*}
-procedure DrawScrewNumber(Canvas : TCanvas; X, Y, Number : integer;
-  FontColor : TColor = clBlack);
-begin
-  with Canvas do
-  begin
-    Brush.Color := clWhite;
-    Font.Name := 'Arial'; {don't localize}
-    Font.Color := FontColor;
-    TextOut(X+10, Y+8, IntToStr(Number));
-  end;
-end;
 
 {--------------------}
 { Classe TMaskPlugin }
@@ -87,7 +61,7 @@ end;
   @param AMaks     Masque à appliquer
 *}
 constructor TMaskPlugin.Create(AMaster : TMaster; const AID : TComponentID;
-  AMask : TBitmap = nil);
+  AMask : TBitmap);
 var X, Y : integer;
 begin
   inherited Create(AMaster, AID);
@@ -95,26 +69,13 @@ begin
   FMask := TBitmap.Create;
   with FMask do
   begin
-    if Assigned(AMask) then
+    Assign(AMask);
+    for X := 0 to ScrewSize do for Y := 0 to ScrewSize do
     begin
-      Assign(AMask);
-      for X := 0 to ScrewSize do for Y := 0 to ScrewSize do
-      begin
-        if Canvas.Pixels[X, Y] = clTransparent then
-          Canvas.Pixels[X, Y] := clBlack
-        else
-          Canvas.Pixels[X, Y] := clTransparent;
-      end;
-    end else
-    begin
-      Width := ScrewSize;
-      Height := ScrewSize;
-      with Canvas do
-      begin
-        Brush.Color := clBlack;
-        Pen.Color := clBlack;
-        Rectangle(ScrewRect);
-      end;
+      if Canvas.Pixels[X, Y] = clTransparent then
+        Canvas.Pixels[X, Y] := clBlack
+      else
+        Canvas.Pixels[X, Y] := clTransparent;
     end;
     TransparentColor := clBlack;
     Transparent := True;

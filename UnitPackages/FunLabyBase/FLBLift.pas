@@ -237,7 +237,7 @@ begin
 
   // Fermer l'ascenseur et cacher le joueur complètement
   TEngagedLiftScrew.Create(Master, Player.Map, Pos, Player);
-  Player.AddPlugin(Master.Plugin[idAvoidShowPlugin]);
+  Player.Hide;
 
   // Demande au joueur de l'étage auquel il souhaite aller
   Other.Z := Player.ChooseNumber(sChooseFloorTitle, sChooseFloor,
@@ -250,7 +250,7 @@ begin
   Master.Temporize;
   Player.Map[Other].Free;
   TEngagedLiftScrew.Create(Master, Player.Map, Other, Player, True, True);
-  Player.RemovePlugin(Master.Plugin[idAvoidShowPlugin]);
+  Player.Show;
 end;
 
 end.

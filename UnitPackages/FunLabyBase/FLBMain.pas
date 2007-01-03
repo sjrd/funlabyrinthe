@@ -34,7 +34,6 @@ var Buoys, Planks, SilverKeys, GoldenKeys : TObjectDef;
     I : integer;
 begin
   // Plug-in
-  TMaskPlugin.Create(Master, idAvoidShowPlugin);
   TBuoyPlugin.Create(Master, idBuoyPlugin);
   TPlankPlugin.Create(Master, idPlankPlugin);
   TBoatPlugin.Create(Master, idBoatPlugin);

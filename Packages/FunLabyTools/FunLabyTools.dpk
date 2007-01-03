@@ -33,7 +33,8 @@ requires
 
 contains
   MapTools in 'MapTools.pas',
-  PlayerObjects in 'PlayerObjects.pas';
+  PlayerObjects in 'PlayerObjects.pas',
+  GraphicsTools in 'GraphicsTools.pas';
 
 end.
 
