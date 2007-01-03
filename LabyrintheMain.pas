@@ -76,6 +76,7 @@ type
     Master : TMaster;
     View : TPlayerView;
     Controller : TPlayerController;
+    GameEnded : boolean;
     LastFileName : TFileName;
 
     procedure NewGame(FileName : TFileName);
@@ -109,6 +110,7 @@ begin
   Master := MasterFile.Master;
   View := TPlayerView.Create(Master.Players[0]);
   Controller := TPlayerController.Create(Master.Players[0]);
+  GameEnded := False;
   LastFileName := FileName;
 
   Caption := MasterFile.Title;
@@ -413,7 +415,11 @@ end;
 *}
 procedure TFormMain.UpdateImage(Sender: TObject);
 begin
-  { TODO 3 : Vérification de terminaison de partie pour appeler GameEnded }
+  if (not GameEnded) and Master.Terminated then
+  begin
+    GameEnded := True;
+    MasterFile.GameEnded;
+  end;
 
   View.Draw(HiddenBitmap.Canvas);
   Image.Picture.Assign(HiddenBitmap);
