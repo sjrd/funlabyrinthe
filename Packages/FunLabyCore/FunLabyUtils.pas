@@ -15,6 +15,7 @@ uses
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
+  sNothing = 'Rien';
   sEffectName = '%1:s sur %0:s';
   sToolName = '%s avec %s';
   sObstacleName = '%s obstrué par %s';
@@ -50,6 +51,9 @@ const {don't localize}
   CommandShowDialog = 'ShowDialog';           /// Commande ShowDialog
   CommandShowDialogRadio = 'ShowDialogRadio'; /// Commande ShowDialogRadio
   CommandChooseNumber = 'ChooseNumber';       /// Commande ChooseNumber
+
+  ScrewIDDelim = '-';            /// Délimiteur des parties d'un ID de case
+  ScrewIDFormat = '%s-%s-%s-%s'; /// Format d'un ID de case
 
 type
   /// Identificateur de composant FunLabyrinthe
@@ -193,12 +197,15 @@ type
       ponctuellement.
     *}
     FTag : integer;
+
+    function GetSafeID : TComponentID;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID);
     destructor Destroy; override;
 
     property Master : TMaster read FMaster;
     property ID : TComponentID read FID;
+    property SafeID : TComponentID read GetSafeID;
     property Tag : integer read FTag write FTag;
   end;
 
@@ -412,8 +419,9 @@ type
 
   {*
     Représente une case du jeu
-    TScrew représente une case du jeu. Une case possède deux parties : le
-    terrain et l'effet.
+    TScrew représente une case du jeu. Une case possède quatre composantes : le
+    terrain, l'effet, l'outil et l'obstacle. Chacune de ces composantes est
+    optionnelle.
     @author Sébastien Jean Robert Doeraene
     @version 5.0
   *}
@@ -448,10 +456,10 @@ type
       KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel, AbortExecute : boolean);
 
-    function ChangeField(NewField : TComponentID) : TScrew;
-    function ChangeEffect(NewEffect : TComponentID = '') : TScrew;
-    function ChangeTool(NewTool : TComponentID = '') : TScrew;
-    function ChangeObstacle(NewObstacle : TComponentID = '') : TScrew;
+    function ChangeField(const NewField : TComponentID = '') : TScrew;
+    function ChangeEffect(const NewEffect : TComponentID = '') : TScrew;
+    function ChangeTool(const NewTool : TComponentID = '') : TScrew;
+    function ChangeObstacle(const NewObstacle : TComponentID = '') : TScrew;
 
     property Field : TField read FField;
     property Effect : TEffect read FEffect;
@@ -1142,6 +1150,17 @@ begin
   inherited;
 end;
 
+{*
+  ID du composant
+  Accès moins rapide que ID mais qui renvoie un ID vide si le composant vaut
+  nil.
+  @return ID du composant s'il existe, un ID vide sinon
+*}
+function TFunLabyComponent.GetSafeID : TComponentID;
+begin
+  if Assigned(Self) then Result := FID else Result := '';
+end;
+
 {-------------------------}
 { Classe TVisualComponent }
 {-------------------------}
@@ -1662,7 +1681,8 @@ begin
   FTool := ATool;
   FObstacle := AObstacle;
 
-  FStaticDraw := FField.StaticDraw and
+  FStaticDraw :=
+    ((not Assigned(FField)) or FField.StaticDraw) and
     ((not Assigned(FEffect)) or FEffect.StaticDraw) and
     ((not Assigned(FTool)) or FTool.StaticDraw) and
     ((not Assigned(FObstacle)) or FObstacle.StaticDraw);
@@ -1678,7 +1698,8 @@ end;
 procedure TScrew.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
   X : integer = 0; Y : integer = 0);
 begin
-  Field.Draw(QPos, Canvas, X, Y);
+  if Assigned(Field) then
+    Field.Draw(QPos, Canvas, X, Y);
   if Assigned(Effect) then
     Effect.Draw(QPos, Canvas, X, Y);
   if Assigned(Tool) then
@@ -1703,7 +1724,8 @@ end;
 procedure TScrew.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint; var Cancel : boolean);
 begin
-  Field.Entering(Player, OldDirection, KeyPressed, Src, Pos, Cancel);
+  if Assigned(Field) then
+    Field.Entering(Player, OldDirection, KeyPressed, Src, Pos, Cancel);
 end;
 
 {*
@@ -1720,7 +1742,8 @@ end;
 procedure TScrew.Exiting(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Pos, Dest : T3DPoint; var Cancel : boolean);
 begin
-  Field.Exiting(Player, OldDirection, KeyPressed, Pos, Dest, Cancel);
+  if Assigned(Field) then
+    Field.Exiting(Player, OldDirection, KeyPressed, Pos, Dest, Cancel);
 end;
 
 {*
@@ -1731,7 +1754,8 @@ end;
 *}
 procedure TScrew.Entered(Player : TPlayer; const Src, Pos : T3DPoint);
 begin
-  Field.Entered(Player, Src, Pos);
+  if Assigned(Field) then
+    Field.Entered(Player, Src, Pos);
   if Assigned(Effect) then
     Effect.Entered(Player, Src, Pos);
 end;
@@ -1744,7 +1768,8 @@ end;
 *}
 procedure TScrew.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
 begin
-  Field.Exited(Player, Pos, Dest);
+  if Assigned(Field) then
+    Field.Exited(Player, Pos, Dest);
   if Assigned(Effect) then
     Effect.Exited(Player, Pos, Dest);
 end;
@@ -1794,16 +1819,10 @@ end;
   @param NewField   ID du nouveau terrain
   @return Une case identique à celle-ci mais avec le terrain indiqué
 *}
-function TScrew.ChangeField(NewField : TComponentID) : TScrew;
-var EffectID, ToolID, ObstacleID : TComponentID;
+function TScrew.ChangeField(const NewField : TComponentID = '') : TScrew;
 begin
-  if Effect = nil then EffectID := '' else
-    EffectID := Effect.ID;
-  if Tool = nil then ToolID := '' else
-    ToolID := Tool.ID;
-  if Obstacle = nil then ObstacleID := '' else
-    ObstacleID := Obstacle.ID;
-  Result := Master.Screw[NewField+'-'+EffectID+'-'+ToolID+'-'+ObstacleID];
+  Result := Master.Screw[Format(ScrewIDFormat,
+    [NewField, Effect.SafeID, Tool.SafeID, Obstacle.SafeID])];
 end;
 
 {*
@@ -1811,14 +1830,10 @@ end;
   @param NewEffect   ID du nouvel effet
   @return Une case identique à celle-ci mais avec l'effet indiqué
 *}
-function TScrew.ChangeEffect(NewEffect : TComponentID = '') : TScrew;
-var ToolID, ObstacleID : TComponentID;
+function TScrew.ChangeEffect(const NewEffect : TComponentID = '') : TScrew;
 begin
-  if Tool = nil then ToolID := '' else
-    ToolID := Tool.ID;
-  if Obstacle = nil then ObstacleID := '' else
-    ObstacleID := Obstacle.ID;
-  Result := Master.Screw[Field.ID+'-'+NewEffect+'-'+ToolID+'-'+ObstacleID];
+  Result := Master.Screw[Format(ScrewIDFormat,
+    [Field.SafeID, NewEffect, Tool.SafeID, Obstacle.SafeID])];
 end;
 
 {*
@@ -1826,14 +1841,10 @@ end;
   @param NewTool   ID du nouvel outil
   @return Une case identique à celle-ci mais avec l'outil indiqué
 *}
-function TScrew.ChangeTool(NewTool : TComponentID = '') : TScrew;
-var EffectID, ObstacleID : TComponentID;
+function TScrew.ChangeTool(const NewTool : TComponentID = '') : TScrew;
 begin
-  if Effect = nil then EffectID := '' else
-    EffectID := Effect.ID;
-  if Obstacle = nil then ObstacleID := '' else
-    ObstacleID := Obstacle.ID;
-  Result := Master.Screw[Field.ID+'-'+EffectID+'-'+NewTool+'-'+ObstacleID];
+  Result := Master.Screw[Format(ScrewIDFormat,
+    [Field.SafeID, Effect.SafeID, NewTool, Obstacle.SafeID])];
 end;
 
 {*
@@ -1841,14 +1852,10 @@ end;
   @param NewObstacle   ID du nouvel obstacle
   @return Une case identique à celle-ci mais avec l'obstacle indiqué
 *}
-function TScrew.ChangeObstacle(NewObstacle : TComponentID = '') : TScrew;
-var EffectID, ToolID : TComponentID;
+function TScrew.ChangeObstacle(const NewObstacle : TComponentID = '') : TScrew;
 begin
-  if Effect = nil then EffectID := '' else
-    EffectID := Effect.ID;
-  if Tool = nil then ToolID := '' else
-    ToolID := Tool.ID;
-  Result := Master.Screw[Field.ID+'-'+EffectID+'-'+ToolID+'-'+NewObstacle];
+  Result := Master.Screw[Format(ScrewIDFormat,
+    [Field.SafeID, Effect.SafeID, Tool.SafeID, NewObstacle])];
 end;
 
 {-------------------------}
@@ -1920,7 +1927,6 @@ end;
 *}
 constructor TMap.Create(AMaster : TMaster; const AID : TComponentID;
   ADimensions : T3DPoint; AZoneWidth, AZoneHeight : integer);
-var I : integer;
 begin
   inherited Create(AMaster, AID);
   FDimensions := ADimensions;
@@ -1930,8 +1936,7 @@ begin
 
   FOutsideOffset := FDimensions.X * FDimensions.Y * FDimensions.Z;
   SetLength(FMap, FOutsideOffset + FDimensions.Z);
-  for I := Low(FMap) to High(FMap) do
-    FMap[I] := nil;
+  FillChar(FMap[0], Length(FMap)*4, 0);
 end;
 
 {*
@@ -2748,17 +2753,20 @@ end;
 {*
   Tableau des composants indexé par leur ID
   @param ID   ID du composant à trouver
-  @return Le composant dont l'ID a été spécifié
+  @return Le composant dont l'ID a été spécifié, ou nil si ID était vide
   @throws EComponentNotFound : Aucun composant ne correspond à l'ID spécifié
 *}
 function TMaster.GetComponent(const ID : TComponentID) : TFunLabyComponent;
 var Index : integer;
 begin
-  Index := FComponents.IndexOf(ID);
-  if Index >= 0 then
-    Result := TFunLabyComponent(FComponents.Objects[Index])
-  else
-    raise EComponentNotFound.CreateFmt(sComponentNotFound, [ID]);
+  if ID = '' then Result := nil else
+  begin
+    Index := FComponents.IndexOf(ID);
+    if Index >= 0 then
+      Result := TFunLabyComponent(FComponents.Objects[Index])
+    else
+      raise EComponentNotFound.CreateFmt(sComponentNotFound, [ID]);
+  end;
 end;
 
 {*
@@ -2775,7 +2783,7 @@ begin
   except
     on Error : EComponentNotFound do
     begin
-      if NberCharInStr('-', ID) = 3 then
+      if NberCharInStr(ScrewIDDelim, ID) = 3 then
         Result := Screw[ID]
       else
         raise;
@@ -2828,8 +2836,7 @@ end;
 *}
 function TMaster.GetEffect(const ID : TComponentID) : TEffect;
 begin
-  if ID = '' then Result := nil else
-    Result := Component[ID] as TEffect;
+  Result := Component[ID] as TEffect;
 end;
 
 {*
@@ -2841,8 +2848,7 @@ end;
 *}
 function TMaster.GetTool(const ID : TComponentID) : TTool;
 begin
-  if ID = '' then Result := nil else
-    Result := Component[ID] as TTool;
+  Result := Component[ID] as TTool;
 end;
 
 {*
@@ -2854,8 +2860,7 @@ end;
 *}
 function TMaster.GetObstacle(const ID : TComponentID) : TObstacle;
 begin
-  if ID = '' then Result := nil else
-    Result := Component[ID] as TObstacle;
+  Result := Component[ID] as TObstacle;
 end;
 
 {*
@@ -2881,14 +2886,17 @@ begin
     begin
       Result := nil;
 
-      if NberCharInStr('-', ID) = 3 then
+      if NberCharInStr(ScrewIDDelim, ID) = 3 then
       try
-        AField := Field[GetXToken(ID, '-', 1)];
-        AEffect := Effect[GetXToken(ID, '-', 2)];
-        ATool := Tool[GetXToken(ID, '-', 3)];
-        AObstacle := Obstacle[GetXToken(ID, '-', 4)];
+        AField    := Field   [GetXToken(ID, ScrewIDDelim, 1)];
+        AEffect   := Effect  [GetXToken(ID, ScrewIDDelim, 2)];
+        ATool     := Tool    [GetXToken(ID, ScrewIDDelim, 3)];
+        AObstacle := Obstacle[GetXToken(ID, ScrewIDDelim, 4)];
 
-        AName := AField.Name;
+        if Assigned(AField) then
+          AName := AField.Name
+        else
+          AName := sNothing;
         if Assigned(AEffect) then
           AName := Format(sEffectName, [AName, AEffect.Name]);
         if Assigned(ATool) then
