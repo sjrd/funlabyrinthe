@@ -44,14 +44,6 @@ begin
   SilverKeys := TSilverKeys.Create(Master, idSilverKeys, sSilverKeys);
   GoldenKeys := TGoldenKeys.Create(Master, idGoldenKeys, sGoldenKeys);
 
-  // Terrain et effet spécial planche
-  TPlankField.Create(Master, idPlankField, '');
-  TPlankEffect.Create(Master, idPlankEffect, '');
-
-  // Terrain et effet spécial ascenseur occupé
-  TEngagedLiftField.Create(Master, idEngagedLiftField, '');
-  TEngagedLiftEffect.Create(Master, idEngagedLiftEffect, '');
-
   // Terrains
 
   TGrass.Create(Master, idGrass, sGrass);

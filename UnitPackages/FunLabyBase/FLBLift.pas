@@ -16,11 +16,7 @@ resourcestring
   sLift = 'Ascenseur'; /// Nom de l'ascenseur
 
 const {don't localize}
-  idEngagedLiftField = 'EngagedLiftField';       /// ID du terrain ascenseur
-  idEngagedLiftEffect = 'EngagedLiftEffect';     /// ID de l'effet ascenseur
-  idEngagedLiftScrew = 'EngageLiftScrew-%s-%d';  /// ID de la case ascenseur
-
-  idLift = 'Lift';                               /// ID de l'ascenseur
+  idLift = 'Lift'; /// ID de l'ascenseur
 
 const {don't localize}
   fLift = 'Lift';             /// Fichier de l'ascenseur
@@ -33,42 +29,30 @@ resourcestring
 
 type
   {*
-    Terrain spécial ascenseur occupé
-    Ce terrain ne doit pas être utilisé normalement. Il n'est utilisé que par la
-    case spéciale ascenseur occupé.
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TEngagedLiftField = class(TField)
-  public
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
-  end;
-
-  {*
-    Effet spécial ascenseur occupé
-    Cet effet ne doit pas être utilisé normalement. Il n'est utilisé que par la
-    case spécial ascenseur occupé.
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TEngagedLiftEffect = class(TEffect)
-  public
-    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); override;
-  end;
-
-  {*
     Case spéciale ascenseur occupé
     Cette case est utilisée pour l'effet particulier de l'ascenseur.
     @author Sébastien Jean Robert Doeraene
     @version 5.0
   *}
   TEngagedLiftScrew = class(TOverriddenScrew)
+  private
+    FIsExit : boolean; /// Indique si c'est là que sort le joueur
   public
-    constructor Create(AMaster : TMaster; AMap : TMap; APosition : T3DPoint;
-      APlayer : TPlayer; Opened : boolean = False;
-      WithEffect : boolean = False);
+    constructor Create(AMaster : TMaster; AMap : TMap;
+      const APosition : T3DPoint; Opened : boolean = False;
+      AIsExit : boolean = False);
+
+    procedure Entering(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
+      var Cancel : boolean); override;
+
+    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); override;
+
+    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
+      var Cancel, AbortExecute : boolean); override;
+
+    property IsExit : boolean read FIsExit;
   end;
 
   {*
@@ -89,46 +73,47 @@ type
 implementation
 
 {--------------------------}
-{ Classe TEngagedLiftField }
+{ Classe TEngagedLiftScrew }
 {--------------------------}
 
 {*
-  Exécuté lorsque le joueur tente de venir sur la case
-  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
+  Crée une instance de TEngagedLiftScrew
+  @param AMaster     Maître FunLabyrinthe
+  @param AMap        Carte
+  @param APosition   Position
+  @param Opened      Indique si l'ascenseur apparaît ouvert
+  @param AIsExit     Indique si c'est là que sort le joueur
 *}
-procedure TEngagedLiftField.Entering(Player : TPlayer;
+constructor TEngagedLiftScrew.Create(AMaster : TMaster; AMap : TMap;
+  const APosition : T3DPoint; Opened : boolean = False;
+  AIsExit : boolean = False);
+begin
+  inherited Create(AMaster, '', AMap, APosition);
+  FIsExit := AIsExit;
+
+  if Opened then
+    Painter.ImgNames.Add(fOpenedLift);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TEngagedLiftScrew.Entering(Player : TPlayer;
   OldDirection : TDirection; KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 begin
-  if KeyPressed then
-    Player.ShowDialog(sBlindAlley, sLiftIsEngaged, dtError);
-
-  Cancel := True;
+  OriginalScrew.Entering(Player, OldDirection, KeyPressed,
+    Src, Pos, Cancel);
 end;
 
-{---------------------------}
-{ Classe TEngagedLiftEffect }
-{---------------------------}
-
 {*
-  Exécuté lorsque le joueur est sorti de la case
-  Exiting est exécuté lorsque le joueur est sorti de la case.
-  @param Player    Joueur qui se déplace
-  @param Pos       Position de la case
-  @param Dest      Case de destination
+  [@inheritDoc]
 *}
-procedure TEngagedLiftEffect.Exited(Player : TPlayer;
+procedure TEngagedLiftScrew.Exited(Player : TPlayer;
   const Pos, Dest : T3DPoint);
 var Other : T3DPoint;
 begin
-  inherited;
+  if not IsExit then exit;
 
   // Suppression des étages inférieurs
   Other := Pos;
@@ -152,31 +137,20 @@ begin
   Player.Map[Pos].Free;
 end;
 
-{--------------------------}
-{ Classe TEngagedLiftScrew }
-{--------------------------}
-
 {*
-  Crée une instance de TEngagedLiftScrew
-  @param AMaster      Maître FunLabyrinthe
-  @param AMap         Carte
-  @param APosition    Position
-  @param Opened       Indique si l'ascenseur apparaît ouvert
-  @param WithEffect   Indique s'il faut assigner l'effet spécial
+  [@inheritDoc]
 *}
-constructor TEngagedLiftScrew.Create(AMaster : TMaster; AMap : TMap;
-  APosition : T3DPoint; APlayer : TPlayer; Opened : boolean = False;
-  WithEffect : boolean = False);
-var Effect : TEffect;
+procedure TEngagedLiftScrew.Pushing(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
+  var Cancel, AbortExecute : boolean);
 begin
-  if not WithEffect then Effect := nil else
-    Effect := AMaster.Effect[idEngagedLiftEffect];
-  inherited Create(AMaster,
-    Format(idEngagedLiftScrew, [APlayer.ID, APosition.Z]), AMap, APosition,
-    AMaster.Field[idEngagedLiftField], Effect, nil, nil);
+  OriginalScrew.Pushing(Player, OldDirection, KeyPressed,
+    Src, Pos, Cancel, AbortExecute);
+  if Cancel then exit;
 
-  if Opened then
-    Painter.ImgNames.Add(fOpenedLift);
+  if KeyPressed then
+    Player.ShowDialog(sBlindAlley, sLiftIsEngaged, dtError);
+  Cancel := True;
 end;
 
 {--------------}
@@ -212,7 +186,7 @@ begin
   dec(Other.Z);
   while Player.Map[Other].Effect = Self do
   begin
-    TEngagedLiftScrew.Create(Master, Player.Map, Other, Player);
+    TEngagedLiftScrew.Create(Master, Player.Map, Other);
     dec(Other.Z);
   end;
   MinFloor := Other.Z+1;
@@ -222,13 +196,13 @@ begin
   inc(Other.Z);
   while Player.Map[Other].Effect = Self do
   begin
-    TEngagedLiftScrew.Create(Master, Player.Map, Other, Player);
+    TEngagedLiftScrew.Create(Master, Player.Map, Other);
     inc(Other.Z);
   end;
   MaxFloor := Other.Z-1;
 
   // Affichage de l'ascenseur ouvert pendant un temps
-  with TEngagedLiftScrew.Create(Master, Player.Map, Pos, Player, True) do
+  with TEngagedLiftScrew.Create(Master, Player.Map, Pos, True) do
   try
     Master.Temporize;
   finally
@@ -236,7 +210,7 @@ begin
   end;
 
   // Fermer l'ascenseur et cacher le joueur complètement
-  TEngagedLiftScrew.Create(Master, Player.Map, Pos, Player);
+  TEngagedLiftScrew.Create(Master, Player.Map, Pos);
   Player.Hide;
 
   // Demande au joueur de l'étage auquel il souhaite aller
@@ -249,7 +223,7 @@ begin
   // Après un temps, ouvrir l'ascenseur et remontrer le joueur
   Master.Temporize;
   Player.Map[Other].Free;
-  TEngagedLiftScrew.Create(Master, Player.Map, Other, Player, True, True);
+  TEngagedLiftScrew.Create(Master, Player.Map, Other, True, True);
   Player.Show;
 end;
 

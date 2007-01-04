@@ -23,13 +23,9 @@ resourcestring
   sPlank = 'Planche';           /// Nom de la planche
 
 const {don't localize}
-  idPlanks = 'Planks';            /// ID des planches
+  idPlanks = 'Planks'; /// ID des planches
 
-  idPlankField = 'PlankField';    /// ID du terrain planche
-  idPlankEffect = 'PlankEffect';  /// ID de l'effet planche
-  idPlankScrew = 'PlankScrew-%s'; /// ID de la case planche
-
-  idPlank = 'Plank';              /// ID de la planche
+  idPlank = 'Plank';   /// ID de la planche
 
 const {don't localize}
   fPlank = 'Plank'; /// Fichier de la planche
@@ -70,35 +66,6 @@ type
   end;
 
   {*
-    Terrain spécial planche
-    Ce terrain ne doit pas être utilisé normalement. Il n'est utilisé que par la
-    case spéciale planche.
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TPlankField = class(TField)
-  public
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
-  end;
-
-  {*
-    Effet spécial planche
-    Cet effet ne doit pas être utilisé normalement. Il n'est utilisé que par la
-    case spéciale planche.
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TPlankEffect = class(TEffect)
-  public
-    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); override;
-
-    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
-      var GoOnMoving : boolean); override;
-  end;
-
-  {*
     Case spéciale planche
     Cette case est utilisée pour le déplacement particulier de la planche.
     @author Sébastien Jean Robert Doeraene
@@ -108,8 +75,17 @@ type
   private
     FPlayer : TPlayer; /// Joueur qui passe sur la case
   public
-    constructor Create(AMaster : TMaster; AMap : TMap; APosition : T3DPoint;
-      APlayer : TPlayer);
+    constructor Create(AMaster : TMaster; AMap : TMap;
+      const APosition : T3DPoint; APlayer : TPlayer);
+
+    procedure Entering(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; const Src, Pos : T3DPoint;
+      var Cancel : boolean); override;
+
+    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); override;
+
+    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
+      var GoOnMoving : boolean); override;
 
     property Player : TPlayer read FPlayer;
   end;
@@ -230,61 +206,6 @@ begin
 end;
 
 {--------------------}
-{ Classe TPlankField }
-{--------------------}
-
-{*
-  Exécuté lorsque le joueur tente de venir sur la case
-  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-*}
-procedure TPlankField.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel : boolean);
-begin
-  if Player <> (Player.Map[Src] as TPlankScrew).Player then
-    Cancel := True;
-end;
-
-{---------------------}
-{ Classe TPlankEffect }
-{---------------------}
-
-{*
-  Exécuté lorsque le joueur est sorti de la case
-  Exiting est exécuté lorsque le joueur est sorti de la case.
-  @param Player   Joueur qui se déplace
-  @param Pos      Position de la case
-  @param Dest     Case de destination
-*}
-procedure TPlankEffect.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
-begin
-  inherited;
-  Player.RemovePlugin(Master.Plugin[idPlankPlugin]);
-  Player.Map[Pos].Free;
-end;
-
-{*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
-*}
-procedure TPlankEffect.Execute(Player : TPlayer; const Pos : T3DPoint;
-  var GoOnMoving : boolean);
-begin
-  inherited;
-  Master.Temporize;
-  Player.MoveTo(PointBehind(Pos, Player.Direction), True, GoOnMoving);
-end;
-
-{--------------------}
 { Classe TPlankScrew }
 {--------------------}
 
@@ -296,11 +217,42 @@ end;
   @param APlayer     Joueur qui passe sur la case
 *}
 constructor TPlankScrew.Create(AMaster : TMaster; AMap : TMap;
-  APosition : T3DPoint; APlayer : TPlayer);
+  const APosition : T3DPoint; APlayer : TPlayer);
 begin
-  inherited Create(AMaster, Format(idPlankScrew, [APlayer.ID]), AMap, APosition,
-    AMaster.Field[idPlankField], AMaster.Effect[idPlankEffect], nil, nil);
+  inherited Create(AMaster, '', AMap, APosition);
   FPlayer := APlayer;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPlankScrew.Entering(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; const Src, Pos : T3DPoint;
+  var Cancel : boolean);
+begin
+  if Player <> FPlayer then
+    Cancel := True;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPlankScrew.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
+begin
+  inherited;
+  Player.RemovePlugin(Master.Plugin[idPlankPlugin]);
+  Free;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPlankScrew.Execute(Player : TPlayer; const Pos : T3DPoint;
+  var GoOnMoving : boolean);
+begin
+  inherited;
+  Master.Temporize;
+  Player.MoveTo(PointBehind(Pos, Player.Direction), True, GoOnMoving);
 end;
 
 end.

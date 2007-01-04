@@ -441,20 +441,20 @@ type
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean);
+      var Cancel : boolean); virtual;
     procedure Exiting(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Pos, Dest : T3DPoint;
-      var Cancel : boolean);
+      var Cancel : boolean); virtual;
 
-    procedure Entered(Player : TPlayer; const Src, Pos : T3DPoint);
-    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
+    procedure Entered(Player : TPlayer; const Src, Pos : T3DPoint); virtual;
+    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); virtual;
 
     procedure Execute(Player : TPlayer; const Pos : T3DPoint;
-      var GoOnMoving : boolean);
+      var GoOnMoving : boolean); virtual;
 
     procedure Pushing(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortExecute : boolean);
+      var Cancel, AbortExecute : boolean); virtual;
 
     function ChangeField(const NewField : TComponentID = '') : TScrew;
     function ChangeEffect(const NewEffect : TComponentID = '') : TScrew;
@@ -485,8 +485,9 @@ type
       X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      AMap : TMap; APosition : T3DPoint; AField : TField; AEffect : TEffect;
-      ATool : TTool; AObstacle : TObstacle);
+      AMap : TMap; const APosition : T3DPoint; AField : TField = nil;
+      AEffect : TEffect = nil; ATool : TTool = nil;
+      AObstacle : TObstacle = nil);
     destructor Destroy; override;
 
     property Map : TMap read FMap;
@@ -1138,7 +1139,8 @@ begin
   inherited Create;
   FMaster := AMaster;
   FID := AID;
-  Master.AddComponent(Self);
+  if FID <> '' then
+    Master.AddComponent(Self);
 end;
 
 {*
@@ -1146,7 +1148,8 @@ end;
 *}
 destructor TFunLabyComponent.Destroy;
 begin
-  Master.RemoveComponent(Self);
+  if FID <> '' then
+    Master.RemoveComponent(Self);
   inherited;
 end;
 
@@ -1874,8 +1877,8 @@ end;
   @param AObstacle   Obstacle
 *}
 constructor TOverriddenScrew.Create(AMaster : TMaster; const AID : TComponentID;
-  AMap : TMap; APosition : T3DPoint; AField : TField; AEffect : TEffect;
-  ATool : TTool; AObstacle : TObstacle);
+  AMap : TMap; const APosition : T3DPoint; AField : TField = nil;
+  AEffect : TEffect = nil; ATool : TTool = nil; AObstacle : TObstacle = nil);
 var AOriginalScrew : TScrew;
 begin
   AOriginalScrew := AMap[APosition];
