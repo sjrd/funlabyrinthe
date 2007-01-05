@@ -221,7 +221,11 @@ begin
 
   SetLength(FComponents, Len);
   for I := 0 to Len-1 do
+  begin
     FComponents[I] := AComponents[Low(AComponents) + I];
+    if FComponents[I] is TScrew then
+      TScrew(FComponents[I]).AddRef;
+  end;
 
   FDialogTitle := ADialogTitle;
   FDialogPrompt := ADialogPrompt;
@@ -291,6 +295,8 @@ var Button : TButtonItem;
 begin
   Button := AddScrewButton(Component);
   Button.Data := Component;
+  if Component is TScrew then
+    TScrew(Component).AddRef;
 end;
 
 {*

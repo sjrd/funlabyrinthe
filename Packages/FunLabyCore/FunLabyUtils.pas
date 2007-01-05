@@ -44,6 +44,7 @@ const {don't localize}
   ScrewSize = 30;         /// Taille (en largeur et hauteur) d'une case
   MinViewSize = 1;        /// Taille minimale d'une vue
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
+  NoRefCount = MaxInt;    /// Valeur sentinelle : pas de comptage des références
 
   attrColor = 'Color';             /// Attribut de joueur pour Color
   attrShowCounter = 'ShowCounter'; /// Attribut de joueur pour ShowCounter
@@ -432,12 +433,15 @@ type
     FTool : TTool;         /// Outil
     FObstacle : TObstacle; /// Obstacle
   protected
+    FRefCount : integer; /// Compteur de références
+
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; AField : TField; AEffect : TEffect; ATool : TTool;
       AObstacle : TObstacle);
+    procedure BeforeDestruction; override;
 
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
@@ -461,10 +465,15 @@ type
     function ChangeTool(const NewTool : TComponentID = '') : TScrew;
     function ChangeObstacle(const NewObstacle : TComponentID = '') : TScrew;
 
+    function AddRef : integer; virtual;
+    function Release : integer; virtual;
+
     property Field : TField read FField;
     property Effect : TEffect read FEffect;
     property Tool : TTool read FTool;
     property Obstacle : TObstacle read FObstacle;
+
+    property RefCount : integer read FRefCount;
   end;
 
   {*
@@ -1683,12 +1692,25 @@ begin
   FEffect := AEffect;
   FTool := ATool;
   FObstacle := AObstacle;
+  FRefCount := 0;
 
   FStaticDraw :=
     ((not Assigned(FField)) or FField.StaticDraw) and
     ((not Assigned(FEffect)) or FEffect.StaticDraw) and
     ((not Assigned(FTool)) or FTool.StaticDraw) and
     ((not Assigned(FObstacle)) or FObstacle.StaticDraw);
+end;
+
+{*
+  Exécuté avant la destruction de l'objet
+  BeforeDestruction est appelé avant l'exécution du premier destructeur.
+  N'appelez pas directement BeforeDestruction.
+*}
+procedure TScrew.BeforeDestruction;
+begin
+  inherited;
+  // Il ne faut surtout pas détruire une case déjà en cours de destruction
+  FRefCount := NoRefCount;
 end;
 
 {*
@@ -1727,8 +1749,13 @@ end;
 procedure TScrew.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint; var Cancel : boolean);
 begin
-  if Assigned(Field) then
-    Field.Entering(Player, OldDirection, KeyPressed, Src, Pos, Cancel);
+  AddRef;
+  try
+    if Assigned(Field) then
+      Field.Entering(Player, OldDirection, KeyPressed, Src, Pos, Cancel);
+  finally
+    Release;
+  end;
 end;
 
 {*
@@ -1745,8 +1772,13 @@ end;
 procedure TScrew.Exiting(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Pos, Dest : T3DPoint; var Cancel : boolean);
 begin
-  if Assigned(Field) then
-    Field.Exiting(Player, OldDirection, KeyPressed, Pos, Dest, Cancel);
+  AddRef;
+  try
+    if Assigned(Field) then
+      Field.Exiting(Player, OldDirection, KeyPressed, Pos, Dest, Cancel);
+  finally
+    Release;
+  end;
 end;
 
 {*
@@ -1757,10 +1789,15 @@ end;
 *}
 procedure TScrew.Entered(Player : TPlayer; const Src, Pos : T3DPoint);
 begin
-  if Assigned(Field) then
-    Field.Entered(Player, Src, Pos);
-  if Assigned(Effect) then
-    Effect.Entered(Player, Src, Pos);
+  AddRef;
+  try
+    if Assigned(Field) then
+      Field.Entered(Player, Src, Pos);
+    if Assigned(Effect) then
+      Effect.Entered(Player, Src, Pos);
+  finally
+    Release;
+  end;
 end;
 
 {*
@@ -1771,10 +1808,15 @@ end;
 *}
 procedure TScrew.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
 begin
-  if Assigned(Field) then
-    Field.Exited(Player, Pos, Dest);
-  if Assigned(Effect) then
-    Effect.Exited(Player, Pos, Dest);
+  AddRef;
+  try
+    if Assigned(Field) then
+      Field.Exited(Player, Pos, Dest);
+    if Assigned(Effect) then
+      Effect.Exited(Player, Pos, Dest);
+  finally
+    Release;
+  end;
 end;
 
 {*
@@ -1786,10 +1828,15 @@ end;
 procedure TScrew.Execute(Player : TPlayer; const Pos : T3DPoint;
   var GoOnMoving : boolean);
 begin
-  if Assigned(Tool) then
-    Tool.Find(Player, Pos);
-  if Assigned(Effect) then
-    Effect.Execute(Player, Pos, GoOnMoving);
+  AddRef;
+  try
+    if Assigned(Tool) then
+      Tool.Find(Player, Pos);
+    if Assigned(Effect) then
+      Effect.Execute(Player, Pos, GoOnMoving);
+  finally
+    Release;
+  end;
 end;
 
 {*
@@ -1810,10 +1857,15 @@ procedure TScrew.Pushing(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel, AbortExecute : boolean);
 begin
-  if Assigned(Obstacle) then
-  begin
-    Obstacle.Pushing(Player, OldDirection, KeyPressed,
-      Src, Pos, Cancel, AbortExecute);
+  AddRef;
+  try
+    if Assigned(Obstacle) then
+    begin
+      Obstacle.Pushing(Player, OldDirection, KeyPressed,
+        Src, Pos, Cancel, AbortExecute);
+    end;
+  finally
+    Release;
   end;
 end;
 
@@ -1861,6 +1913,31 @@ begin
     [Field.SafeID, Effect.SafeID, Tool.SafeID, NewObstacle])];
 end;
 
+{*
+  Incrémente le compteur de références de la case
+  @return Nouvelle valeur du compteur de références
+*}
+function TScrew.AddRef : integer;
+begin
+  if FRefCount <> NoRefCount then
+    inc(FRefCount);
+  Result := FRefCount;
+end;
+
+{*
+  Décrémente le compteur de références de la case
+  @return Nouvelle valeur du compteur de références
+*}
+function TScrew.Release : integer;
+begin
+  if FRefCount <> NoRefCount then
+    dec(FRefCount);
+  Result := FRefCount;
+
+  if FRefCount = 0 then
+    Free;
+end;
+
 {-------------------------}
 { Classe TOverriddenScrew }
 {-------------------------}
@@ -1884,6 +1961,7 @@ begin
   AOriginalScrew := AMap[APosition];
   inherited Create(AMaster, AID, AOriginalScrew.Name,
     AField, AEffect, ATool, AObstacle);
+  FRefCount := NoRefCount;
 
   if not AOriginalScrew.StaticDraw then
     FStaticDraw := False;
@@ -1891,6 +1969,7 @@ begin
   FPosition := APosition;
   FOriginalScrew := AOriginalScrew;
 
+  OriginalScrew.AddRef;
   Map[Position] := Self;
 end;
 
@@ -1900,6 +1979,8 @@ end;
 destructor TOverriddenScrew.Destroy;
 begin
   Map[Position] := OriginalScrew;
+  OriginalScrew.Release;
+
   inherited;
 end;
 
@@ -1990,7 +2071,7 @@ begin
   Index := Index * FDimensions.X;
   inc(Index, Position.X);
 
-  FMap[Index] := Value;
+  LinearMap[Index] := Value;
 end;
 
 {*
@@ -2013,7 +2094,7 @@ end;
 procedure TMap.SetOutside(Floor : integer; Value : TScrew);
 begin
   if (Floor >= 0) and (Floor < FDimensions.Z) then
-    FMap[Floor + FOutsideOffset] := Value;
+    LinearMap[Floor + FOutsideOffset] := Value;
 end;
 
 {*
@@ -2042,7 +2123,13 @@ end;
 *}
 procedure TMap.SetLinearMap(Index : integer; Value : TScrew);
 begin
+  if Assigned(FMap[Index]) then
+    FMap[Index].Release;
+
   FMap[Index] := Value;
+
+  if Assigned(Value) then
+    Value.AddRef;
 end;
 
 {*
