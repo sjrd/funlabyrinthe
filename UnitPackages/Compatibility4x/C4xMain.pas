@@ -12,7 +12,7 @@ interface
 
 uses
   Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
-  FunLabyUtils, UnitFiles, Generics, C4xCommon, C4xComponents;
+  FunLabyUtils, UnitFiles, Generics, C4xCommon, C4xComponents, C4xScrewsTable;
 
 resourcestring
   sAskForTipsTitle = 'Activation des indices';
@@ -64,6 +64,7 @@ var FileName : TFileName;
     Zone : T3DPoint;
     ActionsID : TComponentID;
     Actions : TActions;
+    C : Char;
 begin
   { Don't localize any of the strings in this procedure. }
 
@@ -183,6 +184,11 @@ begin
 
   if Params.Values[attrShowTips] <> '' then
     Infos.ShowTips := Params.Values[attrShowTips] = 'yes';
+
+  // Les composants de compatibilité ne gèrent pas le comptage de références
+  // On s'assure donc que les cases utilisées sont les mêmes du début à la fin
+  for C := #33 to #255 do if ScrewsTable[C] <> '' then
+    Master.Screw[ScrewsTable[C]].AddRef;
 end;
 
 {*
