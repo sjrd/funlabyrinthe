@@ -10,7 +10,8 @@ unit FLBObstacles;
 interface
 
 uses
-  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, FLBCommon, FLBFields;
+  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, MapTools, FLBCommon,
+  FLBFields;
 
 resourcestring
   sSilverBlock = 'Bloc en argent'; /// Nom du bloc en argent
@@ -124,7 +125,7 @@ begin
   if KeyPressed then with Player do
   begin
     if CanYou(actOpenSilverLock) then
-      Map[Pos] := Map[Pos].ChangeObstacle
+      Map[Pos] := ChangeObstacle(Map[Pos])
     else
       ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
   end;
@@ -170,7 +171,7 @@ begin
   if KeyPressed then with Player do
   begin
     if CanYou(actOpenGoldenLock) then
-      Map[Pos] := Map[Pos].ChangeObstacle
+      Map[Pos] := ChangeObstacle(Map[Pos])
     else
       ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
   end;
@@ -236,8 +237,8 @@ procedure TSecretWay.Pushing(Player : TPlayer; OldDirection : TDirection;
 begin
   inherited;
 
-  if KeyPressed then
-    Player.Map[Pos] := Player.Map[Pos].ChangeObstacle;
+  if KeyPressed then with Player do
+    Map[Pos] := ChangeObstacle(Map[Pos]);
 end;
 
 end.

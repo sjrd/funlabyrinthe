@@ -10,7 +10,7 @@ unit FLBBoat;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, GraphicsTools, FLBCommon,
+  SysUtils, Graphics, ScUtils, FunLabyUtils, GraphicsTools, MapTools, FLBCommon,
   FLBFields;
 
 const {don't localize}
@@ -201,8 +201,9 @@ begin
     RemovePlugin(Self);
 
     // Placer un outil barque sur la case source
-    Map[Src] := Map[Src].ChangeField(idGrassWater).ChangeTool(
-      Format(idBoat, [Attribute[idBoatPlugin]]));
+    with Map[Src] do
+      Map[Src] := Master.ScrewByComps(idGrassWater, Effect.SafeID,
+        Format(idBoat, [Attribute[idBoatPlugin]]), Obstacle.SafeID);
 
     // Remettre à 0 l'attribut du joueur concernant la barque
     Attribute[idBoatPlugin] := 0;
@@ -267,12 +268,12 @@ end;
 *}
 procedure TBoat.Find(Player : TPlayer; const Pos : T3DPoint);
 begin
-  inherited;
-
   with Player do
   begin
     // Remplacement de la case par de l'eau simple
-    Map[Pos] := Map[Pos].ChangeField(idWater);
+    with Map[Pos] do
+      Map[Pos] := Master.ScrewByComps(idWater, Effect.SafeID,
+        '', Obstacle.SafeID);
 
     // Indication du numéro de la barque dans l'attribut correspondant
     Attribute[idBoatPlugin] := Number;

@@ -10,7 +10,7 @@ unit FLBLift;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, Generics, FLBCommon;
 
 resourcestring
   sLift = 'Ascenseur'; /// Nom de l'ascenseur

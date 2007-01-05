@@ -34,7 +34,8 @@ requires
 contains
   MapTools in 'MapTools.pas',
   PlayerObjects in 'PlayerObjects.pas',
-  GraphicsTools in 'GraphicsTools.pas';
+  GraphicsTools in 'GraphicsTools.pas',
+  Generics in 'Generics.pas';
 
 end.
 

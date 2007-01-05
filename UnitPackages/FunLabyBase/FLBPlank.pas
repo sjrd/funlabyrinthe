@@ -10,7 +10,7 @@ unit FLBPlank;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, Generics, FLBCommon;
 
 const {don't localize}
   idPlankPlugin = 'PlankPlugin'; /// ID du plug-in planche

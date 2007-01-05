@@ -357,19 +357,6 @@ type
   end;
 
   {*
-    Effet décoratif
-    La classe TDecorativeEffect permet de créer facilement un effet qui ne fait
-    rien, qui ajoute juste une touche décorative.
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TDecorativeEffect = class(TEffect)
-  public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName, AImgName : string);
-  end;
-
-  {*
     Classe de base pour les outils
     TTool est la classe de base pour la création d'outils. Les outils sont la
     troisième composante d'une case.
@@ -379,29 +366,6 @@ type
   TTool = class(TScrewComponent)
   public
     procedure Find(Player : TPlayer; const Pos : T3DPoint); virtual;
-  end;
-
-  {*
-    Outil lié à une définition d'objet
-    La classe TObjectTool permet de créer facilement un outil qui est lié à une
-    définition d'objet. C'est-à-dire que trouver cet outil incrémente le nombre
-    de tels objets que possède le joueur
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TObjectTool = class(TTool)
-  private
-    FObjectDef : TObjectDef; /// Définition d'objet liée
-    FFindMessage : string;   /// Message apparaissant lorsqu'on trouve l'outil
-  public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      AObjectDef : TObjectDef; const AFindMessage : string;
-      const AName : string = ''; const AImgName : string = '');
-
-    procedure Find(Player : TPlayer; const Pos : T3DPoint); override;
-
-    property ObjectDef : TObjectDef read FObjectDef;
-    property FindMessage : string read FFindMessage;
   end;
 
   {*
@@ -460,11 +424,6 @@ type
       KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel, AbortExecute : boolean); virtual;
 
-    function ChangeField(const NewField : TComponentID = '') : TScrew;
-    function ChangeEffect(const NewEffect : TComponentID = '') : TScrew;
-    function ChangeTool(const NewTool : TComponentID = '') : TScrew;
-    function ChangeObstacle(const NewObstacle : TComponentID = '') : TScrew;
-
     function AddRef : integer; virtual;
     function Release : integer; virtual;
 
@@ -474,34 +433,6 @@ type
     property Obstacle : TObstacle read FObstacle;
 
     property RefCount : integer read FRefCount;
-  end;
-
-  {*
-    Classe de base pour les cases en « surchargeant » d'autres
-    TOverriddenScrew est la classe de base pour les cases spéciales qui
-    surchargent momentanément une autre case. Elle fournit des propriétés et
-    méthodes pour identifier la case en question et la dessiner.
-    @author Sébastien Jean Robert Doeraene
-    @version 5.0
-  *}
-  TOverriddenScrew = class(TScrew)
-  private
-    FMap : TMap;             /// Carte
-    FPosition : T3DPoint;    /// Position
-    FOriginalScrew : TScrew; /// Case originale
-  protected
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
-  public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      AMap : TMap; const APosition : T3DPoint; AField : TField = nil;
-      AEffect : TEffect = nil; ATool : TTool = nil;
-      AObstacle : TObstacle = nil);
-    destructor Destroy; override;
-
-    property Map : TMap read FMap;
-    property Position : T3DPoint read FPosition;
-    property OriginalScrew : TScrew read FOriginalScrew;
   end;
 
   {*
@@ -723,6 +654,9 @@ type
 
     procedure Temporize;
     procedure UpdateTickCount;
+
+    function ScrewByComps(
+      const Field, Effect, Tool, Obstacle : TComponentID) : TScrew;
 
     property ImagesMaster : TImagesMaster read FImagesMaster;
 
@@ -1565,24 +1499,6 @@ procedure TEffect.Execute(Player : TPlayer; const Pos : T3DPoint;
 begin
 end;
 
-{--------------------------}
-{ Classe TDecorativeEffect }
-{--------------------------}
-
-{*
-  Crée une instance de TDecorativeEffect
-  @param AMaster    Maître FunLabyrinthe
-  @param AID        ID de l'effet de case
-  @param AName      Nom de l'effet de case
-  @param AImgName   Nom du fichier image
-*}
-constructor TDecorativeEffect.Create(AMaster : TMaster;
-  const AID : TComponentID; const AName, AImgName : string);
-begin
-  inherited Create(AMaster, AID, AName);
-  Painter.ImgNames.Add(AImgName);
-end;
-
 {--------------}
 { Classe TTool }
 {--------------}
@@ -1596,51 +1512,6 @@ end;
 *}
 procedure TTool.Find(Player : TPlayer; const Pos : T3DPoint);
 begin
-  Player.Map[Pos] := Player.Map[Pos].ChangeTool;
-end;
-
-{--------------------}
-{ Classe TObjectTool }
-{--------------------}
-
-{*
-  Crée une instance de TObjectTool
-  Les nom d'outil et du fichier image peuvent être vide. Dans ce cas, l'outil
-  prend les mêmes que la définition d'objet à laquelle il est lié.
-  @param AMaster        Maître FunLabyrinthe
-  @param AID            ID de l'outil
-  @param AObjectDef     Définition d'objet liée
-  @param AFindMessage   Message apparaissant lorsqu'on trouve l'outil
-  @param AName          Nom de l'outil
-  @param AImgName       Nom du fichier image
-*}
-constructor TObjectTool.Create(AMaster : TMaster; const AID : TComponentID;
-  AObjectDef : TObjectDef; const AFindMessage : string;
-  const AName : string = ''; const AImgName : string = '');
-begin
-  inherited Create(AMaster, AID, IIF(AName = '', AObjectDef.Name, AName));
-  FObjectDef := AObjectDef;
-  FFindMessage := AFindMessage;
-
-  if AImgName = '' then
-    FPainter.ImgNames.Assign(FObjectDef.Painter.ImgNames)
-  else
-    FPainter.ImgNames.Add(AImgName);
-end;
-
-{*
-  Exécuté lorsque le joueur trouve l'outil
-  Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
-  arrive sur une case sur laquelle se trouve l'outil.
-  @param Player   Joueur qui a trouvé l'outil
-  @param Pos      Position de la case
-*}
-procedure TObjectTool.Find(Player : TPlayer; const Pos : T3DPoint);
-begin
-  inherited;
-  ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
-  if FindMessage <> '' then
-    Player.ShowDialog(sMessage, FindMessage);
 end;
 
 {------------------}
@@ -1870,50 +1741,6 @@ begin
 end;
 
 {*
-  Change le terrain d'une case et renvoie la case modifiée
-  @param NewField   ID du nouveau terrain
-  @return Une case identique à celle-ci mais avec le terrain indiqué
-*}
-function TScrew.ChangeField(const NewField : TComponentID = '') : TScrew;
-begin
-  Result := Master.Screw[Format(ScrewIDFormat,
-    [NewField, Effect.SafeID, Tool.SafeID, Obstacle.SafeID])];
-end;
-
-{*
-  Change l'effet d'une case et renvoie la case modifiée
-  @param NewEffect   ID du nouvel effet
-  @return Une case identique à celle-ci mais avec l'effet indiqué
-*}
-function TScrew.ChangeEffect(const NewEffect : TComponentID = '') : TScrew;
-begin
-  Result := Master.Screw[Format(ScrewIDFormat,
-    [Field.SafeID, NewEffect, Tool.SafeID, Obstacle.SafeID])];
-end;
-
-{*
-  Change l'outil d'une case et renvoie la case modifiée
-  @param NewTool   ID du nouvel outil
-  @return Une case identique à celle-ci mais avec l'outil indiqué
-*}
-function TScrew.ChangeTool(const NewTool : TComponentID = '') : TScrew;
-begin
-  Result := Master.Screw[Format(ScrewIDFormat,
-    [Field.SafeID, Effect.SafeID, NewTool, Obstacle.SafeID])];
-end;
-
-{*
-  Change l'obstacle d'une case et renvoie la case modifiée
-  @param NewObstacle   ID du nouvel obstacle
-  @return Une case identique à celle-ci mais avec l'obstacle indiqué
-*}
-function TScrew.ChangeObstacle(const NewObstacle : TComponentID = '') : TScrew;
-begin
-  Result := Master.Screw[Format(ScrewIDFormat,
-    [Field.SafeID, Effect.SafeID, Tool.SafeID, NewObstacle])];
-end;
-
-{*
   Incrémente le compteur de références de la case
   @return Nouvelle valeur du compteur de références
 *}
@@ -1936,66 +1763,6 @@ begin
 
   if FRefCount = 0 then
     Free;
-end;
-
-{-------------------------}
-{ Classe TOverriddenScrew }
-{-------------------------}
-
-{*
-  Crée une instance de TOverriddenScrew
-  @param AMaster     Maître FunLabyrinthe
-  @param AID         ID de la case
-  @param AMap        Carte
-  @param APosition   Position
-  @param AField      Terrain
-  @param AEffect     Effet
-  @param ATool       Outil
-  @param AObstacle   Obstacle
-*}
-constructor TOverriddenScrew.Create(AMaster : TMaster; const AID : TComponentID;
-  AMap : TMap; const APosition : T3DPoint; AField : TField = nil;
-  AEffect : TEffect = nil; ATool : TTool = nil; AObstacle : TObstacle = nil);
-var AOriginalScrew : TScrew;
-begin
-  AOriginalScrew := AMap[APosition];
-  inherited Create(AMaster, AID, AOriginalScrew.Name,
-    AField, AEffect, ATool, AObstacle);
-  FRefCount := NoRefCount;
-
-  if not AOriginalScrew.StaticDraw then
-    FStaticDraw := False;
-  FMap := AMap;
-  FPosition := APosition;
-  FOriginalScrew := AOriginalScrew;
-
-  OriginalScrew.AddRef;
-  Map[Position] := Self;
-end;
-
-{*
-  Détruit l'instance
-*}
-destructor TOverriddenScrew.Destroy;
-begin
-  Map[Position] := OriginalScrew;
-  OriginalScrew.Release;
-
-  inherited;
-end;
-
-{*
-  Dessine la case sur un canevas
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
-*}
-procedure TOverriddenScrew.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
-begin
-  OriginalScrew.Draw(QPos, Canvas, X, Y);
-  inherited;
 end;
 
 {-------------}
@@ -3267,6 +3034,20 @@ end;
 procedure TMaster.UpdateTickCount;
 begin
   FTickCount := GetTickCount - FBeginTickCount;
+end;
+
+{*
+  Obtient une case à partir des ID de ses composantes
+  @param Field      ID du terrain
+  @param Effect     ID de l'effet
+  @param Tool       ID de l'outil
+  @param Obstacle   ID de l'obstacle
+  @return Case avec avec les composantes spécifiées
+*}
+function TMaster.ScrewByComps(
+  const Field, Effect, Tool, Obstacle : TComponentID) : TScrew;
+begin
+  Result := Screw[Format(ScrewIDFormat, [Field, Effect, Tool, Obstacle])];
 end;
 
 initialization

@@ -409,7 +409,7 @@ end;
 procedure TDirectTurnstile.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
 begin
   inherited;
-  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idIndirectTurnstile);
+  Player.Map[Pos] := ChangeEffect(Player.Map[Pos], idIndirectTurnstile);
 end;
 
 {*
@@ -468,7 +468,7 @@ procedure TIndirectTurnstile.Exited(Player : TPlayer;
   const Pos, Dest : T3DPoint);
 begin
   inherited;
-  Player.Map[Pos] := Player.Map[Pos].ChangeEffect(idDirectTurnstile);
+  Player.Map[Pos] := ChangeEffect(Player.Map[Pos], idDirectTurnstile);
 end;
 
 {*

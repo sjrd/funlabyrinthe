@@ -11,7 +11,7 @@ unit MapTools;
 interface
 
 uses
-  ScUtils, FunLabyUtils;
+  SysUtils, ScUtils, FunLabyUtils;
 
 type
   {*
@@ -23,6 +23,20 @@ type
   TFindScrewProc = procedure(Map : TMap; var Pos : T3DPoint;
     Component : TScrewComponent);
 
+function ChangeField(Screw : TScrew;
+  const NewField : TComponentID = '') : TScrew;
+function ChangeEffect(Screw : TScrew;
+  const NewEffect : TComponentID = '') : TScrew;
+function ChangeTool(Screw : TScrew;
+  const NewTool : TComponentID = '') : TScrew;
+function ChangeObstacle(Screw : TScrew;
+  const NewObstacle : TComponentID = '') : TScrew;
+
+function ChangeComp(Screw : TScrew;
+  NewComp : TScrewComponent) : TScrew; overload;
+function ChangeComp(Screw : TScrew;
+  const NewComp : TComponentID) : TScrew; overload;
+
 procedure FindNextScrew(Map : TMap; var Pos : T3DPoint;
   Component : TScrewComponent);
 procedure FindPreviousScrew(Map : TMap; var Pos : T3DPoint;
@@ -31,6 +45,90 @@ procedure FindScrewAtRandom(Map : TMap; var Pos : T3DPoint;
   Component : TScrewComponent);
 
 implementation
+
+{*
+  Change le terrain d'une case et renvoie la case modifiée
+  @param Screw      Case originale
+  @param NewField   ID du nouveau terrain
+  @return Une case identique à Screw mais avec le terrain indiqué
+*}
+function ChangeField(Screw : TScrew;
+  const NewField : TComponentID = '') : TScrew;
+begin
+  with Screw do
+    Result := Master.ScrewByComps(
+      NewField, Effect.SafeID, Tool.SafeID, Obstacle.SafeID);
+end;
+
+{*
+  Change l'effet d'une case et renvoie la case modifiée
+  @param Screw       Case originale
+  @param NewEffect   ID du nouvel effet
+  @return Une case identique à Screw mais avec l'effet indiqué
+*}
+function ChangeEffect(Screw : TScrew;
+  const NewEffect : TComponentID = '') : TScrew;
+begin
+  with Screw do
+    Result := Master.ScrewByComps(
+      Field.SafeID, NewEffect, Tool.SafeID, Obstacle.SafeID);
+end;
+
+{*
+  Change l'outil d'une case et renvoie la case modifiée
+  @param Screw     Case originale
+  @param NewTool   ID du nouvel outil
+  @return Une case identique à Screw mais avec l'outil indiqué
+*}
+function ChangeTool(Screw : TScrew;
+  const NewTool : TComponentID = '') : TScrew;
+begin
+  with Screw do
+    Result := Master.ScrewByComps(
+      Field.SafeID, Effect.SafeID, NewTool, Obstacle.SafeID);
+end;
+
+{*
+  Change l'obstacle d'une case et renvoie la case modifiée
+  @param Screw         Case originale
+  @param NewObstacle   ID du nouvel obstacle
+  @return Une case identique à Screw mais avec l'obstacle indiqué
+*}
+function ChangeObstacle(Screw : TScrew;
+  const NewObstacle : TComponentID = '') : TScrew;
+begin
+  with Screw do
+    Result := Master.ScrewByComps(
+      Field.SafeID, Effect.SafeID, Tool.SafeID, NewObstacle);
+end;
+
+{*
+  Change un des composants d'une case et renvoie la case modifiée
+  @param Screw     Case originale
+  @param NewComp   Composant à modifier
+  @return Une case identique à Screw mais avec le composant indiqué
+*}
+function ChangeComp(Screw : TScrew; NewComp : TScrewComponent) : TScrew;
+begin
+  if NewComp is TField    then Result := ChangeField   (Screw, NewComp.ID) else
+  if NewComp is TEffect   then Result := ChangeEffect  (Screw, NewComp.ID) else
+  if NewComp is TTool     then Result := ChangeTool    (Screw, NewComp.ID) else
+  if NewComp is TObstacle then Result := ChangeObstacle(Screw, NewComp.ID) else
+
+  if NewComp is TScrew then Result := TScrew(NewComp) else
+  Result := Screw;
+end;
+
+{*
+  Change un des composants d'une case et renvoie la case modifiée
+  @param Screw     Case originale
+  @param NewComp   ID du composant à modifier
+  @return Une case identique à Screw mais avec le composant indiqué
+*}
+function ChangeComp(Screw : TScrew; const NewComp : TComponentID) : TScrew;
+begin
+  Result := ChangeComp(Screw, Screw.Master.ScrewComponent[NewComp]);
+end;
 
 {*
   Détermine si la bonne case a été trouvée

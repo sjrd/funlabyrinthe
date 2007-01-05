@@ -12,7 +12,7 @@ interface
 
 uses
   Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
-  FunLabyUtils, UnitFiles, C4xCommon, C4xComponents;
+  FunLabyUtils, UnitFiles, Generics, C4xCommon, C4xComponents;
 
 resourcestring
   sAskForTipsTitle = 'Activation des indices';

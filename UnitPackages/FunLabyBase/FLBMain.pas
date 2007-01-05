@@ -10,7 +10,7 @@ unit FLBMain;
 interface
 
 uses
-  SysUtils, Classes, FunLabyUtils, UnitFiles, FLBCommon, FLBFields,
+  SysUtils, Classes, FunLabyUtils, UnitFiles, Generics, FLBCommon, FLBFields,
   FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBBoat, FLBLift, FLBObstacles;
 
 procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
