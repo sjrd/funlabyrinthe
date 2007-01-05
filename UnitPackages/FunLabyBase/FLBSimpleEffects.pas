@@ -431,13 +431,13 @@ begin
   else
     Dir := Succ(Player.Direction);
 
-  while not Player.Move(Dir, False, GoOnMoving) do
-  begin
+  repeat
+    Player.Move(Dir, False, GoOnMoving);
     if Player.Direction = diNorth then
       Dir := diWest
     else
       Dir := Pred(Player.Direction);
-  end;
+  until not Same3DPoint(Player.Position, Pos);
 end;
 
 {---------------------------}
@@ -490,13 +490,13 @@ begin
   else
     Dir := Pred(Player.Direction);
 
-  while not Player.Move(Dir, False, GoOnMoving) do
-  begin
+  repeat
+    Player.Move(Dir, False, GoOnMoving);
     if Player.Direction = diWest then
       Dir := diNorth
     else
       Dir := Succ(Player.Direction);
-  end;
+  until not Same3DPoint(Player.Position, Pos);
 end;
 
 {-----------------}

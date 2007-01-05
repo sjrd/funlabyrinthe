@@ -598,8 +598,8 @@ type
 
     function CanYou(const Action : TPlayerAction) : boolean;
 
-    function Move(Dir : TDirection; KeyPressed : boolean;
-      out Redo : boolean) : boolean;
+    procedure Move(Dir : TDirection; KeyPressed : boolean;
+      out Redo : boolean);
 
     procedure MoveTo(const Dest : T3DPoint; Execute : boolean;
       out Redo : boolean); overload;
@@ -2360,17 +2360,15 @@ end;
   @param Dir          Direction du déplacement
   @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Redo         Indique s'il faut réitérer le déplacement
-  @return True si le déplacement a réussi, False sinon
 *}
-function TPlayer.Move(Dir : TDirection; KeyPressed : boolean;
-  out Redo : boolean) : boolean;
+procedure TPlayer.Move(Dir : TDirection; KeyPressed : boolean;
+  out Redo : boolean);
 var I : integer;
     Src, Dest : T3DPoint;
     OldDir : TDirection;
     Cancel, AbortExecute : boolean;
 begin
   // Initialisation des variables
-  Result := False;
   Redo := False;
   Src := FPosition;
   Dest := PointBehind(FPosition, Dir);
@@ -2379,12 +2377,8 @@ begin
   Cancel := False;
   AbortExecute := False;
 
-  // Le joueur est-il toujours en train de jouer
-  if PlayState <> psPlaying then
-  begin
-    Result := True;
-    exit;
-  end;
+  // Le joueur est-il toujours en train de jouer ?
+  if PlayState <> psPlaying then exit;
 
   // Le déplacement est-il permis ?
   begin
@@ -2410,8 +2404,6 @@ begin
   // Déplacement du joueur (à moins qu'il ait été déplacé par ailleurs)
   if Same3DPoint(FPosition, Src) then
     MoveTo(Dest, not AbortExecute, Redo);
-
-  Result := True;
 end;
 
 {*
@@ -2425,6 +2417,9 @@ procedure TPlayer.MoveTo(const Dest : T3DPoint; Execute : boolean;
 var Src : T3DPoint;
     I : integer;
 begin
+  // Le joueur est-il toujours en train de jouer ?
+  if PlayState <> psPlaying then exit;
+
   Src := Position;
   FPosition := Dest;
 
@@ -2440,7 +2435,7 @@ begin
 
   // Case destination : execute (seulement si Execute vaut True)
   if Execute then
-    Map[Position].Execute(Self, Position, Redo);
+    Map[Position].Execute(Self, Dest, Redo);
 end;
 
 {*
@@ -2465,6 +2460,9 @@ procedure TPlayer.MoveTo(const Dest : TQualifiedPos; Execute : boolean;
 var Src : T3DPoint;
     I : integer;
 begin
+  // Le joueur est-il toujours en train de jouer ?
+  if PlayState <> psPlaying then exit;
+
   if Dest.Map = Map then
   begin
     MoveTo(Dest.Position, Execute, Redo);
@@ -2498,7 +2496,7 @@ begin
 
     // Case destination : execute (seulement si Execute vaut True)
     if Execute then
-      Map[Position].Execute(Self, Position, Redo);
+      Map[Position].Execute(Self, Dest.Position, Redo);
   end;
 end;
 
