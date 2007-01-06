@@ -1421,7 +1421,7 @@ begin
 
   if AllowPlank and Same3DPoint(PlayerPos, Position) and (not Successful) then
   begin
-    if Player.CanYou(actPassOverScrew) then
+    if Player.DoAction(actPassOverScrew) then
     begin
       Successful := True;
       DoNextPhase := True;

@@ -124,7 +124,7 @@ begin
 
   if KeyPressed then with Player do
   begin
-    if CanYou(actOpenSilverLock) then
+    if DoAction(actOpenSilverLock) then
       Map[Pos] := ChangeObstacle(Map[Pos])
     else
       ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
@@ -170,7 +170,7 @@ begin
 
   if KeyPressed then with Player do
   begin
-    if CanYou(actOpenGoldenLock) then
+    if DoAction(actOpenGoldenLock) then
       Map[Pos] := ChangeObstacle(Map[Pos])
     else
       ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);

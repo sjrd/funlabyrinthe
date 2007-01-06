@@ -68,7 +68,7 @@ type
 
     procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); override;
 
-    function CanYou(Player : TPlayer;
+    function AbleTo(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
   end;
 
@@ -85,7 +85,7 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    function CanYou(Player : TPlayer;
+    function AbleTo(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
     procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
   end;
@@ -103,7 +103,7 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    function CanYou(Player : TPlayer;
+    function AbleTo(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
     procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
   end;
@@ -121,7 +121,7 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    function CanYou(Player : TPlayer;
+    function AbleTo(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
     procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
   end;
@@ -177,7 +177,7 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TBuoyPlugin.CanYou(Player : TPlayer;
+function TBuoyPlugin.AbleTo(Player : TPlayer;
   const Action : TPlayerAction) : boolean;
 begin
   Result := Action = actGoOnWater;
@@ -224,11 +224,11 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TBuoys.CanYou(Player : TPlayer;
+function TBuoys.AbleTo(Player : TPlayer;
   const Action : TPlayerAction) : boolean;
 begin
   Result := ((Action = actGoOnWater) and (Count[Player] > 0)) or
-    (inherited CanYou(Player, Action));
+    (inherited AbleTo(Player, Action));
 end;
 
 {*
@@ -287,11 +287,11 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TSilverKeys.CanYou(Player : TPlayer;
+function TSilverKeys.AbleTo(Player : TPlayer;
   const Action : TPlayerAction) : boolean;
 begin
   Result := ((Action = actOpenSilverLock) and (Count[Player] > 0)) or
-    (inherited CanYou(Player, Action));
+    (inherited AbleTo(Player, Action));
 end;
 
 {*
@@ -350,11 +350,11 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TGoldenKeys.CanYou(Player : TPlayer;
+function TGoldenKeys.AbleTo(Player : TPlayer;
   const Action : TPlayerAction) : boolean;
 begin
   Result := ((Action = actOpenGoldenLock) and (Count[Player] > 0)) or
-    (inherited CanYou(Player, Action));
+    (inherited AbleTo(Player, Action));
 end;
 
 {*

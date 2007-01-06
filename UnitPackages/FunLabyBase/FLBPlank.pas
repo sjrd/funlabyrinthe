@@ -60,7 +60,7 @@ type
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
 
-    function CanYou(Player : TPlayer;
+    function AbleTo(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
     procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
   end;
@@ -181,11 +181,11 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TPlanks.CanYou(Player : TPlayer;
+function TPlanks.AbleTo(Player : TPlayer;
   const Action : TPlayerAction) : boolean;
 begin
   Result := ((Action = actPassOverScrew) and (Count[Player] > 0)) or
-    (inherited CanYou(Player, Action));
+    (inherited AbleTo(Player, Action));
 end;
 
 {*

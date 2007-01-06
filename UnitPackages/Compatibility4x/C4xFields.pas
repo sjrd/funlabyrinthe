@@ -61,7 +61,7 @@ var Behind : T3DPoint;
 begin
   with Player do
   begin
-    if CanYou(actGoOnWater) then exit;
+    if DoAction(actGoOnWater) then exit;
 
     Behind := PointBehind(Pos, Direction);
     if Map[Behind].Field is TGrass then
@@ -71,7 +71,7 @@ begin
         OK := (Map[Behind].Obstacle is TActionsObstacle) and
           (TActionsObstacle(Map[Behind].Obstacle).Actions.Kind <> akObstacle);
       end;
-      if OK and CanYou(actPassOverScrew) then exit;
+      if OK and DoAction(actPassOverScrew) then exit;
     end;
 
     if KeyPressed then
@@ -103,7 +103,7 @@ begin
         OK := (Map[Behind].Obstacle is TActionsObstacle) and
           (TActionsObstacle(Map[Behind].Obstacle).Actions.Kind <> akObstacle);
       end;
-      if OK and CanYou(actPassOverScrew) then exit;
+      if OK and DoAction(actPassOverScrew) then exit;
     end;
 
     if KeyPressed then

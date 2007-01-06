@@ -265,12 +265,12 @@ var Behind : T3DPoint;
 begin
   with Player do
   begin
-    if CanYou(actGoOnWater) then exit;
+    if DoAction(actGoOnWater) then exit;
 
     Behind := PointBehind(Pos, Direction);
     if (Map[Behind].Field is TGrass) and
        (Map[Behind].Obstacle = Map[Src].Obstacle) and
-       CanYou(actPassOverScrew) then exit;
+       DoAction(actPassOverScrew) then exit;
 
     if KeyPressed then
       Player.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
@@ -317,7 +317,7 @@ begin
     Behind := PointBehind(Pos, Direction);
     if (Map[Behind].Field is TGrass) and
        (Map[Behind].Obstacle = Map[Src].Obstacle) and
-       CanYou(actPassOverScrew) then exit;
+       DoAction(actPassOverScrew) then exit;
 
     if KeyPressed then
       Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);

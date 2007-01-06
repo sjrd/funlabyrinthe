@@ -277,7 +277,7 @@ type
       var Cancel : boolean); virtual;
     procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); virtual;
 
-    function CanYou(Player : TPlayer;
+    function AbleTo(Player : TPlayer;
       const Action : TPlayerAction) : boolean; virtual;
   end;
 
@@ -296,7 +296,7 @@ type
 
     function GetShownInfos(Player : TPlayer) : string; virtual;
   public
-    function CanYou(Player : TPlayer;
+    function AbleTo(Player : TPlayer;
       const Action : TPlayerAction) : boolean; virtual;
     procedure UseFor(Player : TPlayer; const Action : TPlayerAction); virtual;
 
@@ -536,7 +536,8 @@ type
     procedure AddPlugin(Plugin : TPlugin);
     procedure RemovePlugin(Plugin : TPlugin);
 
-    function CanYou(const Action : TPlayerAction) : boolean;
+    function AbleTo(const Action : TPlayerAction) : boolean;
+    function DoAction(const Action : TPlayerAction) : boolean;
 
     procedure Move(Dir : TDirection; KeyPressed : boolean;
       out Redo : boolean);
@@ -1309,7 +1310,7 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TPlugin.CanYou(Player : TPlayer;
+function TPlugin.AbleTo(Player : TPlayer;
   const Action : TPlayerAction) : boolean;
 begin
   Result := False;
@@ -1358,7 +1359,7 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TObjectDef.CanYou(Player : TPlayer;
+function TObjectDef.AbleTo(Player : TPlayer;
   const Action : TPlayerAction) : boolean;
 begin
   Result := False;
@@ -2154,14 +2155,33 @@ end;
 
 {*
   Indique si le joueur est capable d'effectuer une action donnée
-  CanYou commence par tester si un plug-in permet l'action. Sinon, il
-  détermine quels sont les objets permettant cette action. S'il y en a
-  plusieurs, le joueur se voit demander d'en choisir un, et celui-ci est
-  utilisé.
+  Un joueur est capable d'effectuer une action si l'un de ses plug-in ou l'un de
+  ses objets le lui permet.
   @param Action   Action à tester
-  @return True si le joueur est capabled d'effectuer l'action, False sinon
+  @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TPlayer.CanYou(const Action : TPlayerAction) : boolean;
+function TPlayer.AbleTo(const Action : TPlayerAction) : boolean;
+var I : integer;
+begin
+  Result := True;
+
+  for I := 0 to PluginCount-1 do
+    if Plugins[I].AbleTo(Self, Action) then exit;
+  for I := 0 to Master.ObjectDefCount-1 do
+    if Master.ObjectDefs[I].AbleTo(Self, Action) then exit;
+
+  Result := False;
+end;
+
+{*
+  Exécute l'action spécifiée
+  DoAction vérifie d'abord que le joueur en est bien capable. Et si plusieurs
+  objets permettent d'effectuer l'action, le joueur se voit demander d'en
+  choisir un.
+  @param Action   Action à tester
+  @return True si le joueur a été capable d'effectuer l'action, False sinon
+*}
+function TPlayer.DoAction(const Action : TPlayerAction) : boolean;
 var I, GoodObjectCount : integer;
     GoodObjects : array of TObjectDef;
     RadioTitles : array of string;
@@ -2170,14 +2190,14 @@ begin
   Result := True;
 
   // Les plug-in ont la priorité, puisqu'ils n'ont pas d'effet de bord
-  for I := 0 to PluginCount-1 do if Plugins[I].CanYou(Self, Action) then exit;
+  for I := 0 to PluginCount-1 do if Plugins[I].AbleTo(Self, Action) then exit;
 
   // Listage des objets susceptibles d'aider le joueur
   SetLength(GoodObjects, Master.ObjectDefCount);
   GoodObjectCount := 0;
   for I := 0 to Master.ObjectDefCount-1 do
   begin
-    if Master.ObjectDefs[I].CanYou(Self, Action) then
+    if Master.ObjectDefs[I].AbleTo(Self, Action) then
     begin
       GoodObjects[GoodObjectCount] := Master.ObjectDefs[I];
       inc(GoodObjectCount);

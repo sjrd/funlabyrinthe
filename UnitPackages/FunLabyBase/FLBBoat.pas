@@ -52,7 +52,7 @@ type
       var Cancel : boolean); override;
     procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); override;
 
-    function CanYou(Player : TPlayer;
+    function AbleTo(Player : TPlayer;
       const Action : TPlayerAction) : boolean; override;
   end;
 
@@ -218,7 +218,7 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TBoatPlugin.CanYou(Player : TPlayer;
+function TBoatPlugin.AbleTo(Player : TPlayer;
   const Action : TPlayerAction) : boolean;
 begin
   Result := Action = actGoOnWater;
