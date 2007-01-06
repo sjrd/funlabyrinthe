@@ -15,21 +15,8 @@ const
   MaxVar = 20; /// Indice maximal de variable
 
 const {don't localize}
-  idGrass = 'Grass';                             /// ID de l'herbe
-  idGrassWater = 'GrassWater';                   /// ID de l'eau effet herbe
-  idInactiveTransporter = 'InactiveTransporter'; /// ID du téléporteur inactif
-
-  idGrassScrew = 'Grass---';           /// ID de la case herbe
-  idWaterScrew = 'Water---';           /// ID de la case eau
-
-  idBuoys = 'Buoys';           /// ID des bouées
-  idPlanks = 'Planks';         /// ID des planches
-  idSilverKeys = 'SilverKeys'; /// ID des clefs d'argent
-  idGoldenKeys = 'GoldenKeys'; /// ID des clefs d'or
-  idBoat = 'Boat%d';           /// ID de la barque
-
-  /// Action de passer au-dessus d'une case
-  actPassOverScrew = 'PassOverScrew';
+  idGrassScrew = 'Grass---'; /// ID de la case herbe
+  idWaterScrew = 'Water---'; /// ID de la case eau
 
 implementation
 

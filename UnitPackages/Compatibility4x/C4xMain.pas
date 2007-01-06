@@ -12,7 +12,8 @@ interface
 
 uses
   Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
-  FunLabyUtils, UnitFiles, Generics, C4xCommon, C4xComponents, C4xScrewsTable;
+  FunLabyUtils, UnitFiles, Generics, FLBFields, C4xCommon, C4xComponents,
+  C4xFields, C4xScrewsTable;
 
 resourcestring
   sAskForTipsTitle = 'Activation des indices';
@@ -79,6 +80,11 @@ begin
   // Plug-in
 
   TZonesPlugin.Create(Master, idZonesPlugin);
+
+  // Terrains
+
+  TOldWater.Create(Master, idOldWater, sWater);
+  TOldHole.Create(Master, idOldHole, sHole);
 
   // Effets
 

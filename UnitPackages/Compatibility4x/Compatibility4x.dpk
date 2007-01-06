@@ -29,13 +29,15 @@ package Compatibility4x;
 requires
   rtl,
   FunLabyCore,
-  FunLabyTools;
+  FunLabyTools,
+  FunLabyBase;
 
 contains
   C4xMain in 'C4xMain.pas',
   C4xCommon in 'C4xCommon.pas',
   C4xInterpreter in 'C4xInterpreter.pas',
   C4xComponents in 'C4xComponents.pas',
-  C4xScrewsTable in 'C4xScrewsTable.pas';
+  C4xScrewsTable in 'C4xScrewsTable.pas',
+  C4xFields in 'C4xFields.pas';
 
 end.
