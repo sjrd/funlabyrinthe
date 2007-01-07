@@ -46,13 +46,13 @@ begin
 
   // Terrains
 
-  TGrass.Create(Master, idGrass, sGrass);
+  TGround.Create(Master, idGrass, sGrass);
   TWall.Create(Master, idWall, sWall);
   TWater.Create(Master, idWater, sWater);
   THole.Create(Master, idHole, sHole);
   TSky.Create(Master, idSky, sSky);
 
-  TGrass.Create(Master, idGrassWater, sWater, Master.Field[idWater]);
+  TGround.Create(Master, idGroundWater, sWater, '', Master.Field[idWater]);
 
   // Effets de case
 

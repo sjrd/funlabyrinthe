@@ -57,21 +57,26 @@ procedure TOldWater.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 var Behind : T3DPoint;
-    OK : boolean;
+    SrcObstacle, DestObstacle : TObstacle;
 begin
   with Player do
   begin
     if DoAction(actGoOnWater) then exit;
 
     Behind := PointBehind(Pos, Direction);
-    if Map[Behind].Field is TGrass then
+    if Map[Behind].Field is TGround then
     begin
-      if Map[Behind].Obstacle = Map[Src].Obstacle then OK := True else
-      begin
-        OK := (Map[Behind].Obstacle is TActionsObstacle) and
-          (TActionsObstacle(Map[Behind].Obstacle).Actions.Kind <> akObstacle);
-      end;
-      if OK and DoAction(actPassOverScrew) then exit;
+      SrcObstacle := Map[Src].Obstacle;
+      if (SrcObstacle is TActionsObstacle) and
+         (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
+        SrcObstacle := nil;
+
+      DestObstacle := Map[Behind].Obstacle;
+      if (DestObstacle is TActionsObstacle) and
+         (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
+        DestObstacle := nil;
+
+      if (DestObstacle = SrcObstacle) and DoAction(actPassOverScrew) then exit;
     end;
 
     if KeyPressed then
@@ -91,19 +96,24 @@ procedure TOldHole.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 var Behind : T3DPoint;
-    OK : boolean;
+    SrcObstacle, DestObstacle : TObstacle;
 begin
   with Player do
   begin
     Behind := PointBehind(Pos, Direction);
-    if Map[Behind].Field is TGrass then
+    if Map[Behind].Field is TGround then
     begin
-      if Map[Behind].Obstacle = Map[Src].Obstacle then OK := True else
-      begin
-        OK := (Map[Behind].Obstacle is TActionsObstacle) and
-          (TActionsObstacle(Map[Behind].Obstacle).Actions.Kind <> akObstacle);
-      end;
-      if OK and DoAction(actPassOverScrew) then exit;
+      SrcObstacle := Map[Src].Obstacle;
+      if (SrcObstacle is TActionsObstacle) and
+         (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
+        SrcObstacle := nil;
+
+      DestObstacle := Map[Behind].Obstacle;
+      if (DestObstacle is TActionsObstacle) and
+         (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
+        DestObstacle := nil;
+
+      if (DestObstacle = SrcObstacle) and DoAction(actPassOverScrew) then exit;
     end;
 
     if KeyPressed then

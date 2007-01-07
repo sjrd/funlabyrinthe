@@ -24,8 +24,8 @@ const {don't localize}
   idBoat = 'Boat%d';               /// ID de la barque
   idBoatTemplate = 'BoatTemplate'; /// ID de la barque modèle
 
-  idBoatScrew = idGrassWater+'--'+idBoat+'-'; /// ID de la case barque
-  idBoatScrewTemplate = idGrassWater+'--'+idBoatTemplate+'-'; /// Barque modèle
+  idBoatScrew = idGroundWater+'--'+idBoat+'-'; /// ID de la case barque
+  idBoatScrewTemplate = idGroundWater+'--'+idBoatTemplate+'-'; /// Barque modèle
 
 const {don't localize}
   fBoat = 'Boat'; /// Fichier de la barque
@@ -202,7 +202,7 @@ begin
 
     // Placer un outil barque sur la case source
     with Map[Src] do
-      Map[Src] := Master.ScrewByComps(idGrassWater, Effect.SafeID,
+      Map[Src] := Master.ScrewByComps(idGroundWater, Effect.SafeID,
         Format(idBoat, [Attribute[idBoatPlugin]]), Obstacle.SafeID);
 
     // Remettre à 0 l'attribut du joueur concernant la barque

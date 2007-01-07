@@ -1139,7 +1139,7 @@ begin
   Screw := GetScrewParam(Params, Map);
   ScrewRef := GetScrewReference(Params, True);
 
-  if Copy(Screw.ID, 1, Length(idGrassWater)) = idGrassWater then
+  if Copy(Screw.ID, 1, Length(idGroundWater)) = idGroundWater then
     Replacement := Master.Screw[idWaterScrew]
   else
     Replacement := Master.Screw[idGrassScrew];

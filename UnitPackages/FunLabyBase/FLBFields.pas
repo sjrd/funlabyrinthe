@@ -20,13 +20,13 @@ resourcestring
   sSky = 'Ciel';    /// Nom du ciel
 
 const {don't localize}
-  idGrass = 'Grass';           /// ID de l'herbe
-  idWall = 'Wall';             /// ID du mur
-  idWater = 'Water';           /// ID de l'eau
-  idHole = 'Hole';             /// ID du trou
-  idSky = 'Sky';               /// ID du ciel
+  idGrass = 'Grass';             /// ID de l'herbe
+  idWall = 'Wall';               /// ID du mur
+  idWater = 'Water';             /// ID de l'eau
+  idHole = 'Hole';               /// ID du trou
+  idSky = 'Sky';                 /// ID du ciel
 
-  idGrassWater = 'GrassWater'; /// ID de l'eau effet herbe
+  idGroundWater = 'GroundWater'; /// ID de l'eau effet herbe
 
 const {don't localize}
   fGrass = 'Grass';                   /// Fichier de l'herbe
@@ -43,15 +43,18 @@ resourcestring
 
 type
   {*
-    Herbe
-    L'herbe est le terrain de base de FunLabyrinthe. Il n'a pas de condition.
+    Sol
+    Le sol est le terrain de base de FunLabyrinthe. Il n'a pas de condition. On
+    peut en créer plusieurs versions, avec des graphismes différents. Par
+    défaut, il existe un type de sol : l'herbe.
     @author Sébastien Jean Robert Doeraene
     @version 5.0
   *}
-  TGrass = class(TField)
+  TGround = class(TField)
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ADelegateDrawTo : TField = nil);
+      const AName : string; const AImgName : string = fGrass;
+      ADelegateDrawTo : TField = nil);
   end;
 
   {*
@@ -140,13 +143,16 @@ implementation
   @param AMaster           Maître FunLabyrinthe
   @param AID               ID du terrain
   @param AName             Nom du terrain
+  @param AImgName          Nom de l'image des graphismes (défaut : l'herbe)
   @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
-constructor TGrass.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ADelegateDrawTo : TField = nil);
+constructor TGround.Create(AMaster : TMaster; const AID : TComponentID;
+  const AName : string; const AImgName : string = fGrass;
+  ADelegateDrawTo : TField = nil);
 begin
   inherited Create(AMaster, AID, AName, ADelegateDrawTo);
-  Painter.ImgNames.Add(fGrass);
+  if AImgName <> '' then
+    Painter.ImgNames.Add(AImgName);
 end;
 
 {--------------}
@@ -268,7 +274,7 @@ begin
     if DoAction(actGoOnWater) then exit;
 
     Behind := PointBehind(Pos, Direction);
-    if (Map[Behind].Field is TGrass) and
+    if (Map[Behind].Field is TGround) and
        (Map[Behind].Obstacle = Map[Src].Obstacle) and
        DoAction(actPassOverScrew) then exit;
 
@@ -315,7 +321,7 @@ begin
   with Player do
   begin
     Behind := PointBehind(Pos, Direction);
-    if (Map[Behind].Field is TGrass) and
+    if (Map[Behind].Field is TGround) and
        (Map[Behind].Obstacle = Map[Src].Obstacle) and
        DoAction(actPassOverScrew) then exit;
 
