@@ -11,12 +11,15 @@ unit GraphicsTools;
 interface
 
 uses
-  SysUtils, Graphics;
+  Graphics;
 
 procedure DrawScrewNumber(Canvas : TCanvas; X, Y, Number : integer;
   FontColor : TColor = clBlack);
 
 implementation
+
+uses
+  SysUtils;
 
 {*
   Dessine un numéro sur un canevas de case

@@ -10,8 +10,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, StrUtils, ScUtils, ScExtra, ScStrUtils,
-  FunLabyUtils, FilesUtils, Mask, MapBase;
+  Dialogs, StdCtrls, Buttons, StrUtils, ScUtils, ScDelphiLanguage, ScStrUtils,
+  SdDialogs, FunLabyUtils, FilesUtils, Mask, MapBase;
 
 resourcestring
   sWrongIDFormatTitle = 'Format d''ID non valide';

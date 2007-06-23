@@ -10,7 +10,7 @@ unit FLBFields;
 interface
 
 uses
-  Graphics, ScUtils, FunLabyUtils, FLBCommon;
+  Graphics, ScUtils, SdDialogs, FunLabyUtils, FLBCommon;
 
 resourcestring
   sGrass = 'Herbe'; /// Nom de l'herbe

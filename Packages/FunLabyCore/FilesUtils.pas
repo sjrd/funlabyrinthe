@@ -11,8 +11,7 @@ unit FilesUtils;
 interface
 
 uses
-  SysUtils, Classes, Contnrs, ScUtils, ScLists, ScStrUtils, MSXML, FunLabyUtils,
-  Variants, IniFiles;
+  SysUtils, Classes, Contnrs, ScUtils, FunLabyUtils;
 
 resourcestring
   sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
@@ -141,7 +140,7 @@ type
 
     procedure InvalidFormat;
 
-    procedure Load(Document : IXMLDOMDocument);
+    procedure Load(ADocument : IInterface);
     procedure TestOpeningValidity;
 
     function GetUnitFileCount : integer;
@@ -208,7 +207,7 @@ const {don't localize}
 implementation
 
 uses
-  UnitFiles;
+  UnitFiles, ScStrUtils, IniFiles, Variants, MSXML;
 
 const {don't localize}
   /// Code de format d'un fichier FLM (correspond à '.flm')
@@ -661,14 +660,15 @@ end;
   @param Document   Document XML DOM contenu du fichier
   @throws EFileError : Un fichier à charger n'existe pas ou n'est pas valide
 *}
-procedure TMasterFile.Load(Document : IXMLDOMDocument);
+procedure TMasterFile.Load(ADocument : IInterface);
 
   function NullToEmptyStr(Value : Variant) : Variant;
   begin
     if VarIsNull(Value) then Result := '' else Result := Value;
   end;
 
-var Params : TStrings;
+var Document : IXMLDOMDocument;
+    Params : TStrings;
     I, J, MaxViewSize : integer;
     ID, FileType, HRef, Name, MapID : string;
     Position : T3DPoint;
@@ -676,6 +676,8 @@ var Params : TStrings;
     Node : IXMLDOMNode;
 begin
   { Don't localize strings in this method }
+
+  Document := ADocument as IXMLDOMDocument;
 
   with Document.documentElement as IXMLDOMElement do
   begin

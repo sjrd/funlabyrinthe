@@ -10,7 +10,7 @@ unit UnitFiles;
 interface
 
 uses
-  Windows, SysUtils, Classes, FunLabyUtils, FilesUtils;
+  SysUtils, Classes, FunLabyUtils, FilesUtils;
 
 resourcestring
   sCantLoadPackage = 'Impossible de charger le paquet "%s"';
@@ -49,6 +49,9 @@ type
   end;
 
 implementation
+
+uses
+  Windows;
 
 {---------------------}
 { Classe TBPLUnitFile }

@@ -9,9 +9,8 @@ unit FunLabyUtils;
 interface
 
 uses
-  Windows, SysUtils, Classes, Graphics, Contnrs, Controls, IniFiles, StrUtils,
-  Forms, Dialogs, StdCtrls, Math, TypInfo, ScUtils, ScStrUtils, ScExtra,
-  SdDialogs;
+  Windows, Types, SysUtils, Classes, Graphics, Contnrs, Controls, Dialogs,
+  TypInfo, ScUtils, SdDialogs;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
@@ -748,6 +747,9 @@ procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
 function IsNoQPos(const QPos : TQualifiedPos) : boolean;
 
 implementation
+
+uses
+  IniFiles, StrUtils, Forms, ScStrUtils, ScDelphiLanguage;
 
 {*
   Vérifie que FunLabyrinthe a été lancé de façon valide

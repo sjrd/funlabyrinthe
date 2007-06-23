@@ -12,8 +12,8 @@ interface
 
 uses
   Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
-  FunLabyUtils, UnitFiles, Generics, FLBFields, C4xCommon, C4xComponents,
-  C4xFields, C4xScrewsTable;
+  SdDialogs, FunLabyUtils, UnitFiles, Generics, FLBFields, C4xCommon,
+  C4xComponents, C4xFields, C4xScrewsTable;
 
 resourcestring
   sAskForTipsTitle = 'Activation des indices';

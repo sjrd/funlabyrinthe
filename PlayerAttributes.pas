@@ -11,7 +11,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Grids, ValEdit, ScExtra, FunLabyUtils;
+  Dialogs, StdCtrls, Grids, ValEdit, ScDelphiLanguage, FunLabyUtils;
 
 resourcestring
   sWrongKeyFormat = 'Les noms d''attributs ne doivent être constitués que de '+

@@ -11,7 +11,7 @@ unit MapTools;
 interface
 
 uses
-  SysUtils, ScUtils, FunLabyUtils;
+  ScUtils, FunLabyUtils;
 
 type
   {*

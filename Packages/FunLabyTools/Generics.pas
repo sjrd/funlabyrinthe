@@ -3,7 +3,7 @@ unit Generics;
 interface
 
 uses
-  Graphics, ScUtils, FunLabyUtils, MapTools;
+  Graphics, ScUtils, FunLabyUtils;
 
 type
   {*
@@ -74,6 +74,9 @@ type
   end;
 
 implementation
+
+uses
+  MapTools;
 
 {--------------------------}
 { Classe TDecorativeEffect }

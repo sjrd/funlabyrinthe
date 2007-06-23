@@ -10,9 +10,10 @@ unit C4xInterpreter;
 interface
 
 uses
-  SysUtils, Classes, Graphics, StrUtils, Contnrs, ScUtils, ScStrUtils, ScExtra,
-  FunLabyUtils, FilesUtils, MapTools, FLBFields, FLBSimpleObjects, FLBPlank,
-  FLBBoat, FLBCommon, C4xComponents, C4xScrewsTable, C4xCommon;
+  SysUtils, Classes, Graphics, StrUtils, Contnrs, ScUtils, ScStrUtils,
+  ScWindows, SdDialogs, FunLabyUtils, FilesUtils, MapTools, FLBFields,
+  FLBSimpleObjects, FLBPlank, FLBBoat, FLBCommon, C4xComponents, C4xScrewsTable,
+  C4xCommon;
 
 resourcestring
   sIfStatCannotMixAndOr = 'Ne peut mélanger les Et et les Ou';

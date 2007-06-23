@@ -9,7 +9,8 @@ interface
 
 uses
   Windows, SysUtils, Forms, Classes, Controls, Graphics, Dialogs, StdCtrls,
-  StrUtils, Math, TypInfo, ScUtils, ScLists, ScExtra, SdDialogs, FunLabyUtils;
+  StrUtils, Math, TypInfo, ScUtils, ScLists, ScDelphiLanguage, SdDialogs,
+  FunLabyUtils;
 
 const {don't localize}
   attrViewSize = 'ViewSize'; /// Nom d'attribut pour la taille de la vue

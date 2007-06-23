@@ -10,8 +10,8 @@ unit FLBObstacles;
 interface
 
 uses
-  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, MapTools, FLBCommon,
-  FLBFields;
+  SysUtils, Classes, Graphics, ScUtils, SdDialogs, FunLabyUtils, MapTools,
+  FLBCommon, FLBFields;
 
 resourcestring
   sSilverBlock = 'Bloc en argent'; /// Nom du bloc en argent

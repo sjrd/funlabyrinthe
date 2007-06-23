@@ -11,7 +11,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ScUtils, FilesUtils;
+  Dialogs, StdCtrls, SdDialogs, FilesUtils;
 
 resourcestring
   sUnfilledTitleTitle = 'Titre non complété';
