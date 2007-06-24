@@ -170,6 +170,18 @@ begin
             inc(Number);
           end;
 
+          // On s'assure qu'il y a suffisamment d'actions
+          SubContents.Clear;
+          while Number < MinActionsCount do
+          begin
+            Actions := TActions.Create(Master, Number, akPushButton,
+              '', SubContents, '');
+            ActionsList.Add(Actions);
+            if Counters.Count > Number then
+              Actions.Counter := StrToIntDef(Counters[Number], 0);
+            inc(Number);
+          end;
+
           Infos := TC4xInfos.Create(UnitFile.MasterFile, ActionsList);
         finally
           ActionsList.Free;

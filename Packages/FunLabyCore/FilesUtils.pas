@@ -611,9 +611,12 @@ begin
 
   { Dans la mesure où des unités pourraient être dépendantes d'autres, il faut
     absolument les libérer dans l'ordre inverse de chargement. }
-  while FUnitFiles.Count > 0 do
-    FUnitFiles.Delete(FUnitFiles.Count-1);
-  FUnitFiles.Free;
+  if Assigned(FUnitFiles) then
+  begin
+    while FUnitFiles.Count > 0 do
+      FUnitFiles.Delete(FUnitFiles.Count-1);
+    FUnitFiles.Free;
+  end;
 
   inherited;
 end;

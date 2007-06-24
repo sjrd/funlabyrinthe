@@ -12,7 +12,8 @@ const
   phPushing = 1; /// Phase "pushing"
   phExecute = 2; /// Phase "execute"
 
-  MaxVar = 20; /// Indice maximal de variable
+  MinActionsCount = 78; /// Nombre minimal d'actions
+  MaxVar = 20;          /// Indice maximal de variable
 
 const {don't localize}
   idGrassScrew = 'Grass---'; /// ID de la case herbe

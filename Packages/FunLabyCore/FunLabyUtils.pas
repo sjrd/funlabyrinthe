@@ -1094,7 +1094,7 @@ end;
 *}
 destructor TFunLabyComponent.Destroy;
 begin
-  if FID <> '' then
+  if (FID <> '') and Assigned(Master) then
     Master.RemoveComponent(Self);
   inherited;
 end;
@@ -1137,8 +1137,7 @@ end;
 *}
 destructor TVisualComponent.Destroy;
 begin
-  if Assigned(FCachedImg) then
-    FCachedImg.Free;
+  FCachedImg.Free;
   FPainter.Free;
   inherited;
 end;
@@ -2608,8 +2607,11 @@ end;
 destructor TMaster.Destroy;
 var I : integer;
 begin
-  for I := FComponents.Count-1 downto 0 do
-    FComponents.Objects[I].Free;
+  if Assigned(FComponents) then
+  begin
+    for I := FComponents.Count-1 downto 0 do
+      FComponents.Objects[I].Free;
+  end;
 
   FPlayers.Free;
   FMaps.Free;

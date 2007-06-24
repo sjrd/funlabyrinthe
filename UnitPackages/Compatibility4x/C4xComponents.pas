@@ -662,18 +662,16 @@ end;
 *}
 constructor TC4xInfos.Create(AMasterFile : TMasterFile;
   AActions : TObjectList);
-var I : integer;
 begin
   inherited Create(AMasterFile.Master, idC4xInfos);
   FMasterFile := AMasterFile;
   FKnowShowTips := False;
   FShowTips := False;
   FActionsCount := AActions.Count;
+
   SetLength(FActions, FActionsCount);
-  for I := 0 to FActionsCount-1 do
-    FActions[I] := TActions(AActions[I]);
-  for I := 1 to MaxVar do
-    FVariables[I] := 0;
+  Move(AActions.List^, FActions[0], FActionsCount*sizeof(TObject));
+  FillChar(FVariables[1], MaxVar*sizeof(integer), 0);
 end;
 
 {*
