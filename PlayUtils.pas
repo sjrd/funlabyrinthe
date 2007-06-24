@@ -62,6 +62,13 @@ type
     FMaster : TMaster; /// Maître FunLabyrinthe
     FPlayer : TPlayer; /// Joueur lié
 
+    Bitmap : TBitmap;          /// Bitmap
+    OldOrigin : TQualifiedPos; /// Ancienne origine
+    OldSize : TPoint;          /// Ancienne taille
+    OldView : array of TScrew; /// Ancienne vue
+
+    procedure Update;
+
     function GetMinSize : integer;
     function GetMaxSize : integer;
 
@@ -71,7 +78,7 @@ type
     function GetHeight : integer;
   public
     constructor Create(APlayer : TPlayer);
-
+    destructor Destroy; override;
     procedure Draw(Canvas : TCanvas);
 
     property Master : TMaster read FMaster;
@@ -127,8 +134,98 @@ begin
   inherited Create;
   FMaster := APlayer.Master;
   FPlayer := APlayer;
+  Bitmap := TBitmap.Create;
+
+  OldOrigin := NoQPos;
+  OldSize := NoPoint;
 
   Size := Size; // Mettre Size dans les bornes [MinSize ; MaxSize]
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TPlayerView.Destroy;
+begin
+  Bitmap.Free;
+  inherited;
+end;
+
+{*
+  Met à jour le bitmap
+*}
+procedure TPlayerView.Update;
+var Map : TMap;
+    Size, Width, Height : integer;
+    OrigX, OrigY : integer;
+    Origin : T3DPoint;
+    X, Y, Z : integer;
+    QPos : TQualifiedPos;
+    Screw : TScrew;
+begin
+  // Mettre à jour le tick count de la partie avant de dessiner
+  Master.UpdateTickCount;
+
+  // Simplifier et accélrer les accès aux informations
+  Map := Player.Map;
+  Size := GetSize;
+  Width := GetWidth;
+  Height := GetHeight;
+
+  // Origine à la position du joueur
+  OrigX := Player.Position.X;
+  OrigY := Player.Position.Y;
+  { Si le joueur a fini de jouer et qu'on est en bordure de carte, on affiche la
+    zone la plus proche dans la carte. }
+  if Player.PlayState <> psPlaying then
+  begin
+    if OrigX = -1 then OrigX := 0 else
+    if OrigX = Map.Dimensions.X then dec(OrigX);
+    if OrigY = -1 then OrigY := 0 else
+    if OrigY = Map.Dimensions.Y then dec(OrigY);
+  end;
+  // Origine au niveau de la zone
+  dec(OrigX, IntMod(OrigX, Map.ZoneWidth));
+  dec(OrigY, IntMod(OrigY, Map.ZoneHeight));
+  // Origine au niveau de la vue
+  dec(OrigX, Size);
+  dec(OrigY, Size);
+
+  Origin := Point3D(OrigX, OrigY, Player.Position.Z);
+
+  // Test de validité des anciennes informations
+  if (OldOrigin.Map <> Map) or
+     (not Same3DPoint(OldOrigin.Position, Origin)) or
+     (not SamePoint(OldSize, Point(Width, Height))) then
+  begin
+    OldOrigin.Map := Map;
+    OldOrigin.Position := Origin;
+    OldSize := Point(Width, Height);
+
+    SetLength(OldView, Width*Height);
+    FillChar(OldView[0], 4*Width*Height, 0);
+
+    Bitmap.Width := Width*ScrewSize;
+    Bitmap.Height := Height*ScrewSize;
+  end;
+
+  // Dessin des cases
+  QPos.Map := Map;
+  Z := Player.Position.Z;
+  for X := 0 to Width-1 do for Y := 0 to Height-1 do
+  begin
+    QPos.Position := Point3D(OrigX+X, OrigY+Y, Z);
+    Screw := Map[QPos.Position];
+
+    if OldView[Y*Width + X] <> Screw then
+    begin
+      Screw.Draw(QPos, Bitmap.Canvas, X*ScrewSize, Y*ScrewSize);
+      if Screw.StaticDraw then
+        OldView[Y*Width + X] := Screw
+      else
+        OldView[Y*Width + X] := nil;
+    end;
+  end;
 end;
 
 {*
@@ -190,56 +287,20 @@ end;
   @param Canvas   Canevas sur lequel dessiner la vue
 *}
 procedure TPlayerView.Draw(Canvas : TCanvas);
-var Map : TMap;
-    Size, Width, Height : integer;
-    OrigX, OrigY : integer;
-    X, Y, Z, I : integer;
-    QPos : TQualifiedPos;
+var I : integer;
 begin
-  // Mettre à jour le tick count de la partie avant de dessiner
-  Master.UpdateTickCount;
-
-  // Simplifier et accélrer les accès aux informations
-  Map := Player.Map;
-  Size := GetSize;
-  Width := GetWidth;
-  Height := GetHeight;
-
-  // Origine à la position du joueur
-  OrigX := Player.Position.X;
-  OrigY := Player.Position.Y;
-  { Si le joueur a fini de jouer et qu'on est en bordure de carte, on affiche la
-    zone la plus proche dans la carte. }
-  if Player.PlayState <> psPlaying then
-  begin
-    if OrigX = -1 then OrigX := 0 else
-    if OrigX = Map.Dimensions.X then dec(OrigX);
-    if OrigY = -1 then OrigY := 0 else
-    if OrigY = Map.Dimensions.Y then dec(OrigY);
-  end;
-  // Origine au niveau de la zone
-  dec(OrigX, IntMod(OrigX, Map.ZoneWidth));
-  dec(OrigY, IntMod(OrigY, Map.ZoneHeight));
-  // Origine au niveau de la vue
-  dec(OrigX, Size);
-  dec(OrigY, Size);
-
   // Dessin des cases
-  QPos.Map := Map;
-  Z := Player.Position.Z;
-  for X := 0 to Width-1 do for Y := 0 to Height-1 do
-  begin
-    QPos.Position := Point3D(OrigX+X, OrigY+Y, Z);
-    Map[QPos.Position].Draw(QPos, Canvas, X*ScrewSize, Y*ScrewSize);
-  end;
+  Update;
+  Canvas.Draw(0, 0, Bitmap);
 
   // Dessin des joueurs
   for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
   begin
-    if (Map = Player.Map) and (Position.Z = Z) then
+    if (Map = Player.Map) and (Position.Z = Player.Position.Z) then
     begin
-      DrawInPlace(Canvas, (Position.X-OrigX)*ScrewSize,
-        (Position.Y-OrigY)*ScrewSize);
+      DrawInPlace(Canvas,
+        (Position.X-OldOrigin.Position.X)*ScrewSize,
+        (Position.Y-OldOrigin.Position.Y)*ScrewSize);
     end;
   end;
 end;
@@ -402,20 +463,22 @@ end;
 *}
 procedure TPlayerController.Execute;
 var Redo : boolean;
+    Dir : TDirection;
 begin
   while not Terminated do
   begin
     if FNextDir = diNone then Sleep(50) else
     begin
       try
-        Player.Move(FNextDir, True, Redo);
+        Dir := FNextDir;
+        FNextDir := diNone;
+        Player.Move(Dir, True, Redo);
         if Redo then
           Player.NaturalMoving;
       except
         on Error : Exception do
           Player.ShowDialog(Error.ClassName, Error.Message, dtError);
       end;
-      FNextDir := diNone;
     end;
   end;
 end;

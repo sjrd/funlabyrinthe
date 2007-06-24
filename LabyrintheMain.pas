@@ -27,7 +27,6 @@ type
     @version 5.0
   *}
   TFormMain = class(TForm)
-    Image: TImage;
     StatusBar: TStatusBar;
     BigMenu: TMainMenu;
     BigMenuFile: TMenuItem;
@@ -52,6 +51,8 @@ type
     LoadGameDialog: TOpenDialog;
     TimerUpdateImage: TTimer;
     MenuViewSize: TMenuItem;
+    PaintBox: TPaintBox;
+    procedure PaintBoxPaint(Sender: TObject);
     procedure MenuViewSizeClick(Sender: TObject);
     procedure UpdateImage(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -70,8 +71,6 @@ type
     procedure MenuReloadGameClick(Sender: TObject);
   private
     { Déclarations privées }
-    HiddenBitmap : TBitmap;
-
     MasterFile : TMasterFile;
     Master : TMaster;
     View : TPlayerView;
@@ -192,10 +191,12 @@ begin
   View := nil;
   Master := nil;
   MasterFile := nil;
+
+  PaintBox.Invalidate;
 end;
 
 {*
-  Adapte la taille de HiddenBitmap et de la fenêtre à la taille de la vue
+  Adapte la taille de la fenêtre à la taille de la vue
 *}
 procedure TFormMain.AdaptSizeToView;
 var ImgWidth, ImgHeight : integer;
@@ -208,12 +209,6 @@ begin
   begin
     ImgWidth := View.Width * ScrewSize;
     ImgHeight := View.Height * ScrewSize;
-  end;
-
-  with HiddenBitmap do
-  begin
-    Width := ImgWidth;
-    Height := ImgHeight;
   end;
 
   ClientWidth := ImgWidth;
@@ -254,15 +249,9 @@ begin
   Controller := nil;
   LastFileName := '';
 
-  HiddenBitmap := TBitmap.Create;
   AdaptSizeToView;
-  with HiddenBitmap.Canvas do
-  begin
-    Brush.Color := clBlack;
-    Pen.Color := clBlack;
-    Rectangle(0, 0, HiddenBitmap.Width, HiddenBitmap.Height);
-  end;
-  Image.Picture.Assign(HiddenBitmap);
+
+  DoubleBuffered := True;
 
   if ParamCount > 0 then
     NewGame(ParamStr(1));
@@ -405,8 +394,6 @@ end;
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
   CloseGame(True);
-
-  HiddenBitmap.Free;
 end;
 
 {*
@@ -421,8 +408,7 @@ begin
     MasterFile.GameEnded;
   end;
 
-  View.Draw(HiddenBitmap.Canvas);
-  Image.Picture.Assign(HiddenBitmap);
+  PaintBox.Invalidate;
   ShowStatus;
 end;
 
@@ -435,6 +421,23 @@ begin
   View.Size := QueryNumber(sViewSize, sViewSizePrompt,
     View.Size, View.MinSize, View.MaxSize);
   AdaptSizeToView;
+end;
+
+{*
+  Gestionnaire d'événement OnPaint de la paint box
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.PaintBoxPaint(Sender: TObject);
+begin
+  if Assigned(View) then View.Draw(PaintBox.Canvas) else
+  begin
+    with PaintBox.Canvas do
+    begin
+      Brush.Color := clBlack;
+      Pen.Color := clBlack;
+      Rectangle(0, 0, PaintBox.Width, PaintBox.Height);
+    end;
+  end;
 end;
 
 end.

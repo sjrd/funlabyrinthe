@@ -31,13 +31,13 @@ object FormMain: TFormMain
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
-  object Image: TImage
+  object PaintBox: TPaintBox
     Left = 0
     Top = 0
     Width = 270
     Height = 270
     Align = alClient
-    Center = True
+    OnPaint = PaintBoxPaint
   end
   object StatusBar: TStatusBar
     Left = 0
