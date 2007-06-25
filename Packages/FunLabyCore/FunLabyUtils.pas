@@ -406,6 +406,8 @@ type
       AObstacle : TObstacle);
     procedure BeforeDestruction; override;
 
+    procedure DefaultHandler(var Msg); override;
+
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
       var Cancel : boolean); virtual;
@@ -1575,18 +1577,6 @@ begin
 end;
 
 {*
-  Exécuté avant la destruction de l'objet
-  BeforeDestruction est appelé avant l'exécution du premier destructeur.
-  N'appelez pas directement BeforeDestruction.
-*}
-procedure TScrew.BeforeDestruction;
-begin
-  inherited;
-  // Il ne faut surtout pas détruire une case déjà en cours de destruction
-  FRefCount := NoRefCount;
-end;
-
-{*
   Dessine la case sur un canevas
   @param QPos     Position qualifiée de l'emplacement de dessin
   @param Canvas   Canevas sur lequel dessiner les images
@@ -1606,6 +1596,33 @@ begin
     Obstacle.Draw(QPos, Canvas, X, Y);
 
   inherited;
+end;
+
+{*
+  Exécuté avant la destruction de l'objet
+  BeforeDestruction est appelé avant l'exécution du premier destructeur.
+  N'appelez pas directement BeforeDestruction.
+*}
+procedure TScrew.BeforeDestruction;
+begin
+  inherited;
+  // Il ne faut surtout pas détruire une case déjà en cours de destruction
+  FRefCount := NoRefCount;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TScrew.DefaultHandler(var Msg);
+begin
+  if Assigned(Field) then
+    Field.Dispatch(Msg);
+  if Assigned(Effect) then
+    Effect.Dispatch(Msg);
+  if Assigned(Tool) then
+    Tool.Dispatch(Msg);
+  if Assigned(Obstacle) then
+    Obstacle.Dispatch(Msg);
 end;
 
 {*

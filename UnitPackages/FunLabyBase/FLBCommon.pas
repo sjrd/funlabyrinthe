@@ -11,19 +11,44 @@ unit FLBCommon;
 interface
 
 uses
-  SysUtils, Graphics, FunLabyUtils;
+  SysUtils, Graphics, ScUtils, FunLabyUtils;
 
 const {don't localize}
   /// Action d'aller sur l'eau
   actGoOnWater = 'GoOnWater';
-  /// Action de passer au-dessus d'une case
-  actPassOverScrew = 'PassOverScrew';
   /// Action d'ouvrir une serrure en argent
   actOpenSilverLock = 'OpenSilverLock';
   /// Action d'ouvrir une serrure en or
   actOpenGoldenLock = 'OpenGoldenLock';
 
+const
+  /// Message lié à la planche
+  msgPlank = 1;
+
 type
+  {*
+    Type de message lié à la planche
+    - plkPassOver : Test sur la case au-dessus de laquelle on passe
+    - plkArriveAt : Test sur la case sur laquelle on arriverait
+    - plkLeaveFrom : Test sur la case de laquelle on vient
+  *}
+  TPlankMessageKind = (pmkPassOver, pmkLeaveFrom, pmkArriveAt);
+
+  {*
+    Message lié à la planche
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TPlankMessage = record
+    MsgID : Word;             /// ID du message
+    Kind : TPlankMessageKind; /// Type de message
+    Result : boolean;         /// True pour autoriser, False sinon
+    Player : TPlayer;         /// Joueur concerné
+    Pos : T3DPoint;           /// Case au-dessus de laquelle on passe
+    Src : T3DPoint;           /// Case dont on vient
+    Dest : T3DPoint;          /// Case vers laquelle on va
+  end;
+
   {*
     Plug-in masque
     Filtre l'affichage du joueur au moyen d'un masque monochrome.

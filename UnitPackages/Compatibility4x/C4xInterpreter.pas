@@ -1420,13 +1420,14 @@ begin
     end;
   end;
 
-  if AllowPlank and Same3DPoint(PlayerPos, Position) and (not Successful) then
+  if AllowPlank and Same3DPoint(PlayerPos, Position) and (not Successful) and
+     (Master.ObjectDef[idPlanks].Count[Player] > 0) then
   begin
-    if Player.DoAction(actPassOverScrew) then
-    begin
-      Successful := True;
-      DoNextPhase := True;
-    end;
+    TPlankScrew.Create(Master, Map, Position, Player);
+    Master.Temporize;
+
+    Successful := True;
+    DoNextPhase := True;
   end;
 
   if HasMoved and (not Same3DPoint(Player.Position, PlayerPos)) then

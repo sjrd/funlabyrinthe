@@ -51,6 +51,8 @@ type
     @version 5.0
   *}
   TGround = class(TField)
+  private
+    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; const AImgName : string = fGrass;
@@ -83,6 +85,8 @@ type
   TWater = class(TField)
   private
     FAlternatePainter : TPainter; /// Peintre alternatif
+
+    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
   protected
     procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
       X : integer = 0; Y : integer = 0); override;
@@ -107,6 +111,8 @@ type
     @version 5.0
   *}
   THole = class(TField)
+  private
+    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string; ADelegateDrawTo : TField = nil);
@@ -153,6 +159,21 @@ begin
   inherited Create(AMaster, AID, AName, ADelegateDrawTo);
   if AImgName <> '' then
     Painter.ImgNames.Add(AImgName);
+end;
+
+{*
+  Gestionnaire de message msgPlank
+  TGround permet d'y poser la planche pour autant que de l'autre côté, il y ait
+  également un TGround, et qu'il n'y ait d'obstacle d'aucun côté.
+  @param Msg   Message
+*}
+procedure TGround.PlankMessage(var Msg : TPlankMessage);
+begin
+  with Msg, Player do if Kind = pmkLeaveFrom then
+  begin
+    Result := (Map[Dest].Field is TGround) and
+      (Map[Src].Obstacle = nil) and (Map[Dest].Obstacle = nil);
+  end;
 end;
 
 {--------------}
@@ -217,23 +238,24 @@ begin
 end;
 
 {*
-  Exécuté après la construction de l'objet
-  AfterConstruction est appelé après l'exécution du dernier constructeur.
-  N'appelez pas directement AfterConstruction.
-*}
-procedure TWater.AfterConstruction;
-begin
-  inherited;
-  FAlternatePainter.ImgNames.EndUpdate;
-end;
-
-{*
   Détruit l'instance
 *}
 destructor TWater.Destroy;
 begin
   FAlternatePainter.Free;
   inherited;
+end;
+
+{*
+  Gestionnaire de message msgPlank
+  TWater permet de passer au-dessus d'elle avec la planche si le joueur ne sait
+  pas aller dans l'eau.
+  @param Msg   Message
+*}
+procedure TWater.PlankMessage(var Msg : TPlankMessage);
+begin
+  if Msg.Kind = pmkPassOver then
+    Msg.Result := not Msg.Player.AbleTo(actGoOnWater);
 end;
 
 {*
@@ -254,6 +276,17 @@ begin
 end;
 
 {*
+  Exécuté après la construction de l'objet
+  AfterConstruction est appelé après l'exécution du dernier constructeur.
+  N'appelez pas directement AfterConstruction.
+*}
+procedure TWater.AfterConstruction;
+begin
+  inherited;
+  FAlternatePainter.ImgNames.EndUpdate;
+end;
+
+{*
   Exécuté lorsque le joueur tente de venir sur la case
   Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
   annuler le déplacement, il faut positionner Cancel à True.
@@ -267,19 +300,13 @@ end;
 procedure TWater.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
-var Behind : T3DPoint;
 begin
   with Player do
   begin
     if DoAction(actGoOnWater) then exit;
 
-    Behind := PointBehind(Pos, Direction);
-    if (Map[Behind].Field is TGround) and
-       (Map[Behind].Obstacle = Map[Src].Obstacle) and
-       DoAction(actPassOverScrew) then exit;
-
     if KeyPressed then
-      Player.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
+      ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
     Cancel := True;
   end;
 end;
@@ -303,6 +330,17 @@ begin
 end;
 
 {*
+  Gestionnaire de message msgPlank
+  THole permet toujours de passer au-dessus d'elle avec la planche.
+  @param Msg   Message
+*}
+procedure THole.PlankMessage(var Msg : TPlankMessage);
+begin
+  if Msg.Kind = pmkPassOver then
+    Msg.Result := True;
+end;
+
+{*
   Exécuté lorsque le joueur tente de venir sur la case
   Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
   annuler le déplacement, il faut positionner Cancel à True.
@@ -316,19 +354,10 @@ end;
 procedure THole.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
-var Behind : T3DPoint;
 begin
-  with Player do
-  begin
-    Behind := PointBehind(Pos, Direction);
-    if (Map[Behind].Field is TGround) and
-       (Map[Behind].Obstacle = Map[Src].Obstacle) and
-       DoAction(actPassOverScrew) then exit;
-
-    if KeyPressed then
-      Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
-    Cancel := True;
-  end;
+  if KeyPressed then
+    Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
+  Cancel := True;
 end;
 
 {-------------}

@@ -30,6 +30,9 @@ const {don't localize}
 const {don't localize}
   fPlank = 'Plank'; /// Fichier de la planche
 
+const {don't localize}
+  attrUsePlank = 'UsePlank'; /// Attribut indiquant l'usage de la planche
+
 resourcestring
   sFoundPlank = 'Tu as trouvé une planche.'+#10+
                 'Tu peux franchir certains obstacles.';
@@ -45,6 +48,10 @@ type
   public
     procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
       Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
+
+    procedure Moving(Player : TPlayer; OldDirection : TDirection;
+      KeyPressed : boolean; const Src, Dest : T3DPoint;
+      var Cancel : boolean); override;
   end;
 
   {*
@@ -55,14 +62,12 @@ type
   *}
   TPlanks = class(TObjectDef)
   protected
+    procedure SetCount(Player : TPlayer; Value : integer); override;
+
     function GetShownInfos(Player : TPlayer) : string; override;
   public
     constructor Create(AMaster : TMaster; const AID : TComponentID;
       const AName : string);
-
-    function AbleTo(Player : TPlayer;
-      const Action : TPlayerAction) : boolean; override;
-    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
   end;
 
   {*
@@ -114,6 +119,8 @@ procedure TPlankPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
 begin
   inherited;
 
+  if Player.Attribute[attrUsePlank] = 0 then exit;
+
   // Détermination de l'endroit où dessiner réellement la planche
   if not (Player.Map[Player.Position] is TPlankScrew) then
   begin
@@ -140,6 +147,53 @@ begin
   end;
 end;
 
+{*
+  [@inheritDoc]
+*}
+procedure TPlankPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
+  KeyPressed : boolean; const Src, Dest : T3DPoint; var Cancel : boolean);
+var Behind : T3DPoint;
+    Msg : TPlankMessage;
+    Field : TField;
+begin
+  Behind := PointBehind(Dest, Player.Direction);
+
+  Msg.MsgID := msgPlank;
+  Msg.Kind := pmkPassOver;
+  Msg.Result := False;
+  Msg.Player := Player;
+  Msg.Pos := Dest;
+  Msg.Src := Src;
+  Msg.Dest := Behind;
+
+  with Player do
+  begin
+    // On vérifie que la case du milieu peut être survolée
+    Field := Map[Msg.Pos].Field;
+    if Assigned(Field) then
+      Field.Dispatch(Msg);
+    if not Msg.Result then exit;
+
+    // On vérifie que la case de départ ou d'arrivée autorise le déplacement
+    Msg.Kind := pmkLeaveFrom;
+    Msg.Result := False;
+    Field := Map[Msg.Src].Field;
+    if Assigned(Field) then
+      Field.Dispatch(Msg);
+    if not Msg.Result then
+    begin
+      Msg.Kind := pmkArriveAt;
+      Field := Map[Msg.Dest].Field;
+      if Assigned(Field) then
+        Field.Dispatch(Msg);
+      if not Msg.Result then exit;
+    end;
+
+    TPlankScrew.Create(Master, Map, Msg.Pos, Player);
+    Master.Temporize;
+  end;
+end;
+
 {----------------}
 { Classe TPlanks }
 {----------------}
@@ -158,6 +212,19 @@ begin
 end;
 
 {*
+  [@inheritDoc]
+*}
+procedure TPlanks.SetCount(Player : TPlayer; Value : integer);
+begin
+  inherited;
+
+  if Value > 0 then
+    Player.AddPlugin(Master.Plugin[idPlankPlugin])
+  else
+    Player.RemovePlugin(Master.Plugin[idPlankPlugin]);
+end;
+
+{*
   Informations textuelles sur l'objet
   GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
   @param Player   Joueur pour lequel on veut obtenir les infos
@@ -171,38 +238,6 @@ begin
     Result := Format(sPlankInfos, [ACount])
   else
     Result := Format(sPlanksInfos, [ACount]);
-end;
-
-{*
-  Indique si l'objet permet au joueur d'effectuer une action donnée
-  CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
-  d'effectuer l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à tester
-  @return True si l'objet permet d'effectuer l'action, False sinon
-*}
-function TPlanks.AbleTo(Player : TPlayer;
-  const Action : TPlayerAction) : boolean;
-begin
-  Result := ((Action = actPassOverScrew) and (Count[Player] > 0)) or
-    (inherited AbleTo(Player, Action));
-end;
-
-{*
-  Utiliser l'objet pour effectuer l'action donnée
-  UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
-  effectuer l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à effectuer
-*}
-procedure TPlanks.UseFor(Player : TPlayer; const Action : TPlayerAction);
-begin
-  if Action = actPassOverScrew then with Player do
-  begin
-    TPlankScrew.Create(Master, Map, PointBehind(Position, Direction), Player);
-    AddPlugin(Master.Plugin[idPlankPlugin]);
-    Master.Temporize;
-  end else inherited;
 end;
 
 {--------------------}
@@ -221,6 +256,7 @@ constructor TPlankScrew.Create(AMaster : TMaster; AMap : TMap;
 begin
   inherited Create(AMaster, '', AMap, APosition);
   FPlayer := APlayer;
+  FPlayer.Attribute[attrUsePlank] := 1;
 end;
 
 {*
@@ -230,6 +266,7 @@ procedure TPlankScrew.Entering(Player : TPlayer; OldDirection : TDirection;
   KeyPressed : boolean; const Src, Pos : T3DPoint;
   var Cancel : boolean);
 begin
+  inherited;
   if Player <> FPlayer then
     Cancel := True;
 end;
@@ -240,7 +277,7 @@ end;
 procedure TPlankScrew.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
 begin
   inherited;
-  Player.RemovePlugin(Master.Plugin[idPlankPlugin]);
+  FPlayer.Attribute[attrUsePlank] := 0;
   Free;
 end;
 

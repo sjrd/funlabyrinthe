@@ -9,7 +9,8 @@ unit C4xFields;
 interface
 
 uses
-  ScUtils, SdDialogs, FunLabyUtils, FLBFields, FLBCommon, C4xComponents;
+  ScUtils, SdDialogs, FunLabyUtils, FLBFields, FLBPlank, FLBCommon,
+  C4xComponents;
 
 const
   idOldWater = 'OldWater'; /// ID de l'eau ancienne version
@@ -24,6 +25,8 @@ type
     @version 5.0
   *}
   TOldWater = class(TWater)
+  private
+    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
   public
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
@@ -38,6 +41,8 @@ type
     @version 5.0
   *}
   TOldHole = class(THole)
+  private
+    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
   public
     procedure Entering(Player : TPlayer; OldDirection : TDirection;
       KeyPressed : boolean; const Src, Pos : T3DPoint;
@@ -49,6 +54,15 @@ implementation
 {------------------}
 { Classe TOldWater }
 {------------------}
+
+{*
+  Gestionnaire de message msgPlank
+  TOldWater anihile le comportement de FunLabyBase envers la planche.
+  @param Msg   Message
+*}
+procedure TOldWater.PlankMessage(var Msg : TPlankMessage);
+begin
+end;
 
 {*
   [@inheritDoc]
@@ -76,7 +90,13 @@ begin
          (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
         DestObstacle := nil;
 
-      if (DestObstacle = SrcObstacle) and DoAction(actPassOverScrew) then exit;
+      if (DestObstacle = SrcObstacle) and
+         (Master.ObjectDef[idPlanks].Count[Player] > 0) then
+      begin
+        TPlankScrew.Create(Master, Map, Pos, Player);
+        Master.Temporize;
+        exit;
+      end;
     end;
 
     if KeyPressed then
@@ -88,6 +108,15 @@ end;
 {-----------------}
 { Classe TOldHole }
 {-----------------}
+
+{*
+  Gestionnaire de message msgPlank
+  TOldHole anihile le comportement de FunLabyBase envers la planche.
+  @param Msg   Message
+*}
+procedure TOldHole.PlankMessage(var Msg : TPlankMessage);
+begin
+end;
 
 {*
   [@inheritDoc]
@@ -113,7 +142,13 @@ begin
          (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
         DestObstacle := nil;
 
-      if (DestObstacle = SrcObstacle) and DoAction(actPassOverScrew) then exit;
+      if (DestObstacle = SrcObstacle) and
+         (Master.ObjectDef[idPlanks].Count[Player] > 0) then
+      begin
+        TPlankScrew.Create(Master, Map, Pos, Player);
+        Master.Temporize;
+        exit;
+      end;
     end;
 
     if KeyPressed then
