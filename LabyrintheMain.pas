@@ -11,7 +11,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, SdDialogs, ShellAPI,
-  FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects;
+  FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiMetaUnits;
 
 resourcestring
   sViewSize = 'Taille de la vue';
@@ -71,6 +71,9 @@ type
     procedure MenuReloadGameClick(Sender: TObject);
   private
     { Déclarations privées }
+    SepiRootManager : TSepiAsynchronousRootManager;
+    SepiRoot : TSepiMetaRoot;
+
     MasterFile : TMasterFile;
     Master : TMaster;
     View : TPlayerView;
@@ -105,7 +108,7 @@ implementation
 *}
 procedure TFormMain.NewGame(FileName : TFileName);
 begin
-  MasterFile := TMasterFile.Create(FileName, fmPlay);
+  MasterFile := TMasterFile.Create(SepiRoot, FileName, fmPlay);
   Master := MasterFile.Master;
   View := TPlayerView.Create(Master.Players[0]);
   Controller := TPlayerController.Create(Master.Players[0]);
@@ -242,6 +245,10 @@ begin
   NewGameDialog.InitialDir := fLabyrinthsDir;
   LoadGameDialog.InitialDir := fSaveguardsDir;
   SaveGameDialog.InitialDir := fSaveguardsDir;
+
+  SepiRootManager := TSepiAsynchronousRootManager.Create;
+  SepiRootManager.LoadUnit('FunLabyUtils');
+  SepiRoot := SepiRootManager.Root;
 
   MasterFile := nil;
   Master := nil;
@@ -394,6 +401,8 @@ end;
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
   CloseGame(True);
+
+  SepiRootManager.Free;
 end;
 
 {*

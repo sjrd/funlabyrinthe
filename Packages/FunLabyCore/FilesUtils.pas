@@ -11,7 +11,7 @@ unit FilesUtils;
 interface
 
 uses
-  SysUtils, Classes, Contnrs, ScUtils, FunLabyUtils;
+  SysUtils, Classes, Contnrs, ScUtils, SepiMetaUnits, FunLabyUtils;
 
 resourcestring
   sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
@@ -120,6 +120,8 @@ type
   *}
   TMasterFile = class
   private
+    FSepiRoot : TSepiMetaRoot; /// Meta-racine Sepi
+
     FFileName : TFileName;    /// Nom du fichier
     FMode : TFileMode;        /// Mode d'ouverture du fichier
     FVersion : string;        /// Version lors de l'enregistrement
@@ -148,8 +150,10 @@ type
     function GetMapFileCount : integer;
     function GetMapFiles(Index : integer) : TMapFile;
   public
-    constructor Create(const AFileName : TFileName; AMode : TFileMode);
-    constructor CreateNew(FileContents : TStrings = nil);
+    constructor Create(ASepiRoot : TSepiMetaRoot; const AFileName : TFileName;
+      AMode : TFileMode);
+    constructor CreateNew(ASepiRoot : TSepiMetaRoot;
+      FileContents : TStrings = nil);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -178,7 +182,9 @@ type
       RegisterSingleComponentProc : TRegisterSingleComponentProc;
       RegisterComponentSetProc : TRegisterComponentSetProc);
 
-    procedure Save(AFileName : TFileName = '');
+    procedure Save(const AFileName : TFileName = '');
+
+    property SepiRoot : TSepiMetaRoot read FSepiRoot;
 
     property FileName : TFileName read FFileName;
     property Mode : TFileMode read FMode;
@@ -225,16 +231,21 @@ var
   @return 0 si les versions sont égales, 1 si la première est supérieure à la
           seconde, et -1 dans le cas contraire
 *}
-function CompareVersions(Version1, Version2 : string) : integer;
-var SubVer1, SubVer2 : string;
+function CompareVersions(const Version1, Version2 : string) : integer;
+var SubVer1, SubVer2, MajVer1, MajVer2 : string;
 begin
+  SubVer1 := Version1;
+  SubVer2 := Version2;
+
   repeat
-    SubVer1 := GetFirstToken(Version1, '.');
-    Delete(Version1, 1, Length(SubVer1)+1);
-    SubVer2 := GetFirstToken(Version2, '.');
-    Delete(Version2, 1, Length(SubVer2)+1);
-    Result := StrToIntDef(SubVer1, 0) - StrToIntDef(SubVer2, 0);
-  until (Result <> 0) or ((Version1 = '') and (Version2 = ''));
+    MajVer1 := GetFirstToken(Version1, '.');
+    Delete(SubVer1, 1, Length(MajVer1)+1);
+
+    MajVer2 := GetFirstToken(Version2, '.');
+    Delete(SubVer2, 1, Length(MajVer2)+1);
+
+    Result := StrToIntDef(MajVer1, 0) - StrToIntDef(MajVer2, 0);
+  until (Result <> 0) or ((SubVer1 = '') and (SubVer2 = ''));
 end;
 
 {*
@@ -526,10 +537,14 @@ end;
   @param AMode       Mode sous lequel ouvrir le fichier
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
-constructor TMasterFile.Create(const AFileName : TFileName; AMode : TFileMode);
+constructor TMasterFile.Create(ASepiRoot : TSepiMetaRoot;
+  const AFileName : TFileName; AMode : TFileMode);
 var Document : IXMLDOMDocument;
 begin
   inherited Create;
+
+  FSepiRoot := ASepiRoot;
+
   FFileName := AFileName;
   FMode := AMode;
   FVersion := CurrentVersion;
@@ -563,10 +578,14 @@ end;
   @param FileContents   Contenu pré-créé du fichier (ou nil pour créer un vide)
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
-constructor TMasterFile.CreateNew(FileContents : TStrings = nil);
+constructor TMasterFile.CreateNew(ASepiRoot : TSepiMetaRoot;
+  FileContents : TStrings = nil);
 var Document : IXMLDOMDocument;
 begin
   inherited Create;
+
+  FSepiRoot := ASepiRoot;
+
   FFileName := '';
   FMode := fmEdit;
   FVersion := CurrentVersion;
@@ -1031,13 +1050,13 @@ end;
   Enregistre le fichier
   @param AFileName   Nom du fichier à enregistrer (si vide, conserve l'existant)
 *}
-procedure TMasterFile.Save(AFileName : TFileName = '');
+procedure TMasterFile.Save(const AFileName : TFileName = '');
 var Document : IXMLDOMDocument;
     FunLabyrinthe, Units, Maps, Players, Player : IXMLDOMElement;
     Element, Param : IXMLDOMElement;
     Params : TStrings;
     MapHRef : string;
-    MapFileName : TFileName;
+    FileName, MapFileName : TFileName;
     I, J : integer;
 begin
   { Don't localize strings in this method }
@@ -1045,11 +1064,13 @@ begin
   if (AFileName = '') and (Mode = fmPlay) and (not IsSaveguard) then
     raise EFileError.Create(sNoFileName);
   if AFileName = '' then
-    AFileName := FFileName;
+    FileName := FFileName
+  else
+    FileName := AFileName;
 
   if Mode = fmPlay then
   begin
-    MapHRef := ExtractFileName(AFileName);
+    MapHRef := ExtractFileName(FileName);
     I := LastDelimiter('.', MapHRef);
     if I > 0 then
     begin
@@ -1057,7 +1078,7 @@ begin
       MapHRef[I] := PathDelim;
     end else MapHRef := MapHRef + '-files' + PathDelim;
 
-    MapFileName := ExtractFilePath(AFileName) + MapHRef;
+    MapFileName := ExtractFilePath(FileName) + MapHRef;
     MapHRef := StringReplace(MapHRef, PathDelim, HRefDelim, [rfReplaceAll]);
 
     ForceDirectories(MapFileName);
@@ -1226,8 +1247,8 @@ begin
     appendChild(FunLabyrinthe);
   end;
 
-  Document.save(AFileName);
-  FFileName := AFileName;
+  Document.save(FileName);
+  FFileName := FileName;
   if Mode = fmPlay then
     FIsSaveguard := True;
 end;

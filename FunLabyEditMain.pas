@@ -13,7 +13,8 @@ uses
   Dialogs, ActnList, XPStyleActnCtrls, ActnMan, Menus, ImgList, StdCtrls,
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
   StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, ShellAPI, PlayerPlugins,
-  PlayerAttributes, PlayerObjects, FileProperties, AddMap, SdDialogs;
+  PlayerAttributes, PlayerObjects, FileProperties, AddMap, SdDialogs,
+  SepiMetaUnits;
 
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
@@ -150,6 +151,9 @@ type
     EditFloor : TSpinEdit;
 
     { Déclarations privées }
+    SepiRootManager : TSepiAsynchronousRootManager;
+    SepiRoot : TSepiMetaRoot;
+
     ScrewBmp : TScrewBitmap;      /// Bitmap de case à tout faire
     LastCompIndex : integer;      /// Dernier index de composant choisi
 
@@ -452,7 +456,7 @@ end;
 *}
 procedure TFormMain.NewFile;
 begin
-  MasterFile := TMasterFile.CreateNew;
+  MasterFile := TMasterFile.CreateNew(SepiRoot);
   if TFormFileProperties.ManageProperties(MasterFile) then
   begin
     MasterFile.AddUnitFile(FunLabyBaseMIMEType, FunLabyBaseHRef);
@@ -472,7 +476,7 @@ end;
 *}
 procedure TFormMain.OpenFile(FileName : TFileName);
 begin
-  MasterFile := TMasterFile.Create(FileName, fmEdit);
+  MasterFile := TMasterFile.Create(SepiRoot, FileName, fmEdit);
   LoadFile;
 end;
 
@@ -611,6 +615,10 @@ begin
     OnChange := EditFloorChange;
   end;
 
+  SepiRootManager := TSepiAsynchronousRootManager.Create;
+  SepiRootManager.LoadUnit('FunLabyUtils');
+  SepiRoot := SepiRootManager.Root;
+
   ScrewBmp := TScrewBitmap.Create;
 
   LastCompIndex := 0;
@@ -634,6 +642,8 @@ end;
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
   ScrewBmp.Free;
+
+  SepiRootManager.Free;
 end;
 
 {*

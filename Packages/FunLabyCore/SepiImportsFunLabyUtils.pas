@@ -680,6 +680,9 @@ begin
     AddMethod('BeforeDestruction', @TSepiImportsTScrew.BeforeDestruction,
       'procedure',
       mlkOverride);
+    AddMethod('DefaultHandler', @TSepiImportsTScrew.DefaultHandler,
+      'procedure(var Msg)',
+      mlkOverride);
     AddMethod('Entering', @TSepiImportsTScrew.Entering,
       'procedure(Player : TPlayer; OldDirection : TDirection; KeyPressed : boolean ; const Src, Pos : T3DPoint ; var Cancel : boolean )',
       mlkVirtual);
