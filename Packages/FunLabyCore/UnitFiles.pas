@@ -29,7 +29,7 @@ type
     procedure Notify(const ProcName : string);
   public
     constructor Create(AMasterFile : TMasterFile; const AHRef : string;
-      const AFileName : TFileName; const AMIMEType : string;
+      const AFileName : TFileName; const AGUID : TGUID;
       Params : TStrings); override;
     destructor Destroy; override;
 
@@ -48,6 +48,10 @@ type
     property Attributes : TStrings read FAttributes;
   end;
 
+const
+  /// GUID du gestionnaire d'unités de type package Borland
+  BPLUnitHandlerGUID : TGUID = '{B28D4F92-6C46-4F22-87F9-432165EDA4C6}';
+
 implementation
 
 uses
@@ -58,9 +62,6 @@ uses
 {---------------------}
 
 const {don't localize}
-  /// Type MIME des unités de type package Borland
-  BPLMIMEType = 'application/bpl';
-
   /// Procédure de chargement des composants
   LoadComponentsProc = 'LoadComponents';
 
@@ -93,7 +94,7 @@ const {don't localize}
   @param Params        Paramètres envoyés à l'unité
 *}
 constructor TBPLUnitFile.Create(AMasterFile : TMasterFile; const AHRef : string;
-  const AFileName : TFileName; const AMIMEType : string; Params : TStrings);
+  const AFileName : TFileName; const AGUID : TGUID; Params : TStrings);
 type
   TLoadComponentsProc = procedure(UnitFile : TBPLUnitFile; Master : TMaster;
     Params : TStrings); stdcall;
@@ -239,8 +240,8 @@ begin
 end;
 
 initialization
-  TMasterFile.RegisterUnitFileClass(BPLMIMEType, TBPLUnitFile);
+  TMasterFile.RegisterUnitFileClass(BPLUnitHandlerGUID, TBPLUnitFile);
 finalization
-  TMasterFile.UnregisterUnitFileClass(BPLMIMEType, TBPLUnitFile);
+  TMasterFile.UnregisterUnitFileClass(BPLUnitHandlerGUID);
 end.
 

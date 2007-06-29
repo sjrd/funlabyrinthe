@@ -41,6 +41,8 @@ type
     Représente un fichier dépendant d'un fichier maître FunLabyrinthe
     TDependantFile est la classe de base pour les classes chargeant et
     enregistrant des fichiers dépendant d'un fichier maître FunLabyrinthe.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TDependantFile = class
   private
@@ -61,13 +63,15 @@ type
   {*
     Représente un fichier unité
     TUnitFile est la classe de base pour les fichiers d'unité FunLabyrinthe.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TUnitFile = class(TDependantFile)
   private
-    FMIMEType : string; /// Type MIME du fichier unité
+    FHandlerGUID : TGUID; /// GUID du gestionnaire du fichier unité
   public
     constructor Create(AMasterFile : TMasterFile; const AHRef : string;
-      const AFileName : TFileName; const AMIMEType : string;
+      const AFileName : TFileName; const AHandlerGUID : TGUID;
       Params : TStrings); virtual;
     procedure AfterConstruction; override;
 
@@ -83,7 +87,7 @@ type
 
     procedure GetParams(Params : TStrings); virtual;
 
-    property MIMEType : string read FMIMEType;
+    property HandlerGUID : TGUID read FHandlerGUID;
   end;
   TUnitFileClass = class of TUnitFile;
 
@@ -91,6 +95,8 @@ type
     Représente un fichier carte
     TMapFile représente un fichier carte FunLabyrinthe (extension .flm). Elle
     fournit des méthodes pour créer, charger et enregistrer des cartes.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TMapFile = class(TDependantFile)
   private
@@ -117,6 +123,8 @@ type
     Elle est capable de charger tous les fichiers annexes au moyen des autres
     classes de l'unité.
     C'est la classe au plus haut niveau du fonctionnement de FunLabyrinthe.
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
   *}
   TMasterFile = class
   private
@@ -159,15 +167,14 @@ type
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
 
-    class procedure RegisterUnitFileClass(const MIMEType : string;
+    class procedure RegisterUnitFileClass(const GUID : TGUID;
       UnitFileClass : TUnitFileClass);
-    class procedure UnregisterUnitFileClass(const MIMEType : string;
-      UnitFileClass : TUnitFileClass);
-    class function FindUnitFileClass(const MIMEType : string) : TUnitFileClass;
+    class procedure UnregisterUnitFileClass(const GUID : TGUID);
+    class function FindUnitFileClass(const GUID : TGUID) : TUnitFileClass;
 
     function ResolveHRef(const HRef, DefaultDir : string) : TFileName;
 
-    function AddUnitFile(const MIMEType, HRef : string;
+    function AddUnitFile(const GUID : TGUID; const HRef : string;
       Params : TStrings = nil) : TUnitFile;
     function AddMapFile(const ID : TComponentID; const HRef : string;
       MaxViewSize : integer = 1) : TMapFile;
@@ -221,8 +228,21 @@ const {don't localize}
 
   FLMVersion = 1; /// Version courante du format FLM
 
+type
+  PUnitHandler = ^TUnitHandler; /// Pointeur vers TUnitHandler
+
+  {*
+    Informations sur un gestionnaire de fichier unité
+    @author Sébastien Jean Robert Doeraene
+    @version 5.0
+  *}
+  TUnitHandler = record
+    GUID : TGUID;               /// GUID du handler
+    FileClass : TUnitFileClass; /// Classe de fichier unité
+  end;
+
 var
-  UnitFileClasses : TStrings = nil; /// Type MIME -> Classe unité
+  UnitHandlers : TList = nil; /// Liste des gestionnaires de fichier unité
 
 {*
   Compare deux numéros de versions représentés textuellement
@@ -251,10 +271,32 @@ end;
 {*
   S'assure que la liste des classes d'unités est créée
 *}
-procedure EnsureClassListCreated;
+procedure EnsureUnitHandlerListCreated;
 begin
-  if UnitFileClasses = nil then
-    UnitFileClasses := TStringList.Create;
+  if UnitHandlers = nil then
+    UnitHandlers := TList.Create;
+end;
+
+{*
+  Cherche un enregistrement dans la liste des gestionnaires de fichier unité
+  @param GUID   GUID du gestionnaire recherché
+  @return Index du gestionnaire dans la liste
+*}
+function IndexOfUnitHandler(const GUID : TGUID) : integer;
+var List : PPointerList;
+begin
+  List := UnitHandlers.List;
+  Result := 0;
+
+  while Result < UnitHandlers.Count do
+  begin
+    if SameGUID(GUID, PUnitHandler(List[Result]).GUID) then
+      exit
+    else
+      inc(Result);
+  end;
+
+  Result := -1;
 end;
 
 {-----------------------}
@@ -289,10 +331,10 @@ end;
   @param Params        Paramètres envoyés à l'unité
 *}
 constructor TUnitFile.Create(AMasterFile : TMasterFile; const AHRef : string;
-  const AFileName : TFileName; const AMIMEType : string; Params : TStrings);
+  const AFileName : TFileName; const AHandlerGUID : TGUID; Params : TStrings);
 begin
   inherited Create(AMasterFile, AHRef, AFileName);
-  FMIMEType := AMIMEType;
+  FHandlerGUID := AHandlerGUID;
 end;
 
 {*
@@ -692,7 +734,8 @@ procedure TMasterFile.Load(ADocument : IInterface);
 var Document : IXMLDOMDocument;
     Params : TStrings;
     I, J, MaxViewSize : integer;
-    ID, FileType, HRef, Name, MapID : string;
+    ID, HRef, Name, MapID : string;
+    FileType : TGUID;
     Position : T3DPoint;
     Player : TPlayer;
     Node : IXMLDOMNode;
@@ -740,7 +783,7 @@ begin
       begin
         for I := 0 to length-1 do with item[I] as IXMLDOMElement do
         begin
-          FileType := getAttribute('type');
+          FileType := StringToGUID(getAttribute('type'));
           HRef := getAttribute('href');
 
           Params.Clear;
@@ -869,58 +912,67 @@ begin
 end;
 
 {*
-  Enregistre un gestionnaire d'unité
-  Si il existait déjà un gestionnaire pour le type MIME indiqué, celui-ci est
-  remplacé.
-  @param MIMEType       Type MIME géré par la classe
+  Enregistre un gestionnaire de fichier unité
+  Les doublons ne sont pas supportés.
+  @param GUID           GUID géré par la classe
   @param MapFileClass   Classe gestionnaire du type MIME
 *}
-class procedure TMasterFile.RegisterUnitFileClass(const MIMEType : string;
+class procedure TMasterFile.RegisterUnitFileClass(const GUID : TGUID;
   UnitFileClass : TUnitFileClass);
 var Index : integer;
+    Handler : PUnitHandler;
 begin
-  EnsureClassListCreated;
-  Index := UnitFileClasses.IndexOf(MIMEType);
-  if Index < 0 then
-    UnitFileClasses.AddObject(MIMEType, TObject(UnitFileClass))
-  else
-    UnitFileClasses.Objects[Index] := TObject(UnitFileClass);
+  EnsureUnitHandlerListCreated;
+  Index := IndexOfUnitHandler(GUID);
+
+  if Index >= 0 then Handler := UnitHandlers[Index] else
+  begin
+    New(Handler);
+    Handler.GUID := GUID;
+    UnitHandlers.Add(Handler);
+  end;
+  Handler.FileClass := UnitFileClass;
 end;
 
 {*
   Supprime un gestionnaire d'unité
-  UnregisterUnitFileClass vérifie d'abord que le gestionnaire que l'on veut
-  effacer est bien celui affecté au type MIME indiqué.
-  @param MIMEType       Type MIME géré par la classe
+  UnregisterUnitFileClass est insensible à une tentative de suppression d'un
+  gestionnaire inexistant.
+  @param GUID           GUID géré par la classe
   @param MapFileClass   Classe gestionnaire du type MIME
 *}
-class procedure TMasterFile.UnregisterUnitFileClass(const MIMEType : string;
-  UnitFileClass : TUnitFileClass);
+class procedure TMasterFile.UnregisterUnitFileClass(const GUID : TGUID);
 var Index : integer;
+    Handler : PUnitHandler;
 begin
-  if not Assigned(UnitFileClasses) then exit;
-  Index := UnitFileClasses.IndexOf(MIMEType);
-  if (Index >= 0) and
-     (UnitFileClasses.Objects[Index] = TObject(UnitFileClass)) then
-    UnitFileClasses.Delete(Index);
+  if not Assigned(UnitHandlers) then exit;
+  Index := IndexOfUnitHandler(GUID);
+  if Index < 0 then exit;
+
+  Handler := UnitHandlers[Index];
+  UnitHandlers.Delete(Index);
+  Dispose(Handler);
 end;
 
 {*
-  Trouve la classe de fichier unité gérant le type MIME donné
-  @param MIMEType   Type MIME dont il faut trouver le gestionnaire
-  @return Classe de fichier unité gérant le type MIME spécifié
+  Trouve la classe de fichier unité gérant le GUID donné
+  @param GUID   GUID dont il faut trouver le gestionnaire
+  @return Classe de fichier unité gérant le GUID spécifié
   @throws EFileError : Type d'unité inconnu
 *}
 class function TMasterFile.FindUnitFileClass(
-  const MIMEType : string) : TUnitFileClass;
+  const GUID : TGUID) : TUnitFileClass;
 var Index : integer;
 begin
-  EnsureClassListCreated;
-  Index := UnitFileClasses.IndexOf(MIMEType);
-  if Index < 0 then
-    raise EFileError.CreateFmt(sUnknownUnitType, [MIMEType])
+  if Assigned(UnitHandlers) then
+    Index := IndexOfUnitHandler(GUID)
   else
-    Result := TUnitFileClass(UnitFileClasses.Objects[Index]);
+    Index := -1;
+
+  if Index < 0 then
+    raise EFileError.CreateFmt(sUnknownUnitType, [GUIDToString(GUID)])
+  else
+    Result := PUnitHandler(UnitHandlers[Index]).FileClass;
 end;
 
 {*
@@ -961,7 +1013,7 @@ end;
   @param Params     Paramètres passés au fichier, ou nil pour aucun
   @return Le fichier unité créé et chargé
 *}
-function TMasterFile.AddUnitFile(const MIMEType, HRef : string;
+function TMasterFile.AddUnitFile(const GUID : TGUID; const HRef : string;
   Params : TStrings = nil) : TUnitFile;
 var OwnParams : boolean;
 begin
@@ -971,8 +1023,8 @@ begin
     Params := TStringList.Create;
   end;
   try
-    Result := FindUnitFileClass(MIMEType).Create(Self, HRef,
-      ResolveHRef(HRef, fUnitsDir), MIMEType, Params);
+    Result := FindUnitFileClass(GUID).Create(Self, HRef,
+      ResolveHRef(HRef, fUnitsDir), GUID, Params);
   finally
     if OwnParams then Params.Free;
   end;
@@ -1146,7 +1198,7 @@ begin
             GetParams(Params);
 
             Element := Document.createElement('unit');
-            Element.setAttribute('type', MIMEType);
+            Element.setAttribute('type', GUIDToString(HandlerGUID));
             Element.setAttribute('href', HRef);
 
             with Element do for J := 0 to Params.Count-1 do
@@ -1254,9 +1306,9 @@ begin
 end;
 
 initialization
-  EnsureClassListCreated;
+  EnsureUnitHandlerListCreated;
 finalization
-  UnitFileClasses.Free;
-  UnitFileClasses := nil;
+  UnitHandlers.Free;
+  UnitHandlers := nil;
 end.
 

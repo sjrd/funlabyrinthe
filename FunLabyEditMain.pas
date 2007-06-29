@@ -14,7 +14,7 @@ uses
   ExtCtrls, Tabs, ComCtrls, ActnMenus, ToolWin, ActnCtrls, CategoryButtons,
   StdActns, ScUtils, FunLabyUtils, FilesUtils, Spin, ShellAPI, PlayerPlugins,
   PlayerAttributes, PlayerObjects, FileProperties, AddMap, SdDialogs,
-  SepiMetaUnits;
+  SepiMetaUnits, UnitFiles;
 
 resourcestring
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
@@ -151,8 +151,9 @@ type
     EditFloor : TSpinEdit;
 
     { Déclarations privées }
+    /// Manager asynchrone de la racine Sepi
     SepiRootManager : TSepiAsynchronousRootManager;
-    SepiRoot : TSepiMetaRoot;
+    SepiRoot : TSepiMetaRoot;     /// Racine Sepi
 
     ScrewBmp : TScrewBitmap;      /// Bitmap de case à tout faire
     LastCompIndex : integer;      /// Dernier index de composant choisi
@@ -180,7 +181,7 @@ type
     procedure UnloadFile;
 
     procedure NewFile;
-    procedure OpenFile(FileName : TFileName);
+    procedure OpenFile(const FileName : TFileName);
     function SaveFile(FileName : TFileName = '') : boolean;
     function CloseFile : boolean;
 
@@ -192,9 +193,8 @@ type
   end;
 
 const {don't localize}
-  FunLabyBaseMIMEType = 'application/bpl'; /// Type MIME de l'unité FunLabyCore
-  FunLabyBaseHRef = 'FunLabyBase.bpl';     /// HRef de l'unité FunLabyCore
-  idPlayer = 'Player';                     /// ID de l'unique joueur
+  FunLabyBaseHRef = 'FunLabyBase.bpl'; /// HRef de l'unité FunLabyCore
+  idPlayer = 'Player';                 /// ID de l'unique joueur
 
 var
   FormMain: TFormMain; /// Instance de la fiche principale
@@ -459,7 +459,7 @@ begin
   MasterFile := TMasterFile.CreateNew(SepiRoot);
   if TFormFileProperties.ManageProperties(MasterFile) then
   begin
-    MasterFile.AddUnitFile(FunLabyBaseMIMEType, FunLabyBaseHRef);
+    MasterFile.AddUnitFile(BPLUnitHandlerGUID, FunLabyBaseHRef);
     TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName,
       nil, Point3D(0, 0, 0));
     LoadFile;
@@ -474,7 +474,7 @@ end;
   Ouvre un fichier et le charge
   @param FileName   Nom du fichier maître à charger
 *}
-procedure TFormMain.OpenFile(FileName : TFileName);
+procedure TFormMain.OpenFile(const FileName : TFileName);
 begin
   MasterFile := TMasterFile.Create(SepiRoot, FileName, fmEdit);
   LoadFile;
