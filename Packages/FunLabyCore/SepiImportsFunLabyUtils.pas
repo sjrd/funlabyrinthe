@@ -227,7 +227,6 @@ begin
 
   with Result do
   begin
-    TSepiMetaOverloadedMethod.Create(Result, 'Draw', 2);
     CurrentVisibility := mvPrivate;
 
     AddField('FImgList', System.TypeInfo(TImageList));
@@ -870,7 +869,6 @@ begin
 
   with Result do
   begin
-    TSepiMetaOverloadedMethod.Create(Result, 'MoveTo', 4);
     CurrentVisibility := mvPrivate;
 
     AddField('FMap', System.TypeInfo(TMap));
