@@ -32,13 +32,21 @@ requires
   SVCL90,
   SCL90,
   SDL90,
-  SepiBinaries90;
+  SepiBinaries90,
+  SepiWinTypesImport90,
+  SepiRTLCommonImport90,
+  SepiRTLSysImport90,
+  SepiSCLImport90,
+  SepiSDLImport90,
+  SepiSVCLImport90,
+  SepiVCLStdImport90;
 
 contains
   FunLabyUtils in 'FunLabyUtils.pas',
   FilesUtils in 'FilesUtils.pas',
   UnitFiles in 'UnitFiles.pas',
-  SepiImportsFunLabyUtils in 'SepiImportsFunLabyUtils.pas';
+  SepiImportsFunLabyUtils in 'SepiImportsFunLabyUtils.pas',
+  SepiImportsFunLaby in 'SepiImportsFunLaby.pas';
 
 end.
 

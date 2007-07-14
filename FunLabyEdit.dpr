@@ -9,7 +9,9 @@ uses
   PlayerAttributes in 'PlayerAttributes.pas' {FormAttributes},
   FileProperties in 'FileProperties.pas' {FormFileProperties},
   AddMap in 'AddMap.pas' {FormAddMap},
-  MapBase in 'MapBase.pas' {FormMapBase};
+  MapBase in 'MapBase.pas' {FormMapBase},
+  MapEditor in 'MapEditor.pas' {FrameMapEditor: TFrame},
+  FunLabyEditConsts in 'FunLabyEditConsts.pas';
 
 {$R *.res}
 

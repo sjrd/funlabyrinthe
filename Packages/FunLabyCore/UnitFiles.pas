@@ -55,7 +55,7 @@ const
 implementation
 
 uses
-  Windows;
+  Windows, SepiImportsFunLaby;
 
 {---------------------}
 { Classe TBPLUnitFile }
