@@ -2,7 +2,7 @@
   Décrit le comportement complet de l'ascenseur
   L'unité FLBLift regroupe tous les composants intervenant dans le
   fonctionnement de l'ascenseur.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FLBLift;
@@ -31,7 +31,7 @@ type
   {*
     Case spéciale ascenseur occupé
     Cette case est utilisée pour l'effet particulier de l'ascenseur.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TEngagedLiftScrew = class(TOverriddenScrew)
@@ -58,7 +58,7 @@ type
   {*
     Ascenseur
     Un ascenseur permet au joueur de décider de l'étage où aller.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TLift = class(TEffect)

@@ -1,7 +1,7 @@
 {*
   Unité principale de FunLabyEdit.exe
   Cette unité contient la fiche principale de FunLabyEdit.exe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FunLabyEditMain;
@@ -17,7 +17,7 @@ uses
 type
   {*
     Fiche principale de FunLabyEdit.exe
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TFormMain = class(TForm)

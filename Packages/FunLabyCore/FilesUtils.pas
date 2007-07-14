@@ -3,7 +3,7 @@
   L'unité FilesUtils contient des routines et classes se chargeant du
   traitement (création, ouverture, enregistrement) des fichiers et
   l'interfaçage de leurs données avec les classes métier.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FilesUtils;
@@ -41,7 +41,7 @@ type
     Représente un fichier dépendant d'un fichier maître FunLabyrinthe
     TDependantFile est la classe de base pour les classes chargeant et
     enregistrant des fichiers dépendant d'un fichier maître FunLabyrinthe.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TDependantFile = class
@@ -63,7 +63,7 @@ type
   {*
     Représente un fichier unité
     TUnitFile est la classe de base pour les fichiers d'unité FunLabyrinthe.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TUnitFile = class(TDependantFile)
@@ -95,7 +95,7 @@ type
     Représente un fichier carte
     TMapFile représente un fichier carte FunLabyrinthe (extension .flm). Elle
     fournit des méthodes pour créer, charger et enregistrer des cartes.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TMapFile = class(TDependantFile)
@@ -123,7 +123,7 @@ type
     Elle est capable de charger tous les fichiers annexes au moyen des autres
     classes de l'unité.
     C'est la classe au plus haut niveau du fonctionnement de FunLabyrinthe.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TMasterFile = class
@@ -233,7 +233,7 @@ type
 
   {*
     Informations sur un gestionnaire de fichier unité
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TUnitHandler = record

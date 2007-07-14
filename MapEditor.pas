@@ -16,7 +16,7 @@ type
 
   {*
     Représente un ensemble de composants enregistré
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TComponentSet = class
@@ -35,7 +35,7 @@ type
 
   {*
     Cadre d'édition des cartes
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TFrameMapEditor = class(TFrame)

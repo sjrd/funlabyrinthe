@@ -1,7 +1,7 @@
 {*
   Unité principale de Labyrinthe.exe
   Cette unité contient la fiche principale de Labyrinthe.exe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit LabyrintheMain;
@@ -23,7 +23,7 @@ resourcestring
 type
   {*
     Classe de la fiche principale
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TFormMain = class(TForm)

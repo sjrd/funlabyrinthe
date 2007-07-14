@@ -2,7 +2,7 @@
   Boîte de dialogue affichant les objets possédés par un joueur
   L'unité PlayerObjects propose une boîte de dialogue affichant les objets
   possédés par un joueur.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit PlayerObjects;
@@ -16,7 +16,7 @@ uses
 type
   {*
     Boîte de dialogue affichant les objets possédés par un joueur
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TFormObjects = class(TForm)

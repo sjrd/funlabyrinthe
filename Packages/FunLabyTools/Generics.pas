@@ -10,7 +10,7 @@ type
     Effet décoratif
     La classe TDecorativeEffect permet de créer facilement un effet qui ne fait
     rien, qui ajoute juste une touche décorative.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TDecorativeEffect = class(TEffect)
@@ -24,7 +24,7 @@ type
     La classe TObjectTool permet de créer facilement un outil qui est lié à une
     définition d'objet. C'est-à-dire que trouver cet outil incrémente le nombre
     de tels objets que possède le joueur
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TObjectTool = class(TTool)
@@ -50,7 +50,7 @@ type
     TOverriddenScrew est la classe de base pour les cases spéciales qui
     surchargent momentanément une autre case. Elle fournit des propriétés et
     méthodes pour identifier la case en question et la dessiner.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TOverriddenScrew = class(TScrew)

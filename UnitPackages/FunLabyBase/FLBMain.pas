@@ -2,7 +2,7 @@
   Recense les composants de base de Funlabyrinthe
   L'unité FLBMain recense tous les composants du package FunLabyBase, ceux qui
   sont à la base de FunLabyrinthe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FLBMain;

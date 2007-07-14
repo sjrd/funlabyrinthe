@@ -3,7 +3,7 @@
   L'unité FLBCommon décrit les constantes et classes qui sont communes aux
   autres parties, ce qui inclut essentiellement les constantes d'actions et les
   plug-in « polyvalents ».
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FLBCommon;
@@ -36,7 +36,7 @@ type
 
   {*
     Message lié à la planche
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TPlankMessage = record
@@ -52,7 +52,7 @@ type
   {*
     Plug-in masque
     Filtre l'affichage du joueur au moyen d'un masque monochrome.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TMaskPlugin = class(TPlugin)

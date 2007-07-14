@@ -1,6 +1,6 @@
 {*
   Classes métier de jeu
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit PlayUtils;
@@ -21,7 +21,7 @@ type
 
   {*
     Données d'une boîte de dialogue standart à afficher
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TStdDialogInfos = record
@@ -54,7 +54,7 @@ type
 
   {*
     Vue du joueur
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TPlayerView = class
@@ -92,7 +92,7 @@ type
 
   {*
     Contrôleur de joueur
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TPlayerController = class(TThread)

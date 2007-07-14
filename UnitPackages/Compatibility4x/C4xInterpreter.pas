@@ -2,7 +2,7 @@
   Interprétation des actions
   L'unité C4xInterpreter décrit la classe TActionsInterpreter, qui se charge
   d'interpréter les actions.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit C4xInterpreter;
@@ -37,21 +37,21 @@ const
 type
   {*
     Générée lorsqu'une action est invalide
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   EInvalidAction = class(Exception);
 
   {*
     Générée lorsqu'une instruction Si est invalide
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   EInvalidIf = class(EInvalidAction);
 
   {*
     Générée lorsqu'un paramètre d'une action est invalide
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   EBadParam = class(EInvalidAction);
@@ -61,7 +61,7 @@ type
 
   {*
     Interprète des actions
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TActionsInterpreter = class

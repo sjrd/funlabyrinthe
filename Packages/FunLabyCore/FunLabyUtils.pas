@@ -1,7 +1,7 @@
 {*
   Types et classes de bases de FunLabyrinthe
   FunLabyUtils comprend les types et classes de base de FunLabyrinthe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FunLabyUtils;
@@ -81,7 +81,7 @@ type
 
   {*
     Position qualifiée, composée d'une carte et d'une position sur la carte
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TQualifiedPos = record
@@ -122,7 +122,7 @@ type
     Gère le chargement des images d'après leur nom
     TImagesMaster s'occupe de charger automatiquement les images qu'on lui
     demande d'afficher. Il les conserve dans une liste d'image.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TImagesMaster = class
@@ -144,7 +144,7 @@ type
 
   {*
     Bitmap de la taille d'une case, gérant automatiquement la transparence
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TScrewBitmap = class(TBitmap)
@@ -159,7 +159,7 @@ type
     Enregistre est affiche par superposition une liste d'images
     TPainter enregistre une liste d'images par leur noms et propose une méthode
     pour les dessiner les unes sur les autres, par transparence.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TPainter = class
@@ -183,7 +183,7 @@ type
     TFunLabyComponent est la classe de base pour tous les composants de
     FunLabyrinthe. Elle fournit des propriétés et des méthodes pour repérer le
     maître FunLabyrinthe et pour identifier le composant.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TFunLabyComponent = class
@@ -213,7 +213,7 @@ type
     Classe de base pour les composants devant être affichés
     TVisualComponent étend la classe TFunLabyComponent pour lui ajouter un
     traitement standart et simple de nommage et de dessin.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TVisualComponent = class(TFunLabyComponent)
@@ -251,7 +251,7 @@ type
     - Dessiner sous et sur le joueur ;
     - Empêcher le déplacement du joueur et réagir à son déplacement effectif ;
     - Indiquer au joueur qu'il a la capacité de faire certaines actions.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TPlugin = class(TFunLabyComponent)
@@ -285,7 +285,7 @@ type
     TObjectDef est la classe de base pour les définitions d'objets que possède
     le joueur.
     Les objets peuvent rendre un joueur capable d'effectuer certaines actions.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TObjectDef = class(TVisualComponent)
@@ -305,7 +305,7 @@ type
 
   {*
     Classe de base pour les composants de case
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TScrewComponent = class(TVisualComponent)
@@ -315,7 +315,7 @@ type
     Classe de base pour les terrains
     TField est la classe de base pour la création de terrains. Les terrains
     sont la première composante d'une case.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TField = class(TScrewComponent)
@@ -343,7 +343,7 @@ type
     Classe de base pour les effets de case
     TEffect est la classe de base pour la création d'effets de case. Les effets
     sont la deuxième composante d'une case.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TEffect = class(TScrewComponent)
@@ -359,7 +359,7 @@ type
     Classe de base pour les outils
     TTool est la classe de base pour la création d'outils. Les outils sont la
     troisième composante d'une case.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TTool = class(TScrewComponent)
@@ -371,7 +371,7 @@ type
     Classe de base pour les obstacles
     TObstacle est la classe de base pour la création d'obstacles. Les obstacles
     sont la quatrième composante d'une case.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TObstacle = class(TScrewComponent)
@@ -386,7 +386,7 @@ type
     TScrew représente une case du jeu. Une case possède quatre composantes : le
     terrain, l'effet, l'outil et l'obstacle. Chacune de ces composantes est
     optionnelle.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TScrew = class(TScrewComponent)
@@ -440,7 +440,7 @@ type
     Représente la carte du jeu
     TMap gère et représente la carte du jeu. Elle offre des propriétés et
     méthodes pour lire et modifier cette carte.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TMap = class(TFunLabyComponent)
@@ -492,7 +492,7 @@ type
     TPlayer représente un joueur. Elle possède de nombreuses propriétés et
     méthodes permettant d'afficher le joueur, de le déplacer, de lui greffer
     des plug-in, etc.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TPlayer = class(TVisualComponent)
@@ -589,7 +589,7 @@ type
   {*
     Maître FunLabyrinthe
     TMaster gère les différents composants de FunLabyrinthe.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TMaster = class

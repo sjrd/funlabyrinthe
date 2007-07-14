@@ -2,7 +2,7 @@
   Gestion des fichiers unité de base de FunLabyrinthe
   L'unité UnitFiles décrit les classes de gestion des fichiers unité de base de
   FunLabyrinthe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit UnitFiles;

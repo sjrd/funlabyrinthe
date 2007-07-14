@@ -2,7 +2,7 @@
   Décrit les classes de composants de compatibilité 4.x
   L'unité C4xScrews regroupe les différentes classes de composants de
   compatibilité 4.x de FunLabyrinthe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit C4xComponents;
@@ -64,7 +64,7 @@ resourcestring
 type
   {*
     Représente le type d'un ensemble d'actions
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TActionsKind = (akGameStarted, akPushButton, akSwitch, akInfoStone, akHidden,
@@ -77,7 +77,7 @@ type
     Plug-in de joueur de gestion des zones
     Ce plug-in assure la compatibilité des actions de zones de
     FunLabyrinthe 4.x.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TZonesPlugin = class(TPlugin)
@@ -88,7 +88,7 @@ type
   {*
     Escaliers de la v1.0
     Les escaliers permettent de monter ou descendre d'un étage
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TOldStairs = class(TEffect)
@@ -106,7 +106,7 @@ type
   {*
     Définition d'objet lié à des actions
     Les nombre des objets liés à des actions est le compteur de ces actions.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TActionsObject = class(TObjectDef)
@@ -124,7 +124,7 @@ type
   {*
     Effet à actions
     Un effet à actions exécute une série d'actions lorsqu'on arrive dessus.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TActionsEffect = class(TEffect)
@@ -149,7 +149,7 @@ type
   {*
     Obstacle à actions
     Un obstacle à actions exécute une série d'actions lorsqu'on pousse dessus.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TActionsObstacle = class(TObstacle)
@@ -167,7 +167,7 @@ type
 
   {*
     Représente un ensemble d'actions pour une case active particulière
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TActions = class(TFunLabyComponent)
@@ -204,7 +204,7 @@ type
 
   {*
     Composant unique par parties conservant les infos de ce package
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TC4xInfos = class(TFunLabyComponent)

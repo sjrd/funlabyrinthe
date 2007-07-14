@@ -2,7 +2,7 @@
   Boîte de dialogue affichant et modifiant les propriétés d'un joueur
   L'unité PlayerAttributes propose une boîte de dialogue affichant les attributs
   d'un joueur, et permettant de les modifier.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit PlayerAttributes;
@@ -20,7 +20,7 @@ resourcestring
 type
   {*
     Boîte de dialogue affichant et modifiant les propriétés d'un joueur
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TFormAttributes = class(TForm)

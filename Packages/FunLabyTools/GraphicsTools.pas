@@ -3,7 +3,7 @@
   L'unité GraphicsTools donne quelques routines utilitaires permettant
   d'effectuer facilement des traitements graphiques récurrents dans
   FunLabyrinthe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit GraphicsTools;

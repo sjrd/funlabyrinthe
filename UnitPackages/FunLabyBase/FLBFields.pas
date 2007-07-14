@@ -2,7 +2,7 @@
   Décrit les terrains de base de Funlabyrinthe
   L'unité FLBFields regroupe les définitions des terrains de base de
   FunLabyrinthe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FLBFields;
@@ -47,7 +47,7 @@ type
     Le sol est le terrain de base de FunLabyrinthe. Il n'a pas de condition. On
     peut en créer plusieurs versions, avec des graphismes différents. Par
     défaut, il existe un type de sol : l'herbe.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TGround = class(TField)
@@ -62,7 +62,7 @@ type
   {*
     Mur
     Le mur est un terrain qui bloque systématiquement le joueur.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TWall = class(TField)
@@ -79,7 +79,7 @@ type
     Eau
     L'eau est un terrain sur lequel on peut aller avec une bouée ou une barque,
     et au-dessus duquel on peut passer avec une planche.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TWater = class(TField)
@@ -107,7 +107,7 @@ type
     Trou
     Le trou est un terrain au-dessus duquel on peut passer avec une planche, et
     sinon inaccessible.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   THole = class(TField)
@@ -125,7 +125,7 @@ type
   {*
     Ciel
     Le ciel est toujours inaccessible.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TSky = class(TField)

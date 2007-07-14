@@ -1,7 +1,7 @@
 {*
   Boîte de dialogue d'ajout d'une carte
   L'unité AddMap définit une boîte de dialogue d'ajout de carte.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit AddMap;
@@ -29,7 +29,7 @@ resourcestring
 type
   {*
     Boîte de dialogue d'ajout d'une carte
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TFormAddMap = class(TForm)

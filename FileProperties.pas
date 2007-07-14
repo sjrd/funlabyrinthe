@@ -2,7 +2,7 @@
   Boîte de dialogue des propriétés d'un fichier
   L'unité FileProperties définit une boîte de dialogue des propriétés d'un
   fichier.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FileProperties;
@@ -20,7 +20,7 @@ resourcestring
 type
   {*
     Boîte de dialogue des propriétés d'un fichier
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TFormFileProperties = class(TForm)

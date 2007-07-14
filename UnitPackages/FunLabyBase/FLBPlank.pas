@@ -2,7 +2,7 @@
   Décrit le comportement complet de la planche
   L'unité FLBPlank regroupe tous les composants intervenant dans le
   fonctionnement de la planche.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FLBPlank;
@@ -41,7 +41,7 @@ type
   {*
     Plug-in planche
     Affiche une planche à côté du joueur ou sous celui-ci.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TPlankPlugin = class(TPlugin)
@@ -57,7 +57,7 @@ type
   {*
     Définition de l'objet planche
     La planche permet de passer au-dessus des cases
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TPlanks = class(TObjectDef)
@@ -73,7 +73,7 @@ type
   {*
     Case spéciale planche
     Cette case est utilisée pour le déplacement particulier de la planche.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TPlankScrew = class(TOverriddenScrew)

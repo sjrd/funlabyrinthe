@@ -3,7 +3,7 @@
   L'unité MapTools donne quelques routines utilitaires permettant
   d'effectuer facilement des traitements récurrents sur les cartes de
   FunLabyrinthe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit MapTools;

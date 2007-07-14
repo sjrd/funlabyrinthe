@@ -1,7 +1,7 @@
 {*
   Génération du base de carte
   L'unité MapBase définit une boîte de dialogue créant une base de carte.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit MapBase;
@@ -15,7 +15,7 @@ uses
 type
   {*
     Boîte de dialogue créant une base de carte
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TFormMapBase = class(TForm)

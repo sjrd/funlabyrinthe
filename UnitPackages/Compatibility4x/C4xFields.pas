@@ -1,7 +1,7 @@
 {*
   Décrit les terrains de compatibilité 4.x
   L'unité C4xFields regroupe les définitions des terrains de compatiblité 4.x.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit C4xFields;
@@ -21,7 +21,7 @@ type
     Eau (ancienne version)
     Elle fonctionne comme l'eau de base, sauf que le test de la planche est
     conforme au test de la version 4.x.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TOldWater = class(TWater)
@@ -37,7 +37,7 @@ type
     Trou (ancienne version)
     Il fonctionne comme le trou de base, sauf que le test de la planche est
     conforme au test de la version 4.x.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TOldHole = class(THole)

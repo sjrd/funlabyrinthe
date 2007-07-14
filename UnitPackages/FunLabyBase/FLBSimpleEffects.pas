@@ -3,7 +3,7 @@
   L'unité FLBSimpleEffects regroupe les différents effets qui se suffisent à
   eux-mêmes, c'est-à-dire qui n'ont pas besoin de composants annexes pour
   fonctionner.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FLBSimpleEffects;
@@ -88,7 +88,7 @@ resourcestring
 type
   {*
     Type de téléporteur
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TTransporterKind = (tkInactive, tkNext, tkPrevious, tkRandom);
@@ -98,7 +98,7 @@ type
     Les flèches repoussent le joueur dans la direction qui leur est propre. Le
     carrefour en est un cas particulier qui laisse inchangée la direction du
     joueur.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TArrow = class(TEffect)
@@ -117,7 +117,7 @@ type
   {*
     Téléporteur
     Le téléporteur emmène le joueur à un autre téléporteur
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TTransporter = class(TEffect)
@@ -142,7 +142,7 @@ type
   {*
     Escaliers
     Les escaliers permettent de monter ou descendre d'un étage
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TStairs = class(TEffect)
@@ -162,7 +162,7 @@ type
     Tourniquet Direct
     Le tourniquet direct fait tourner le joueur dans le sens direct jusqu'à
     parvenir à en sortir.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TDirectTurnstile = class(TEffect)
@@ -180,7 +180,7 @@ type
     Tourniquet Indirect
     Le tourniquet indirect fait tourner le joueur dans le sens indirect jusqu'à
     parvenir à en sortir.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TIndirectTurnstile = class(TEffect)
@@ -198,7 +198,7 @@ type
     Dehors
     Le dehors représente l'extérieur du labyrinthe et fait remporter la victoire
     au joueur qui y parvient.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TOutside = class(TEffect)
@@ -213,7 +213,7 @@ type
   {*
     Trésor
     Le trésor fait remporter la victoire au joueur qui le trouve.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TTreasure = class(TEffect)

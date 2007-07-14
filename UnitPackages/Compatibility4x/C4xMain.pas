@@ -3,7 +3,7 @@
   L'unité C4xMain recense tous les composants du package
   Compatibility4x, ceux qui décrivent les composants de compatibilité 4.x de
   FunLabyrinthe.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit C4xMain;

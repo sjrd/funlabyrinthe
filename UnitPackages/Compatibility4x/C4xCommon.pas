@@ -1,7 +1,7 @@
 {*
   Constantes et classes communes
   L'unité C4xCommon décrit les constantes qui sont communes aux autres parties.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit C4xCommon;

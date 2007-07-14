@@ -4,7 +4,7 @@
   FunLabyrinthe, c'est-à-dire ceux qui n'ont besoin que de la définition d'objet
   et de l'effet permettant de les obtenir, avec éventuellement un plug-in
   d'affichage.
-  @author Sébastien Jean Robert Doeraene
+  @author sjrd
   @version 5.0
 *}
 unit FLBSimpleObjects;
@@ -58,7 +58,7 @@ type
   {*
     Plug-in bouée
     Affiche une bouée sous le joueur, et permet d'aller dans l'eau.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TBuoyPlugin = class(TPlugin)
@@ -75,7 +75,7 @@ type
   {*
     Définition de l'objet bouée
     La bouée permet d'aller dans l'eau.
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TBuoys = class(TObjectDef)
@@ -93,7 +93,7 @@ type
   {*
     Définition de l'objet clef d'argent
     La clef d'argent permet d'ouvrir une serrure en argent
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TSilverKeys = class(TObjectDef)
@@ -111,7 +111,7 @@ type
   {*
     Définition de l'objet clef d'or
     La clef d'or permet d'ouvrir une serrure en or
-    @author Sébastien Jean Robert Doeraene
+    @author sjrd
     @version 5.0
   *}
   TGoldenKeys = class(TObjectDef)
