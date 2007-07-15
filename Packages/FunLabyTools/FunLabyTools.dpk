@@ -29,7 +29,8 @@ requires
   rtl,
   vcl,
   VclSmp,
-  FunLabyCore;
+  FunLabyCore,
+  SepiBinaries90;
 
 contains
   MapTools in 'MapTools.pas',
