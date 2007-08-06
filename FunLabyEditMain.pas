@@ -161,6 +161,7 @@ begin
         ActionList := ActionManager;
         Caption := ExtractFileName(MasterFile.UnitFiles[I].FileName);
         Tag := Integer(MasterFile.UnitFiles[I]);
+        Enabled := UnitEditorExists(MasterFile.UnitFiles[I].HandlerGUID);
         OnExecute := ActionViewUnitExecute;
       end;
 
@@ -585,17 +586,7 @@ begin
   end;
 
   // Créer l'éditeur
-  try
-    Editor := CreateUnitEditor(UnitFile);
-  except
-    on Error : EFileError do
-    begin
-      ShowDialog(sError, Error.Message, dtError);
-      exit;
-    end;
-  end;
-
-  // Placer le contrôle d'édition
+  Editor := CreateUnitEditor(UnitFile);
   EditorControl := Editor.Control;
   EditorControl.Align := alClient;
   EditorControl.Visible := False;
@@ -604,7 +595,7 @@ begin
   // Créer un nouvel onglet pour l'éditeur et l'afficher
   Tab := TJvTabBarItem(TabBarEditors.Tabs.Add);
   Tab.Caption := ExtractFileName(UnitFile.FileName);
-  Tab.Data := TObject(Editor);
+  Tab.Data := TObject(Pointer(Editor));
   Tab.Tag := UnitEditorTag;
   Tab.Selected := True;
 end;

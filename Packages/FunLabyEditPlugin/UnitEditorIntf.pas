@@ -60,6 +60,7 @@ procedure RegisterUnitEditor(const GUID : TGUID;
 procedure UnregisterUnitEditor(const GUID : TGUID);
 function FindUnitEditorCreateProc(const GUID : TGUID) : TCreateUnitEditorProc;
 function CreateUnitEditor(UnitFile : TUnitFile) : IUnitEditor50;
+function UnitEditorExists(const GUID : TGUID) : boolean;
 
 implementation
 
@@ -183,6 +184,17 @@ var CreateProc : TCreateUnitEditorProc;
 begin
   CreateProc := FindUnitEditorCreateProc(UnitFile.HandlerGUID);
   Result := CreateProc(UnitFile);
+end;
+
+{*
+  Détermine si un éditeur est disponible pour un type de fichier donné
+  @param GUID   GUID du type de fichier à tester
+  @return True si un éditeur est disponible, False sinon
+*}
+function UnitEditorExists(const GUID : TGUID) : boolean;
+begin
+  Result := Assigned(UnitEditors) and
+    (IndexOfUnitEditor(GUID) >= 0);
 end;
 
 initialization
