@@ -1,4 +1,4 @@
-package FunLabyTools;
+package FunLabyEditPlugin;
 
 {$R *.res}
 {$ALIGN 8}
@@ -22,7 +22,7 @@ package FunLabyTools;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'FunLabyrinthe helper tools'}
+{$DESCRIPTION 'Plug-in system of FunLabyEdit'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
@@ -30,18 +30,10 @@ requires
   rtl,
   vcl,
   VclSmp,
-  FunLabyCore,
-  SepiBinaries90;
+  FunLabyCore;
 
 contains
-  MapTools in 'MapTools.pas',
-  PlayerObjects in 'PlayerObjects.pas',
-  GraphicsTools in 'GraphicsTools.pas',
-  Generics in 'Generics.pas',
-  SepiImportsGenerics in 'SepiImportsGenerics.pas',
-  SepiImportsGraphicsTools in 'SepiImportsGraphicsTools.pas',
-  SepiImportsMapTools in 'SepiImportsMapTools.pas',
-  SepiImportsPlayerObjects in 'SepiImportsPlayerObjects.pas';
+  UnitEditorIntf in 'UnitEditorIntf.pas';
 
 end.
 

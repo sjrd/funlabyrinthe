@@ -734,6 +734,8 @@ var {don't localize}
   fLabyrinthsDir : string = 'Labyrinths\';
   /// Dossier des fichiers sauvegarde
   fSaveguardsDir : string = 'Saveguards\';
+  /// Dossier des plug-in de l'éditeur
+  fEditPluginDir : string = 'EditPlugins\';
 
   /// Chaîne de format pour les fichiers image
   fScrewFileName : string = '%s.bmp';
@@ -3104,6 +3106,7 @@ initialization
     FMapsDir := fFunLabyAppData + fMapsDir;
     fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
     fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
+    fEditPluginDir := fFunLabyAppData + fEditPluginDir;
 
     fScrewFileName := fScrewsDir+fScrewFileName;
   finally

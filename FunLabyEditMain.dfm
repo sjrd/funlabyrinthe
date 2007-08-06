@@ -65,18 +65,23 @@ object FormMain: TFormMain
     Height = 19
     Panels = <>
   end
-  inline FrameMapEditor: TFrameMapEditor
+  object TabBarEditors: TJvTabBar
     Left = 0
     Top = 50
     Width = 670
-    Height = 421
-    Align = alClient
-    TabOrder = 3
-    TabStop = True
+    Tabs = <
+      item
+        Caption = 'Cartes et joueurs'
+        Selected = True
+      end>
+    OnTabClosing = TabBarEditorsTabClosing
+    OnTabClosed = TabBarEditorsTabClosed
+    OnTabSelecting = TabBarEditorsTabSelecting
+    OnTabSelected = TabBarEditorsTabSelected
   end
   object Images: TImageList
-    Left = 248
-    Top = 184
+    Left = 16
+    Top = 88
     Bitmap = {
       494C010108000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
@@ -615,6 +620,14 @@ object FormMain: TFormMain
           item
             Items = <
               item
+                Action = ActionViewAllUnits
+              end>
+            Visible = False
+            Caption = '&Unit'#233's'
+          end
+          item
+            Items = <
+              item
                 Action = ActionHelpTopics
                 Caption = '&Rubriques d'#39'aide'
                 ImageIndex = 7
@@ -632,11 +645,11 @@ object FormMain: TFormMain
         ActionBar = MainMenuBar
       end>
     Images = Images
-    Left = 280
-    Top = 184
+    Left = 48
+    Top = 88
     StyleName = 'XP Style'
     object ActionNewFile: TAction
-      Category = 'Fichier'
+      Category = 'File'
       Caption = 'Nouveau...'
       Hint = 'Nouveau fichier|Cr'#233'er un nouveau fichier'
       ImageIndex = 0
@@ -644,7 +657,7 @@ object FormMain: TFormMain
       OnExecute = ActionNewFileExecute
     end
     object ActionOpenFile: TAction
-      Category = 'Fichier'
+      Category = 'File'
       Caption = 'Ouvrir...'
       Hint = 'Ouvrir|Ouvrir un fichier existant'
       ImageIndex = 1
@@ -652,7 +665,7 @@ object FormMain: TFormMain
       OnExecute = ActionOpenFileExecute
     end
     object ActionSaveFile: TAction
-      Category = 'Fichier'
+      Category = 'File'
       Caption = 'Enregistrer'
       Enabled = False
       Hint = 'Enregistrer le fichier|Enregistrer le fichier courant'
@@ -661,7 +674,7 @@ object FormMain: TFormMain
       OnExecute = ActionSaveFileExecute
     end
     object ActionSaveFileAs: TAction
-      Category = 'Fichier'
+      Category = 'File'
       Caption = 'Enregistrer sous...'
       Enabled = False
       Hint = 
@@ -670,7 +683,7 @@ object FormMain: TFormMain
       OnExecute = ActionSaveFileAsExecute
     end
     object ActionCloseFile: TAction
-      Category = 'Fichier'
+      Category = 'File'
       Caption = 'Fermer'
       Enabled = False
       Hint = 'Fermer le fichier|Fermer le fichier courant'
@@ -679,7 +692,7 @@ object FormMain: TFormMain
       OnExecute = ActionCloseFileExecute
     end
     object ActionFileProperties: TAction
-      Category = 'Fichier'
+      Category = 'File'
       Caption = 'Propri'#233't'#233's...'
       Enabled = False
       Hint = 'Propri'#233't'#233's du fichier|Modifier les propri'#233't'#233's du fichier'
@@ -688,7 +701,7 @@ object FormMain: TFormMain
       OnExecute = ActionFilePropertiesExecute
     end
     object ActionTest: TAction
-      Category = 'Fichier'
+      Category = 'File'
       Caption = 'Tester'
       Enabled = False
       Hint = 
@@ -699,7 +712,7 @@ object FormMain: TFormMain
       OnExecute = ActionTestExecute
     end
     object ActionExit: TAction
-      Category = 'Fichier'
+      Category = 'File'
       Caption = 'Quitter'
       Hint = 'Quitter FunLabyEdit|Quitter l'#39#233'diteur FunLabyrinthe'
       ImageIndex = 6
@@ -707,21 +720,21 @@ object FormMain: TFormMain
       OnExecute = ActionExitExecute
     end
     object ActionAddMap: TAction
-      Category = 'Cartes'
+      Category = 'Maps'
       Caption = 'Ajouter...'
       Enabled = False
       Hint = 'Ajouter une carte|Ajouter une carte au projet'
       OnExecute = ActionAddMapExecute
     end
     object ActionRemoveMap: TAction
-      Category = 'Cartes'
+      Category = 'Maps'
       Caption = 'Retirer'
       Enabled = False
       Hint = 'Retirer cette carte|Retirer la carte courante du projet'
       OnExecute = ActionRemoveMapExecute
     end
     object ActionHelpTopics: TAction
-      Category = 'Aide'
+      Category = 'Help'
       Caption = 'Rubriques d'#39'aide'
       Hint = 
         'Afficher l'#39'aide de FunLabyEdit|Afficher l'#39'aide de l'#39#233'diteur de l' +
@@ -731,40 +744,48 @@ object FormMain: TFormMain
       OnExecute = ActionHelpTopicsExecute
     end
     object ActionAbout: TAction
-      Category = 'Aide'
+      Category = 'Help'
       Caption = #192' propos...'
       Hint = #192' propos de FunLabyrinthe'
       OnExecute = ActionAboutExecute
+    end
+    object ActionViewAllUnits: TAction
+      Category = 'Units'
+      Caption = 'Toutes'
+      Hint = 
+        'Voir toutes les unit'#233's|Ouvrir un '#233'diteur pour chaque unit'#233' du pr' +
+        'ojet'
+      OnExecute = ActionViewAllUnitsExecute
     end
   end
   object ScrewsImages: TImageList
     Height = 30
     Width = 30
-    Left = 248
-    Top = 248
+    Left = 16
+    Top = 152
   end
   object OpenDialog: TOpenDialog
     DefaultExt = 'flp'
     Filter = 'Projet FunLabyrinthe (*.flp)|*.flp'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofNoReadOnlyReturn, ofEnableSizing]
     Title = 'Ouvrir un fichier existant'
-    Left = 248
-    Top = 216
+    Left = 16
+    Top = 120
   end
   object SaveDialog: TSaveDialog
     DefaultExt = 'flp'
     Filter = 'Projet FunLabyrinthe (*.flp)|*.flp'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
     Title = 'Enregistrer le fichier'
-    Left = 280
-    Top = 216
+    Left = 48
+    Top = 120
   end
   object SaveMapDialog: TSaveDialog
     DefaultExt = 'flm'
     Filter = 'Cartes FunLabyrinthe (*.flm)|*.flm'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing, ofDontAddToRecent]
     Title = 'Enregistrer la carte'
-    Left = 312
-    Top = 216
+    Left = 80
+    Top = 120
   end
 end

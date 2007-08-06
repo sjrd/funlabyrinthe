@@ -124,7 +124,7 @@
 			<Directories Name="PackageDLLOutputDir"></Directories>
 			<Directories Name="PackageDCPOutputDir"></Directories>
 			<Directories Name="SearchPath"></Directories>
-			<Directories Name="Packages">rtl;vcl;VclSmp;SCL90;SVCL90;SDL90;SepiCore90;SepiBinaries90;FunLabyCore;FunLabyTools</Directories>
+			<Directories Name="Packages">rtl;vcl;VclSmp;SCL90;SVCL90;SDL90;SepiCore90;SepiBinaries90;FunLabyCore;FunLabyTools;FunLabyEditPlugin</Directories>
 			<Directories Name="Conditionals"></Directories>
 			<Directories Name="DebugSourceDirs"></Directories>
 			<Directories Name="UsePackages">True</Directories>

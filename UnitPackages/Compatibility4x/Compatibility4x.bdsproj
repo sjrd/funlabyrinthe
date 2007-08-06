@@ -169,14 +169,13 @@
 			<VersionInfoKeys Name="FileDescription">FunLabyrinthe components for 4.x compatibility</VersionInfoKeys>
 			<VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys>
 			<VersionInfoKeys Name="InternalName">FunLabyButtons</VersionInfoKeys>
-			<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2006 (c) SJRDoeraene</VersionInfoKeys>
+			<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2007 (c) SJRDoeraene</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
 			<VersionInfoKeys Name="OriginalFilename">FunLabyButtons.bpl</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductVersion">5.0</VersionInfoKeys>
 			<VersionInfoKeys Name="Comments"></VersionInfoKeys>
-		</VersionInfoKeys>  
-    <Excluded_Packages>
+		</VersionInfoKeys>  <Excluded_Packages>
       <Excluded_Packages Name="C:\DOCUME~1\Sepi\MESDOC~1\PROJET~1\Bpl\JclUsesExpert90.bpl">JCL Uses Wizard</Excluded_Packages>
     </Excluded_Packages>
   </Delphi.Personality>

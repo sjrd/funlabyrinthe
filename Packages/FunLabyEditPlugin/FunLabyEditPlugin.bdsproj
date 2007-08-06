@@ -5,12 +5,12 @@
 			<Option Name="Personality">Delphi.Personality</Option>
 			<Option Name="ProjectType"></Option>
 			<Option Name="Version">1.0</Option>
-			<Option Name="GUID">{A9777E95-7475-46E0-97B3-468D0207FCEF}</Option>
+			<Option Name="GUID">{B9611954-431A-4065-BE7C-0E75345D5516}</Option>
 		</Option>
 	</PersonalityInfo>
 	<Delphi.Personality>
 		<Source>
-			<Source Name="MainSource">FunLabyTools.dpk</Source>
+			<Source Name="MainSource">FunLabyEditPlugin.dpk</Source>
 		</Source>
 		<FileVersion>
 			<FileVersion Name="Version">7.0</FileVersion>
@@ -112,7 +112,7 @@
 			<Linker Name="MinStackSize">16384</Linker>
 			<Linker Name="MaxStackSize">1048576</Linker>
 			<Linker Name="ImageBase">4194304</Linker>
-			<Linker Name="ExeDescription">FunLabyrinthe helper tools</Linker>
+			<Linker Name="ExeDescription">Plug-in system of FunLabyEdit</Linker>
 		</Linker>
 		<Directories>
 			<Directories Name="OutputDir"></Directories>
@@ -127,7 +127,7 @@
 		</Directories>
 		<Parameters>
 			<Parameters Name="RunParams"></Parameters>
-			<Parameters Name="HostApplication">C:\Documents and Settings\Sébastien\Mes documents\Projets Borland Studio\FunLabyrinthe\Labyrinthe.exe</Parameters>
+			<Parameters Name="HostApplication"></Parameters>
 			<Parameters Name="Launcher"></Parameters>
 			<Parameters Name="UseLauncher">False</Parameters>
 			<Parameters Name="DebugCWD"></Parameters>
@@ -159,15 +159,17 @@
 		</VersionInfo>
 		<VersionInfoKeys>
 			<VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys>
-			<VersionInfoKeys Name="FileDescription">FunLabyrinthe helper tools</VersionInfoKeys>
+			<VersionInfoKeys Name="FileDescription">Plug-in system of FunLabyEdit</VersionInfoKeys>
 			<VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys>
-			<VersionInfoKeys Name="InternalName">FunLabyTools</VersionInfoKeys>
+			<VersionInfoKeys Name="InternalName">FunLabyEditPlugin</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalCopyright">Copyright (c) 2000-2007 SJRDoeraene</VersionInfoKeys>
-			<VersionInfoKeys Name="OriginalFilename">FunLabyTools.bpl</VersionInfoKeys>
+			<VersionInfoKeys Name="OriginalFilename">FunLabyEditPlugin.bpl</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductVersion">5.0</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
-		</VersionInfoKeys>  <Excluded_Packages>
+		</VersionInfoKeys>  
+    
+    <Excluded_Packages>
       <Excluded_Packages Name="C:\DOCUME~1\Sepi\MESDOC~1\PROJET~1\Bpl\JclUsesExpert90.bpl">JCL Uses Wizard</Excluded_Packages>
     </Excluded_Packages>
   </Delphi.Personality>
