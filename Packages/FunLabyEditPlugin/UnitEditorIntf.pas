@@ -55,12 +55,59 @@ type
   *}
   TCreateUnitEditorProc = function(UnitFile : TUnitFile) : IUnitEditor50;
 
+  {*
+    Type de routine de call-back qui crée une nouvelle unité et son éditeur
+    @param MasterFile   Fichier maître FunLabyrinthe
+    @return Interface vers l'éditeur créé
+  *}
+  TCreateNewUnitProc = function(MasterFile : TMasterFile) : IUnitEditor50;
+
+  PUnitCreator = ^TUnitCreator; /// Pointeur vers TUnitCreator
+
+  {*
+    Informations sur un créateur de fichier unité
+    @author sjrd
+    @version 5.0
+  *}
+  TUnitCreator = record
+    Title : string;                  /// Titre du créateur
+    Description : string;            /// Description longue
+    CreateProc : TCreateNewUnitProc; /// Routine fabrique
+  end;
+
+  /// Tableau de TUnitCreator
+  TUnitCreatorArray = array of TUnitCreator;
+
+  PUnitFilter = ^TUnitFilter; /// Pointeur vers TUnitFilter
+
+  {*
+    Informations sur un filtre de fichier unité
+    @author sjrd
+    @version 5.0
+  *}
+  TUnitFilter = record
+    GUID : TGUID;    /// GUID du handler
+    Filter : string; /// Filtre de fichiers
+  end;
+
+  /// Tableau de TUnitFilter
+  TUnitFilterArray = array of TUnitFilter;
+
 procedure RegisterUnitEditor(const GUID : TGUID;
   CreateProc : TCreateUnitEditorProc);
 procedure UnregisterUnitEditor(const GUID : TGUID);
 function FindUnitEditorCreateProc(const GUID : TGUID) : TCreateUnitEditorProc;
 function CreateUnitEditor(UnitFile : TUnitFile) : IUnitEditor50;
 function UnitEditorExists(const GUID : TGUID) : boolean;
+
+procedure RegisterUnitCreator(const Title, Description : string;
+  CreateProc : TCreateNewUnitProc);
+procedure UnregisterUnitCreator(CreateProc : TCreateNewUnitProc);
+procedure GetUnitCreators(out UnitCreatorArray : TUnitCreatorArray);
+
+procedure RegisterUnitFilter(const GUID : TGUID; const Filter : string);
+procedure UnregisterUnitFilter(const GUID : TGUID);
+procedure GetUnitFilters(out UnitFilterArray : TUnitFilterArray);
 
 implementation
 
@@ -78,31 +125,34 @@ type
   end;
 
 var
-  UnitEditors : TList = nil; /// Liste des éditeurs d'unités
+  UnitEditors : TList = nil;  /// Liste des éditeurs d'unités
+  UnitCreators : TList = nil; /// Liste des créateurs d'unités
+  UnitFilters : TList = nil;  /// Liste des filtres d'unités
 
 {*
-  S'assure que la liste des d'éditeurs d'unités est créée
+  S'assure qu'une liste TList est créée
+  @param List   Liste à vérifier
 *}
-procedure EnsureUnitEditorListCreated;
+procedure EnsureListCreated(var List : TList);
 begin
-  if UnitEditors = nil then
-    UnitEditors := TList.Create;
+  if List = nil then
+    List := TList.Create;
 end;
 
 {*
-  Cherche un enregistrement dans la liste des éditeurs d'unités
+  Cherche un enregistrement dans une liste par un GUID
   @param GUID   GUID de l'éditeur recherché
   @return Index de l'éditeur dans la liste
 *}
-function IndexOfUnitEditor(const GUID : TGUID) : integer;
-var List : PPointerList;
+function IndexOfGUID(List : TList; const GUID : TGUID) : integer;
+var PointerList : PPointerList;
 begin
-  List := UnitEditors.List;
+  PointerList := List.List;
   Result := 0;
 
-  while Result < UnitEditors.Count do
+  while Result < List.Count do
   begin
-    if SameGUID(GUID, PUnitEditor(List[Result]).GUID) then
+    if SameGUID(GUID, PGUID(PointerList[Result])^) then
       exit
     else
       inc(Result);
@@ -110,6 +160,10 @@ begin
 
   Result := -1;
 end;
+
+{-----------------------------}
+{ Liste des éditeurs d'unités }
+{-----------------------------}
 
 {*
   Enregistre un éditeur de fichier unité
@@ -122,8 +176,8 @@ procedure RegisterUnitEditor(const GUID : TGUID;
 var Index : integer;
     Editor : PUnitEditor;
 begin
-  EnsureUnitEditorListCreated;
-  Index := IndexOfUnitEditor(GUID);
+  EnsureListCreated(UnitEditors);
+  Index := IndexOfGUID(UnitEditors, GUID);
 
   if Index >= 0 then Editor := UnitEditors[Index] else
   begin
@@ -131,26 +185,27 @@ begin
     Editor.GUID := GUID;
     UnitEditors.Add(Editor);
   end;
+
   Editor.CreateProc := CreateProc;
 end;
 
 {*
   Supprime un éditeur d'unité
-  UnregisterUnitEditorClass est insensible à une tentative de suppression d'un
+  UnregisterUnitEditor est insensible à une tentative de suppression d'un
   éditeur inexistant.
   @param GUID   GUID géré par l'éditeur
 *}
 procedure UnregisterUnitEditor(const GUID : TGUID);
 var Index : integer;
-    Handler : PUnitEditor;
+    Editor : PUnitEditor;
 begin
   if not Assigned(UnitEditors) then exit;
-  Index := IndexOfUnitEditor(GUID);
+  Index := IndexOfGUID(UnitEditors, GUID);
   if Index < 0 then exit;
 
-  Handler := UnitEditors[Index];
+  Editor := UnitEditors[Index];
   UnitEditors.Delete(Index);
-  Dispose(Handler);
+  Dispose(Editor);
 end;
 
 {*
@@ -163,7 +218,7 @@ function FindUnitEditorCreateProc(const GUID : TGUID) : TCreateUnitEditorProc;
 var Index : integer;
 begin
   if Assigned(UnitEditors) then
-    Index := IndexOfUnitEditor(GUID)
+    Index := IndexOfGUID(UnitEditors, GUID)
   else
     Index := -1;
 
@@ -194,13 +249,162 @@ end;
 function UnitEditorExists(const GUID : TGUID) : boolean;
 begin
   Result := Assigned(UnitEditors) and
-    (IndexOfUnitEditor(GUID) >= 0);
+    (IndexOfGUID(UnitEditors, GUID) >= 0);
+end;
+
+{------------------------------}
+{ Liste des créateurs d'unités }
+{------------------------------}
+
+{*
+  Cherche un enregistrement dans la liste des créateurs d'unités
+  @param CreateProc   Routine fabrique
+  @return Index de l'éditeur dans la liste
+*}
+function IndexOfUnitCreator(CreateProc : TCreateNewUnitProc) : integer;
+var List : PPointerList;
+begin
+  List := UnitCreators.List;
+  Result := 0;
+
+  while Result < UnitCreators.Count do
+  begin
+    if @CreateProc = @PUnitCreator(List[Result]).CreateProc then
+      exit
+    else
+      inc(Result);
+  end;
+
+  Result := -1;
+end;
+
+{*
+  Enregistre un créateur de fichier unité
+  Les doublons ne sont pas supportés.
+  @param Title         Titre du créateur
+  @param Description   Description du créateur
+  @param CreateProc    Routine fabrique
+*}
+procedure RegisterUnitCreator(const Title, Description : string;
+  CreateProc : TCreateNewUnitProc);
+var Index : integer;
+    Creator : PUnitCreator;
+begin
+  EnsureListCreated(UnitCreators);
+  Index := IndexOfUnitCreator(CreateProc);
+
+  if Index >= 0 then Creator := UnitCreators[Index] else
+  begin
+    New(Creator);
+    Initialize(Creator^);
+    Creator.CreateProc := CreateProc;
+    UnitCreators.Add(Creator);
+  end;
+
+  Creator.Title := Title;
+  Creator.Description := Description;
+end;
+
+{*
+  Supprime un créateur d'unité
+  UnregisterUnitCreator est insensible à une tentative de suppression d'un
+  créateur inexistant.
+  @param CreateProc   Routine fabrique
+*}
+procedure UnregisterUnitCreator(CreateProc : TCreateNewUnitProc);
+var Index : integer;
+    Creator : PUnitCreator;
+begin
+  if not Assigned(UnitCreators) then exit;
+  Index := IndexOfUnitCreator(CreateProc);
+  if Index < 0 then exit;
+
+  Creator := UnitCreators[Index];
+  UnitCreators.Delete(Index);
+  Finalize(Creator^);
+  Dispose(Creator);
+end;
+
+{*
+  Obtient un tableau des créateurs d'unités disponibles
+  @param UnitCreatorArray   Tableau dans lequel stocker le résultat
+*}
+procedure GetUnitCreators(out UnitCreatorArray : TUnitCreatorArray);
+var I : integer;
+begin
+  SetLength(UnitCreatorArray, UnitCreators.Count);
+  for I := 0 to UnitCreators.Count-1 do
+    UnitCreatorArray[I] := PUnitCreator(UnitCreators[I])^;
+end;
+
+{----------------------------}
+{ Liste des filtres d'unités }
+{----------------------------}
+
+{*
+  Enregistre un filtre de fichier unité
+  Les doublons ne sont pas supportés.
+  @param GUID     GUID du type fichier
+  @param Filter   Filtre de fichier
+*}
+procedure RegisterUnitFilter(const GUID : TGUID; const Filter : string);
+var Index : integer;
+    FilterInfo : PUnitFilter;
+begin
+  EnsureListCreated(UnitFilters);
+  Index := IndexOfGUID(UnitFilters, GUID);
+
+  if Index >= 0 then FilterInfo := UnitFilters[Index] else
+  begin
+    New(FilterInfo);
+    FilterInfo.GUID := GUID;
+    UnitFilters.Add(FilterInfo);
+  end;
+
+  FilterInfo.Filter := Filter;
+end;
+
+{*
+  Supprime un filtre d'unité
+  UnregisterUnitFilter est insensible à une tentative de suppression d'un
+  filtre inexistant.
+  @param GUID   GUID du type de fichier à supprimer
+*}
+procedure UnregisterUnitFilter(const GUID : TGUID);
+var Index : integer;
+    Filter : PUnitFilter;
+begin
+  if not Assigned(UnitFilters) then exit;
+  Index := IndexOfGUID(UnitFilters, GUID);
+  if Index < 0 then exit;
+
+  Filter := UnitFilters[Index];
+  UnitFilters.Delete(Index);
+  Dispose(Filter);
+end;
+
+{*
+  Obtient un tableau des filtres d'unités disponibles
+  @param UnitFilterArray   Tableau dans lequel stocker le résultat
+*}
+procedure GetUnitFilters(out UnitFilterArray : TUnitFilterArray);
+var I : integer;
+begin
+  SetLength(UnitFilterArray, UnitFilters.Count);
+  for I := 0 to UnitFilters.Count-1 do
+    UnitFilterArray[I] := PUnitFilter(UnitFilters[I])^;
 end;
 
 initialization
-  EnsureUnitEditorListCreated;
+  EnsureListCreated(UnitEditors);
+  EnsureListCreated(UnitCreators);
+  EnsureListCreated(UnitFilters);
 finalization
   UnitEditors.Free;
   UnitEditors := nil;
+  UnitCreators.Free;
+  UnitCreators := nil;
+  UnitFilters.Free;
+  UnitFilters := nil;
 end.
 

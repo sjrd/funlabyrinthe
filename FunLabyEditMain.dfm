@@ -1,8 +1,8 @@
 object FormMain: TFormMain
   Left = 0
   Top = 0
-  Width = 678
-  Height = 524
+  Width = 689
+  Height = 542
   Caption = #201'diteur FunLabyrinthe'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -31,7 +31,7 @@ object FormMain: TFormMain
   object ToolBarFile: TActionToolBar
     Left = 0
     Top = 24
-    Width = 670
+    Width = 681
     Height = 26
     ActionManager = ActionManager
     Caption = 'File'
@@ -43,7 +43,7 @@ object FormMain: TFormMain
   object MainMenuBar: TActionMainMenuBar
     Left = 0
     Top = 0
-    Width = 670
+    Width = 681
     Height = 24
     UseSystemFont = False
     ActionManager = ActionManager
@@ -60,15 +60,15 @@ object FormMain: TFormMain
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 471
-    Width = 670
+    Top = 489
+    Width = 681
     Height = 19
     Panels = <>
   end
   object TabBarEditors: TJvTabBar
     Left = 0
     Top = 50
-    Width = 670
+    Width = 681
     Tabs = <
       item
         Caption = 'Cartes et joueurs'
@@ -621,6 +621,18 @@ object FormMain: TFormMain
             Items = <
               item
                 Action = ActionViewAllUnits
+                Caption = '&Toutes'
+              end
+              item
+                Action = ActionAddUnit
+                Caption = '&Ajouter...'
+              end
+              item
+                Action = ActionNewUnit
+                Caption = '&Nouvelle...'
+              end
+              item
+                Caption = '-'
               end>
             Visible = False
             Caption = '&Unit'#233's'
@@ -757,6 +769,16 @@ object FormMain: TFormMain
         'ojet'
       OnExecute = ActionViewAllUnitsExecute
     end
+    object ActionAddUnit: TAction
+      Category = 'Units'
+      Caption = 'Ajouter...'
+      OnExecute = ActionAddUnitExecute
+    end
+    object ActionNewUnit: TAction
+      Category = 'Units'
+      Caption = 'Nouvelle...'
+      OnExecute = ActionNewUnitExecute
+    end
   end
   object ScrewsImages: TImageList
     Height = 30
@@ -787,5 +809,11 @@ object FormMain: TFormMain
     Title = 'Enregistrer la carte'
     Left = 80
     Top = 120
+  end
+  object OpenUnitDialog: TOpenDialog
+    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing, ofDontAddToRecent]
+    Title = 'Ajouter une unit'#233' existante'
+    Left = 16
+    Top = 184
   end
 end

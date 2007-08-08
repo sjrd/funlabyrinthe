@@ -214,13 +214,16 @@ type
     property MapFiles[index : integer] : TMapFile read GetMapFiles;
   end;
 
+function FileNameToHRef(const FileName : TFileName;
+  BaseDirs : array of TFileName) : string;
+
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
 
 implementation
 
 uses
-  UnitFiles, ScStrUtils, IniFiles, Variants, MSXML;
+  UnitFiles, StrUtils, ScStrUtils, IniFiles, Variants, MSXML;
 
 const {don't localize}
   /// Code de format d'un fichier FLM (correspond à '.flm')
@@ -297,6 +300,30 @@ begin
   end;
 
   Result := -1;
+end;
+
+{*
+  Convertit un nom de fichier en HRef
+  @param FileName   Nom de fichier à convertir
+  @param BaseDirs   Liste de répertoires de base à tester avant l'absolu
+  @return HRef pointant sur le nom de fichier FileName
+*}
+function FileNameToHRef(const FileName : TFileName;
+  BaseDirs : array of TFileName) : string;
+var I : integer;
+begin
+  Result := FileName;
+
+  for I := Low(BaseDirs) to High(BaseDirs) do
+  begin
+    if AnsiStartsText(BaseDirs[I], FileName) then
+    begin
+      Result := Copy(FileName, Length(BaseDirs[I])+1, MaxInt);
+      Break;
+    end;
+  end;
+
+  Result := StringReplace(Result, PathDelim, HRefDelim, [rfReplaceAll]);
 end;
 
 {-----------------------}

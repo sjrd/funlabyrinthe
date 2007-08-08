@@ -12,7 +12,8 @@ uses
   MapBase in 'MapBase.pas' {FormMapBase},
   MapEditor in 'MapEditor.pas' {FrameMapEditor: TFrame},
   FunLabyEditConsts in 'FunLabyEditConsts.pas',
-  EditPluginManager in 'EditPluginManager.pas';
+  EditPluginManager in 'EditPluginManager.pas',
+  NewUnit in 'NewUnit.pas' {FormCreateNewUnit};
 
 {$R *.res}
 

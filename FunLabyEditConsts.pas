@@ -30,6 +30,12 @@ resourcestring
   sRemoveMapTitle = 'Retirer une carte';
   sRemoveMap = 'Êtes-vous certain de vouloir retirer cette carte du projet ?';
 
+  sNoUnitOpenerHandlerTitle = 'Pas de gestionnaire disponible';
+  sNoUnitOpenerHandler = 'Aucun gestionnaire disponible pour l''ajout d''unité';
+
+  sNoUnitCreatorTitle = 'Pas de gestionnaire disponible';
+  sNoUnitCreator = 'Aucun gestionnaire disponible pour la création d''unité';
+
 implementation
 
 end.

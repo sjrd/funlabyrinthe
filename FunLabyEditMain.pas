@@ -13,7 +13,7 @@ uses
   ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus, ToolWin,
   ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiMetaUnits, FunLabyUtils,
   FilesUtils, UnitFiles, EditPluginManager, UnitEditorIntf, FileProperties,
-  FunLabyEditConsts, JvTabBar;
+  FunLabyEditConsts, JvTabBar, NewUnit;
 
 type
   {*
@@ -45,6 +45,11 @@ type
     ActionTest: TAction;
     TabBarEditors: TJvTabBar;
     ActionViewAllUnits: TAction;
+    OpenUnitDialog: TOpenDialog;
+    ActionAddUnit: TAction;
+    ActionNewUnit: TAction;
+    procedure ActionNewUnitExecute(Sender: TObject);
+    procedure ActionAddUnitExecute(Sender: TObject);
     procedure TabBarEditorsTabSelected(Sender: TObject; Item: TJvTabBarItem);
     procedure TabBarEditorsTabSelecting(Sender: TObject; Item: TJvTabBarItem;
       var AllowSelect: Boolean);
@@ -74,7 +79,13 @@ type
     SepiRootManager : TSepiAsynchronousRootManager;
     SepiRoot : TSepiMetaRoot; /// Racine Sepi
 
+    BigMenuMaps : TActionClient;  /// Menu des cartes
+    BigMenuUnits : TActionClient; /// Menu des unités
+
+    TabMapEditor : TJvTabBarItem;     /// Onglet d'édition des cartes
     FrameMapEditor : TFrameMapEditor; /// Cadre d'édition des cartes
+
+    UnitActions : array of TAction; /// Liste des actions du menu Unités
 
     FModified : boolean;      /// Indique si le fichier a été modifié
     MasterFile : TMasterFile; /// Fichier maître
@@ -89,6 +100,12 @@ type
     function CloseFile : boolean;
 
     procedure MarkModified;
+
+    procedure MakeUnitActions;
+    procedure DeleteUnitActions;
+    procedure RemakeUnitActions;
+
+    procedure AddUnitEditor(Editor : IUnitEditor50);
 
     procedure SetModified(Value : boolean);
 
@@ -122,9 +139,6 @@ const
   graphique
 *}
 procedure TFormMain.LoadFile;
-var I : integer;
-    PreviousItem : TActionClientItem;
-    ViewUnitAction : TAction;
 begin
   // Un fichier nouvellement chargé n'est modifié que s'il vient d'être créé
   Modified := MasterFile.FileName = '';
@@ -140,34 +154,15 @@ begin
   ActionTest.Enabled := True;
 
   // Menu des cartes
-  MainMenuBar.ActionClient.Items[1].Visible := True;
+  BigMenuMaps.Visible := True;
   ActionAddMap.Enabled := True;
 
   // Menu des unités
-  MainMenuBar.ActionClient.Items[2].Visible := True;
+  BigMenuUnits.Visible := True;
   ActionViewAllUnits.Enabled := True;
-  PreviousItem := ActionManager.FindItemByAction(ActionViewAllUnits);
-
-  // Un sous-menu pour chaque unité
-  if MasterFile.UnitFileCount > 0 then
-  begin
-    PreviousItem := ActionManager.AddSeparator(PreviousItem);
-
-    for I := 0 to MasterFile.UnitFileCount-1 do
-    begin
-      ViewUnitAction := TAction.Create(Self);
-      with ViewUnitAction do
-      begin
-        ActionList := ActionManager;
-        Caption := ExtractFileName(MasterFile.UnitFiles[I].FileName);
-        Tag := Integer(MasterFile.UnitFiles[I]);
-        Enabled := UnitEditorExists(MasterFile.UnitFiles[I].HandlerGUID);
-        OnExecute := ActionViewUnitExecute;
-      end;
-
-      PreviousItem := ActionManager.AddAction(ViewUnitAction, PreviousItem);
-    end;
-  end;
+  ActionAddUnit.Enabled := True;
+  ActionNewUnit.Enabled := True;
+  MakeUnitActions;
 
   // Chargement des cartes
   FrameMapEditor.LoadFile(SepiRoot, MasterFile);
@@ -178,8 +173,6 @@ end;
   Décharge le MasterFile de l'interface graphique
 *}
 procedure TFormMain.UnloadFile;
-var I : integer;
-    ViewUnitAction : TContainedAction;
 begin
   // Déchargement des cartes
   FrameMapEditor.UnloadFile;
@@ -192,22 +185,15 @@ begin
   ActionTest.Enabled := False;
 
   // Menu des cartes
-  MainMenuBar.ActionClient.Items[1].Visible := False;
+  BigMenuMaps.Visible := False;
   ActionAddMap.Enabled := False;
 
   // Menu des unités
-  MainMenuBar.ActionClient.Items[2].Visible := False;
+  BigMenuUnits.Visible := False;
   ActionViewAllUnits.Enabled := False;
-
-  with MainMenuBar.ActionClient.Items[2] do
-  begin
-    for I := Items.Count-1 downto 1 do
-    begin
-      ViewUnitAction := Items[I].Action;
-      Items.Delete(I);
-      ViewUnitAction.Free;
-    end;
-  end;
+  ActionAddUnit.Enabled := False;
+  ActionNewUnit.Enabled := False;
+  DeleteUnitActions;
 
   // Autres variables
   Master := nil;
@@ -297,11 +283,7 @@ begin
       MapFileName := SaveMapDialog.FileName;
     end;
 
-    if AnsiSameText(Copy(MapFileName, 1, Length(DirName)), DirName) then
-      MapHRef := Copy(MapFileName, Length(DirName)+1, Length(MapFileName)) else
-    if AnsiSameText(Copy(MapFileName, 1, Length(fMapsDir)), fMapsDir) then
-      MapHRef := Copy(MapFileName, Length(fMapsDir)+1, Length(MapFileName)) else
-    MapHRef := MapFileName;
+    MapHRef := FileNameToHRef(MapFileName, [DirName, fMapsDir]);
 
     MapFile.Save(MapHRef, MapFileName);
   end;
@@ -372,13 +354,85 @@ begin
 end;
 
 {*
+  Crée une entrée dans le menu des unités pour chaque unité
+*}
+procedure TFormMain.MakeUnitActions;
+var I : integer;
+    PreviousItem : TActionClientItem;
+    UnitFile : TUnitFile;
+begin
+  PreviousItem := BigMenuUnits.Items[BigMenuUnits.Items.Count-1];
+  SetLength(UnitActions, MasterFile.UnitFileCount);
+
+  for I := 0 to MasterFile.UnitFileCount-1 do
+  begin
+    UnitFile := MasterFile.UnitFiles[I];
+    UnitActions[I] := TAction.Create(Self);
+    with UnitActions[I] do
+    begin
+      ActionList := ActionManager;
+      Caption := ExtractFileName(UnitFile.FileName);
+      Tag := Integer(UnitFile);
+      Enabled := UnitEditorExists(UnitFile.HandlerGUID);
+      OnExecute := ActionViewUnitExecute;
+    end;
+    PreviousItem := ActionManager.AddAction(UnitActions[I], PreviousItem);
+  end;
+end;
+
+{*
+  Supprime toutes les actions Voir une unité et leurs menus associés
+*}
+procedure TFormMain.DeleteUnitActions;
+var I : integer;
+begin
+  for I := 0 to Length(UnitActions)-1 do
+  begin
+    ActionManager.DeleteActionItems([UnitActions[I]]);
+    UnitActions[I].Free;
+  end;
+  SetLength(UnitActions, 0);
+end;
+
+{*
+  Reconstruit le menu des unités
+*}
+procedure TFormMain.RemakeUnitActions;
+begin
+  DeleteUnitActions;
+  MakeUnitActions;
+end;
+
+{*
+  Ajoute un éditeur d'unité à l'interface visuelle et l'affiche
+  @param Editor   Éditeur à ajouter
+*}
+procedure TFormMain.AddUnitEditor(Editor : IUnitEditor50);
+var EditorControl : TControl;
+    Tab : TJvTabBarItem;
+begin
+  // Configurer le contrôle d'édition
+  EditorControl := Editor.Control;
+  EditorControl.Align := alClient;
+  EditorControl.Visible := False;
+  EditorControl.Parent := Self;
+
+  // Créer un nouvel onglet pour l'éditeur et l'afficher
+  Tab := TJvTabBarItem(TabBarEditors.Tabs.Add);
+  Tab.Caption := ExtractFileName(Editor.UnitFile.FileName);
+  Tab.Data := TObject(Pointer(Editor));
+  Tab.Tag := UnitEditorTag;
+  Tab.Selected := True;
+end;
+
+{*
   Modifie l'état Modifié du fichier
   @param Value   Nouvelle valeur
 *}
 procedure TFormMain.SetModified(Value : boolean);
 begin
   FModified := Value;
-  TabBarEditors.Tabs[0].Modified := Value;
+  TabMapEditor.Modified := Value;
 end;
 
 {*
@@ -396,6 +450,10 @@ begin
 
   MasterFile := nil;
 
+  BigMenuMaps := MainMenuBar.ActionClient.Items[1];
+  BigMenuUnits := MainMenuBar.ActionClient.Items[2];
+
+  TabMapEditor := TabBarEditors.Tabs[0];
   FrameMapEditor := TFrameMapEditor.Create(Self);
   with FrameMapEditor do
   begin
@@ -403,8 +461,8 @@ begin
     Align := alClient;
     MarkModified := Self.MarkModified;
   end;
-  TabBarEditors.Tabs[0].Data := FrameMapEditor;
-  TabBarEditors.Tabs[0].Tag := MapEditorTag;
+  TabMapEditor.Data := FrameMapEditor;
+  TabMapEditor.Tag := MapEditorTag;
 
   if ParamCount > 0 then
     OpenFile(ParamStr(1));
@@ -549,15 +607,67 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnExecute d'une action Voir toutes les unités
+  Gestionnaire d'événement OnExecute de l'action Voir toutes les unités
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.ActionViewAllUnitsExecute(Sender: TObject);
 var I : integer;
 begin
-  with MainMenuBar.ActionClient.Items[2] do
-    for I := 2 to Items.Count-1 do
-      Items[I].Action.Execute;
+  for I := 0 to Length(UnitActions)-1 do
+    UnitActions[I].Execute;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Ajouter une unité
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionAddUnitExecute(Sender: TObject);
+var Filters : TUnitFilterArray;
+    StrFilters, FileName, HRef : string;
+    I : integer;
+    GUID : TGUID;
+begin
+  if Modified and (not SaveFile) then
+    exit;
+
+  GetUnitFilters(Filters);
+
+  if Length(Filters) = 0 then
+  begin
+    ShowDialog(sNoUnitOpenerHandlerTitle, sNoUnitOpenerHandler, dtError);
+    exit;
+  end;
+
+  StrFilters := '';
+  for I := 0 to Length(Filters)-1 do
+    StrFilters := Filters[I].Filter + '|';
+  SetLength(StrFilters, Length(StrFilters)-1);
+
+  OpenUnitDialog.Filter := StrFilters;
+  if not OpenUnitDialog.Execute then
+    exit;
+
+  GUID := Filters[OpenUnitDialog.FilterIndex-1].GUID;
+  FileName := OpenUnitDialog.FileName;
+  HRef := FileNameToHRef(FileName, [ExtractFilePath(FileName), fUnitsDir]);
+
+  AddUnitEditor(CreateUnitEditor(MasterFile.AddUnitFile(GUID, HRef)));
+  RemakeUnitActions;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Nouvelle unité
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionNewUnitExecute(Sender: TObject);
+var Editor : IUnitEditor50;
+begin
+  Editor := TFormCreateNewUnit.NewUnit(MasterFile);
+  if Editor <> nil then
+  begin
+    AddUnitEditor(Editor);
+    RemakeUnitActions;
+  end;
 end;
 
 {*
@@ -568,8 +678,6 @@ procedure TFormMain.ActionViewUnitExecute(Sender: TObject);
 var I : integer;
     UnitFile : TUnitFile;
     Tab : TJvTabBarItem;
-    Editor : IUnitEditor50;
-    EditorControl : TControl;
 begin
   UnitFile := TUnitFile((Sender as TAction).Tag);
 
@@ -586,18 +694,7 @@ begin
   end;
 
   // Créer l'éditeur
-  Editor := CreateUnitEditor(UnitFile);
-  EditorControl := Editor.Control;
-  EditorControl.Align := alClient;
-  EditorControl.Visible := False;
-  EditorControl.Parent := Self;
-
-  // Créer un nouvel onglet pour l'éditeur et l'afficher
-  Tab := TJvTabBarItem(TabBarEditors.Tabs.Add);
-  Tab.Caption := ExtractFileName(UnitFile.FileName);
-  Tab.Data := TObject(Pointer(Editor));
-  Tab.Tag := UnitEditorTag;
-  Tab.Selected := True;
+  AddUnitEditor(CreateUnitEditor(UnitFile));
 end;
 
 {*
