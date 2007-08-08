@@ -173,6 +173,8 @@ type
     class function FindUnitFileClass(const GUID : TGUID) : TUnitFileClass;
 
     function ResolveHRef(const HRef, DefaultDir : string) : TFileName;
+    function MakeHRef(const FileName : TFileName;
+      const DefaultDir : string) : string;
 
     function AddUnitFile(const GUID : TGUID; const HRef : string;
       Params : TStrings = nil) : TUnitFile;
@@ -214,8 +216,10 @@ type
     property MapFiles[index : integer] : TMapFile read GetMapFiles;
   end;
 
+function HRefToFileName(const HRef : string;
+  const BaseDirs : array of TFileName) : TFileName;
 function FileNameToHRef(const FileName : TFileName;
-  BaseDirs : array of TFileName) : string;
+  const BaseDirs : array of TFileName) : string;
 
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
@@ -303,13 +307,42 @@ begin
 end;
 
 {*
+  Convertit un HRef en nom de fichier
+  @param HRef       HRef à convertir
+  @param BaseDirs   Liste de répertoires de base à tester avant l'absolu
+  @return Nom du fichier sur lequel pointe HRef
+  @throws EFileError Le fichier n'existe pas
+*}
+function HRefToFileName(const HRef : string;
+  const BaseDirs : array of TFileName) : TFileName;
+var I : integer;
+    SubFile : TFileName;
+begin
+  SubFile := StringReplace(HRef, HRefDelim, PathDelim, [rfReplaceAll]);
+
+  for I := Low(BaseDirs) to High(BaseDirs) do
+  begin
+    if FileExists(BaseDirs[I]+SubFile) then
+    begin
+      Result := BaseDirs[I]+SubFile;
+      exit;
+    end;
+  end;
+
+  if FileExists(SubFile) then
+    Result := SubFile
+  else
+    raise EFileError.CreateFmt(sFileNotFound, [HRef]);
+end;
+
+{*
   Convertit un nom de fichier en HRef
   @param FileName   Nom de fichier à convertir
   @param BaseDirs   Liste de répertoires de base à tester avant l'absolu
   @return HRef pointant sur le nom de fichier FileName
 *}
 function FileNameToHRef(const FileName : TFileName;
-  BaseDirs : array of TFileName) : string;
+  const BaseDirs : array of TFileName) : string;
 var I : integer;
 begin
   Result := FileName;
@@ -1007,30 +1040,34 @@ end;
   @param HRef         Adresse HRef du fichier
   @param DefaultDir   Dossier par défaut du type de fichier attendu
   @return Nom du fichier qualifié de son chemin d'accès
-  @throws EFileError : Le fichier n'existe pas
+  @throws EFileError Le fichier n'existe pas
 *}
 function TMasterFile.ResolveHRef(const HRef, DefaultDir : string) : TFileName;
-
-  function TestAndReturn(const Path : string;
-    out FileName : TFileName) : boolean;
-  begin
-    Result := FileExists(Path);
-    if Result then
-      FileName := Path;
-  end;
-
-  var FilePath, SubDir, SubFile : string;
+var FilePath, SubDir : string;
 begin
   FilePath := ExtractFilePath(FileName);
   SubDir := ChangeFileExt(ExtractFileName(FileName), '') + PathDelim;
-  SubFile := StringReplace(HRef, HRefDelim, PathDelim, [rfReplaceAll]);
 
-  if (not TestAndReturn(FilePath   + SubDir + SubFile, Result)) and
-     (not TestAndReturn(DefaultDir + SubDir + SubFile, Result)) and
-     (not TestAndReturn(FilePath   +          SubFile, Result)) and
-     (not TestAndReturn(DefaultDir +          SubFile, Result)) and
-     (not TestAndReturn(                      SubFile, Result)) then
-    raise EFileError.CreateFmt(sFileNotFound, [HRef]);
+  Result := HRefToFileName(HRef,
+    [FilePath+SubDir, DefaultDir+SubDir, FilePath, DefaultDir]);
+end;
+
+{*
+  Construit une adresse HRef pour un fichier
+  @param FileName     Nom du fichier
+  @param DefaultDir   Dossier par défaut du type du fichier
+  @return Adresse HRef du fichier, relativement au contexte du fichier maître
+  @throws EFileError Le fichier n'existe pas
+*}
+function TMasterFile.MakeHRef(const FileName : TFileName;
+  const DefaultDir : string) : string;
+var FilePath, SubDir : string;
+begin
+  FilePath := ExtractFilePath(FileName);
+  SubDir := ChangeFileExt(ExtractFileName(FileName), '') + PathDelim;
+
+  Result := FileNameToHRef(FileName,
+    [FilePath+SubDir, DefaultDir+SubDir, FilePath, DefaultDir]);
 end;
 
 {*

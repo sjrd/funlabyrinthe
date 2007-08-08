@@ -256,7 +256,8 @@ begin
   begin
     if Map = nil then
     begin
-      ShowDialog(sCantSave, Format(sCantSaveUnplacedPlayer, [ID]), dtError);
+      SdDialogs.ShowDialog(sCantSave,
+        Format(sCantSaveUnplacedPlayer, [ID]), dtError);
       exit;
     end;
   end;
@@ -627,7 +628,7 @@ var Filters : TUnitFilterArray;
     I : integer;
     GUID : TGUID;
 begin
-  if Modified and (not SaveFile) then
+  if Modified and (not SaveFile(MasterFile.FileName)) then
     exit;
 
   GetUnitFilters(Filters);
@@ -662,6 +663,9 @@ end;
 procedure TFormMain.ActionNewUnitExecute(Sender: TObject);
 var Editor : IUnitEditor50;
 begin
+  if Modified and (not SaveFile(MasterFile.FileName)) then
+    exit;
+
   Editor := TFormCreateNewUnit.NewUnit(MasterFile);
   if Editor <> nil then
   begin
