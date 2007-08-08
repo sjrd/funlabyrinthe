@@ -12,27 +12,53 @@ interface
 
 uses
   Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
-  SdDialogs, FunLabyUtils, UnitFiles, Generics, FLBFields, C4xCommon,
-  C4xComponents, C4xFields, C4xScrewsTable;
+  SdDialogs, FunLabyUtils, FilesUtils, UnitFiles, Generics, FLBFields,
+  C4xCommon, C4xComponents, C4xFields, C4xScrewsTable;
 
 resourcestring
   sAskForTipsTitle = 'Activation des indices';
   sAskForTips = 'Ce labyrinthe propose certains indices : '+
     'voulez-vous les activer ?';
 
-procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
-  Params : TStrings); stdcall;
+type
+  TCompatibility4xUnit = class(TInterfacedUnitFile)
+  private
+    FSourceHRef : string;
+  protected
+    procedure GameStarted; override;
 
-procedure GameStarted(UnitFile : TBPLUnitFile; Master : TMaster); stdcall;
+    procedure RegisterComponents(
+      RegisterSingleComponentProc : TRegisterSingleComponentProc;
+      RegisterComponentSetProc : TRegisterComponentSetProc); override;
 
-procedure RegisterComponents(UnitFile : TBPLUnitFile; Master : TMaster;
-  RegisterSingleComponentProc : TRegisterSingleComponentProc;
-  RegisterComponentSetProc : TRegisterComponentSetProc); stdcall;
+    procedure GetParams(Params : TStrings); override;
+  public
+    constructor Create(AMasterFile : TMasterFile; Params : TStrings);
 
-procedure GetParams(UnitFile : TBPLUnitFile; Master : TMaster;
-  Params : TStrings); stdcall;
+    property SourceHRef : string read FSourceHRef;
+  end;
+
+function CreateUnitFile(BPLHandler : TBPLUnitFile; Master : TMaster;
+  Params : TStrings) : IUnitFile50; stdcall;
 
 implementation
+
+{*
+  Crée l'unité Compatibility4x
+  @param BPLHandler   Gestionnaire d'unité BPL prenant en charge ce paquet
+  @param Master       Maître FunLabyrinthe
+  @param Params       Paramètres passés à l'unité
+  @return Interface de l'unité Compatibility4x créée
+*}
+function CreateUnitFile(BPLHandler : TBPLUnitFile; Master : TMaster;
+  Params : TStrings) : IUnitFile50; stdcall;
+begin
+  Result := TCompatibility4xUnit.Create(BPLHandler.MasterFile, Params);
+end;
+
+{-----------------------------}
+{ Classe TCompatibility4xUnit }
+{-----------------------------}
 
 const {don't localize}
   attrFileName = 'FileName';   /// Attribut pour le nom de fichier
@@ -42,11 +68,10 @@ const {don't localize}
 
 {*
   Charge tous les composants de compatibilité 4.x de FunLabyrinthe
-  @param UnitFile   Fichier unité appelant
-  @param Master     Maître FunLabyrinthe dans lequel charger les composants
-  @param Params     Paramètres envoyés au fichier unité
+  @param AMasterFile   Fichier maître
+  @param Params        Paramètres envoyés au fichier unité
 *}
-procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
+constructor TCompatibility4xUnit.Create(AMasterFile : TMasterFile;
   Params : TStrings);
 const {don't localize}
   KindStrings : array[0..14] of string = (
@@ -69,10 +94,12 @@ var FileName : TFileName;
 begin
   { Don't localize any of the strings in this procedure. }
 
+  inherited Create(AMasterFile);
+
   try
-    FileName := UnitFile.MasterFile.ResolveHRef(
+    FileName := MasterFile.ResolveHRef(
       Params.Values[attrFileName], fUnitsDir);
-    UnitFile.Attributes.Values[attrFileName] := Params.Values[attrFileName];
+    FSourceHRef := Params.Values[attrFileName];
   except
     FileName := '';
   end;
@@ -112,7 +139,7 @@ begin
       try
         ActionsList := TObjectList.Create(False);
         try
-          Counters.DelimitedText := UnitFile.Attributes.Values[attrCounters];
+          Counters.DelimitedText := Params.Values[attrCounters];
           while True do
           begin
             // Ici on lit une série d'actions, dans l'ordre de Number
@@ -182,7 +209,7 @@ begin
             inc(Number);
           end;
 
-          Infos := TC4xInfos.Create(UnitFile.MasterFile, ActionsList);
+          Infos := TC4xInfos.Create(MasterFile, ActionsList);
         finally
           ActionsList.Free;
         end;
@@ -193,7 +220,7 @@ begin
       FileContents.Free;
     end;
 
-    Counters.DelimitedText := UnitFile.Attributes.Values[attrVariables];
+    Counters.DelimitedText := Params.Values[attrVariables];
     for I := 1 to Min(Counters.Count, MaxVar) do
       Infos.Variables[I] := StrToIntDef(Counters[I-1], 0);
   finally
@@ -210,13 +237,9 @@ begin
 end;
 
 {*
-  Exécuté lorsque la partie vient juste d'être commencée
-  GameStarted est appelée lorsque la partie vient juste d'être commencée (en
-  mode jeu, donc pas en mode édition).
-  @param UnitFile   Fichier unité appelant
-  @param Master     Maître FunLabyrinthe
+  [@inheritDoc]
 *}
-procedure GameStarted(UnitFile : TBPLUnitFile; Master : TMaster);
+procedure TCompatibility4xUnit.GameStarted;
 var Infos : TC4xInfos;
     I : integer;
     DoNextPhase, HasMoved, HasShownMsg, Successful : boolean;
@@ -259,13 +282,9 @@ begin
 end;
 
 {*
-  Enregistre les différents composants à placer dans la palette d'édition
-  @param UnitFile                      Fichier unité appelant
-  @param Master                        Maître FunLabyrinthe
-  @param RegisterSingleComponentProc   Call-back pour un unique composant
-  @param RegisterComponentSetProc      Call-back pour un ensemble de composants
+  [inheritDoc]
 *}
-procedure RegisterComponents(UnitFile : TBPLUnitFile; Master : TMaster;
+procedure TCompatibility4xUnit.RegisterComponents(
   RegisterSingleComponentProc : TRegisterSingleComponentProc;
   RegisterComponentSetProc : TRegisterComponentSetProc);
 
@@ -311,18 +330,14 @@ begin
 end;
 
 {*
-  Dresse la liste des paramètres à enregistrer
-  @param UnitFile   Fichier unité appelant
-  @param Master     Maître FunLabyrinthe
-  @param Params     Liste des paramètres
+  [@inheritDoc]
 *}
-procedure GetParams(UnitFile : TBPLUnitFile; Master : TMaster;
-  Params : TStrings);
+procedure TCompatibility4xUnit.GetParams(Params : TStrings);
 var Infos : TC4xInfos;
     I : integer;
     Counters : string;
 begin
-  Params.Values[attrFileName] := UnitFile.Attributes.Values[attrFileName];
+  Params.Values[attrFileName] := SourceHRef;
 
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   if Infos.ActionsCount > 0 then
@@ -356,10 +371,7 @@ end;
 
 {$IFNDEF DCTD}
 exports
-  LoadComponents name 'LoadComponents',
-  GameStarted name 'GameStarted',
-  RegisterComponents name 'RegisterComponents',
-  GetParams name 'GetParams';
+  CreateUnitFile name 'CreateUnitFile';
 {$ENDIF}
 
 end.

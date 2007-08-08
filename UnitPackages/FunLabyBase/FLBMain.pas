@@ -10,29 +10,55 @@ unit FLBMain;
 interface
 
 uses
-  SysUtils, Classes, FunLabyUtils, UnitFiles, Generics, FLBCommon, FLBFields,
-  FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBBoat, FLBLift, FLBObstacles;
+  SysUtils, Classes, FunLabyUtils, FilesUtils, UnitFiles, Generics, FLBCommon,
+  FLBFields, FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBBoat, FLBLift,
+  FLBObstacles;
 
-procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
-  Params : TStrings); stdcall;
+type
+  TFunLabyBaseUnit = class(TInterfacedUnitFile)
+  protected
+    procedure RegisterComponents(
+      RegisterSingleComponentProc : TRegisterSingleComponentProc;
+      RegisterComponentSetProc : TRegisterComponentSetProc); override;
+  public
+    constructor Create(AMasterFile : TMasterFile; Params : TStrings);
+  end;
 
-procedure RegisterComponents(UnitFile : TBPLUnitFile; Master : TMaster;
-  RegisterSingleComponentProc : TRegisterSingleComponentProc;
-  RegisterComponentSetProc : TRegisterComponentSetProc); stdcall;
+function CreateUnitFile(BPLHandler : TBPLUnitFile; Master : TMaster;
+  Params : TStrings) : IUnitFile50; stdcall;
 
 implementation
 
 {*
-  Charge tous les composants au coeur de FunLabyrinthe
+  Crée l'unité FunLabyBase
+  @param BPLHandler   Gestionnaire d'unité BPL prenant en charge ce paquet
+  @param Master       Maître FunLabyrinthe
+  @param Params       Paramètres passés à l'unité
+  @return Interface de l'unité FunLabyBase créée
+*}
+function CreateUnitFile(BPLHandler : TBPLUnitFile; Master : TMaster;
+  Params : TStrings) : IUnitFile50; stdcall;
+begin
+  Result := TFunLabyBaseUnit.Create(BPLHandler.MasterFile, Params);
+end;
+
+{-------------------------}
+{ Classe TFunLabyBaseUnit }
+{-------------------------}
+
+{*
+  Crée l'unité FunLabyBase et charge tous les composants
   @param UnitFile   Fichier unité appelant
   @param Master     Maître FunLabyrinthe dans lequel charger les composants
   @param Params     Paramètres envoyés au fichier unité
 *}
-procedure LoadComponents(UnitFile : TBPLUnitFile; Master : TMaster;
+constructor TFunLabyBaseUnit.Create(AMasterFile : TMasterFile;
   Params : TStrings);
 var Buoys, Planks, SilverKeys, GoldenKeys : TObjectDef;
     I : integer;
 begin
+  inherited Create(AMasterFile);
+
   // Plug-in
   TBuoyPlugin.Create(Master, idBuoyPlugin);
   TPlankPlugin.Create(Master, idPlankPlugin);
@@ -111,7 +137,7 @@ end;
   @param RegisterSingleComponentProc   Call-back pour un unique composant
   @param RegisterComponentSetProc      Call-back pour un ensemble de composants
 *}
-procedure RegisterComponents(UnitFile : TBPLUnitFile; Master : TMaster;
+procedure TFunLabyBaseUnit.RegisterComponents(
   RegisterSingleComponentProc : TRegisterSingleComponentProc;
   RegisterComponentSetProc : TRegisterComponentSetProc);
 
@@ -189,8 +215,7 @@ end;
 
 {$IFNDEF DCTD}
 exports
-  LoadComponents name 'LoadComponents',
-  RegisterComponents name 'RegisterComponents';
+  CreateUnitFile name 'CreateUnitFile';
 {$ENDIF}
 
 end.
