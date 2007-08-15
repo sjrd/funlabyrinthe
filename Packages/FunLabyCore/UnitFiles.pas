@@ -308,8 +308,8 @@ begin
 end;
 
 initialization
-  TMasterFile.RegisterUnitFileClass(BPLUnitHandlerGUID, TBPLUnitFile);
+  UnitFileClasses.Add(BPLUnitHandlerGUID, TBPLUnitFile);
 finalization
-  TMasterFile.UnregisterUnitFileClass(BPLUnitHandlerGUID);
+  UnitFileClasses.Remove(BPLUnitHandlerGUID);
 end.
 

@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
   ScUtils, SdDialogs, SepiMetaUnits, FunLabyUtils, FilesUtils,
-  FunLabyEditConsts, PlayerObjects, PlayerPlugins, PlayerAttributes, AddMap;
+  FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters, AddMap;
 
 type
   {*
@@ -612,7 +612,7 @@ begin
     end;
     opShowAttributes :
     begin
-      if TFormAttributes.ManageAttributes(Player) then
+      if TFormParameters.EditPlayerAttributes(Player) then
         MarkModified;
     end;
     opShowObjects : TFormObjects.ShowObjects(Player);

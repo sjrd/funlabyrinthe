@@ -5,25 +5,30 @@
   @author sjrd
   @version 5.0
 *}
-unit PlayerAttributes;
+unit EditParameters;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Grids, ValEdit, ScDelphiLanguage, FunLabyUtils;
+  Dialogs, StdCtrls, Grids, ValEdit, ScDelphiLanguage, FunLabyUtils, FilesUtils;
 
 resourcestring
+  sUnitParamsCaption = 'Paramètres de l''unité';
+  sUnitParamsPrompt = 'Paramètres de l''unité :';
+  sUnitParamsKeyName = 'Nom';
+  sUnitParamsValueName = 'Valeur';
+
   sWrongKeyFormat = 'Les noms d''attributs ne doivent être constitués que de '+
     'lettres non accentuées et de chiffres';
 
 type
   {*
-    Boîte de dialogue affichant et modifiant les propriétés d'un joueur
+    Boîte de dialogue affichant et modifiant des listes de paires nom/valeur
     @author sjrd
     @version 5.0
   *}
-  TFormAttributes = class(TForm)
+  TFormParameters = class(TForm)
     LabelAttributes: TLabel;
     ValueListAttributes: TValueListEditor;
     ButtonOK: TButton;
@@ -32,9 +37,11 @@ type
       const KeyName, KeyValue: string);
   private
     { Déclarations privées }
+    DataType : (dtString, dtInteger);
   public
     { Déclarations publiques }
-    class function ManageAttributes(Player : TPlayer) : boolean;
+    class function EditPlayerAttributes(Player : TPlayer) : boolean;
+    class function EditUnitParams(var Params : TUnitFileParams) : boolean;
   end;
 
 implementation
@@ -46,12 +53,14 @@ implementation
   @param Player   Joueur concerné
   @return True si une modification a eu lieu, False sinon
 *}
-class function TFormAttributes.ManageAttributes(Player : TPlayer) : boolean;
+class function TFormParameters.EditPlayerAttributes(Player : TPlayer) : boolean;
 var Attributes : TStrings;
     I : integer;
 begin
   with Create(Application) do
   try
+    DataType := dtInteger;
+
     Attributes := TStringList.Create;
     try
       Player.GetAttributes(Attributes);
@@ -80,6 +89,38 @@ begin
 end;
 
 {*
+  Édite la liste des paramètres d'une unité
+  @param Params   Liste des paramètres
+  @return True si la liste a été modifiée, False sinon
+*}
+class function TFormParameters.EditUnitParams(
+  var Params : TUnitFileParams) : boolean;
+var I : integer;
+begin
+  with Create(Application), ValueListAttributes do
+  try
+    DataType := dtString;
+
+    for I := 0 to Length(Params)-1 do
+      Strings.Values[Params[I].Name] := Params[I].Value;
+
+    if ShowModal <> mrOK then Result := False else
+    begin
+      SetLength(Params, Strings.Count);
+      for I := 0 to Length(Params)-1 do with Params[I] do
+      begin
+        Name := Strings.Names[I];
+        Value := Strings.ValueFromIndex[I];
+      end;
+
+      Result := True;
+    end;
+  finally
+    Release;
+  end;
+end;
+
+{*
   Gestionnaire d'événement OnValidate de la liste de valeurs
   @param Sender     Objet qui a déclenché l'événement
   @param ACol       Index de colonne de la cellule à valider
@@ -87,12 +128,13 @@ end;
   @param KeyName    Nom de la clef à valider
   @param KeyValue   Valeur de la clef à valider
 *}
-procedure TFormAttributes.ValueListAttributesValidate(Sender: TObject;
+procedure TFormParameters.ValueListAttributesValidate(Sender: TObject;
   ACol, ARow: Integer; const KeyName, KeyValue: string);
 begin
   if not CorrectIdentifier(KeyName) then
     raise EConvertError.Create(sWrongKeyFormat);
-  if KeyValue <> '' then
+
+  if (DataType = dtInteger) and (KeyValue <> '') then
     StrToInt(KeyValue);
 end;
 

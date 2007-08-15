@@ -36,6 +36,13 @@ resourcestring
   sNoUnitCreatorTitle = 'Pas de gestionnaire disponible';
   sNoUnitCreator = 'Aucun gestionnaire disponible pour la création d''unité';
 
+  sDuplicateUnitTitle = 'Unité déjà présente';
+  sDuplicateUnit = 'Il y a déjà une unité ''%s''';
+
+  sRemoveUnitTitle = 'Supprimer une unité';
+  sCantRemoveLastUnit = 'Il faut toujours garder au moins une unité';
+  sConfirmRemoveUnit = 'Êtes-vous sûr-e de vouloir supprimer l''unité ''%s'' ?';
+
 implementation
 
 end.

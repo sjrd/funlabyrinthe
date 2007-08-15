@@ -13,7 +13,7 @@ uses
   ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus, ToolWin,
   ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiMetaUnits, FunLabyUtils,
   FilesUtils, UnitFiles, EditPluginManager, UnitEditorIntf, FileProperties,
-  FunLabyEditConsts, JvTabBar, NewUnit;
+  FunLabyEditConsts, JvTabBar, EditUnits;
 
 type
   {*
@@ -46,10 +46,8 @@ type
     TabBarEditors: TJvTabBar;
     ActionViewAllUnits: TAction;
     OpenUnitDialog: TOpenDialog;
-    ActionAddUnit: TAction;
-    ActionNewUnit: TAction;
-    procedure ActionNewUnitExecute(Sender: TObject);
-    procedure ActionAddUnitExecute(Sender: TObject);
+    ActionEditUnits: TAction;
+    procedure ActionEditUnitsExecute(Sender: TObject);
     procedure TabBarEditorsTabSelected(Sender: TObject; Item: TJvTabBarItem);
     procedure TabBarEditorsTabSelecting(Sender: TObject; Item: TJvTabBarItem;
       var AllowSelect: Boolean);
@@ -103,7 +101,7 @@ type
 
     procedure MakeUnitActions;
     procedure DeleteUnitActions;
-    procedure RemakeUnitActions;
+//    procedure RemakeUnitActions;
 
     procedure AddUnitEditor(Editor : IUnitEditor50);
 
@@ -160,8 +158,7 @@ begin
   // Menu des unités
   BigMenuUnits.Visible := True;
   ActionViewAllUnits.Enabled := True;
-  ActionAddUnit.Enabled := True;
-  ActionNewUnit.Enabled := True;
+  ActionEditUnits.Enabled := True;
   MakeUnitActions;
 
   // Chargement des cartes
@@ -191,8 +188,7 @@ begin
   // Menu des unités
   BigMenuUnits.Visible := False;
   ActionViewAllUnits.Enabled := False;
-  ActionAddUnit.Enabled := False;
-  ActionNewUnit.Enabled := False;
+  ActionEditUnits.Enabled := False;
   DeleteUnitActions;
 
   // Autres variables
@@ -213,7 +209,7 @@ begin
   MasterFile := TMasterFile.CreateNew(SepiRoot);
   if TFormFileProperties.ManageProperties(MasterFile) then
   begin
-    MasterFile.AddUnitFile(BPLUnitHandlerGUID, FunLabyBaseHRef);
+//    MasterFile.AddUnitFile(BPLUnitHandlerGUID, FunLabyBaseHRef);
     TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName,
       nil, Point3D(0, 0, 0));
     LoadFile;
@@ -374,7 +370,7 @@ begin
       ActionList := ActionManager;
       Caption := ExtractFileName(UnitFile.FileName);
       Tag := Integer(UnitFile);
-      Enabled := UnitEditorExists(UnitFile.HandlerGUID);
+      Enabled := UnitEditors.Exists(UnitFile.HandlerGUID);
       OnExecute := ActionViewUnitExecute;
     end;
     PreviousItem := ActionManager.AddAction(UnitActions[I], PreviousItem);
@@ -398,11 +394,11 @@ end;
 {*
   Reconstruit le menu des unités
 *}
-procedure TFormMain.RemakeUnitActions;
+{procedure TFormMain.RemakeUnitActions;
 begin
   DeleteUnitActions;
   MakeUnitActions;
-end;
+end;}
 
 {*
   Ajoute un éditeur d'unité à l'interface visuelle et l'affiche
@@ -622,55 +618,17 @@ end;
   Gestionnaire d'événement OnExecute de l'action Ajouter une unité
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormMain.ActionAddUnitExecute(Sender: TObject);
-var Filters : TUnitFilterArray;
-    StrFilters, FileName, HRef : string;
-    I : integer;
-    GUID : TGUID;
+procedure TFormMain.ActionEditUnitsExecute(Sender: TObject);
+var FileName : TFileName;
 begin
   if Modified and (not SaveFile(MasterFile.FileName)) then
     exit;
 
-  GetUnitFilters(Filters);
-
-  if Length(Filters) = 0 then
+  if TFormEditUnits.EditUnits(MasterFile) then
   begin
-    ShowDialog(sNoUnitOpenerHandlerTitle, sNoUnitOpenerHandler, dtError);
-    exit;
-  end;
-
-  StrFilters := '';
-  for I := 0 to Length(Filters)-1 do
-    StrFilters := Filters[I].Filter + '|';
-  SetLength(StrFilters, Length(StrFilters)-1);
-
-  OpenUnitDialog.Filter := StrFilters;
-  if not OpenUnitDialog.Execute then
-    exit;
-
-  GUID := Filters[OpenUnitDialog.FilterIndex-1].GUID;
-  FileName := OpenUnitDialog.FileName;
-  HRef := FileNameToHRef(FileName, [ExtractFilePath(FileName), fUnitsDir]);
-
-  AddUnitEditor(CreateUnitEditor(MasterFile.AddUnitFile(GUID, HRef)));
-  RemakeUnitActions;
-end;
-
-{*
-  Gestionnaire d'événement OnExecute de l'action Nouvelle unité
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormMain.ActionNewUnitExecute(Sender: TObject);
-var Editor : IUnitEditor50;
-begin
-  if Modified and (not SaveFile(MasterFile.FileName)) then
-    exit;
-
-  Editor := TFormCreateNewUnit.NewUnit(MasterFile);
-  if Editor <> nil then
-  begin
-    AddUnitEditor(Editor);
-    RemakeUnitActions;
+    FileName := MasterFile.FileName;
+    CloseFile;
+    OpenFile(FileName);
   end;
 end;
 
@@ -698,7 +656,7 @@ begin
   end;
 
   // Créer l'éditeur
-  AddUnitEditor(CreateUnitEditor(UnitFile));
+  AddUnitEditor(UnitEditors.CreateEditor(UnitFile));
 end;
 
 {*

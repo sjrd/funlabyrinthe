@@ -13,6 +13,7 @@ object FormCreateNewUnit: TFormCreateNewUnit
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object LabelUnitType: TLabel
@@ -62,5 +63,11 @@ object FormCreateNewUnit: TFormCreateNewUnit
     Height = 25
     TabOrder = 3
     Kind = bkCancel
+  end
+  object SaveUnitDialog: TSaveDialog
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing, ofDontAddToRecent]
+    Title = 'Veuillez choisir un nom de fichier pour l'#39'unit'#233
+    Left = 16
+    Top = 208
   end
 end

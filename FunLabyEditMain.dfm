@@ -621,15 +621,9 @@ object FormMain: TFormMain
             Items = <
               item
                 Action = ActionViewAllUnits
-                Caption = '&Toutes'
               end
               item
-                Action = ActionAddUnit
-                Caption = '&Ajouter...'
-              end
-              item
-                Action = ActionNewUnit
-                Caption = '&Nouvelle...'
+                Action = ActionEditUnits
               end
               item
                 Caption = '-'
@@ -763,21 +757,16 @@ object FormMain: TFormMain
     end
     object ActionViewAllUnits: TAction
       Category = 'Units'
-      Caption = 'Toutes'
+      Caption = 'Voir toutes'
       Hint = 
         'Voir toutes les unit'#233's|Ouvrir un '#233'diteur pour chaque unit'#233' du pr' +
         'ojet'
       OnExecute = ActionViewAllUnitsExecute
     end
-    object ActionAddUnit: TAction
+    object ActionEditUnits: TAction
       Category = 'Units'
-      Caption = 'Ajouter...'
-      OnExecute = ActionAddUnitExecute
-    end
-    object ActionNewUnit: TAction
-      Category = 'Units'
-      Caption = 'Nouvelle...'
-      OnExecute = ActionNewUnitExecute
+      Caption = 'Modifier...'
+      OnExecute = ActionEditUnitsExecute
     end
   end
   object ScrewsImages: TImageList

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, SdDialogs, FilesUtils, UnitEditorIntf,
-  FunLabyEditConsts;
+  FunLabyUtils, FunLabyEditConsts;
 
 type
   TFormCreateNewUnit = class(TForm)
@@ -15,51 +15,98 @@ type
     MemoDescription: TMemo;
     ButtonOK: TBitBtn;
     ButtonCancel: TBitBtn;
+    SaveUnitDialog: TSaveDialog;
     procedure ListBoxUnitTypeClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     { Déclarations privées }
+    procedure AddCreator(const CreateProc, Info; var Continue : boolean);
   public
     { Déclarations publiques }
-    class function NewUnit(MasterFile : TMasterFile) : IUnitEditor50;
+    class function NewUnit(out FileName : TFileName;
+      out GUID : TGUID) : boolean;
   end;
-
-var
-  FormCreateNewUnit: TFormCreateNewUnit;
 
 implementation
 
 {$R *.dfm}
 
+type
+  /// Pointeur vers TUnitCreator
+  PUnitCreator = ^TUnitCreator;
+
+  {*
+    Créateur de fichier unité
+    @author sjrd
+    @version 5.0
+  *}
+  TUnitCreator = record
+    CreateProc : TCreateNewUnitProc;
+    Info : TUnitCreatorInfo;
+  end;
+
+{*
+  Méthode de call-back pour UnitCreators.ForEach qui ajoute le créateur
+  @param CreateProc   Routine de call-back de création d'unité
+  @param Info         Informations sur le créateur
+  @param Continue     Positionner à False pour interrompre l'énumération
+*}
+procedure TFormCreateNewUnit.AddCreator(const CreateProc, Info;
+  var Continue : boolean);
+var Creator : PUnitCreator;
+begin
+  New(Creator);
+  Initialize(Creator^);
+  Creator.CreateProc := TCreateNewUnitProc(CreateProc);
+  Creator.Info := TUnitCreatorInfo(Info);
+
+  ListBoxUnitType.Items.AddObject(Creator.Info.Title, TObject(Creator));
+end;
+
 {*
   Affiche la boîte de dialogue de création d'une nouvelle unité
-  @param MasterFile   Fichier maître
+  @param FileName   En sortie : nom du fichier unité créé
+  @param GUID       En sortie : GUID du type de fichier créé
   @return Éditeur de l'unité
 *}
 class function TFormCreateNewUnit.NewUnit(
-  MasterFile : TMasterFile) : IUnitEditor50;
-var Creators : TUnitCreatorArray;
-    I : integer;
+  out FileName : TFileName; out GUID : TGUID) : boolean;
+var Creator : PUnitCreator;
 begin
-  Result := nil;
-  GetUnitCreators(Creators);
+  // Initialisations
+  Result := False;
 
-  if Length(Creators) = 0 then
-  begin
-    ShowDialog(sNoUnitCreatorTitle, sNoUnitCreator, dtError);
+  // Vérifier qu'il y a au moins un créateur d'unité enregistré
+  if UnitCreators.IsEmpty then
     exit;
-  end;
 
   with Create(Application) do
   try
-    for I := 0 to Length(Creators)-1 do
-      ListBoxUnitType.Items.AddObject(Creators[I].Title,
-        TObject(@Creators[I]));
-
+    // Lister les créateurs
+    UnitCreators.ForEach(AddCreator);
+    ListBoxUnitType.Sorted := True;
     ListBoxUnitType.ItemIndex := 0;
     ListBoxUnitTypeClick(nil);
 
-    if ShowModal = mrOK then
-      Result := Creators[ListBoxUnitType.ItemIndex].CreateProc(MasterFile);
+    // Afficher la boîte de dialogue
+    if ShowModal <> mrOK then
+      exit;
+
+    with ListBoxUnitType do
+      Creator := PUnitCreator(Items.Objects[ItemIndex]);
+
+    // Préparer le nom de fichier, si besoin
+    if Creator.Info.AskForFileName then
+    begin
+      SaveUnitDialog.Filter := Creator.Info.Filter;
+      SaveUnitDialog.InitialDir := fUnitsDir;
+      if not SaveUnitDialog.Execute then
+        exit;
+      FileName := SaveUnitDialog.FileName;
+    end else FileName := '';
+
+    // Créer le fichier
+    Result := Creator.CreateProc(FileName, GUID);
   finally
     Release;
   end;
@@ -71,8 +118,24 @@ end;
 *}
 procedure TFormCreateNewUnit.ListBoxUnitTypeClick(Sender: TObject);
 begin
-  with ListBoxUnitType do
-    MemoDescription.Text := PUnitCreator(Items.Objects[ItemIndex]).Description;
+  with ListBoxUnitType, PUnitCreator(Items.Objects[ItemIndex])^ do
+    MemoDescription.Text := Info.Description;
+end;
+
+{*
+  Gestionnaire d'événement OnDestroy de la fiche
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormCreateNewUnit.FormDestroy(Sender: TObject);
+var I : integer;
+    Creator : PUnitCreator;
+begin
+  for I := 0 to ListBoxUnitType.Items.Count-1 do
+  begin
+    Creator := PUnitCreator(ListBoxUnitType.Items.Objects[I]);
+    Finalize(Creator^);
+    Dispose(Creator);
+  end;
 end;
 
 end.

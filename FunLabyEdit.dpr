@@ -6,14 +6,15 @@ uses
   FunLabyUtils,
   FunLabyEditMain in 'FunLabyEditMain.pas' {FormMain},
   PlayerPlugins in 'PlayerPlugins.pas' {FormPlugins},
-  PlayerAttributes in 'PlayerAttributes.pas' {FormAttributes},
+  EditParameters in 'EditParameters.pas' {FormParameters},
   FileProperties in 'FileProperties.pas' {FormFileProperties},
   AddMap in 'AddMap.pas' {FormAddMap},
   MapBase in 'MapBase.pas' {FormMapBase},
   MapEditor in 'MapEditor.pas' {FrameMapEditor: TFrame},
   FunLabyEditConsts in 'FunLabyEditConsts.pas',
   EditPluginManager in 'EditPluginManager.pas',
-  NewUnit in 'NewUnit.pas' {FormCreateNewUnit};
+  NewUnit in 'NewUnit.pas' {FormCreateNewUnit},
+  EditUnits in 'EditUnits.pas' {FormEditUnits};
 
 {$R *.res}
 

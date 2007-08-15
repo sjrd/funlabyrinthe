@@ -1,4 +1,4 @@
-object FormAttributes: TFormAttributes
+object FormParameters: TFormParameters
   Left = 0
   Top = 0
   BorderStyle = bsDialog
