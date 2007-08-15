@@ -15,14 +15,14 @@ object FormParameters: TFormParameters
   Position = poScreenCenter
   PixelsPerInch = 96
   TextHeight = 13
-  object LabelAttributes: TLabel
+  object LabelParams: TLabel
     Left = 16
     Top = 16
     Width = 98
     Height = 13
     Caption = 'Attributs du joueur :'
   end
-  object ValueListAttributes: TValueListEditor
+  object ValueListParams: TValueListEditor
     Left = 16
     Top = 32
     Width = 393
@@ -32,7 +32,7 @@ object FormParameters: TFormParameters
     TitleCaptions.Strings = (
       'Attribut'
       'Valeur')
-    OnValidate = ValueListAttributesValidate
+    OnValidate = ValueListParamsValidate
     ColWidths = (
       150
       237)

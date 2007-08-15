@@ -29,11 +29,11 @@ type
     @version 5.0
   *}
   TFormParameters = class(TForm)
-    LabelAttributes: TLabel;
-    ValueListAttributes: TValueListEditor;
+    LabelParams: TLabel;
+    ValueListParams: TValueListEditor;
     ButtonOK: TButton;
     ButtonCancel: TButton;
-    procedure ValueListAttributesValidate(Sender: TObject; ACol, ARow: Integer;
+    procedure ValueListParamsValidate(Sender: TObject; ACol, ARow: Integer;
       const KeyName, KeyValue: string);
   private
     { Déclarations privées }
@@ -67,7 +67,7 @@ begin
 
       for I := 0 to Attributes.Count-1 do
       begin
-        ValueListAttributes.Strings.Values[Attributes[I]] :=
+        ValueListParams.Strings.Values[Attributes[I]] :=
           IntToStr(integer(Attributes.Objects[I]));
       end;
 
@@ -75,7 +75,7 @@ begin
       begin
         for I := 0 to Attributes.Count-1 do
           Player.Attribute[Attributes[I]] := 0;
-        with ValueListAttributes.Strings do for I := 0 to Count-1 do
+        with ValueListParams.Strings do for I := 0 to Count-1 do
           Player.Attribute[Names[I]] := StrToIntDef(ValueFromIndex[I], 0);
 
         Result := True;
@@ -97,9 +97,13 @@ class function TFormParameters.EditUnitParams(
   var Params : TUnitFileParams) : boolean;
 var I : integer;
 begin
-  with Create(Application), ValueListAttributes do
+  with Create(Application), ValueListParams do
   try
     DataType := dtString;
+    Caption := sUnitParamsCaption;
+    LabelParams.Caption := sUnitParamsPrompt;
+    TitleCaptions[0] := sUnitParamsKeyName;
+    TitleCaptions[1] := sUnitParamsValueName;
 
     for I := 0 to Length(Params)-1 do
       Strings.Values[Params[I].Name] := Params[I].Value;
@@ -128,7 +132,7 @@ end;
   @param KeyName    Nom de la clef à valider
   @param KeyValue   Valeur de la clef à valider
 *}
-procedure TFormParameters.ValueListAttributesValidate(Sender: TObject;
+procedure TFormParameters.ValueListParamsValidate(Sender: TObject;
   ACol, ARow: Integer; const KeyName, KeyValue: string);
 begin
   if not CorrectIdentifier(KeyName) then
