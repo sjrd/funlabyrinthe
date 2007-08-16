@@ -191,7 +191,7 @@ type
     constructor Create(ASepiRoot : TSepiMetaRoot; const AFileName : TFileName;
       AMode : TFileMode);
     constructor CreateNew(ASepiRoot : TSepiMetaRoot;
-      FileContents : TStrings = nil);
+      const UnitFileDescs : TUnitFileDescs; FileContents : TStrings = nil);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -679,8 +679,10 @@ end;
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
 constructor TMasterFile.CreateNew(ASepiRoot : TSepiMetaRoot;
-  FileContents : TStrings = nil);
-var Document : IXMLDOMDocument;
+  const UnitFileDescs : TUnitFileDescs; FileContents : TStrings = nil);
+var I, J : integer;
+    Parameters : TStrings;
+    Document : IXMLDOMDocument;
 begin
   inherited Create;
 
@@ -704,6 +706,25 @@ begin
   FUnitFiles := TObjectList.Create;
   FMapFiles := TObjectList.Create;
 
+  // Ajouter les unités décrites par UnitFileDescs
+  if Length(UnitFileDescs) > 0 then
+  begin
+    Parameters := TStringList.Create;
+    try
+      for I := 0 to Length(UnitFileDescs)-1 do with UnitFileDescs[I] do
+      begin
+        Parameters.Clear;
+        for J := 0 to Length(Params)-1 do with Params[I] do
+          Parameters.Values[Name] := Value;
+        UnitFileClasses.Find(GUID).Create(Self, HRef,
+          ResolveHRef(HRef, fUnitsDir), GUID, Parameters);
+      end;
+    finally
+      Parameters.Free;
+    end;
+  end;
+
+  // Prendre en compte un éventuel XML de base
   if Assigned(FileContents) then
   begin
     Document := CoDOMDocument.Create;

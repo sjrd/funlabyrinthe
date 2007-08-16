@@ -101,7 +101,6 @@ type
 
     procedure MakeUnitActions;
     procedure DeleteUnitActions;
-//    procedure RemakeUnitActions;
 
     procedure AddUnitEditor(Editor : IUnitEditor50);
 
@@ -202,14 +201,18 @@ end;
   Crée un nouveau fichier et le charge
 *}
 procedure TFormMain.NewFile;
+var UnitFileDescs : TUnitFileDescs;
 begin
+  SetLength(UnitFileDescs, 1);
+  UnitFileDescs[0].GUID := BPLUnitHandlerGUID;
+  UnitFileDescs[0].HRef := FunLabyBaseHRef;
+
   while not SepiRootManager.Ready do
     Sleep(100);
 
-  MasterFile := TMasterFile.CreateNew(SepiRoot);
+  MasterFile := TMasterFile.CreateNew(SepiRoot, UnitFileDescs);
   if TFormFileProperties.ManageProperties(MasterFile) then
   begin
-//    MasterFile.AddUnitFile(BPLUnitHandlerGUID, FunLabyBaseHRef);
     TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName,
       nil, Point3D(0, 0, 0));
     LoadFile;
@@ -390,15 +393,6 @@ begin
   end;
   SetLength(UnitActions, 0);
 end;
-
-{*
-  Reconstruit le menu des unités
-*}
-{procedure TFormMain.RemakeUnitActions;
-begin
-  DeleteUnitActions;
-  MakeUnitActions;
-end;}
 
 {*
   Ajoute un éditeur d'unité à l'interface visuelle et l'affiche
