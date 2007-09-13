@@ -37,11 +37,11 @@ type
       const KeyName, KeyValue: string);
   private
     { Déclarations privées }
-    DataType : (dtString, dtInteger);
+    DataType: (dtString, dtInteger);
   public
     { Déclarations publiques }
-    class function EditPlayerAttributes(Player : TPlayer) : boolean;
-    class function EditUnitParams(var Params : TUnitFileParams) : boolean;
+    class function EditPlayerAttributes(Player: TPlayer): Boolean;
+    class function EditUnitParams(var Params: TUnitFileParams): Boolean;
   end;
 
 implementation
@@ -53,9 +53,10 @@ implementation
   @param Player   Joueur concerné
   @return True si une modification a eu lieu, False sinon
 *}
-class function TFormParameters.EditPlayerAttributes(Player : TPlayer) : boolean;
-var Attributes : TStrings;
-    I : integer;
+class function TFormParameters.EditPlayerAttributes(Player: TPlayer): Boolean;
+var
+  Attributes: TStrings;
+  I: Integer;
 begin
   with Create(Application) do
   try
@@ -68,15 +69,18 @@ begin
       for I := 0 to Attributes.Count-1 do
       begin
         ValueListParams.Strings.Values[Attributes[I]] :=
-          IntToStr(integer(Attributes.Objects[I]));
+          IntToStr(Integer(Attributes.Objects[I]));
       end;
 
-      if ShowModal <> mrOK then Result := False else
+      if ShowModal <> mrOk then
+        Result := False
+      else
       begin
         for I := 0 to Attributes.Count-1 do
           Player.Attribute[Attributes[I]] := 0;
-        with ValueListParams.Strings do for I := 0 to Count-1 do
-          Player.Attribute[Names[I]] := StrToIntDef(ValueFromIndex[I], 0);
+        with ValueListParams.Strings do
+          for I := 0 to Count-1 do
+            Player.Attribute[Names[I]] := StrToIntDef(ValueFromIndex[I], 0);
 
         Result := True;
       end;
@@ -94,8 +98,9 @@ end;
   @return True si la liste a été modifiée, False sinon
 *}
 class function TFormParameters.EditUnitParams(
-  var Params : TUnitFileParams) : boolean;
-var I : integer;
+  var Params: TUnitFileParams): Boolean;
+var
+  I: Integer;
 begin
   with Create(Application), ValueListParams do
   try
@@ -108,13 +113,18 @@ begin
     for I := 0 to Length(Params)-1 do
       Strings.Values[Params[I].Name] := Params[I].Value;
 
-    if ShowModal <> mrOK then Result := False else
+    if ShowModal <> mrOk then
+      Result := False
+    else
     begin
       SetLength(Params, Strings.Count);
-      for I := 0 to Length(Params)-1 do with Params[I] do
+      for I := 0 to Length(Params)-1 do
       begin
-        Name := Strings.Names[I];
-        Value := Strings.ValueFromIndex[I];
+        with Params[I] do
+        begin
+          Name := Strings.Names[I];
+          Value := Strings.ValueFromIndex[I];
+        end;
       end;
 
       Result := True;

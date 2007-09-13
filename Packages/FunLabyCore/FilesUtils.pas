@@ -46,18 +46,18 @@ type
   *}
   TDependantFile = class
   private
-    FMasterFile : TMasterFile; /// Fichier maître
-    FHRef : string;            /// HRef
-    FFileName : TFileName;     /// Nom du fichier
-    FMaster : TMaster;         /// Maître FunLabyrinthe
+    FMasterFile: TMasterFile; /// Fichier maître
+    FHRef: string;            /// HRef
+    FFileName: TFileName;     /// Nom du fichier
+    FMaster: TMaster;         /// Maître FunLabyrinthe
   public
-    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
-      const AFileName : TFileName);
+    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
+      const AFileName: TFileName);
 
-    property MasterFile : TMasterFile read FMasterFile;
-    property HRef : string read FHRef;
-    property FileName : TFileName read FFileName;
-    property Master : TMaster read FMaster;
+    property MasterFile: TMasterFile read FMasterFile;
+    property HRef: string read FHRef;
+    property FileName: TFileName read FFileName;
+    property Master: TMaster read FMaster;
   end;
 
   {*
@@ -68,11 +68,11 @@ type
   *}
   TUnitFile = class(TDependantFile)
   private
-    FHandlerGUID : TGUID; /// GUID du gestionnaire du fichier unité
+    FHandlerGUID: TGUID; /// GUID du gestionnaire du fichier unité
   public
-    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
-      const AFileName : TFileName; const AHandlerGUID : TGUID;
-      Params : TStrings); virtual;
+    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
+      const AFileName: TFileName; const AHandlerGUID: TGUID;
+      Params: TStrings); virtual;
     procedure AfterConstruction; override;
 
     procedure Loaded; virtual;
@@ -82,13 +82,14 @@ type
     procedure GameEnded; virtual;
 
     procedure RegisterComponents(
-      RegisterSingleComponentProc : TRegisterSingleComponentProc;
-      RegisterComponentSetProc : TRegisterComponentSetProc); virtual;
+      RegisterSingleComponentProc: TRegisterSingleComponentProc;
+      RegisterComponentSetProc: TRegisterComponentSetProc); virtual;
 
-    procedure GetParams(Params : TStrings); virtual;
+    procedure GetParams(Params: TStrings); virtual;
 
-    property HandlerGUID : TGUID read FHandlerGUID;
+    property HandlerGUID: TGUID read FHandlerGUID;
   end;
+
   TUnitFileClass = class of TUnitFile;
 
   {*
@@ -100,21 +101,23 @@ type
   *}
   TMapFile = class(TDependantFile)
   private
-    FMapID : TComponentID; /// ID de la carte liée
-    FMap : TMap;           /// Carte liée
+    FMapID: TComponentID; /// ID de la carte liée
+    FMap: TMap;           /// Carte liée
   public
-    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
-      const AFileName : TFileName; const AMapID : TComponentID);
-    constructor CreateNew(AMasterFile : TMasterFile;
-      const AMapID : TComponentID; const ADimensions : T3DPoint;
-      AZoneWidth, AZoneHeight : integer);
+    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
+      const AFileName: TFileName; const AMapID: TComponentID);
+    constructor CreateNew(AMasterFile: TMasterFile;
+      const AMapID: TComponentID; const ADimensions: T3DPoint;
+      AZoneWidth, AZoneHeight: Integer);
     procedure AfterConstruction; override;
 
-    procedure Save(const AHRef : string = ''; const AFileName : TFileName = '');
+    procedure Save(const AHRef: string = '';
+      const AFileName: TFileName = '');
 
-    property MapID : TComponentID read FMapID;
-    property Map : TMap read FMap;
+    property MapID: TComponentID read FMapID;
+    property Map: TMap read FMap;
   end;
+
   TMapFileClass = class of TMapFile;
 
   {*
@@ -123,8 +126,8 @@ type
     @version 5.0
   *}
   TUnitFileParam = record
-    Name : string;  /// Nom
-    Value : string; /// Valeur
+    Name: string;  /// Nom
+    Value: string; /// Valeur
   end;
 
   /// Tableau des paramètres d'un fichier unité
@@ -139,9 +142,9 @@ type
     @version 5.0
   *}
   TUnitFileDesc = record
-    GUID : TGUID;             /// GUID du gestionnaire
-    HRef : string;            /// Adresse HRef
-    Params : TUnitFileParams; /// Paramètres
+    GUID: TGUID;             /// GUID du gestionnaire
+    HRef: string;            /// Adresse HRef
+    Params: TUnitFileParams; /// Paramètres
   end;
 
   /// Tableau de descripteurs de fichiers unité
@@ -158,89 +161,90 @@ type
   *}
   TMasterFile = class
   private
-    FSepiRoot : TSepiMetaRoot; /// Meta-racine Sepi
+    FSepiRoot: TSepiMetaRoot; /// Meta-racine Sepi
 
-    FFileName : TFileName;    /// Nom du fichier
-    FMode : TFileMode;        /// Mode d'ouverture du fichier
-    FVersion : string;        /// Version lors de l'enregistrement
+    FFileName: TFileName;    /// Nom du fichier
+    FMode: TFileMode;        /// Mode d'ouverture du fichier
+    FVersion: string;        /// Version lors de l'enregistrement
 
-    FTitle : string;          /// Titre du labyrinthe
-    FDescription : string;    /// Description
-    FDifficulty : string;     /// Difficulté
-    FAuthorID : integer;      /// ID Web de l'auteur, ou 0 si non renseigné
-    FAuthor : string;         /// Nom de l'auteur
+    FTitle: string;          /// Titre du labyrinthe
+    FDescription: string;    /// Description
+    FDifficulty: string;     /// Difficulté
+    FAuthorID: Integer;      /// ID Web de l'auteur, ou 0 si non renseigné
+    FAuthor: string;         /// Nom de l'auteur
 
-    FAllowEdit : boolean;     /// Indique si le fichier peut être édité
-    FIsSaveguard : boolean;   /// Indique si le fichier était une sauvegarde
+    FAllowEdit: Boolean;     /// Indique si le fichier peut être édité
+    FIsSaveguard: Boolean;   /// Indique si le fichier était une sauvegarde
 
-    FMaster : TMaster;        /// Maître FunLabyrinthe
+    FMaster: TMaster;        /// Maître FunLabyrinthe
 
-    FUnitFiles : TObjectList; /// Liste des fichiers unité
-    FMapFiles : TObjectList;  /// Liste des fichiers carte
+    FUnitFiles: TObjectList; /// Liste des fichiers unité
+    FMapFiles: TObjectList;  /// Liste des fichiers carte
 
     procedure InvalidFormat;
 
-    procedure Load(ADocument : IInterface);
+    procedure Load(ADocument: IInterface);
     procedure TestOpeningValidity;
 
-    function GetUnitFileCount : integer;
-    function GetUnitFiles(Index : integer) : TUnitFile;
-    function GetMapFileCount : integer;
-    function GetMapFiles(Index : integer) : TMapFile;
+    function GetUnitFileCount: Integer;
+    function GetUnitFiles(Index: Integer): TUnitFile;
+    function GetMapFileCount: Integer;
+    function GetMapFiles(Index: Integer): TMapFile;
   public
-    constructor Create(ASepiRoot : TSepiMetaRoot; const AFileName : TFileName;
-      AMode : TFileMode);
-    constructor CreateNew(ASepiRoot : TSepiMetaRoot;
-      const UnitFileDescs : TUnitFileDescs; FileContents : TStrings = nil);
+    constructor Create(ASepiRoot: TSepiMetaRoot; const AFileName: TFileName;
+      AMode: TFileMode);
+    constructor CreateNew(ASepiRoot: TSepiMetaRoot;
+      const UnitFileDescs: TUnitFileDescs; FileContents: TStrings = nil);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
 
-    function ResolveHRef(const HRef, DefaultDir : string) : TFileName;
-    function MakeHRef(const FileName : TFileName;
-      const DefaultDir : string) : string;
+    function ResolveHRef(const HRef, DefaultDir: string): TFileName;
+    function MakeHRef(const FileName: TFileName;
+      const DefaultDir: string): string;
 
-    function AddMapFile(const ID : TComponentID; const HRef : string;
-      MaxViewSize : integer = 1) : TMapFile;
-    function AddNewMapFile(const ID : TComponentID; const Dimensions : T3DPoint;
-      ZoneWidth, ZoneHeight : integer;
-      MaxViewSize : integer = 1) : TMapFile;
+    function AddMapFile(const ID: TComponentID; const HRef: string;
+      MaxViewSize: Integer = 1): TMapFile;
+    function AddNewMapFile(const ID: TComponentID;
+      const Dimensions: T3DPoint;
+      ZoneWidth, ZoneHeight: Integer;
+      MaxViewSize: Integer = 1): TMapFile;
 
     procedure GameStarted;
     procedure GameEnded;
 
     procedure RegisterComponents(
-      RegisterSingleComponentProc : TRegisterSingleComponentProc;
-      RegisterComponentSetProc : TRegisterComponentSetProc);
+      RegisterSingleComponentProc: TRegisterSingleComponentProc;
+      RegisterComponentSetProc: TRegisterComponentSetProc);
 
-    procedure GetUnitFileDescs(out UnitFileDescs : TUnitFileDescs);
+    procedure GetUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
 
-    procedure Save(const UnitFileDescs : TUnitFileDescs;
-      const AFileName : TFileName = ''); overload;
-    procedure Save(const AFileName : TFileName = ''); overload;
+    procedure Save(const UnitFileDescs: TUnitFileDescs;
+      const AFileName: TFileName = ''); overload;
+    procedure Save(const AFileName: TFileName = ''); overload;
 
-    property SepiRoot : TSepiMetaRoot read FSepiRoot;
+    property SepiRoot: TSepiMetaRoot read FSepiRoot;
 
-    property FileName : TFileName read FFileName;
-    property Mode : TFileMode read FMode;
-    property Version : string read FVersion;
+    property FileName: TFileName read FFileName;
+    property Mode: TFileMode read FMode;
+    property Version: string read FVersion;
 
-    property Title : string read FTitle write FTitle;
-    property Description : string read FDescription write FDescription;
-    property Difficulty : string read FDifficulty write FDifficulty;
-    property AuthorID : integer read FAuthorID write FAuthorID;
-    property Author : string read FAuthor write FAuthor;
+    property Title: string read FTitle write FTitle;
+    property Description: string read FDescription write FDescription;
+    property Difficulty: string read FDifficulty write FDifficulty;
+    property AuthorID: Integer read FAuthorID write FAuthorID;
+    property Author: string read FAuthor write FAuthor;
 
-    property AllowEdit : boolean read FAllowEdit;
-    property IsSaveguard : boolean read FIsSaveguard;
+    property AllowEdit: Boolean read FAllowEdit;
+    property IsSaveguard: Boolean read FIsSaveguard;
 
-    property Master : TMaster read FMaster;
+    property Master: TMaster read FMaster;
 
-    property UnitFileCount : integer read GetUnitFileCount;
-    property UnitFiles[index : integer] : TUnitFile read GetUnitFiles;
-    property MapFileCount : integer read GetMapFileCount;
-    property MapFiles[index : integer] : TMapFile read GetMapFiles;
+    property UnitFileCount: Integer read GetUnitFileCount;
+    property UnitFiles[Index: Integer]: TUnitFile read GetUnitFiles;
+    property MapFileCount: Integer read GetMapFileCount;
+    property MapFiles[Index: Integer]: TMapFile read GetMapFiles;
   end;
 
   {*
@@ -252,22 +256,22 @@ type
   public
     constructor Create;
 
-    procedure Add(const GUID : TGUID; UnitFileClass : TUnitFileClass);
-    procedure Remove(const GUID : TGUID);
-    function Find(const GUID : TGUID) : TUnitFileClass;
+    procedure Add(const GUID: TGUID; UnitFileClass: TUnitFileClass);
+    procedure Remove(const GUID: TGUID);
+    function Find(const GUID: TGUID): TUnitFileClass;
   end;
 
-function HRefToFileName(const HRef : string;
-  const BaseDirs : array of TFileName) : TFileName;
-function FileNameToHRef(const FileName : TFileName;
-  const BaseDirs : array of TFileName) : string;
+function HRefToFileName(const HRef: string;
+  const BaseDirs: array of TFileName): TFileName;
+function FileNameToHRef(const FileName: TFileName;
+  const BaseDirs: array of TFileName): string;
 
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
 
 var
   /// Gestionnaires d'unité : association GUID <-> classe d'unité
-  UnitFileClasses : TUnitFileClassList = nil;
+  UnitFileClasses: TUnitFileClassList = nil;
 
 implementation
 
@@ -276,7 +280,7 @@ uses
 
 const {don't localize}
   /// Code de format d'un fichier FLM (correspond à '.flm')
-  FLMFormatCode : LongInt = $6D6C662E;
+  FLMFormatCode: Longint = $6D6C662E;
 
   FLMVersion = 1; /// Version courante du format FLM
 
@@ -287,8 +291,9 @@ const {don't localize}
   @return 0 si les versions sont égales, 1 si la première est supérieure à la
           seconde, et -1 dans le cas contraire
 *}
-function CompareVersions(const Version1, Version2 : string) : integer;
-var SubVer1, SubVer2, MajVer1, MajVer2 : string;
+function CompareVersions(const Version1, Version2: string): Integer;
+var
+  SubVer1, SubVer2, MajVer1, MajVer2: string;
 begin
   SubVer1 := Version1;
   SubVer2 := Version2;
@@ -311,10 +316,11 @@ end;
   @return Nom du fichier sur lequel pointe HRef
   @throws EFileError Le fichier n'existe pas
 *}
-function HRefToFileName(const HRef : string;
-  const BaseDirs : array of TFileName) : TFileName;
-var I : integer;
-    SubFile : TFileName;
+function HRefToFileName(const HRef: string;
+  const BaseDirs: array of TFileName): TFileName;
+var
+  I: Integer;
+  SubFile: TFileName;
 begin
   SubFile := StringReplace(HRef, HRefDelim, PathDelim, [rfReplaceAll]);
 
@@ -323,7 +329,7 @@ begin
     if FileExists(BaseDirs[I]+SubFile) then
     begin
       Result := BaseDirs[I]+SubFile;
-      exit;
+      Exit;
     end;
   end;
 
@@ -339,9 +345,10 @@ end;
   @param BaseDirs   Liste de répertoires de base à tester avant l'absolu
   @return HRef pointant sur le nom de fichier FileName
 *}
-function FileNameToHRef(const FileName : TFileName;
-  const BaseDirs : array of TFileName) : string;
-var I : integer;
+function FileNameToHRef(const FileName: TFileName;
+  const BaseDirs: array of TFileName): string;
+var
+  I: Integer;
 begin
   Result := FileName;
 
@@ -367,8 +374,8 @@ end;
   @param AFileName     Nom du fichier
   @param AMIMEType     Type MIME du fichier
 *}
-constructor TDependantFile.Create(AMasterFile : TMasterFile;
-  const AHRef : string; const AFileName : TFileName);
+constructor TDependantFile.Create(AMasterFile: TMasterFile;
+  const AHRef: string; const AFileName: TFileName);
 begin
   inherited Create;
   FMasterFile := AMasterFile;
@@ -388,8 +395,8 @@ end;
   @param AMIMEType     Type MIME du fichier
   @param Params        Paramètres envoyés à l'unité
 *}
-constructor TUnitFile.Create(AMasterFile : TMasterFile; const AHRef : string;
-  const AFileName : TFileName; const AHandlerGUID : TGUID; Params : TStrings);
+constructor TUnitFile.Create(AMasterFile: TMasterFile; const AHRef: string;
+  const AFileName: TFileName; const AHandlerGUID: TGUID; Params: TStrings);
 begin
   inherited Create(AMasterFile, AHRef, AFileName);
   FHandlerGUID := AHandlerGUID;
@@ -454,8 +461,8 @@ end;
   @param RegisterComponentSetProc      Call-back pour un ensemble de composants
 *}
 procedure TUnitFile.RegisterComponents(
-  RegisterSingleComponentProc : TRegisterSingleComponentProc;
-  RegisterComponentSetProc : TRegisterComponentSetProc);
+  RegisterSingleComponentProc: TRegisterSingleComponentProc;
+  RegisterComponentSetProc: TRegisterComponentSetProc);
 begin
 end;
 
@@ -465,7 +472,7 @@ end;
   au fichier maître les paramètres qu'il doit enregistrer.
   @param Params   Liste des paramètres
 *}
-procedure TUnitFile.GetParams(Params : TStrings);
+procedure TUnitFile.GetParams(Params: TStrings);
 begin
 end;
 
@@ -480,12 +487,13 @@ end;
   @param AFileName     Nom du fichier
   @param AMapID        ID de la carte
 *}
-constructor TMapFile.Create(AMasterFile : TMasterFile; const AHRef : string;
-  const AFileName : TFileName; const AMapID : TComponentID);
-var Stream : TStream;
-    ZoneWidth, ZoneHeight, I, Count, Value, ScrewSize : integer;
-    Dimensions : T3DPoint;
-    Palette : array of TScrew;
+constructor TMapFile.Create(AMasterFile: TMasterFile; const AHRef: string;
+  const AFileName: TFileName; const AMapID: TComponentID);
+var
+  Stream: TStream;
+  ZoneWidth, ZoneHeight, I, Count, Value, ScrewSize: Integer;
+  Dimensions: T3DPoint;
+  Palette: array of TScrew;
 begin
   inherited Create(AMasterFile, AHRef, AFileName);
   FMapID := AMapID;
@@ -503,7 +511,7 @@ begin
       EFileError.CreateFmt(sVersionTooHigh, [IntToStr(Value)]);
 
     // Lecture des dimensions et de la taille d'une zone
-    Stream.ReadBuffer(Dimensions, sizeof(T3DPoint));
+    Stream.ReadBuffer(Dimensions, SizeOf(T3DPoint));
     Stream.ReadBuffer(ZoneWidth, 4);
     Stream.ReadBuffer(ZoneHeight, 4);
 
@@ -517,7 +525,10 @@ begin
       Palette[I] := Master.Screw[ReadStrFromStream(Stream)];
 
     // Lecture de la carte
-    if Count <= 256 then ScrewSize := 1 else ScrewSize := 2;
+    if Count <= 256 then
+      ScrewSize := 1
+    else
+      ScrewSize := 2;
     Value := 0;
     for I := 0 to Map.LinearMapCount-1 do
     begin
@@ -539,9 +550,9 @@ end;
   @param AZoneWidth    Largeur d'une zone
   @param AZoneHeight   Hauteur d'une zone
 *}
-constructor TMapFile.CreateNew(AMasterFile : TMasterFile;
-  const AMapID : TComponentID; const ADimensions : T3DPoint;
-  AZoneWidth, AZoneHeight : integer);
+constructor TMapFile.CreateNew(AMasterFile: TMasterFile;
+  const AMapID: TComponentID; const ADimensions: T3DPoint;
+  AZoneWidth, AZoneHeight: Integer);
 begin
   inherited Create(AMasterFile, '', '');
   FMapID := AMapID;
@@ -563,11 +574,12 @@ end;
   Enregistre le fichier
   @param AFileName   Nom du fichier dans lequel enregistrer
 *}
-procedure TMapFile.Save(const AHRef : string = '';
-  const AFileName : TFileName = '');
-var I, Value, Count, PaletteCountPos, ScrewSize : integer;
-    Stream : TStream;
-    Dimensions : T3DPoint;
+procedure TMapFile.Save(const AHRef: string = '';
+  const AFileName: TFileName = '');
+var
+  I, Value, Count, PaletteCountPos, ScrewSize: Integer;
+  Stream: TStream;
+  Dimensions: T3DPoint;
 begin
   if AHRef <> '' then
   begin
@@ -587,7 +599,7 @@ begin
 
     // Écriture des dimensions et de la taille d'une zone
     Dimensions := Map.Dimensions;
-    Stream.WriteBuffer(Dimensions, sizeof(T3DPoint));
+    Stream.WriteBuffer(Dimensions, SizeOf(T3DPoint));
     Value := Map.ZoneWidth;
     Stream.WriteBuffer(Value, 4);
     Value := Map.ZoneHeight;
@@ -599,20 +611,26 @@ begin
     Count := 0;
     PaletteCountPos := Stream.Position;
     Stream.WriteBuffer(Count, 4); // On repassera changer çà plus tard
-    for I := 0 to Map.LinearMapCount-1 do with Map.LinearMap[I] do
+    for I := 0 to Map.LinearMapCount-1 do
     begin
-      if ClassType <> TScrew then
-        raise EFileError.CreateFmt(sTemporaryStatedMap, [Map.ID]);
-      if Tag < 0 then
+      with Map.LinearMap[I] do
       begin
-        Tag := Count;
-        WriteStrToStream(Stream, ID);
-        inc(Count);
+        if ClassType <> TScrew then
+          raise EFileError.CreateFmt(sTemporaryStatedMap, [Map.ID]);
+        if Tag < 0 then
+        begin
+          Tag := Count;
+          WriteStrToStream(Stream, ID);
+          Inc(Count);
+        end;
       end;
     end;
 
     // Écriture de la carte
-    if Count <= 256 then ScrewSize := 1 else ScrewSize := 2;
+    if Count <= 256 then
+      ScrewSize := 1
+    else
+      ScrewSize := 2;
     for I := 0 to Map.LinearMapCount-1 do
     begin
       Value := Map.LinearMap[I].Tag;
@@ -637,9 +655,10 @@ end;
   @param AMode       Mode sous lequel ouvrir le fichier
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
-constructor TMasterFile.Create(ASepiRoot : TSepiMetaRoot;
-  const AFileName : TFileName; AMode : TFileMode);
-var Document : IXMLDOMDocument;
+constructor TMasterFile.Create(ASepiRoot: TSepiMetaRoot;
+  const AFileName: TFileName; AMode: TFileMode);
+var
+  Document: IXMLDOMDocument;
 begin
   inherited Create;
 
@@ -678,11 +697,12 @@ end;
   @param FileContents   Contenu pré-créé du fichier (ou nil pour créer un vide)
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
-constructor TMasterFile.CreateNew(ASepiRoot : TSepiMetaRoot;
-  const UnitFileDescs : TUnitFileDescs; FileContents : TStrings = nil);
-var I, J : integer;
-    Parameters : TStrings;
-    Document : IXMLDOMDocument;
+constructor TMasterFile.CreateNew(ASepiRoot: TSepiMetaRoot;
+  const UnitFileDescs: TUnitFileDescs; FileContents: TStrings = nil);
+var
+  I, J: Integer;
+  Parameters: TStrings;
+  Document: IXMLDOMDocument;
 begin
   inherited Create;
 
@@ -711,13 +731,17 @@ begin
   begin
     Parameters := TStringList.Create;
     try
-      for I := 0 to Length(UnitFileDescs)-1 do with UnitFileDescs[I] do
+      for I := 0 to Length(UnitFileDescs)-1 do
       begin
-        Parameters.Clear;
-        for J := 0 to Length(Params)-1 do with Params[I] do
-          Parameters.Values[Name] := Value;
-        UnitFileClasses.Find(GUID).Create(Self, HRef,
-          ResolveHRef(HRef, fUnitsDir), GUID, Parameters);
+        with UnitFileDescs[I] do
+        begin
+          Parameters.Clear;
+          for J := 0 to Length(Params)-1 do
+            with Params[I] do
+              Parameters.Values[Name] := Value;
+          UnitFileClasses.Find(GUID).Create(Self, HRef,
+            ResolveHRef(HRef, fUnitsDir), GUID, Parameters);
+        end;
       end;
     finally
       Parameters.Free;
@@ -767,7 +791,8 @@ end;
   N'appelez pas directement AfterConstruction.
 *}
 procedure TMasterFile.AfterConstruction;
-var I : integer;
+var
+  I: Integer;
 begin
   inherited;
 
@@ -781,7 +806,8 @@ end;
   N'appelez pas directement BeforeDestruction.
 *}
 procedure TMasterFile.BeforeDestruction;
-var I : integer;
+var
+  I: Integer;
 begin
   inherited;
 
@@ -803,21 +829,25 @@ end;
   @param Document   Document XML DOM contenu du fichier
   @throws EFileError : Un fichier à charger n'existe pas ou n'est pas valide
 *}
-procedure TMasterFile.Load(ADocument : IInterface);
+procedure TMasterFile.Load(ADocument: IInterface);
 
-  function NullToEmptyStr(Value : Variant) : Variant;
+  function NullToEmptyStr(Value: Variant): Variant;
   begin
-    if VarIsNull(Value) then Result := '' else Result := Value;
+    if VarIsNull(Value) then
+      Result := ''
+    else
+      Result := Value;
   end;
 
-var Document : IXMLDOMDocument;
-    Params : TStrings;
-    I, J, MaxViewSize : integer;
-    ID, HRef, Name, MapID : string;
-    FileType : TGUID;
-    Position : T3DPoint;
-    Player : TPlayer;
-    Node : IXMLDOMNode;
+var
+  Document: IXMLDOMDocument;
+  Params: TStrings;
+  I, J, MaxViewSize: Integer;
+  ID, HRef, Name, MapID: string;
+  FileType: TGUID;
+  Position: T3DPoint;
+  Player: TPlayer;
+  Node: IXMLDOMNode;
 begin
   { Don't localize strings in this method }
 
@@ -825,11 +855,13 @@ begin
 
   with Document.documentElement as IXMLDOMElement do
   begin
-    if nodeName <> 'funlabyrinthe' then InvalidFormat;
+    if nodeName <> 'funlabyrinthe' then
+      InvalidFormat;
 
     // Test de version
     FVersion := getAttribute('version');
-    if FVersion = '' then InvalidFormat;
+    if FVersion = '' then
+      InvalidFormat;
     if CompareVersions(FVersion, CurrentVersion) > 0 then
       raise EFileError.CreateFmt(sVersionTooHigh, [FVersion]);
 
@@ -860,20 +892,24 @@ begin
     try
       with selectNodes('./units/unit') do
       begin
-        for I := 0 to length-1 do with item[I] as IXMLDOMElement do
+        for I := 0 to length-1 do
         begin
-          FileType := StringToGUID(getAttribute('type'));
-          HRef := getAttribute('href');
-
-          Params.Clear;
-          with selectNodes('./param') do
+          with item[I] as IXMLDOMElement do
           begin
-            for J := 0 to length-1 do with item[J] as IXMLDOMElement do
-              Params.Values[getAttribute('name')] := getAttribute('value');
-          end;
+            FileType := StringToGUID(getAttribute('type'));
+            HRef := getAttribute('href');
 
-          UnitFileClasses.Find(FileType).Create(Self, HRef,
-            ResolveHRef(HRef, fUnitsDir), FileType, Params);
+            Params.Clear;
+            with selectNodes('./param') do
+            begin
+              for J := 0 to length-1 do
+                with item[J] as IXMLDOMElement do
+                  Params.Values[getAttribute('name')] := getAttribute('value');
+            end;
+
+            UnitFileClasses.Find(FileType).Create(Self, HRef,
+              ResolveHRef(HRef, fUnitsDir), FileType, Params);
+          end;
         end;
       end;
     finally
@@ -883,17 +919,20 @@ begin
     // Cartes
     with selectNodes('./maps/map') do
     begin
-      for I := 0 to length-1 do with item[I] as IXMLDOMElement do
+      for I := 0 to length-1 do
       begin
-        ID := getAttribute('id');
-        HRef := getAttribute('href');
+        with item[I] as IXMLDOMElement do
+        begin
+          ID := getAttribute('id');
+          HRef := getAttribute('href');
 
-        if VarIsNull(getAttribute('maxviewsize')) then
-          MaxViewSize := MinViewSize
-        else
-          MaxViewSize := getAttribute('maxviewsize');
+          if VarIsNull(getAttribute('maxviewsize')) then
+            MaxViewSize := MinViewSize
+          else
+            MaxViewSize := getAttribute('maxviewsize');
 
-        AddMapFile(ID, HRef, MaxViewSize);
+          AddMapFile(ID, HRef, MaxViewSize);
+        end;
       end;
     end;
 
@@ -902,35 +941,43 @@ begin
     begin
       if length <> 1 then
         raise EFileError.Create(sThereMustBeOnePlayer);
-      for I := 0 to length-1 do with item[I] as IXMLDOMElement do
+      for I := 0 to length-1 do
       begin
-        ID := getAttribute('id');
-        if VarIsNull(getAttribute('name')) then Name := ID else
-          Name := getAttribute('name');
-
-        with selectSingleNode('./position') as IXMLDOMElement do
+        with item[I] as IXMLDOMElement do
         begin
-          MapID := getAttribute('map');
-          Position.X := getAttribute('posx');
-          Position.Y := getAttribute('posy');
-          Position.Z := getAttribute('posz');
-        end;
+          ID := getAttribute('id');
+          if VarIsNull(getAttribute('name')) then
+            Name := ID
+          else
+            Name := getAttribute('name');
 
-        Player := TPlayer.Create(Master, ID, Name, Master.Map[MapID], Position);
+          with selectSingleNode('./position') as IXMLDOMElement do
+          begin
+            MapID := getAttribute('map');
+            Position.X := getAttribute('posx');
+            Position.Y := getAttribute('posy');
+            Position.Z := getAttribute('posz');
+          end;
 
-        if NullToEmptyStr(getAttribute('lost')) = 'yes' then
-          Player.Lose;
+          Player := TPlayer.Create(Master, ID, Name,
+            Master.Map[MapID], Position);
 
-        with selectNodes('./attributes/attribute') do
-        begin
-          for J := 0 to length-1 do with item[J] as IXMLDOMElement do
-            Player.Attribute[getAttribute('name')] := getAttribute('value');
-        end;
+          if NullToEmptyStr(getAttribute('lost')) = 'yes' then
+            Player.Lose;
 
-        with selectNodes('./plugins/plugin') do
-        begin
-          for J := 0 to length-1 do with item[J] as IXMLDOMElement do
-            Player.AddPlugin(Master.Plugin[getAttribute('id')]);
+          with selectNodes('./attributes/attribute') do
+          begin
+            for J := 0 to length-1 do
+              with item[J] as IXMLDOMElement do
+                Player.Attribute[getAttribute('name')] := getAttribute('value');
+          end;
+
+          with selectNodes('./plugins/plugin') do
+          begin
+            for J := 0 to length-1 do
+              with item[J] as IXMLDOMElement do
+                Player.AddPlugin(Master.Plugin[getAttribute('id')]);
+          end;
         end;
       end;
     end;
@@ -957,7 +1004,7 @@ end;
   Nombre de fichiers unité
   @return Nombre de fichiers unité
 *}
-function TMasterFile.GetUnitFileCount : integer;
+function TMasterFile.GetUnitFileCount: Integer;
 begin
   Result := FUnitFiles.Count;
 end;
@@ -967,7 +1014,7 @@ end;
   @param Index   Index du fichier unité
   @return Le fichier unité dont l'index a été spécifié
 *}
-function TMasterFile.GetUnitFiles(Index : integer) : TUnitFile;
+function TMasterFile.GetUnitFiles(Index: Integer): TUnitFile;
 begin
   Result := TUnitFile(FUnitFiles[Index]);
 end;
@@ -976,7 +1023,7 @@ end;
   Nombre de fichiers carte
   @return Nombre de fichiers carte
 *}
-function TMasterFile.GetMapFileCount : integer;
+function TMasterFile.GetMapFileCount: Integer;
 begin
   Result := FMapFiles.Count;
 end;
@@ -986,7 +1033,7 @@ end;
   @param Index   Index du fichier carte
   @return Le fichier carte dont l'index a été spécifié
 *}
-function TMasterFile.GetMapFiles(Index : integer) : TMapFile;
+function TMasterFile.GetMapFiles(Index: Integer): TMapFile;
 begin
   Result := TMapFile(FMapFiles[Index]);
 end;
@@ -998,8 +1045,9 @@ end;
   @return Nom du fichier qualifié de son chemin d'accès
   @throws EFileError Le fichier n'existe pas
 *}
-function TMasterFile.ResolveHRef(const HRef, DefaultDir : string) : TFileName;
-var FilePath, SubDir : string;
+function TMasterFile.ResolveHRef(const HRef, DefaultDir: string): TFileName;
+var
+  FilePath, SubDir: string;
 begin
   FilePath := ExtractFilePath(FileName);
   SubDir := ChangeFileExt(ExtractFileName(FileName), '') + PathDelim;
@@ -1015,9 +1063,10 @@ end;
   @return Adresse HRef du fichier, relativement au contexte du fichier maître
   @throws EFileError Le fichier n'existe pas
 *}
-function TMasterFile.MakeHRef(const FileName : TFileName;
-  const DefaultDir : string) : string;
-var FilePath, SubDir : string;
+function TMasterFile.MakeHRef(const FileName: TFileName;
+  const DefaultDir: string): string;
+var
+  FilePath, SubDir: string;
 begin
   FilePath := ExtractFilePath(FileName);
   SubDir := ChangeFileExt(ExtractFileName(FileName), '') + PathDelim;
@@ -1033,8 +1082,8 @@ end;
   @param MaxViewSize   Taille maximale d'une vue pour cette carte
   @return Le fichier carte créé et chargé
 *}
-function TMasterFile.AddMapFile(const ID : TComponentID; const HRef : string;
-  MaxViewSize : integer = 1) : TMapFile;
+function TMasterFile.AddMapFile(const ID: TComponentID; const HRef: string;
+  MaxViewSize: Integer = 1): TMapFile;
 begin
   Result := TMapFile.Create(Self, HRef, ResolveHRef(HRef, fMapsDir), ID);
   Result.Map.MaxViewSize := MaxViewSize;
@@ -1049,9 +1098,9 @@ end;
   @param MaxViewSize   Taille maximale d'une vue pour cette carte
   @return Le fichier carte créé
 *}
-function TMasterFile.AddNewMapFile(const ID : TComponentID;
-  const Dimensions : T3DPoint; ZoneWidth, ZoneHeight : integer;
-  MaxViewSize : integer = 1) : TMapFile;
+function TMasterFile.AddNewMapFile(const ID: TComponentID;
+  const Dimensions: T3DPoint; ZoneWidth, ZoneHeight: Integer;
+  MaxViewSize: Integer = 1): TMapFile;
 begin
   Result := TMapFile.CreateNew(Self, ID, Dimensions, ZoneWidth, ZoneHeight);
   Result.Map.MaxViewSize := MaxViewSize;
@@ -1061,7 +1110,8 @@ end;
   Commence la partie
 *}
 procedure TMasterFile.GameStarted;
-var I : integer;
+var
+  I: Integer;
 begin
   for I := 0 to UnitFileCount-1 do
     UnitFiles[I].GameStarted;
@@ -1071,7 +1121,8 @@ end;
   Termine la partie
 *}
 procedure TMasterFile.GameEnded;
-var I : integer;
+var
+  I: Integer;
 begin
   for I := 0 to UnitFileCount-1 do
     UnitFiles[I].GameEnded;
@@ -1083,9 +1134,10 @@ end;
   @param RegisterComponentSetProc      Call-back pour un ensemble de composants
 *}
 procedure TMasterFile.RegisterComponents(
-  RegisterSingleComponentProc : TRegisterSingleComponentProc;
-  RegisterComponentSetProc : TRegisterComponentSetProc);
-var I : integer;
+  RegisterSingleComponentProc: TRegisterSingleComponentProc;
+  RegisterComponentSetProc: TRegisterComponentSetProc);
+var
+  I: Integer;
 begin
   for I := 0 to UnitFileCount-1 do
   begin
@@ -1098,28 +1150,35 @@ end;
   Fournit un tableau des descripteurs des fichiers unité
   @param UnitFileDescs   Descripteurs des fichiers unité en sortie
 *}
-procedure TMasterFile.GetUnitFileDescs(out UnitFileDescs : TUnitFileDescs);
-var FileIdx, ParamIdx : integer;
-    UnitFile : TUnitFile;
-    ParamList : TStrings;
+procedure TMasterFile.GetUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
+var
+  FileIdx, ParamIdx: Integer;
+  UnitFile: TUnitFile;
+  ParamList: TStrings;
 begin
   ParamList := TStringList.Create;
   try
     SetLength(UnitFileDescs, UnitFileCount);
-    for FileIdx := 0 to UnitFileCount-1 do with UnitFileDescs[FileIdx] do
+    for FileIdx := 0 to UnitFileCount-1 do
     begin
-      UnitFile := UnitFiles[FileIdx];
-      GUID := UnitFile.HandlerGUID;
-      HRef := UnitFile.HRef;
-
-      ParamList.Clear;
-      UnitFile.GetParams(ParamList);
-
-      SetLength(Params, ParamList.Count);
-      for ParamIdx := 0 to ParamList.Count-1 do with Params[ParamIdx] do
+      with UnitFileDescs[FileIdx] do
       begin
-        Name := ParamList.Names[ParamIdx];
-        Value := ParamList.ValueFromIndex[ParamIdx];
+        UnitFile := UnitFiles[FileIdx];
+        GUID := UnitFile.HandlerGUID;
+        HRef := UnitFile.HRef;
+
+        ParamList.Clear;
+        UnitFile.GetParams(ParamList);
+
+        SetLength(Params, ParamList.Count);
+        for ParamIdx := 0 to ParamList.Count-1 do
+        begin
+          with Params[ParamIdx] do
+          begin
+            Name := ParamList.Names[ParamIdx];
+            Value := ParamList.ValueFromIndex[ParamIdx];
+          end;
+        end;
       end;
     end;
   finally
@@ -1134,15 +1193,16 @@ end;
   @param UnitFileDescs   Descripteurs de fichiers unité, pour les modifier
   @param AFileName       Nom du fichier à enregistrer (vide conserve l'existant)
 *}
-procedure TMasterFile.Save(const UnitFileDescs : TUnitFileDescs;
-  const AFileName : TFileName = '');
-var Document : IXMLDOMDocument;
-    FunLabyrinthe, Units, Maps, Players, Player : IXMLDOMElement;
-    Element, Param : IXMLDOMElement;
-    Params : TStrings;
-    MapHRef : string;
-    FileName, MapFileName : TFileName;
-    I, J : integer;
+procedure TMasterFile.Save(const UnitFileDescs: TUnitFileDescs;
+  const AFileName: TFileName = '');
+var
+  Document: IXMLDOMDocument;
+  FunLabyrinthe, Units, Maps, Players, Player: IXMLDOMElement;
+  Element, Param: IXMLDOMElement;
+  Params: TStrings;
+  MapHRef: string;
+  FileName, MapFileName: TFileName;
+  I, J: Integer;
 begin
   { Don't localize strings in this method }
 
@@ -1161,7 +1221,8 @@ begin
     begin
       SetLength(MapHRef, I);
       MapHRef[I] := PathDelim;
-    end else MapHRef := MapHRef + '-files' + PathDelim;
+    end else
+      MapHRef := MapHRef + '-files' + PathDelim;
 
     MapFileName := ExtractFilePath(FileName) + MapHRef;
     MapHRef := StringReplace(MapHRef, PathDelim, HRefDelim, [rfReplaceAll]);
@@ -1223,21 +1284,25 @@ begin
       Units := Document.createElement('units');
       with Units do
       begin
-        for I := 0 to Length(UnitFileDescs)-1 do with UnitFileDescs[I] do
+        for I := 0 to Length(UnitFileDescs)-1 do
         begin
-          Element := Document.createElement('unit');
-          Element.setAttribute('type', GUIDToString(GUID));
-          Element.setAttribute('href', HRef);
-
-          with Element do for J := 0 to Length(Params)-1 do
+          with UnitFileDescs[I] do
           begin
-            Param := Document.createElement('param');
-            Param.setAttribute('name', Params[J].Name);
-            Param.setAttribute('value', Params[J].Value);
-            appendChild(Param);
-          end;
+            Element := Document.createElement('unit');
+            Element.setAttribute('type', GUIDToString(GUID));
+            Element.setAttribute('href', HRef);
 
-          appendChild(Element); // unit
+            with Element do
+              for J := 0 to Length(Params)-1 do
+              begin
+                Param := Document.createElement('param');
+                Param.setAttribute('name', Params[J].Name);
+                Param.setAttribute('value', Params[J].Value);
+                appendChild(Param);
+              end;
+
+            appendChild(Element); // unit
+          end;
         end;
       end;
       appendChild(Units);
@@ -1246,17 +1311,22 @@ begin
       Maps := Document.createElement('maps');
       with Maps do
       begin
-        for I := 0 to MapFileCount-1 do with MapFiles[I] do
+        for I := 0 to MapFileCount-1 do
         begin
-          if Mode <> fmPlay then Save else
-            Save(MapHRef+MapID+'.flm', MapFileName+MapID+'.flm');
+          with MapFiles[I] do
+          begin
+            if Mode <> fmPlay then
+              Save
+            else
+              Save(MapHRef+MapID+'.flm', MapFileName+MapID+'.flm');
 
-          Element := Document.createElement('map');
-          Element.setAttribute('id', Map.ID);
-          Element.setAttribute('href', HRef);
-          if Map.MaxViewSize > 1 then
-            Element.setAttribute('maxviewsize', Map.MaxViewSize);
-          appendChild(Element);
+            Element := Document.createElement('map');
+            Element.setAttribute('id', Map.ID);
+            Element.setAttribute('href', HRef);
+            if Map.MaxViewSize > 1 then
+              Element.setAttribute('maxviewsize', Map.MaxViewSize);
+            appendChild(Element);
+          end;
         end;
       end;
       appendChild(Maps);
@@ -1267,52 +1337,55 @@ begin
       begin
         Params := TStringList.Create;
         try
-          for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
+          for I := 0 to Master.PlayerCount-1 do
           begin
-            Player := Document.createElement('player');
-            Player.setAttribute('id', ID);
-            Player.setAttribute('name', Name);
-            if PlayState = psLost then
-              Player.setAttribute('lost', 'yes');
-
-            with Player do
+            with Master.Players[I] do
             begin
-              Element := Document.createElement('position');
-              Element.setAttribute('map', Map.ID);
-              Element.setAttribute('posx', Position.X);
-              Element.setAttribute('posy', Position.Y);
-              Element.setAttribute('posz', Position.Z);
-              appendChild(Element);
+              Player := Document.createElement('player');
+              Player.setAttribute('id', ID);
+              Player.setAttribute('name', Name);
+              if PlayState = psLost then
+                Player.setAttribute('lost', 'yes');
 
-              Element := Document.createElement('attributes');
-              with Element do
+              with Player do
               begin
-                GetAttributes(Params);
-                for J := 0 to Params.Count-1 do
-                begin
-                  Param := Document.createElement('attribute');
-                  Param.setAttribute('name', Params[J]);
-                  Param.setAttribute('value', integer(Params.Objects[J]));
-                  appendChild(Param);
-                end;
-              end;
-              appendChild(Element); // attributes
+                Element := Document.createElement('position');
+                Element.setAttribute('map', Map.ID);
+                Element.setAttribute('posx', Position.X);
+                Element.setAttribute('posy', Position.Y);
+                Element.setAttribute('posz', Position.Z);
+                appendChild(Element);
 
-              Element := Document.createElement('plugins');
-              with Element do
-              begin
-                GetPluginIDs(Params);
-                for J := 0 to Params.Count-1 do
+                Element := Document.createElement('attributes');
+                with Element do
                 begin
-                  Param := Document.createElement('plugin');
-                  Param.setAttribute('id', Params[J]);
-                  appendChild(Param);
+                  GetAttributes(Params);
+                  for J := 0 to Params.Count-1 do
+                  begin
+                    Param := Document.createElement('attribute');
+                    Param.setAttribute('name', Params[J]);
+                    Param.setAttribute('value', Integer(Params.Objects[J]));
+                    appendChild(Param);
+                  end;
                 end;
+                appendChild(Element); // attributes
+
+                Element := Document.createElement('plugins');
+                with Element do
+                begin
+                  GetPluginIDs(Params);
+                  for J := 0 to Params.Count-1 do
+                  begin
+                    Param := Document.createElement('plugin');
+                    Param.setAttribute('id', Params[J]);
+                    appendChild(Param);
+                  end;
+                end;
+                appendChild(Element); // plugins
               end;
-              appendChild(Element); // plugins
+
+              appendChild(Player);
             end;
-
-            appendChild(Player);
           end;
         finally
           Params.Free;
@@ -1334,8 +1407,9 @@ end;
   Enregistre le fichier
   @param AFileName   Nom du fichier à enregistrer (si vide, conserve l'existant)
 *}
-procedure TMasterFile.Save(const AFileName : TFileName = '');
-var UnitFileDescs : TUnitFileDescs;
+procedure TMasterFile.Save(const AFileName: TFileName = '');
+var
+  UnitFileDescs: TUnitFileDescs;
 begin
   GetUnitFileDescs(UnitFileDescs);
   Save(UnitFileDescs, AFileName);
@@ -1350,7 +1424,7 @@ end;
 *}
 constructor TUnitFileClassList.Create;
 begin
-  inherited Create(sizeof(TGUID), sizeof(TUnitFileClass));
+  inherited Create(SizeOf(TGUID), SizeOf(TUnitFileClass));
 end;
 
 {*
@@ -1358,8 +1432,8 @@ end;
   @param GUID            GUID du gestionnaire
   @param UnitFileClass   Classe du gestionnaire
 *}
-procedure TUnitFileClassList.Add(const GUID : TGUID;
-  UnitFileClass : TUnitFileClass);
+procedure TUnitFileClassList.Add(const GUID: TGUID;
+  UnitFileClass: TUnitFileClass);
 begin
   AddData(GUID, UnitFileClass);
 end;
@@ -1368,7 +1442,7 @@ end;
   Supprime un gestionnaire d'unité
   @param GUID   GUID du gestionnaire à supprimer
 *}
-procedure TUnitFileClassList.Remove(const GUID : TGUID);
+procedure TUnitFileClassList.Remove(const GUID: TGUID);
 begin
   RemoveData(GUID);
 end;
@@ -1379,7 +1453,7 @@ end;
   @return Classe du gestionnaire gérant les fichiers de type GUID
   @throws EFileError Type de fichier inconnu
 *}
-function TUnitFileClassList.Find(const GUID : TGUID) : TUnitFileClass;
+function TUnitFileClassList.Find(const GUID: TGUID): TUnitFileClass;
 begin
   if not (inherited Find(GUID, Result)) then
     raise EFileError.CreateFmt(sUnknownUnitType, [GUIDToString(GUID)]);

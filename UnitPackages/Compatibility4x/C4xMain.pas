@@ -23,23 +23,23 @@ resourcestring
 type
   TCompatibility4xUnit = class(TInterfacedUnitFile)
   private
-    FSourceHRef : string;
+    FSourceHRef: string;
   protected
     procedure GameStarted; override;
 
     procedure RegisterComponents(
-      RegisterSingleComponentProc : TRegisterSingleComponentProc;
-      RegisterComponentSetProc : TRegisterComponentSetProc); override;
+      RegisterSingleComponentProc: TRegisterSingleComponentProc;
+      RegisterComponentSetProc: TRegisterComponentSetProc); override;
 
-    procedure GetParams(Params : TStrings); override;
+    procedure GetParams(Params: TStrings); override;
   public
-    constructor Create(AMasterFile : TMasterFile; Params : TStrings);
+    constructor Create(AMasterFile: TMasterFile; Params: TStrings);
 
-    property SourceHRef : string read FSourceHRef;
+    property SourceHRef: string read FSourceHRef;
   end;
 
-function CreateUnitFile(BPLHandler : TBPLUnitFile; Master : TMaster;
-  Params : TStrings) : IUnitFile50; stdcall;
+function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
+  Params: TStrings): IUnitFile50; stdcall;
 
 implementation
 
@@ -50,8 +50,8 @@ implementation
   @param Params       Paramètres passés à l'unité
   @return Interface de l'unité Compatibility4x créée
 *}
-function CreateUnitFile(BPLHandler : TBPLUnitFile; Master : TMaster;
-  Params : TStrings) : IUnitFile50; stdcall;
+function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
+  Params: TStrings): IUnitFile50; stdcall;
 begin
   Result := TCompatibility4xUnit.Create(BPLHandler.MasterFile, Params);
 end;
@@ -71,26 +71,27 @@ const {don't localize}
   @param AMasterFile   Fichier maître
   @param Params        Paramètres envoyés au fichier unité
 *}
-constructor TCompatibility4xUnit.Create(AMasterFile : TMasterFile;
-  Params : TStrings);
+constructor TCompatibility4xUnit.Create(AMasterFile: TMasterFile;
+  Params: TStrings);
 const {don't localize}
-  KindStrings : array[0..14] of string = (
+  KindStrings: array[0..14] of string = (
     'GameStarted', 'PushButton', 'Switch', 'InfoStone', 'Hidden',
     'TransporterNext', 'TransporterPrevious', 'TransporterRandom', 'Outside',
     'Treasure', 'Custom', 'Object', 'Obstacle', 'Direction', 'Zone'
   );
-var FileName : TFileName;
-    FileContents, SubContents, Counters : TStrings;
-    ActionsList : TObjectList;
-    Number, FirstLine, LastLine : integer;
-    StrNumber, InfoLine, Graphics : string;
-    Kind : TActionsKind;
-    Infos : TC4xInfos;
-    I : integer;
-    Zone : T3DPoint;
-    ActionsID : TComponentID;
-    Actions : TActions;
-    C : Char;
+var
+  FileName: TFileName;
+  FileContents, SubContents, Counters: TStrings;
+  ActionsList: TObjectList;
+  Number, FirstLine, LastLine: Integer;
+  StrNumber, InfoLine, Graphics: string;
+  Kind: TActionsKind;
+  Infos: TC4xInfos;
+  I: Integer;
+  Zone: T3DPoint;
+  ActionsID: TComponentID;
+  Actions: TActions;
+  C: Char;
 begin
   { Don't localize any of the strings in this procedure. }
 
@@ -129,7 +130,8 @@ begin
   try
     Counters.Delimiter := ' ';
 
-    if FileName = '' then exit;
+    if FileName = '' then
+      Exit;
     FileContents := TStringList.Create;
     try
       FileContents.LoadFromFile(FileName);
@@ -146,23 +148,26 @@ begin
 
             StrNumber := Format('[%d;', [Number]);
             FirstLine := StringsOps.FindAtPos(FileContents, StrNumber);
-            if FirstLine < 0 then Break;
+            if FirstLine < 0 then
+              Break;
 
             InfoLine := FileContents[FirstLine];
-            inc(FirstLine);
+            Inc(FirstLine);
             LastLine := StringsOps.FindAtPos(FileContents, '[', 1, FirstLine);
 
             // Les actions sont dans les lignes [FirstLine ; LastLine[
 
             Delete(InfoLine, 1, Length(StrNumber));
-            if InfoLine[Length(InfoLine)] <> ']' then Break;
+            if InfoLine[Length(InfoLine)] <> ']' then
+              Break;
             Delete(InfoLine, Length(InfoLine), 1);
 
             // Maintenant InfoLine est du gabarit 'Kind' ou 'Kind;Graphics'
 
             Kind := TActionsKind(AnsiIndexStr(
               GetFirstToken(InfoLine, ';'), KindStrings));
-            if Ord(Kind) < 0 then Break;
+            if Ord(Kind) < 0 then
+              Break;
             if Kind in CustomActionsKind then
               Graphics := GetLastToken(InfoLine, ';')
             else
@@ -170,12 +175,15 @@ begin
 
             // Déterminer l'ID des actions à créer
 
-            if Kind <> akZone then ActionsID := '' else
+            if Kind <> akZone then
+              ActionsID := ''
+            else
             begin
               Zone.X := StrToIntDef(GetXToken(InfoLine, ';', 2), -1);
               Zone.Y := StrToIntDef(GetXToken(InfoLine, ';', 3), -1);
               Zone.Z := StrToIntDef(GetXToken(InfoLine, ';', 4), -1);
-              if (Zone.X < 0) or (Zone.Y < 0) or (Zone.Z < 0) then Break;
+              if (Zone.X < 0) or (Zone.Y < 0) or (Zone.Z < 0) then
+                Break;
               ActionsID := Format(idZoneActions, [Zone.X, Zone.Y, Zone.Z]);
             end;
 
@@ -194,7 +202,7 @@ begin
 
             // Passage à l'itération suivante
 
-            inc(Number);
+            Inc(Number);
           end;
 
           // On s'assure qu'il y a suffisamment d'actions
@@ -206,7 +214,7 @@ begin
             ActionsList.Add(Actions);
             if Counters.Count > Number then
               Actions.Counter := StrToIntDef(Counters[Number], 0);
-            inc(Number);
+            Inc(Number);
           end;
 
           Infos := TC4xInfos.Create(MasterFile, ActionsList);
@@ -232,31 +240,36 @@ begin
 
   // Les composants de compatibilité ne gèrent pas le comptage de références
   // On s'assure donc que les cases utilisées sont les mêmes du début à la fin
-  for C := #33 to #255 do if ScrewsTable[C] <> '' then
-    Master.Screw[ScrewsTable[C]].AddRef;
+  for C := #33 to #255 do
+    if ScrewsTable[C] <> '' then
+      Master.Screw[ScrewsTable[C]].AddRef;
 end;
 
 {*
   [@inheritDoc]
 *}
 procedure TCompatibility4xUnit.GameStarted;
-var Infos : TC4xInfos;
-    I : integer;
-    DoNextPhase, HasMoved, HasShownMsg, Successful : boolean;
-    WereZones, WereTips : boolean;
+var
+  Infos: TC4xInfos;
+  I: Integer;
+  DoNextPhase, HasMoved, HasShownMsg, Successful: Boolean;
+  WereZones, WereTips: Boolean;
 begin
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   DoNextPhase := False;
   WereZones := False;
   WereTips := False;
 
-  for I := 0 to Infos.ActionsCount-1 do with Infos.Actions[I] do
+  for I := 0 to Infos.ActionsCount-1 do
   begin
-    if Kind = akZone then
-      WereZones := True;
+    with Infos.Actions[I] do
+    begin
+      if Kind = akZone then
+        WereZones := True;
 
-    if StringsOps.FindText(Actions, 'Indice') >= 0 then
-      WereTips := True;
+      if StringsOps.FindText(Actions, 'Indice') >= 0 then
+        WereTips := True;
+    end;
   end;
 
   if WereZones then
@@ -264,19 +277,24 @@ begin
 
   if not Infos.KnowShowTips then
   begin
-    if not WereTips then Infos.ShowTips := False else
+    if not WereTips then
+      Infos.ShowTips := False
+    else
     begin
       Infos.ShowTips := Master.Players[0].ShowDialog(
         sAskForTipsTitle, sAskForTips, dtConfirmation, dbYesNo) = drYes;
     end;
   end;
 
-  for I := 0 to Infos.ActionsCount-1 do with Infos.Actions[I] do
+  for I := 0 to Infos.ActionsCount-1 do
   begin
-    if Kind = akGameStarted then
+    with Infos.Actions[I] do
     begin
-      Execute(phExecute, Master.Players[0], False, Master.Players[0].Position,
-        DoNextPhase, HasMoved, HasShownMsg, Successful);
+      if Kind = akGameStarted then
+      begin
+        Execute(phExecute, Master.Players[0], False, Master.Players[0].Position,
+          DoNextPhase, HasMoved, HasShownMsg, Successful);
+      end;
     end;
   end;
 end;
@@ -285,25 +303,26 @@ end;
   [inheritDoc]
 *}
 procedure TCompatibility4xUnit.RegisterComponents(
-  RegisterSingleComponentProc : TRegisterSingleComponentProc;
-  RegisterComponentSetProc : TRegisterComponentSetProc);
+  RegisterSingleComponentProc: TRegisterSingleComponentProc;
+  RegisterComponentSetProc: TRegisterComponentSetProc);
 
-  procedure RegSingle(Component : TComponentID);
+  procedure RegSingle(Component: TComponentID);
   begin
     RegisterSingleComponentProc(Master.ScrewComponent[Component]);
   end;
 
-  procedure RegSet(Template : TComponentID;
-    const Components : array of TScrewComponent; BaseIndex : integer;
-    const DialogTitle, DialogPrompt : string);
+  procedure RegSet(Template: TComponentID;
+    const Components: array of TScrewComponent; BaseIndex: Integer;
+    const DialogTitle, DialogPrompt: string);
   begin
     RegisterComponentSetProc(Master.ScrewComponent[Template],
       Components, BaseIndex, DialogTitle, DialogPrompt);
   end;
 
-var Infos : TC4xInfos;
-    I : integer;
-    Components : array of TScrewComponent;
+var
+  Infos: TC4xInfos;
+  I: Integer;
+  Components: array of TScrewComponent;
 begin
   // Effets
 
@@ -332,10 +351,11 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TCompatibility4xUnit.GetParams(Params : TStrings);
-var Infos : TC4xInfos;
-    I : integer;
-    Counters : string;
+procedure TCompatibility4xUnit.GetParams(Params: TStrings);
+var
+  Infos: TC4xInfos;
+  I: Integer;
+  Counters: string;
 begin
   Params.Values[attrFileName] := SourceHRef;
 
@@ -344,22 +364,24 @@ begin
   begin
     Counters := '';
     I := Infos.ActionsCount-1;
-    while (I >= 0) and (Infos.Actions[I].Counter = 0) do dec(I);
+    while (I >= 0) and (Infos.Actions[I].Counter = 0) do
+      Dec(I);
     while I >= 0 do
     begin
       Counters := IntToStr(Infos.Actions[I].Counter) + ' ' + Counters;
-      dec(I);
+      Dec(I);
     end;
     if Counters <> '' then
       Params.Values[attrCounters] := Copy(Counters, 1, Length(Counters)-1);
 
     Counters := '';
     I := MaxVar;
-    while (I > 0) and (Infos.Variables[I] = 0) do dec(I);
+    while (I > 0) and (Infos.Variables[I] = 0) do
+      Dec(I);
     while I > 0 do
     begin
       Counters := IntToStr(Infos.Variables[I]) + ' ' + Counters;
-      dec(I);
+      Dec(I);
     end;
     if Counters <> '' then
       Params.Values[attrVariables] := Copy(Counters, 1, Length(Counters)-1);

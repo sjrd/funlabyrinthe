@@ -20,11 +20,11 @@ type
     procedure FormDestroy(Sender: TObject);
   private
     { Déclarations privées }
-    procedure AddCreator(const CreateProc, Info; var Continue : boolean);
+    procedure AddCreator(const CreateProc, Info; var Continue: Boolean);
   public
     { Déclarations publiques }
-    class function NewUnit(out FileName : TFileName;
-      out GUID : TGUID) : boolean;
+    class function NewUnit(out FileName: TFileName;
+      out GUID: TGUID): Boolean;
   end;
 
 implementation
@@ -41,8 +41,8 @@ type
     @version 5.0
   *}
   TUnitCreator = record
-    CreateProc : TCreateNewUnitProc;
-    Info : TUnitCreatorInfo;
+    CreateProc: TCreateNewUnitProc;
+    Info: TUnitCreatorInfo;
   end;
 
 {*
@@ -52,8 +52,9 @@ type
   @param Continue     Positionner à False pour interrompre l'énumération
 *}
 procedure TFormCreateNewUnit.AddCreator(const CreateProc, Info;
-  var Continue : boolean);
-var Creator : PUnitCreator;
+  var Continue: Boolean);
+var
+  Creator: PUnitCreator;
 begin
   New(Creator);
   Initialize(Creator^);
@@ -70,15 +71,16 @@ end;
   @return Éditeur de l'unité
 *}
 class function TFormCreateNewUnit.NewUnit(
-  out FileName : TFileName; out GUID : TGUID) : boolean;
-var Creator : PUnitCreator;
+  out FileName: TFileName; out GUID: TGUID): Boolean;
+var
+  Creator: PUnitCreator;
 begin
   // Initialisations
   Result := False;
 
   // Vérifier qu'il y a au moins un créateur d'unité enregistré
   if UnitCreators.IsEmpty then
-    exit;
+    Exit;
 
   with Create(Application) do
   try
@@ -89,8 +91,8 @@ begin
     ListBoxUnitTypeClick(nil);
 
     // Afficher la boîte de dialogue
-    if ShowModal <> mrOK then
-      exit;
+    if ShowModal <> mrOk then
+      Exit;
 
     with ListBoxUnitType do
       Creator := PUnitCreator(Items.Objects[ItemIndex]);
@@ -101,9 +103,10 @@ begin
       SaveUnitDialog.Filter := Creator.Info.Filter;
       SaveUnitDialog.InitialDir := fUnitsDir;
       if not SaveUnitDialog.Execute then
-        exit;
+        Exit;
       FileName := SaveUnitDialog.FileName;
-    end else FileName := '';
+    end else
+      FileName := '';
 
     // Créer le fichier
     Result := Creator.CreateProc(FileName, GUID);
@@ -127,8 +130,9 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormCreateNewUnit.FormDestroy(Sender: TObject);
-var I : integer;
-    Creator : PUnitCreator;
+var
+  I: Integer;
+  Creator: PUnitCreator;
 begin
   for I := 0 to ListBoxUnitType.Items.Count-1 do
   begin

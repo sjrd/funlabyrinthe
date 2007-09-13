@@ -52,11 +52,11 @@ type
     procedure RadioExistingMapClick(Sender: TObject);
   private
     { Déclarations privées }
-    Dimensions : T3DPoint; /// Dimensions de la care
-    ZoneSize : TPoint;     /// Dimensions d'une zone
+    Dimensions: T3DPoint; /// Dimensions de la care
+    ZoneSize: TPoint;     /// Dimensions d'une zone
   public
     { Déclarations publiques }
-    class function AddMap(MasterFile : TMasterFile) : TComponentID;
+    class function AddMap(MasterFile: TMasterFile): TComponentID;
   end;
 
 implementation
@@ -68,12 +68,14 @@ implementation
   @param MasterFile   Fichier maître
   @return ID de la nouvelle carte
 *}
-class function TFormAddMap.AddMap(MasterFile : TMasterFile) : TComponentID;
+class function TFormAddMap.AddMap(MasterFile: TMasterFile): TComponentID;
 begin
   with Create(Application) do
   try
     OpenDialog.InitialDir := fMapsDir;
-    if ShowModal <> mrOK then Result := '' else
+    if ShowModal <> mrOk then
+      Result := ''
+    else
     begin
       Result := EditID.Text;
       if RadioExistingMap.Checked then
@@ -83,7 +85,7 @@ begin
       begin
         TFormMapBase.GenerateBase(
           MasterFile.AddNewMapFile(
-            Result, Dimensions, ZoneSize.X, ZoneSize.Y).Map);
+          Result, Dimensions, ZoneSize.X, ZoneSize.Y).Map);
       end;
     end;
   finally
@@ -132,7 +134,8 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormAddMap.ButtonOKClick(Sender: TObject);
-var Str : string;
+var
+  Str: string;
 begin
   { Don't localize strings in this method }
 
@@ -148,7 +151,7 @@ begin
   if not CorrectIdentifier(EditID.Text) then
   begin
     ShowDialog(sWrongIDFormatTitle, sWrongIDFormatTitle, dtError);
-    exit;
+    Exit;
   end;
 
   if RadioExistingMap.Checked then
@@ -156,7 +159,7 @@ begin
     if EditFileName.Text = '' then
       ShowDialog(sUnfilledFileNameTitle, sUnfilledFileName, dtError)
     else
-      ModalResult := mrOK;
+      ModalResult := mrOk;
   end else
   begin
     if (Dimensions.X <= 0) or (Dimensions.Y <= 0) or (Dimensions.Z <= 0) then
@@ -164,10 +167,10 @@ begin
     else if (ZoneSize.X <= 0) or (ZoneSize.Y <= 0) then
       ShowDialog(sWrongZoneSizeTitle, sWrongZoneSize, dtError)
     else if (Dimensions.X mod ZoneSize.X <> 0) or
-            (Dimensions.Y mod ZoneSize.Y <> 0) then
+      (Dimensions.Y mod ZoneSize.Y <> 0) then
       ShowDialog(sWrongZoneSizeTitle, sZoneSizeMustDivideDimensions, dtError)
     else
-      ModalResult := mrOK;
+      ModalResult := mrOk;
   end;
 end;
 

@@ -66,75 +66,75 @@ type
   *}
   TActionsInterpreter = class
   private
-    Counter : PInteger;    /// Pointeur vers le compteur des actions courantes
-    Actions : TStrings;    /// Actions à exécuter
-    Master : TMaster;      /// Maître FunLabyrinthe
-    Infos : TC4xInfos;     /// Infos C4x
-    Phase : integer;       /// Phase courante (phPushing ou phExecute)
-    Player : TPlayer;      /// Joueur concerné
-    PlayerPos : T3DPoint;  /// Position du joueur
-    Map : TMap;            /// Carte courante
-    KeyPressed : boolean;  /// True si une touche a été pressée
-    Position : T3DPoint;   /// Position de la case
-    DoNextPhase : boolean; /// Indique s'il faut exécuter la phase suivante
-    HasMoved : boolean;    /// Indique si un AllerA a été fait
-    HasShownMsg : boolean; /// Indique si un message a été affiché
-    Successful : boolean;  /// État de réussite
-    Inactive : TScrew;     /// Case à utiliser lors d'un Desactiver
-    AllowPlank : boolean;  /// Indique si un AutoriserPlanche a été fait
+    Counter: PInteger;    /// Pointeur vers le compteur des actions courantes
+    Actions: TStrings;    /// Actions à exécuter
+    Master: TMaster;      /// Maître FunLabyrinthe
+    Infos: TC4xInfos;     /// Infos C4x
+    Phase: Integer;       /// Phase courante (phPushing ou phExecute)
+    Player: TPlayer;      /// Joueur concerné
+    PlayerPos: T3DPoint;  /// Position du joueur
+    Map: TMap;            /// Carte courante
+    KeyPressed: Boolean;  /// True si une touche a été pressée
+    Position: T3DPoint;   /// Position de la case
+    DoNextPhase: Boolean; /// Indique s'il faut exécuter la phase suivante
+    HasMoved: Boolean;    /// Indique si un AllerA a été fait
+    HasShownMsg: Boolean; /// Indique si un message a été affiché
+    Successful: Boolean;  /// État de réussite
+    Inactive: TScrew;     /// Case à utiliser lors d'un Desactiver
+    AllowPlank: Boolean;  /// Indique si un AutoriserPlanche a été fait
 
-    StrHere : string;   /// Case courante
-    StrBefore : string; /// Case devant
-    StrBehind : string; /// Case derrière
-    Answer : integer;   /// Réponse d'un Choix
-    Boat : integer;     /// Numéro de la barque qu'a le joueur
+    StrHere: string;   /// Case courante
+    StrBefore: string; /// Case devant
+    StrBehind: string; /// Case derrière
+    Answer: Integer;   /// Réponse d'un Choix
+    Boat: Integer;     /// Numéro de la barque qu'a le joueur
 
-    ReferencesStrings : array of string; /// Tableau des références
+    ReferencesStrings: array of string; /// Tableau des références
 
-    procedure TreatVariables(var Line : string);
+    procedure TreatVariables(var Line: string);
 
-    function EvalBool(var Condition : string) : boolean;
-    function EvalBoolExpression(var Condition : string) : boolean;
-    procedure TreatIfStatement(var Line : string);
+    function EvalBool(var Condition: string): Boolean;
+    function EvalBoolExpression(var Condition: string): Boolean;
+    procedure TreatIfStatement(var Line: string);
 
-    procedure ModifyReference(Reference, Value : integer;
-      ModificationKind : TModificationKind);
-    procedure ConvertScrews(FromScrew, ToScrew : TScrew);
+    procedure ModifyReference(Reference, Value: Integer;
+      ModificationKind: TModificationKind);
+    procedure ConvertScrews(FromScrew, ToScrew: TScrew);
 
-    function Information(var Params : string; const Title : string;
-      DlgType : TDialogType;
-      DlgButtons : TDialogButtons = dbOK) : TDialogResult;
+    function Information(var Params: string; const Title: string;
+      DlgType: TDialogType;
+      DlgButtons: TDialogButtons = dbOK): TDialogResult;
 
-    procedure ReplaceCmd    (var Params : string);
-    procedure ConvertCmd    (var Params : string);
-    procedure MoveCmd       (var Params : string);
-    procedure DeactivateCmd (var Params : string);
-    procedure IncrementCmd  (var Params : string);
-    procedure DecrementCmd  (var Params : string);
-    procedure MultiplyCmd   (var Params : string);
-    procedure MessageCmd    (var Params : string);
-    procedure TipCmd        (var Params : string);
-    procedure FailureCmd    (var Params : string);
-    procedure BlindAlleyCmd (var Params : string);
-    procedure ChoiceCmd     (var Params : string);
-    procedure DescriptionCmd(var Params : string);
-    procedure WinCmd        (var Params : string);
-    procedure SoundCmd      (var Params : string);
-    procedure GoToCmd       (var Params : string);
-    procedure LetPassCmd    (var Params : string);
-    procedure AllowPlankCmd (var Params : string);
-    procedure DontGoOnCmd   (var Params : string);
-    procedure GoOnCmd       (var Params : string);
+    procedure ReplaceCmd    (var Params: string);
+    procedure ConvertCmd    (var Params: string);
+    procedure MoveCmd       (var Params: string);
+    procedure DeactivateCmd (var Params: string);
+    procedure IncrementCmd  (var Params: string);
+    procedure DecrementCmd  (var Params: string);
+    procedure MultiplyCmd   (var Params: string);
+    procedure MessageCmd    (var Params: string);
+    procedure TipCmd        (var Params: string);
+    procedure FailureCmd    (var Params: string);
+    procedure BlindAlleyCmd (var Params: string);
+    procedure ChoiceCmd     (var Params: string);
+    procedure DescriptionCmd(var Params: string);
+    procedure WinCmd        (var Params: string);
+    procedure SoundCmd      (var Params: string);
+    procedure GoToCmd       (var Params: string);
+    procedure LetPassCmd    (var Params: string);
+    procedure AllowPlankCmd (var Params: string);
+    procedure DontGoOnCmd   (var Params: string);
+    procedure GoOnCmd       (var Params: string);
 
     procedure ExecuteActions;
   public
     constructor Create;
 
-    class procedure Execute(ACounter : PInteger; AActions : TStrings;
-      AMaster : TMaster; APhase : integer; APlayer : TPlayer;
-      AKeyPressed : boolean; const APos : T3DPoint; var ADoNextPhase : boolean;
-      out AHasMoved, AHasShownMsg, ASuccessful : boolean;
-      const AInactive : TComponentID);
+    class procedure Execute(ACounter: PInteger; AActions: TStrings;
+      AMaster: TMaster; APhase: Integer; APlayer: TPlayer;
+      AKeyPressed: Boolean; const APos: T3DPoint; var ADoNextPhase: Boolean;
+      out AHasMoved, AHasShownMsg, ASuccessful: Boolean;
+      const AInactive: TComponentID);
   end;
 
 implementation
@@ -171,7 +171,7 @@ const
   cEnd         = 23; /// Fin des commandes
 
   /// Tableaux des chaînes de commandes
-  CommandStrings : array[cBegin..cEnd] of string = (
+  CommandStrings: array[cBegin..cEnd] of string = (
     'Remplacer', 'Convertir', 'Deplacer', 'Desactiver', 'Incrementer',
     'Decrementer', 'Multiplier', 'Message', 'Indice', 'Echec', 'Impasse',
     'Choix', 'Description', 'Gagner', 'Son', 'AllerA', 'LaisserPasser',
@@ -198,7 +198,7 @@ const
   srEnd           = 14; /// Fin des références simples
 
   /// Tableaux des références simples
-  SimpleReferencesStrings : array[srBegin..srEnd] of string = (
+  SimpleReferencesStrings: array[srBegin..srEnd] of string = (
     '&Compteur', '&Bouee', '&Bouees', '&Planche', '&Planches', '&ClesArgent',
     '&ClesOr', '&Couleur', '&Temporisation', '&X', '&Y', '&Z', '&Direction',
     '&Reussite', '&CompteurFin'
@@ -227,11 +227,11 @@ const
   TransporterCounterOffset = 46; /// Décalage des index des téléporteurs
 
   /// Nom des couleurs
-  ColorStrings : array[0..6] of string = (
+  ColorStrings: array[0..6] of string = (
     'Bleu', 'Rouge', 'Vert', 'Jaune', 'Noir', 'Blanc', 'Invisible'
   );
   /// Valeur des couleurs
-  ColorValues : array[0..6] of integer = (
+  ColorValues: array[0..6] of Integer = (
     clBlue, clRed, clLime, clYellow, clBlack, clWhite, clTransparent
   );
 
@@ -242,7 +242,7 @@ type
     @param Str      Chaîne dans laquelle chercher SubStr
     @return Index de la première occurence de SubStr dans Str (0 si non trouvée)
   *}
-  TPosProc = function(const SubStr, Str : string) : integer;
+  TPosProc = function(const SubStr, Str: string): Integer;
 
   {*
     Type d'une procédure qui remplace toutes les occurences d'une variable par
@@ -251,19 +251,19 @@ type
     @param Variable   Variable à remplacer
     @param Value      Valeur entière de la variable
   *}
-  TReplaceVarProc = procedure(var Str : string; const Variable : string;
-    Value : integer);
+  TReplaceVarProc = procedure(var Str: string; const Variable: string;
+    Value: Integer);
 
   {*
     Type procédural correspondant aux méthodes d'exécution de commande
     @param Self     Référence à l'objet courant
     @param Params   Paramètres de la commande
   *}
-  TCommandProc = procedure(Self : TObject; var Params : string);
+  TCommandProc = procedure(Self: TObject; var Params: string);
 
 var
   /// Tableau des méthodes d'exécution de commande
-  CommandProcs : array[cBegin..cClassicEnd] of TCommandProc;
+  CommandProcs: array[cBegin..cClassicEnd] of TCommandProc;
 
 {-------------------}
 { Routines globales }
@@ -277,30 +277,36 @@ var
   @param Str        Chaîne dans laquelle chercher Variable
   @return Index de la première occurence de Variable dans Str (0 si non trouvée)
 *}
-function PosNonStrVariable(const Variable, Str : string) : integer;
-var Str2 : string;
-    ReplaceBrackets : boolean;
-    I, Len : integer;
+function PosNonStrVariable(const Variable, Str: string): Integer;
+var
+  Str2: string;
+  ReplaceBrackets: Boolean;
+  I, Len: Integer;
 begin
   Str2 := ' '+Str+' ';
   ReplaceBrackets := Pos('[', Variable) = 0;
   I := 2;
   Len := Length(Str2);
-  while I < Len do case Str2[I] of
-    '[', ']' :
-    begin
-      if ReplaceBrackets then Str2[I] := ' ';
-      inc(I);
-    end;
-    '{' :
-    begin
-      while (I < Len) and (Str2[I] <> '}') do
+  while I < Len do
+  begin
+    case Str2[I] of
+      '[', ']':
       begin
-        Str2[I] := ' ';
-        inc(I);
+        if ReplaceBrackets then
+          Str2[I] := ' ';
+        Inc(I);
       end;
+      '{':
+      begin
+        while (I < Len) and (Str2[I] <> '}') do
+        begin
+          Str2[I] := ' ';
+          Inc(I);
+        end;
+      end;
+    else
+      Inc(I);
     end;
-    else inc(I);
   end;
 
   Result := Pos(' '+Variable+' ', Str2);
@@ -313,28 +319,34 @@ end;
   @param Str        Chaîne dans laquelle chercher Variable
   @return Index de la première occurence de Variable dans Str (0 si non trouvée)
 *}
-function PosStrVariable(const Variable, Str : string) : integer;
-var Str2 : string;
-    I, Len : integer;
+function PosStrVariable(const Variable, Str: string): Integer;
+var
+  Str2: string;
+  I, Len: Integer;
 begin
   Str2 := '}'+Str;
 
   I := 1;
   Len := Length(Str2);
-  while I <= Len do case Str2[I] of
-    '}' :
-    begin
-      while (I <= Len) and (Str2[I] <> '{') do
+  while I <= Len do
+  begin
+    case Str2[I] of
+      '}':
       begin
-        Str2[I] := ' ';
-        inc(I);
+        while (I <= Len) and (Str2[I] <> '{') do
+        begin
+          Str2[I] := ' ';
+          Inc(I);
+        end;
       end;
+    else
+      Inc(I);
     end;
-    else inc(I);
   end;
 
   Result := Pos(Variable, Str2);
-  if Result > 0 then dec(Result);
+  if Result > 0 then
+    Dec(Result);
 end;
 
 {*
@@ -344,9 +356,10 @@ end;
   @param ToText     Texte à insérer à la place de FromText
   @param PosProc    Routine de recherche à utiliser
 *}
-procedure GenericReplace(var Str : string; const FromText, ToText : string;
-  PosProc : TPosProc);
-var Len, Index : integer;
+procedure GenericReplace(var Str: string; const FromText, ToText: string;
+  PosProc: TPosProc);
+var
+  Len, Index: Integer;
 begin
   Len := Length(FromText);
   repeat
@@ -365,7 +378,7 @@ end;
   @param FromText   Sous-chaîne à remplacer
   @param ToText     Texte à insérer à la place de FromText
 *}
-procedure Replace(var Str : string; const FromText, ToText : string);
+procedure Replace(var Str: string; const FromText, ToText: string);
 begin
   GenericReplace(Str, FromText, ToText, Pos);
 end;
@@ -377,8 +390,8 @@ end;
   @param Value      Valeur de la variable
   @see PosNonStrVariable
 *}
-procedure ReplaceNonStrVariable(var Str : string;
-  const Variable, Value : string); overload;
+procedure ReplaceNonStrVariable(var Str: string;
+  const Variable, Value: string); overload;
 begin
   GenericReplace(Str, Variable, Value, PosNonStrVariable);
 end;
@@ -390,8 +403,8 @@ end;
   @param Value      Valeur entière de la variable
   @see PosNonStrVariable
 *}
-procedure ReplaceNonStrVariable(var Str : string; const Variable : string;
-  Value : integer); overload;
+procedure ReplaceNonStrVariable(var Str: string; const Variable: string;
+  Value: Integer); overload;
 begin
   GenericReplace(Str, Variable, IntToStr(Value), PosNonStrVariable);
 end;
@@ -403,8 +416,8 @@ end;
   @param Value      Valeur de la variable
   @see PosStrVariable
 *}
-procedure ReplaceStrVariable(var Str : string;
-  const Variable, Value : string); overload;
+procedure ReplaceStrVariable(var Str: string;
+  const Variable, Value: string); overload;
 begin
   GenericReplace(Str, Variable, Value, PosStrVariable);
 end;
@@ -416,8 +429,8 @@ end;
   @param Value      Valeur entière de la variable
   @see PosStrVariable
 *}
-procedure ReplaceStrVariable(var Str : string; const Variable : string;
-  Value : integer); overload;
+procedure ReplaceStrVariable(var Str: string; const Variable: string;
+  Value: Integer); overload;
 begin
   GenericReplace(Str, Variable, IntToStr(Value), PosStrVariable);
 end;
@@ -430,8 +443,8 @@ end;
   @see ReplaceNonStrVariable
   @see ReplaceStrVariable
 *}
-procedure ReplaceVariable(var Str : string;
-  const Variable, Value : string); overload;
+procedure ReplaceVariable(var Str: string;
+  const Variable, Value: string); overload;
 begin
   ReplaceNonStrVariable(Str, Variable, Value);
   ReplaceStrVariable(Str, '$'+Variable, Value);
@@ -445,8 +458,8 @@ end;
   @see ReplaceNonStrVariable
   @see ReplaceStrVariable
 *}
-procedure ReplaceVariable(var Str : string; const Variable : string;
-  Value : integer); overload;
+procedure ReplaceVariable(var Str: string; const Variable: string;
+  Value: Integer); overload;
 begin
   ReplaceVariable(Str, Variable, IntToStr(Value));
 end;
@@ -456,11 +469,11 @@ end;
   @param Params   Liste des paramètres
   @return Index du premier non-espace
 *}
-function SkipSpaces(const Params : string) : integer;
+function SkipSpaces(const Params: string): Integer;
 begin
   Result := 1;
   while (Result <= Length(Params)) and (Params[Result] = ' ') do
-    inc(Result);
+    Inc(Result);
 end;
 
 {*
@@ -470,12 +483,12 @@ end;
   @param C         Caractère à rechercher
   @return Index du premier caractère C donné
 *}
-function ToNextChar(const Params : string; StartAt : integer;
-  C : Char) : integer;
+function ToNextChar(const Params: string; StartAt: Integer;
+  C: Char): Integer;
 begin
   Result := StartAt;
   while (Result <= Length(Params)) and (Params[Result] <> C) do
-    inc(Result);
+    Inc(Result);
 end;
 
 {*
@@ -486,10 +499,11 @@ end;
   @return Sous-commande lue, ou -1 si la sous-commande est invalide
   @throws EBadParam : Le premier paramètre n'est pas une sous-commande valide
 *}
-function GetCommandIndex(var Params : string;
-  const Commands : array of string;
-  RaiseException : boolean = True) : integer;
-var StartIndex, EndIndex : integer;
+function GetCommandIndex(var Params: string;
+  const Commands: array of string;
+  RaiseException: Boolean = True): Integer;
+var
+  StartIndex, EndIndex: Integer;
 begin
   StartIndex := SkipSpaces(Params);
   EndIndex := ToNextChar(Params, StartIndex, ' ');
@@ -497,8 +511,9 @@ begin
   Result := AnsiIndexStr(
     Copy(Params, StartIndex, EndIndex-StartIndex), Commands);
 
-  if Result >= 0 then Delete(Params, 1, EndIndex-1) else
-  if RaiseException then
+  if Result >= 0 then
+    Delete(Params, 1, EndIndex-1)
+  else if RaiseException then
     raise EBadParam.Create(sInvalidCommand);
 end;
 
@@ -508,16 +523,17 @@ end;
   @return Valeur entière lue
   @throws EBadParam : Le type du premier paramètre n'est pas un entier
 *}
-function GetIntParam(var Params : string) : integer;
-var ColorIndex : integer;
-    IsRandom : boolean;
-    StartIndex, EndIndex : integer;
+function GetIntParam(var Params: string): Integer;
+var
+  ColorIndex: Integer;
+  IsRandom: Boolean;
+  StartIndex, EndIndex: Integer;
 begin
   ColorIndex := GetCommandIndex(Params, ColorStrings, False);
   if ColorIndex >= 0 then
   begin
     Result := ColorValues[ColorIndex];
-    exit;
+    Exit;
   end;
 
   IsRandom := GetCommandIndex(Params, ['EntierAleatoire'], False) = 0;
@@ -531,17 +547,20 @@ begin
 
       if IsRandom then
       begin
-        if Result > 0 then Result := Random(Result) else
+        if Result > 0 then
+          Result := Random(Result)
+        else
           raise EBadParam.Create(sInvalidRandomParameter);
       end;
 
       Delete(Params, 1, EndIndex-1);
     except
-      on Error : EConvertError do
+      on Error: EConvertError do
         raise EBadParam.Create(Error.Message);
     end;
   except
-    if IsRandom then Params := 'EntierAleatoire' + Params;
+    if IsRandom then
+      Params := 'EntierAleatoire' + Params;
     raise;
   end;
 end;
@@ -552,20 +571,21 @@ end;
   @return Valeur chaîne lue
   @throws EBadParam : Le type du premier paramètre n'est pas une chaîne
 *}
-function GetStringParam(var Params : string) : string;
-var Len, StartIndex, EndIndex : integer;
+function GetStringParam(var Params: string): string;
+var
+  Len, StartIndex, EndIndex: Integer;
 begin
   if GetCommandIndex(Params, ['Rien'], False) = 0 then
   begin
     Result := '';
-    exit;
+    Exit;
   end;
 
   Len := Length(Params);
   StartIndex := SkipSpaces(Params);
   if (StartIndex > Len) or (Params[StartIndex] <> '{') then
     raise EBadParam.Create(sInvalidParameter);
-  inc(StartIndex);
+  Inc(StartIndex);
 
   EndIndex := ToNextChar(Params, StartIndex, '}');
   if EndIndex > Len then
@@ -587,11 +607,12 @@ end;
   @return Référence à la case lue
   @throws EBadParam : Le type du premier paramètre n'est pas une case
 *}
-function GetScrewReference(var Params : string;
-  NoneAllowed : boolean = False) : T3DPoint;
+function GetScrewReference(var Params: string;
+  NoneAllowed: Boolean = False): T3DPoint;
 begin
   if NoneAllowed and (GetCommandIndex(Params, ['Rien'], False) = 0) then
-    Result := No3DPoint else
+    Result := No3DPoint
+  else
   begin
     GetCommandIndex(Params, ['Case']);
     Result.X := GetIntParam(Params);
@@ -607,10 +628,11 @@ end;
   @return Valeur case lue
   @throws EBadParam : Le type du premier paramètre n'est pas une case
 *}
-function GetScrewParam(var Params : string; Map : TMap) : TScrew;
-var Master : TMaster;
-    StartIndex, EndIndex : integer;
-    Param : string;
+function GetScrewParam(var Params: string; Map: TMap): TScrew;
+var
+  Master: TMaster;
+  StartIndex, EndIndex: Integer;
+  Param: string;
 begin
   Master := Map.Master;
   StartIndex := SkipSpaces(Params);
@@ -618,7 +640,7 @@ begin
   if (StartIndex < Length(Params)) and (Params[StartIndex] = '[') then
   begin
     // Case référencée par une position de la carte ou par son caractère
-    inc(StartIndex);
+    Inc(StartIndex);
     EndIndex := ToNextChar(Params, StartIndex, ']');
     Param := Copy(Params, StartIndex, EndIndex-StartIndex);
     if Length(Param) = 1 then
@@ -633,7 +655,7 @@ begin
       Result := Master.Screw[ScrewsTable[Params[StartIndex]]];
       Delete(Params, 1, StartIndex);
     except
-      on Error : EComponentNotFound do
+      on Error: EComponentNotFound do
         raise EBadParam.Create(Error.Message);
     end;
   end;
@@ -674,7 +696,7 @@ end;
   Traite les valeurs de variables dans l'instruction
   @param Line   Instruction à traiter
 *}
-procedure TActionsInterpreter.TreatVariables(var Line : string);
+procedure TActionsInterpreter.TreatVariables(var Line: string);
 
   {*
     Traite toutes les sous-expressions de type Suivant/Precedent/Aleatoire
@@ -682,21 +704,23 @@ procedure TActionsInterpreter.TreatVariables(var Line : string);
     @param Kind       Nom de la sous-instruction à traiter
     @param FindProc   Routine de recherche de la case à utiliser
   *}
-  procedure TreatNextPreviousRandom(var Line : string; const Kind : string;
-    FindProc : TFindScrewProc);
-  var Len, ExprStart, IDPos : integer;
-      ID : TComponentID;
-      Dest : T3DPoint;
+  procedure TreatNextPreviousRandom(var Line: string; const Kind: string;
+    FindProc: TFindScrewProc);
+  var
+    Len, ExprStart, IDPos: Integer;
+    ID: TComponentID;
+    Dest: T3DPoint;
   begin
     Len := Length(Kind);
     while True do
     begin
       ExprStart := PosNonStrVariable(Kind, Line);
-      if ExprStart = 0 then Break;
+      if ExprStart = 0 then
+        Break;
 
       IDPos := ExprStart+Len+1;
       while (IDPos <= Length(Line)) and (Line[IDPos] in [' ', '[', ']']) do
-        inc(IDPos);
+        Inc(IDPos);
 
       if IDPos > Length(Line) then
         raise EInvalidAction.CreateFmt(sBadNextPreviousRandom, [Kind]);
@@ -718,9 +742,10 @@ procedure TActionsInterpreter.TreatVariables(var Line : string);
     @param ActionsOffset   Index du premier compteur dans les actions
     @param Replace         Routine de remplacement à utiliser
   *}
-  procedure ReplaceIndexedCounter(const Pattern : string;
-    Count, IndexOffset, ActionsOffset : integer; ReplaceVar : TReplaceVarProc);
-  var I : integer;
+  procedure ReplaceIndexedCounter(const Pattern: string;
+    Count, IndexOffset, ActionsOffset: Integer; ReplaceVar: TReplaceVarProc);
+  var
+    I: Integer;
   begin
     if Pos(GetFirstToken(Pattern, '%'), Line) > 0 then
     begin
@@ -732,7 +757,8 @@ procedure TActionsInterpreter.TreatVariables(var Line : string);
     end;
   end;
 
-var I : integer;
+var
+  I: Integer;
 begin
   ReplaceNonStrVariable(Line, 'Ici', StrHere);
   ReplaceNonStrVariable(Line, 'Devant', StrBefore);
@@ -745,10 +771,10 @@ begin
   ReplaceNonStrVariable(Line, 'X'        , PlayerPos.X);
   ReplaceNonStrVariable(Line, 'Y'        , PlayerPos.Y);
   ReplaceNonStrVariable(Line, 'Z'        , PlayerPos.Z);
-  ReplaceNonStrVariable(Line, 'Direction', integer(Player.Direction));
+  ReplaceNonStrVariable(Line, 'Direction', Integer(Player.Direction));
   ReplaceNonStrVariable(Line, 'Reponse'  , Answer);
-  ReplaceNonStrVariable(Line, 'Reussite' , integer(Successful));
-  ReplaceNonStrVariable(Line, 'Touche'   , integer(KeyPressed));
+  ReplaceNonStrVariable(Line, 'Reussite' , Integer(Successful));
+  ReplaceNonStrVariable(Line, 'Touche'   , Integer(KeyPressed));
   ReplaceNonStrVariable(Line, 'Phase'    , Phase);
 
   with Master.ObjectDef[idBuoys] do
@@ -812,9 +838,10 @@ end;
   @param Condition   Condition à évaluer
   @return Résultat booléen de l'évaluation
 *}
-function TActionsInterpreter.EvalBool(var Condition : string) : boolean;
-var Operation : integer;
-    IntOp1, IntOp2 : integer;
+function TActionsInterpreter.EvalBool(var Condition: string): Boolean;
+var
+  Operation: Integer;
+  IntOp1, IntOp2: Integer;
 begin
   Result := False;
 
@@ -834,11 +861,11 @@ begin
   end;
 
   case Operation of
-    0 : Result := IntOp1 =  IntOp2;
-    1 : Result := IntOp1 <> IntOp2;
-    2 : Result := IntOp1 <  IntOp2;
-    3 : Result := IntOp1 >  IntOp2;
-    4 : Result := IntOp1 mod IntOp2 = 0;
+    0: Result := IntOp1 =  IntOp2;
+    1: Result := IntOp1 <> IntOp2;
+    2: Result := IntOp1 <  IntOp2;
+    3: Result := IntOp1 >  IntOp2;
+    4: Result := IntOp1 mod IntOp2 = 0;
   end;
 end;
 
@@ -848,10 +875,11 @@ end;
   @return Résultat booléen de l'évaluation
 *}
 function TActionsInterpreter.EvalBoolExpression(
-  var Condition : string) : boolean;
-var Operation : (ckAnd, ckOr);
-    StrOp, SimpleCond : string;
-    OpPos : integer;
+  var Condition: string): Boolean;
+var
+  Operation: (ckAnd, ckOr);
+  StrOp, SimpleCond: string;
+  OpPos: Integer;
 begin
   // Vérifier qu'il y a soit des Et, soit des Ou, mais pas les deux
   if PosNonStrVariable('Et', Condition) > 0 then
@@ -870,13 +898,15 @@ begin
   Result := Operation = ckOr;
   repeat
     OpPos := PosNonStrVariable(StrOp, Condition);
-    if OpPos = 0 then OpPos := Length(Condition) + 1;
+    if OpPos = 0 then
+      OpPos := Length(Condition) + 1;
 
     SimpleCond := Trim(Copy(Condition, 1, OpPos-1));
     Delete(Condition, 1, OpPos+1);
     Condition := TrimLeft(Condition);
 
-    if EvalBool(SimpleCond) = Result then exit;
+    if EvalBool(SimpleCond) = Result then
+      Exit;
   until Condition = '';
   Result := not Result;
 end;
@@ -885,9 +915,10 @@ end;
   Traite une éventuelle condition dans l'instruction
   @param Line   Instruction à traiter
 *}
-procedure TActionsInterpreter.TreatIfStatement(var Line : string);
-var IfPos, ThenPos, ElsePos, EndIfPos : integer;
-    BeforeIf, Condition, TrueStatement, FalseStatement, AfterIf : string;
+procedure TActionsInterpreter.TreatIfStatement(var Line: string);
+var
+  IfPos, ThenPos, ElsePos, EndIfPos: Integer;
+  BeforeIf, Condition, TrueStatement, FalseStatement, AfterIf: string;
 begin
   // Récupération des positions des opérateurs du Si
   IfPos    := PosNonStrVariable('Si'   , Line);
@@ -897,13 +928,15 @@ begin
 
   // Contrôle de la présence correcte de Si et de Alors
   if (IfPos = 0) and (ThenPos = 0) and (ElsePos = 0) and (EndIfPos = 0) then
-    exit;
+    Exit;
   if (IfPos = 0) or (ThenPos = 0) then
     raise EInvalidIf.Create(sIfStatMustBeIfAndThen);
 
   // Les opérateurs Sinon et FinSi sont optionnels
-  if ElsePos = 0  then ElsePos  := Length(Line) + 1;
-  if EndIfPos = 0 then EndIfPos := Length(Line) + 2;
+  if ElsePos = 0 then
+    ElsePos := Length(Line) + 1;
+  if EndIfPos = 0 then
+    EndIfPos := Length(Line) + 2;
 
   // Contrôle de l'ordre des opérateurs
   if (IfPos >= ThenPos) or (ThenPos >= ElsePos) or (ElsePos >= EndIfPos) then
@@ -918,10 +951,10 @@ begin
 
   // Contrôle de l'intégrité des instructions pour vrai et faux
   if (TrueStatement = '') or (TrueStatement[1] <> '[') or
-     (TrueStatement[Length(TrueStatement)] <> ']') then
+    (TrueStatement[Length(TrueStatement)] <> ']') then
     raise EInvalidIf.Create(sIfStatInvalidThenClause);
   if (FalseStatement <> '') and ((FalseStatement[1] <> '[') or
-     (FalseStatement[Length(FalseStatement)] <> ']')) then
+    (FalseStatement[Length(FalseStatement)] <> ']')) then
     raise EInvalidIf.Create(sIfStatInvalidElseClause);
 
   // Suppression des crochets des instructions pour vrai et faux
@@ -948,76 +981,79 @@ end;
   @param Value              Valeur de modification
   @param ModificationKind   Type de modification à effectuer
 *}
-procedure TActionsInterpreter.ModifyReference(Reference, Value : integer;
-  ModificationKind : TModificationKind);
+procedure TActionsInterpreter.ModifyReference(Reference, Value: Integer;
+  ModificationKind: TModificationKind);
 
   {*
     Transforme la valeur lue selon le type de modification à effectuer
     @param OldValue   Ancienne valeur
     @return Valeur transformée
   *}
-  function TransformValue(OldValue : integer) : integer;
+  function TransformValue(OldValue: Integer): Integer;
   begin
     case ModificationKind of
-      mkAdd       : Result := OldValue + Value;
-      mkSubstract : Result := OldValue - Value;
-      mkMultiply  : Result := OldValue * Value;
-      else Result := Value;
+      mkAdd:       Result := OldValue + Value;
+      mkSubstract: Result := OldValue - Value;
+      mkMultiply:  Result := OldValue * Value;
+    else
+      Result := Value;
     end;
   end;
 
-var ActionsIndex : integer;
+var
+  ActionsIndex: Integer;
 begin
   ActionsIndex := -1;
 
   case Reference of
-    srCounter : Counter^ := TransformValue(Counter^);
+    srCounter: Counter^ := TransformValue(Counter^);
 
-    srBuoy, srBuoys :
+    srBuoy, srBuoys:
       with Master.ObjectDef[idBuoys] do
         Count[Player] := TransformValue(Count[Player]);
-    srPlank, srPlanks :
+    srPlank, srPlanks:
       with Master.ObjectDef[idPlanks] do
         Count[Player] := TransformValue(Count[Player]);
-    srSilverKeys :
+    srSilverKeys:
       with Master.ObjectDef[idSilverKeys] do
         Count[Player] := TransformValue(Count[Player]);
-    srGoldenKeys :
+    srGoldenKeys:
       with Master.ObjectDef[idGoldenKeys] do
         Count[Player] := TransformValue(Count[Player]);
 
-    srColor : Player.Color := TransformValue(Player.Color);
-    srTemporization :
+    srColor: Player.Color := TransformValue(Player.Color);
+    srTemporization:
       Master.Temporization := TransformValue(Master.Temporization);
 
-    srX, srY, srZ :
+    srX, srY, srZ:
     begin
       case Reference of
-        srX : PlayerPos.X := TransformValue(PlayerPos.X);
-        srY : PlayerPos.Y := TransformValue(PlayerPos.Y);
-        srZ : PlayerPos.Z := TransformValue(PlayerPos.Z);
+        srX: PlayerPos.X := TransformValue(PlayerPos.X);
+        srY: PlayerPos.Y := TransformValue(PlayerPos.Y);
+        srZ: PlayerPos.Z := TransformValue(PlayerPos.Z);
       end;
       HasMoved := True;
     end;
 
-    srDirection :
-      Player.Direction := TDirection(TransformValue(integer(Player.Direction)));
+    srDirection:
+      Player.Direction := TDirection(TransformValue(Integer(Player.Direction)));
 
-    srSuccess : { TODO 1 : Modification de Reussite };
+    srSuccess: { TODO 1 : Modification de Reussite };
 
-    srEndCounter : ActionsIndex := EndCounterIndex;
+    srEndCounter: ActionsIndex := EndCounterIndex;
 
-    irButtonsBegin..irButtonsEnd :
+    irButtonsBegin..irButtonsEnd:
       ActionsIndex := Reference-irButtonsBegin+ButtonCounterOffset;
 
-    irTransportersBegin..irTransportersEnd :
+    irTransportersBegin..irTransportersEnd:
       ActionsIndex := Reference-irButtonsBegin+TransporterCounterOffset;
 
-    irVariablesBegin..irVariablesEnd :
+    irVariablesBegin..irVariablesEnd:
       Infos.Variables[Reference-irVariablesBegin+1] :=
         TransformValue(Infos.Variables[Reference-irVariablesBegin+1]);
 
-    else ActionsIndex := Reference-irActionsCounterBegin;
+  else
+    ActionsIndex := Reference-irActionsCounterBegin;
   end;
 
   if ActionsIndex >= 0 then
@@ -1030,8 +1066,9 @@ end;
   @param FromScrew   Case à rechercher
   @param ToScrew     Case de remplacement
 *}
-procedure TActionsInterpreter.ConvertScrews(FromScrew, ToScrew : TScrew);
-var X, Y, Z : integer;
+procedure TActionsInterpreter.ConvertScrews(FromScrew, ToScrew: TScrew);
+var
+  X, Y, Z: Integer;
 begin
   for X := 0 to Map.Dimensions.X-1 do
     for Y := 0 to Map.Dimensions.Y-1 do
@@ -1048,13 +1085,16 @@ end;
   @param DlgButtons   Boutons
   @return Code de résultat du bouton cliqué
 *}
-function TActionsInterpreter.Information(var Params : string;
-  const Title : string; DlgType : TDialogType;
-  DlgButtons : TDialogButtons = dbOK) : TDialogResult;
-var Text : string;
+function TActionsInterpreter.Information(var Params: string;
+  const Title: string; DlgType: TDialogType;
+  DlgButtons: TDialogButtons = dbOK): TDialogResult;
+var
+  Text: string;
 begin
   Text := GetStringParam(Params);
-  if Text = '' then Result := drOK else
+  if Text = '' then
+    Result := drOK
+  else
     Result := Player.ShowDialog(Title, Text, DlgType, DlgButtons);
   HasShownMsg := True;
 end;
@@ -1063,18 +1103,19 @@ end;
   Commande 'Remplacer'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.ReplaceCmd(var Params : string);
-var Reference, Floor, Index : integer;
-    Screw : TScrew;
-    ScrewRef : T3DPoint;
-    Replacements : TObjectList;
+procedure TActionsInterpreter.ReplaceCmd(var Params: string);
+var
+  Reference, Floor, Index: Integer;
+  Screw: TScrew;
+  ScrewRef: T3DPoint;
+  Replacements: TObjectList;
 begin
   Reference := GetCommandIndex(Params, ReferencesStrings, False);
 
   // Référence à un entier
   if Reference >= 0 then
-    ModifyReference(Reference, GetIntParam(Params), mkSet) else
-
+    ModifyReference(Reference, GetIntParam(Params), mkSet)
+  else
   // Bord
   if GetCommandIndex(Params, ['Bord'], False) = 0 then
   begin
@@ -1082,13 +1123,13 @@ begin
     repeat
       Screw := GetScrewParam(Params, Map);
       Map.Outside[Floor] := Screw;
-      inc(Floor);
+      Inc(Floor);
     until Params = '';
 
     while Floor < Map.Dimensions.Z do
     begin
       Map.Outside[Floor] := Screw;
-      inc(Floor);
+      Inc(Floor);
     end;
   end else
 
@@ -1102,7 +1143,8 @@ begin
       until Params = '';
 
       if Replacements.Count = 1 then
-        Map[ScrewRef] := TScrew(Replacements.First) else
+        Map[ScrewRef] := TScrew(Replacements.First)
+      else
       begin
         Index := Replacements.IndexOf(Map[ScrewRef]);
         if Index >= 0 then
@@ -1121,8 +1163,9 @@ end;
   Commande 'Convertir'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.ConvertCmd(var Params : string);
-var FromScrew, ToScrew : TScrew;
+procedure TActionsInterpreter.ConvertCmd(var Params: string);
+var
+  FromScrew, ToScrew: TScrew;
 begin
   FromScrew := GetScrewParam(Params, Map);
   ToScrew := GetScrewParam(Params, Map);
@@ -1133,9 +1176,10 @@ end;
   Commande 'Deplacer'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.MoveCmd(var Params : string);
-var Screw, Replacement : TScrew;
-    ScrewRef : T3DPoint;
+procedure TActionsInterpreter.MoveCmd(var Params: string);
+var
+  Screw, Replacement: TScrew;
+  ScrewRef: T3DPoint;
 begin
   Screw := GetScrewParam(Params, Map);
   ScrewRef := GetScrewReference(Params, True);
@@ -1154,10 +1198,13 @@ end;
   Commande 'Desactiver'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.DeactivateCmd(var Params : string);
-var Screw : TScrew;
+procedure TActionsInterpreter.DeactivateCmd(var Params: string);
+var
+  Screw: TScrew;
 begin
-  if Params = '' then Screw := Inactive else
+  if Params = '' then
+    Screw := Inactive
+  else
     Screw := GetScrewParam(Params, Map);
 
   Map[Position] := Screw;
@@ -1167,11 +1214,14 @@ end;
   Commande 'Incrementer'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.IncrementCmd(var Params : string);
-var Reference, Value : integer;
+procedure TActionsInterpreter.IncrementCmd(var Params: string);
+var
+  Reference, Value: Integer;
 begin
   Reference := GetCommandIndex(Params, ReferencesStrings);
-  if Params = '' then Value := 1 else
+  if Params = '' then
+    Value := 1
+  else
     Value := GetIntParam(Params);
   ModifyReference(Reference, Value, mkAdd);
 end;
@@ -1180,11 +1230,14 @@ end;
   Commande 'Decrementer'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.DecrementCmd(var Params : string);
-var Reference, Value : integer;
+procedure TActionsInterpreter.DecrementCmd(var Params: string);
+var
+  Reference, Value: Integer;
 begin
   Reference := GetCommandIndex(Params, ReferencesStrings);
-  if Params = '' then Value := 1 else
+  if Params = '' then
+    Value := 1
+  else
     Value := GetIntParam(Params);
   ModifyReference(Reference, Value, mkSubstract);
 end;
@@ -1193,7 +1246,7 @@ end;
   Commande 'Multiplier'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.MultiplyCmd(var Params : string);
+procedure TActionsInterpreter.MultiplyCmd(var Params: string);
 begin
   ModifyReference(GetCommandIndex(Params, ReferencesStrings),
     GetIntParam(Params), mkMultiply);
@@ -1203,7 +1256,7 @@ end;
   Commande 'Message'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.MessageCmd(var Params : string);
+procedure TActionsInterpreter.MessageCmd(var Params: string);
 begin
   Information(Params, sMessage, dtInformation);
 end;
@@ -1212,7 +1265,7 @@ end;
   Commande 'Indice'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.TipCmd(var Params : string);
+procedure TActionsInterpreter.TipCmd(var Params: string);
 begin
   if Infos.ShowTips then
     Information(Params, sTip, dtWarning);
@@ -1222,7 +1275,7 @@ end;
   Commande 'Echec'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.FailureCmd(var Params : string);
+procedure TActionsInterpreter.FailureCmd(var Params: string);
 begin
   Information(Params, sFailure, dtError);
 end;
@@ -1231,7 +1284,7 @@ end;
   Commande 'Impasse'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.BlindAlleyCmd(var Params : string);
+procedure TActionsInterpreter.BlindAlleyCmd(var Params: string);
 begin
   if KeyPressed then
     Information(Params, sBlindAlley, dtError);
@@ -1241,20 +1294,22 @@ end;
   Commande 'Choix'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.ChoiceCmd(var Params : string);
-var DlgButtons : TDialogButtons;
+procedure TActionsInterpreter.ChoiceCmd(var Params: string);
+var
+  DlgButtons: TDialogButtons;
 begin
   case GetCommandIndex(Params,
-         ['Oui-Non', 'Oui-Non-Annuler', 'OK-Annuler']) of
-    0 : DlgButtons := dbYesNo;
-    1 : DlgButtons := dbYesNoCancel;
-    else DlgButtons := dbOKCancel;
+      ['Oui-Non', 'Oui-Non-Annuler', 'OK-Annuler']) of
+    0: DlgButtons := dbYesNo;
+    1: DlgButtons := dbYesNoCancel;
+  else
+    DlgButtons := dbOKCancel;
   end;
 
   case Information(Params, sChoice, dtConfirmation, DlgButtons) of
-    drNo : Answer := 0;
-    drOK, drYes : Answer := 1;
-    drCancel : Answer := 2;
+    drNo: Answer := 0;
+    drOK, drYes: Answer := 1;
+    drCancel: Answer := 2;
   end;
 end;
 
@@ -1262,8 +1317,9 @@ end;
   Commande 'Description'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.DescriptionCmd(var Params : string);
-var Text : string;
+procedure TActionsInterpreter.DescriptionCmd(var Params: string);
+var
+  Text: string;
 begin
   with Infos.MasterFile do
   begin
@@ -1281,7 +1337,7 @@ end;
   Commande 'Gagner'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.WinCmd(var Params : string);
+procedure TActionsInterpreter.WinCmd(var Params: string);
 begin
   Player.Win;
   if Params <> '' then
@@ -1294,20 +1350,25 @@ end;
   @throws EBadParam : Le son en paramètre n'a pas pu être joué
 *}
 {$WARNINGS OFF}
-procedure TActionsInterpreter.SoundCmd(var Params : string);
-var Sound : string;
+procedure TActionsInterpreter.SoundCmd(var Params: string);
+var
+  Sound: string;
 begin
   Sound := GetStringParam(Params);
-  if Sound = 'Information' then Sound := 'SystemAsterisk'    else
-  if Sound = 'Question'    then Sound := 'SystemQuestion'    else
-  if Sound = 'Danger'      then Sound := 'SystemExclamation' else
-  if Sound = 'Erreur'      then Sound := 'SystemHand';
+  if Sound = 'Information' then
+    Sound := 'SystemAsterisk'
+  else if Sound = 'Question' then
+    Sound := 'SystemQuestion'
+  else if Sound = 'Danger' then
+    Sound := 'SystemExclamation'
+  else if Sound = 'Erreur' then
+    Sound := 'SystemHand';
 
   try
     if not ExecuteSound(Sound, stSysSound) then
       ExecuteSound(Infos.MasterFile.ResolveHRef(Sound, fSoundsDir));
   except
-    on Error : EFileError do
+    on Error: EFileError do
       raise EBadParam.Create(Error.Message);
   end;
 end;
@@ -1317,8 +1378,9 @@ end;
   Commande 'AllerA'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.GoToCmd(var Params : string);
-var ScrewRef : T3DPoint;
+procedure TActionsInterpreter.GoToCmd(var Params: string);
+var
+  ScrewRef: T3DPoint;
 begin
   ScrewRef := GetScrewReference(Params, True);
   if not IsNo3DPoint(ScrewRef) then
@@ -1330,7 +1392,7 @@ end;
   Commande 'LaisserPasser'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.LetPassCmd(var Params : string);
+procedure TActionsInterpreter.LetPassCmd(var Params: string);
 begin
   PlayerPos := Position;
   Successful := True;
@@ -1340,7 +1402,7 @@ end;
   Commande 'AutoriserPlanche'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.AllowPlankCmd(var Params : string);
+procedure TActionsInterpreter.AllowPlankCmd(var Params: string);
 begin
   if Phase = phPushing then
     AllowPlank := True;
@@ -1350,7 +1412,7 @@ end;
   Commande 'Arreter'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.DontGoOnCmd(var Params : string);
+procedure TActionsInterpreter.DontGoOnCmd(var Params: string);
 begin
   DoNextPhase := False;
 end;
@@ -1359,7 +1421,7 @@ end;
   Commandes 'Poursuivre' et 'Continuer'
   @param Params   Paramètres de la commande
 *}
-procedure TActionsInterpreter.GoOnCmd(var Params : string);
+procedure TActionsInterpreter.GoOnCmd(var Params: string);
 begin
   DoNextPhase := True;
 end;
@@ -1368,15 +1430,16 @@ end;
   Exécute les actions dans le contexte donné
 *}
 procedure TActionsInterpreter.ExecuteActions;
-var Current : integer;
-    Line : string;
-    IntCommand, Index : integer;
+var
+  Current: Integer;
+  Line: string;
+  IntCommand, Index: Integer;
 begin
   Current := 0;
   while Current < Actions.Count do
   try
     Line := Trim(Actions[Current]);
-    inc(Current);
+    Inc(Current);
 
     // Lignes de commentaires à éliminer
     if (Line = '') or (Line[1] = '#') or (GetXWord(Line, 1) = 'Remarque') then
@@ -1391,37 +1454,41 @@ begin
     // Traitement d'un éventuel Unique
     if GetXWord(Line, 1) = 'Unique' then
     begin
-      if Counter^ <> 1 then Continue else
+      if Counter^ <> 1 then
+        Continue
+      else
         Delete(Line, 1, 7);
     end;
 
     // Les conditions peuvent avoir rendu la ligne vide
-    if Line = '' then Continue;
+    if Line = '' then
+      Continue;
 
     // Exécution de la commande
     IntCommand := GetCommandIndex(Line, CommandStrings);
     case IntCommand of
-      cBegin..cClassicEnd : CommandProcs[IntCommand](Self, Line);
-      cJump :
+      cBegin..cClassicEnd: CommandProcs[IntCommand](Self, Line);
+      cJump:
       begin
         Index := Actions.IndexOf('#'+Trim(Line));
         if Index >= 0 then
           Current := Index;
       end;
-      cStop : Break;
-      cRemark : ;
+      cStop: Break;
+      cRemark: ;
     end;
   except
-    on Error : Exception do
+    on Error: Exception do
     begin
       ShowDialog(Error.ClassName,
         Actions[Current-1]+#10+Error.Message, dtError);
-      if not (Error is EInvalidAction) then exit;
+      if not (Error is EInvalidAction) then
+        Exit;
     end;
   end;
 
   if AllowPlank and Same3DPoint(PlayerPos, Position) and (not Successful) and
-     (Master.ObjectDef[idPlanks].Count[Player] > 0) then
+    (Master.ObjectDef[idPlanks].Count[Player] > 0) then
   begin
     TPlankScrew.Create(Master, Map, Position, Player);
     Master.Temporize;
@@ -1454,13 +1521,14 @@ end;
   @param ASuccessful    Indique si la manoeuvre est réussie
   @parma AInactive      Effet à utiliser lors d'un Desactiver
 *}
-class procedure TActionsInterpreter.Execute(ACounter : PInteger;
-  AActions : TStrings; AMaster : TMaster; APhase : integer; APlayer : TPlayer;
-  AKeyPressed : boolean; const APos : T3DPoint; var ADoNextPhase : boolean;
-  out AHasMoved, AHasShownMsg, ASuccessful : boolean;
-  const AInactive : TComponentID);
-var PluginIDs : TStrings;
-    I : integer;
+class procedure TActionsInterpreter.Execute(ACounter: PInteger;
+  AActions: TStrings; AMaster: TMaster; APhase: Integer; APlayer: TPlayer;
+  AKeyPressed: Boolean; const APos: T3DPoint; var ADoNextPhase: Boolean;
+  out AHasMoved, AHasShownMsg, ASuccessful: Boolean;
+  const AInactive: TComponentID);
+var
+  PluginIDs: TStrings;
+  I: Integer;
 begin
   with Create do
   try
@@ -1492,7 +1560,7 @@ begin
       while Boat > 0 do
       begin
         if PluginIDs.IndexOf(Format(idBoat, [Boat])) < 0 then
-          dec(Boat)
+          Dec(Boat)
         else
           Break;
       end;

@@ -18,7 +18,7 @@ implementation
 type
   TSepiImportsTFormObjects = class(TFormObjects)
   private
-    class function SepiImport(Owner : TSepiMetaUnit) : TSepiClass;
+    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
   end;
 
 {---------------------}
@@ -26,7 +26,7 @@ type
 {---------------------}
 
 class function TSepiImportsTFormObjects.SepiImport(
-  Owner : TSepiMetaUnit) : TSepiClass;
+  Owner: TSepiMetaUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TFormObjects));
@@ -52,12 +52,12 @@ end;
 { Unit import }
 {-------------}
 
-function ImportUnit(Root : TSepiMetaRoot) : TSepiMetaUnit;
+function ImportUnit(Root: TSepiMetaRoot): TSepiMetaUnit;
 begin
   Result := TSepiMetaUnit.Create(Root, 'PlayerObjects',
     ['Windows', 'Messages', 'SysUtils', 'Variants', 'Classes', 'Graphics',
-     'Controls', 'Forms', 'Dialogs', 'ImgList', 'StdCtrls', 'ComCtrls',
-     'FunLabyUtils']);
+    'Controls', 'Forms', 'Dialogs', 'ImgList', 'StdCtrls', 'ComCtrls',
+    'FunLabyUtils']);
 
   // Types
   TSepiImportsTFormObjects.SepiImport(Result);

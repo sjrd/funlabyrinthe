@@ -40,13 +40,13 @@ type
     @version 5.0
   *}
   TPlankMessage = record
-    MsgID : Word;             /// ID du message
-    Kind : TPlankMessageKind; /// Type de message
-    Result : boolean;         /// True pour autoriser, False sinon
-    Player : TPlayer;         /// Joueur concerné
-    Pos : T3DPoint;           /// Case au-dessus de laquelle on passe
-    Src : T3DPoint;           /// Case dont on vient
-    Dest : T3DPoint;          /// Case vers laquelle on va
+    MsgID: Word;             /// ID du message
+    Kind: TPlankMessageKind; /// Type de message
+    Result: Boolean;         /// True pour autoriser, False sinon
+    Player: TPlayer;         /// Joueur concerné
+    Pos: T3DPoint;           /// Case au-dessus de laquelle on passe
+    Src: T3DPoint;           /// Case dont on vient
+    Dest: T3DPoint;          /// Case vers laquelle on va
   end;
 
   {*
@@ -57,20 +57,20 @@ type
   *}
   TMaskPlugin = class(TPlugin)
   private
-    FMask : TBitmap;   /// Masque monochrome à appliquer
-    FBefore : TBitmap; /// Ce qu'il y avait avant le joueur
+    FMask: TBitmap;   /// Masque monochrome à appliquer
+    FBefore: TBitmap; /// Ce qu'il y avait avant le joueur
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      AMask : TBitmap);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      AMask: TBitmap);
     destructor Destroy; override;
 
-    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
-    procedure DrawAfter(Player : TPlayer; const QPos : TQualifiedPos;
-      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
+    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
+    procedure DrawAfter(Player: TPlayer; const QPos: TQualifiedPos;
+      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
 
-    property Mask : TBitmap read FMask;
-    property Before : TBitmap read FBefore;
+    property Mask: TBitmap read FMask;
+    property Before: TBitmap read FBefore;
   end;
 
 implementation
@@ -85,9 +85,10 @@ implementation
   @param AID       ID du plug-in
   @param AMaks     Masque à appliquer
 *}
-constructor TMaskPlugin.Create(AMaster : TMaster; const AID : TComponentID;
-  AMask : TBitmap);
-var X, Y : integer;
+constructor TMaskPlugin.Create(AMaster: TMaster; const AID: TComponentID;
+  AMask: TBitmap);
+var
+  X, Y: Integer;
 begin
   inherited Create(AMaster, AID);
 
@@ -95,12 +96,15 @@ begin
   with FMask do
   begin
     Assign(AMask);
-    for X := 0 to ScrewSize do for Y := 0 to ScrewSize do
+    for X := 0 to ScrewSize do
     begin
-      if Canvas.Pixels[X, Y] = clTransparent then
-        Canvas.Pixels[X, Y] := clBlack
-      else
-        Canvas.Pixels[X, Y] := clTransparent;
+      for Y := 0 to ScrewSize do
+      begin
+        if Canvas.Pixels[X, Y] = clTransparent then
+          Canvas.Pixels[X, Y] := clBlack
+        else
+          Canvas.Pixels[X, Y] := clTransparent;
+      end;
     end;
     TransparentColor := clBlack;
     Transparent := True;
@@ -136,8 +140,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TMaskPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TMaskPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   Before.Canvas.CopyRect(ScrewRect, Canvas, ScrewRect(X, Y));
   Before.Canvas.Draw(0, 0, Mask);
@@ -153,8 +157,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TMaskPlugin.DrawAfter(Player : TPlayer; const QPos : TQualifiedPos;
-  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TMaskPlugin.DrawAfter(Player: TPlayer; const QPos: TQualifiedPos;
+  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   Canvas.Draw(X, Y, Before);
 end;

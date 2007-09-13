@@ -74,39 +74,39 @@ type
   private
     { Déclarations privées }
     /// Manager asynchrone de la racine Sepi
-    SepiRootManager : TSepiAsynchronousRootManager;
-    SepiRoot : TSepiMetaRoot; /// Racine Sepi
+    SepiRootManager: TSepiAsynchronousRootManager;
+    SepiRoot: TSepiMetaRoot; /// Racine Sepi
 
-    BigMenuMaps : TActionClient;  /// Menu des cartes
-    BigMenuUnits : TActionClient; /// Menu des unités
+    BigMenuMaps: TActionClient;  /// Menu des cartes
+    BigMenuUnits: TActionClient; /// Menu des unités
 
-    TabMapEditor : TJvTabBarItem;     /// Onglet d'édition des cartes
-    FrameMapEditor : TFrameMapEditor; /// Cadre d'édition des cartes
+    TabMapEditor: TJvTabBarItem;     /// Onglet d'édition des cartes
+    FrameMapEditor: TFrameMapEditor; /// Cadre d'édition des cartes
 
-    UnitActions : array of TAction; /// Liste des actions du menu Unités
+    UnitActions: array of TAction; /// Liste des actions du menu Unités
 
-    FModified : boolean;      /// Indique si le fichier a été modifié
-    MasterFile : TMasterFile; /// Fichier maître
-    Master : TMaster;         /// Maître FunLabyrinthe
+    FModified: Boolean;      /// Indique si le fichier a été modifié
+    MasterFile: TMasterFile; /// Fichier maître
+    Master: TMaster;         /// Maître FunLabyrinthe
 
     procedure LoadFile;
     procedure UnloadFile;
 
     procedure NewFile;
-    procedure OpenFile(const FileName : TFileName);
-    function SaveFile(FileName : TFileName = '') : boolean;
-    function CloseFile : boolean;
+    procedure OpenFile(const FileName: TFileName);
+    function SaveFile(FileName: TFileName = ''): Boolean;
+    function CloseFile: Boolean;
 
     procedure MarkModified;
 
     procedure MakeUnitActions;
     procedure DeleteUnitActions;
 
-    procedure AddUnitEditor(Editor : IUnitEditor50);
+    procedure AddUnitEditor(Editor: IUnitEditor50);
 
-    procedure SetModified(Value : boolean);
+    procedure SetModified(Value: Boolean);
 
-    property Modified : boolean read FModified write SetModified;
+    property Modified: Boolean read FModified write SetModified;
   public
     { Déclarations publiques }
   end;
@@ -201,7 +201,8 @@ end;
   Crée un nouveau fichier et le charge
 *}
 procedure TFormMain.NewFile;
-var UnitFileDescs : TUnitFileDescs;
+var
+  UnitFileDescs: TUnitFileDescs;
 begin
   SetLength(UnitFileDescs, 1);
   UnitFileDescs[0].GUID := BPLUnitHandlerGUID;
@@ -227,7 +228,7 @@ end;
   Ouvre un fichier et le charge
   @param FileName   Nom du fichier maître à charger
 *}
-procedure TFormMain.OpenFile(const FileName : TFileName);
+procedure TFormMain.OpenFile(const FileName: TFileName);
 begin
   while not SepiRootManager.Ready do
     Sleep(100);
@@ -241,30 +242,35 @@ end;
   @param FileName   Fichier dans lequel enregistrer, ou vide pour demander
   @return True si l'enregistrement a bien été effectué, False sinon
 *}
-function TFormMain.SaveFile(FileName : TFileName = '') : boolean;
-var DirName : TFileName;
-    I : integer;
-    MapFile : TMapFile;
-    MapFileName : TFileName;
-    MapHRef : string;
+function TFormMain.SaveFile(FileName: TFileName = ''): Boolean;
+var
+  DirName: TFileName;
+  I: Integer;
+  MapFile: TMapFile;
+  MapFileName: TFileName;
+  MapHRef: string;
 begin
   Result := False;
 
   // Vérifier que tous les joueurs sont placés
-  for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
+  for I := 0 to Master.PlayerCount-1 do
   begin
-    if Map = nil then
+    with Master.Players[I] do
     begin
-      SdDialogs.ShowDialog(sCantSave,
-        Format(sCantSaveUnplacedPlayer, [ID]), dtError);
-      exit;
+      if Map = nil then
+      begin
+        SdDialogs.ShowDialog(sCantSave,
+          Format(sCantSaveUnplacedPlayer, [ID]), dtError);
+        Exit;
+      end;
     end;
   end;
 
   // Choisir un nom de fichier pour l'enregistrement
   if FileName = '' then
   begin
-    if not SaveDialog.Execute then exit;
+    if not SaveDialog.Execute then
+      Exit;
     OpenDialog.FileName := SaveDialog.FileName;
     FileName := SaveDialog.FileName;
   end;
@@ -279,7 +285,8 @@ begin
     if MapFileName = '' then
     begin
       SaveMapDialog.FileName := MapFile.MapID;
-      if not SaveMapDialog.Execute then exit;
+      if not SaveMapDialog.Execute then
+        Exit;
       MapFileName := SaveMapDialog.FileName;
     end;
 
@@ -298,14 +305,16 @@ end;
   Ferme le fichier
   @return True si le fichier a bien été fermé, False sinon
 *}
-function TFormMain.CloseFile : boolean;
-var I : integer;
-    Tab : TJvTabBarItem;
-    Editor : IUnitEditor50;
+function TFormMain.CloseFile: Boolean;
+var
+  I: Integer;
+  Tab: TJvTabBarItem;
+  Editor: IUnitEditor50;
 begin
   Result := True;
 
-  if MasterFile = nil then exit;
+  if MasterFile = nil then
+    Exit;
 
   // Fermer toutes les unités ouvertes : chacune peut empêcher la fermeture
   for I := TabBarEditors.Tabs.Count-1 downto 0 do
@@ -318,7 +327,7 @@ begin
     begin
       Editor := IUnitEditor50(Pointer(Tab.Data));
       if not Editor.CanClose then
-        exit;
+        Exit;
       Editor.Release;
       Tab.Data := nil;
     end;
@@ -330,12 +339,13 @@ begin
   if Modified then
   begin
     case ShowDialog(sConfirmExitTitle, sConfirmExit,
-                    dtConfirmation, dbYesNoCancel) of
-      drYes : Result := SaveFile(MasterFile.FileName);
-      drCancel : Result := False;
+        dtConfirmation, dbYesNoCancel) of
+      drYes: Result := SaveFile(MasterFile.FileName);
+      drCancel: Result := False;
     end;
 
-    if not Result then exit;
+    if not Result then
+      Exit;
   end;
 
   // Tout décharger
@@ -357,9 +367,10 @@ end;
   Crée une entrée dans le menu des unités pour chaque unité
 *}
 procedure TFormMain.MakeUnitActions;
-var I : integer;
-    PreviousItem : TActionClientItem;
-    UnitFile : TUnitFile;
+var
+  I: Integer;
+  PreviousItem: TActionClientItem;
+  UnitFile: TUnitFile;
 begin
   PreviousItem := BigMenuUnits.Items[BigMenuUnits.Items.Count-1];
   SetLength(UnitActions, MasterFile.UnitFileCount);
@@ -384,7 +395,8 @@ end;
   Supprime toutes les actions Voir une unité et leurs menus associés
 *}
 procedure TFormMain.DeleteUnitActions;
-var I : integer;
+var
+  I: Integer;
 begin
   for I := 0 to Length(UnitActions)-1 do
   begin
@@ -398,9 +410,10 @@ end;
   Ajoute un éditeur d'unité à l'interface visuelle et l'affiche
   @param Editor   Éditeur à ajouter
 *}
-procedure TFormMain.AddUnitEditor(Editor : IUnitEditor50);
-var EditorControl : TControl;
-    Tab : TJvTabBarItem;
+procedure TFormMain.AddUnitEditor(Editor: IUnitEditor50);
+var
+  EditorControl: TControl;
+  Tab: TJvTabBarItem;
 begin
   // Configurer le contrôle d'édition
   EditorControl := Editor.Control;
@@ -420,7 +433,7 @@ end;
   Modifie l'état Modifié du fichier
   @param Value   Nouvelle valeur
 *}
-procedure TFormMain.SetModified(Value : boolean);
+procedure TFormMain.SetModified(Value: Boolean);
 begin
   FModified := Value;
   TabMapEditor.Modified := Value;
@@ -485,7 +498,8 @@ end;
 *}
 procedure TFormMain.ActionNewFileExecute(Sender: TObject);
 begin
-  if CloseFile then NewFile;
+  if CloseFile then
+    NewFile;
 end;
 
 {*
@@ -494,7 +508,8 @@ end;
 *}
 procedure TFormMain.ActionOpenFileExecute(Sender: TObject);
 begin
-  if not CloseFile then exit;
+  if not CloseFile then
+    Exit;
 
   if OpenDialog.Execute then
   begin
@@ -585,7 +600,7 @@ end;
 *}
 procedure TFormMain.ActionHelpTopicsExecute(Sender: TObject);
 begin
-//
+// Don't delete this comment
 end;
 
 {*
@@ -602,7 +617,8 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.ActionViewAllUnitsExecute(Sender: TObject);
-var I : integer;
+var
+  I: Integer;
 begin
   for I := 0 to Length(UnitActions)-1 do
     UnitActions[I].Execute;
@@ -613,10 +629,11 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.ActionEditUnitsExecute(Sender: TObject);
-var FileName : TFileName;
+var
+  FileName: TFileName;
 begin
   if Modified and (not SaveFile(MasterFile.FileName)) then
-    exit;
+    Exit;
 
   if TFormEditUnits.EditUnits(MasterFile) then
   begin
@@ -631,9 +648,10 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.ActionViewUnitExecute(Sender: TObject);
-var I : integer;
-    UnitFile : TUnitFile;
-    Tab : TJvTabBarItem;
+var
+  I: Integer;
+  UnitFile: TUnitFile;
+  Tab: TJvTabBarItem;
 begin
   UnitFile := TUnitFile((Sender as TAction).Tag);
 
@@ -642,10 +660,10 @@ begin
   begin
     Tab := TabBarEditors.Tabs[I];
     if (Tab.Tag = UnitEditorTag) and
-       (IUnitEditor50(Pointer(Tab.Data)).UnitFile = UnitFile) then
+      (IUnitEditor50(Pointer(Tab.Data)).UnitFile = UnitFile) then
     begin
       Tab.Selected := True;
-      exit;
+      Exit;
     end;
   end;
 
@@ -694,11 +712,11 @@ procedure TFormMain.TabBarEditorsTabSelecting(Sender: TObject;
 begin
   Item := TabBarEditors.SelectedTab;
   if (Item = nil) or (Item.Data = nil) then
-    exit;
+    Exit;
 
   case Item.Tag of
-    MapEditorTag : TControl(Item.Data).Visible := False;
-    UnitEditorTag : IUnitEditor50(Pointer(Item.Data)).Control.Visible := False;
+    MapEditorTag: TControl(Item.Data).Visible := False;
+    UnitEditorTag: IUnitEditor50(Pointer(Item.Data)).Control.Visible := False;
   end;
 end;
 
@@ -711,11 +729,11 @@ procedure TFormMain.TabBarEditorsTabSelected(Sender: TObject;
   Item: TJvTabBarItem);
 begin
   if (Item = nil) or (Item.Data = nil) then
-    exit;
+    Exit;
 
   case Item.Tag of
-    MapEditorTag : TControl(Item.Data).Visible := True;
-    UnitEditorTag : IUnitEditor50(Pointer(Item.Data)).Control.Visible := True;
+    MapEditorTag: TControl(Item.Data).Visible := True;
+    UnitEditorTag: IUnitEditor50(Pointer(Item.Data)).Control.Visible := True;
   end;
 end;
 

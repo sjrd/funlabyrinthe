@@ -19,7 +19,7 @@ implementation
 { Unit import }
 {-------------}
 
-function ImportUnit(Root : TSepiMetaRoot) : TSepiMetaUnit;
+function ImportUnit(Root: TSepiMetaRoot): TSepiMetaUnit;
 begin
   Result := TSepiMetaUnit.Create(Root, 'GraphicsTools',
     ['Graphics']);

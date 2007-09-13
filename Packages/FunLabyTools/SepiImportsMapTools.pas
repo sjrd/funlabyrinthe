@@ -19,17 +19,17 @@ implementation
 { Unit import }
 {-------------}
 
-function ChangeComp_0(Screw : TScrew; NewComp : TScrewComponent ) : TScrew;
+function ChangeComp_0(Screw: TScrew; NewComp: TScrewComponent): TScrew;
 begin
   Result := ChangeComp(Screw, NewComp);
 end;
 
-function ChangeComp_1(Screw : TScrew; const NewComp : TComponentID ) : TScrew;
+function ChangeComp_1(Screw: TScrew; const NewComp: TComponentID): TScrew;
 begin
   Result := ChangeComp(Screw, NewComp);
 end;
 
-function ImportUnit(Root : TSepiMetaRoot) : TSepiMetaUnit;
+function ImportUnit(Root: TSepiMetaRoot): TSepiMetaUnit;
 begin
   Result := TSepiMetaUnit.Create(Root, 'MapTools',
     ['ScUtils', 'FunLabyUtils']);

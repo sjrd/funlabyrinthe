@@ -40,12 +40,12 @@ type
   *}
   TSilverBlock = class(TObstacle)
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
 
-    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortExecute : boolean); override;
+    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel, AbortExecute: Boolean); override;
   end;
 
   {*
@@ -56,12 +56,12 @@ type
   *}
   TGoldenBlock = class(TObstacle)
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
 
-    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortExecute : boolean); override;
+    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel, AbortExecute: Boolean); override;
   end;
 
   {*
@@ -72,15 +72,15 @@ type
   *}
   TSecretWay = class(TObstacle)
   protected
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
 
-    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortExecute : boolean); override;
+    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel, AbortExecute: Boolean); override;
   end;
 
 implementation
@@ -95,8 +95,8 @@ implementation
   @param AID       ID du terrain
   @param AName     Nom de l'obstacle
 *}
-constructor TSilverBlock.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TSilverBlock.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fSilverBlock);
@@ -116,18 +116,21 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
   @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
-procedure TSilverBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortExecute : boolean);
+procedure TSilverBlock.Pushing(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel, AbortExecute: Boolean);
 begin
   inherited;
 
-  if KeyPressed then with Player do
+  if KeyPressed then
   begin
-    if DoAction(actOpenSilverLock) then
-      Map[Pos] := ChangeObstacle(Map[Pos])
-    else
-      ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
+    with Player do
+    begin
+      if DoAction(actOpenSilverLock) then
+        Map[Pos] := ChangeObstacle(Map[Pos])
+      else
+        ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
+    end;
   end;
 end;
 
@@ -141,8 +144,8 @@ end;
   @param AID       ID du terrain
   @param AName     Nom de l'obstacle
 *}
-constructor TGoldenBlock.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TGoldenBlock.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fGoldenBlock);
@@ -162,18 +165,21 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
   @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
-procedure TGoldenBlock.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortExecute : boolean);
+procedure TGoldenBlock.Pushing(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel, AbortExecute: Boolean);
 begin
   inherited;
 
-  if KeyPressed then with Player do
+  if KeyPressed then
   begin
-    if DoAction(actOpenGoldenLock) then
-      Map[Pos] := ChangeObstacle(Map[Pos])
-    else
-      ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
+    with Player do
+    begin
+      if DoAction(actOpenGoldenLock) then
+        Map[Pos] := ChangeObstacle(Map[Pos])
+      else
+        ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
+    end;
   end;
 end;
 
@@ -187,8 +193,8 @@ end;
   @param AID       ID du terrain
   @param AName     Nom de l'obstacle
 *}
-constructor TSecretWay.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TSecretWay.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fWall);
@@ -201,19 +207,22 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TSecretWay.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TSecretWay.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   inherited;
 
-  if Master.Editing then with Canvas do
+  if Master.Editing then
   begin
-    Brush.Color := clWhite;
-    Font.Color := clBlack;
-    Font.Size := 12;
-    Font.Style := [fsBold];
-    Font.Name := 'Courier'; {don't localize}
-    TextOut(X+10, Y+8, '!'); {don't localize}
+    with Canvas do
+    begin
+      Brush.Color := clWhite;
+      Font.Color := clBlack;
+      Font.Size := 12;
+      Font.Style := [fsBold];
+      Font.Name := 'Courier';  {don't localize}
+      TextOut(X+10, Y+8, '!'); {don't localize}
+    end;
   end;
 end;
 
@@ -231,14 +240,15 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
   @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
-procedure TSecretWay.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortExecute : boolean);
+procedure TSecretWay.Pushing(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel, AbortExecute: Boolean);
 begin
   inherited;
 
-  if KeyPressed then with Player do
-    Map[Pos] := ChangeObstacle(Map[Pos]);
+  if KeyPressed then
+    with Player do
+      Map[Pos] := ChangeObstacle(Map[Pos]);
 end;
 
 end.

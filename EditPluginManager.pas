@@ -12,7 +12,7 @@ uses
 
 var
   /// Handles de modules des plug-in de l'éditeur chargés
-  EditPluginModules : array of HModule;
+  EditPluginModules: array of HModule;
 
 implementation
 
@@ -22,8 +22,9 @@ implementation
 procedure LoadPlugins;
 const
   AllocBy = 16;
-var SearchRec : TSearchRec;
-    Index : integer;
+var
+  SearchRec: TSearchRec;
+  Index: Integer;
 begin
   Index := 0;
 
@@ -35,7 +36,7 @@ begin
 
       EditPluginModules[Index] := LoadPackage(fEditPluginDir+SearchRec.Name);
       if EditPluginModules[Index] <> 0 then
-        inc(Index);
+        Inc(Index);
     until FindNext(SearchRec) <> 0;
   finally
     FindClose(SearchRec);
@@ -47,7 +48,8 @@ end;
   Décharge les plug-in
 *}
 procedure UnloadPlugins;
-var I : integer;
+var
+  I: Integer;
 begin
   for I := 0 to Length(EditPluginModules)-1 do
     UnloadPackage(EditPluginModules[I]);

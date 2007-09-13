@@ -11,7 +11,8 @@ uses
 {$R *.RES}
 
 begin
-  if not CheckValidLaunch then exit;
+  if not CheckValidLaunch then
+    Exit;
   Application.Initialize;
   Application.Title := 'FunLabyrinthe';
   Application.HelpFile := Dir+'Labyrinthe.hlp';

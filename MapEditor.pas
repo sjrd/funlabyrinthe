@@ -3,7 +3,7 @@ unit MapEditor;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
   ScUtils, SdDialogs, SepiMetaUnits, FunLabyUtils, FilesUtils,
   FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters, AddMap;
@@ -21,16 +21,16 @@ type
   *}
   TComponentSet = class
   private
-    FMinIndex : integer;                    /// Index minimal
-    FMaxIndex : integer;                    /// Index maximal
-    FComponents : array of TScrewComponent; /// Ensemble des composants
-    FDialogTitle : string;                  /// Titre de la boîte de dialogue
-    FDialogPrompt : string;                 /// Invite de la boîte de dialogue
+    FMinIndex: Integer;                    /// Index minimal
+    FMaxIndex: Integer;                    /// Index maximal
+    FComponents: array of TScrewComponent; /// Ensemble des composants
+    FDialogTitle: string;                  /// Titre de la boîte de dialogue
+    FDialogPrompt: string;                 /// Invite de la boîte de dialogue
   public
-    constructor Create(const AComponents : array of TScrewComponent;
-      BaseIndex : integer; const ADialogTitle, ADialogPrompt : string);
+    constructor Create(const AComponents: array of TScrewComponent;
+      BaseIndex: Integer; const ADialogTitle, ADialogPrompt: string);
 
-    function ChooseComponent(var LastIndex : integer) : TScrewComponent;
+    function ChooseComponent(var LastIndex: Integer): TScrewComponent;
   end;
 
   {*
@@ -75,47 +75,47 @@ type
       X, Y: Integer);
   private
     { Déclarations privées }
-    SepiRoot : TSepiMetaRoot;     /// Racine Sepi
+    SepiRoot: TSepiMetaRoot;     /// Racine Sepi
 
-    MasterFile : TMasterFile;     /// Fichier maître
-    Master : TMaster;             /// Maître FunLabyrinthe
+    MasterFile: TMasterFile;     /// Fichier maître
+    Master: TMaster;             /// Maître FunLabyrinthe
 
-    ScrewBmp : TScrewBitmap;      /// Bitmap de case à tout faire
-    LastCompIndex : integer;      /// Dernier index de composant choisi
+    ScrewBmp: TScrewBitmap;      /// Bitmap de case à tout faire
+    LastCompIndex: Integer;      /// Dernier index de composant choisi
 
-    CurrentMap : TMap;            /// Carte courante
-    FCurrentFloor : integer;      /// Étage courant
+    CurrentMap: TMap;            /// Carte courante
+    FCurrentFloor: Integer;      /// Étage courant
 
-    Component : TVisualComponent; /// Composant à placer
+    Component: TVisualComponent; /// Composant à placer
 
     /// Call-back marquant le fichier comme modifé
-    FMarkModified : TMarkModifiedProc;
+    FMarkModified: TMarkModifiedProc;
 
-    procedure SetCurrentFloor(Value : integer);
+    procedure SetCurrentFloor(Value: Integer);
 
-    function AddScrewButton(Template : TVisualComponent) : TButtonItem;
-    procedure RegisterSingleComponent(Component : TScrewComponent); stdcall;
-    procedure RegisterComponentSet(Template : TScrewComponent;
-      const Components : array of TScrewComponent; BaseIndex : integer;
-      const DialogTitle, DialogPrompt : string); stdcall;
+    function AddScrewButton(Template: TVisualComponent): TButtonItem;
+    procedure RegisterSingleComponent(Component: TScrewComponent); stdcall;
+    procedure RegisterComponentSet(Template: TScrewComponent;
+      const Components: array of TScrewComponent; BaseIndex: Integer;
+      const DialogTitle, DialogPrompt: string); stdcall;
 
     procedure LoadPlayers;
   public
     { Déclarations publiques }
-    constructor Create(AOwner : TComponent); override;
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure CenterToPlayerPosition(Player : TPlayer);
+    procedure CenterToPlayerPosition(Player: TPlayer);
 
-    procedure LoadFile(ASepiRoot : TSepiMetaRoot; AMasterFile : TMasterFile);
+    procedure LoadFile(ASepiRoot: TSepiMetaRoot; AMasterFile: TMasterFile);
     procedure UnloadFile;
 
     procedure AddMap;
     procedure RemoveCurrentMap;
 
-    property CurrentFloor : integer read FCurrentFloor write SetCurrentFloor;
+    property CurrentFloor: Integer read FCurrentFloor write SetCurrentFloor;
 
-    property MarkModified : TMarkModifiedProc
+    property MarkModified: TMarkModifiedProc
       read FMarkModified write FMarkModified;
   end;
 
@@ -141,9 +141,10 @@ const
   @param ADialogTitle    Titre de la boîte de dialogue
   @param ADialogPrompt   Invite de la boîte de dialogue
 *}
-constructor TComponentSet.Create(const AComponents : array of TScrewComponent;
-  BaseIndex : integer; const ADialogTitle, ADialogPrompt : string);
-var Len, I : integer;
+constructor TComponentSet.Create(const AComponents: array of TScrewComponent;
+  BaseIndex: Integer; const ADialogTitle, ADialogPrompt: string);
+var
+  Len, I: Integer;
 begin
   inherited Create;
 
@@ -169,7 +170,7 @@ end;
   @return Référence au composant choisi
 *}
 function TComponentSet.ChooseComponent(
-  var LastIndex : integer) : TScrewComponent;
+  var LastIndex: Integer): TScrewComponent;
 begin
   LastIndex := QueryNumber(FDialogTitle, FDialogPrompt,
     MinMax(LastIndex, FMinIndex, FMaxIndex), FMinIndex, FMaxIndex);
@@ -183,7 +184,7 @@ end;
 {*
   [@inheritDoc]
 *}
-constructor TFrameMapEditor.Create(AOwner : TComponent);
+constructor TFrameMapEditor.Create(AOwner: TComponent);
 begin
   inherited;
 
@@ -209,7 +210,7 @@ end;
   Modifie l'étage courant
   @param Value   Nouvel étage
 *}
-procedure TFrameMapEditor.SetCurrentFloor(Value : integer);
+procedure TFrameMapEditor.SetCurrentFloor(Value: Integer);
 begin
   EditFloor.Value := Value;
   PaintBoxMap.Invalidate;
@@ -221,9 +222,10 @@ end;
   @return Le bouton nouvellement créé
 *}
 function TFrameMapEditor.AddScrewButton(
-  Template : TVisualComponent) : TButtonItem;
-var ImageIndex : integer;
-    Category : TButtonCategory;
+  Template: TVisualComponent): TButtonItem;
+var
+  ImageIndex: Integer;
+  Category: TButtonCategory;
 begin
   // Ajout de l'image du composant dans la liste d'images
   ScrewBmp.EmptyScrew;
@@ -231,12 +233,18 @@ begin
   ImageIndex := ScrewsImages.AddMasked(ScrewBmp, clTransparent);
 
   // Choix de la catégorie
-  if Template is TField    then Category := ScrewsContainer.Categories[0] else
-  if Template is TEffect   then Category := ScrewsContainer.Categories[1] else
-  if Template is TTool     then Category := ScrewsContainer.Categories[2] else
-  if Template is TObstacle then Category := ScrewsContainer.Categories[3] else
-  if Template is TScrew    then Category := ScrewsContainer.Categories[4] else
-  Category := ScrewsContainer.Categories[5];
+  if Template is TField then
+    Category := ScrewsContainer.Categories[0]
+  else if Template is TEffect then
+    Category := ScrewsContainer.Categories[1]
+  else if Template is TTool then
+    Category := ScrewsContainer.Categories[2]
+  else if Template is TObstacle then
+    Category := ScrewsContainer.Categories[3]
+  else if Template is TScrew then
+    Category := ScrewsContainer.Categories[4]
+  else
+    Category := ScrewsContainer.Categories[5];
 
   // Ajout du bouton
   Result := Category.Items.Add;
@@ -248,8 +256,9 @@ end;
   Enregistre un unique composant
   @param Component   Le composant à enregistrer
 *}
-procedure TFrameMapEditor.RegisterSingleComponent(Component : TScrewComponent);
-var Button : TButtonItem;
+procedure TFrameMapEditor.RegisterSingleComponent(Component: TScrewComponent);
+var
+  Button: TButtonItem;
 begin
   Button := AddScrewButton(Component);
   Button.Data := Component;
@@ -264,10 +273,11 @@ end;
   @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
   @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
 *}
-procedure TFrameMapEditor.RegisterComponentSet(Template : TScrewComponent;
-  const Components : array of TScrewComponent; BaseIndex : integer;
-  const DialogTitle, DialogPrompt : string);
-var Button : TButtonItem;
+procedure TFrameMapEditor.RegisterComponentSet(Template: TScrewComponent;
+  const Components: array of TScrewComponent; BaseIndex: Integer;
+  const DialogTitle, DialogPrompt: string);
+var
+  Button: TButtonItem;
 begin
   Button := AddScrewButton(Template);
   Button.Data := TComponentSet.Create(Components,
@@ -278,8 +288,9 @@ end;
   Charge les infos sur les joueurs
 *}
 procedure TFrameMapEditor.LoadPlayers;
-var I : integer;
-    Player : TPlayer;
+var
+  I: Integer;
+  Player: TPlayer;
 begin
   for I := 0 to Master.PlayerCount-1 do
   begin
@@ -327,19 +338,23 @@ end;
   Centre l'affichage sur le joueur
   @param Player   Joueur  visionner
 *}
-procedure TFrameMapEditor.CenterToPlayerPosition(Player : TPlayer);
-var TabIndex : integer;
-    X, Y : integer;
+procedure TFrameMapEditor.CenterToPlayerPosition(Player: TPlayer);
+var
+  TabIndex: Integer;
+  X, Y: Integer;
 begin
   if Player.Map = nil then
   begin
     ShowDialog(sCantCenterToPosition, sCantCenterToUnplacedPlayer, dtError);
-    exit;
+    Exit;
   end;
 
   TabIndex := Master.MapCount-1;
   while TabIndex >= 0 do
-    if Master.Maps[TabIndex] = Player.Map then Break else dec(TabIndex);
+    if Master.Maps[TabIndex] = Player.Map then
+      Break
+    else
+      Dec(TabIndex);
   MapTabSet.TabIndex := TabIndex;
 
   X := Player.Position.X * ScrewSize + ScrewSize div 2;
@@ -358,9 +373,10 @@ end;
   @param ASepiRoot     Racine Sepi
   @param AMasterFile   Fichier maître
 *}
-procedure TFrameMapEditor.LoadFile(ASepiRoot : TSepiMetaRoot;
-  AMasterFile : TMasterFile);
-var I : integer;
+procedure TFrameMapEditor.LoadFile(ASepiRoot: TSepiMetaRoot;
+  AMasterFile: TMasterFile);
+var
+  I: Integer;
 begin
   SepiRoot := ASepiRoot;
   MasterFile := AMasterFile;
@@ -373,8 +389,9 @@ begin
   LoadPlayers;
 
   // Recensement des cartes
-  with MasterFile do for I := 0 to MapFileCount-1 do
-    MapTabSet.Tabs.Add(MapFiles[I].MapID);
+  with MasterFile do
+    for I := 0 to MapFileCount-1 do
+      MapTabSet.Tabs.Add(MapFiles[I].MapID);
   CurrentFloor := 0;
   if MasterFile.MapFileCount > 0 then
     MapTabSet.TabIndex := 0;
@@ -384,7 +401,8 @@ end;
   Décharge le fichier courant
 *}
 procedure TFrameMapEditor.UnloadFile;
-var I : integer;
+var
+  I: Integer;
 begin
   // Vider les onglets de carte
   MapTabSet.TabIndex := -1;
@@ -396,13 +414,16 @@ begin
   // Vider les composants d'édition
   with ScrewsContainer do
   begin
-    for I := 0 to Categories.Count-1 do with Categories[I] do
+    for I := 0 to Categories.Count-1 do
     begin
-      while Items.Count > 0 do
+      with Categories[I] do
       begin
-        if TObject(Items[0].Data) is TComponentSet then
-          TObject(Items[0].Data).Free;
-        Items.Delete(0);
+        while Items.Count > 0 do
+        begin
+          if TObject(Items[0].Data) is TComponentSet then
+            TObject(Items[0].Data).Free;
+          Items.Delete(0);
+        end;
       end;
     end;
   end;
@@ -419,7 +440,8 @@ end;
   Demande l'ajout d'une carte
 *}
 procedure TFrameMapEditor.AddMap;
-var MapID : TComponentID;
+var
+  MapID: TComponentID;
 begin
   MapID := TFormAddMap.AddMap(MasterFile);
   if MapID <> '' then
@@ -433,14 +455,17 @@ end;
   Demande la suppression de la carte courante
 *}
 procedure TFrameMapEditor.RemoveCurrentMap;
-var Map : TMap;
-    I, Index : integer;
+var
+  Map: TMap;
+  I, Index: Integer;
 begin
   Map := CurrentMap;
-  if Map = nil then exit;
+  if Map = nil then
+    Exit;
 
   if ShowDialog(sRemoveMapTitle, sRemoveMap,
-    dtConfirmation, dbOKCancel, 2) <> drOK then exit;
+    dtConfirmation, dbOKCancel, 2) <> drOK then
+    Exit;
 
   for I := 0 to Master.PlayerCount-1 do
   begin
@@ -504,12 +529,14 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFrameMapEditor.PaintBoxMapPaint(Sender: TObject);
-var Left, Top, Right, Bottom : integer;
-    LeftZone, TopZone, RightZone, BottomZone : integer;
-    I, X, Y : integer;
-    QPos : TQualifiedPos;
+var
+  Left, Top, Right, Bottom: Integer;
+  LeftZone, TopZone, RightZone, BottomZone: Integer;
+  I, X, Y: Integer;
+  QPos: TQualifiedPos;
 begin
-  if CurrentMap = nil then exit;
+  if CurrentMap = nil then
+    Exit;
 
   // Calcul des coordonnées à afficher
   Left := ScrollBoxMap.HorzScrollBar.Position div ScrewSize - MinViewSize;
@@ -519,25 +546,31 @@ begin
 
   LeftZone := Left div CurrentMap.ZoneWidth;
   TopZone  := Top  div CurrentMap.ZoneHeight;
-  RightZone  := LeftZone + Right  div CurrentMap.ZoneWidth ;
+  RightZone  := LeftZone + Right  div CurrentMap.ZoneWidth;
   BottomZone := TopZone  + Bottom div CurrentMap.ZoneHeight;
 
   // Dessin des cases
   QPos.Map := CurrentMap;
-  for X := Left to Right do for Y := Top to Bottom do
+  for X := Left to Right do
   begin
-    QPos.Position := Point3D(X, Y, CurrentFloor);
-    CurrentMap[QPos.Position].Draw(QPos, PaintBoxMap.Canvas,
-      (MinViewSize+X) * ScrewSize, (MinViewSize+Y) * ScrewSize);
+    for Y := Top to Bottom do
+    begin
+      QPos.Position := Point3D(X, Y, CurrentFloor);
+      CurrentMap[QPos.Position].Draw(QPos, PaintBoxMap.Canvas,
+        (MinViewSize+X) * ScrewSize, (MinViewSize+Y) * ScrewSize);
+    end;
   end;
 
   // Dessin des joueurs
-  for I := 0 to Master.PlayerCount-1 do with Master.Players[I] do
+  for I := 0 to Master.PlayerCount-1 do
   begin
-    if (Map = CurrentMap) and (Position.Z = CurrentFloor) then
+    with Master.Players[I] do
     begin
-      DrawInPlace(PaintBoxMap.Canvas, (MinViewSize+Position.X) * ScrewSize,
-        (MinViewSize+Position.Y) * ScrewSize);
+      if (Map = CurrentMap) and (Position.Z = CurrentFloor) then
+      begin
+        DrawInPlace(PaintBoxMap.Canvas, (MinViewSize+Position.X) * ScrewSize,
+          (MinViewSize+Position.Y) * ScrewSize);
+      end;
     end;
   end;
 
@@ -597,12 +630,13 @@ end;
 *}
 procedure TFrameMapEditor.PlayersContainerButtonClicked(Sender: TObject;
   const Button: TButtonItem);
-var Player : TPlayer;
+var
+  Player: TPlayer;
 begin
-  Player := Master.Players[integer(Button.Data) shr opShift];
-  case integer(Button.Data) and opMask of
-    opCenterToPosition : CenterToPlayerPosition(Player);
-    opShowPlugins :
+  Player := Master.Players[Integer(Button.Data) shr opShift];
+  case Integer(Button.Data) and opMask of
+    opCenterToPosition: CenterToPlayerPosition(Player);
+    opShowPlugins:
     begin
       if TFormPlugins.ManagePlugins(Player) then
       begin
@@ -610,12 +644,12 @@ begin
         PaintBoxMap.Invalidate;
       end;
     end;
-    opShowAttributes :
+    opShowAttributes:
     begin
       if TFormParameters.EditPlayerAttributes(Player) then
         MarkModified;
     end;
-    opShowObjects : TFormObjects.ShowObjects(Player);
+    opShowObjects: TFormObjects.ShowObjects(Player);
   end;
 end;
 
@@ -627,12 +661,14 @@ end;
   @param X        Abscisse du point cliqué
   @param Y        Ordonnée du point cliqué
 *}
-procedure TFrameMapEditor.PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-var Position : T3DPoint;
-    FieldID, EffectID, ToolID, NewID : TComponentID;
+procedure TFrameMapEditor.PaintBoxMapMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Position: T3DPoint;
+  FieldID, EffectID, ToolID, NewID: TComponentID;
 begin
-  if (Button <> mbLeft) or (CurrentMap = nil) or (Component = nil) then exit;
+  if (Button <> mbLeft) or (CurrentMap = nil) or (Component = nil) then
+    Exit;
 
   Position := Point3D(X div ScrewSize - 1, Y div ScrewSize - 1, CurrentFloor);
 
@@ -645,16 +681,22 @@ begin
     with CurrentMap[Position] do
     begin
       FieldID := Field.ID;
-      if Effect = nil then EffectID := '' else EffectID := Effect.ID;
-      if Tool   = nil then ToolID   := '' else ToolID   := Tool.ID;
+      if Effect = nil then
+        EffectID := ''
+      else
+        EffectID := Effect.ID;
+      if Tool = nil then
+        ToolID := ''
+      else
+        ToolID := Tool.ID;
 
       if Component is TField then
-        NewID := NewID+'---' else
-      if Component is TEffect then
-        NewID := FieldID+'-'+NewID+'--' else
-      if Component is TTool then
-        NewID := FieldID+'-'+EffectID+'-'+NewID+'-' else
-      if Component is TObstacle then
+        NewID := NewID+'---'
+      else if Component is TEffect then
+        NewID := FieldID+'-'+NewID+'--'
+      else if Component is TTool then
+        NewID := FieldID+'-'+EffectID+'-'+NewID+'-'
+      else if Component is TObstacle then
         NewID := FieldID+'-'+EffectID+'-'+ToolID+'-'+NewID;
     end;
 
@@ -664,7 +706,8 @@ begin
     end else
     begin
       if ShowDialog(sReplaceOutsideTitle, sReplaceOutside,
-        dtConfirmation, dbOKCancel) <> drOK then exit;
+        dtConfirmation, dbOKCancel) <> drOK then
+        Exit;
       CurrentMap.Outside[CurrentFloor] := Master.Screw[NewID];
     end;
   end;
@@ -682,9 +725,11 @@ end;
 *}
 procedure TFrameMapEditor.PaintBoxMapMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
-var Position : T3DPoint;
+var
+  Position: T3DPoint;
 begin
-  if CurrentMap = nil then exit;
+  if CurrentMap = nil then
+    Exit;
 
   Position := Point3D(X div ScrewSize - 1, Y div ScrewSize - 1, CurrentFloor);
   StaticPosition.Caption := Point3DToString(Position, ', ');
@@ -692,11 +737,20 @@ begin
   with CurrentMap[Position] do
   begin
     StaticField.Caption := Field.Name;
-    if Effect = nil then StaticEffect.Caption := '' else
+
+    if Effect = nil then
+      StaticEffect.Caption := ''
+    else
       StaticEffect.Caption := Effect.Name;
-    if Tool = nil then StaticTool.Caption := '' else
+
+    if Tool = nil then
+      StaticTool.Caption := ''
+    else
       StaticTool.Caption := Tool.Name;
-    if Obstacle = nil then StaticObstacle.Caption := '' else
+
+    if Obstacle = nil then
+      StaticObstacle.Caption := ''
+    else
       StaticObstacle.Caption := Obstacle.Name;
   end;
 end;

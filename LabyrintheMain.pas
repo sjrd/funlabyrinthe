@@ -71,19 +71,19 @@ type
     procedure MenuReloadGameClick(Sender: TObject);
   private
     { Déclarations privées }
-    SepiRootManager : TSepiAsynchronousRootManager;
-    SepiRoot : TSepiMetaRoot;
+    SepiRootManager: TSepiAsynchronousRootManager;
+    SepiRoot: TSepiMetaRoot;
 
-    MasterFile : TMasterFile;
-    Master : TMaster;
-    View : TPlayerView;
-    Controller : TPlayerController;
-    GameEnded : boolean;
-    LastFileName : TFileName;
+    MasterFile: TMasterFile;
+    Master: TMaster;
+    View: TPlayerView;
+    Controller: TPlayerController;
+    GameEnded: Boolean;
+    LastFileName: TFileName;
 
-    procedure NewGame(FileName : TFileName);
-    function SaveGame : boolean;
-    function CloseGame(DontSave : boolean = False) : boolean;
+    procedure NewGame(FileName: TFileName);
+    function SaveGame: Boolean;
+    function CloseGame(DontSave: Boolean = False): Boolean;
 
     procedure AdaptSizeToView;
     procedure ShowStatus;
@@ -92,7 +92,7 @@ type
   end;
 
 var
-  FormMain : TFormMain; /// Instance de la fiche principale
+  FormMain: TFormMain; /// Instance de la fiche principale
 
 implementation
 
@@ -106,7 +106,7 @@ implementation
   Commence une nouvelle partie
   @param FileName   Nom du fichier maître à charger
 *}
-procedure TFormMain.NewGame(FileName : TFileName);
+procedure TFormMain.NewGame(FileName: TFileName);
 begin
   MasterFile := TMasterFile.Create(SepiRoot, FileName, fmPlay);
   Master := MasterFile.Master;
@@ -136,9 +136,11 @@ end;
   Enregistre la partie en cours
   @return True si la partie a effectivement été enregistrée, False sinon
 *}
-function TFormMain.SaveGame : boolean;
+function TFormMain.SaveGame: Boolean;
 begin
-  if MasterFile = nil then Result := True else
+  if MasterFile = nil then
+    Result := True
+  else
   begin
     Result := SaveGameDialog.Execute;
 
@@ -155,24 +157,28 @@ end;
   @param DontSave   À True, ne demande pas à l'utilisateur d'enregistrer
   @return True si la partie a effectivement été terminée, False sinon
 *}
-function TFormMain.CloseGame(DontSave : boolean = False) : boolean;
+function TFormMain.CloseGame(DontSave: Boolean = False): Boolean;
 begin
   if MasterFile = nil then
   begin
     Result := True;
-    exit;
+    Exit;
   end;
 
-  if DontSave or Master.Terminated then Result := True else
+  if DontSave or Master.Terminated then
+    Result := True
+  else
   begin
     case ShowDialog(sExitConfirmTitle, sExitConfirm,
-                    dtConfirmation, dbYesNoCancel) of
-      drYes : Result := SaveGame;
-      drCancel : Result := False;
-      else Result := True;
+        dtConfirmation, dbYesNoCancel) of
+      drYes: Result := SaveGame;
+      drCancel: Result := False;
+    else
+      Result := True;
     end;
 
-    if not Result then exit;
+    if not Result then
+      Exit;
   end;
 
   Controller.Terminate;
@@ -202,7 +208,8 @@ end;
   Adapte la taille de la fenêtre à la taille de la vue
 *}
 procedure TFormMain.AdaptSizeToView;
-var ImgWidth, ImgHeight : integer;
+var
+  ImgWidth, ImgHeight: Integer;
 begin
   if View = nil then
   begin
@@ -224,12 +231,15 @@ end;
   Affiche les quatre objets principaux dans la barre de statut
 *}
 procedure TFormMain.ShowStatus;
-var I : integer;
+var
+  I: Integer;
 begin
-  if MasterFile = nil then exit;
+  if MasterFile = nil then
+    Exit;
   for I := 0 to 3 do
   begin
-    if I >= Master.ObjectDefCount then Break;
+    if I >= Master.ObjectDefCount then
+      Break;
     StatusBar.Panels[I].Text :=
       Master.ObjectDefs[I].ShownInfos[View.Player];
   end;
@@ -281,7 +291,8 @@ procedure TFormMain.MenuNewGameClick(Sender: TObject);
 begin
   if CloseGame then
   begin
-    if not NewGameDialog.Execute then exit;
+    if not NewGameDialog.Execute then
+      Exit;
 
     if ofExtensionDifferent in NewGameDialog.Options then
       RunURL(NewGameDialog.FileName)
@@ -298,7 +309,8 @@ procedure TFormMain.MenuLoadGameClick(Sender: TObject);
 begin
   if CloseGame then
   begin
-    if not LoadGameDialog.Execute then exit;
+    if not LoadGameDialog.Execute then
+      Exit;
 
     if ofExtensionDifferent in LoadGameDialog.Options then
       RunURL(LoadGameDialog.FileName)
@@ -438,7 +450,9 @@ end;
 *}
 procedure TFormMain.PaintBoxPaint(Sender: TObject);
 begin
-  if Assigned(View) then View.Draw(PaintBox.Canvas) else
+  if Assigned(View) then
+    View.Draw(PaintBox.Canvas)
+  else
   begin
     with PaintBox.Canvas do
     begin

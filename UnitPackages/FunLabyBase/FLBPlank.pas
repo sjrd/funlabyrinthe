@@ -35,7 +35,7 @@ const {don't localize}
 
 resourcestring
   sFoundPlank = 'Tu as trouvé une planche.'+#10+
-                'Tu peux franchir certains obstacles.';
+    'Tu peux franchir certains obstacles.';
 
 type
   {*
@@ -46,12 +46,12 @@ type
   *}
   TPlankPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
+    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
 
-    procedure Moving(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Dest : T3DPoint;
-      var Cancel : boolean); override;
+    procedure Moving(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Dest: T3DPoint;
+      var Cancel: Boolean); override;
   end;
 
   {*
@@ -62,12 +62,12 @@ type
   *}
   TPlanks = class(TObjectDef)
   protected
-    procedure SetCount(Player : TPlayer; Value : integer); override;
+    procedure SetCount(Player: TPlayer; Value: Integer); override;
 
-    function GetShownInfos(Player : TPlayer) : string; override;
+    function GetShownInfos(Player: TPlayer): string; override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
   end;
 
   {*
@@ -78,21 +78,21 @@ type
   *}
   TPlankScrew = class(TOverriddenScrew)
   private
-    FPlayer : TPlayer; /// Joueur qui passe sur la case
+    FPlayer: TPlayer; /// Joueur qui passe sur la case
   public
-    constructor Create(AMaster : TMaster; AMap : TMap;
-      const APosition : T3DPoint; APlayer : TPlayer);
+    constructor Create(AMaster: TMaster; AMap: TMap;
+      const APosition: T3DPoint; APlayer: TPlayer);
 
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); override;
 
-    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); override;
+    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); override;
 
-    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
-      var GoOnMoving : boolean); override;
+    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
+      var GoOnMoving: Boolean); override;
 
-    property Player : TPlayer read FPlayer;
+    property Player: TPlayer read FPlayer;
   end;
 
 const
@@ -114,21 +114,22 @@ implementation
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TPlankPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TPlankPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   inherited;
 
-  if Player.Attribute[attrUsePlank] = 0 then exit;
+  if Player.Attribute[attrUsePlank] = 0 then
+    Exit;
 
   // Détermination de l'endroit où dessiner réellement la planche
   if not (Player.Map[Player.Position] is TPlankScrew) then
   begin
     case Player.Direction of
-      diNorth : dec(Y, ScrewSize);
-      diEast  : inc(X, ScrewSize);
-      diSouth : inc(Y, ScrewSize);
-      diWest  : dec(X, ScrewSize);
+      diNorth: Dec(Y, ScrewSize);
+      diEast:  Inc(X, ScrewSize);
+      diSouth: Inc(Y, ScrewSize);
+      diWest:  Dec(X, ScrewSize);
     end;
   end;
 
@@ -150,11 +151,12 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Dest : T3DPoint; var Cancel : boolean);
-var Behind : T3DPoint;
-    Msg : TPlankMessage;
-    Field : TField;
+procedure TPlankPlugin.Moving(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Dest: T3DPoint; var Cancel: Boolean);
+var
+  Behind: T3DPoint;
+  Msg: TPlankMessage;
+  Field: TField;
 begin
   Behind := PointBehind(Dest, Player.Direction);
 
@@ -172,7 +174,8 @@ begin
     Field := Map[Msg.Pos].Field;
     if Assigned(Field) then
       Field.Dispatch(Msg);
-    if not Msg.Result then exit;
+    if not Msg.Result then
+      Exit;
 
     // On vérifie que la case de départ ou d'arrivée autorise le déplacement
     Msg.Kind := pmkLeaveFrom;
@@ -186,7 +189,8 @@ begin
       Field := Map[Msg.Dest].Field;
       if Assigned(Field) then
         Field.Dispatch(Msg);
-      if not Msg.Result then exit;
+      if not Msg.Result then
+        Exit;
     end;
 
     TPlankScrew.Create(Master, Map, Msg.Pos, Player);
@@ -204,8 +208,8 @@ end;
   @param AID       ID du composant
   @param AName     Nom du composant
 *}
-constructor TPlanks.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TPlanks.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fPlank);
@@ -214,7 +218,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlanks.SetCount(Player : TPlayer; Value : integer);
+procedure TPlanks.SetCount(Player: TPlayer; Value: Integer);
 begin
   inherited;
 
@@ -230,8 +234,9 @@ end;
   @param Player   Joueur pour lequel on veut obtenir les infos
   @return Informations textuelles, ou une chaîne vide si rien à afficher
 *}
-function TPlanks.GetShownInfos(Player : TPlayer) : string;
-var ACount : integer;
+function TPlanks.GetShownInfos(Player: TPlayer): string;
+var
+  ACount: Integer;
 begin
   ACount := Count[Player];
   if ACount < 2 then
@@ -251,8 +256,8 @@ end;
   @param APosition   Position
   @param APlayer     Joueur qui passe sur la case
 *}
-constructor TPlankScrew.Create(AMaster : TMaster; AMap : TMap;
-  const APosition : T3DPoint; APlayer : TPlayer);
+constructor TPlankScrew.Create(AMaster: TMaster; AMap: TMap;
+  const APosition: T3DPoint; APlayer: TPlayer);
 begin
   inherited Create(AMaster, '', AMap, APosition);
   FPlayer := APlayer;
@@ -262,9 +267,9 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankScrew.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel : boolean);
+procedure TPlankScrew.Entering(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel: Boolean);
 begin
   inherited;
   if Player <> FPlayer then
@@ -274,7 +279,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankScrew.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
+procedure TPlankScrew.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
 begin
   inherited;
   FPlayer.Attribute[attrUsePlank] := 0;
@@ -284,8 +289,8 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankScrew.Execute(Player : TPlayer; const Pos : T3DPoint;
-  var GoOnMoving : boolean);
+procedure TPlankScrew.Execute(Player: TPlayer; const Pos: T3DPoint;
+  var GoOnMoving: Boolean);
 begin
   inherited;
   Master.Temporize;

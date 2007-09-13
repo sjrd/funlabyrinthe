@@ -18,17 +18,17 @@ implementation
 type
   TSepiImportsTDecorativeEffect = class(TDecorativeEffect)
   private
-    class function SepiImport(Owner : TSepiMetaUnit) : TSepiClass;
+    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
   end;
 
   TSepiImportsTObjectTool = class(TObjectTool)
   private
-    class function SepiImport(Owner : TSepiMetaUnit) : TSepiClass;
+    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
   end;
 
   TSepiImportsTOverriddenScrew = class(TOverriddenScrew)
   private
-    class function SepiImport(Owner : TSepiMetaUnit) : TSepiClass;
+    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
   end;
 
 {--------------------------}
@@ -36,7 +36,7 @@ type
 {--------------------------}
 
 class function TSepiImportsTDecorativeEffect.SepiImport(
-  Owner : TSepiMetaUnit) : TSepiClass;
+  Owner: TSepiMetaUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TDecorativeEffect));
@@ -57,7 +57,7 @@ end;
 {--------------------}
 
 class function TSepiImportsTObjectTool.SepiImport(
-  Owner : TSepiMetaUnit) : TSepiClass;
+  Owner: TSepiMetaUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TObjectTool));
@@ -97,7 +97,7 @@ end;
 {-------------------------}
 
 class function TSepiImportsTOverriddenScrew.SepiImport(
-  Owner : TSepiMetaUnit) : TSepiClass;
+  Owner: TSepiMetaUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TOverriddenScrew));
@@ -139,7 +139,7 @@ end;
 { Unit import }
 {-------------}
 
-function ImportUnit(Root : TSepiMetaRoot) : TSepiMetaUnit;
+function ImportUnit(Root: TSepiMetaRoot): TSepiMetaUnit;
 begin
   Result := TSepiMetaUnit.Create(Root, 'Generics',
     ['Graphics', 'ScUtils', 'FunLabyUtils']);

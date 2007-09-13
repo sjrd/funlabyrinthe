@@ -28,7 +28,7 @@ type
     { Déclarations prives }
   public
     { Déclarations publiques }
-    class procedure ShowObjects(Player : TPlayer);
+    class procedure ShowObjects(Player: TPlayer);
   end;
 
 implementation
@@ -39,11 +39,12 @@ implementation
   Affiche les objets d'un joueur
   @param Player   Joueur concerné
 *}
-class procedure TFormObjects.ShowObjects(Player : TPlayer);
-var Bitmap : TBitmap;
-    Master : TMaster;
-    I : integer;
-    Infos : string;
+class procedure TFormObjects.ShowObjects(Player: TPlayer);
+var
+  Bitmap: TBitmap;
+  Master: TMaster;
+  I: Integer;
+  Infos: string;
 begin
   with Create(Application) do
   try
@@ -54,18 +55,21 @@ begin
 
       Master := Player.Master;
 
-      for I := 0 to Master.ObjectDefCount-1 do with Master.ObjectDefs[I] do
+      for I := 0 to Master.ObjectDefCount-1 do
       begin
-        Infos := ShownInfos[Player];
-        if Infos <> '' then
+        with Master.ObjectDefs[I] do
         begin
-          EmptyScrewRect(Bitmap.Canvas);
-          Draw(NoQPos, Bitmap.Canvas);
-
-          with ListViewObjects.Items.Add do
+          Infos := ShownInfos[Player];
+          if Infos <> '' then
           begin
-            Caption := Infos;
-            ImageIndex := ObjectsImages.AddMasked(Bitmap, clTransparent);
+            EmptyScrewRect(Bitmap.Canvas);
+            Draw(NoQPos, Bitmap.Canvas);
+
+            with ListViewObjects.Items.Add do
+            begin
+              Caption := Infos;
+              ImageIndex := ObjectsImages.AddMasked(Bitmap, clTransparent);
+            end;
           end;
         end;
       end;

@@ -20,29 +20,29 @@ type
     @param Pos         Début de la recherche en entrée et résultat en sortie
     @param Component   Composant à rechercher
   *}
-  TFindScrewProc = procedure(Map : TMap; var Pos : T3DPoint;
-    Component : TScrewComponent);
+  TFindScrewProc = procedure(Map: TMap; var Pos: T3DPoint;
+    Component: TScrewComponent);
 
-function ChangeField(Screw : TScrew;
-  const NewField : TComponentID = '') : TScrew;
-function ChangeEffect(Screw : TScrew;
-  const NewEffect : TComponentID = '') : TScrew;
-function ChangeTool(Screw : TScrew;
-  const NewTool : TComponentID = '') : TScrew;
-function ChangeObstacle(Screw : TScrew;
-  const NewObstacle : TComponentID = '') : TScrew;
+function ChangeField(Screw: TScrew;
+  const NewField: TComponentID = ''): TScrew;
+function ChangeEffect(Screw: TScrew;
+  const NewEffect: TComponentID = ''): TScrew;
+function ChangeTool(Screw: TScrew;
+  const NewTool: TComponentID = ''): TScrew;
+function ChangeObstacle(Screw: TScrew;
+  const NewObstacle: TComponentID = ''): TScrew;
 
-function ChangeComp(Screw : TScrew;
-  NewComp : TScrewComponent) : TScrew; overload;
-function ChangeComp(Screw : TScrew;
-  const NewComp : TComponentID) : TScrew; overload;
+function ChangeComp(Screw: TScrew;
+  NewComp: TScrewComponent): TScrew; overload;
+function ChangeComp(Screw: TScrew;
+  const NewComp: TComponentID): TScrew; overload;
 
-procedure FindNextScrew(Map : TMap; var Pos : T3DPoint;
-  Component : TScrewComponent);
-procedure FindPreviousScrew(Map : TMap; var Pos : T3DPoint;
-  Component : TScrewComponent);
-procedure FindScrewAtRandom(Map : TMap; var Pos : T3DPoint;
-  Component : TScrewComponent);
+procedure FindNextScrew(Map: TMap; var Pos: T3DPoint;
+  Component: TScrewComponent);
+procedure FindPreviousScrew(Map: TMap; var Pos: T3DPoint;
+  Component: TScrewComponent);
+procedure FindScrewAtRandom(Map: TMap; var Pos: T3DPoint;
+  Component: TScrewComponent);
 
 implementation
 
@@ -52,8 +52,8 @@ implementation
   @param NewField   ID du nouveau terrain
   @return Une case identique à Screw mais avec le terrain indiqué
 *}
-function ChangeField(Screw : TScrew;
-  const NewField : TComponentID = '') : TScrew;
+function ChangeField(Screw: TScrew;
+  const NewField: TComponentID = ''): TScrew;
 begin
   with Screw do
     Result := Master.ScrewByComps(
@@ -66,8 +66,8 @@ end;
   @param NewEffect   ID du nouvel effet
   @return Une case identique à Screw mais avec l'effet indiqué
 *}
-function ChangeEffect(Screw : TScrew;
-  const NewEffect : TComponentID = '') : TScrew;
+function ChangeEffect(Screw: TScrew;
+  const NewEffect: TComponentID = ''): TScrew;
 begin
   with Screw do
     Result := Master.ScrewByComps(
@@ -80,8 +80,8 @@ end;
   @param NewTool   ID du nouvel outil
   @return Une case identique à Screw mais avec l'outil indiqué
 *}
-function ChangeTool(Screw : TScrew;
-  const NewTool : TComponentID = '') : TScrew;
+function ChangeTool(Screw: TScrew;
+  const NewTool: TComponentID = ''): TScrew;
 begin
   with Screw do
     Result := Master.ScrewByComps(
@@ -94,8 +94,8 @@ end;
   @param NewObstacle   ID du nouvel obstacle
   @return Une case identique à Screw mais avec l'obstacle indiqué
 *}
-function ChangeObstacle(Screw : TScrew;
-  const NewObstacle : TComponentID = '') : TScrew;
+function ChangeObstacle(Screw: TScrew;
+  const NewObstacle: TComponentID = ''): TScrew;
 begin
   with Screw do
     Result := Master.ScrewByComps(
@@ -108,15 +108,20 @@ end;
   @param NewComp   Composant à modifier
   @return Une case identique à Screw mais avec le composant indiqué
 *}
-function ChangeComp(Screw : TScrew; NewComp : TScrewComponent) : TScrew;
+function ChangeComp(Screw: TScrew; NewComp: TScrewComponent): TScrew;
 begin
-  if NewComp is TField    then Result := ChangeField   (Screw, NewComp.ID) else
-  if NewComp is TEffect   then Result := ChangeEffect  (Screw, NewComp.ID) else
-  if NewComp is TTool     then Result := ChangeTool    (Screw, NewComp.ID) else
-  if NewComp is TObstacle then Result := ChangeObstacle(Screw, NewComp.ID) else
-
-  if NewComp is TScrew then Result := TScrew(NewComp) else
-  Result := Screw;
+  if NewComp is TField then
+    Result := ChangeField(Screw, NewComp.ID)
+  else if NewComp is TEffect then
+    Result := ChangeEffect(Screw, NewComp.ID)
+  else if NewComp is TTool then
+    Result := ChangeTool(Screw, NewComp.ID)
+  else if NewComp is TObstacle then
+    Result := ChangeObstacle(Screw, NewComp.ID)
+  else if NewComp is TScrew then
+    Result := TScrew(NewComp)
+  else
+    Result := Screw;
 end;
 
 {*
@@ -125,7 +130,7 @@ end;
   @param NewComp   ID du composant à modifier
   @return Une case identique à Screw mais avec le composant indiqué
 *}
-function ChangeComp(Screw : TScrew; const NewComp : TComponentID) : TScrew;
+function ChangeComp(Screw: TScrew; const NewComp: TComponentID): TScrew;
 begin
   Result := ChangeComp(Screw, Screw.Master.ScrewComponent[NewComp]);
 end;
@@ -136,16 +141,22 @@ end;
   @param Pos         Début de la recherche en entrée et résultat en sortie
   @param Component   Composant à rechercher
 *}
-function ScrewCompFound(Map : TMap; const Pos : T3DPoint;
-  Component : TScrewComponent) : boolean;
-var Screw : TScrew;
+function ScrewCompFound(Map: TMap; const Pos: T3DPoint;
+  Component: TScrewComponent): Boolean;
+var
+  Screw: TScrew;
 begin
   Screw := Map[Pos];
-  if Component is TField    then Result := Screw.Field    = Component else
-  if Component is TEffect   then Result := Screw.Effect   = Component else
-  if Component is TTool     then Result := Screw.Tool     = Component else
-  if Component is TObstacle then Result := Screw.Obstacle = Component else
-  Result := Screw = Component;
+  if Component is TField then
+    Result := Screw.Field = Component
+  else if Component is TEffect then
+    Result := Screw.Effect = Component
+  else if Component is TTool then
+    Result := Screw.Tool = Component
+  else if Component is TObstacle then
+    Result := Screw.Obstacle = Component
+  else
+    Result := Screw = Component;
 end;
 
 {*
@@ -154,9 +165,10 @@ end;
   @param Pos         Début de la recherche en entrée et résultat en sortie
   @param Component   Composant à rechercher
 *}
-procedure FindNextScrew(Map : TMap; var Pos : T3DPoint;
-  Component : TScrewComponent);
-var DimX, DimY, DimZ : integer;
+procedure FindNextScrew(Map: TMap; var Pos: T3DPoint;
+  Component: TScrewComponent);
+var
+  DimX, DimY, DimZ: Integer;
 begin
   with Map.Dimensions do
   begin
@@ -166,15 +178,15 @@ begin
   end;
 
   repeat
-    inc(Pos.X);
+    Inc(Pos.X);
     if Pos.X >= DimX then
     begin
       Pos.X := 0;
-      inc(Pos.Y);
+      Inc(Pos.Y);
       if Pos.Y >= DimY then
       begin
         Pos.Y := 0;
-        inc(Pos.Z);
+        Inc(Pos.Z);
         if Pos.Z >= DimZ then
           Pos.Z := 0;
       end;
@@ -188,9 +200,10 @@ end;
   @param Pos         Début de la recherche en entrée et résultat en sortie
   @param Component   Composant à rechercher
 *}
-procedure FindPreviousScrew(Map : TMap; var Pos : T3DPoint;
-  Component : TScrewComponent);
-var DimX, DimY, DimZ : integer;
+procedure FindPreviousScrew(Map: TMap; var Pos: T3DPoint;
+  Component: TScrewComponent);
+var
+  DimX, DimY, DimZ: Integer;
 begin
   with Map.Dimensions do
   begin
@@ -200,15 +213,15 @@ begin
   end;
 
   repeat
-    dec(Pos.X);
+    Dec(Pos.X);
     if Pos.X < 0 then
     begin
       Pos.X := DimX-1;
-      dec(Pos.Y);
+      Dec(Pos.Y);
       if Pos.Y < 0 then
       begin
         Pos.Y := DimY-1;
-        dec(Pos.Z);
+        Dec(Pos.Z);
         if Pos.Z < 0 then
           Pos.Z := DimZ-1;
       end;
@@ -222,14 +235,15 @@ end;
   @param Pos         Début de la recherche en entrée et résultat en sortie
   @param Component   Composant à rechercher
 *}
-procedure FindScrewAtRandom(Map : TMap; var Pos : T3DPoint;
-  Component : TScrewComponent);
+procedure FindScrewAtRandom(Map: TMap; var Pos: T3DPoint;
+  Component: TScrewComponent);
 const
   AllocBy = 10;
-var DimX, DimY, DimZ : integer;
-    Others : array of T3DPoint;
-    Count, X, Y, Z : integer;
-    Other : T3DPoint;
+var
+  DimX, DimY, DimZ: Integer;
+  Others: array of T3DPoint;
+  Count, X, Y, Z: Integer;
+  Other: T3DPoint;
 begin
   with Map.Dimensions do
   begin
@@ -241,16 +255,22 @@ begin
   // Recensement de toutes les cases identiques, à l'exception de l'originale
   Count := 0;
   SetLength(Others, AllocBy);
-  for X := 0 to DimX-1 do for Y := 0 to DimY-1 do for Z := 0 to DimZ-1 do
+  for X := 0 to DimX-1 do
   begin
-    Other := Point3D(X, Y, Z);
-    if (ScrewCompFound(Map, Other, Component)) and
-       (not Same3DPoint(Other, Pos)) then
+    for Y := 0 to DimY-1 do
     begin
-      if Count >= Length(Others) then
-        SetLength(Others, Count+AllocBy);
-      Others[Count] := Other;
-      inc(Count);
+      for Z := 0 to DimZ-1 do
+      begin
+        Other := Point3D(X, Y, Z);
+        if (ScrewCompFound(Map, Other, Component)) and
+          (not Same3DPoint(Other, Pos)) then
+        begin
+          if Count >= Length(Others) then
+            SetLength(Others, Count+AllocBy);
+          Others[Count] := Other;
+          Inc(Count);
+        end;
+      end;
     end;
   end;
   SetLength(Others, Count);
@@ -261,3 +281,4 @@ begin
 end;
 
 end.
+

@@ -25,27 +25,27 @@ type
       Unité ouverte dans l'éditeur
       @return Unité ouverte
     *}
-    function GetUnitFile : TUnitFile;
+    function GetUnitFile: TUnitFile;
 
     {*
       Contrôle d'édition à placer dans la fiche principale de FunLabyEdit
       @return Contrôle d'édition
     *}
-    function GetControl : TControl;
+    function GetControl: TControl;
 
     {*
       Teste si l'éditeur peut être fermé
       @return True s'il peut être fermé, False pour empêcher la fermeture
     *}
-    function CanClose : boolean;
+    function CanClose: Boolean;
 
     {*
       Libère l'éditeur
     *}
     procedure Release;
 
-    property UnitFile : TUnitFile read GetUnitFile;
-    property Control : TControl read GetControl;
+    property UnitFile: TUnitFile read GetUnitFile;
+    property Control: TControl read GetControl;
   end;
 
   {*
@@ -53,7 +53,7 @@ type
     @param UnitFile   Fichier unité à éditer
     @return Interface vers l'éditeur créé
   *}
-  TCreateUnitEditorProc = function(UnitFile : TUnitFile) : IUnitEditor50;
+  TCreateUnitEditorProc = function(UnitFile: TUnitFile): IUnitEditor50;
 
   {*
     Collection d'éditeurs d'unité
@@ -64,12 +64,12 @@ type
   public
     constructor Create;
 
-    procedure Add(const GUID : TGUID; CreateProc : TCreateUnitEditorProc);
-    procedure Remove(const GUID : TGUID);
-    function Exists(const GUID : TGUID) : boolean;
-    function Find(const GUID : TGUID) : TCreateUnitEditorProc;
+    procedure Add(const GUID: TGUID; CreateProc: TCreateUnitEditorProc);
+    procedure Remove(const GUID: TGUID);
+    function Exists(const GUID: TGUID): Boolean;
+    function Find(const GUID: TGUID): TCreateUnitEditorProc;
 
-    function CreateEditor(UnitFile : TUnitFile) : IUnitEditor50;
+    function CreateEditor(UnitFile: TUnitFile): IUnitEditor50;
   end;
 
   {*
@@ -84,8 +84,8 @@ type
     @param GUID       GUID du type du fichier créé
     @return True si le fichier a bien été créé, False sinon
   *}
-  TCreateNewUnitProc = function(var FileName : TFileName;
-    out GUID : TGUID) : boolean;
+  TCreateNewUnitProc = function(var FileName: TFileName;
+    out GUID: TGUID): Boolean;
 
   /// Pointeur vers TUnitCreatorInfo
   PUnitCreatorInfo = ^TUnitCreatorInfo;
@@ -96,10 +96,10 @@ type
     @version 5.0
   *}
   TUnitCreatorInfo = record
-    Title : string;           /// Titre du créateur
-    Description : string;     /// Description longue
-    AskForFileName : boolean; /// Demander un nom de fichier
-    Filter : string;          /// Filtre de nom de fichier
+    Title: string;           /// Titre du créateur
+    Description: string;     /// Description longue
+    AskForFileName: Boolean; /// Demander un nom de fichier
+    Filter: string;          /// Filtre de nom de fichier
   end;
 
   {*
@@ -111,9 +111,9 @@ type
   public
     constructor Create;
 
-    procedure Add(CreateProc : TCreateNewUnitProc;
-      const Info : TUnitCreatorInfo);
-    procedure Remove(CreateProc : TCreateNewUnitProc);
+    procedure Add(CreateProc: TCreateNewUnitProc;
+      const Info: TUnitCreatorInfo);
+    procedure Remove(CreateProc: TCreateNewUnitProc);
   end;
 
   {*
@@ -123,28 +123,28 @@ type
   *}
   TUnitFilterList = class(TCustomValueBucketList)
   private
-    function GetGUID(const Filter : string) : TGUID;
+    function GetGUID(const Filter: string): TGUID;
   protected
-    function BucketFor(const Key) : Cardinal; override;
-    function KeyEquals(const Key1, Key2) : boolean; override;
+    function BucketFor(const Key): Cardinal; override;
+    function KeyEquals(const Key1, Key2): Boolean; override;
   public
     constructor Create;
 
-    procedure Add(const Filter : string; const GUID : TGUID);
-    procedure Remove(const Filter : string);
+    procedure Add(const Filter: string; const GUID: TGUID);
+    procedure Remove(const Filter: string);
 
-    property GUID[const Filter : string] : TGUID read GetGUID;
+    property GUID[const Filter: string]: TGUID read GetGUID;
   end;
 
 var
   /// Éditeurs d'unité
-  UnitEditors : TUnitEditorList = nil;
+  UnitEditors: TUnitEditorList = nil;
 
   /// Créateurs d'unité
-  UnitCreators : TUnitCreatorList = nil;
+  UnitCreators: TUnitCreatorList = nil;
 
   /// Filtres d'unité
-  UnitFilters : TUnitFilterList = nil;
+  UnitFilters: TUnitFilterList = nil;
 
 {procedure RegisterUnitEditor(const GUID : TGUID;
   CreateProc : TCreateUnitEditorProc);
@@ -174,7 +174,7 @@ implementation
 *}
 constructor TUnitEditorList.Create;
 begin
-  inherited Create(sizeof(TGUID), sizeof(TCreateUnitEditorProc));
+  inherited Create(SizeOf(TGUID), SizeOf(TCreateUnitEditorProc));
 end;
 
 {*
@@ -182,8 +182,8 @@ end;
   @param GUID         GUID du type de fichiers géré
   @param CreateProc   Routine de call-back créant l'éditeur
 *}
-procedure TUnitEditorList.Add(const GUID : TGUID;
-  CreateProc : TCreateUnitEditorProc);
+procedure TUnitEditorList.Add(const GUID: TGUID;
+  CreateProc: TCreateUnitEditorProc);
 begin
   AddData(GUID, CreateProc);
 end;
@@ -192,7 +192,7 @@ end;
   Supprime un éditeur
   @param GUID   GUID du type de fichiers géré
 *}
-procedure TUnitEditorList.Remove(const GUID : TGUID);
+procedure TUnitEditorList.Remove(const GUID: TGUID);
 begin
   RemoveData(GUID);
 end;
@@ -202,7 +202,7 @@ end;
   @param GUID   GUID du type de fichiers
   @return True s'il existe un éditeur approprié, False sinon
 *}
-function TUnitEditorList.Exists(const GUID : TGUID) : boolean;
+function TUnitEditorList.Exists(const GUID: TGUID): Boolean;
 begin
   Result := (inherited Exists(GUID));
 end;
@@ -213,7 +213,7 @@ end;
   @return Routine de call-back de création de l'éditeur
   @throws EFileError Type de fichier inconnu
 *}
-function TUnitEditorList.Find(const GUID : TGUID) : TCreateUnitEditorProc;
+function TUnitEditorList.Find(const GUID: TGUID): TCreateUnitEditorProc;
 begin
   if not (inherited Find(GUID, Result)) then
     raise EFileError.CreateFmt(sUnknownUnitType, [GUIDToString(GUID)]);
@@ -225,8 +225,9 @@ end;
   @return Un nouvel éditeur pour le fichier UnitFile
   @throws EFileError Type de fichier inconnu
 *}
-function TUnitEditorList.CreateEditor(UnitFile : TUnitFile) : IUnitEditor50;
-var CreateProc : TCreateUnitEditorProc;
+function TUnitEditorList.CreateEditor(UnitFile: TUnitFile): IUnitEditor50;
+var
+  CreateProc: TCreateUnitEditorProc;
 begin
   CreateProc := Find(UnitFile.HandlerGUID);
   Result := CreateProc(UnitFile);
@@ -241,7 +242,7 @@ end;
 *}
 constructor TUnitCreatorList.Create;
 begin
-  inherited Create(sizeof(TCreateNewUnitProc), TypeInfo(TUnitCreatorInfo));
+  inherited Create(SizeOf(TCreateNewUnitProc), TypeInfo(TUnitCreatorInfo));
 end;
 
 {*
@@ -249,8 +250,8 @@ end;
   @param CreateProc   Routine de call-back de création d'unité
   @param Info         Informations sur ce créateur d'unité
 *}
-procedure TUnitCreatorList.Add(CreateProc : TCreateNewUnitProc;
-  const Info : TUnitCreatorInfo);
+procedure TUnitCreatorList.Add(CreateProc: TCreateNewUnitProc;
+  const Info: TUnitCreatorInfo);
 begin
   AddData(CreateProc, Info);
 end;
@@ -259,7 +260,7 @@ end;
   Supprime un créateur d'unité
   @param CreateProc   Routine de call-back de création d'unité
 *}
-procedure TUnitCreatorList.Remove(CreateProc : TCreateNewUnitProc);
+procedure TUnitCreatorList.Remove(CreateProc: TCreateNewUnitProc);
 begin
   RemoveData(CreateProc);
 end;
@@ -273,7 +274,7 @@ end;
 *}
 constructor TUnitFilterList.Create;
 begin
-  inherited Create(TypeInfo(string), sizeof(TGUID));
+  inherited Create(TypeInfo(string), SizeOf(TGUID));
 end;
 
 {*
@@ -281,7 +282,7 @@ end;
   @param Filter   Filtre de fichiers
   @result GUID de ce type de fichiers
 *}
-function TUnitFilterList.GetGUID(const Filter : string) : TGUID;
+function TUnitFilterList.GetGUID(const Filter: string): TGUID;
 begin
   GetData(Filter, Result);
 end;
@@ -289,7 +290,7 @@ end;
 {*
   [@inheritDoc]
 *}
-function TUnitFilterList.BucketFor(const Key) : Cardinal;
+function TUnitFilterList.BucketFor(const Key): Cardinal;
 begin
   Result := HashOfStr(string(Key)) mod BucketCount;
 end;
@@ -297,7 +298,7 @@ end;
 {*
   [@inheritDoc]
 *}
-function TUnitFilterList.KeyEquals(const Key1, Key2) : boolean;
+function TUnitFilterList.KeyEquals(const Key1, Key2): Boolean;
 begin
   Result := string(Key1) = string(Key2);
 end;
@@ -307,7 +308,7 @@ end;
   @param Filter   Filtre d'unité (tel qu'utilisé par TOpenDialog/TSaveDialog)
   @param GUID     GUID de type des fichiers correspondant à Filter
 *}
-procedure TUnitFilterList.Add(const Filter : string; const GUID : TGUID);
+procedure TUnitFilterList.Add(const Filter: string; const GUID: TGUID);
 begin
   AddData(Filter, GUID);
 end;
@@ -316,7 +317,7 @@ end;
   Supprime un filtre d'unité
   @param Filter   Filtre d'unité
 *}
-procedure TUnitFilterList.Remove(const Filter : string);
+procedure TUnitFilterList.Remove(const Filter: string);
 begin
   RemoveData(Filter);
 end;

@@ -52,11 +52,11 @@ type
   *}
   TGround = class(TField)
   private
-    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
+    procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; const AImgName : string = fGrass;
-      ADelegateDrawTo : TField = nil);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; const AImgName: string = fGrass;
+      ADelegateDrawTo: TField = nil);
   end;
 
   {*
@@ -67,12 +67,12 @@ type
   *}
   TWall = class(TField)
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ADelegateDrawTo : TField = nil);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; ADelegateDrawTo: TField = nil);
 
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); override;
   end;
 
   {*
@@ -84,23 +84,23 @@ type
   *}
   TWater = class(TField)
   private
-    FAlternatePainter : TPainter; /// Peintre alternatif
+    FAlternatePainter: TPainter; /// Peintre alternatif
 
-    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
+    procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   protected
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
 
-    property AlternatePainter : TPainter read FAlternatePainter;
+    property AlternatePainter: TPainter read FAlternatePainter;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ADelegateDrawTo : TField = nil);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; ADelegateDrawTo: TField = nil);
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); override;
   end;
 
   {*
@@ -112,14 +112,14 @@ type
   *}
   THole = class(TField)
   private
-    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
+    procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ADelegateDrawTo : TField = nil);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; ADelegateDrawTo: TField = nil);
 
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); override;
   end;
 
   {*
@@ -130,12 +130,12 @@ type
   *}
   TSky = class(TField)
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ADelegateDrawTo : TField = nil);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; ADelegateDrawTo: TField = nil);
 
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); override;
   end;
 
 implementation
@@ -152,9 +152,9 @@ implementation
   @param AImgName          Nom de l'image des graphismes (défaut : l'herbe)
   @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
-constructor TGround.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; const AImgName : string = fGrass;
-  ADelegateDrawTo : TField = nil);
+constructor TGround.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; const AImgName: string = fGrass;
+  ADelegateDrawTo: TField = nil);
 begin
   inherited Create(AMaster, AID, AName, ADelegateDrawTo);
   if AImgName <> '' then
@@ -167,12 +167,15 @@ end;
   également un TGround, et qu'il n'y ait d'obstacle d'aucun côté.
   @param Msg   Message
 *}
-procedure TGround.PlankMessage(var Msg : TPlankMessage);
+procedure TGround.PlankMessage(var Msg: TPlankMessage);
 begin
-  with Msg, Player do if Kind = pmkLeaveFrom then
+  with Msg, Player do
   begin
-    Result := (Map[Dest].Field is TGround) and
-      (Map[Src].Obstacle = nil) and (Map[Dest].Obstacle = nil);
+    if Kind = pmkLeaveFrom then
+    begin
+      Result := (Map[Dest].Field is TGround) and
+        (Map[Src].Obstacle = nil) and (Map[Dest].Obstacle = nil);
+    end;
   end;
 end;
 
@@ -187,8 +190,8 @@ end;
   @param AName             Nom du terrain
   @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
-constructor TWall.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ADelegateDrawTo : TField = nil);
+constructor TWall.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; ADelegateDrawTo: TField = nil);
 begin
   inherited Create(AMaster, AID, AName, ADelegateDrawTo);
   Painter.ImgNames.Add(fWall);
@@ -205,9 +208,9 @@ end;
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TWall.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel : boolean);
+procedure TWall.Entering(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel: Boolean);
 begin
   Cancel := True;
 end;
@@ -223,8 +226,8 @@ end;
   @param AName             Nom du terrain
   @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
-constructor TWater.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ADelegateDrawTo : TField = nil);
+constructor TWater.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; ADelegateDrawTo: TField = nil);
 begin
   inherited Create(AMaster, AID, AName, ADelegateDrawTo);
 
@@ -252,7 +255,7 @@ end;
   pas aller dans l'eau.
   @param Msg   Message
 *}
-procedure TWater.PlankMessage(var Msg : TPlankMessage);
+procedure TWater.PlankMessage(var Msg: TPlankMessage);
 begin
   if Msg.Kind = pmkPassOver then
     Msg.Result := not Msg.Player.AbleTo(actGoOnWater);
@@ -266,8 +269,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TWater.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TWater.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   if (Master.TickCount mod 2000) < 1000 then
     Painter.Draw(Canvas, X, Y)
@@ -297,13 +300,14 @@ end;
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TWater.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel : boolean);
+procedure TWater.Entering(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel: Boolean);
 begin
   with Player do
   begin
-    if DoAction(actGoOnWater) then exit;
+    if DoAction(actGoOnWater) then
+      Exit;
 
     if KeyPressed then
       ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
@@ -322,8 +326,8 @@ end;
   @param AName             Nom du terrain
   @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
-constructor THole.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ADelegateDrawTo : TField = nil);
+constructor THole.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; ADelegateDrawTo: TField = nil);
 begin
   inherited Create(AMaster, AID, AName, ADelegateDrawTo);
   Painter.ImgNames.Add(fHole);
@@ -334,7 +338,7 @@ end;
   THole permet toujours de passer au-dessus d'elle avec la planche.
   @param Msg   Message
 *}
-procedure THole.PlankMessage(var Msg : TPlankMessage);
+procedure THole.PlankMessage(var Msg: TPlankMessage);
 begin
   if Msg.Kind = pmkPassOver then
     Msg.Result := True;
@@ -351,9 +355,9 @@ end;
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure THole.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel : boolean);
+procedure THole.Entering(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel: Boolean);
 begin
   if KeyPressed then
     Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
@@ -371,8 +375,8 @@ end;
   @param AName             Nom du terrain
   @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
-constructor TSky.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ADelegateDrawTo : TField = nil);
+constructor TSky.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; ADelegateDrawTo: TField = nil);
 begin
   inherited Create(AMaster, AID, AName, ADelegateDrawTo);
   Painter.ImgNames.Add(fSky);
@@ -389,9 +393,9 @@ end;
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TSky.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel : boolean);
+procedure TSky.Entering(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel: Boolean);
 begin
   if KeyPressed then
     Player.ShowDialog(sBlindAlley, sCantGoOnSky, dtError);

@@ -85,8 +85,8 @@ type
     @version 5.0
   *}
   TQualifiedPos = record
-    Map : TMap;          /// Carte, ou nil pour une position nulle
-    Position : T3DPoint; /// Position sur la carte, si Map <> nil
+    Map: TMap;          /// Carte, ou nil pour une position nulle
+    Position: T3DPoint; /// Position sur la carte, si Map <> nil
   end;
 
   {*
@@ -97,15 +97,15 @@ type
     @return Résultat de la commande
     @throws EUnsupportedCommand : La commande demandée n'est pas supportée
   *}
-  TSendCommandEvent = function(Sender : TPlayer;
-    const Command : string; const Params : string = '') : string of object;
+  TSendCommandEvent = function(Sender: TPlayer;
+    const Command: string; const Params: string = ''): string of object;
 
   {*
     Type de méthode call-back pour l'enregistrement d'un unique composant
     @param Component   Le composant à enregistrer
   *}
   TRegisterSingleComponentProc = procedure(
-    Component : TScrewComponent) of object; stdcall;
+    Component: TScrewComponent) of object; stdcall;
 
   {*
     Type de méthode call-back pour l'enregistrement d'un ensemble de composants
@@ -114,9 +114,9 @@ type
     @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
     @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
   *}
-  TRegisterComponentSetProc = procedure(Template : TScrewComponent;
-    const Components : array of TScrewComponent; BaseIndex : integer;
-    const DialogTitle, DialogPrompt : string) of object; stdcall;
+  TRegisterComponentSetProc = procedure(Template: TScrewComponent;
+    const Components: array of TScrewComponent; BaseIndex: Integer;
+    const DialogTitle, DialogPrompt: string) of object; stdcall;
 
   {*
     Gère le chargement des images d'après leur nom
@@ -127,19 +127,19 @@ type
   *}
   TImagesMaster = class
   private
-    FImgList : TImageList; /// Liste d'images interne
-    FImgNames : TStrings;  /// Liste des noms des images
+    FImgList: TImageList; /// Liste d'images interne
+    FImgNames: TStrings;  /// Liste des noms des images
   public
     constructor Create;
     destructor Destroy; override;
 
-    function Add(const ImgName : string; Bitmap : TBitmap) : integer;
+    function Add(const ImgName: string; Bitmap: TBitmap): Integer;
 
-    function IndexOf(const ImgName : string) : integer;
-    procedure Draw(Index : integer; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); overload;
-    procedure Draw(const ImgName : string; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); overload;
+    function IndexOf(const ImgName: string): Integer;
+    procedure Draw(Index: Integer; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); overload;
+    procedure Draw(const ImgName: string; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); overload;
   end;
 
   {*
@@ -152,7 +152,7 @@ type
     constructor Create; override;
 
     procedure EmptyScrew;
-    procedure DrawScrew(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+    procedure DrawScrew(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
   end;
 
   {*
@@ -164,18 +164,18 @@ type
   *}
   TPainter = class
   private
-    FMaster : TImagesMaster;   /// Maître d'images
-    FImgNames : TStrings;      /// Liste des noms des images
-    FCachedImg : TScrewBitmap; /// Copie cache de l'image résultante
+    FMaster: TImagesMaster;   /// Maître d'images
+    FImgNames: TStrings;      /// Liste des noms des images
+    FCachedImg: TScrewBitmap; /// Copie cache de l'image résultante
 
-    procedure ImgNamesChange(Sender : TObject);
+    procedure ImgNamesChange(Sender: TObject);
   public
-    constructor Create(AMaster : TImagesMaster);
+    constructor Create(AMaster: TImagesMaster);
     destructor Destroy; override;
 
-    procedure Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+    procedure Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 
-    property ImgNames : TStrings read FImgNames;
+    property ImgNames: TStrings read FImgNames;
   end;
 
   {*
@@ -188,25 +188,25 @@ type
   *}
   TFunLabyComponent = class
   private
-    FMaster : TMaster;  /// Maître FunLabyrinthe
-    FID : TComponentID; /// ID du composant
+    FMaster: TMaster;  /// Maître FunLabyrinthe
+    FID: TComponentID; /// ID du composant
     {*
       Valeur non fonctionnelle pouvant servir au fonctionnement d'un algorithme
       Cette valeur est susceptible d'être utilisée par beaucoup d'algorithmes
       différents, et donc interférer. Il ne faut donc l'utiliser que
       ponctuellement.
     *}
-    FTag : integer;
+    FTag: Integer;
 
-    function GetSafeID : TComponentID;
+    function GetSafeID: TComponentID;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID);
+    constructor Create(AMaster: TMaster; const AID: TComponentID);
     destructor Destroy; override;
 
-    property Master : TMaster read FMaster;
-    property ID : TComponentID read FID;
-    property SafeID : TComponentID read GetSafeID;
-    property Tag : integer read FTag write FTag;
+    property Master: TMaster read FMaster;
+    property ID: TComponentID read FID;
+    property SafeID: TComponentID read GetSafeID;
+    property Tag: Integer read FTag write FTag;
   end;
 
   {*
@@ -218,30 +218,30 @@ type
   *}
   TVisualComponent = class(TFunLabyComponent)
   private
-    FName : string;            /// Nom du composant
-    FPainter : TPainter;       /// Peintre par défaut
-    FCachedImg : TScrewBitmap; /// Image en cache (pour les dessins invariants)
+    FName: string;            /// Nom du composant
+    FPainter: TPainter;       /// Peintre par défaut
+    FCachedImg: TScrewBitmap; /// Image en cache (pour les dessins invariants)
 
-    procedure PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); virtual;
+    procedure PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); virtual;
   protected
-    FStaticDraw : boolean; /// Indique si le dessin du composant est invariant
+    FStaticDraw: Boolean; /// Indique si le dessin du composant est invariant
 
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); virtual;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); virtual;
 
-    property Painter : TPainter read FPainter;
+    property Painter: TPainter read FPainter;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
-    procedure Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0);
+    procedure Draw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0);
 
-    property Name : string read FName;
-    property StaticDraw : boolean read FStaticDraw;
+    property Name: string read FName;
+    property StaticDraw: Boolean read FStaticDraw;
   end;
 
   {*
@@ -256,28 +256,28 @@ type
   *}
   TPlugin = class(TFunLabyComponent)
   private
-    FPainterBefore : TPainter; /// Peintre par défaut sous le joueur
-    FPainterAfter : TPainter;  /// Peintre par défaut sur le joueur
+    FPainterBefore: TPainter; /// Peintre par défaut sous le joueur
+    FPainterAfter: TPainter;  /// Peintre par défaut sur le joueur
   protected
-    property PainterBefore : TPainter read FPainterBefore;
-    property PainterAfter : TPainter read FPainterAfter;
+    property PainterBefore: TPainter read FPainterBefore;
+    property PainterAfter: TPainter read FPainterAfter;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID);
+    constructor Create(AMaster: TMaster; const AID: TComponentID);
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
-    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-      Canvas : TCanvas; X : integer = 0; Y : integer = 0); virtual;
-    procedure DrawAfter(Player : TPlayer; const QPos : TQualifiedPos;
-      Canvas : TCanvas; X : integer = 0; Y : integer = 0); virtual;
+    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); virtual;
+    procedure DrawAfter(Player: TPlayer; const QPos: TQualifiedPos;
+      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); virtual;
 
-    procedure Moving(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Dest : T3DPoint;
-      var Cancel : boolean); virtual;
-    procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); virtual;
+    procedure Moving(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Dest: T3DPoint;
+      var Cancel: Boolean); virtual;
+    procedure Moved(Player: TPlayer; const Src, Dest: T3DPoint); virtual;
 
-    function AbleTo(Player : TPlayer;
-      const Action : TPlayerAction) : boolean; virtual;
+    function AbleTo(Player: TPlayer;
+      const Action: TPlayerAction): Boolean; virtual;
   end;
 
   {*
@@ -290,17 +290,17 @@ type
   *}
   TObjectDef = class(TVisualComponent)
   protected
-    function GetCount(Player : TPlayer) : integer; virtual;
-    procedure SetCount(Player : TPlayer; Value : integer); virtual;
+    function GetCount(Player: TPlayer): Integer; virtual;
+    procedure SetCount(Player: TPlayer; Value: Integer); virtual;
 
-    function GetShownInfos(Player : TPlayer) : string; virtual;
+    function GetShownInfos(Player: TPlayer): string; virtual;
   public
-    function AbleTo(Player : TPlayer;
-      const Action : TPlayerAction) : boolean; virtual;
-    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); virtual;
+    function AbleTo(Player: TPlayer;
+      const Action: TPlayerAction): Boolean; virtual;
+    procedure UseFor(Player: TPlayer; const Action: TPlayerAction); virtual;
 
-    property Count[Player : TPlayer] : integer read GetCount write SetCount;
-    property ShownInfos[Player : TPlayer] : string read GetShownInfos;
+    property Count[Player: TPlayer]: Integer read GetCount write SetCount;
+    property ShownInfos[Player: TPlayer]: string read GetShownInfos;
   end;
 
   {*
@@ -320,23 +320,23 @@ type
   *}
   TField = class(TScrewComponent)
   private
-    FDelegateDrawTo : TField; /// Terrain délégué pour l'affichage
+    FDelegateDrawTo: TField; /// Terrain délégué pour l'affichage
 
-    procedure PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ADelegateDrawTo : TField = nil);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; ADelegateDrawTo: TField = nil);
 
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); virtual;
-    procedure Exiting(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Pos, Dest : T3DPoint;
-      var Cancel : boolean); virtual;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); virtual;
+    procedure Exiting(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Pos, Dest: T3DPoint;
+      var Cancel: Boolean); virtual;
 
-    procedure Entered(Player : TPlayer; const Src, Pos : T3DPoint); virtual;
-    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); virtual;
+    procedure Entered(Player: TPlayer; const Src, Pos: T3DPoint); virtual;
+    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); virtual;
   end;
 
   {*
@@ -348,11 +348,11 @@ type
   *}
   TEffect = class(TScrewComponent)
   public
-    procedure Entered(Player : TPlayer; const Src, Pos : T3DPoint); virtual;
-    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); virtual;
+    procedure Entered(Player: TPlayer; const Src, Pos: T3DPoint); virtual;
+    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); virtual;
 
-    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
-      var GoOnMoving : boolean); virtual;
+    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
+      var GoOnMoving: Boolean); virtual;
   end;
 
   {*
@@ -364,7 +364,7 @@ type
   *}
   TTool = class(TScrewComponent)
   public
-    procedure Find(Player : TPlayer; const Pos : T3DPoint); virtual;
+    procedure Find(Player: TPlayer; const Pos: T3DPoint); virtual;
   end;
 
   {*
@@ -376,9 +376,9 @@ type
   *}
   TObstacle = class(TScrewComponent)
   public
-    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortExecute : boolean); virtual;
+    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel, AbortExecute: Boolean); virtual;
   end;
 
   {*
@@ -391,49 +391,49 @@ type
   *}
   TScrew = class(TScrewComponent)
   private
-    FField : TField;       /// Terrain
-    FEffect : TEffect;     /// Effet
-    FTool : TTool;         /// Outil
-    FObstacle : TObstacle; /// Obstacle
+    FField: TField;       /// Terrain
+    FEffect: TEffect;     /// Effet
+    FTool: TTool;         /// Outil
+    FObstacle: TObstacle; /// Obstacle
   protected
-    FRefCount : integer; /// Compteur de références
+    FRefCount: Integer; /// Compteur de références
 
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; AField : TField; AEffect : TEffect; ATool : TTool;
-      AObstacle : TObstacle);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; AField: TField; AEffect: TEffect; ATool: TTool;
+      AObstacle: TObstacle);
     procedure BeforeDestruction; override;
 
     procedure DefaultHandler(var Msg); override;
 
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); virtual;
-    procedure Exiting(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Pos, Dest : T3DPoint;
-      var Cancel : boolean); virtual;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); virtual;
+    procedure Exiting(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Pos, Dest: T3DPoint;
+      var Cancel: Boolean); virtual;
 
-    procedure Entered(Player : TPlayer; const Src, Pos : T3DPoint); virtual;
-    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); virtual;
+    procedure Entered(Player: TPlayer; const Src, Pos: T3DPoint); virtual;
+    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); virtual;
 
-    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
-      var GoOnMoving : boolean); virtual;
+    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
+      var GoOnMoving: Boolean); virtual;
 
-    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortExecute : boolean); virtual;
+    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel, AbortExecute: Boolean); virtual;
 
-    function AddRef : integer; virtual;
-    function Release : integer; virtual;
+    function AddRef: Integer; virtual;
+    function Release: Integer; virtual;
 
-    property Field : TField read FField;
-    property Effect : TEffect read FEffect;
-    property Tool : TTool read FTool;
-    property Obstacle : TObstacle read FObstacle;
+    property Field: TField read FField;
+    property Effect: TEffect read FEffect;
+    property Tool: TTool read FTool;
+    property Obstacle: TObstacle read FObstacle;
 
-    property RefCount : integer read FRefCount;
+    property RefCount: Integer read FRefCount;
   end;
 
   {*
@@ -445,45 +445,45 @@ type
   *}
   TMap = class(TFunLabyComponent)
   private
-    FDimensions : T3DPoint;   /// Dimensions de la carte (en cases)
-    FZoneWidth : integer;     /// Largeur d'une zone de la carte
-    FZoneHeight : integer;    /// Hauteur d'une zone de la carte
-    FMaxViewSize : integer;   /// Taille maximale d'une vue pour cette carte
-    FMap : array of TScrew;   /// Carte stockée de façon linéaire
-    FOutsideOffset : integer; /// Offset de départ de l'extérieur
+    FDimensions: T3DPoint;   /// Dimensions de la carte (en cases)
+    FZoneWidth: Integer;     /// Largeur d'une zone de la carte
+    FZoneHeight: Integer;    /// Hauteur d'une zone de la carte
+    FMaxViewSize: Integer;   /// Taille maximale d'une vue pour cette carte
+    FMap: array of TScrew;   /// Carte stockée de façon linéaire
+    FOutsideOffset: Integer; /// Offset de départ de l'extérieur
 
-    procedure SetMaxViewSize(Value : integer);
+    procedure SetMaxViewSize(Value: Integer);
 
-    function GetMap(const Position : T3DPoint) : TScrew;
-    procedure SetMap(const Position : T3DPoint; Value : TScrew);
+    function GetMap(const Position: T3DPoint): TScrew;
+    procedure SetMap(const Position: T3DPoint; Value: TScrew);
 
-    function GetOutside(Floor : integer) : TScrew;
-    procedure SetOutside(Floor : integer; Value : TScrew);
+    function GetOutside(Floor: Integer): TScrew;
+    procedure SetOutside(Floor: Integer; Value: TScrew);
 
-    function GetLinearMapCount : integer;
-    function GetLinearMap(Index : integer) : TScrew;
-    procedure SetLinearMap(Index : integer; Value : TScrew);
+    function GetLinearMapCount: Integer;
+    function GetLinearMap(Index: Integer): TScrew;
+    procedure SetLinearMap(Index: Integer; Value: TScrew);
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      ADimensions : T3DPoint; AZoneWidth, AZoneHeight : integer);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer);
 
-    function InMap(const Position : T3DPoint) : boolean;
+    function InMap(const Position: T3DPoint): Boolean;
 
-    function PlayersOn(const Position : T3DPoint) : integer;
+    function PlayersOn(const Position: T3DPoint): Integer;
 
-    property Dimensions : T3DPoint read FDimensions;
-    property ZoneWidth : integer read FZoneWidth;
-    property ZoneHeight : integer read FZoneHeight;
-    property MaxViewSize : integer read FMaxViewSize write SetMaxViewSize;
+    property Dimensions: T3DPoint read FDimensions;
+    property ZoneWidth: Integer read FZoneWidth;
+    property ZoneHeight: Integer read FZoneHeight;
+    property MaxViewSize: Integer read FMaxViewSize write SetMaxViewSize;
 
-    property Map[const Position : T3DPoint] : TScrew
+    property Map[const Position: T3DPoint]: TScrew
       read GetMap write SetMap; default;
 
-    property Outside[Floor : integer] : TScrew
+    property Outside[Floor: Integer]: TScrew
       read GetOutside write SetOutside;
 
-    property LinearMapCount : integer read GetLinearMapCount;
-    property LinearMap[index : integer] : TScrew
+    property LinearMapCount: Integer read GetLinearMapCount;
+    property LinearMap[Index: Integer]: TScrew
       read GetLinearMap write SetLinearMap;
   end;
 
@@ -497,93 +497,92 @@ type
   *}
   TPlayer = class(TVisualComponent)
   private
-    FMap : TMap;                        /// Carte
-    FPosition : T3DPoint;               /// Position
-    FDirection : TDirection;            /// Direction
-    FShowCounter : integer;             /// Compteur de visibilité
-    FColor : TColor;                    /// Couleur
-    FPlugins : TObjectList;             /// Liste des plug-in
-    FAttributes : TStrings;             /// Liste des attributs
-    FOnSendCommand : TSendCommandEvent; /// Événement d'exécution de commande
-    FPlayState : TPlayState;            /// État de victoire/défaite
+    FMap: TMap;                        /// Carte
+    FPosition: T3DPoint;               /// Position
+    FDirection: TDirection;            /// Direction
+    FShowCounter: Integer;             /// Compteur de visibilité
+    FColor: TColor;                    /// Couleur
+    FPlugins: TObjectList;             /// Liste des plug-in
+    FAttributes: TStrings;             /// Liste des attributs
+    FOnSendCommand: TSendCommandEvent; /// Événement d'exécution de commande
+    FPlayState: TPlayState;            /// État de victoire/défaite
 
-    procedure PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
 
-    function GetVisible : boolean;
+    function GetVisible: Boolean;
 
-    function GetPluginCount : integer;
-    function GetPlugins(Index : integer) : TPlugin;
+    function GetPluginCount: Integer;
+    function GetPlugins(Index: Integer): TPlugin;
 
-    property PluginCount : integer read GetPluginCount;
-    property Plugins[index : integer] : TPlugin read GetPlugins;
+    property PluginCount: Integer read GetPluginCount;
+    property Plugins[Index: Integer]: TPlugin read GetPlugins;
   protected
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
 
-    function GetAttribute(const AttrName : string) : integer; virtual;
-    procedure SetAttribute(const AttrName : string; Value : integer); virtual;
+    function GetAttribute(const AttrName: string): Integer; virtual;
+    procedure SetAttribute(const AttrName: string; Value: Integer); virtual;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; AMap : TMap; const APosition : T3DPoint);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; AMap: TMap; const APosition: T3DPoint);
     destructor Destroy; override;
 
-    procedure GetAttributes(Attributes : TStrings); virtual;
-    procedure GetPluginIDs(PluginIDs : TStrings);
+    procedure GetAttributes(Attributes: TStrings); virtual;
+    procedure GetPluginIDs(PluginIDs: TStrings);
 
-    procedure DrawInPlace(Canvas : TCanvas; X : integer = 0;
-      Y : integer = 0);
+    procedure DrawInPlace(Canvas: TCanvas; X: Integer = 0;
+      Y: Integer = 0);
 
-    procedure AddPlugin(Plugin : TPlugin);
-    procedure RemovePlugin(Plugin : TPlugin);
+    procedure AddPlugin(Plugin: TPlugin);
+    procedure RemovePlugin(Plugin: TPlugin);
 
-    function AbleTo(const Action : TPlayerAction) : boolean;
-    function DoAction(const Action : TPlayerAction) : boolean;
+    function AbleTo(const Action: TPlayerAction): Boolean;
+    function DoAction(const Action: TPlayerAction): Boolean;
 
-    procedure Move(Dir : TDirection; KeyPressed : boolean;
-      out Redo : boolean);
+    procedure Move(Dir: TDirection; KeyPressed: Boolean;
+      out Redo: Boolean);
 
-    procedure MoveTo(const Dest : T3DPoint; Execute : boolean;
-      out Redo : boolean); overload;
-    procedure MoveTo(const Dest : T3DPoint); overload;
-    procedure MoveTo(const Dest : TQualifiedPos; Execute : boolean;
-      out Redo : boolean); overload;
-    procedure MoveTo(const Dest : TQualifiedPos); overload;
+    procedure MoveTo(const Dest: T3DPoint; Execute: Boolean;
+      out Redo: Boolean); overload;
+    procedure MoveTo(const Dest: T3DPoint); overload;
+    procedure MoveTo(const Dest: TQualifiedPos; Execute: Boolean;
+      out Redo: Boolean); overload;
+    procedure MoveTo(const Dest: TQualifiedPos); overload;
 
     procedure NaturalMoving;
 
-    procedure ChangePosition(AMap : TMap; const APosition : T3DPoint);
+    procedure ChangePosition(AMap: TMap; const APosition: T3DPoint);
 
     procedure Show;
     procedure Hide;
 
-    function SendCommand(const Command : string;
-      const Params : string = '') : string;
+    function SendCommand(const Command: string;
+      const Params: string = ''): string;
 
-    function ShowDialog(const Title, Text : string;
-      DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
-      DefButton : Byte = 1;
-      AddFlags : LongWord = 0) : TDialogResult;
-    function ShowDialogRadio(const Title, Text : string; DlgType : TMsgDlgType;
-      DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
-      const RadioTitles : array of string; var Selected : integer;
-      OverButtons : boolean = False) : Word;
-    function ChooseNumber(const Title, Prompt : string;
-      Default, Min, Max : integer) : integer;
+    function ShowDialog(const Title, Text: string;
+      DlgType: TDialogType = dtInformation; DlgButtons: TDialogButtons = dbOK;
+      DefButton: Byte = 1; AddFlags: LongWord = 0): TDialogResult;
+    function ShowDialogRadio(const Title, Text: string; DlgType: TMsgDlgType;
+      DlgButtons: TMsgDlgButtons; DefButton: TModalResult;
+      const RadioTitles: array of string; var Selected: Integer;
+      OverButtons: Boolean = False): Word;
+    function ChooseNumber(const Title, Prompt: string;
+      Default, Min, Max: Integer): Integer;
 
     procedure Win;
     procedure Lose;
 
-    property Map : TMap read FMap;
-    property Position : T3DPoint read FPosition;
-    property Direction : TDirection read FDirection write FDirection;
-    property Visible : boolean read GetVisible;
-    property Color : TColor read FColor write FColor;
-    property Attribute[const AttrName : string] : integer
+    property Map: TMap read FMap;
+    property Position: T3DPoint read FPosition;
+    property Direction: TDirection read FDirection write FDirection;
+    property Visible: Boolean read GetVisible;
+    property Color: TColor read FColor write FColor;
+    property Attribute[const AttrName: string]: Integer
       read GetAttribute write SetAttribute;
-    property OnSendCommand : TSendCommandEvent
+    property OnSendCommand: TSendCommandEvent
       read FOnSendCommand write FOnSendCommand;
-    property PlayState : TPlayState read FPlayState;
+    property PlayState: TPlayState read FPlayState;
   end;
 
   {*
@@ -594,111 +593,111 @@ type
   *}
   TMaster = class
   private
-    FImagesMaster : TImagesMaster; /// Maître d'images
-    FComponents : TStrings;        /// Table de hashage ID -> composant
-    FPlugins : TObjectList;        /// Liste des plug-in
-    FObjectDefs : TObjectList;     /// Liste des définitions d'objet
-    FFields : TObjectList;         /// Liste des terrains
-    FEffects : TObjectList;        /// Liste des effets
-    FTools : TObjectList;          /// Liste des outils
-    FObstacles : TObjectList;      /// Liste des obstacles
-    FScrews : TObjectList;         /// Liste des cases
-    FMaps : TObjectList;           /// Liste des cartes
-    FPlayers : TObjectList;        /// Liste des joueurs
+    FImagesMaster: TImagesMaster; /// Maître d'images
+    FComponents: TStrings;        /// Table de hashage ID -> composant
+    FPlugins: TObjectList;        /// Liste des plug-in
+    FObjectDefs: TObjectList;     /// Liste des définitions d'objet
+    FFields: TObjectList;         /// Liste des terrains
+    FEffects: TObjectList;        /// Liste des effets
+    FTools: TObjectList;          /// Liste des outils
+    FObstacles: TObjectList;      /// Liste des obstacles
+    FScrews: TObjectList;         /// Liste des cases
+    FMaps: TObjectList;           /// Liste des cartes
+    FPlayers: TObjectList;        /// Liste des joueurs
 
-    FEditing : boolean;            /// Indique si on est en mode édition
-    FTemporization : integer;      /// Temporisation en millisecondes
-    FBeginTickCount : Cardinal;    /// Tick count système au lancement
-    FTickCount : Cardinal;         /// Tick count de la partie
-    FTerminated : boolean;         /// Indique si la partie est terminée
+    FEditing: Boolean;            /// Indique si on est en mode édition
+    FTemporization: Integer;      /// Temporisation en millisecondes
+    FBeginTickCount: Cardinal;    /// Tick count système au lancement
+    FTickCount: Cardinal;         /// Tick count de la partie
+    FTerminated: Boolean;         /// Indique si la partie est terminée
 
-    function GetComponent(const ID : TComponentID) : TFunLabyComponent;
-    function GetScrewComponent(const ID : TComponentID) : TScrewComponent;
+    function GetComponent(const ID: TComponentID): TFunLabyComponent;
+    function GetScrewComponent(const ID: TComponentID): TScrewComponent;
 
-    function GetPlugin   (const ID : TComponentID) : TPlugin;
-    function GetObjectDef(const ID : TComponentID) : TObjectDef;
-    function GetField    (const ID : TComponentID) : TField;
-    function GetEffect   (const ID : TComponentID) : TEffect;
-    function GetTool     (const ID : TComponentID) : TTool;
-    function GetObstacle (const ID : TComponentID) : TObstacle;
-    function GetScrew    (const ID : TComponentID) : TScrew;
-    function GetMap      (const ID : TComponentID) : TMap;
-    function GetPlayer   (const ID : TComponentID) : TPlayer;
+    function GetPlugin(const ID: TComponentID): TPlugin;
+    function GetObjectDef(const ID: TComponentID): TObjectDef;
+    function GetField(const ID: TComponentID): TField;
+    function GetEffect(const ID: TComponentID): TEffect;
+    function GetTool(const ID: TComponentID): TTool;
+    function GetObstacle(const ID: TComponentID): TObstacle;
+    function GetScrew(const ID: TComponentID): TScrew;
+    function GetMap(const ID: TComponentID): TMap;
+    function GetPlayer(const ID: TComponentID): TPlayer;
 
-    function GetPluginCount : integer;
-    function GetPlugins(Index : integer) : TPlugin;
-    function GetObjectDefCount : integer;
-    function GetObjectDefs(Index : integer) : TObjectDef;
-    function GetFieldCount : integer;
-    function GetFields(Index : integer) : TField;
-    function GetEffectCount : integer;
-    function GetEffects(Index : integer) : TEffect;
-    function GetToolCount : integer;
-    function GetTools(Index : integer) : TTool;
-    function GetObstacleCount : integer;
-    function GetObstacles(Index : integer) : TObstacle;
-    function GetScrewCount : integer;
-    function GetScrews(Index : integer) : TScrew;
-    function GetMapCount : integer;
-    function GetMaps(Index : integer) : TMap;
-    function GetPlayerCount : integer;
-    function GetPlayers(Index : integer) : TPlayer;
+    function GetPluginCount: Integer;
+    function GetPlugins(Index: Integer): TPlugin;
+    function GetObjectDefCount: Integer;
+    function GetObjectDefs(Index: Integer): TObjectDef;
+    function GetFieldCount: Integer;
+    function GetFields(Index: Integer): TField;
+    function GetEffectCount: Integer;
+    function GetEffects(Index: Integer): TEffect;
+    function GetToolCount: Integer;
+    function GetTools(Index: Integer): TTool;
+    function GetObstacleCount: Integer;
+    function GetObstacles(Index: Integer): TObstacle;
+    function GetScrewCount: Integer;
+    function GetScrews(Index: Integer): TScrew;
+    function GetMapCount: Integer;
+    function GetMaps(Index: Integer): TMap;
+    function GetPlayerCount: Integer;
+    function GetPlayers(Index: Integer): TPlayer;
 
-    procedure SetTemporization(Value : integer);
+    procedure SetTemporization(Value: Integer);
 
-    procedure AddComponent(Component : TFunLabyComponent);
-    procedure RemoveComponent(Component : TFunLabyComponent);
+    procedure AddComponent(Component: TFunLabyComponent);
+    procedure RemoveComponent(Component: TFunLabyComponent);
 
     procedure Terminate;
   public
-    constructor Create(AEditing : boolean);
+    constructor Create(AEditing: Boolean);
     destructor Destroy; override;
 
     procedure Temporize;
     procedure UpdateTickCount;
 
     function ScrewByComps(
-      const Field, Effect, Tool, Obstacle : TComponentID) : TScrew;
+      const Field, Effect, Tool, Obstacle: TComponentID): TScrew;
 
-    property ImagesMaster : TImagesMaster read FImagesMaster;
+    property ImagesMaster: TImagesMaster read FImagesMaster;
 
-    property Component[const ID : TComponentID] : TFunLabyComponent
+    property Component[const ID: TComponentID]: TFunLabyComponent
       read GetComponent;
-    property ScrewComponent[const ID : TComponentID] : TScrewComponent
+    property ScrewComponent[const ID: TComponentID]: TScrewComponent
       read GetScrewComponent;
-    property Plugin   [const ID : TComponentID] : TPlugin    read GetPlugin;
-    property ObjectDef[const ID : TComponentID] : TObjectDef read GetObjectDef;
-    property Field    [const ID : TComponentID] : TField     read GetField;
-    property Effect   [const ID : TComponentID] : TEffect    read GetEffect;
-    property Tool     [const ID : TComponentID] : TTool      read GetTool;
-    property Obstacle [const ID : TComponentID] : TObstacle  read GetObstacle;
-    property Screw    [const ID : TComponentID] : TScrew     read GetScrew;
-    property Map      [const ID : TComponentID] : TMap       read GetMap;
-    property Player   [const ID : TComponentID] : TPlayer    read GetPlayer;
+    property Plugin[const ID: TComponentID]: TPlugin read GetPlugin;
+    property ObjectDef[const ID: TComponentID]: TObjectDef read GetObjectDef;
+    property Field[const ID: TComponentID]: TField read GetField;
+    property Effect[const ID: TComponentID]: TEffect read GetEffect;
+    property Tool[const ID: TComponentID]: TTool read GetTool;
+    property Obstacle[const ID: TComponentID]: TObstacle read GetObstacle;
+    property Screw[const ID: TComponentID]: TScrew read GetScrew;
+    property Map[const ID: TComponentID]: TMap read GetMap;
+    property Player[const ID: TComponentID]: TPlayer read GetPlayer;
 
-    property PluginCount : integer read GetPluginCount;
-    property Plugins[index : integer] : TPlugin read GetPlugins;
-    property ObjectDefCount : integer read GetObjectDefCount;
-    property ObjectDefs[index : integer] : TObjectDef read GetObjectDefs;
-    property FieldCount : integer read GetFieldCount;
-    property Fields[index : integer] : TField read GetFields;
-    property EffectCount : integer read GetEffectCount;
-    property Effects[index : integer] : TEffect read GetEffects;
-    property ToolCount : integer read GetToolCount;
-    property Tools[index : integer] : TTool read GetTools;
-    property ObstacleCount : integer read GetObstacleCount;
-    property Obstacles[index : integer] : TObstacle read GetObstacles;
-    property ScrewCount : integer read GetScrewCount;
-    property Screws[index : integer] : TScrew read GetScrews;
-    property MapCount : integer read GetMapCount;
-    property Maps[index : integer] : TMap read GetMaps;
-    property PlayerCount : integer read GetPlayerCount;
-    property Players[index : integer] : TPlayer read GetPlayers;
+    property PluginCount: Integer read GetPluginCount;
+    property Plugins[Index: Integer]: TPlugin read GetPlugins;
+    property ObjectDefCount: Integer read GetObjectDefCount;
+    property ObjectDefs[Index: Integer]: TObjectDef read GetObjectDefs;
+    property FieldCount: Integer read GetFieldCount;
+    property Fields[Index: Integer]: TField read GetFields;
+    property EffectCount: Integer read GetEffectCount;
+    property Effects[Index: Integer]: TEffect read GetEffects;
+    property ToolCount: Integer read GetToolCount;
+    property Tools[Index: Integer]: TTool read GetTools;
+    property ObstacleCount: Integer read GetObstacleCount;
+    property Obstacles[Index: Integer]: TObstacle read GetObstacles;
+    property ScrewCount: Integer read GetScrewCount;
+    property Screws[Index: Integer]: TScrew read GetScrews;
+    property MapCount: Integer read GetMapCount;
+    property Maps[Index: Integer]: TMap read GetMaps;
+    property PlayerCount: Integer read GetPlayerCount;
+    property Players[Index: Integer]: TPlayer read GetPlayers;
 
-    property Editing : boolean read FEditing;
-    property Temporization : integer read FTemporization write SetTemporization;
-    property TickCount : Cardinal read FTickCount;
-    property Terminated : boolean read FTerminated;
+    property Editing: Boolean read FEditing;
+    property Temporization: Integer read FTemporization write SetTemporization;
+    property TickCount: Cardinal read FTickCount;
+    property Terminated: Boolean read FTerminated;
   end;
 
 const {don't localize}
@@ -706,7 +705,7 @@ const {don't localize}
   fIniFileName = 'FunLabyrinthe.ini';
 
   /// Position qualifiée nulle
-  NoQPos : TQualifiedPos = (Map : nil; Position : (X : 0; Y : 0; Z : 0));
+  NoQPos: TQualifiedPos = (Map: nil; Position: (X: 0; Y: 0; Z: 0));
 
   /// Temporisation par défaut
   DefaultTemporization = 500;
@@ -715,40 +714,40 @@ const {don't localize}
   DefaultPlayerColor = clBlue;
 
   /// Application d'une direction vers la direction opposée
-  NegDir : array[TDirection] of TDirection = (
+  NegDir: array[TDirection] of TDirection = (
     diNone, diSouth, diWest, diNorth, diEast
   );
 
 var {don't localize}
   /// Dossier de FunLabyrinthe dans Application Data
-  fFunLabyAppData : string = '';
+  fFunLabyAppData: string = '';
   /// Dossier des fichiers image
-  fScrewsDir : string = 'Screws\';
+  fScrewsDir: string = 'Screws\';
   /// Dossier des fichiers son
-  fSoundsDir : string = 'Sounds\';
+  fSoundsDir: string = 'Sounds\';
   /// Dossier des unités
-  fUnitsDir : string = 'Units\';
+  fUnitsDir: string = 'Units\';
   /// Dossier des cartes
-  fMapsDir : string = 'Maps\';
+  fMapsDir: string = 'Maps\';
   /// Dossier des fichiers labyrinthe
-  fLabyrinthsDir : string = 'Labyrinths\';
+  fLabyrinthsDir: string = 'Labyrinths\';
   /// Dossier des fichiers sauvegarde
-  fSaveguardsDir : string = 'Saveguards\';
+  fSaveguardsDir: string = 'Saveguards\';
   /// Dossier des plug-in de l'éditeur
-  fEditPluginDir : string = 'EditPlugins\';
+  fEditPluginDir: string = 'EditPlugins\';
 
   /// Chaîne de format pour les fichiers image
-  fScrewFileName : string = '%s.bmp';
+  fScrewFileName: string = '%s.bmp';
 
-function CheckValidLaunch : boolean;
+function CheckValidLaunch: Boolean;
 procedure ShowFunLabyAbout;
 
-function PointBehind(const Src : T3DPoint; Dir : TDirection) : T3DPoint;
-function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
-procedure EmptyRect(Canvas : TCanvas; Rect : TRect);
-procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+function PointBehind(const Src: T3DPoint; Dir: TDirection): T3DPoint;
+function ScrewRect(X: Integer = 0; Y: Integer = 0): TRect;
+procedure EmptyRect(Canvas: TCanvas; Rect: TRect);
+procedure EmptyScrewRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 
-function IsNoQPos(const QPos : TQualifiedPos) : boolean;
+function IsNoQPos(const QPos: TQualifiedPos): Boolean;
 
 implementation
 
@@ -762,14 +761,14 @@ uses
   packages Delphi et autres ressources non partageables.
   @return True si FunLabyrinthe a été lancé de façon valide, False sinon
 *}
-function CheckValidLaunch : boolean;
+function CheckValidLaunch: Boolean;
 begin
   if (Dir[1] = PathDelim) and (Dir[2] = PathDelim) then
   begin
     ShowDialog(sError, sCantLaunchThroughNetwork, dtError);
     Result := False;
   end else
-  Result := True;
+    Result := True;
 end;
 
 {*
@@ -800,14 +799,14 @@ end;
   @param Dir   Direction dans laquelle on va
   @return Le point situé derrière le point Src dans la direction Dir
 *}
-function PointBehind(const Src : T3DPoint; Dir : TDirection) : T3DPoint;
+function PointBehind(const Src: T3DPoint; Dir: TDirection): T3DPoint;
 begin
   Result := Src;
   case Dir of
-    diNorth : dec(Result.Y);
-    diEast  : inc(Result.X);
-    diSouth : inc(Result.Y);
-    diWest  : dec(Result.X);
+    diNorth: Dec(Result.Y);
+    diEast:  Inc(Result.X);
+    diSouth: Inc(Result.Y);
+    diWest:  Dec(Result.X);
   end;
 end;
 
@@ -817,7 +816,7 @@ end;
   @param Y   Bord supérieur du rectangle
   @return Le rectangle de type TRect
 *}
-function ScrewRect(X : integer = 0; Y : integer = 0) : TRect;
+function ScrewRect(X: Integer = 0; Y: Integer = 0): TRect;
 begin
   Result.Left := X;
   Result.Top := Y;
@@ -830,7 +829,7 @@ end;
   @param Canvas   Canevas à traiter
   @param Rect     Rectangle à effacer
 *}
-procedure EmptyRect(Canvas : TCanvas; Rect : TRect);
+procedure EmptyRect(Canvas: TCanvas; Rect: TRect);
 begin
   with Canvas do
   begin
@@ -848,7 +847,7 @@ end;
   @param X        Bord gauche du rectangle
   @param Y        Bord supérieur du rectangle
 *}
-procedure EmptyScrewRect(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure EmptyScrewRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   EmptyRect(Canvas, ScrewRect(X, Y));
 end;
@@ -858,7 +857,7 @@ end;
   @param QPos   Position à tester
   @return True si la position qualifiée QPos est nulle, False sinon
 *}
-function IsNoQPos(const QPos : TQualifiedPos) : boolean;
+function IsNoQPos(const QPos: TQualifiedPos): Boolean;
 begin
   Result := QPos.Map = nil;
 end;
@@ -871,7 +870,8 @@ end;
   Crée une instance de TImagesMaster
 *}
 constructor TImagesMaster.Create;
-var EmptyScrew : TBitmap;
+var
+  EmptyScrew: TBitmap;
 begin
   inherited Create;
   FImgList := TImageList.CreateSize(ScrewSize, ScrewSize);
@@ -903,7 +903,7 @@ end;
   @param Bitmap    Bitmap contenant l'image à ajouter
   @return Index de l'image nouvellement ajoutée, ou existante
 *}
-function TImagesMaster.Add(const ImgName : string; Bitmap : TBitmap) : integer;
+function TImagesMaster.Add(const ImgName: string; Bitmap: TBitmap): Integer;
 begin
   Result := FImgNames.IndexOf(ImgName);
   if Result < 0 then
@@ -929,8 +929,9 @@ end;
   @param ImgName   Nom de l'image
   @return Index de l'image
 *}
-function TImagesMaster.IndexOf(const ImgName : string) : integer;
-var NewImg : TBitmap;
+function TImagesMaster.IndexOf(const ImgName: string): Integer;
+var
+  NewImg: TBitmap;
 begin
   Result := FImgNames.IndexOf(ImgName);
   if Result < 0 then
@@ -957,8 +958,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner l'image
   @param Y        Coordonnée Y du point à partir duquel dessiner l'image
 *}
-procedure TImagesMaster.Draw(Index : integer; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TImagesMaster.Draw(Index: Integer; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   FImgList.Draw(Canvas, X, Y, Index);
 end;
@@ -971,8 +972,8 @@ end;
   @param X         Coordonnée X du point à partir duquel dessiner l'image
   @param Y         Coordonnée Y du point à partir duquel dessiner l'image
 *}
-procedure TImagesMaster.Draw(const ImgName : string; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TImagesMaster.Draw(const ImgName: string; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   Draw(IndexOf(ImgName), Canvas, X, Y);
 end;
@@ -1007,9 +1008,10 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner l'image
   @param Y        Coordonnée Y du point à partir duquel dessiner l'image
 *}
-procedure TScrewBitmap.DrawScrew(Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
-var OldBrushStyle : TBrushStyle;
+procedure TScrewBitmap.DrawScrew(Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
+var
+  OldBrushStyle: TBrushStyle;
 begin
   OldBrushStyle := Canvas.Brush.Style;
   Canvas.Brush.Style := bsClear;
@@ -1025,7 +1027,7 @@ end;
   Crée une instance de TPainter
   @param AMaster   Maître d'images associé au peintre
 *}
-constructor TPainter.Create(AMaster : TImagesMaster);
+constructor TPainter.Create(AMaster: TImagesMaster);
 begin
   inherited Create;
 
@@ -1052,8 +1054,9 @@ end;
   Elle actualise l'image cache.
   @param Sender   Objet lançant l'événement
 *}
-procedure TPainter.ImgNamesChange(Sender : TObject);
-var I : integer;
+procedure TPainter.ImgNamesChange(Sender: TObject);
+var
+  I: Integer;
 begin
   FCachedImg.EmptyScrew;
   for I := 0 to FImgNames.Count-1 do
@@ -1069,7 +1072,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TPainter.Draw(Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TPainter.Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   FCachedImg.DrawScrew(Canvas, X, Y);
 end;
@@ -1083,8 +1086,8 @@ end;
   @param AMaster   Maître FunLabyrinthe
   @param AID       ID du composant
 *}
-constructor TFunLabyComponent.Create(AMaster : TMaster;
-  const AID : TComponentID);
+constructor TFunLabyComponent.Create(AMaster: TMaster;
+  const AID: TComponentID);
 begin
   inherited Create;
   FMaster := AMaster;
@@ -1109,9 +1112,12 @@ end;
   nil.
   @return ID du composant s'il existe, un ID vide sinon
 *}
-function TFunLabyComponent.GetSafeID : TComponentID;
+function TFunLabyComponent.GetSafeID: TComponentID;
 begin
-  if Assigned(Self) then Result := FID else Result := '';
+  if Assigned(Self) then
+    Result := FID
+  else
+    Result := '';
 end;
 
 {-------------------------}
@@ -1124,8 +1130,8 @@ end;
   @param AID       ID du composant
   @param AName     Nom du composant
 *}
-constructor TVisualComponent.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TVisualComponent.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID);
 
@@ -1171,8 +1177,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le composant
   @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TVisualComponent.PrivDraw(const QPos : TQualifiedPos;
-  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TVisualComponent.PrivDraw(const QPos: TQualifiedPos;
+  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   DoDraw(QPos, Canvas, X, Y);
 end;
@@ -1185,8 +1191,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le composant
   @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TVisualComponent.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TVisualComponent.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   FPainter.Draw(Canvas, X, Y);
 end;
@@ -1199,8 +1205,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le composant
   @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TVisualComponent.Draw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TVisualComponent.Draw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   if StaticDraw then
     FCachedImg.DrawScrew(Canvas, X, Y)
@@ -1217,7 +1223,7 @@ end;
   @param AMaster   Maître FunLabyrinthe
   @param AID       ID du plug-in
 *}
-constructor TPlugin.Create(AMaster : TMaster; const AID : TComponentID);
+constructor TPlugin.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited Create(AMaster, AID);
   FPainterBefore := TPainter.Create(FMaster.ImagesMaster);
@@ -1258,8 +1264,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   FPainterBefore.Draw(Canvas, X, Y);
 end;
@@ -1274,8 +1280,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TPlugin.DrawAfter(Player : TPlayer; const QPos : TQualifiedPos;
-  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TPlugin.DrawAfter(Player: TPlayer; const QPos: TQualifiedPos;
+  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   FPainterAfter.Draw(Canvas, X, Y);
 end;
@@ -1291,8 +1297,8 @@ end;
   @param Dest           Case d'arrivée
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Dest : T3DPoint; var Cancel : boolean);
+procedure TPlugin.Moving(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Dest: T3DPoint; var Cancel: Boolean);
 begin
 end;
 
@@ -1303,7 +1309,7 @@ end;
   @param Src      Case de départ
   @param Dest     Case d'arrivée
 *}
-procedure TPlugin.Moved(Player : TPlayer; const Src, Dest : T3DPoint);
+procedure TPlugin.Moved(Player: TPlayer; const Src, Dest: T3DPoint);
 begin
 end;
 
@@ -1315,8 +1321,8 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TPlugin.AbleTo(Player : TPlayer;
-  const Action : TPlayerAction) : boolean;
+function TPlugin.AbleTo(Player: TPlayer;
+  const Action: TPlayerAction): Boolean;
 begin
   Result := False;
 end;
@@ -1330,7 +1336,7 @@ end;
   @param Player   Joueur concerné
   @return Nombre d'objets que ce joueur possède
 *}
-function TObjectDef.GetCount(Player : TPlayer) : integer;
+function TObjectDef.GetCount(Player: TPlayer): Integer;
 begin
   Result := Player.Attribute[ID];
 end;
@@ -1340,7 +1346,7 @@ end;
   @param Player   Joueur concerné
   @param Value    Nouveau nombre d'objets
 *}
-procedure TObjectDef.SetCount(Player : TPlayer; Value : integer);
+procedure TObjectDef.SetCount(Player: TPlayer; Value: Integer);
 begin
   Player.Attribute[ID] := Value;
 end;
@@ -1351,7 +1357,7 @@ end;
   @param Player   Joueur pour lequel on veut obtenir les infos
   @return Informations textuelles, ou une chaîne vide si rien à afficher
 *}
-function TObjectDef.GetShownInfos(Player : TPlayer) : string;
+function TObjectDef.GetShownInfos(Player: TPlayer): string;
 begin
   Result := Format(sDefaultObjectInfos, [Name, Count[Player]]);
 end;
@@ -1364,8 +1370,8 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TObjectDef.AbleTo(Player : TPlayer;
-  const Action : TPlayerAction) : boolean;
+function TObjectDef.AbleTo(Player: TPlayer;
+  const Action: TPlayerAction): Boolean;
 begin
   Result := False;
 end;
@@ -1377,7 +1383,7 @@ end;
   @param Player   Joueur concerné
   @param Action   Action à effectuer
 *}
-procedure TObjectDef.UseFor(Player : TPlayer; const Action : TPlayerAction);
+procedure TObjectDef.UseFor(Player: TPlayer; const Action: TPlayerAction);
 begin
 end;
 
@@ -1392,8 +1398,8 @@ end;
   @param AName             Nom du terrain
   @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
-constructor TField.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ADelegateDrawTo : TField = nil);
+constructor TField.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; ADelegateDrawTo: TField = nil);
 begin
   inherited Create(AMaster, AID, AName);
   FDelegateDrawTo := ADelegateDrawTo;
@@ -1409,8 +1415,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le composant
   @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TField.PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TField.PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   if FDelegateDrawTo = nil then
     inherited
@@ -1429,8 +1435,8 @@ end;
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TField.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint; var Cancel : boolean);
+procedure TField.Entering(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint; var Cancel: Boolean);
 begin
 end;
 
@@ -1445,8 +1451,8 @@ end;
   @param Dest           Case de destination
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TField.Exiting(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Pos, Dest : T3DPoint; var Cancel : boolean);
+procedure TField.Exiting(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Pos, Dest: T3DPoint; var Cancel: Boolean);
 begin
 end;
 
@@ -1456,7 +1462,7 @@ end;
   @param Src      Case de provenance
   @param Pos      Position de la case
 *}
-procedure TField.Entered(Player : TPlayer; const Src, Pos : T3DPoint);
+procedure TField.Entered(Player: TPlayer; const Src, Pos: T3DPoint);
 begin
 end;
 
@@ -1466,7 +1472,7 @@ end;
   @param Pos      Position de la case
   @param Dest     Case de destination
 *}
-procedure TField.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
+procedure TField.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
 begin
 end;
 
@@ -1480,7 +1486,7 @@ end;
   @param Src      Case de provenance
   @param Pos      Position de la case
 *}
-procedure TEffect.Entered(Player : TPlayer; const Src, Pos : T3DPoint);
+procedure TEffect.Entered(Player: TPlayer; const Src, Pos: T3DPoint);
 begin
 end;
 
@@ -1490,7 +1496,7 @@ end;
   @param Pos      Position de la case
   @param Dest     Case de destination
 *}
-procedure TEffect.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
+procedure TEffect.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
 begin
 end;
 
@@ -1500,8 +1506,8 @@ end;
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TEffect.Execute(Player : TPlayer; const Pos : T3DPoint;
-  var GoOnMoving : boolean);
+procedure TEffect.Execute(Player: TPlayer; const Pos: T3DPoint;
+  var GoOnMoving: Boolean);
 begin
 end;
 
@@ -1516,7 +1522,7 @@ end;
   @param Player   Joueur qui a trouvé l'outil
   @param Pos      Position de la case
 *}
-procedure TTool.Find(Player : TPlayer; const Pos : T3DPoint);
+procedure TTool.Find(Player: TPlayer; const Pos: T3DPoint);
 begin
 end;
 
@@ -1538,9 +1544,9 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
   @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
-procedure TObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortExecute : boolean);
+procedure TObstacle.Pushing(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel, AbortExecute: Boolean);
 begin
   Cancel := True;
 end;
@@ -1559,9 +1565,9 @@ end;
   @param ATool       Outil
   @param AObstacle   Obstacle
 *}
-constructor TScrew.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; AField : TField; AEffect : TEffect; ATool : TTool;
-  AObstacle : TObstacle);
+constructor TScrew.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; AField: TField; AEffect: TEffect; ATool: TTool;
+  AObstacle: TObstacle);
 begin
   inherited Create(AMaster, AID, AName);
   FStaticDraw := False;
@@ -1585,8 +1591,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TScrew.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TScrew.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   if Assigned(Field) then
     Field.Draw(QPos, Canvas, X, Y);
@@ -1638,8 +1644,8 @@ end;
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TScrew.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint; var Cancel : boolean);
+procedure TScrew.Entering(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint; var Cancel: Boolean);
 begin
   AddRef;
   try
@@ -1661,8 +1667,8 @@ end;
   @param Dest           Case de destination
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TScrew.Exiting(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Pos, Dest : T3DPoint; var Cancel : boolean);
+procedure TScrew.Exiting(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Pos, Dest: T3DPoint; var Cancel: Boolean);
 begin
   AddRef;
   try
@@ -1679,7 +1685,7 @@ end;
   @param Src      Case de provenance
   @param Pos      Position de la case
 *}
-procedure TScrew.Entered(Player : TPlayer; const Src, Pos : T3DPoint);
+procedure TScrew.Entered(Player: TPlayer; const Src, Pos: T3DPoint);
 begin
   AddRef;
   try
@@ -1698,7 +1704,7 @@ end;
   @param Pos      Position de la case
   @param Dest     Case de destination
 *}
-procedure TScrew.Exited(Player : TPlayer; const Pos, Dest : T3DPoint);
+procedure TScrew.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
 begin
   AddRef;
   try
@@ -1717,8 +1723,8 @@ end;
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TScrew.Execute(Player : TPlayer; const Pos : T3DPoint;
-  var GoOnMoving : boolean);
+procedure TScrew.Execute(Player: TPlayer; const Pos: T3DPoint;
+  var GoOnMoving: Boolean);
 begin
   AddRef;
   try
@@ -1745,9 +1751,9 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
   @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
-procedure TScrew.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortExecute : boolean);
+procedure TScrew.Pushing(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel, AbortExecute: Boolean);
 begin
   AddRef;
   try
@@ -1765,10 +1771,10 @@ end;
   Incrémente le compteur de références de la case
   @return Nouvelle valeur du compteur de références
 *}
-function TScrew.AddRef : integer;
+function TScrew.AddRef: Integer;
 begin
   if FRefCount <> NoRefCount then
-    inc(FRefCount);
+    Inc(FRefCount);
   Result := FRefCount;
 end;
 
@@ -1776,10 +1782,10 @@ end;
   Décrémente le compteur de références de la case
   @return Nouvelle valeur du compteur de références
 *}
-function TScrew.Release : integer;
+function TScrew.Release: Integer;
 begin
   if FRefCount <> NoRefCount then
-    dec(FRefCount);
+    Dec(FRefCount);
   Result := FRefCount;
 
   if FRefCount = 0 then
@@ -1797,8 +1803,8 @@ end;
   @param ADimensions   Dimensions de la carte (en cases)
   @param AZoneSize     Taille d'une zone de la carte
 *}
-constructor TMap.Create(AMaster : TMaster; const AID : TComponentID;
-  ADimensions : T3DPoint; AZoneWidth, AZoneHeight : integer);
+constructor TMap.Create(AMaster: TMaster; const AID: TComponentID;
+  ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer);
 begin
   inherited Create(AMaster, AID);
   FDimensions := ADimensions;
@@ -1815,7 +1821,7 @@ end;
   Modifie la taille maximale d'une vue pour cette carte
   @param Value   Nouvelle taille maximale
 *}
-procedure TMap.SetMaxViewSize(Value : integer);
+procedure TMap.SetMaxViewSize(Value: Integer);
 begin
   if Value < MinViewSize then
     FMaxViewSize := MinViewSize
@@ -1828,19 +1834,21 @@ end;
   @param Position   Position sur la carte
   @return La case à la position spécifiée
 *}
-function TMap.GetMap(const Position : T3DPoint) : TScrew;
-var Index : integer;
+function TMap.GetMap(const Position: T3DPoint): TScrew;
+var
+  Index: Integer;
 begin
   if InMap(Position) then
   begin
     Index := Position.Z;
     Index := Index * FDimensions.Y;
-    inc(Index, Position.Y);
+    Inc(Index, Position.Y);
     Index := Index * FDimensions.X;
-    inc(Index, Position.X);
+    Inc(Index, Position.X);
 
     Result := FMap[Index];
-  end else Result := Outside[Position.Z];
+  end else
+    Result := Outside[Position.Z];
 end;
 
 {*
@@ -1848,16 +1856,18 @@ end;
   @param Position   Position sur la carte
   @param Value      Nouvelle case
 *}
-procedure TMap.SetMap(const Position : T3DPoint; Value : TScrew);
-var Index : integer;
+procedure TMap.SetMap(const Position: T3DPoint; Value: TScrew);
+var
+  Index: Integer;
 begin
-  if not InMap(Position) then exit;
+  if not InMap(Position) then
+    Exit;
 
   Index := Position.Z;
   Index := Index * FDimensions.Y;
-  inc(Index, Position.Y);
+  Inc(Index, Position.Y);
   Index := Index * FDimensions.X;
-  inc(Index, Position.X);
+  Inc(Index, Position.X);
 
   LinearMap[Index] := Value;
 end;
@@ -1867,10 +1877,12 @@ end;
   @param Floor   Étage
   @return La case hors de la carte à l'étage spécifié
 *}
-function TMap.GetOutside(Floor : integer) : TScrew;
+function TMap.GetOutside(Floor: Integer): TScrew;
 begin
-  if Floor < 0 then Floor := 0 else
-  if Floor >= FDimensions.Z then Floor := FDimensions.Z-1;
+  if Floor < 0 then
+    Floor := 0
+  else if Floor >= FDimensions.Z then
+    Floor := FDimensions.Z-1;
   Result := FMap[Floor + FOutsideOffset];
 end;
 
@@ -1879,7 +1891,7 @@ end;
   @param Floor   Étage
   @param Value   Nouvelle case
 *}
-procedure TMap.SetOutside(Floor : integer; Value : TScrew);
+procedure TMap.SetOutside(Floor: Integer; Value: TScrew);
 begin
   if (Floor >= 0) and (Floor < FDimensions.Z) then
     LinearMap[Floor + FOutsideOffset] := Value;
@@ -1889,7 +1901,7 @@ end;
   Taille du tableau de la carte linéaire
   @return Taille du tableau de la carte linéaire
 *}
-function TMap.GetLinearMapCount : integer;
+function TMap.GetLinearMapCount: Integer;
 begin
   Result := Length(FMap);
 end;
@@ -1899,7 +1911,7 @@ end;
   @param Index   Index dans le tableau
   @return Case de la carte linéaire à l'index spécifié
 *}
-function TMap.GetLinearMap(Index : integer) : TScrew;
+function TMap.GetLinearMap(Index: Integer): TScrew;
 begin
   Result := FMap[Index];
 end;
@@ -1909,7 +1921,7 @@ end;
   @param Index   Index dans le tableau
   @param Value   Nouvelle case
 *}
-procedure TMap.SetLinearMap(Index : integer; Value : TScrew);
+procedure TMap.SetLinearMap(Index: Integer; Value: TScrew);
 begin
   if Assigned(FMap[Index]) then
     FMap[Index].Release;
@@ -1925,7 +1937,7 @@ end;
   @param Position   Coordonnée à tester
   @return True si la coordonnée est dans la carte, False sinon
 *}
-function TMap.InMap(const Position : T3DPoint) : boolean;
+function TMap.InMap(const Position: T3DPoint): Boolean;
 begin
   Result :=
     (Position.X >= 0) and (Position.X < FDimensions.X) and
@@ -1938,16 +1950,18 @@ end;
   @param Position   Position de la carte où chercher les joueurs
   @return Nombre de joueurs qui se trouvent au point Position de la carte
 *}
-function TMap.PlayersOn(const Position : T3DPoint) : integer;
-var I : integer;
+function TMap.PlayersOn(const Position: T3DPoint): Integer;
+var
+  I: Integer;
 begin
   Result := 0;
-  if IsNo3DPoint(Position) then exit;
+  if IsNo3DPoint(Position) then
+    Exit;
   for I := 0 to Master.PlayerCount-1 do
   begin
     if (Master.Players[I].Map = Self) and
-       Same3DPoint(Master.Players[I].Position, Position) then
-      inc(Result);
+      Same3DPoint(Master.Players[I].Position, Position) then
+      Inc(Result);
   end;
 end;
 
@@ -1963,8 +1977,8 @@ end;
   @param AMap        Carte de départ
   @param APosition   Position de départ
 *}
-constructor TPlayer.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; AMap : TMap; const APosition : T3DPoint);
+constructor TPlayer.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; AMap: TMap; const APosition: T3DPoint);
 begin
   inherited Create(AMaster, AID, AName);
 
@@ -1999,9 +2013,10 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le composant
   @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TPlayer.PrivDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
-var I : integer;
+procedure TPlayer.PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
+var
+  I: Integer;
 begin
   // Dessine les plug-in en-dessous du joueur
   for I := 0 to PluginCount-1 do
@@ -2016,7 +2031,7 @@ begin
     Plugins[I].DrawAfter(Self, QPos, Canvas, X, Y);
 end;
 
-function TPlayer.GetVisible : boolean;
+function TPlayer.GetVisible: Boolean;
 begin
   Result := FShowCounter >= 0;
 end;
@@ -2025,7 +2040,7 @@ end;
   Nombre de plug-in greffés au joueur
   @return Nombre de plug-in
 *}
-function TPlayer.GetPluginCount : integer;
+function TPlayer.GetPluginCount: Integer;
 begin
   Result := FPlugins.Count;
 end;
@@ -2035,7 +2050,7 @@ end;
   @param Index   Index du plug-in dans le tableau
   @return Le plug-in à la position indiquée
 *}
-function TPlayer.GetPlugins(Index : integer) : TPlugin;
+function TPlayer.GetPlugins(Index: Integer): TPlugin;
 begin
   Result := TPlugin(FPlugins[Index]);
 end;
@@ -2048,8 +2063,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le joueur
   @param Y        Coordonnée Y du point à partir duquel dessiner le joueur
 *}
-procedure TPlayer.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TPlayer.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   if FColor <> clTransparent then
   begin
@@ -2068,18 +2083,19 @@ end;
   @param AttrName   Nom de l'attribut à récupérer
   @return Attribut dont le nom a été spécifié
 *}
-function TPlayer.GetAttribute(const AttrName : string) : integer;
-var Index : integer;
+function TPlayer.GetAttribute(const AttrName: string): Integer;
+var
+  Index: Integer;
 begin
   case AnsiIndexStr(AttrName, [attrColor, attrShowCounter]) of
-    0 : Result := FColor;
-    1 : Result := FShowCounter;
+    0: Result := FColor;
+    1: Result := FShowCounter;
+  else
+    Index := FAttributes.IndexOf(AttrName);
+    if Index < 0 then
+      Result := 0
     else
-    begin
-      Index := FAttributes.IndexOf(AttrName);
-      if Index < 0 then Result := 0 else
-        Result := integer(FAttributes.Objects[Index]);
-    end;
+      Result := Integer(FAttributes.Objects[Index]);
   end;
 end;
 
@@ -2088,24 +2104,25 @@ end;
   @param AttrName   Nom de l'attribut à modifier
   @param Value      Nouvelle valeur de l'attribut
 *}
-procedure TPlayer.SetAttribute(const AttrName : string; Value : integer);
-var Index : integer;
+procedure TPlayer.SetAttribute(const AttrName: string; Value: Integer);
+var
+  Index: Integer;
 begin
   case AnsiIndexStr(AttrName, [attrColor, attrShowCounter]) of
-    0 : FColor := Value;
-    1 : FShowCounter := Value;
-    else
+    0: FColor := Value;
+    1: FShowCounter := Value;
+  else
+    Index := FAttributes.IndexOf(AttrName);
+    if Index < 0 then
     begin
-      Index := FAttributes.IndexOf(AttrName);
-      if Index < 0 then
-      begin
-        if Value <> 0 then
-          FAttributes.AddObject(AttrName, TObject(Value));
-      end else
-      begin
-        if Value = 0 then FAttributes.Delete(Index) else
-          FAttributes.Objects[Index] := TObject(Value);
-      end;
+      if Value <> 0 then
+        FAttributes.AddObject(AttrName, TObject(Value));
+    end else
+    begin
+      if Value = 0 then
+        FAttributes.Delete(Index)
+      else
+        FAttributes.Objects[Index] := TObject(Value);
     end;
   end;
 end;
@@ -2114,7 +2131,7 @@ end;
   Dresse la liste des attributs du joueur
   @param Attributes   Liste de chaînes dans laquelle enregistrer les attributs
 *}
-procedure TPlayer.GetAttributes(Attributes : TStrings);
+procedure TPlayer.GetAttributes(Attributes: TStrings);
 begin
   with Attributes do
   begin
@@ -2130,8 +2147,9 @@ end;
   Dresse la liste des ID des plug-in du joueur
   @param Plugins   Liste de chaînes dans laquelle enregistrer les ID des plug-in
 *}
-procedure TPlayer.GetPluginIDs(PluginIDs : TStrings);
-var I : integer;
+procedure TPlayer.GetPluginIDs(PluginIDs: TStrings);
+var
+  I: Integer;
 begin
   PluginIDs.Clear;
   for I := 0 to PluginCount-1 do
@@ -2146,9 +2164,10 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le joueur
   @param Y        Coordonnée Y du point à partir duquel dessiner le joueur
 *}
-procedure TPlayer.DrawInPlace(Canvas : TCanvas; X : integer = 0;
-  Y : integer = 0);
-var QPos : TQualifiedPos;
+procedure TPlayer.DrawInPlace(Canvas: TCanvas; X: Integer = 0;
+  Y: Integer = 0);
+var
+  QPos: TQualifiedPos;
 begin
   QPos.Map := Map;
   QPos.Position := Position;
@@ -2159,7 +2178,7 @@ end;
   Greffe un plug-in au joueur
   @param Plugin   Le plug-in à greffer
 *}
-procedure TPlayer.AddPlugin(Plugin : TPlugin);
+procedure TPlayer.AddPlugin(Plugin: TPlugin);
 begin
   FPlugins.Add(Plugin);
 end;
@@ -2168,7 +2187,7 @@ end;
   Retire un plug-in du joueur
   @param Plugin   Le plug-in à retirer
 *}
-procedure TPlayer.RemovePlugin(Plugin : TPlugin);
+procedure TPlayer.RemovePlugin(Plugin: TPlugin);
 begin
   FPlugins.Remove(Plugin);
 end;
@@ -2180,15 +2199,18 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TPlayer.AbleTo(const Action : TPlayerAction) : boolean;
-var I : integer;
+function TPlayer.AbleTo(const Action: TPlayerAction): Boolean;
+var
+  I: Integer;
 begin
   Result := True;
 
   for I := 0 to PluginCount-1 do
-    if Plugins[I].AbleTo(Self, Action) then exit;
+    if Plugins[I].AbleTo(Self, Action) then
+      Exit;
   for I := 0 to Master.ObjectDefCount-1 do
-    if Master.ObjectDefs[I].AbleTo(Self, Action) then exit;
+    if Master.ObjectDefs[I].AbleTo(Self, Action) then
+      Exit;
 
   Result := False;
 end;
@@ -2201,16 +2223,19 @@ end;
   @param Action   Action à tester
   @return True si le joueur a été capable d'effectuer l'action, False sinon
 *}
-function TPlayer.DoAction(const Action : TPlayerAction) : boolean;
-var I, GoodObjectCount : integer;
-    GoodObjects : array of TObjectDef;
-    RadioTitles : array of string;
-    GoodObject : TObjectDef;
+function TPlayer.DoAction(const Action: TPlayerAction): Boolean;
+var
+  I, GoodObjectCount: Integer;
+  GoodObjects: array of TObjectDef;
+  RadioTitles: array of string;
+  GoodObject: TObjectDef;
 begin
   Result := True;
 
   // Les plug-in ont la priorité, puisqu'ils n'ont pas d'effet de bord
-  for I := 0 to PluginCount-1 do if Plugins[I].AbleTo(Self, Action) then exit;
+  for I := 0 to PluginCount-1 do
+    if Plugins[I].AbleTo(Self, Action) then
+      Exit;
 
   // Listage des objets susceptibles d'aider le joueur
   SetLength(GoodObjects, Master.ObjectDefCount);
@@ -2220,7 +2245,7 @@ begin
     if Master.ObjectDefs[I].AbleTo(Self, Action) then
     begin
       GoodObjects[GoodObjectCount] := Master.ObjectDefs[I];
-      inc(GoodObjectCount);
+      Inc(GoodObjectCount);
     end;
   end;
 
@@ -2228,18 +2253,20 @@ begin
   if GoodObjectCount = 0 then
   begin
     Result := False;
-    exit;
+    Exit;
   end;
 
   // Si plusieurs objets, demande au joueur lequel utiliser
-  if GoodObjectCount = 1 then GoodObject := GoodObjects[0] else
+  if GoodObjectCount = 1 then
+    GoodObject := GoodObjects[0]
+  else
   begin
     SetLength(RadioTitles, GoodObjectCount);
     for I := 0 to GoodObjectCount-1 do
       RadioTitles[I] := GoodObjects[I].Name;
     I := 0;
     ShowDialogRadio(sWhichObject, sWhichObject, mtConfirmation,
-      [mbOK], mrOK, RadioTitles, I, True);
+      [mbOK], mrOk, RadioTitles, I, True);
     GoodObject := GoodObjects[I];
   end;
 
@@ -2255,12 +2282,13 @@ end;
   @param KeyPressed   True si une touche a été pressée pour le déplacement
   @param Redo         Indique s'il faut réitérer le déplacement
 *}
-procedure TPlayer.Move(Dir : TDirection; KeyPressed : boolean;
-  out Redo : boolean);
-var I : integer;
-    Src, Dest : T3DPoint;
-    OldDir : TDirection;
-    Cancel, AbortExecute : boolean;
+procedure TPlayer.Move(Dir: TDirection; KeyPressed: Boolean;
+  out Redo: Boolean);
+var
+  I: Integer;
+  Src, Dest: T3DPoint;
+  OldDir: TDirection;
+  Cancel, AbortExecute: Boolean;
 begin
   // Initialisation des variables
   Redo := False;
@@ -2272,27 +2300,32 @@ begin
   AbortExecute := False;
 
   // Le joueur est-il toujours en train de jouer ?
-  if PlayState <> psPlaying then exit;
+  if PlayState <> psPlaying then
+    Exit;
 
   // Le déplacement est-il permis ?
   begin
     // Case source : exiting
     Map[Src].Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
-    if Cancel then exit;
+    if Cancel then
+      Exit;
 
     // Plug-in : moving
     for I := 0 to PluginCount-1 do
       Plugins[I].Moving(Self, OldDir, KeyPressed, Src, Dest, Cancel);
-    if Cancel then exit;
+    if Cancel then
+      Exit;
 
     // Case destination : entering
     Map[Dest].Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel);
-    if Cancel then exit;
+    if Cancel then
+      Exit;
 
     // Case destination : pushing
     Map[Dest].Pushing(Self, OldDir, KeyPressed, Src, Dest, Cancel,
       AbortExecute);
-    if Cancel then exit;
+    if Cancel then
+      Exit;
   end;
 
   // Déplacement du joueur (à moins qu'il ait été déplacé par ailleurs)
@@ -2306,13 +2339,15 @@ end;
   @param Execute   Indique s'il faut exécuter la case d'arrivée
   @param Redo      Indique s'il faut réitérer le déplacement
 *}
-procedure TPlayer.MoveTo(const Dest : T3DPoint; Execute : boolean;
-  out Redo : boolean);
-var Src : T3DPoint;
-    I : integer;
+procedure TPlayer.MoveTo(const Dest: T3DPoint; Execute: Boolean;
+  out Redo: Boolean);
+var
+  Src: T3DPoint;
+  I: Integer;
 begin
   // Le joueur est-il toujours en train de jouer ?
-  if PlayState <> psPlaying then exit;
+  if PlayState <> psPlaying then
+    Exit;
 
   Src := Position;
   FPosition := Dest;
@@ -2337,8 +2372,9 @@ end;
   Cette variante de MoveTo n'exécute pas la case d'arrivée
   @param Dest   Position de destination
 *}
-procedure TPlayer.MoveTo(const Dest : T3DPoint);
-var Redo : boolean;
+procedure TPlayer.MoveTo(const Dest: T3DPoint);
+var
+  Redo: Boolean;
 begin
   MoveTo(Dest, False, Redo);
 end;
@@ -2349,18 +2385,20 @@ end;
   @param Execute   Indique s'il faut exécuter la case d'arrivée
   @param Redo      Indique s'il faut réitérer le déplacement
 *}
-procedure TPlayer.MoveTo(const Dest : TQualifiedPos; Execute : boolean;
-  out Redo : boolean);
-var Src : T3DPoint;
-    I : integer;
+procedure TPlayer.MoveTo(const Dest: TQualifiedPos; Execute: Boolean;
+  out Redo: Boolean);
+var
+  Src: T3DPoint;
+  I: Integer;
 begin
   // Le joueur est-il toujours en train de jouer ?
-  if PlayState <> psPlaying then exit;
+  if PlayState <> psPlaying then
+    Exit;
 
   if Dest.Map = Map then
   begin
     MoveTo(Dest.Position, Execute, Redo);
-    exit;
+    Exit;
   end;
 
   Src := Position;
@@ -2399,8 +2437,9 @@ end;
   Cette variante de MoveTo n'exécute pas la case d'arrivée
   @param Dest   Position de destination
 *}
-procedure TPlayer.MoveTo(const Dest : TQualifiedPos);
-var Redo : boolean;
+procedure TPlayer.MoveTo(const Dest: TQualifiedPos);
+var
+  Redo: Boolean;
 begin
   MoveTo(Dest, False, Redo);
 end;
@@ -2411,7 +2450,8 @@ end;
   NaturalMoving pour continuer le mouvement normalement.
 *}
 procedure TPlayer.NaturalMoving;
-var Redo : boolean;
+var
+  Redo: Boolean;
 begin
   repeat
     Master.Temporize;
@@ -2424,7 +2464,7 @@ end;
   ChangePosition ne doit être utilisée qu'en mode édition, ou sous réserve
   d'être certain de ce qu'on fait.
 *}
-procedure TPlayer.ChangePosition(AMap : TMap; const APosition : T3DPoint);
+procedure TPlayer.ChangePosition(AMap: TMap; const APosition: T3DPoint);
 begin
   FMap := AMap;
   FPosition := APosition;
@@ -2435,7 +2475,7 @@ end;
 *}
 procedure TPlayer.Show;
 begin
-  inc(FShowCounter);
+  Inc(FShowCounter);
 end;
 
 {*
@@ -2443,7 +2483,7 @@ end;
 *}
 procedure TPlayer.Hide;
 begin
-  dec(FShowCounter);
+  Dec(FShowCounter);
 end;
 
 {*
@@ -2453,8 +2493,8 @@ end;
   @return Résultat de la commande
   @throws EUnsupportedCommand : La commande demandée n'est pas supportée
 *}
-function TPlayer.SendCommand(const Command : string;
-  const Params : string = '') : string;
+function TPlayer.SendCommand(const Command: string;
+  const Params: string = ''): string;
 begin
   if Assigned(FOnSendCommand) then
     Result := FOnSendCommand(Self, Command, Params)
@@ -2472,17 +2512,18 @@ end;
   @param AddFlags     Flags additionnels pour MessageBox
   @return Bouton sur lequel l'utilisateur a cliqué
 *}
-function TPlayer.ShowDialog(const Title, Text : string;
-  DlgType : TDialogType = dtInformation; DlgButtons : TDialogButtons = dbOK;
-  DefButton : Byte = 1; AddFlags : LongWord = 0) : TDialogResult;
-var Params : string;
+function TPlayer.ShowDialog(const Title, Text: string;
+  DlgType: TDialogType = dtInformation; DlgButtons: TDialogButtons = dbOK;
+  DefButton: Byte = 1; AddFlags: LongWord = 0): TDialogResult;
+var
+  Params: string;
 begin
   Params := StrToStrRepres(Title);
   Params := Params + #10 + StrToStrRepres(Text);
   Params := Params + #10 + GetEnumName(
-    TypeInfo(TDialogType), integer(DlgType));
+    TypeInfo(TDialogType), Integer(DlgType));
   Params := Params + #10 + GetEnumName(
-    TypeInfo(TDialogButtons), integer(DlgButtons));
+    TypeInfo(TDialogButtons), Integer(DlgButtons));
   Params := Params + #10 + IntToStr(DefButton);
   Params := Params + #10 + IntToStr(AddFlags);
 
@@ -2504,23 +2545,24 @@ end;
   @param OverButtons   Boutons radio placés au-dessus des boutons si True
   @return Bouton sur lequel l'utilisateur a cliqué
 *}
-function TPlayer.ShowDialogRadio(const Title, Text : string;
-  DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons; DefButton : TModalResult;
-  const RadioTitles : array of string; var Selected : integer;
-  OverButtons : boolean = False) : Word;
-var Params, CmdResult : string;
-    I : integer;
+function TPlayer.ShowDialogRadio(const Title, Text: string;
+  DlgType: TMsgDlgType; DlgButtons: TMsgDlgButtons; DefButton: TModalResult;
+  const RadioTitles: array of string; var Selected: Integer;
+  OverButtons: Boolean = False): Word;
+var
+  Params, CmdResult: string;
+  I: Integer;
 begin
   Params := StrToStrRepres(Title);
   Params := Params + #10 + StrToStrRepres(Text);
-  Params := Params + #10 + GetEnumName(TypeInfo(TMsgDlgType), integer(DlgType));
+  Params := Params + #10 + GetEnumName(TypeInfo(TMsgDlgType), Integer(DlgType));
   Params := Params + #10 + EnumSetToStr(DlgButtons, TypeInfo(TMsgDlgButtons));
   Params := Params + #10 + IntToStr(DefButton);
   Params := Params + #10 + IntToStr(Length(RadioTitles));
   for I := Low(RadioTitles) to High(RadioTitles) do
     Params := Params + #10 + StrToStrRepres(RadioTitles[I]);
   Params := Params + #10 + IntToStr(Selected);
-  Params := Params + #10 + GetEnumName(TypeInfo(boolean), integer(OverButtons));
+  Params := Params + #10 + GetEnumName(TypeInfo(Boolean), Integer(OverButtons));
 
   CmdResult := SendCommand(CommandShowDialogRadio, Params);
   Selected := StrToInt(GetFirstToken(CmdResult, ' '));
@@ -2536,9 +2578,10 @@ end;
   @param Max       Valeur maximale que peut choisir le joueur
   @return La valeur qu'a choisie le joueur
 *}
-function TPlayer.ChooseNumber(const Title, Prompt : string;
-  Default, Min, Max : integer) : integer;
-var Params : string;
+function TPlayer.ChooseNumber(const Title, Prompt: string;
+  Default, Min, Max: Integer): Integer;
+var
+  Params: string;
 begin
   Params := StrToStrRepres(Title);
   Params := Params + #10 + StrToStrRepres(Prompt);
@@ -2553,16 +2596,19 @@ end;
   Fait gagner le joueur
 *}
 procedure TPlayer.Win;
-var I : integer;
+var
+  I: Integer;
 begin
-  if FPlayState <> psPlaying then exit;
+  if FPlayState <> psPlaying then
+    Exit;
 
   // Ce joueur a gagné
   FPlayState := psWon;
 
   // Les autres joueurs ont perdu
-  for I := 0 to Master.PlayerCount-1 do if Master.Players[I] <> Self then
-    Master.Players[I].FPlayState := psLost;
+  for I := 0 to Master.PlayerCount-1 do
+    if Master.Players[I] <> Self then
+      Master.Players[I].FPlayState := psLost;
 
   // La partie est terminée
   Master.Terminate;
@@ -2572,16 +2618,19 @@ end;
   Fait perdre le joueur
 *}
 procedure TPlayer.Lose;
-var I : integer;
+var
+  I: Integer;
 begin
-  if FPlayState <> psPlaying then exit;
+  if FPlayState <> psPlaying then
+    Exit;
 
   // Ce joueur a perdu
   FPlayState := psLost;
 
   // Si plus aucun joueur ne joue, la partie est terminée
   for I := 0 to Master.PlayerCount-1 do
-    if Master.Players[I].PlayState = psPlaying then exit;
+    if Master.Players[I].PlayState = psPlaying then
+      Exit;
   Master.Terminate;
 end;
 
@@ -2592,7 +2641,7 @@ end;
 {*
   Crée une instance de TMaster
 *}
-constructor TMaster.Create(AEditing : boolean);
+constructor TMaster.Create(AEditing: Boolean);
 begin
   inherited Create;
 
@@ -2624,7 +2673,8 @@ end;
   Détruit l'instance
 *}
 destructor TMaster.Destroy;
-var I : integer;
+var
+  I: Integer;
 begin
   if Assigned(FComponents) then
   begin
@@ -2654,10 +2704,13 @@ end;
   @return Le composant dont l'ID a été spécifié, ou nil si ID était vide
   @throws EComponentNotFound : Aucun composant ne correspond à l'ID spécifié
 *}
-function TMaster.GetComponent(const ID : TComponentID) : TFunLabyComponent;
-var Index : integer;
+function TMaster.GetComponent(const ID: TComponentID): TFunLabyComponent;
+var
+  Index: Integer;
 begin
-  if ID = '' then Result := nil else
+  if ID = '' then
+    Result := nil
+  else
   begin
     Index := FComponents.IndexOf(ID);
     if Index >= 0 then
@@ -2674,12 +2727,12 @@ end;
   @throws EComponentNotFound : Aucun composant ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas de case
 *}
-function TMaster.GetScrewComponent(const ID : TComponentID) : TScrewComponent;
+function TMaster.GetScrewComponent(const ID: TComponentID): TScrewComponent;
 begin
   try
     Result := Component[ID] as TScrewComponent;
   except
-    on Error : EComponentNotFound do
+    on Error: EComponentNotFound do
     begin
       if NberCharInStr(ScrewIDDelim, ID) = 3 then
         Result := Screw[ID]
@@ -2696,7 +2749,7 @@ end;
   @throws EComponentNotFound : Aucun plug-in ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un plug-in
 *}
-function TMaster.GetPlugin(const ID : TComponentID) : TPlugin;
+function TMaster.GetPlugin(const ID: TComponentID): TPlugin;
 begin
   Result := Component[ID] as TPlugin;
 end;
@@ -2708,7 +2761,7 @@ end;
   @throws EComponentNotFound : Aucune définition ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas une def d'objet
 *}
-function TMaster.GetObjectDef(const ID : TComponentID) : TObjectDef;
+function TMaster.GetObjectDef(const ID: TComponentID): TObjectDef;
 begin
   Result := Component[ID] as TObjectDef;
 end;
@@ -2720,7 +2773,7 @@ end;
   @throws EComponentNotFound : Aucun terrain ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un terrain
 *}
-function TMaster.GetField(const ID : TComponentID) : TField;
+function TMaster.GetField(const ID: TComponentID): TField;
 begin
   Result := Component[ID] as TField;
 end;
@@ -2732,7 +2785,7 @@ end;
   @throws EComponentNotFound : Aucun effet ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un effet
 *}
-function TMaster.GetEffect(const ID : TComponentID) : TEffect;
+function TMaster.GetEffect(const ID: TComponentID): TEffect;
 begin
   Result := Component[ID] as TEffect;
 end;
@@ -2744,7 +2797,7 @@ end;
   @throws EComponentNotFound : Aucun outil ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un outil
 *}
-function TMaster.GetTool(const ID : TComponentID) : TTool;
+function TMaster.GetTool(const ID: TComponentID): TTool;
 begin
   Result := Component[ID] as TTool;
 end;
@@ -2756,7 +2809,7 @@ end;
   @throws EComponentNotFound : Aucun obstacle ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un obstacle
 *}
-function TMaster.GetObstacle(const ID : TComponentID) : TObstacle;
+function TMaster.GetObstacle(const ID: TComponentID): TObstacle;
 begin
   Result := Component[ID] as TObstacle;
 end;
@@ -2770,17 +2823,18 @@ end;
   @throws EComponentNotFound : Aucune case ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas une case
 *}
-function TMaster.GetScrew(const ID : TComponentID) : TScrew;
-var AField : TField;
-    AEffect : TEffect;
-    ATool : TTool;
-    AObstacle : TObstacle;
-    AName : string;
+function TMaster.GetScrew(const ID: TComponentID): TScrew;
+var
+  AField: TField;
+  AEffect: TEffect;
+  ATool: TTool;
+  AObstacle: TObstacle;
+  AName: string;
 begin
   try
     Result := Component[ID] as TScrew;
   except
-    on Error : EComponentNotFound do
+    on Error: EComponentNotFound do
     begin
       Result := nil;
 
@@ -2807,7 +2861,8 @@ begin
       except
       end;
 
-      if Result = nil then raise;
+      if Result = nil then
+        raise;
     end;
   end;
 end;
@@ -2819,7 +2874,7 @@ end;
   @throws EComponentNotFound : Aucune carte ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas une carte
 *}
-function TMaster.GetMap(const ID : TComponentID) : TMap;
+function TMaster.GetMap(const ID: TComponentID): TMap;
 begin
   Result := Component[ID] as TMap;
 end;
@@ -2831,7 +2886,7 @@ end;
   @throws EComponentNotFound : Aucun joueur ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas un joueur
 *}
-function TMaster.GetPlayer(const ID : TComponentID) : TPlayer;
+function TMaster.GetPlayer(const ID: TComponentID): TPlayer;
 begin
   Result := Component[ID] as TPlayer;
 end;
@@ -2840,7 +2895,7 @@ end;
   Nombre de plug-in
   @return Nombre de plug-in
 *}
-function TMaster.GetPluginCount : integer;
+function TMaster.GetPluginCount: Integer;
 begin
   Result := FPlugins.Count;
 end;
@@ -2850,7 +2905,7 @@ end;
   @param Index   Index du plug-in
   @return Le plug-in à la position spécifiée
 *}
-function TMaster.GetPlugins(Index : integer) : TPlugin;
+function TMaster.GetPlugins(Index: Integer): TPlugin;
 begin
   Result := TPlugin(FPlugins[Index]);
 end;
@@ -2859,7 +2914,7 @@ end;
   Nombre de définitions d'objet
   @return Nombre de définitions d'objet
 *}
-function TMaster.GetObjectDefCount : integer;
+function TMaster.GetObjectDefCount: Integer;
 begin
   Result := FObjectDefs.Count;
 end;
@@ -2869,7 +2924,7 @@ end;
   @param Index   Index de la définition d'objet
   @return La définition d'objet à la position spécifiée
 *}
-function TMaster.GetObjectDefs(Index : integer) : TObjectDef;
+function TMaster.GetObjectDefs(Index: Integer): TObjectDef;
 begin
   Result := TObjectDef(FObjectDefs[Index]);
 end;
@@ -2878,7 +2933,7 @@ end;
   Nombre de terrains
   @return Nombre de terrains
 *}
-function TMaster.GetFieldCount : integer;
+function TMaster.GetFieldCount: Integer;
 begin
   Result := FFields.Count;
 end;
@@ -2888,7 +2943,7 @@ end;
   @param Index   Index du terrain
   @return Le terrain à la position spécifiée
 *}
-function TMaster.GetFields(Index : integer) : TField;
+function TMaster.GetFields(Index: Integer): TField;
 begin
   Result := TField(FFields[Index]);
 end;
@@ -2897,7 +2952,7 @@ end;
   Nombre d'effets
   @return Nombre d'effets
 *}
-function TMaster.GetEffectCount : integer;
+function TMaster.GetEffectCount: Integer;
 begin
   Result := FEffects.Count;
 end;
@@ -2907,7 +2962,7 @@ end;
   @param Index   Index de l'effet
   @return L'effet à la position spécifiée
 *}
-function TMaster.GetEffects(Index : integer) : TEffect;
+function TMaster.GetEffects(Index: Integer): TEffect;
 begin
   Result := TEffect(FEffects[Index]);
 end;
@@ -2916,7 +2971,7 @@ end;
   Nombre d'outils
   @return Nombre d'outils
 *}
-function TMaster.GetToolCount : integer;
+function TMaster.GetToolCount: Integer;
 begin
   Result := FTools.Count;
 end;
@@ -2926,7 +2981,7 @@ end;
   @param Index   Index de l'outil
   @return L'outil à la position spécifiée
 *}
-function TMaster.GetTools(Index : integer) : TTool;
+function TMaster.GetTools(Index: Integer): TTool;
 begin
   Result := TTool(FTools[Index]);
 end;
@@ -2935,7 +2990,7 @@ end;
   Nombre d'obstacles
   @return Nombre d'obstacles
 *}
-function TMaster.GetObstacleCount : integer;
+function TMaster.GetObstacleCount: Integer;
 begin
   Result := FObstacles.Count;
 end;
@@ -2945,7 +3000,7 @@ end;
   @param Index   Index de l'obstacle
   @return L'obstacle à la position spécifiée
 *}
-function TMaster.GetObstacles(Index : integer) : TObstacle;
+function TMaster.GetObstacles(Index: Integer): TObstacle;
 begin
   Result := TObstacle(FObstacles[Index]);
 end;
@@ -2954,7 +3009,7 @@ end;
   Nombre de cases
   @return Nombre de cases
 *}
-function TMaster.GetScrewCount : integer;
+function TMaster.GetScrewCount: Integer;
 begin
   Result := FScrews.Count;
 end;
@@ -2964,7 +3019,7 @@ end;
   @param Index   Index de la case
   @return La case à la position spécifiée
 *}
-function TMaster.GetScrews(Index : integer) : TScrew;
+function TMaster.GetScrews(Index: Integer): TScrew;
 begin
   Result := TScrew(FScrews[Index]);
 end;
@@ -2973,7 +3028,7 @@ end;
   Nombre de cartes
   @return Nombre de cartes
 *}
-function TMaster.GetMapCount : integer;
+function TMaster.GetMapCount: Integer;
 begin
   Result := FMaps.Count;
 end;
@@ -2983,7 +3038,7 @@ end;
   @param Index   Index de la carte
   @return La carte à la position spécifiée
 *}
-function TMaster.GetMaps(Index : integer) : TMap;
+function TMaster.GetMaps(Index: Integer): TMap;
 begin
   Result := TMap(FMaps[Index]);
 end;
@@ -2992,7 +3047,7 @@ end;
   Nombre de joueurs
   @return Nombre de joueurs
 *}
-function TMaster.GetPlayerCount : integer;
+function TMaster.GetPlayerCount: Integer;
 begin
   Result := FPlayers.Count;
 end;
@@ -3002,7 +3057,7 @@ end;
   @param Index   Index du joueur
   @return Le joueur à la position spécifiée
 *}
-function TMaster.GetPlayers(Index : integer) : TPlayer;
+function TMaster.GetPlayers(Index: Integer): TPlayer;
 begin
   Result := TPlayer(FPlayers[Index]);
 end;
@@ -3011,7 +3066,7 @@ end;
   Modifie la temporisation
   @param Value   Nouvelle temporisation en millisecondes
 *}
-procedure TMaster.SetTemporization(Value : integer);
+procedure TMaster.SetTemporization(Value: Integer);
 begin
   if Value > 0 then
     FTemporization := Value;
@@ -3021,36 +3076,54 @@ end;
   Ajoute un composant
   @param Component   Le composant à ajouter
 *}
-procedure TMaster.AddComponent(Component : TFunLabyComponent);
+procedure TMaster.AddComponent(Component: TFunLabyComponent);
 begin
   FComponents.AddObject(Component.ID, Component);
 
-  if Component is TPlugin    then FPlugins   .Add(Component) else
-  if Component is TObjectDef then FObjectDefs.Add(Component) else
-  if Component is TField     then FFields    .Add(Component) else
-  if Component is TEffect    then FEffects   .Add(Component) else
-  if Component is TTool      then FTools     .Add(Component) else
-  if Component is TObstacle  then FObstacles .Add(Component) else
-  if Component is TScrew     then FScrews    .Add(Component) else
-  if Component is TMap       then FMaps      .Add(Component) else
-  if Component is TPlayer    then FPlayers   .Add(Component);
+  if Component is TPlugin then
+    FPlugins.Add(Component)
+  else if Component is TObjectDef then
+    FObjectDefs.Add(Component)
+  else if Component is TField then
+    FFields.Add(Component)
+  else if Component is TEffect then
+    FEffects.Add(Component)
+  else if Component is TTool then
+    FTools.Add(Component)
+  else if Component is TObstacle then
+    FObstacles.Add(Component)
+  else if Component is TScrew then
+    FScrews.Add(Component)
+  else if Component is TMap then
+    FMaps.Add(Component)
+  else if Component is TPlayer then
+    FPlayers.Add(Component);
 end;
 
 {*
   Retire un composant
   @param Component   Le composant à retirer
 *}
-procedure TMaster.RemoveComponent(Component : TFunLabyComponent);
+procedure TMaster.RemoveComponent(Component: TFunLabyComponent);
 begin
-  if Component is TPlugin    then FPlugins   .Remove(Component) else
-  if Component is TObjectDef then FObjectDefs.Remove(Component) else
-  if Component is TField     then FFields    .Remove(Component) else
-  if Component is TEffect    then FEffects   .Remove(Component) else
-  if Component is TTool      then FTools     .Remove(Component) else
-  if Component is TObstacle  then FObstacles .Remove(Component) else
-  if Component is TScrew     then FScrews    .Remove(Component) else
-  if Component is TMap       then FMaps      .Remove(Component) else
-  if Component is TPlayer    then FPlayers   .Remove(Component);
+  if Component is TPlugin then
+    FPlugins.Remove(Component)
+  else if Component is TObjectDef then
+    FObjectDefs.Remove(Component)
+  else if Component is TField then
+    FFields.Remove(Component)
+  else if Component is TEffect then
+    FEffects.Remove(Component)
+  else if Component is TTool then
+    FTools.Remove(Component)
+  else if Component is TObstacle then
+    FObstacles.Remove(Component)
+  else if Component is TScrew then
+    FScrews.Remove(Component)
+  else if Component is TMap then
+    FMaps.Remove(Component)
+  else if Component is TPlayer then
+    FPlayers.Remove(Component);
 
   FComponents.Delete(FComponents.IndexOf(Component.ID));
 end;
@@ -3088,7 +3161,7 @@ end;
   @return Case avec avec les composantes spécifiées
 *}
 function TMaster.ScrewByComps(
-  const Field, Effect, Tool, Obstacle : TComponentID) : TScrew;
+  const Field, Effect, Tool, Obstacle: TComponentID): TScrew;
 begin
   Result := Screw[Format(ScrewIDFormat, [Field, Effect, Tool, Obstacle])];
 end;

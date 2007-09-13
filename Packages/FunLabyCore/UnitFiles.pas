@@ -66,8 +66,8 @@ type
       @param RegisterComponentSetProc      Call-back pour un set de composants
     *}
     procedure RegisterComponents(
-      RegisterSingleComponentProc : TRegisterSingleComponentProc;
-      RegisterComponentSetProc : TRegisterComponentSetProc);
+      RegisterSingleComponentProc: TRegisterSingleComponentProc;
+      RegisterComponentSetProc: TRegisterComponentSetProc);
 
     {*
       Dresse la liste des paramètres à enregistrer
@@ -75,7 +75,7 @@ type
       indiquer au fichier maître les paramètres qu'il doit enregistrer.
       @param Params   Liste des paramètres
     *}
-    procedure GetParams(Params : TStrings);
+    procedure GetParams(Params: TStrings);
   end;
 
   {*
@@ -87,12 +87,12 @@ type
   *}
   TBPLUnitFile = class(TUnitFile)
   private
-    FHandle : HMODULE;           /// Module du package chargé
-    FUnitFileIntf : IUnitFile50; /// Interface vers le fichier unité
+    FHandle: HMODULE;           /// Module du package chargé
+    FUnitFileIntf: IUnitFile50; /// Interface vers le fichier unité
   public
-    constructor Create(AMasterFile : TMasterFile; const AHRef : string;
-      const AFileName : TFileName; const AGUID : TGUID;
-      Params : TStrings); override;
+    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
+      const AFileName: TFileName; const AGUID: TGUID;
+      Params: TStrings); override;
     destructor Destroy; override;
 
     procedure Loaded; override;
@@ -102,13 +102,13 @@ type
     procedure GameEnded; override;
 
     procedure RegisterComponents(
-      RegisterSingleComponentProc : TRegisterSingleComponentProc;
-      RegisterComponentSetProc : TRegisterComponentSetProc); override;
+      RegisterSingleComponentProc: TRegisterSingleComponentProc;
+      RegisterComponentSetProc: TRegisterComponentSetProc); override;
 
-    procedure GetParams(Params : TStrings); override;
+    procedure GetParams(Params: TStrings); override;
 
-    property Handle : HMODULE read FHandle;
-    property UnitFileIntf : IUnitFile50 read FUnitFileIntf;
+    property Handle: HMODULE read FHandle;
+    property UnitFileIntf: IUnitFile50 read FUnitFileIntf;
   end;
 
   {*
@@ -118,8 +118,8 @@ type
   *}
   TInterfacedUnitFile = class(TInterfacedObject, IUnitFile50)
   private
-    FMasterFile : TMasterFile;
-    FMaster : TMaster;
+    FMasterFile: TMasterFile;
+    FMaster: TMaster;
   protected
     procedure Loaded; virtual;
     procedure Unloading; virtual;
@@ -128,20 +128,20 @@ type
     procedure GameEnded; virtual;
 
     procedure RegisterComponents(
-      RegisterSingleComponentProc : TRegisterSingleComponentProc;
-      RegisterComponentSetProc : TRegisterComponentSetProc); virtual;
+      RegisterSingleComponentProc: TRegisterSingleComponentProc;
+      RegisterComponentSetProc: TRegisterComponentSetProc); virtual;
 
-    procedure GetParams(Params : TStrings); virtual;
+    procedure GetParams(Params: TStrings); virtual;
 
-    property MasterFile : TMasterFile read FMasterFile;
-    property Master : TMaster read FMaster;
+    property MasterFile: TMasterFile read FMasterFile;
+    property Master: TMaster read FMaster;
   public
-    constructor Create(AMasterFile : TMasterFile);
+    constructor Create(AMasterFile: TMasterFile);
   end;
 
 const
   /// GUID du gestionnaire d'unités de type package Borland
-  BPLUnitHandlerGUID : TGUID = '{B28D4F92-6C46-4F22-87F9-432165EDA4C6}';
+  BPLUnitHandlerGUID: TGUID = '{B28D4F92-6C46-4F22-87F9-432165EDA4C6}';
 
 implementation
 
@@ -163,12 +163,13 @@ const {don't localize}
   @param AMIMEType     Type MIME du fichier
   @param Params        Paramètres envoyés à l'unité
 *}
-constructor TBPLUnitFile.Create(AMasterFile : TMasterFile; const AHRef : string;
-  const AFileName : TFileName; const AGUID : TGUID; Params : TStrings);
+constructor TBPLUnitFile.Create(AMasterFile: TMasterFile; const AHRef: string;
+  const AFileName: TFileName; const AGUID: TGUID; Params: TStrings);
 type
-  TCreateUnitFileProc = function(BPLHandler : TBPLUnitFile; Master : TMaster;
-    Params : TStrings) : IUnitFile50; stdcall;
-var CreateUnitFile : TCreateUnitFileProc;
+  TCreateUnitFileProc = function(BPLHandler: TBPLUnitFile; Master: TMaster;
+      Params: TStrings): IUnitFile50; stdcall;
+var
+  CreateUnitFile: TCreateUnitFileProc;
 begin
   inherited;
 
@@ -232,8 +233,8 @@ end;
   [@inheritDoc]
 *}
 procedure TBPLUnitFile.RegisterComponents(
-  RegisterSingleComponentProc : TRegisterSingleComponentProc;
-  RegisterComponentSetProc : TRegisterComponentSetProc);
+  RegisterSingleComponentProc: TRegisterSingleComponentProc;
+  RegisterComponentSetProc: TRegisterComponentSetProc);
 begin
   UnitFileIntf.RegisterComponents(
     RegisterSingleComponentProc, RegisterComponentSetProc);
@@ -242,7 +243,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TBPLUnitFile.GetParams(Params : TStrings);
+procedure TBPLUnitFile.GetParams(Params: TStrings);
 begin
   UnitFileIntf.GetParams(Params);
 end;
@@ -255,7 +256,7 @@ end;
   Crée une instance de TInterfacedUnitFile
   @param AMasterFile   Fichier maître
 *}
-constructor TInterfacedUnitFile.Create(AMasterFile : TMasterFile);
+constructor TInterfacedUnitFile.Create(AMasterFile: TMasterFile);
 begin
   inherited Create;
 
@@ -295,15 +296,15 @@ end;
   [@inheritDoc]
 *}
 procedure TInterfacedUnitFile.RegisterComponents(
-  RegisterSingleComponentProc : TRegisterSingleComponentProc;
-  RegisterComponentSetProc : TRegisterComponentSetProc);
+  RegisterSingleComponentProc: TRegisterSingleComponentProc;
+  RegisterComponentSetProc: TRegisterComponentSetProc);
 begin
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TInterfacedUnitFile.GetParams(Params : TStrings);
+procedure TInterfacedUnitFile.GetParams(Params: TStrings);
 begin
 end;
 

@@ -26,17 +26,17 @@ type
     procedure ButtonEditParamsClick(Sender: TObject);
   private
     { Déclarations privées }
-    MasterFile : TMasterFile;
-    Filters : TStrings;
+    MasterFile: TMasterFile;
+    Filters: TStrings;
 
-    procedure AddUnitFilter(const Filter, GUID; var Continue : boolean);
+    procedure AddUnitFilter(const Filter, GUID; var Continue: Boolean);
 
-    procedure AddUnitFileDesc(const UnitFileDesc : TUnitFileDesc);
-    procedure DeleteUnitFileDesc(Index : integer);
-    procedure AddUnitFile(const FileName : TFileName; const GUID : TGUID);
+    procedure AddUnitFileDesc(const UnitFileDesc: TUnitFileDesc);
+    procedure DeleteUnitFileDesc(Index: Integer);
+    procedure AddUnitFile(const FileName: TFileName; const GUID: TGUID);
   public
     { Déclarations publiques }
-    class function EditUnits(AMasterFile : TMasterFile) : boolean;
+    class function EditUnits(AMasterFile: TMasterFile): Boolean;
   end;
 
 implementation
@@ -50,7 +50,7 @@ implementation
   @param Continue   Position à False pour interrompre l'énumération
 *}
 procedure TFormEditUnits.AddUnitFilter(const Filter, GUID;
-  var Continue : boolean);
+  var Continue: Boolean);
 begin
   Filters.Add(string(Filter));
 end;
@@ -59,14 +59,15 @@ end;
   Ajoute à la list box les informations d'un descripteur de fichier
   @param UnitFileDesc   Descripteur de fichier à ajouter
 *}
-procedure TFormEditUnits.AddUnitFileDesc(const UnitFileDesc : TUnitFileDesc);
-var DescPtr : PUnitFileDesc;
+procedure TFormEditUnits.AddUnitFileDesc(const UnitFileDesc: TUnitFileDesc);
+var
+  DescPtr: PUnitFileDesc;
 begin
   if ListBoxUnits.Items.IndexOf(UnitFileDesc.HRef) >= 0 then
   begin
     ShowDialog(sDuplicateUnitTitle,
       Format(sDuplicateUnit, [UnitFileDesc.HRef]), dtError);
-    exit;
+    Exit;
   end;
 
   New(DescPtr);
@@ -80,8 +81,9 @@ end;
   Supprime un élément de la list box des fichiers unité
   @param Index   Index de l'élément à supprimer
 *}
-procedure TFormEditUnits.DeleteUnitFileDesc(Index : integer);
-var DescPtr : PUnitFileDesc;
+procedure TFormEditUnits.DeleteUnitFileDesc(Index: Integer);
+var
+  DescPtr: PUnitFileDesc;
 begin
   DescPtr := PUnitFileDesc(ListBoxUnits.Items.Objects[Index]);
   Finalize(DescPtr^);
@@ -94,9 +96,10 @@ end;
   @param FileName   Nom du fichier
   @param GUID       GUID du type de fichier
 *}
-procedure TFormEditUnits.AddUnitFile(const FileName : TFileName;
-  const GUID : TGUID);
-var UnitFileDesc : TUnitFileDesc;
+procedure TFormEditUnits.AddUnitFile(const FileName: TFileName;
+  const GUID: TGUID);
+var
+  UnitFileDesc: TUnitFileDesc;
 begin
   UnitFileDesc.GUID := GUID;
   UnitFileDesc.HRef := MasterFile.MakeHRef(FileName, fUnitsDir);
@@ -114,14 +117,15 @@ end;
   @param MasterFile   Fichier maître dont modifier les unités
   @return True si les unités ont été modifiées, False sinon
 *}
-class function TFormEditUnits.EditUnits(AMasterFile : TMasterFile) : boolean;
-var I : integer;
-    UnitFileDescs : TUnitFileDescs;
+class function TFormEditUnits.EditUnits(AMasterFile: TMasterFile): Boolean;
+var
+  I: Integer;
+  UnitFileDescs: TUnitFileDescs;
 begin
   // Initialisations et contrôles de validité d'appel
   Result := False;
   if AMasterFile.FileName = '' then
-    exit;
+    Exit;
 
   with Create(Application) do
   try
@@ -134,8 +138,8 @@ begin
     ListBoxUnits.ItemIndex := 0;
 
     // Affichage de la boîte de dialogue
-    if ShowModal <> mrOK then
-      exit;
+    if ShowModal <> mrOk then
+      Exit;
 
     // Reformer le tableau des descripteurs
     SetLength(UnitFileDescs, ListBoxUnits.Items.Count);
@@ -158,8 +162,9 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormEditUnits.FormCreate(Sender: TObject);
-var I : integer;
-    Filter : string;
+var
+  I: Integer;
+  Filter: string;
 begin
   // Lister les filtres d'unité
   Filters := TStringList.Create;
@@ -207,8 +212,9 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormEditUnits.ButtonAddNewClick(Sender: TObject);
-var FileName : TFileName;
-    GUID : TGUID;
+var
+  FileName: TFileName;
+  GUID: TGUID;
 begin
   if TFormCreateNewUnit.NewUnit(FileName, GUID) then
     AddUnitFile(FileName, GUID);
@@ -223,16 +229,16 @@ begin
   with ListBoxUnits do
   begin
     if ItemIndex < 0 then
-      exit;
+      Exit;
 
     // Garder toujours au moins une unité
     if Items.Count = 1 then
-      ShowDialog(sRemoveUnitTitle, sCantRemoveLastUnit, dtError) else
-
+      ShowDialog(sRemoveUnitTitle, sCantRemoveLastUnit, dtError)
+    else
     // Demander confirmation à l'utilisateur
     if ShowDialog(sRemoveUnitTitle,
-        Format(sConfirmRemoveUnit, [Items[ItemIndex]]),
-        dtConfirmation, dbOKCancel) = drOK then
+      Format(sConfirmRemoveUnit, [Items[ItemIndex]]),
+      dtConfirmation, dbOKCancel) = drOK then
       DeleteUnitFileDesc(ItemIndex);
   end;
 end;
@@ -243,9 +249,10 @@ end;
 *}
 procedure TFormEditUnits.ButtonEditParamsClick(Sender: TObject);
 begin
-  with ListBoxUnits do if ItemIndex >= 0 then
-    TFormParameters.EditUnitParams(
-      PUnitFileDesc(Items.Objects[ItemIndex]).Params);
+  with ListBoxUnits do
+    if ItemIndex >= 0 then
+      TFormParameters.EditUnitParams(
+        PUnitFileDesc(Items.Objects[ItemIndex]).Params);
 end;
 
 end.

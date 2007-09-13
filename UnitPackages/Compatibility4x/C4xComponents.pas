@@ -56,7 +56,7 @@ const {don't localize}
 
 resourcestring
   sGotOutsideMaze = 'BRAVO ! Tu as réussi à sortir du labyrinthe !';
-  sFoundTreasure  = 'BRAVO ! Tu as trouvé le trésor !';
+  sFoundTreasure = 'BRAVO ! Tu as trouvé le trésor !';
 
   sButtonTitle = 'Numéro du bouton';
   sButtonPrompt = 'Numéro du bouton (0 à %d) :';
@@ -82,7 +82,7 @@ type
   *}
   TZonesPlugin = class(TPlugin)
   public
-    procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); override;
+    procedure Moved(Player: TPlayer; const Src, Dest: T3DPoint); override;
   end;
 
   {*
@@ -93,14 +93,14 @@ type
   *}
   TOldStairs = class(TEffect)
   protected
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
 
-    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
-      var GoOnMoving : boolean); override;
+    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
+      var GoOnMoving: Boolean); override;
   end;
 
   {*
@@ -111,14 +111,14 @@ type
   *}
   TActionsObject = class(TObjectDef)
   private
-    FActions : TActions; /// Actions propriétaires
+    FActions: TActions; /// Actions propriétaires
   protected
-    function GetCount(Player : TPlayer) : integer; override;
-    procedure SetCount(Player : TPlayer; Value : integer); override;
+    function GetCount(Player: TPlayer): Integer; override;
+    procedure SetCount(Player: TPlayer; Value: Integer); override;
   public
-    constructor Create(AActions : TActions);
+    constructor Create(AActions: TActions);
 
-    property Actions : TActions read FActions;
+    property Actions: TActions read FActions;
   end;
 
   {*
@@ -129,21 +129,21 @@ type
   *}
   TActionsEffect = class(TEffect)
   private
-    FActions : TActions;          /// Actions propriétaires
-    FAlternatePainter : TPainter; /// Peintre alternatif
+    FActions: TActions;          /// Actions propriétaires
+    FAlternatePainter: TPainter; /// Peintre alternatif
   protected
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
 
-    property AlternatePainter : TPainter read FAlternatePainter;
+    property AlternatePainter: TPainter read FAlternatePainter;
   public
-    constructor Create(AActions : TActions);
+    constructor Create(AActions: TActions);
     procedure AfterConstruction; override;
 
-    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
-      var GoOnMoving : boolean); override;
+    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
+      var GoOnMoving: Boolean); override;
 
-    property Actions : TActions read FActions;
+    property Actions: TActions read FActions;
   end;
 
   {*
@@ -154,15 +154,15 @@ type
   *}
   TActionsObstacle = class(TObstacle)
   private
-    FActions : TActions; /// Actions propriétaires
+    FActions: TActions; /// Actions propriétaires
   public
-    constructor Create(AActions : TActions);
+    constructor Create(AActions: TActions);
 
-    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortExecute : boolean); override;
+    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel, AbortExecute: Boolean); override;
 
-    property Actions : TActions read FActions;
+    property Actions: TActions read FActions;
   end;
 
   {*
@@ -172,34 +172,34 @@ type
   *}
   TActions = class(TFunLabyComponent)
   private
-    FNumber : integer;            /// Numéro d'actions
-    FKind : TActionsKind;         /// Type d'actions
-    FFileName : string;           /// Nom du fichier de graphismes
-    FActions : TStrings;          /// Actions à exécuter
-    FCounter : integer;           /// Compteur d'exécution
-    FInactive : TComponentID;     /// Effet inactif correspondant
-    FObjectDef : TActionsObject;  /// Objet correspondant
-    FEffect : TActionsEffect;     /// Effet correspondant
-    FObstacle : TActionsObstacle; /// Obstacle correspondant
+    FNumber: Integer;            /// Numéro d'actions
+    FKind: TActionsKind;         /// Type d'actions
+    FFileName: string;           /// Nom du fichier de graphismes
+    FActions: TStrings;          /// Actions à exécuter
+    FCounter: Integer;           /// Compteur d'exécution
+    FInactive: TComponentID;     /// Effet inactif correspondant
+    FObjectDef: TActionsObject;  /// Objet correspondant
+    FEffect: TActionsEffect;     /// Effet correspondant
+    FObstacle: TActionsObstacle; /// Obstacle correspondant
   public
-    constructor Create(AMaster : TMaster; ANumber : integer;
-      AKind : TActionsKind; const AFileName : string; AActions : TStrings;
-      const AID : TComponentID = '');
+    constructor Create(AMaster: TMaster; ANumber: Integer;
+      AKind: TActionsKind; const AFileName: string; AActions: TStrings;
+      const AID: TComponentID = '');
     destructor Destroy; override;
 
-    procedure Execute(Phase : integer; Player : TPlayer; KeyPressed : boolean;
-      const Pos : T3DPoint; var DoNextPhase : boolean;
-      out HasMoved, HasShownMsg, Successful : boolean);
+    procedure Execute(Phase: Integer; Player: TPlayer; KeyPressed: Boolean;
+      const Pos: T3DPoint; var DoNextPhase: Boolean;
+      out HasMoved, HasShownMsg, Successful: Boolean);
 
-    property Number : integer read FNumber;
-    property Kind : TActionsKind read FKind;
-    property FileName : string read FFileName;
-    property Actions : TStrings read FActions;
-    property Counter : integer read FCounter write FCounter;
-    property Inactive : TComponentID read FInactive;
-    property ObjectDef : TActionsObject read FObjectDef;
-    property Effect : TActionsEffect read FEffect;
-    property Obstacle : TActionsObstacle read FObstacle;
+    property Number: Integer read FNumber;
+    property Kind: TActionsKind read FKind;
+    property FileName: string read FFileName;
+    property Actions: TStrings read FActions;
+    property Counter: Integer read FCounter write FCounter;
+    property Inactive: TComponentID read FInactive;
+    property ObjectDef: TActionsObject read FObjectDef;
+    property Effect: TActionsEffect read FEffect;
+    property Obstacle: TActionsObstacle read FObstacle;
   end;
 
   {*
@@ -209,41 +209,41 @@ type
   *}
   TC4xInfos = class(TFunLabyComponent)
   private
-    FMasterFile : TMasterFile;                /// Fichier maître
-    FKnowShowTips : boolean;                  /// Affichage des indices fixé
-    FShowTips : boolean;                      /// Affichage les indices
-    FActionsCount : integer;                  /// Nombres d'actions
-    FActions : array of TActions;             /// Liste des actions
-    FVariables : array[1..MaxVar] of integer; /// Variables
+    FMasterFile: TMasterFile;                /// Fichier maître
+    FKnowShowTips: Boolean;                  /// Affichage des indices fixé
+    FShowTips: Boolean;                      /// Affichage les indices
+    FActionsCount: Integer;                  /// Nombres d'actions
+    FActions: array of TActions;             /// Liste des actions
+    FVariables: array[1..MaxVar] of Integer; /// Variables
 
-    procedure SetShowTips(Value : boolean);
+    procedure SetShowTips(Value: Boolean);
 
-    function GetActions(Index : integer) : TActions;
+    function GetActions(Index: Integer): TActions;
 
-    function GetVariables(Index : integer) : integer;
-    procedure SetVariables(Index, Value : integer);
+    function GetVariables(Index: Integer): Integer;
+    procedure SetVariables(Index, Value: Integer);
   public
-    constructor Create(AMasterFile : TMasterFile; AActions : TObjectList);
+    constructor Create(AMasterFile: TMasterFile; AActions: TObjectList);
 
-    property MasterFile : TMasterFile read FMasterFile;
+    property MasterFile: TMasterFile read FMasterFile;
 
-    property KnowShowTips : boolean read FKnowShowTips;
-    property ShowTips : boolean read FShowTips write SetShowTips;
+    property KnowShowTips: Boolean read FKnowShowTips;
+    property ShowTips: Boolean read FShowTips write SetShowTips;
 
-    property ActionsCount : integer read FActionsCount;
-    property Actions[index : integer] : TActions read GetActions;
+    property ActionsCount: Integer read FActionsCount;
+    property Actions[Index: Integer]: TActions read GetActions;
 
-    property Variables[index : integer] : integer
+    property Variables[Index: Integer]: Integer
       read GetVariables write SetVariables;
   end;
 
 const {don't localize}
   /// Ensemble des types d'actions qui ne sont pas associées à une case
-  ActionsKindsWithoutScrew : set of TActionsKind =
+  ActionsKindsWithoutScrew: set of TActionsKind =
     [akGameStarted, akZone];
 
   /// Ensemble des types d'actions personnalisés
-  CustomActionsKind : set of TActionsKind =
+  CustomActionsKind: set of TActionsKind =
     [akCustom, akObject, akObstacle, akDirection];
 
   /// Sous-répertoire des images gardées pour compatibilité
@@ -258,26 +258,28 @@ uses
 { Classe TZonesPlugin }
 {---------------------}
 
-procedure TZonesPlugin.Moved(Player : TPlayer; const Src, Dest : T3DPoint);
-var Zone : T3DPoint;
-    ActionsID : TComponentID;
-    Actions : TActions;
-    DoNextPhase, HasMoved, HasShownMsg, Successful, Redo : boolean;
+procedure TZonesPlugin.Moved(Player: TPlayer; const Src, Dest: T3DPoint);
+var
+  Zone: T3DPoint;
+  ActionsID: TComponentID;
+  Actions: TActions;
+  DoNextPhase, HasMoved, HasShownMsg, Successful, Redo: Boolean;
 begin
   Zone.X := Dest.X div 7;
   Zone.Y := Dest.Y div 7;
   Zone.Z := Dest.Z;
 
-  if (Src.X div 7 = Zone.X) and (Src.Y div 7 = Zone.Y) and (Src.Z = Zone.Z) then
-    exit;
+  if (Src.X div 7 = Zone.X) and (Src.Y div 7 = Zone.Y) and
+    (Src.Z = Zone.Z) then
+    Exit;
 
   ActionsID := Format(idZoneActions, [Zone.X, Zone.Y, Zone.Z]);
   Actions := nil;
   try
     Actions := Master.Component[ActionsID] as TActions;
   except
-    on Error : EComponentNotFound do;
-    on Error : EInvalidCast do;
+    on Error: EComponentNotFound do;
+    on Error: EInvalidCast do;
   end;
 
   if Actions <> nil then
@@ -304,8 +306,8 @@ end;
   @param AID       ID de l'effet de case
   @param AName     Nom de la case
 *}
-constructor TOldStairs.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TOldStairs.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
   FStaticDraw := False;
@@ -318,27 +320,30 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TOldStairs.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
-var StairsID : TComponentID;
-    Pos, Other : T3DPoint;
+procedure TOldStairs.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
+var
+  StairsID: TComponentID;
+  Pos, Other: T3DPoint;
 begin
   inherited;
 
-  if IsNoQPos(QPos) then StairsID := idUpStairs else
+  if IsNoQPos(QPos) then
+    StairsID := idUpStairs
+  else
   begin
     Pos := QPos.Position;
     Other := Pos;
     FindNextScrew(QPos.Map, Other, Self);
 
-    if (Other.Z < Pos.Z) or ( (Other.Z = Pos.Z) and
-       (Other.Y < Pos.Y) or ( (Other.Y = Pos.Y) and (Other.X < Pos.X) ) ) then
+    if (Other.Z < Pos.Z) or ((Other.Z = Pos.Z) and
+      (Other.Y < Pos.Y) or ((Other.Y = Pos.Y) and (Other.X < Pos.X))) then
       StairsID := idDownStairs
     else
       StairsID := idUpStairs;
   end;
 
-  Master.Effect[StairsID].Draw(QPos, Canvas, X, Y)
+  Master.Effect[StairsID].Draw(QPos, Canvas, X, Y);
 end;
 
 {*
@@ -347,9 +352,10 @@ end;
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TOldStairs.Execute(Player : TPlayer; const Pos : T3DPoint;
-  var GoOnMoving : boolean);
-var Other : T3DPoint;
+procedure TOldStairs.Execute(Player: TPlayer; const Pos: T3DPoint;
+  var GoOnMoving: Boolean);
+var
+  Other: T3DPoint;
 begin
   inherited;
 
@@ -371,7 +377,7 @@ end;
   Crée une instance de TActionsObject
   @param AActions   Actions propriétaires
 *}
-constructor TActionsObject.Create(AActions : TActions);
+constructor TActionsObject.Create(AActions: TActions);
 begin
   inherited Create(AActions.Master, Format(idActionsObject, [AActions.Number]),
     AActions.FileName);
@@ -385,7 +391,7 @@ end;
   @param Player   Joueur concerné
   @return Nombre d'objets que ce joueur possède
 *}
-function TActionsObject.GetCount(Player : TPlayer) : integer;
+function TActionsObject.GetCount(Player: TPlayer): Integer;
 begin
   Result := Actions.Counter;
 end;
@@ -395,7 +401,7 @@ end;
   @param Player   Joueur concerné
   @param Value    Nouveau nombre d'objets
 *}
-procedure TActionsObject.SetCount(Player : TPlayer; Value : integer);
+procedure TActionsObject.SetCount(Player: TPlayer; Value: Integer);
 begin
   Actions.Counter := Value;
 end;
@@ -408,7 +414,7 @@ end;
   Crée une instance de TActionsEffect
   @param AActions   Actions propriétaires
 *}
-constructor TActionsEffect.Create(AActions : TActions);
+constructor TActionsEffect.Create(AActions: TActions);
 begin
   inherited Create(AActions.Master, Format(idActionsEffect, [AActions.Number]),
     Format(sButton, [AActions.Number]));
@@ -418,27 +424,27 @@ begin
   FAlternatePainter.ImgNames.BeginUpdate;
 
   case Actions.Kind of
-    akPushButton :
+    akPushButton:
     begin
       Painter.ImgNames.Add(fButton);
       AlternatePainter.ImgNames.Add(fSunkenButton);
       FStaticDraw := False;
     end;
-    akSwitch :
+    akSwitch:
     begin
       Painter.ImgNames.Add(fSwitchOff);
       AlternatePainter.ImgNames.Add(fSwitchOn);
       FStaticDraw := False;
     end;
-    akInfoStone :
+    akInfoStone:
       Painter.ImgNames.Add(fInfoStone);
-    akTransporterNext..akTransporterRandom :
+    akTransporterNext..akTransporterRandom:
       Painter.ImgNames.Add(fTransporter);
-    akOutside :
+    akOutside:
       Painter.ImgNames.Add(fOutside);
-    akTreasure :
+    akTreasure:
       Painter.ImgNames.Add(fTreasure);
-    akCustom..akDirection :
+    akCustom..akDirection:
       Painter.ImgNames.Add(fCompatibility + Actions.FileName);
   end;
 end;
@@ -462,8 +468,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le composant
   @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TActionsEffect.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TActionsEffect.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   if Actions.Kind = akPushButton then
   begin
@@ -471,15 +477,14 @@ begin
       Painter.Draw(Canvas, X, Y)
     else
       AlternatePainter.Draw(Canvas, X, Y);
-  end else
-  if Actions.Kind = akSwitch then
+  end else if Actions.Kind = akSwitch then
   begin
     if Odd(Actions.Counter) then
       AlternatePainter.Draw(Canvas, X, Y)
     else
       Painter.Draw(Canvas, X, Y);
   end else
-  inherited;
+    inherited;
 end;
 
 {*
@@ -488,10 +493,11 @@ end;
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TActionsEffect.Execute(Player : TPlayer; const Pos : T3DPoint;
-  var GoOnMoving : boolean);
-var HasMoved, HasShownMsg, Successful : boolean;
-    Other : T3DPoint;
+procedure TActionsEffect.Execute(Player: TPlayer; const Pos: T3DPoint;
+  var GoOnMoving: Boolean);
+var
+  HasMoved, HasShownMsg, Successful: Boolean;
+  Other: T3DPoint;
 begin
   GoOnMoving := Actions.Kind = akDirection;
   FActions.Execute(phExecute, Player, True, Pos, GoOnMoving,
@@ -513,12 +519,12 @@ begin
       end;
 
       // Si l'on a trouvé une autre case, on déplace le joueur
-      if Same3DPoint(Other, Pos) then exit;
+      if Same3DPoint(Other, Pos) then
+        Exit;
       Master.Temporize;
       Player.MoveTo(Other);
     end;
-  end else
-  if Actions.Kind in [akOutside..akTreasure] then
+  end else if Actions.Kind in [akOutside..akTreasure] then
   begin
     if Player.Map[Player.Position].Effect = Self then
     begin
@@ -543,7 +549,7 @@ end;
   Crée une instance de TActionsObstacle
   @param AActions   Actions propriétaires
 *}
-constructor TActionsObstacle.Create(AActions : TActions);
+constructor TActionsObstacle.Create(AActions: TActions);
 begin
   inherited Create(AActions.Master, Format(idActionsObstacle,
     [AActions.Number]), Format(sButton, [AActions.Number]));
@@ -564,12 +570,14 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
   @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
-procedure TActionsObstacle.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortExecute : boolean);
-var DoNextPhase, HasMoved, HasShownMsg, Successful : boolean;
+procedure TActionsObstacle.Pushing(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel, AbortExecute: Boolean);
+var
+  DoNextPhase, HasMoved, HasShownMsg, Successful: Boolean;
 begin
-  if FActions.Kind <> akObstacle then exit;
+  if FActions.Kind <> akObstacle then
+    Exit;
   DoNextPhase := False;
   FActions.Execute(phPushing, Player, KeyPressed, Pos, DoNextPhase,
     HasMoved, HasShownMsg, Successful);
@@ -589,9 +597,9 @@ end;
   @param AFileName   Nom du fichier de graphismes
   @param AID         ID des actions, ou vide pour utiliser un ID par défaut
 *}
-constructor TActions.Create(AMaster : TMaster; ANumber : integer;
-  AKind : TActionsKind; const AFileName : string; AActions : TStrings;
-  const AID : TComponentID = '');
+constructor TActions.Create(AMaster: TMaster; ANumber: Integer;
+  AKind: TActionsKind; const AFileName: string; AActions: TStrings;
+  const AID: TComponentID = '');
 begin
   inherited Create(AMaster, IIF(AID = '', Format(idActions, [ANumber]), AID));
 
@@ -603,9 +611,10 @@ begin
   FCounter := 0;
 
   case Kind of
-    akPushButton : FInactive := idSunkenButton;
-    akTransporterNext..akTransporterRandom : FInactive := idInactiveTransporter;
-    else FInactive := '';
+    akPushButton: FInactive := idSunkenButton;
+    akTransporterNext..akTransporterRandom: FInactive := idInactiveTransporter;
+  else
+    FInactive := '';
   end;
 
   if Kind in ActionsKindsWithoutScrew then
@@ -615,7 +624,9 @@ begin
     FObstacle := nil;
   end else
   begin
-    if Kind <> akObject then FObjectDef := nil else
+    if Kind <> akObject then
+      FObjectDef := nil
+    else
       FObjectDef := TActionsObject.Create(Self);
     FEffect := TActionsEffect.Create(Self);
     FObstacle := TActionsObstacle.Create(Self);
@@ -642,11 +653,11 @@ end;
   @param HasShownMsg   Indique si un message a été affiché
   @param Successful    Indique si la manoeuvre est réussie
 *}
-procedure TActions.Execute(Phase : integer; Player : TPlayer;
-  KeyPressed : boolean; const Pos : T3DPoint; var DoNextPhase : boolean;
-  out HasMoved, HasShownMsg, Successful : boolean);
+procedure TActions.Execute(Phase: Integer; Player: TPlayer;
+  KeyPressed: Boolean; const Pos: T3DPoint; var DoNextPhase: Boolean;
+  out HasMoved, HasShownMsg, Successful: Boolean);
 begin
-  inc(FCounter);
+  Inc(FCounter);
   TActionsInterpreter.Execute(@FCounter, FActions, Master, Phase, Player,
     KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg, Successful, Inactive);
 end;
@@ -660,8 +671,8 @@ end;
   @param AMasterFile   Fichier maître
   @param AActions      Liste des actions
 *}
-constructor TC4xInfos.Create(AMasterFile : TMasterFile;
-  AActions : TObjectList);
+constructor TC4xInfos.Create(AMasterFile: TMasterFile;
+  AActions: TObjectList);
 begin
   inherited Create(AMasterFile.Master, idC4xInfos);
   FMasterFile := AMasterFile;
@@ -670,15 +681,15 @@ begin
   FActionsCount := AActions.Count;
 
   SetLength(FActions, FActionsCount);
-  Move(AActions.List^, FActions[0], FActionsCount*sizeof(TObject));
-  FillChar(FVariables[1], MaxVar*sizeof(integer), 0);
+  Move(AActions.List^, FActions[0], FActionsCount*SizeOf(TObject));
+  FillChar(FVariables[1], MaxVar*SizeOf(Integer), 0);
 end;
 
 {*
   Définit l'affichage des indices
   @param Value   Nouvelle valeur de l'affichage des indices
 *}
-procedure TC4xInfos.SetShowTips(Value : boolean);
+procedure TC4xInfos.SetShowTips(Value: Boolean);
 begin
   FKnowShowTips := True;
   FShowTips := Value;
@@ -689,7 +700,7 @@ end;
   @param Index   Index des actions
   @return Les actions à l'index spécifié
 *}
-function TC4xInfos.GetActions(Index : integer) : TActions;
+function TC4xInfos.GetActions(Index: Integer): TActions;
 begin
   Result := FActions[Index];
 end;
@@ -700,7 +711,7 @@ end;
   @return Valeur de la variable d'index Index
   @see MaxVar
 *}
-function TC4xInfos.GetVariables(Index : integer) : integer;
+function TC4xInfos.GetVariables(Index: Integer): Integer;
 begin
   Result := FVariables[Index];
 end;
@@ -711,7 +722,7 @@ end;
   @param Value   Nouvelle valeur de la variable d'index Index
   @see MaxVar
 *}
-procedure TC4xInfos.SetVariables(Index, Value : integer);
+procedure TC4xInfos.SetVariables(Index, Value: Integer);
 begin
   FVariables[Index] := Value;
 end;

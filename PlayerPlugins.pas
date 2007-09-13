@@ -9,7 +9,7 @@ unit PlayerPlugins;
 
 interface
 
-uses 
+uses
   Windows, Messages, SysUtils, Classes, Graphics, Forms, Dialogs, Controls,
   StdCtrls, Buttons, FunLabyUtils;
 
@@ -42,7 +42,7 @@ type
     procedure SetButtons;
   public
     { Déclarations publiques }
-    class function ManagePlugins(Player : TPlayer) : boolean;
+    class function ManagePlugins(Player: TPlayer): Boolean;
   end;
 
 implementation
@@ -54,8 +54,9 @@ implementation
   @param List    Boîte liste source
   @param Items   Liste d'éléments destination
 *}
-procedure TFormPlugins.MoveSelected(List : TCustomListBox; Items : TStrings);
-var I : integer;
+procedure TFormPlugins.MoveSelected(List: TCustomListBox; Items: TStrings);
+var
+  I: Integer;
 begin
   for I := List.Items.Count-1 downto 0 do
   begin
@@ -71,7 +72,8 @@ end;
   Met à jour la disponibilité des boutons
 *}
 procedure TFormPlugins.SetButtons;
-var AvailableEmpty, AttachedEmpty : boolean;
+var
+  AvailableEmpty, AttachedEmpty: Boolean;
 begin
   AvailableEmpty := ListBoxAvailablePlugins.Items.Count = 0;
   AttachedEmpty  := ListBoxAttachedPlugins .Items.Count = 0;
@@ -87,10 +89,11 @@ end;
   @param List   Boîte liste concernée
   @return L'index du premier élément sélectionné
 *}
-function TFormPlugins.GetFirstSelection(List : TCustomListBox) : integer;
+function TFormPlugins.GetFirstSelection(List: TCustomListBox): Integer;
 begin
   for Result := 0 to List.Items.Count-1 do
-    if List.Selected[Result] then exit;
+    if List.Selected[Result] then
+      Exit;
   Result := LB_ERR;
 end;
 
@@ -99,16 +102,19 @@ end;
   @param List    Boîte liste concernée
   @param Index   Index de l'élément à sélectionner
 *}
-procedure TFormPlugins.SetItem(List : TListBox; Index : integer);
-var MaxIndex : integer;
+procedure TFormPlugins.SetItem(List: TListBox; Index: Integer);
+var
+  MaxIndex: Integer;
 begin
   with List do
   begin
     SetFocus;
     MaxIndex := List.Items.Count-1;
 
-    if Index = LB_ERR then Index := 0 else
-    if Index > MaxIndex then Index := MaxIndex;
+    if Index = LB_ERR then
+      Index := 0
+    else if Index > MaxIndex then
+      Index := MaxIndex;
     Selected[Index] := True;
   end;
 
@@ -120,9 +126,10 @@ end;
   @param Player   Joueur concerné
   @return True si une modification a eu lieu, False sinon
 *}
-class function TFormPlugins.ManagePlugins(Player : TPlayer) : boolean;
-var Master : TMaster;
-    I : integer;
+class function TFormPlugins.ManagePlugins(Player: TPlayer): Boolean;
+var
+  Master: TMaster;
+  I: Integer;
 begin
   with Create(Application) do
   try
@@ -139,7 +146,9 @@ begin
 
     SetButtons;
 
-    if ShowModal <> mrOK then Result := False else
+    if ShowModal <> mrOk then
+      Result := False
+    else
     begin
       for I := 0 to Master.PluginCount-1 do
         Player.RemovePlugin(Master.Plugins[I]);
@@ -154,7 +163,8 @@ begin
 end;
 
 procedure TFormPlugins.ButtonAttachPluginClick(Sender: TObject);
-var Index : integer;
+var
+  Index: Integer;
 begin
   Index := GetFirstSelection(ListBoxAvailablePlugins);
   MoveSelected(ListBoxAvailablePlugins, ListBoxAttachedPlugins.Items);
@@ -162,7 +172,8 @@ begin
 end;
 
 procedure TFormPlugins.ButtonDetachPluginClick(Sender: TObject);
-var Index : integer;
+var
+  Index: Integer;
 begin
   Index := GetFirstSelection(ListBoxAttachedPlugins);
   MoveSelected(ListBoxAttachedPlugins, ListBoxAvailablePlugins.Items);
@@ -170,7 +181,8 @@ begin
 end;
 
 procedure TFormPlugins.ButtonAttachAllClick(Sender: TObject);
-var I : integer;
+var
+  I: Integer;
 begin
   for I := 0 to ListBoxAvailablePlugins.Items.Count-1 do
   begin
@@ -184,7 +196,8 @@ begin
 end;
 
 procedure TFormPlugins.ButtonDetachAllClick(Sender: TObject);
-var I : integer;
+var
+  I: Integer;
 begin
   for I := 0 to ListBoxAttachedPlugins.Items.Count-1 do
   begin
@@ -198,3 +211,4 @@ begin
 end;
 
 end.
+

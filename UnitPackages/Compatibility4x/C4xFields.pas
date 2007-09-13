@@ -26,11 +26,11 @@ type
   *}
   TOldWater = class(TWater)
   private
-    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
+    procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); override;
   end;
 
   {*
@@ -42,11 +42,11 @@ type
   *}
   TOldHole = class(THole)
   private
-    procedure PlankMessage(var Msg : TPlankMessage); message msgPlank;
+    procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); override;
   end;
 
 implementation
@@ -60,42 +60,43 @@ implementation
   TOldWater anihile le comportement de FunLabyBase envers la planche.
   @param Msg   Message
 *}
-procedure TOldWater.PlankMessage(var Msg : TPlankMessage);
+procedure TOldWater.PlankMessage(var Msg: TPlankMessage);
 begin
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TOldWater.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel : boolean);
-var Behind : T3DPoint;
-    SrcObstacle, DestObstacle : TObstacle;
+procedure TOldWater.Entering(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint; var Cancel: Boolean);
+var
+  Behind: T3DPoint;
+  SrcObstacle, DestObstacle: TObstacle;
 begin
   with Player do
   begin
-    if DoAction(actGoOnWater) then exit;
+    if DoAction(actGoOnWater) then
+      Exit;
 
     Behind := PointBehind(Pos, Direction);
     if Map[Behind].Field is TGround then
     begin
       SrcObstacle := Map[Src].Obstacle;
       if (SrcObstacle is TActionsObstacle) and
-         (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
+        (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
         SrcObstacle := nil;
 
       DestObstacle := Map[Behind].Obstacle;
       if (DestObstacle is TActionsObstacle) and
-         (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
+        (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
         DestObstacle := nil;
 
       if (DestObstacle = SrcObstacle) and
-         (Master.ObjectDef[idPlanks].Count[Player] > 0) then
+        (Master.ObjectDef[idPlanks].Count[Player] > 0) then
       begin
         TPlankScrew.Create(Master, Map, Pos, Player);
         Master.Temporize;
-        exit;
+        Exit;
       end;
     end;
 
@@ -114,18 +115,18 @@ end;
   TOldHole anihile le comportement de FunLabyBase envers la planche.
   @param Msg   Message
 *}
-procedure TOldHole.PlankMessage(var Msg : TPlankMessage);
+procedure TOldHole.PlankMessage(var Msg: TPlankMessage);
 begin
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TOldHole.Entering(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel : boolean);
-var Behind : T3DPoint;
-    SrcObstacle, DestObstacle : TObstacle;
+procedure TOldHole.Entering(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint; var Cancel: Boolean);
+var
+  Behind: T3DPoint;
+  SrcObstacle, DestObstacle: TObstacle;
 begin
   with Player do
   begin
@@ -134,20 +135,20 @@ begin
     begin
       SrcObstacle := Map[Src].Obstacle;
       if (SrcObstacle is TActionsObstacle) and
-         (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
+        (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
         SrcObstacle := nil;
 
       DestObstacle := Map[Behind].Obstacle;
       if (DestObstacle is TActionsObstacle) and
-         (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
+        (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
         DestObstacle := nil;
 
       if (DestObstacle = SrcObstacle) and
-         (Master.ObjectDef[idPlanks].Count[Player] > 0) then
+        (Master.ObjectDef[idPlanks].Count[Player] > 0) then
       begin
         TPlankScrew.Create(Master, Map, Pos, Player);
         Master.Temporize;
-        exit;
+        Exit;
       end;
     end;
 

@@ -18,14 +18,14 @@ type
   TFunLabyBaseUnit = class(TInterfacedUnitFile)
   protected
     procedure RegisterComponents(
-      RegisterSingleComponentProc : TRegisterSingleComponentProc;
-      RegisterComponentSetProc : TRegisterComponentSetProc); override;
+      RegisterSingleComponentProc: TRegisterSingleComponentProc;
+      RegisterComponentSetProc: TRegisterComponentSetProc); override;
   public
-    constructor Create(AMasterFile : TMasterFile; Params : TStrings);
+    constructor Create(AMasterFile: TMasterFile; Params: TStrings);
   end;
 
-function CreateUnitFile(BPLHandler : TBPLUnitFile; Master : TMaster;
-  Params : TStrings) : IUnitFile50; stdcall;
+function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
+  Params: TStrings): IUnitFile50; stdcall;
 
 implementation
 
@@ -36,8 +36,8 @@ implementation
   @param Params       Paramètres passés à l'unité
   @return Interface de l'unité FunLabyBase créée
 *}
-function CreateUnitFile(BPLHandler : TBPLUnitFile; Master : TMaster;
-  Params : TStrings) : IUnitFile50; stdcall;
+function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
+  Params: TStrings): IUnitFile50; stdcall;
 begin
   Result := TFunLabyBaseUnit.Create(BPLHandler.MasterFile, Params);
 end;
@@ -52,10 +52,11 @@ end;
   @param Master     Maître FunLabyrinthe dans lequel charger les composants
   @param Params     Paramètres envoyés au fichier unité
 *}
-constructor TFunLabyBaseUnit.Create(AMasterFile : TMasterFile;
-  Params : TStrings);
-var Buoys, Planks, SilverKeys, GoldenKeys : TObjectDef;
-    I : integer;
+constructor TFunLabyBaseUnit.Create(AMasterFile: TMasterFile;
+  Params: TStrings);
+var
+  Buoys, Planks, SilverKeys, GoldenKeys: TObjectDef;
+  I: Integer;
 begin
   inherited Create(AMasterFile);
 
@@ -138,25 +139,26 @@ end;
   @param RegisterComponentSetProc      Call-back pour un ensemble de composants
 *}
 procedure TFunLabyBaseUnit.RegisterComponents(
-  RegisterSingleComponentProc : TRegisterSingleComponentProc;
-  RegisterComponentSetProc : TRegisterComponentSetProc);
+  RegisterSingleComponentProc: TRegisterSingleComponentProc;
+  RegisterComponentSetProc: TRegisterComponentSetProc);
 
-  procedure RegSingle(Component : TComponentID);
+  procedure RegSingle(Component: TComponentID);
   begin
     RegisterSingleComponentProc(Master.ScrewComponent[Component]);
   end;
 
-  procedure RegSet(Template : TComponentID;
-    const Components : array of TScrewComponent; BaseIndex : integer;
-    const DialogTitle, DialogPrompt : string);
+  procedure RegSet(Template: TComponentID;
+    const Components: array of TScrewComponent; BaseIndex: Integer;
+    const DialogTitle, DialogPrompt: string);
   begin
     RegisterComponentSetProc(Master.ScrewComponent[Template],
       Components, BaseIndex, DialogTitle, DialogPrompt);
   end;
 
-var I : integer;
-    Transporters : array[0..45] of TScrewComponent;
-    Boats : array[1..10] of TScrewComponent;
+var
+  I: Integer;
+  Transporters: array[0..45] of TScrewComponent;
+  Boats: array[1..10] of TScrewComponent;
 begin
   // Terrains
 

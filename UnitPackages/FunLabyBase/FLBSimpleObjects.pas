@@ -47,12 +47,12 @@ const {don't localize}
   fGoldenKey = 'GoldenKey'; /// Fichier de la clef d'or
 
 resourcestring
-  sFoundBuoy      = 'Tu as trouvé une bouée.'+#10+
-                    'Tu peux aller dans l''eau.';
+  sFoundBuoy = 'Tu as trouvé une bouée.'+#10+
+    'Tu peux aller dans l''eau.';
   sFoundSilverKey = 'Tu as trouvé une clef d''argent.'+#10+
-                    'Tu peux faire disparaître un bloc en argent.';
+    'Tu peux faire disparaître un bloc en argent.';
   sFoundGoldenKey = 'Tu as trouvé une clef d''or.'+#10+
-                    'Tu peux faire disparaître un bloc en or.';
+    'Tu peux faire disparaître un bloc en or.';
 
 type
   {*
@@ -63,13 +63,13 @@ type
   *}
   TBuoyPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
+    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
 
-    procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); override;
+    procedure Moved(Player: TPlayer; const Src, Dest: T3DPoint); override;
 
-    function AbleTo(Player : TPlayer;
-      const Action : TPlayerAction) : boolean; override;
+    function AbleTo(Player: TPlayer;
+      const Action: TPlayerAction): Boolean; override;
   end;
 
   {*
@@ -80,14 +80,14 @@ type
   *}
   TBuoys = class(TObjectDef)
   protected
-    function GetShownInfos(Player : TPlayer) : string; override;
+    function GetShownInfos(Player: TPlayer): string; override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
 
-    function AbleTo(Player : TPlayer;
-      const Action : TPlayerAction) : boolean; override;
-    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
+    function AbleTo(Player: TPlayer;
+      const Action: TPlayerAction): Boolean; override;
+    procedure UseFor(Player: TPlayer; const Action: TPlayerAction); override;
   end;
 
   {*
@@ -98,14 +98,14 @@ type
   *}
   TSilverKeys = class(TObjectDef)
   protected
-    function GetShownInfos(Player : TPlayer) : string; override;
+    function GetShownInfos(Player: TPlayer): string; override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
 
-    function AbleTo(Player : TPlayer;
-      const Action : TPlayerAction) : boolean; override;
-    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
+    function AbleTo(Player: TPlayer;
+      const Action: TPlayerAction): Boolean; override;
+    procedure UseFor(Player: TPlayer; const Action: TPlayerAction); override;
   end;
 
   {*
@@ -116,14 +116,14 @@ type
   *}
   TGoldenKeys = class(TObjectDef)
   protected
-    function GetShownInfos(Player : TPlayer) : string; override;
+    function GetShownInfos(Player: TPlayer): string; override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
 
-    function AbleTo(Player : TPlayer;
-      const Action : TPlayerAction) : boolean; override;
-    procedure UseFor(Player : TPlayer; const Action : TPlayerAction); override;
+    function AbleTo(Player: TPlayer;
+      const Action: TPlayerAction): Boolean; override;
+    procedure UseFor(Player: TPlayer; const Action: TPlayerAction); override;
   end;
 
 implementation
@@ -142,8 +142,8 @@ implementation
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TBuoyPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TBuoyPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   inherited;
   with Canvas do
@@ -163,7 +163,7 @@ end;
   @param Src      Case de départ
   @param Dest     Case d'arrivée
 *}
-procedure TBuoyPlugin.Moved(Player : TPlayer; const Src, Dest : T3DPoint);
+procedure TBuoyPlugin.Moved(Player: TPlayer; const Src, Dest: T3DPoint);
 begin
   if not (Player.Map[Dest].Field is TWater) then
     Player.RemovePlugin(Self);
@@ -177,8 +177,8 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TBuoyPlugin.AbleTo(Player : TPlayer;
-  const Action : TPlayerAction) : boolean;
+function TBuoyPlugin.AbleTo(Player: TPlayer;
+  const Action: TPlayerAction): Boolean;
 begin
   Result := Action = actGoOnWater;
 end;
@@ -193,8 +193,8 @@ end;
   @param AID       ID du composant
   @param AName     Nom du composant
 *}
-constructor TBuoys.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TBuoys.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fBuoy);
@@ -206,8 +206,9 @@ end;
   @param Player   Joueur pour lequel on veut obtenir les infos
   @return Informations textuelles, ou une chaîne vide si rien à afficher
 *}
-function TBuoys.GetShownInfos(Player : TPlayer) : string;
-var ACount : integer;
+function TBuoys.GetShownInfos(Player: TPlayer): string;
+var
+  ACount: Integer;
 begin
   ACount := Count[Player];
   if ACount < 2 then
@@ -224,8 +225,8 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TBuoys.AbleTo(Player : TPlayer;
-  const Action : TPlayerAction) : boolean;
+function TBuoys.AbleTo(Player: TPlayer;
+  const Action: TPlayerAction): Boolean;
 begin
   Result := ((Action = actGoOnWater) and (Count[Player] > 0)) or
     (inherited AbleTo(Player, Action));
@@ -238,7 +239,7 @@ end;
   @param Player   Joueur concerné
   @param Action   Action à effectuer
 *}
-procedure TBuoys.UseFor(Player : TPlayer; const Action : TPlayerAction);
+procedure TBuoys.UseFor(Player: TPlayer; const Action: TPlayerAction);
 begin
   if Action = actGoOnWater then
     Player.AddPlugin(Master.Plugin[idBuoyPlugin])
@@ -256,8 +257,8 @@ end;
   @param AID       ID du composant
   @param AName     Nom du composant
 *}
-constructor TSilverKeys.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TSilverKeys.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fSilverKey);
@@ -269,8 +270,9 @@ end;
   @param Player   Joueur pour lequel on veut obtenir les infos
   @return Informations textuelles, ou une chaîne vide si rien à afficher
 *}
-function TSilverKeys.GetShownInfos(Player : TPlayer) : string;
-var ACount : integer;
+function TSilverKeys.GetShownInfos(Player: TPlayer): string;
+var
+  ACount: Integer;
 begin
   ACount := Count[Player];
   if ACount < 2 then
@@ -287,8 +289,8 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TSilverKeys.AbleTo(Player : TPlayer;
-  const Action : TPlayerAction) : boolean;
+function TSilverKeys.AbleTo(Player: TPlayer;
+  const Action: TPlayerAction): Boolean;
 begin
   Result := ((Action = actOpenSilverLock) and (Count[Player] > 0)) or
     (inherited AbleTo(Player, Action));
@@ -301,7 +303,7 @@ end;
   @param Player   Joueur concerné
   @param Action   Action à effectuer
 *}
-procedure TSilverKeys.UseFor(Player : TPlayer; const Action : TPlayerAction);
+procedure TSilverKeys.UseFor(Player: TPlayer; const Action: TPlayerAction);
 begin
   if Action = actOpenSilverLock then
     Count[Player] := Count[Player]-1
@@ -319,8 +321,8 @@ end;
   @param AID       ID du composant
   @param AName     Nom du composant
 *}
-constructor TGoldenKeys.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TGoldenKeys.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fGoldenKey);
@@ -332,8 +334,9 @@ end;
   @param Player   Joueur pour lequel on veut obtenir les infos
   @return Informations textuelles, ou une chaîne vide si rien à afficher
 *}
-function TGoldenKeys.GetShownInfos(Player : TPlayer) : string;
-var ACount : integer;
+function TGoldenKeys.GetShownInfos(Player: TPlayer): string;
+var
+  ACount: Integer;
 begin
   ACount := Count[Player];
   if ACount < 2 then
@@ -350,8 +353,8 @@ end;
   @param Action   Action à tester
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TGoldenKeys.AbleTo(Player : TPlayer;
-  const Action : TPlayerAction) : boolean;
+function TGoldenKeys.AbleTo(Player: TPlayer;
+  const Action: TPlayerAction): Boolean;
 begin
   Result := ((Action = actOpenGoldenLock) and (Count[Player] > 0)) or
     (inherited AbleTo(Player, Action));
@@ -364,7 +367,7 @@ end;
   @param Player   Joueur concerné
   @param Action   Action à effectuer
 *}
-procedure TGoldenKeys.UseFor(Player : TPlayer; const Action : TPlayerAction);
+procedure TGoldenKeys.UseFor(Player: TPlayer; const Action: TPlayerAction);
 begin
   if Action = actOpenGoldenLock then
     Count[Player] := Count[Player]-1

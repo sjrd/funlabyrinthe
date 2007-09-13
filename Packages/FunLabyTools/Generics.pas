@@ -15,8 +15,8 @@ type
   *}
   TDecorativeEffect = class(TEffect)
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName, AImgName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName, AImgName: string);
   end;
 
   {*
@@ -29,20 +29,20 @@ type
   *}
   TObjectTool = class(TTool)
   private
-    FObjectDef : TObjectDef; /// Définition d'objet liée
-    FFindMessage : string;   /// Message apparaissant lorsqu'on trouve l'outil
+    FObjectDef: TObjectDef; /// Définition d'objet liée
+    FFindMessage: string;   /// Message apparaissant lorsqu'on trouve l'outil
   protected
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      AObjectDef : TObjectDef; const AFindMessage : string;
-      const AName : string = ''; const AImgName : string = '');
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      AObjectDef: TObjectDef; const AFindMessage: string;
+      const AName: string = ''; const AImgName: string = '');
 
-    procedure Find(Player : TPlayer; const Pos : T3DPoint); override;
+    procedure Find(Player: TPlayer; const Pos: T3DPoint); override;
 
-    property ObjectDef : TObjectDef read FObjectDef;
-    property FindMessage : string read FFindMessage;
+    property ObjectDef: TObjectDef read FObjectDef;
+    property FindMessage: string read FFindMessage;
   end;
 
   {*
@@ -55,22 +55,22 @@ type
   *}
   TOverriddenScrew = class(TScrew)
   private
-    FMap : TMap;             /// Carte
-    FPosition : T3DPoint;    /// Position
-    FOriginalScrew : TScrew; /// Case originale
+    FMap: TMap;             /// Carte
+    FPosition: T3DPoint;    /// Position
+    FOriginalScrew: TScrew; /// Case originale
   protected
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      AMap : TMap; const APosition : T3DPoint; AField : TField = nil;
-      AEffect : TEffect = nil; ATool : TTool = nil;
-      AObstacle : TObstacle = nil);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      AMap: TMap; const APosition: T3DPoint; AField: TField = nil;
+      AEffect: TEffect = nil; ATool: TTool = nil;
+      AObstacle: TObstacle = nil);
     destructor Destroy; override;
 
-    property Map : TMap read FMap;
-    property Position : T3DPoint read FPosition;
-    property OriginalScrew : TScrew read FOriginalScrew;
+    property Map: TMap read FMap;
+    property Position: T3DPoint read FPosition;
+    property OriginalScrew: TScrew read FOriginalScrew;
   end;
 
 implementation
@@ -89,8 +89,8 @@ uses
   @param AName      Nom de l'effet de case
   @param AImgName   Nom du fichier image
 *}
-constructor TDecorativeEffect.Create(AMaster : TMaster;
-  const AID : TComponentID; const AName, AImgName : string);
+constructor TDecorativeEffect.Create(AMaster: TMaster;
+  const AID: TComponentID; const AName, AImgName: string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(AImgName);
@@ -111,9 +111,9 @@ end;
   @param AName          Nom de l'outil
   @param AImgName       Nom du fichier image
 *}
-constructor TObjectTool.Create(AMaster : TMaster; const AID : TComponentID;
-  AObjectDef : TObjectDef; const AFindMessage : string;
-  const AName : string = ''; const AImgName : string = '');
+constructor TObjectTool.Create(AMaster: TMaster; const AID: TComponentID;
+  AObjectDef: TObjectDef; const AFindMessage: string;
+  const AName: string = ''; const AImgName: string = '');
 begin
   inherited Create(AMaster, AID, IIF(AName = '', AObjectDef.Name, AName));
   FObjectDef := AObjectDef;
@@ -128,8 +128,8 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TObjectTool.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TObjectTool.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   inherited;
 
@@ -140,7 +140,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TObjectTool.Find(Player : TPlayer; const Pos : T3DPoint);
+procedure TObjectTool.Find(Player: TPlayer; const Pos: T3DPoint);
 begin
   Player.Map[Pos] := ChangeTool(Player.Map[Pos]);
   ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
@@ -163,10 +163,11 @@ end;
   @param ATool       Outil
   @param AObstacle   Obstacle
 *}
-constructor TOverriddenScrew.Create(AMaster : TMaster; const AID : TComponentID;
-  AMap : TMap; const APosition : T3DPoint; AField : TField = nil;
-  AEffect : TEffect = nil; ATool : TTool = nil; AObstacle : TObstacle = nil);
-var AOriginalScrew : TScrew;
+constructor TOverriddenScrew.Create(AMaster: TMaster; const AID: TComponentID;
+  AMap: TMap; const APosition: T3DPoint; AField: TField = nil;
+  AEffect: TEffect = nil; ATool: TTool = nil; AObstacle: TObstacle = nil);
+var
+  AOriginalScrew: TScrew;
 begin
   AOriginalScrew := AMap[APosition];
   inherited Create(AMaster, AID, AOriginalScrew.Name,
@@ -197,8 +198,8 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TOverriddenScrew.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TOverriddenScrew.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   OriginalScrew.Draw(QPos, Canvas, X, Y);
   inherited;

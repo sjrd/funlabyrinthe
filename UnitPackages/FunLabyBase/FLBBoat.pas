@@ -44,16 +44,16 @@ type
   *}
   TBoatPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-      Canvas : TCanvas; X : integer = 0; Y : integer = 0); override;
+    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
 
-    procedure Moving(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Dest : T3DPoint;
-      var Cancel : boolean); override;
-    procedure Moved(Player : TPlayer; const Src, Dest : T3DPoint); override;
+    procedure Moving(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Dest: T3DPoint;
+      var Cancel: Boolean); override;
+    procedure Moved(Player: TPlayer; const Src, Dest: T3DPoint); override;
 
-    function AbleTo(Player : TPlayer;
-      const Action : TPlayerAction) : boolean; override;
+    function AbleTo(Player: TPlayer;
+      const Action: TPlayerAction): Boolean; override;
   end;
 
   {*
@@ -64,17 +64,17 @@ type
   *}
   TBoat = class(TTool)
   private
-    FNumber : integer; /// Numéro de la barque
+    FNumber: Integer; /// Numéro de la barque
   protected
-    procedure DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-      X : integer = 0; Y : integer = 0); override;
+    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+      X: Integer = 0; Y: Integer = 0); override;
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string; ANumber : integer);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; ANumber: Integer);
 
-    procedure Find(Player : TPlayer; const Pos : T3DPoint); override;
+    procedure Find(Player: TPlayer; const Pos: T3DPoint); override;
 
-    property Number : integer read FNumber;
+    property Number: Integer read FNumber;
   end;
 
 const
@@ -97,8 +97,8 @@ implementation
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TBoatPlugin.DrawBefore(Player : TPlayer; const QPos : TQualifiedPos;
-  Canvas : TCanvas; X : integer = 0; Y : integer = 0);
+procedure TBoatPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
+  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   inherited;
   with Canvas do
@@ -110,7 +110,7 @@ begin
     Pen.Width := 2;
 
     case Player.Direction of
-      diNone, diNorth :
+      diNone, diNorth:
       begin
         // Proue
         Arc(X-5, Y-2, X+25, Y+24, X+25, Y+12, X+15, Y+ 2);
@@ -123,7 +123,7 @@ begin
         // Pont
         FloodFill(X+15, Y+15, clOutBoat, fsBorder);
       end;
-      diEast :
+      diEast:
       begin
         // Proue
         Arc(X+4, Y-5, X+32, Y+25, X+18, Y+25, X+30, Y+15);
@@ -136,7 +136,7 @@ begin
         // Pont
         FloodFill(X+15, Y+15, clOutBoat, fsBorder);
       end;
-      diSouth :
+      diSouth:
       begin
         // Proue
         Arc(X+5, Y+4, X+35, Y+32, X+ 5, Y+18, X+15, Y+30);
@@ -149,7 +149,7 @@ begin
         // Pont
         FloodFill(X+15, Y+15, clOutBoat, fsBorder);
       end;
-      diWest :
+      diWest:
       begin
         // Proue
         Arc(X-2, Y+5, X+26, Y+35, X+12, Y+ 5, X   , Y+15);
@@ -179,8 +179,8 @@ end;
   @param Dest           Case d'arrivée
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TBoatPlugin.Moving(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Dest : T3DPoint; var Cancel : boolean);
+procedure TBoatPlugin.Moving(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Dest: T3DPoint; var Cancel: Boolean);
 begin
   if Player.Direction <> OldDirection then
     Cancel := True;
@@ -193,20 +193,23 @@ end;
   @param Src      Case de départ
   @param Dest     Case d'arrivée
 *}
-procedure TBoatPlugin.Moved(Player : TPlayer; const Src, Dest : T3DPoint);
+procedure TBoatPlugin.Moved(Player: TPlayer; const Src, Dest: T3DPoint);
 begin
-  with Player do if not (Map[Dest].Field is TWater) then
+  with Player do
   begin
-    // Retirer le plug-in barque
-    RemovePlugin(Self);
+    if not (Map[Dest].Field is TWater) then
+    begin
+      // Retirer le plug-in barque
+      RemovePlugin(Self);
 
-    // Placer un outil barque sur la case source
-    with Map[Src] do
-      Map[Src] := Master.ScrewByComps(idGroundWater, Effect.SafeID,
-        Format(idBoat, [Attribute[idBoatPlugin]]), Obstacle.SafeID);
+      // Placer un outil barque sur la case source
+      with Map[Src] do
+        Map[Src] := Master.ScrewByComps(idGroundWater, Effect.SafeID,
+          Format(idBoat, [Attribute[idBoatPlugin]]), Obstacle.SafeID);
 
-    // Remettre à 0 l'attribut du joueur concernant la barque
-    Attribute[idBoatPlugin] := 0;
+      // Remettre à 0 l'attribut du joueur concernant la barque
+      Attribute[idBoatPlugin] := 0;
+    end;
   end;
 end;
 
@@ -218,8 +221,8 @@ end;
   @param Action   Action à tester
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TBoatPlugin.AbleTo(Player : TPlayer;
-  const Action : TPlayerAction) : boolean;
+function TBoatPlugin.AbleTo(Player: TPlayer;
+  const Action: TPlayerAction): Boolean;
 begin
   Result := Action = actGoOnWater;
 end;
@@ -235,8 +238,8 @@ end;
   @param AName     Nom de l'outil
   @param ANumber   Numéro de la barque
 *}
-constructor TBoat.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string; ANumber : integer);
+constructor TBoat.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; ANumber: Integer);
 begin
   inherited Create(AMaster, Format(AID, [ANumber]), Format(AName, [ANumber]));
   FNumber := ANumber;
@@ -250,8 +253,8 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner le terrain
   @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
 *}
-procedure TBoat.DoDraw(const QPos : TQualifiedPos; Canvas : TCanvas;
-  X : integer = 0; Y : integer = 0);
+procedure TBoat.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+  X: Integer = 0; Y: Integer = 0);
 begin
   inherited;
 
@@ -266,7 +269,7 @@ end;
   @param Player   Joueur qui a trouvé l'outil
   @param Pos      Position de la case
 *}
-procedure TBoat.Find(Player : TPlayer; const Pos : T3DPoint);
+procedure TBoat.Find(Player: TPlayer; const Pos: T3DPoint);
 begin
   with Player do
   begin

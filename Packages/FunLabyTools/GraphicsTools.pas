@@ -13,8 +13,8 @@ interface
 uses
   Graphics;
 
-procedure DrawScrewNumber(Canvas : TCanvas; X, Y, Number : integer;
-  FontColor : TColor = clBlack);
+procedure DrawScrewNumber(Canvas: TCanvas; X, Y, Number: Integer;
+  FontColor: TColor = clBlack);
 
 implementation
 
@@ -29,8 +29,8 @@ uses
   @param Number      Numéro à écrire
   @param FontColor   Couleur du texte
 *}
-procedure DrawScrewNumber(Canvas : TCanvas; X, Y, Number : integer;
-  FontColor : TColor = clBlack);
+procedure DrawScrewNumber(Canvas: TCanvas; X, Y, Number: Integer;
+  FontColor: TColor = clBlack);
 begin
   with Canvas do
   begin

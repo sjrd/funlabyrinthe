@@ -42,7 +42,7 @@ type
     { Déclarations privées }
   public
     { Déclarations publiques }
-    class function ManageProperties(MasterFile : TMasterFile) : boolean;
+    class function ManageProperties(MasterFile: TMasterFile): Boolean;
   end;
 
 implementation
@@ -55,7 +55,7 @@ implementation
   @return True si une modification a eu lieu, False sinon
 *}
 class function TFormFileProperties.ManageProperties(
-  MasterFile : TMasterFile) : boolean;
+  MasterFile: TMasterFile): Boolean;
 begin
   with Create(Application) do
   try
@@ -65,7 +65,9 @@ begin
     EditAuthor.Text := MasterFile.Author;
     EditAuthorID.Text := IntToStr(MasterFile.AuthorID);
 
-    if ShowModal <> mrOK then Result := False else
+    if ShowModal <> mrOk then
+      Result := False
+    else
     begin
       MasterFile.Title := EditTitle.Text;
       MasterFile.Description := EditDescription.Text;
@@ -99,7 +101,7 @@ begin
   if EditTitle.Text = '' then
     ShowDialog(sUnfilledTitleTitle, sUnfilledTitle, dtError)
   else
-    ModalResult := mrOK;
+    ModalResult := mrOk;
 end;
 
 end.

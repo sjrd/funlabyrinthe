@@ -36,23 +36,23 @@ type
   *}
   TEngagedLiftScrew = class(TOverriddenScrew)
   private
-    FIsExit : boolean; /// Indique si c'est là que sort le joueur
+    FIsExit: Boolean; /// Indique si c'est là que sort le joueur
   public
-    constructor Create(AMaster : TMaster; AMap : TMap;
-      const APosition : T3DPoint; Opened : boolean = False;
-      AIsExit : boolean = False);
+    constructor Create(AMaster: TMaster; AMap: TMap;
+      const APosition: T3DPoint; Opened: Boolean = False;
+      AIsExit: Boolean = False);
 
-    procedure Entering(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel : boolean); override;
+    procedure Entering(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel: Boolean); override;
 
-    procedure Exited(Player : TPlayer; const Pos, Dest : T3DPoint); override;
+    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); override;
 
-    procedure Pushing(Player : TPlayer; OldDirection : TDirection;
-      KeyPressed : boolean; const Src, Pos : T3DPoint;
-      var Cancel, AbortExecute : boolean); override;
+    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
+      KeyPressed: Boolean; const Src, Pos: T3DPoint;
+      var Cancel, AbortExecute: Boolean); override;
 
-    property IsExit : boolean read FIsExit;
+    property IsExit: Boolean read FIsExit;
   end;
 
   {*
@@ -63,11 +63,11 @@ type
   *}
   TLift = class(TEffect)
   public
-    constructor Create(AMaster : TMaster; const AID : TComponentID;
-      const AName : string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
 
-    procedure Execute(Player : TPlayer; const Pos : T3DPoint;
-      var GoOnMoving : boolean); override;
+    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
+      var GoOnMoving: Boolean); override;
   end;
 
 implementation
@@ -84,9 +84,9 @@ implementation
   @param Opened      Indique si l'ascenseur apparaît ouvert
   @param AIsExit     Indique si c'est là que sort le joueur
 *}
-constructor TEngagedLiftScrew.Create(AMaster : TMaster; AMap : TMap;
-  const APosition : T3DPoint; Opened : boolean = False;
-  AIsExit : boolean = False);
+constructor TEngagedLiftScrew.Create(AMaster: TMaster; AMap: TMap;
+  const APosition: T3DPoint; Opened: Boolean = False;
+  AIsExit: Boolean = False);
 begin
   inherited Create(AMaster, '', AMap, APosition);
   FIsExit := AIsExit;
@@ -98,9 +98,9 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftScrew.Entering(Player : TPlayer;
-  OldDirection : TDirection; KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel : boolean);
+procedure TEngagedLiftScrew.Entering(Player: TPlayer;
+  OldDirection: TDirection; KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel: Boolean);
 begin
   OriginalScrew.Entering(Player, OldDirection, KeyPressed,
     Src, Pos, Cancel);
@@ -109,28 +109,30 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftScrew.Exited(Player : TPlayer;
-  const Pos, Dest : T3DPoint);
-var Other : T3DPoint;
+procedure TEngagedLiftScrew.Exited(Player: TPlayer;
+  const Pos, Dest: T3DPoint);
+var
+  Other: T3DPoint;
 begin
-  if not IsExit then exit;
+  if not IsExit then
+    Exit;
 
   // Suppression des étages inférieurs
   Other := Pos;
-  dec(Other.Z);
+  Dec(Other.Z);
   while Player.Map[Other] is TEngagedLiftScrew do
   begin
     Player.Map[Other].Free;
-    dec(Other.Z);
+    Dec(Other.Z);
   end;
 
   // Suppression des étages supérieurs
   Other := Pos;
-  inc(Other.Z);
+  Inc(Other.Z);
   while Player.Map[Other] is TEngagedLiftScrew do
   begin
     Player.Map[Other].Free;
-    inc(Other.Z);
+    Inc(Other.Z);
   end;
 
   // Suppresion de cet étage-ci
@@ -140,13 +142,14 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftScrew.Pushing(Player : TPlayer; OldDirection : TDirection;
-  KeyPressed : boolean; const Src, Pos : T3DPoint;
-  var Cancel, AbortExecute : boolean);
+procedure TEngagedLiftScrew.Pushing(Player: TPlayer; OldDirection: TDirection;
+  KeyPressed: Boolean; const Src, Pos: T3DPoint;
+  var Cancel, AbortExecute: Boolean);
 begin
   OriginalScrew.Pushing(Player, OldDirection, KeyPressed,
     Src, Pos, Cancel, AbortExecute);
-  if Cancel then exit;
+  if Cancel then
+    Exit;
 
   if KeyPressed then
     Player.ShowDialog(sBlindAlley, sLiftIsEngaged, dtError);
@@ -163,8 +166,8 @@ end;
   @param AID       ID de l'effet de case
   @param AName     Nom de la case
 *}
-constructor TLift.Create(AMaster : TMaster; const AID : TComponentID;
-  const AName : string);
+constructor TLift.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fLift);
@@ -176,28 +179,29 @@ end;
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TLift.Execute(Player : TPlayer; const Pos : T3DPoint;
-  var GoOnMoving : boolean);
-var Other : T3DPoint;
-    MinFloor, MaxFloor : integer;
+procedure TLift.Execute(Player: TPlayer; const Pos: T3DPoint;
+  var GoOnMoving: Boolean);
+var
+  Other: T3DPoint;
+  MinFloor, MaxFloor: Integer;
 begin
   // Occupation des étages inférieurs
   Other := Pos;
-  dec(Other.Z);
+  Dec(Other.Z);
   while Player.Map[Other].Effect = Self do
   begin
     TEngagedLiftScrew.Create(Master, Player.Map, Other);
-    dec(Other.Z);
+    Dec(Other.Z);
   end;
   MinFloor := Other.Z+1;
 
   // Occupation des étages supérieurs
   Other := Pos;
-  inc(Other.Z);
+  Inc(Other.Z);
   while Player.Map[Other].Effect = Self do
   begin
     TEngagedLiftScrew.Create(Master, Player.Map, Other);
-    inc(Other.Z);
+    Inc(Other.Z);
   end;
   MaxFloor := Other.Z-1;
 
