@@ -8,8 +8,8 @@ unit SepiImportsFunLabyUtils;
 interface
 
 uses
-  TypInfo, SepiMetaUnits, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
-  SepiCompTypes, Classes, Graphics, Controls, Contnrs, ScUtils, FunLabyUtils;
+  TypInfo, SepiReflectionCore, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
+  SepiMembers, Classes, Graphics, Controls, Contnrs, ScUtils, FunLabyUtils;
 
 implementation
 
@@ -18,80 +18,80 @@ implementation
 type
   TSepiImportsEComponentNotFound = class(EComponentNotFound)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsEUnsupportedCommand = class(EUnsupportedCommand)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTImagesMaster = class(TImagesMaster)
   private
     procedure Draw_0(Index: integer; Canvas: TCanvas; X: integer = 0 ; Y: integer = 0 );
     procedure Draw_1(const ImgName: string; Canvas: TCanvas; X: integer = 0 ; Y: integer = 0 );
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTScrewBitmap = class(TScrewBitmap)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTPainter = class(TPainter)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTFunLabyComponent = class(TFunLabyComponent)
   private
     function GetSafeID: TComponentID;
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTVisualComponent = class(TVisualComponent)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTPlugin = class(TPlugin)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTObjectDef = class(TObjectDef)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTScrewComponent = class(TScrewComponent)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTField = class(TField)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTEffect = class(TEffect)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTTool = class(TTool)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTObstacle = class(TObstacle)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTScrew = class(TScrew)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TUnnamed_1 = array of TScrew;
@@ -106,7 +106,7 @@ type
     function GetLinearMapCount: Integer;
     function GetLinearMap(Index: Integer): TScrew;
     procedure SetLinearMap(Index: Integer; Value: TScrew);
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTPlayer = class(TPlayer)
@@ -116,7 +116,7 @@ type
     procedure MoveTo_1(const Dest: T3DPoint);
     procedure MoveTo_2(const Dest: TQualifiedPos; Execute: Boolean; out Redo: Boolean);
     procedure MoveTo_3(const Dest: TQualifiedPos);
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTMaster = class(TMaster)
@@ -151,7 +151,7 @@ type
     function GetPlayerCount: Integer;
     function GetPlayers(Index: Integer): TPlayer;
     procedure SetTemporization(Value: Integer);
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
 {---------------------------}
@@ -159,7 +159,7 @@ type
 {---------------------------}
 
 class function TSepiImportsEComponentNotFound.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(EComponentNotFound));
@@ -176,7 +176,7 @@ end;
 {----------------------------}
 
 class function TSepiImportsEUnsupportedCommand.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(EUnsupportedCommand));
@@ -192,7 +192,7 @@ end;
 { TQualifiedPos import }
 {----------------------}
 
-function SepiImportTQualifiedPos(Owner: TSepiMetaUnit): TSepiRecordType;
+function SepiImportTQualifiedPos(Owner: TSepiUnit): TSepiRecordType;
 begin
   Result := TSepiRecordType.Create(Owner, 'TQualifiedPos', False, True);
 
@@ -220,7 +220,7 @@ begin
 end;
 
 class function TSepiImportsTImagesMaster.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TImagesMaster));
@@ -257,7 +257,7 @@ end;
 {---------------------}
 
 class function TSepiImportsTScrewBitmap.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TScrewBitmap));
@@ -283,7 +283,7 @@ end;
 {-----------------}
 
 class function TSepiImportsTPainter.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TPainter));
@@ -326,7 +326,7 @@ begin
 end;
 
 class function TSepiImportsTFunLabyComponent.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TFunLabyComponent));
@@ -368,7 +368,7 @@ end;
 {-------------------------}
 
 class function TSepiImportsTVisualComponent.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TVisualComponent));
@@ -423,7 +423,7 @@ end;
 {----------------}
 
 class function TSepiImportsTPlugin.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TPlugin));
@@ -477,7 +477,7 @@ end;
 {-------------------}
 
 class function TSepiImportsTObjectDef.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TObjectDef));
@@ -519,7 +519,7 @@ end;
 {------------------------}
 
 class function TSepiImportsTScrewComponent.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass(Owner.FindMeta('TScrewComponent'));
   Result.RegisterTypeInfo(
@@ -537,7 +537,7 @@ end;
 {---------------}
 
 class function TSepiImportsTField.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TField));
@@ -578,7 +578,7 @@ end;
 {----------------}
 
 class function TSepiImportsTEffect.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TEffect));
@@ -606,7 +606,7 @@ end;
 {--------------}
 
 class function TSepiImportsTTool.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TTool));
@@ -628,7 +628,7 @@ end;
 {------------------}
 
 class function TSepiImportsTObstacle.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TObstacle));
@@ -650,7 +650,7 @@ end;
 {---------------}
 
 class function TSepiImportsTScrew.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TScrew));
@@ -767,7 +767,7 @@ begin
 end;
 
 class function TSepiImportsTMap.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass(Owner.FindMeta('TMap'));
   Result.RegisterTypeInfo(
@@ -861,7 +861,7 @@ begin
 end;
 
 class function TSepiImportsTPlayer.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass(Owner.FindMeta('TPlayer'));
   Result.RegisterTypeInfo(
@@ -1137,7 +1137,7 @@ begin
 end;
 
 class function TSepiImportsTMaster.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass(Owner.FindMeta('TMaster'));
   Result.RegisterTypeInfo(
@@ -1322,9 +1322,9 @@ end;
 { Unit import }
 {-------------}
 
-function ImportUnit(Root: TSepiMetaRoot): TSepiMetaUnit;
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
 begin
-  Result := TSepiMetaUnit.Create(Root, 'FunLabyUtils',
+  Result := TSepiUnit.Create(Root, 'FunLabyUtils',
     ['Windows', 'Types', 'SysUtils', 'Classes', 'Graphics', 'Contnrs',
     'Controls', 'Dialogs', 'TypInfo', 'ScUtils', 'SdDialogs']);
 
@@ -1428,19 +1428,19 @@ begin
     fScrewFileName, TypeInfo(string));
 
   // Routines
-  TSepiMetaMethod.Create(Result, 'CheckValidLaunch', @CheckValidLaunch,
+  TSepiMethod.Create(Result, 'CheckValidLaunch', @CheckValidLaunch,
     'function: boolean');
-  TSepiMetaMethod.Create(Result, 'ShowFunLabyAbout', @ShowFunLabyAbout,
+  TSepiMethod.Create(Result, 'ShowFunLabyAbout', @ShowFunLabyAbout,
     'procedure');
-  TSepiMetaMethod.Create(Result, 'PointBehind', @PointBehind,
+  TSepiMethod.Create(Result, 'PointBehind', @PointBehind,
     'function(const Src : T3DPoint; Dir : TDirection) : T3DPoint');
-  TSepiMetaMethod.Create(Result, 'ScrewRect', @ScrewRect,
+  TSepiMethod.Create(Result, 'ScrewRect', @ScrewRect,
     'function(X : integer = 0; Y : integer = 0) : TRect');
-  TSepiMetaMethod.Create(Result, 'EmptyRect', @EmptyRect,
+  TSepiMethod.Create(Result, 'EmptyRect', @EmptyRect,
     'procedure(Canvas : TCanvas; Rect : TRect)');
-  TSepiMetaMethod.Create(Result, 'EmptyScrewRect', @EmptyScrewRect,
+  TSepiMethod.Create(Result, 'EmptyScrewRect', @EmptyScrewRect,
     'procedure(Canvas : TCanvas; X : integer = 0; Y : integer = 0)');
-  TSepiMetaMethod.Create(Result, 'IsNoQPos', @IsNoQPos,
+  TSepiMethod.Create(Result, 'IsNoQPos', @IsNoQPos,
     'function(const QPos : TQualifiedPos) : boolean');
 
   Result.Complete;

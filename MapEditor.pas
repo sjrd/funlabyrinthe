@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
-  ScUtils, SdDialogs, SepiMetaUnits, FunLabyUtils, FilesUtils,
+  ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils, FilesUtils,
   FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters, AddMap;
 
 type
@@ -75,16 +75,16 @@ type
       X, Y: Integer);
   private
     { Déclarations privées }
-    SepiRoot: TSepiMetaRoot;     /// Racine Sepi
+    SepiRoot: TSepiRoot; /// Racine Sepi
 
-    MasterFile: TMasterFile;     /// Fichier maître
-    Master: TMaster;             /// Maître FunLabyrinthe
+    MasterFile: TMasterFile; /// Fichier maître
+    Master: TMaster;         /// Maître FunLabyrinthe
 
-    ScrewBmp: TScrewBitmap;      /// Bitmap de case à tout faire
-    LastCompIndex: Integer;      /// Dernier index de composant choisi
+    ScrewBmp: TScrewBitmap; /// Bitmap de case à tout faire
+    LastCompIndex: Integer; /// Dernier index de composant choisi
 
-    CurrentMap: TMap;            /// Carte courante
-    FCurrentFloor: Integer;      /// Étage courant
+    CurrentMap: TMap;       /// Carte courante
+    FCurrentFloor: Integer; /// Étage courant
 
     Component: TVisualComponent; /// Composant à placer
 
@@ -107,7 +107,7 @@ type
 
     procedure CenterToPlayerPosition(Player: TPlayer);
 
-    procedure LoadFile(ASepiRoot: TSepiMetaRoot; AMasterFile: TMasterFile);
+    procedure LoadFile(ASepiRoot: TSepiRoot; AMasterFile: TMasterFile);
     procedure UnloadFile;
 
     procedure AddMap;
@@ -373,7 +373,7 @@ end;
   @param ASepiRoot     Racine Sepi
   @param AMasterFile   Fichier maître
 *}
-procedure TFrameMapEditor.LoadFile(ASepiRoot: TSepiMetaRoot;
+procedure TFrameMapEditor.LoadFile(ASepiRoot: TSepiRoot;
   AMasterFile: TMasterFile);
 var
   I: Integer;

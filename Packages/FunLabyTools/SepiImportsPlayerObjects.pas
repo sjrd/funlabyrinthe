@@ -8,8 +8,8 @@ unit SepiImportsPlayerObjects;
 interface
 
 uses
-  TypInfo, SepiMetaUnits, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
-  SepiCompTypes, Controls, StdCtrls, ComCtrls, PlayerObjects;
+  TypInfo, SepiReflectionCore, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
+  SepiMembers, Controls, StdCtrls, ComCtrls, PlayerObjects;
 
 implementation
 
@@ -18,7 +18,7 @@ implementation
 type
   TSepiImportsTFormObjects = class(TFormObjects)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
 {---------------------}
@@ -26,7 +26,7 @@ type
 {---------------------}
 
 class function TSepiImportsTFormObjects.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TFormObjects));
@@ -52,9 +52,9 @@ end;
 { Unit import }
 {-------------}
 
-function ImportUnit(Root: TSepiMetaRoot): TSepiMetaUnit;
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
 begin
-  Result := TSepiMetaUnit.Create(Root, 'PlayerObjects',
+  Result := TSepiUnit.Create(Root, 'PlayerObjects',
     ['Windows', 'Messages', 'SysUtils', 'Variants', 'Classes', 'Graphics',
     'Controls', 'Forms', 'Dialogs', 'ImgList', 'StdCtrls', 'ComCtrls',
     'FunLabyUtils']);

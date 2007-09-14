@@ -8,8 +8,8 @@ unit SepiImportsGraphicsTools;
 interface
 
 uses
-  TypInfo, SepiMetaUnits, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
-  SepiCompTypes, GraphicsTools;
+  TypInfo, SepiReflectionCore, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
+  SepiMembers, GraphicsTools;
 
 implementation
 
@@ -19,13 +19,13 @@ implementation
 { Unit import }
 {-------------}
 
-function ImportUnit(Root: TSepiMetaRoot): TSepiMetaUnit;
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
 begin
-  Result := TSepiMetaUnit.Create(Root, 'GraphicsTools',
+  Result := TSepiUnit.Create(Root, 'GraphicsTools',
     ['Graphics']);
 
   // Routines
-  TSepiMetaMethod.Create(Result, 'DrawScrewNumber', @DrawScrewNumber,
+  TSepiMethod.Create(Result, 'DrawScrewNumber', @DrawScrewNumber,
     'procedure(Canvas : TCanvas; X, Y, Number : integer; FontColor : TColor = clBlack )');
 
   Result.Complete;

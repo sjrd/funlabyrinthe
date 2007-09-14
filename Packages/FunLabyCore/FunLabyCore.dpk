@@ -32,7 +32,7 @@ requires
   SVCL90,
   SCL90,
   SDL90,
-  SepiBinaries90,
+  SepiReflection90,
   SepiWinTypesImport90,
   SepiRTLCommonImport90,
   SepiRTLSysImport90,

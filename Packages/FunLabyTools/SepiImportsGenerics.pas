@@ -8,8 +8,8 @@ unit SepiImportsGenerics;
 interface
 
 uses
-  TypInfo, SepiMetaUnits, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
-  SepiCompTypes, FunLabyUtils, Generics;
+  TypInfo, SepiReflectionCore, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
+  SepiMembers, FunLabyUtils, Generics;
 
 implementation
 
@@ -18,17 +18,17 @@ implementation
 type
   TSepiImportsTDecorativeEffect = class(TDecorativeEffect)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTObjectTool = class(TObjectTool)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
   TSepiImportsTOverriddenScrew = class(TOverriddenScrew)
   private
-    class function SepiImport(Owner: TSepiMetaUnit): TSepiClass;
+    class function SepiImport(Owner: TSepiUnit): TSepiClass;
   end;
 
 {--------------------------}
@@ -36,7 +36,7 @@ type
 {--------------------------}
 
 class function TSepiImportsTDecorativeEffect.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TDecorativeEffect));
@@ -57,7 +57,7 @@ end;
 {--------------------}
 
 class function TSepiImportsTObjectTool.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TObjectTool));
@@ -97,7 +97,7 @@ end;
 {-------------------------}
 
 class function TSepiImportsTOverriddenScrew.SepiImport(
-  Owner: TSepiMetaUnit): TSepiClass;
+  Owner: TSepiUnit): TSepiClass;
 begin
   Result := TSepiClass.RegisterTypeInfo(
     Owner, TypeInfo(TOverriddenScrew));
@@ -139,9 +139,9 @@ end;
 { Unit import }
 {-------------}
 
-function ImportUnit(Root: TSepiMetaRoot): TSepiMetaUnit;
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
 begin
-  Result := TSepiMetaUnit.Create(Root, 'Generics',
+  Result := TSepiUnit.Create(Root, 'Generics',
     ['Graphics', 'ScUtils', 'FunLabyUtils']);
 
   // Types

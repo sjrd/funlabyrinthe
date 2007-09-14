@@ -31,7 +31,7 @@ requires
   vcl,
   VclSmp,
   FunLabyCore,
-  SepiBinaries90;
+  SepiReflection90;
 
 contains
   MapTools in 'MapTools.pas',

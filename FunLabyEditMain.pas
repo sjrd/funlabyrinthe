@@ -11,7 +11,7 @@ interface
 uses
   Windows, SysUtils, Forms, Dialogs, Classes, ActnList, XPStyleActnCtrls,
   ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus, ToolWin,
-  ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiMetaUnits, FunLabyUtils,
+  ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
   FilesUtils, UnitFiles, EditPluginManager, UnitEditorIntf, FileProperties,
   FunLabyEditConsts, JvTabBar, EditUnits;
 
@@ -75,7 +75,7 @@ type
     { Déclarations privées }
     /// Manager asynchrone de la racine Sepi
     SepiRootManager: TSepiAsynchronousRootManager;
-    SepiRoot: TSepiMetaRoot; /// Racine Sepi
+    SepiRoot: TSepiRoot; /// Racine Sepi
 
     BigMenuMaps: TActionClient;  /// Menu des cartes
     BigMenuUnits: TActionClient; /// Menu des unités

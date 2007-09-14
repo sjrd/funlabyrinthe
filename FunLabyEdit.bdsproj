@@ -124,7 +124,7 @@
 			<Directories Name="PackageDLLOutputDir"></Directories>
 			<Directories Name="PackageDCPOutputDir"></Directories>
 			<Directories Name="SearchPath"></Directories>
-			<Directories Name="Packages">rtl;vcl;VclSmp;SCL90;SVCL90;SDL90;SepiCore90;SepiBinaries90;FunLabyCore;FunLabyTools;FunLabyEditPlugin;vclx;Jcl;JvCoreD9R;JvDlgsD9R</Directories>
+			<Directories Name="Packages">rtl;vcl;VclSmp;SCL90;SVCL90;SDL90;SepiCore90;SepiReflection90;FunLabyCore;FunLabyTools;FunLabyEditPlugin</Directories>
 			<Directories Name="Conditionals"></Directories>
 			<Directories Name="DebugSourceDirs">C:\Projets\Sepi\source\run\SDL\;C:\Projets\Sepi\source\run\SepiSVCLImport\;C:\Projets\Sepi\source\run\SepiVCLStdImport\;C:\Projets\Sepi\source\run\SepiSCLImport\;C:\Projets\Sepi\source\run\SepiRTLCommonImport\;C:\Projets\Sepi\source\run\SepiWinTypesImport\;C:\Projets\Sepi\source\run\SepiRTLSysImport\</Directories>
 			<Directories Name="UsePackages">True</Directories>
@@ -174,11 +174,9 @@
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
 			<VersionInfoKeys Name="OriginalFilename">FunLabyEdit.exe</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
-		</VersionInfoKeys>  
-    
-    <Excluded_Packages>
-      <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDlgsD9D.bpl">JVCL Dialog Components</Excluded_Packages>
+		</VersionInfoKeys>  <Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDBD9D.bpl">JVCL Database Components</Excluded_Packages>
+      <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDlgsD9D.bpl">JVCL Dialog Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvAppFrmD9D.bpl">JVCL Application and Form Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvBandsD9D.bpl">JVCL Band Objects</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvBDED9D.bpl">JVCL BDE Components</Excluded_Packages>

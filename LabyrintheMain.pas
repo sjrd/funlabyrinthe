@@ -11,7 +11,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, SdDialogs, ShellAPI,
-  FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiMetaUnits;
+  FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
+  UnitFiles, SepiImportsFunLaby;
 
 resourcestring
   sViewSize = 'Taille de la vue';
@@ -72,7 +73,7 @@ type
   private
     { Déclarations privées }
     SepiRootManager: TSepiAsynchronousRootManager;
-    SepiRoot: TSepiMetaRoot;
+    SepiRoot: TSepiRoot;
 
     MasterFile: TMasterFile;
     Master: TMaster;

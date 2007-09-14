@@ -11,7 +11,8 @@ unit FilesUtils;
 interface
 
 uses
-  SysUtils, Classes, Contnrs, ScUtils, ScLists, SepiMetaUnits, FunLabyUtils;
+  SysUtils, Classes, Contnrs, ScUtils, ScLists, SepiReflectionCore,
+  FunLabyUtils;
 
 resourcestring
   sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
@@ -161,22 +162,22 @@ type
   *}
   TMasterFile = class
   private
-    FSepiRoot: TSepiMetaRoot; /// Meta-racine Sepi
+    FSepiRoot: TSepiRoot; /// Meta-racine Sepi
 
-    FFileName: TFileName;    /// Nom du fichier
-    FMode: TFileMode;        /// Mode d'ouverture du fichier
-    FVersion: string;        /// Version lors de l'enregistrement
+    FFileName: TFileName; /// Nom du fichier
+    FMode: TFileMode;     /// Mode d'ouverture du fichier
+    FVersion: string;     /// Version lors de l'enregistrement
 
-    FTitle: string;          /// Titre du labyrinthe
-    FDescription: string;    /// Description
-    FDifficulty: string;     /// Difficulté
-    FAuthorID: Integer;      /// ID Web de l'auteur, ou 0 si non renseigné
-    FAuthor: string;         /// Nom de l'auteur
+    FTitle: string;       /// Titre du labyrinthe
+    FDescription: string; /// Description
+    FDifficulty: string;  /// Difficulté
+    FAuthorID: Integer;   /// ID Web de l'auteur, ou 0 si non renseigné
+    FAuthor: string;      /// Nom de l'auteur
 
-    FAllowEdit: Boolean;     /// Indique si le fichier peut être édité
-    FIsSaveguard: Boolean;   /// Indique si le fichier était une sauvegarde
+    FAllowEdit: Boolean;   /// Indique si le fichier peut être édité
+    FIsSaveguard: Boolean; /// Indique si le fichier était une sauvegarde
 
-    FMaster: TMaster;        /// Maître FunLabyrinthe
+    FMaster: TMaster; /// Maître FunLabyrinthe
 
     FUnitFiles: TObjectList; /// Liste des fichiers unité
     FMapFiles: TObjectList;  /// Liste des fichiers carte
@@ -191,9 +192,9 @@ type
     function GetMapFileCount: Integer;
     function GetMapFiles(Index: Integer): TMapFile;
   public
-    constructor Create(ASepiRoot: TSepiMetaRoot; const AFileName: TFileName;
+    constructor Create(ASepiRoot: TSepiRoot; const AFileName: TFileName;
       AMode: TFileMode);
-    constructor CreateNew(ASepiRoot: TSepiMetaRoot;
+    constructor CreateNew(ASepiRoot: TSepiRoot;
       const UnitFileDescs: TUnitFileDescs; FileContents: TStrings = nil);
     destructor Destroy; override;
 
@@ -224,7 +225,7 @@ type
       const AFileName: TFileName = ''); overload;
     procedure Save(const AFileName: TFileName = ''); overload;
 
-    property SepiRoot: TSepiMetaRoot read FSepiRoot;
+    property SepiRoot: TSepiRoot read FSepiRoot;
 
     property FileName: TFileName read FFileName;
     property Mode: TFileMode read FMode;
@@ -655,7 +656,7 @@ end;
   @param AMode       Mode sous lequel ouvrir le fichier
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
-constructor TMasterFile.Create(ASepiRoot: TSepiMetaRoot;
+constructor TMasterFile.Create(ASepiRoot: TSepiRoot;
   const AFileName: TFileName; AMode: TFileMode);
 var
   Document: IXMLDOMDocument;
@@ -697,7 +698,7 @@ end;
   @param FileContents   Contenu pré-créé du fichier (ou nil pour créer un vide)
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
-constructor TMasterFile.CreateNew(ASepiRoot: TSepiMetaRoot;
+constructor TMasterFile.CreateNew(ASepiRoot: TSepiRoot;
   const UnitFileDescs: TUnitFileDescs; FileContents: TStrings = nil);
 var
   I, J: Integer;

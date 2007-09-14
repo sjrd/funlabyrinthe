@@ -8,8 +8,8 @@ unit SepiImportsMapTools;
 interface
 
 uses
-  TypInfo, SepiMetaUnits, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
-  SepiCompTypes, FunLabyUtils, MapTools;
+  TypInfo, SepiReflectionCore, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
+  SepiMembers, FunLabyUtils, MapTools;
 
 implementation
 
@@ -29,9 +29,9 @@ begin
   Result := ChangeComp(Screw, NewComp);
 end;
 
-function ImportUnit(Root: TSepiMetaRoot): TSepiMetaUnit;
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
 begin
-  Result := TSepiMetaUnit.Create(Root, 'MapTools',
+  Result := TSepiUnit.Create(Root, 'MapTools',
     ['ScUtils', 'FunLabyUtils']);
 
   // Types
@@ -39,24 +39,24 @@ begin
     'procedure(Map : TMap; var Pos : T3DPoint; Component : TScrewComponent )');
 
   // Routines
-  TSepiMetaMethod.Create(Result, 'ChangeField', @ChangeField,
+  TSepiMethod.Create(Result, 'ChangeField', @ChangeField,
     'function(Screw : TScrew; const NewField : TComponentID = '''' ) : TScrew');
-  TSepiMetaMethod.Create(Result, 'ChangeEffect', @ChangeEffect,
+  TSepiMethod.Create(Result, 'ChangeEffect', @ChangeEffect,
     'function(Screw : TScrew; const NewEffect : TComponentID = '''' ) : TScrew');
-  TSepiMetaMethod.Create(Result, 'ChangeTool', @ChangeTool,
+  TSepiMethod.Create(Result, 'ChangeTool', @ChangeTool,
     'function(Screw : TScrew; const NewTool : TComponentID = '''' ) : TScrew');
-  TSepiMetaMethod.Create(Result, 'ChangeObstacle', @ChangeObstacle,
+  TSepiMethod.Create(Result, 'ChangeObstacle', @ChangeObstacle,
     'function(Screw : TScrew; const NewObstacle : TComponentID = '''' ) : TScrew');
-  TSepiMetaOverloadedMethod.Create(Result, 'ChangeComp');
-  TSepiMetaMethod.Create(Result, 'OL$ChangeComp$0', @ChangeComp_0,
+  TSepiOverloadedMethod.Create(Result, 'ChangeComp');
+  TSepiMethod.Create(Result, 'OL$ChangeComp$0', @ChangeComp_0,
     'function(Screw : TScrew; NewComp : TScrewComponent ) : TScrew');
-  TSepiMetaMethod.Create(Result, 'OL$ChangeComp$1', @ChangeComp_1,
+  TSepiMethod.Create(Result, 'OL$ChangeComp$1', @ChangeComp_1,
     'function(Screw : TScrew; const NewComp : TComponentID ) : TScrew');
-  TSepiMetaMethod.Create(Result, 'FindNextScrew', @FindNextScrew,
+  TSepiMethod.Create(Result, 'FindNextScrew', @FindNextScrew,
     'procedure(Map : TMap; var Pos : T3DPoint; Component : TScrewComponent )');
-  TSepiMetaMethod.Create(Result, 'FindPreviousScrew', @FindPreviousScrew,
+  TSepiMethod.Create(Result, 'FindPreviousScrew', @FindPreviousScrew,
     'procedure(Map : TMap; var Pos : T3DPoint; Component : TScrewComponent )');
-  TSepiMetaMethod.Create(Result, 'FindScrewAtRandom', @FindScrewAtRandom,
+  TSepiMethod.Create(Result, 'FindScrewAtRandom', @FindScrewAtRandom,
     'procedure(Map : TMap; var Pos : T3DPoint; Component : TScrewComponent )');
 
   Result.Complete;

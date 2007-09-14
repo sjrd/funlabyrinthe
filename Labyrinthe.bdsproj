@@ -124,7 +124,7 @@
 			<Directories Name="PackageDLLOutputDir"></Directories>
 			<Directories Name="PackageDCPOutputDir"></Directories>
 			<Directories Name="SearchPath"></Directories>
-			<Directories Name="Packages">rtl;vcl;VclSmp;SCL90;SVCL90;SDL90;SepiCore90;SepiBinaries90;FunLabyCore;FunLabyTools</Directories>
+			<Directories Name="Packages">rtl;vcl;VclSmp;SCL90;SVCL90;SDL90;SepiCore90;SepiReflection90;FunLabyCore;FunLabyTools</Directories>
 			<Directories Name="Conditionals"></Directories>
 			<Directories Name="DebugSourceDirs">C:\Projets\Sepi\source\run\SepiRTLCommonImport\</Directories>
 			<Directories Name="UsePackages">True</Directories>
@@ -176,12 +176,12 @@
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
 		</VersionInfoKeys>  <Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDBD9D.bpl">JVCL Database Components</Excluded_Packages>
+      <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDlgsD9D.bpl">JVCL Dialog Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvAppFrmD9D.bpl">JVCL Application and Form Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvBandsD9D.bpl">JVCL Band Objects</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvBDED9D.bpl">JVCL BDE Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvCryptD9D.bpl">JVCL Encryption and Compression</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvCtrlsD9D.bpl">JVCL Visual Controls</Excluded_Packages>
-      <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDlgsD9D.bpl">JVCL Dialog Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDockingD9D.bpl">JVCL Docking Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDotNetCtrlsD9D.bpl">JVCL DotNet Controls</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvEDID9D.bpl">JVCL EDI Components</Excluded_Packages>
@@ -201,7 +201,7 @@
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvValidatorsD9D.bpl">JVCL Validators and Error Provider Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvWizardD9D.bpl">JVCL Wizard</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvXPCtrlsD9D.bpl">JVCL XP Controls</Excluded_Packages>
-      <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JclUsesExpert90.bpl">JCL Uses Wizard</Excluded_Packages>
+      <Excluded_Packages Name="C:\DOCUME~1\Sepi\MESDOC~1\PROJET~1\Bpl\JclUsesExpert90.bpl">JCL Uses Wizard</Excluded_Packages>
     </Excluded_Packages>
   </Delphi.Personality>
 </BorlandProject>
