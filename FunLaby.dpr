@@ -1,11 +1,11 @@
-program Labyrinthe;
+program FunLaby;
 
 uses
   Forms,
   WinHelpViewer,
   ScUtils,
   FunLabyUtils,
-  LabyrintheMain in 'LabyrintheMain.pas' {FormMain},
+  FunLabyMain in 'FunLabyMain.pas' {FormMain},
   PlayUtils in 'PlayUtils.pas';
 
 {$R *.RES}

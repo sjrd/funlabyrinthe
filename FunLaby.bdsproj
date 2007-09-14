@@ -10,7 +10,7 @@
 	</PersonalityInfo>
 	<Delphi.Personality>
 		<Source>
-			<Source Name="MainSource">Labyrinthe.dpr</Source>
+			<Source Name="MainSource">FunLaby.dpr</Source>
 		</Source>
 		<FileVersion>
 			<FileVersion Name="Version">7.0</FileVersion>
@@ -174,7 +174,8 @@
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
 			<VersionInfoKeys Name="OriginalFilename">Labyrinthe.exe</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
-		</VersionInfoKeys>  <Excluded_Packages>
+		</VersionInfoKeys>  
+    <Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDBD9D.bpl">JVCL Database Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDlgsD9D.bpl">JVCL Dialog Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvAppFrmD9D.bpl">JVCL Application and Form Components</Excluded_Packages>

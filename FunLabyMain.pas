@@ -1,10 +1,10 @@
 {*
-  Unité principale de Labyrinthe.exe
-  Cette unité contient la fiche principale de Labyrinthe.exe.
+  Unité principale de FunLaby.exe
+  Cette unité contient la fiche principale de FunLaby.exe.
   @author sjrd
   @version 5.0
 *}
-unit LabyrintheMain;
+unit FunLabyMain;
 
 interface
 
