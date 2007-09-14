@@ -11,10 +11,10 @@
 	<Default.Personality>  <Projects>
       <Projects Name="FunLabyCore.bpl">Packages\FunLabyCore\FunLabyCore.bdsproj</Projects>
       <Projects Name="FunLabyTools.bpl">Packages\FunLabyTools\FunLabyTools.bdsproj</Projects>
-      <Projects Name="FunLaby.exe">FunLaby.bdsproj</Projects>
+      <Projects Name="FunLaby.exe">Programs\FunLaby\FunLaby.bdsproj</Projects>
       <Projects Name="FunLabyEditPlugin.bpl">Packages\FunLabyEditPlugin\FunLabyEditPlugin.bdsproj</Projects>
-      <Projects Name="FunLabyEdit.exe">FunLabyEdit.bdsproj</Projects>
-      <Projects Name="GeneLaby.exe">GeneLaby.bdsproj</Projects>
+      <Projects Name="FunLabyEdit.exe">Programs\FunLabyEdit\FunLabyEdit.bdsproj</Projects>
+      <Projects Name="GeneLaby.exe">Programs\GeneLaby\GeneLaby.bdsproj</Projects>
       <Projects Name="FunLabyBase.bpl">UnitPackages\FunLabyBase\FunLabyBase.bdsproj</Projects>
       <Projects Name="Compatibility4x.bpl">UnitPackages\Compatibility4x\Compatibility4x.bdsproj</Projects>
       <Projects Name="Targets">FunLabyCore.bpl FunLabyTools.bpl FunLaby.exe FunLabyEditPlugin.bpl FunLabyEdit.exe GeneLaby.exe FunLabyBase.bpl Compatibility4x.bpl</Projects>
