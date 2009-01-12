@@ -10,7 +10,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Spin, Math, ExtCtrls, ComCtrls, ScUtils;
+  StdCtrls, Spin, Math, ExtCtrls, ComCtrls, IniFiles, ScUtils;
 
 type
   {*
@@ -131,9 +131,12 @@ const {don't localize}
 
 function WDir: string;
 begin
-  //Result := ExtractFilePath(ParamStr(0));
-  Result := 'C:\Documents and Settings\All Users\Application Data\' +
-    'SJRDoeraene\FunLabyrinthe\';
+  with TMemIniFile.Create(Dir+'FunLabyrinthe.ini') do
+  try
+    Result := ReadString('Directories', 'AppData', '');
+  finally
+    Free;
+  end;
 end;
 
 procedure CreeSortie(Labyrinthe: TStrings;
