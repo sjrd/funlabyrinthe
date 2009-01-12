@@ -112,8 +112,8 @@ const {don't localize}
     '  <difficulty>Moyen</difficulty>'#10+
     '  <author id="2">Jean-Paul Doeraene</author>'#10+
     '  <master/>'#10+
-    '  <units><unit type="application/bpl" href="FunLabyBase.bpl"/></units>'#10+
-    '  <maps><map id="MainMap" type="application/flm" href="%s" maxviewsize="%d"/></maps>'#10+
+    '  <units><unit type="{B28D4F92-6C46-4F22-87F9-432165EDA4C6}" href="FunLabyBase.bpl"/></units>'#10+
+    '  <maps><map id="MainMap" href="%s" maxviewsize="%d"/></maps>'#10+
     '  <players>'#10+
     '    <player id="Player">'#10+
     '      <position map="MainMap" posx="%d" posy="%d" posz="%d"/>'#10+
@@ -545,14 +545,16 @@ end;
 
 procedure TFormPrincipale.BQuitterClick(Sender: TObject);
 begin
-  if FileExists(WDir+'Labyrinthe.exe') then
-    WinExec(PChar(WDir+'Labyrinthe.exe "'+NomLabyrinthe+'"'), SW_ShowNormal);
+  if FileExists(Dir+'FunLaby.exe') then
+    WinExec(PChar('"'+Dir+'FunLaby.exe" "'+
+      WDir+'Labyrinths\'+NomLabyrinthe+'.flp"'),
+      SW_ShowNormal);
   Close;
 end;
 
 procedure TFormPrincipale.FormCreate(Sender: TObject);
 begin
-  Application.HelpFile := WDir+'GeneLaby.hlp';
+  Application.HelpFile := Dir+'GeneLaby.hlp';
 end;
 
 procedure TFormPrincipale.RGModulationClick(Sender: TObject);
