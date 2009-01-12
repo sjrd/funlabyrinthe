@@ -8,151 +8,144 @@ unit SepiImportsGenerics;
 interface
 
 uses
-  TypInfo, SepiReflectionCore, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
-  SepiMembers, FunLabyUtils, Generics;
+  Windows, SysUtils, Classes, TypInfo, SepiReflectionCore, SepiMembers, 
+  Generics;
+
+var
+  SepiImportsGenericsLazyLoad: Boolean = False;
 
 implementation
 
-{ You must not localize any of the strings this unit contains! }
+{$R *.res}
+
+const // don't localize
+  UnitName = 'Generics';
+  ResourceName = 'SepiImportsGenerics';
+  TypeCount = 3;
+  MethodCount = 3;
+
+var
+  TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
+  MethodAddresses: array[0..MethodCount-1] of Pointer;
 
 type
   TSepiImportsTDecorativeEffect = class(TDecorativeEffect)
   private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTObjectTool = class(TObjectTool)
   private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTOverriddenScrew = class(TOverriddenScrew)
   private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
 {--------------------------}
 { TDecorativeEffect import }
 {--------------------------}
 
-class function TSepiImportsTDecorativeEffect.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTDecorativeEffect.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TDecorativeEffect));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTDecorativeEffect.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID; const AName, AImgName : string )');
-
-    Complete;
-  end;
+  MethodAddresses[0] := @TSepiImportsTDecorativeEffect.Create;
 end;
 
 {--------------------}
 { TObjectTool import }
 {--------------------}
 
-class function TSepiImportsTObjectTool.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTObjectTool.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TObjectTool));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FObjectDef', System.TypeInfo(TObjectDef));
-    AddField('FFindMessage', System.TypeInfo(string));
-
-    CurrentVisibility := mvProtected;
-
-    AddMethod('DoDraw', @TSepiImportsTObjectTool.DoDraw,
-      'procedure(const QPos : TQualifiedPos; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )',
-      mlkOverride);
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTObjectTool.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID; AObjectDef : TObjectDef ; const AFindMessage : string ; const AName : string = '''' ; const AImgName : string = '''' )');
-    AddMethod('Find', @TSepiImportsTObjectTool.Find,
-      'procedure(Player : TPlayer; const Pos : T3DPoint)',
-      mlkOverride);
-
-    AddProperty('ObjectDef', 'property: TObjectDef',
-      'FObjectDef', '');
-    AddProperty('FindMessage', 'property: string',
-      'FFindMessage', '');
-
-    Complete;
-  end;
+  MethodAddresses[1] := @TSepiImportsTObjectTool.Create;
 end;
 
 {-------------------------}
 { TOverriddenScrew import }
 {-------------------------}
 
-class function TSepiImportsTOverriddenScrew.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTOverriddenScrew.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TOverriddenScrew));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FMap', System.TypeInfo(TMap));
-    AddField('FPosition', 'T3DPoint');
-    AddField('FOriginalScrew', System.TypeInfo(TScrew));
-
-    CurrentVisibility := mvProtected;
-
-    AddMethod('DoDraw', @TSepiImportsTOverriddenScrew.DoDraw,
-      'procedure(const QPos : TQualifiedPos; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )',
-      mlkOverride);
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTOverriddenScrew.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID; AMap : TMap ; const APosition : T3DPoint ; AField : TField = nil ; AEffect : TEffect = nil ; ATool : TTool = nil ; AObstacle : TObstacle = nil )');
-    AddMethod('Destroy', @TSepiImportsTOverriddenScrew.Destroy,
-      'destructor',
-      mlkOverride);
-
-    AddProperty('Map', 'property: TMap',
-      'FMap', '');
-    AddProperty('Position', 'property: T3DPoint',
-      'FPosition', '');
-    AddProperty('OriginalScrew', 'property: TScrew',
-      'FOriginalScrew', '');
-
-    Complete;
-  end;
+  MethodAddresses[2] := @TSepiImportsTOverriddenScrew.Create;
 end;
+
+{---------------------}
+{ Overloaded routines }
+{---------------------}
 
 {-------------}
 { Unit import }
 {-------------}
 
-function ImportUnit(Root: TSepiRoot): TSepiUnit;
+procedure GetMethodCode(Self, Sender: TObject; var Code: Pointer;
+  var CodeHandler: TObject);
+var
+  Index: Integer;
 begin
-  Result := TSepiUnit.Create(Root, 'Generics',
-    ['Graphics', 'ScUtils', 'FunLabyUtils']);
-
-  // Types
-  TSepiImportsTDecorativeEffect.SepiImport(Result);
-  TSepiImportsTObjectTool.SepiImport(Result);
-  TSepiImportsTOverriddenScrew.SepiImport(Result);
-
-  Result.Complete;
+  Index := (Sender as TSepiMethod).Tag;
+  if Index >= 0 then
+    Code := MethodAddresses[Index];
 end;
 
+procedure GetTypeInfo(Self, Sender: TObject; var TypeInfo: PTypeInfo;
+  var Found: Boolean);
+var
+  Index: Integer;
+begin
+  Index := (Sender as TSepiType).Tag;
+  Found := Index >= -1;
+
+  if Index >= 0 then
+    TypeInfo := TypeInfoArray[Index];
+end;
+
+const
+  GetMethodCodeEvent: TMethod = (Code: @GetMethodCode; Data: nil);
+  GetTypeInfoEvent: TMethod = (Code: @GetTypeInfo; Data: nil);
+
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
+var
+  Stream: TStream;
+begin
+  Stream := TResourceStream.Create(SysInit.HInstance,
+    ResourceName, RT_RCDATA);
+  try
+    Result := TSepiUnit.LoadFromStream(Root, Stream,
+      SepiImportsGenericsLazyLoad,
+      TGetMethodCodeEvent(GetMethodCodeEvent),
+      TGetTypeInfoEvent(GetTypeInfoEvent));
+
+    if SepiImportsGenericsLazyLoad then
+      Result.AcquireObjResource(Stream);
+  finally
+    Stream.Free;
+  end;
+end;
+
+{$WARN SYMBOL_DEPRECATED OFF}
+
+procedure InitTypeInfoArray;
+begin
+  TypeInfoArray[0] := TypeInfo(TDecorativeEffect);
+  TypeInfoArray[1] := TypeInfo(TObjectTool);
+  TypeInfoArray[2] := TypeInfo(TOverriddenScrew);
+end;
+
+procedure InitMethodAddresses;
+begin
+  TSepiImportsTDecorativeEffect.InitMethodAddresses;
+  TSepiImportsTObjectTool.InitMethodAddresses;
+  TSepiImportsTOverriddenScrew.InitMethodAddresses;
+end;
+
+{$WARN SYMBOL_DEPRECATED ON}
+
 initialization
+  InitTypeInfoArray;
+  InitMethodAddresses;
+
   SepiRegisterImportedUnit('Generics', ImportUnit);
 end.
 

@@ -112,7 +112,7 @@ type
   end;
 
 const {don't localize}
-  FunLabyBaseHRef = 'FunLabyBase.bpl'; /// HRef de l'unité FunLabyCore
+  FunLabyBaseHRef = 'FunLabyBase.bpl'; /// HRef de l'unité FunLabyBase
   idPlayer = 'Player';                 /// ID de l'unique joueur
 
 var

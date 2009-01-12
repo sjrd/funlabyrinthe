@@ -8,93 +8,69 @@ unit SepiImportsFunLabyUtils;
 interface
 
 uses
-  TypInfo, SepiReflectionCore, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
-  SepiMembers, Classes, Graphics, Controls, Contnrs, ScUtils, FunLabyUtils;
+  Windows, SysUtils, Classes, TypInfo, SepiReflectionCore, SepiMembers, 
+  Graphics, ScUtils, FunLabyUtils;
+
+var
+  SepiImportsFunLabyUtilsLazyLoad: Boolean = False;
 
 implementation
 
-{ You must not localize any of the strings this unit contains! }
+{$R *.res}
+
+const // don't localize
+  UnitName = 'FunLabyUtils';
+  ResourceName = 'SepiImportsFunLabyUtils';
+  TypeCount = 22;
+  MethodCount = 91;
+
+var
+  TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
+  MethodAddresses: array[0..MethodCount-1] of Pointer;
 
 type
-  TSepiImportsEComponentNotFound = class(EComponentNotFound)
-  private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
-  end;
-
-  TSepiImportsEUnsupportedCommand = class(EUnsupportedCommand)
-  private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
-  end;
-
   TSepiImportsTImagesMaster = class(TImagesMaster)
   private
-    procedure Draw_0(Index: integer; Canvas: TCanvas; X: integer = 0 ; Y: integer = 0 );
-    procedure Draw_1(const ImgName: string; Canvas: TCanvas; X: integer = 0 ; Y: integer = 0 );
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    procedure Draw_0(Index: Integer; Canvas: TCanvas; X: Integer; Y: Integer);
+    procedure Draw_1(const ImgName: string; Canvas: TCanvas; X: Integer; Y: Integer);
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTScrewBitmap = class(TScrewBitmap)
   private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTPainter = class(TPainter)
   private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTFunLabyComponent = class(TFunLabyComponent)
   private
     function GetSafeID: TComponentID;
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTVisualComponent = class(TVisualComponent)
   private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTPlugin = class(TPlugin)
   private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
-  end;
-
-  TSepiImportsTObjectDef = class(TObjectDef)
-  private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
-  end;
-
-  TSepiImportsTScrewComponent = class(TScrewComponent)
-  private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTField = class(TField)
   private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
-  end;
-
-  TSepiImportsTEffect = class(TEffect)
-  private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
-  end;
-
-  TSepiImportsTTool = class(TTool)
-  private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
-  end;
-
-  TSepiImportsTObstacle = class(TObstacle)
-  private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTScrew = class(TScrew)
   private
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
-
-  TUnnamed_1 = array of TScrew;
 
   TSepiImportsTMap = class(TMap)
   private
@@ -106,7 +82,7 @@ type
     function GetLinearMapCount: Integer;
     function GetLinearMap(Index: Integer): TScrew;
     procedure SetLinearMap(Index: Integer; Value: TScrew);
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTPlayer = class(TPlayer)
@@ -116,7 +92,7 @@ type
     procedure MoveTo_1(const Dest: T3DPoint);
     procedure MoveTo_2(const Dest: TQualifiedPos; Execute: Boolean; out Redo: Boolean);
     procedure MoveTo_3(const Dest: TQualifiedPos);
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
 
   TSepiImportsTMaster = class(TMaster)
@@ -151,169 +127,50 @@ type
     function GetPlayerCount: Integer;
     function GetPlayers(Index: Integer): TPlayer;
     procedure SetTemporization(Value: Integer);
-    class function SepiImport(Owner: TSepiUnit): TSepiClass;
+    class procedure InitMethodAddresses;
   end;
-
-{---------------------------}
-{ EComponentNotFound import }
-{---------------------------}
-
-class function TSepiImportsEComponentNotFound.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
-begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(EComponentNotFound));
-
-  with Result do
-  begin
-
-    Complete;
-  end;
-end;
-
-{----------------------------}
-{ EUnsupportedCommand import }
-{----------------------------}
-
-class function TSepiImportsEUnsupportedCommand.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
-begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(EUnsupportedCommand));
-
-  with Result do
-  begin
-
-    Complete;
-  end;
-end;
-
-{----------------------}
-{ TQualifiedPos import }
-{----------------------}
-
-function SepiImportTQualifiedPos(Owner: TSepiUnit): TSepiRecordType;
-begin
-  Result := TSepiRecordType.Create(Owner, 'TQualifiedPos', False, True);
-
-  with Result do
-  begin
-    AddField('Map', System.TypeInfo(TMap));
-    AddField('Position', 'T3DPoint');
-
-    Complete;
-  end;
-end;
 
 {----------------------}
 { TImagesMaster import }
 {----------------------}
 
-procedure TSepiImportsTImagesMaster.Draw_0(Index: Integer; Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TSepiImportsTImagesMaster.Draw_0(Index: Integer; Canvas: TCanvas; X: Integer; Y: Integer);
 begin
   Draw(Index, Canvas, X, Y);
 end;
 
-procedure TSepiImportsTImagesMaster.Draw_1(const ImgName: string; Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TSepiImportsTImagesMaster.Draw_1(const ImgName: string; Canvas: TCanvas; X: Integer; Y: Integer);
 begin
   Draw(ImgName, Canvas, X, Y);
 end;
 
-class function TSepiImportsTImagesMaster.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTImagesMaster.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TImagesMaster));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FImgList', System.TypeInfo(TImageList));
-    AddField('FImgNames', System.TypeInfo(TStrings));
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTImagesMaster.Create,
-      'constructor');
-    AddMethod('Destroy', @TSepiImportsTImagesMaster.Destroy,
-      'destructor',
-      mlkOverride);
-    AddMethod('Add', @TSepiImportsTImagesMaster.Add,
-      'function(const ImgName : string; Bitmap : TBitmap) : integer');
-    AddMethod('IndexOf', @TSepiImportsTImagesMaster.IndexOf,
-      'function(const ImgName : string) : integer');
-    AddMethod('OL$Draw$0', @TSepiImportsTImagesMaster.Draw_0,
-      'procedure(Index : integer; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )');
-    AddMethod('OL$Draw$1', @TSepiImportsTImagesMaster.Draw_1,
-      'procedure(const ImgName : string; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )');
-
-    Complete;
-  end;
+  MethodAddresses[0] := @TSepiImportsTImagesMaster.Create;
+  MethodAddresses[1] := @TSepiImportsTImagesMaster.Add;
+  MethodAddresses[2] := @TSepiImportsTImagesMaster.IndexOf;
+  MethodAddresses[3] := @TSepiImportsTImagesMaster.Draw_0;
+  MethodAddresses[4] := @TSepiImportsTImagesMaster.Draw_1;
 end;
 
 {---------------------}
 { TScrewBitmap import }
 {---------------------}
 
-class function TSepiImportsTScrewBitmap.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTScrewBitmap.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TScrewBitmap));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTScrewBitmap.Create,
-      'constructor',
-      mlkOverride);
-    AddMethod('EmptyScrew', @TSepiImportsTScrewBitmap.EmptyScrew,
-      'procedure');
-    AddMethod('DrawScrew', @TSepiImportsTScrewBitmap.DrawScrew,
-      'procedure(Canvas : TCanvas; X : integer = 0; Y : integer = 0)');
-
-    Complete;
-  end;
+  MethodAddresses[5] := @TSepiImportsTScrewBitmap.EmptyScrew;
+  MethodAddresses[6] := @TSepiImportsTScrewBitmap.DrawScrew;
 end;
 
 {-----------------}
 { TPainter import }
 {-----------------}
 
-class function TSepiImportsTPainter.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTPainter.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TPainter));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FMaster', System.TypeInfo(TImagesMaster));
-    AddField('FImgNames', System.TypeInfo(TStrings));
-    AddField('FCachedImg', System.TypeInfo(TScrewBitmap));
-
-    AddMethod('ImgNamesChange', nil,
-      'procedure(Sender : TObject)');
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTPainter.Create,
-      'constructor(AMaster : TImagesMaster)');
-    AddMethod('Destroy', @TSepiImportsTPainter.Destroy,
-      'destructor',
-      mlkOverride);
-    AddMethod('Draw', @TSepiImportsTPainter.Draw,
-      'procedure(Canvas : TCanvas; X : integer = 0; Y : integer = 0)');
-
-    AddProperty('ImgNames', 'property: TStrings',
-      'FImgNames', '');
-
-    Complete;
-  end;
+  MethodAddresses[7] := @TSepiImportsTPainter.Create;
+  MethodAddresses[8] := @TSepiImportsTPainter.Draw;
 end;
 
 {--------------------------}
@@ -325,401 +182,47 @@ begin
   Result := SafeID;
 end;
 
-class function TSepiImportsTFunLabyComponent.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTFunLabyComponent.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TFunLabyComponent));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FMaster', System.TypeInfo(TMaster));
-    AddField('FID', System.TypeInfo(TComponentID));
-    AddField('FTag', System.TypeInfo(Integer));
-
-    AddMethod('GetSafeID', @TSepiImportsTFunLabyComponent.GetSafeID,
-      'function: TComponentID');
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTFunLabyComponent.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID)');
-    AddMethod('Destroy', @TSepiImportsTFunLabyComponent.Destroy,
-      'destructor',
-      mlkOverride);
-
-    AddProperty('Master', 'property: TMaster',
-      'FMaster', '');
-    AddProperty('ID', 'property: TComponentID',
-      'FID', '');
-    AddProperty('SafeID', 'property: TComponentID',
-      'GetSafeID', '');
-    AddProperty('Tag', 'property: integer',
-      'FTag', 'FTag');
-
-    Complete;
-  end;
+  MethodAddresses[9] := @TSepiImportsTFunLabyComponent.GetSafeID;
+  MethodAddresses[10] := @TSepiImportsTFunLabyComponent.Create;
 end;
 
 {-------------------------}
 { TVisualComponent import }
 {-------------------------}
 
-class function TSepiImportsTVisualComponent.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTVisualComponent.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TVisualComponent));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FName', System.TypeInfo(string));
-    AddField('FPainter', System.TypeInfo(TPainter));
-    AddField('FCachedImg', System.TypeInfo(TScrewBitmap));
-
-    AddMethod('PrivDraw', nil,
-      'procedure(const QPos : TQualifiedPos; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )',
-      mlkVirtual);
-
-    CurrentVisibility := mvProtected;
-
-    AddField('FStaticDraw', System.TypeInfo(Boolean));
-
-    AddMethod('DoDraw', @TSepiImportsTVisualComponent.DoDraw,
-      'procedure(const QPos : TQualifiedPos; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )',
-      mlkVirtual);
-
-    AddProperty('Painter', 'property: TPainter',
-      'FPainter', '');
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTVisualComponent.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID; const AName : string )');
-    AddMethod('Destroy', @TSepiImportsTVisualComponent.Destroy,
-      'destructor',
-      mlkOverride);
-    AddMethod('AfterConstruction', @TSepiImportsTVisualComponent.AfterConstruction,
-      'procedure',
-      mlkOverride);
-    AddMethod('Draw', @TSepiImportsTVisualComponent.Draw,
-      'procedure(const QPos : TQualifiedPos; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )');
-
-    AddProperty('Name', 'property: string',
-      'FName', '');
-    AddProperty('StaticDraw', 'property: boolean',
-      'FStaticDraw', '');
-
-    Complete;
-  end;
+  MethodAddresses[11] := @TSepiImportsTVisualComponent.Create;
+  MethodAddresses[12] := @TSepiImportsTVisualComponent.Draw;
 end;
 
 {----------------}
 { TPlugin import }
 {----------------}
 
-class function TSepiImportsTPlugin.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTPlugin.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TPlugin));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FPainterBefore', System.TypeInfo(TPainter));
-    AddField('FPainterAfter', System.TypeInfo(TPainter));
-
-    CurrentVisibility := mvProtected;
-
-    AddProperty('PainterBefore', 'property: TPainter',
-      'FPainterBefore', '');
-    AddProperty('PainterAfter', 'property: TPainter',
-      'FPainterAfter', '');
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTPlugin.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID)');
-    AddMethod('Destroy', @TSepiImportsTPlugin.Destroy,
-      'destructor',
-      mlkOverride);
-    AddMethod('AfterConstruction', @TSepiImportsTPlugin.AfterConstruction,
-      'procedure',
-      mlkOverride);
-    AddMethod('DrawBefore', @TSepiImportsTPlugin.DrawBefore,
-      'procedure(Player : TPlayer; const QPos : TQualifiedPos; Canvas : TCanvas ; X : integer = 0 ; Y : integer = 0 )',
-      mlkVirtual);
-    AddMethod('DrawAfter', @TSepiImportsTPlugin.DrawAfter,
-      'procedure(Player : TPlayer; const QPos : TQualifiedPos; Canvas : TCanvas ; X : integer = 0 ; Y : integer = 0 )',
-      mlkVirtual);
-    AddMethod('Moving', @TSepiImportsTPlugin.Moving,
-      'procedure(Player : TPlayer; OldDirection : TDirection; KeyPressed : boolean ; const Src, Dest : T3DPoint ; var Cancel : boolean )',
-      mlkVirtual);
-    AddMethod('Moved', @TSepiImportsTPlugin.Moved,
-      'procedure(Player : TPlayer; const Src, Dest : T3DPoint)',
-      mlkVirtual);
-    AddMethod('AbleTo', @TSepiImportsTPlugin.AbleTo,
-      'function(Player : TPlayer; const Action : TPlayerAction ) : boolean',
-      mlkVirtual);
-
-    Complete;
-  end;
-end;
-
-{-------------------}
-{ TObjectDef import }
-{-------------------}
-
-class function TSepiImportsTObjectDef.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
-begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TObjectDef));
-
-  with Result do
-  begin
-    CurrentVisibility := mvProtected;
-
-    AddMethod('GetCount', @TSepiImportsTObjectDef.GetCount,
-      'function(Player : TPlayer) : integer',
-      mlkVirtual);
-    AddMethod('SetCount', @TSepiImportsTObjectDef.SetCount,
-      'procedure(Player : TPlayer; Value : integer)',
-      mlkVirtual);
-    AddMethod('GetShownInfos', @TSepiImportsTObjectDef.GetShownInfos,
-      'function(Player : TPlayer) : string',
-      mlkVirtual);
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('AbleTo', @TSepiImportsTObjectDef.AbleTo,
-      'function(Player : TPlayer; const Action : TPlayerAction ) : boolean',
-      mlkVirtual);
-    AddMethod('UseFor', @TSepiImportsTObjectDef.UseFor,
-      'procedure(Player : TPlayer; const Action : TPlayerAction)',
-      mlkVirtual);
-
-    AddProperty('Count', 'property[Player : TPlayer] : integer',
-      'GetCount', 'SetCount');
-    AddProperty('ShownInfos', 'property[Player : TPlayer] : string',
-      'GetShownInfos', '');
-
-    Complete;
-  end;
-end;
-
-{------------------------}
-{ TScrewComponent import }
-{------------------------}
-
-class function TSepiImportsTScrewComponent.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
-begin
-  Result := TSepiClass(Owner.FindMeta('TScrewComponent'));
-  Result.RegisterTypeInfo(
-    Owner, TypeInfo(TScrewComponent));
-
-  with Result do
-  begin
-
-    Complete;
-  end;
+  MethodAddresses[13] := @TSepiImportsTPlugin.Create;
 end;
 
 {---------------}
 { TField import }
 {---------------}
 
-class function TSepiImportsTField.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTField.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TField));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FDelegateDrawTo', System.TypeInfo(TField));
-
-    AddMethod('PrivDraw', nil,
-      'procedure(const QPos : TQualifiedPos; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )',
-      mlkOverride);
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTField.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID; const AName : string ; ADelegateDrawTo : TField = nil )');
-    AddMethod('Entering', @TSepiImportsTField.Entering,
-      'procedure(Player : TPlayer; OldDirection : TDirection; KeyPressed : boolean ; const Src, Pos : T3DPoint ; var Cancel : boolean )',
-      mlkVirtual);
-    AddMethod('Exiting', @TSepiImportsTField.Exiting,
-      'procedure(Player : TPlayer; OldDirection : TDirection; KeyPressed : boolean ; const Pos, Dest : T3DPoint ; var Cancel : boolean )',
-      mlkVirtual);
-    AddMethod('Entered', @TSepiImportsTField.Entered,
-      'procedure(Player : TPlayer; const Src, Pos : T3DPoint)',
-      mlkVirtual);
-    AddMethod('Exited', @TSepiImportsTField.Exited,
-      'procedure(Player : TPlayer; const Pos, Dest : T3DPoint)',
-      mlkVirtual);
-
-    Complete;
-  end;
-end;
-
-{----------------}
-{ TEffect import }
-{----------------}
-
-class function TSepiImportsTEffect.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
-begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TEffect));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Entered', @TSepiImportsTEffect.Entered,
-      'procedure(Player : TPlayer; const Src, Pos : T3DPoint)',
-      mlkVirtual);
-    AddMethod('Exited', @TSepiImportsTEffect.Exited,
-      'procedure(Player : TPlayer; const Pos, Dest : T3DPoint)',
-      mlkVirtual);
-    AddMethod('Execute', @TSepiImportsTEffect.Execute,
-      'procedure(Player : TPlayer; const Pos : T3DPoint; var GoOnMoving : boolean )',
-      mlkVirtual);
-
-    Complete;
-  end;
-end;
-
-{--------------}
-{ TTool import }
-{--------------}
-
-class function TSepiImportsTTool.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
-begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TTool));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Find', @TSepiImportsTTool.Find,
-      'procedure(Player : TPlayer; const Pos : T3DPoint)',
-      mlkVirtual);
-
-    Complete;
-  end;
-end;
-
-{------------------}
-{ TObstacle import }
-{------------------}
-
-class function TSepiImportsTObstacle.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
-begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TObstacle));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Pushing', @TSepiImportsTObstacle.Pushing,
-      'procedure(Player : TPlayer; OldDirection : TDirection; KeyPressed : boolean ; const Src, Pos : T3DPoint ; var Cancel, AbortExecute : boolean )',
-      mlkVirtual);
-
-    Complete;
-  end;
+  MethodAddresses[14] := @TSepiImportsTField.Create;
 end;
 
 {---------------}
 { TScrew import }
 {---------------}
 
-class function TSepiImportsTScrew.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTScrew.InitMethodAddresses;
 begin
-  Result := TSepiClass.RegisterTypeInfo(
-    Owner, TypeInfo(TScrew));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FField', System.TypeInfo(TField));
-    AddField('FEffect', System.TypeInfo(TEffect));
-    AddField('FTool', System.TypeInfo(TTool));
-    AddField('FObstacle', System.TypeInfo(TObstacle));
-
-    CurrentVisibility := mvProtected;
-
-    AddField('FRefCount', System.TypeInfo(Integer));
-
-    AddMethod('DoDraw', @TSepiImportsTScrew.DoDraw,
-      'procedure(const QPos : TQualifiedPos; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )',
-      mlkOverride);
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTScrew.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID; const AName : string ; AField : TField ; AEffect : TEffect ; ATool : TTool ; AObstacle : TObstacle )');
-    AddMethod('BeforeDestruction', @TSepiImportsTScrew.BeforeDestruction,
-      'procedure',
-      mlkOverride);
-    AddMethod('DefaultHandler', @TSepiImportsTScrew.DefaultHandler,
-      'procedure(var Msg)',
-      mlkOverride);
-    AddMethod('Entering', @TSepiImportsTScrew.Entering,
-      'procedure(Player : TPlayer; OldDirection : TDirection; KeyPressed : boolean ; const Src, Pos : T3DPoint ; var Cancel : boolean )',
-      mlkVirtual);
-    AddMethod('Exiting', @TSepiImportsTScrew.Exiting,
-      'procedure(Player : TPlayer; OldDirection : TDirection; KeyPressed : boolean ; const Pos, Dest : T3DPoint ; var Cancel : boolean )',
-      mlkVirtual);
-    AddMethod('Entered', @TSepiImportsTScrew.Entered,
-      'procedure(Player : TPlayer; const Src, Pos : T3DPoint)',
-      mlkVirtual);
-    AddMethod('Exited', @TSepiImportsTScrew.Exited,
-      'procedure(Player : TPlayer; const Pos, Dest : T3DPoint)',
-      mlkVirtual);
-    AddMethod('Execute', @TSepiImportsTScrew.Execute,
-      'procedure(Player : TPlayer; const Pos : T3DPoint; var GoOnMoving : boolean )',
-      mlkVirtual);
-    AddMethod('Pushing', @TSepiImportsTScrew.Pushing,
-      'procedure(Player : TPlayer; OldDirection : TDirection; KeyPressed : boolean ; const Src, Pos : T3DPoint ; var Cancel, AbortExecute : boolean )',
-      mlkVirtual);
-    AddMethod('AddRef', @TSepiImportsTScrew.AddRef,
-      'function: integer',
-      mlkVirtual);
-    AddMethod('Release', @TSepiImportsTScrew.Release,
-      'function: integer',
-      mlkVirtual);
-
-    AddProperty('Field', 'property: TField',
-      'FField', '');
-    AddProperty('Effect', 'property: TEffect',
-      'FEffect', '');
-    AddProperty('Tool', 'property: TTool',
-      'FTool', '');
-    AddProperty('Obstacle', 'property: TObstacle',
-      'FObstacle', '');
-    AddProperty('RefCount', 'property: integer',
-      'FRefCount', '');
-
-    Complete;
-  end;
+  MethodAddresses[15] := @TSepiImportsTScrew.Create;
 end;
 
 {-------------}
@@ -766,69 +269,19 @@ begin
   LinearMap[Index] := Value;
 end;
 
-class function TSepiImportsTMap.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTMap.InitMethodAddresses;
 begin
-  Result := TSepiClass(Owner.FindMeta('TMap'));
-  Result.RegisterTypeInfo(
-    Owner, TypeInfo(TMap));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FDimensions', 'T3DPoint');
-    AddField('FZoneWidth', System.TypeInfo(Integer));
-    AddField('FZoneHeight', System.TypeInfo(Integer));
-    AddField('FMaxViewSize', System.TypeInfo(Integer));
-    AddField('FMap', System.TypeInfo(TUnnamed_1));
-    AddField('FOutsideOffset', System.TypeInfo(Integer));
-
-    AddMethod('SetMaxViewSize', @TSepiImportsTMap.SetMaxViewSize,
-      'procedure(Value : integer)');
-    AddMethod('GetMap', @TSepiImportsTMap.GetMap,
-      'function(const Position : T3DPoint) : TScrew');
-    AddMethod('SetMap', @TSepiImportsTMap.SetMap,
-      'procedure(const Position : T3DPoint; Value : TScrew)');
-    AddMethod('GetOutside', @TSepiImportsTMap.GetOutside,
-      'function(Floor : integer) : TScrew');
-    AddMethod('SetOutside', @TSepiImportsTMap.SetOutside,
-      'procedure(Floor : integer; Value : TScrew)');
-    AddMethod('GetLinearMapCount', @TSepiImportsTMap.GetLinearMapCount,
-      'function: integer');
-    AddMethod('GetLinearMap', @TSepiImportsTMap.GetLinearMap,
-      'function(Index : integer) : TScrew');
-    AddMethod('SetLinearMap', @TSepiImportsTMap.SetLinearMap,
-      'procedure(Index : integer; Value : TScrew)');
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTMap.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID; ADimensions : T3DPoint ; AZoneWidth, AZoneHeight : integer )');
-    AddMethod('InMap', @TSepiImportsTMap.InMap,
-      'function(const Position : T3DPoint) : boolean');
-    AddMethod('PlayersOn', @TSepiImportsTMap.PlayersOn,
-      'function(const Position : T3DPoint) : integer');
-
-    AddProperty('Dimensions', 'property: T3DPoint',
-      'FDimensions', '');
-    AddProperty('ZoneWidth', 'property: integer',
-      'FZoneWidth', '');
-    AddProperty('ZoneHeight', 'property: integer',
-      'FZoneHeight', '');
-    AddProperty('MaxViewSize', 'property: integer',
-      'FMaxViewSize', 'SetMaxViewSize');
-    AddProperty('Map', 'property[const Position : T3DPoint] : TScrew',
-      'GetMap', 'SetMap', True);
-    AddProperty('Outside', 'property[Floor : integer] : TScrew',
-      'GetOutside', 'SetOutside');
-    AddProperty('LinearMapCount', 'property: integer',
-      'GetLinearMapCount', '');
-    AddProperty('LinearMap', 'property[index : integer] : TScrew',
-      'GetLinearMap', 'SetLinearMap');
-
-    Complete;
-  end;
+  MethodAddresses[16] := @TSepiImportsTMap.SetMaxViewSize;
+  MethodAddresses[17] := @TSepiImportsTMap.GetMap;
+  MethodAddresses[18] := @TSepiImportsTMap.SetMap;
+  MethodAddresses[19] := @TSepiImportsTMap.GetOutside;
+  MethodAddresses[20] := @TSepiImportsTMap.SetOutside;
+  MethodAddresses[21] := @TSepiImportsTMap.GetLinearMapCount;
+  MethodAddresses[22] := @TSepiImportsTMap.GetLinearMap;
+  MethodAddresses[23] := @TSepiImportsTMap.SetLinearMap;
+  MethodAddresses[24] := @TSepiImportsTMap.Create;
+  MethodAddresses[25] := @TSepiImportsTMap.InMap;
+  MethodAddresses[26] := @TSepiImportsTMap.PlayersOn;
 end;
 
 {----------------}
@@ -860,126 +313,31 @@ begin
   MoveTo(Dest);
 end;
 
-class function TSepiImportsTPlayer.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTPlayer.InitMethodAddresses;
 begin
-  Result := TSepiClass(Owner.FindMeta('TPlayer'));
-  Result.RegisterTypeInfo(
-    Owner, TypeInfo(TPlayer));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FMap', System.TypeInfo(TMap));
-    AddField('FPosition', 'T3DPoint');
-    AddField('FDirection', System.TypeInfo(TDirection));
-    AddField('FShowCounter', System.TypeInfo(Integer));
-    AddField('FColor', System.TypeInfo(TColor));
-    AddField('FPlugins', System.TypeInfo(TObjectList));
-    AddField('FAttributes', System.TypeInfo(TStrings));
-    AddField('FOnSendCommand', System.TypeInfo(TSendCommandEvent));
-    AddField('FPlayState', System.TypeInfo(TPlayState));
-
-    AddMethod('PrivDraw', nil,
-      'procedure(const QPos : TQualifiedPos; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )',
-      mlkOverride);
-    AddMethod('GetVisible', @TSepiImportsTPlayer.GetVisible,
-      'function: boolean');
-    AddMethod('GetPluginCount', nil,
-      'function: integer');
-    AddMethod('GetPlugins', nil,
-      'function(Index : integer) : TPlugin');
-
-    AddProperty('PluginCount', 'property: integer',
-      'GetPluginCount', '');
-    AddProperty('Plugins', 'property[index : integer] : TPlugin',
-      'GetPlugins', '');
-
-    CurrentVisibility := mvProtected;
-
-    AddMethod('DoDraw', @TSepiImportsTPlayer.DoDraw,
-      'procedure(const QPos : TQualifiedPos; Canvas : TCanvas; X : integer = 0 ; Y : integer = 0 )',
-      mlkOverride);
-    AddMethod('GetAttribute', @TSepiImportsTPlayer.GetAttribute,
-      'function(const AttrName : string) : integer',
-      mlkVirtual);
-    AddMethod('SetAttribute', @TSepiImportsTPlayer.SetAttribute,
-      'procedure(const AttrName : string; Value : integer)',
-      mlkVirtual);
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTPlayer.Create,
-      'constructor(AMaster : TMaster; const AID : TComponentID; const AName : string ; AMap : TMap ; const APosition : T3DPoint )');
-    AddMethod('Destroy', @TSepiImportsTPlayer.Destroy,
-      'destructor',
-      mlkOverride);
-    AddMethod('GetAttributes', @TSepiImportsTPlayer.GetAttributes,
-      'procedure(Attributes : TStrings)',
-      mlkVirtual);
-    AddMethod('GetPluginIDs', @TSepiImportsTPlayer.GetPluginIDs,
-      'procedure(PluginIDs : TStrings)');
-    AddMethod('DrawInPlace', @TSepiImportsTPlayer.DrawInPlace,
-      'procedure(Canvas : TCanvas; X : integer = 0; Y : integer = 0 )');
-    AddMethod('AddPlugin', @TSepiImportsTPlayer.AddPlugin,
-      'procedure(Plugin : TPlugin)');
-    AddMethod('RemovePlugin', @TSepiImportsTPlayer.RemovePlugin,
-      'procedure(Plugin : TPlugin)');
-    AddMethod('AbleTo', @TSepiImportsTPlayer.AbleTo,
-      'function(const Action : TPlayerAction) : boolean');
-    AddMethod('DoAction', @TSepiImportsTPlayer.DoAction,
-      'function(const Action : TPlayerAction) : boolean');
-    AddMethod('Move', @TSepiImportsTPlayer.Move,
-      'procedure(Dir : TDirection; KeyPressed : boolean; out Redo : boolean )');
-    AddMethod('OL$MoveTo$0', @TSepiImportsTPlayer.MoveTo_0,
-      'procedure(const Dest : T3DPoint; Execute : boolean; out Redo : boolean )');
-    AddMethod('OL$MoveTo$1', @TSepiImportsTPlayer.MoveTo_1,
-      'procedure(const Dest : T3DPoint)');
-    AddMethod('OL$MoveTo$2', @TSepiImportsTPlayer.MoveTo_2,
-      'procedure(const Dest : TQualifiedPos; Execute : boolean; out Redo : boolean )');
-    AddMethod('OL$MoveTo$3', @TSepiImportsTPlayer.MoveTo_3,
-      'procedure(const Dest : TQualifiedPos)');
-    AddMethod('NaturalMoving', @TSepiImportsTPlayer.NaturalMoving,
-      'procedure');
-    AddMethod('ChangePosition', @TSepiImportsTPlayer.ChangePosition,
-      'procedure(AMap : TMap; const APosition : T3DPoint)');
-    AddMethod('Show', @TSepiImportsTPlayer.Show,
-      'procedure');
-    AddMethod('Hide', @TSepiImportsTPlayer.Hide,
-      'procedure');
-    AddMethod('SendCommand', @TSepiImportsTPlayer.SendCommand,
-      'function(const Command : string; const Params : string = '''' ) : string');
-    AddMethod('ShowDialog', @TSepiImportsTPlayer.ShowDialog,
-      'function(const Title, Text : string; DlgType : TDialogType = dtInformation ; DlgButtons : TDialogButtons = dbOK ; DefButton : Byte = 1 ; AddFlags : LongWord = 0 ) : TDialogResult');
-    AddMethod('ShowDialogRadio', @TSepiImportsTPlayer.ShowDialogRadio,
-      'function(const Title, Text : string; DlgType : TMsgDlgType; DlgButtons : TMsgDlgButtons ; DefButton : TModalResult ; const RadioTitles : array of string ; var Selected : integer ; OverButtons : boolean = False ) : Word');
-    AddMethod('ChooseNumber', @TSepiImportsTPlayer.ChooseNumber,
-      'function(const Title, Prompt : string; Default, Min, Max : integer ) : integer');
-    AddMethod('Win', @TSepiImportsTPlayer.Win,
-      'procedure');
-    AddMethod('Lose', @TSepiImportsTPlayer.Lose,
-      'procedure');
-
-    AddProperty('Map', 'property: TMap',
-      'FMap', '');
-    AddProperty('Position', 'property: T3DPoint',
-      'FPosition', '');
-    AddProperty('Direction', 'property: TDirection',
-      'FDirection', 'FDirection');
-    AddProperty('Visible', 'property: boolean',
-      'GetVisible', '');
-    AddProperty('Color', 'property: TColor',
-      'FColor', 'FColor');
-    AddProperty('Attribute', 'property[const AttrName : string] : integer',
-      'GetAttribute', 'SetAttribute');
-    AddProperty('OnSendCommand', 'property: TSendCommandEvent',
-      'FOnSendCommand', 'FOnSendCommand');
-    AddProperty('PlayState', 'property: TPlayState',
-      'FPlayState', '');
-
-    Complete;
-  end;
+  MethodAddresses[27] := @TSepiImportsTPlayer.GetVisible;
+  MethodAddresses[28] := @TSepiImportsTPlayer.Create;
+  MethodAddresses[29] := @TSepiImportsTPlayer.GetPluginIDs;
+  MethodAddresses[30] := @TSepiImportsTPlayer.DrawInPlace;
+  MethodAddresses[31] := @TSepiImportsTPlayer.AddPlugin;
+  MethodAddresses[32] := @TSepiImportsTPlayer.RemovePlugin;
+  MethodAddresses[33] := @TSepiImportsTPlayer.AbleTo;
+  MethodAddresses[34] := @TSepiImportsTPlayer.DoAction;
+  MethodAddresses[35] := @TSepiImportsTPlayer.Move;
+  MethodAddresses[36] := @TSepiImportsTPlayer.MoveTo_0;
+  MethodAddresses[37] := @TSepiImportsTPlayer.MoveTo_1;
+  MethodAddresses[38] := @TSepiImportsTPlayer.MoveTo_2;
+  MethodAddresses[39] := @TSepiImportsTPlayer.MoveTo_3;
+  MethodAddresses[40] := @TSepiImportsTPlayer.NaturalMoving;
+  MethodAddresses[41] := @TSepiImportsTPlayer.ChangePosition;
+  MethodAddresses[42] := @TSepiImportsTPlayer.Show;
+  MethodAddresses[43] := @TSepiImportsTPlayer.Hide;
+  MethodAddresses[44] := @TSepiImportsTPlayer.SendCommand;
+  MethodAddresses[45] := @TSepiImportsTPlayer.ShowDialog;
+  MethodAddresses[46] := @TSepiImportsTPlayer.ShowDialogRadio;
+  MethodAddresses[47] := @TSepiImportsTPlayer.ChooseNumber;
+  MethodAddresses[48] := @TSepiImportsTPlayer.Win;
+  MethodAddresses[49] := @TSepiImportsTPlayer.Lose;
 end;
 
 {----------------}
@@ -1136,317 +494,153 @@ begin
   Temporization := Value;
 end;
 
-class function TSepiImportsTMaster.SepiImport(
-  Owner: TSepiUnit): TSepiClass;
+class procedure TSepiImportsTMaster.InitMethodAddresses;
 begin
-  Result := TSepiClass(Owner.FindMeta('TMaster'));
-  Result.RegisterTypeInfo(
-    Owner, TypeInfo(TMaster));
-
-  with Result do
-  begin
-    CurrentVisibility := mvPrivate;
-
-    AddField('FImagesMaster', System.TypeInfo(TImagesMaster));
-    AddField('FComponents', System.TypeInfo(TStrings));
-    AddField('FPlugins', System.TypeInfo(TObjectList));
-    AddField('FObjectDefs', System.TypeInfo(TObjectList));
-    AddField('FFields', System.TypeInfo(TObjectList));
-    AddField('FEffects', System.TypeInfo(TObjectList));
-    AddField('FTools', System.TypeInfo(TObjectList));
-    AddField('FObstacles', System.TypeInfo(TObjectList));
-    AddField('FScrews', System.TypeInfo(TObjectList));
-    AddField('FMaps', System.TypeInfo(TObjectList));
-    AddField('FPlayers', System.TypeInfo(TObjectList));
-    AddField('FEditing', System.TypeInfo(Boolean));
-    AddField('FTemporization', System.TypeInfo(Integer));
-    AddField('FBeginTickCount', System.TypeInfo(Cardinal));
-    AddField('FTickCount', System.TypeInfo(Cardinal));
-    AddField('FTerminated', System.TypeInfo(Boolean));
-
-    AddMethod('GetComponent', @TSepiImportsTMaster.GetComponent,
-      'function(const ID : TComponentID) : TFunLabyComponent');
-    AddMethod('GetScrewComponent', @TSepiImportsTMaster.GetScrewComponent,
-      'function(const ID : TComponentID) : TScrewComponent');
-    AddMethod('GetPlugin', @TSepiImportsTMaster.GetPlugin,
-      'function(const ID : TComponentID) : TPlugin');
-    AddMethod('GetObjectDef', @TSepiImportsTMaster.GetObjectDef,
-      'function(const ID : TComponentID) : TObjectDef');
-    AddMethod('GetField', @TSepiImportsTMaster.GetField,
-      'function(const ID : TComponentID) : TField');
-    AddMethod('GetEffect', @TSepiImportsTMaster.GetEffect,
-      'function(const ID : TComponentID) : TEffect');
-    AddMethod('GetTool', @TSepiImportsTMaster.GetTool,
-      'function(const ID : TComponentID) : TTool');
-    AddMethod('GetObstacle', @TSepiImportsTMaster.GetObstacle,
-      'function(const ID : TComponentID) : TObstacle');
-    AddMethod('GetScrew', @TSepiImportsTMaster.GetScrew,
-      'function(const ID : TComponentID) : TScrew');
-    AddMethod('GetMap', @TSepiImportsTMaster.GetMap,
-      'function(const ID : TComponentID) : TMap');
-    AddMethod('GetPlayer', @TSepiImportsTMaster.GetPlayer,
-      'function(const ID : TComponentID) : TPlayer');
-    AddMethod('GetPluginCount', @TSepiImportsTMaster.GetPluginCount,
-      'function: integer');
-    AddMethod('GetPlugins', @TSepiImportsTMaster.GetPlugins,
-      'function(Index : integer) : TPlugin');
-    AddMethod('GetObjectDefCount', @TSepiImportsTMaster.GetObjectDefCount,
-      'function: integer');
-    AddMethod('GetObjectDefs', @TSepiImportsTMaster.GetObjectDefs,
-      'function(Index : integer) : TObjectDef');
-    AddMethod('GetFieldCount', @TSepiImportsTMaster.GetFieldCount,
-      'function: integer');
-    AddMethod('GetFields', @TSepiImportsTMaster.GetFields,
-      'function(Index : integer) : TField');
-    AddMethod('GetEffectCount', @TSepiImportsTMaster.GetEffectCount,
-      'function: integer');
-    AddMethod('GetEffects', @TSepiImportsTMaster.GetEffects,
-      'function(Index : integer) : TEffect');
-    AddMethod('GetToolCount', @TSepiImportsTMaster.GetToolCount,
-      'function: integer');
-    AddMethod('GetTools', @TSepiImportsTMaster.GetTools,
-      'function(Index : integer) : TTool');
-    AddMethod('GetObstacleCount', @TSepiImportsTMaster.GetObstacleCount,
-      'function: integer');
-    AddMethod('GetObstacles', @TSepiImportsTMaster.GetObstacles,
-      'function(Index : integer) : TObstacle');
-    AddMethod('GetScrewCount', @TSepiImportsTMaster.GetScrewCount,
-      'function: integer');
-    AddMethod('GetScrews', @TSepiImportsTMaster.GetScrews,
-      'function(Index : integer) : TScrew');
-    AddMethod('GetMapCount', @TSepiImportsTMaster.GetMapCount,
-      'function: integer');
-    AddMethod('GetMaps', @TSepiImportsTMaster.GetMaps,
-      'function(Index : integer) : TMap');
-    AddMethod('GetPlayerCount', @TSepiImportsTMaster.GetPlayerCount,
-      'function: integer');
-    AddMethod('GetPlayers', @TSepiImportsTMaster.GetPlayers,
-      'function(Index : integer) : TPlayer');
-    AddMethod('SetTemporization', @TSepiImportsTMaster.SetTemporization,
-      'procedure(Value : integer)');
-    AddMethod('AddComponent', nil,
-      'procedure(Component : TFunLabyComponent)');
-    AddMethod('RemoveComponent', nil,
-      'procedure(Component : TFunLabyComponent)');
-    AddMethod('Terminate', nil,
-      'procedure');
-
-    CurrentVisibility := mvPublic;
-
-    AddMethod('Create', @TSepiImportsTMaster.Create,
-      'constructor(AEditing : boolean)');
-    AddMethod('Destroy', @TSepiImportsTMaster.Destroy,
-      'destructor',
-      mlkOverride);
-    AddMethod('Temporize', @TSepiImportsTMaster.Temporize,
-      'procedure');
-    AddMethod('UpdateTickCount', @TSepiImportsTMaster.UpdateTickCount,
-      'procedure');
-    AddMethod('ScrewByComps', @TSepiImportsTMaster.ScrewByComps,
-      'function( const Field, Effect, Tool, Obstacle : TComponentID ) : TScrew');
-
-    AddProperty('ImagesMaster', 'property: TImagesMaster',
-      'FImagesMaster', '');
-    AddProperty('Component', 'property[const ID : TComponentID] : TFunLabyComponent',
-      'GetComponent', '');
-    AddProperty('ScrewComponent', 'property[const ID : TComponentID] : TScrewComponent',
-      'GetScrewComponent', '');
-    AddProperty('Plugin', 'property[const ID : TComponentID] : TPlugin',
-      'GetPlugin', '');
-    AddProperty('ObjectDef', 'property[const ID : TComponentID] : TObjectDef',
-      'GetObjectDef', '');
-    AddProperty('Field', 'property[const ID : TComponentID] : TField',
-      'GetField', '');
-    AddProperty('Effect', 'property[const ID : TComponentID] : TEffect',
-      'GetEffect', '');
-    AddProperty('Tool', 'property[const ID : TComponentID] : TTool',
-      'GetTool', '');
-    AddProperty('Obstacle', 'property[const ID : TComponentID] : TObstacle',
-      'GetObstacle', '');
-    AddProperty('Screw', 'property[const ID : TComponentID] : TScrew',
-      'GetScrew', '');
-    AddProperty('Map', 'property[const ID : TComponentID] : TMap',
-      'GetMap', '');
-    AddProperty('Player', 'property[const ID : TComponentID] : TPlayer',
-      'GetPlayer', '');
-    AddProperty('PluginCount', 'property: integer',
-      'GetPluginCount', '');
-    AddProperty('Plugins', 'property[index : integer] : TPlugin',
-      'GetPlugins', '');
-    AddProperty('ObjectDefCount', 'property: integer',
-      'GetObjectDefCount', '');
-    AddProperty('ObjectDefs', 'property[index : integer] : TObjectDef',
-      'GetObjectDefs', '');
-    AddProperty('FieldCount', 'property: integer',
-      'GetFieldCount', '');
-    AddProperty('Fields', 'property[index : integer] : TField',
-      'GetFields', '');
-    AddProperty('EffectCount', 'property: integer',
-      'GetEffectCount', '');
-    AddProperty('Effects', 'property[index : integer] : TEffect',
-      'GetEffects', '');
-    AddProperty('ToolCount', 'property: integer',
-      'GetToolCount', '');
-    AddProperty('Tools', 'property[index : integer] : TTool',
-      'GetTools', '');
-    AddProperty('ObstacleCount', 'property: integer',
-      'GetObstacleCount', '');
-    AddProperty('Obstacles', 'property[index : integer] : TObstacle',
-      'GetObstacles', '');
-    AddProperty('ScrewCount', 'property: integer',
-      'GetScrewCount', '');
-    AddProperty('Screws', 'property[index : integer] : TScrew',
-      'GetScrews', '');
-    AddProperty('MapCount', 'property: integer',
-      'GetMapCount', '');
-    AddProperty('Maps', 'property[index : integer] : TMap',
-      'GetMaps', '');
-    AddProperty('PlayerCount', 'property: integer',
-      'GetPlayerCount', '');
-    AddProperty('Players', 'property[index : integer] : TPlayer',
-      'GetPlayers', '');
-    AddProperty('Editing', 'property: boolean',
-      'FEditing', '');
-    AddProperty('Temporization', 'property: integer',
-      'FTemporization', 'SetTemporization');
-    AddProperty('TickCount', 'property: Cardinal',
-      'FTickCount', '');
-    AddProperty('Terminated', 'property: boolean',
-      'FTerminated', '');
-
-    Complete;
-  end;
+  MethodAddresses[50] := @TSepiImportsTMaster.GetComponent;
+  MethodAddresses[51] := @TSepiImportsTMaster.GetScrewComponent;
+  MethodAddresses[52] := @TSepiImportsTMaster.GetPlugin;
+  MethodAddresses[53] := @TSepiImportsTMaster.GetObjectDef;
+  MethodAddresses[54] := @TSepiImportsTMaster.GetField;
+  MethodAddresses[55] := @TSepiImportsTMaster.GetEffect;
+  MethodAddresses[56] := @TSepiImportsTMaster.GetTool;
+  MethodAddresses[57] := @TSepiImportsTMaster.GetObstacle;
+  MethodAddresses[58] := @TSepiImportsTMaster.GetScrew;
+  MethodAddresses[59] := @TSepiImportsTMaster.GetMap;
+  MethodAddresses[60] := @TSepiImportsTMaster.GetPlayer;
+  MethodAddresses[61] := @TSepiImportsTMaster.GetPluginCount;
+  MethodAddresses[62] := @TSepiImportsTMaster.GetPlugins;
+  MethodAddresses[63] := @TSepiImportsTMaster.GetObjectDefCount;
+  MethodAddresses[64] := @TSepiImportsTMaster.GetObjectDefs;
+  MethodAddresses[65] := @TSepiImportsTMaster.GetFieldCount;
+  MethodAddresses[66] := @TSepiImportsTMaster.GetFields;
+  MethodAddresses[67] := @TSepiImportsTMaster.GetEffectCount;
+  MethodAddresses[68] := @TSepiImportsTMaster.GetEffects;
+  MethodAddresses[69] := @TSepiImportsTMaster.GetToolCount;
+  MethodAddresses[70] := @TSepiImportsTMaster.GetTools;
+  MethodAddresses[71] := @TSepiImportsTMaster.GetObstacleCount;
+  MethodAddresses[72] := @TSepiImportsTMaster.GetObstacles;
+  MethodAddresses[73] := @TSepiImportsTMaster.GetScrewCount;
+  MethodAddresses[74] := @TSepiImportsTMaster.GetScrews;
+  MethodAddresses[75] := @TSepiImportsTMaster.GetMapCount;
+  MethodAddresses[76] := @TSepiImportsTMaster.GetMaps;
+  MethodAddresses[77] := @TSepiImportsTMaster.GetPlayerCount;
+  MethodAddresses[78] := @TSepiImportsTMaster.GetPlayers;
+  MethodAddresses[79] := @TSepiImportsTMaster.SetTemporization;
+  MethodAddresses[80] := @TSepiImportsTMaster.Create;
+  MethodAddresses[81] := @TSepiImportsTMaster.Temporize;
+  MethodAddresses[82] := @TSepiImportsTMaster.UpdateTickCount;
+  MethodAddresses[83] := @TSepiImportsTMaster.ScrewByComps;
 end;
+
+{---------------------}
+{ Overloaded routines }
+{---------------------}
 
 {-------------}
 { Unit import }
 {-------------}
 
-function ImportUnit(Root: TSepiRoot): TSepiUnit;
+procedure GetMethodCode(Self, Sender: TObject; var Code: Pointer;
+  var CodeHandler: TObject);
+var
+  Index: Integer;
 begin
-  Result := TSepiUnit.Create(Root, 'FunLabyUtils',
-    ['Windows', 'Types', 'SysUtils', 'Classes', 'Graphics', 'Contnrs',
-    'Controls', 'Dialogs', 'TypInfo', 'ScUtils', 'SdDialogs']);
-
-  // Constants
-  TSepiConstant.Create(Result, 'sDefaultObjectInfos', sDefaultObjectInfos);
-  TSepiConstant.Create(Result, 'sNothing', sNothing);
-  TSepiConstant.Create(Result, 'sEffectName', sEffectName);
-  TSepiConstant.Create(Result, 'sToolName', sToolName);
-  TSepiConstant.Create(Result, 'sObstacleName', sObstacleName);
-  TSepiConstant.Create(Result, 'sWhichObject', sWhichObject);
-  TSepiConstant.Create(Result, 'sComponentNotFound', sComponentNotFound);
-  TSepiConstant.Create(Result, 'sUnsupportedCommand', sUnsupportedCommand);
-  TSepiConstant.Create(Result, 'sCantLaunchThroughNetwork', sCantLaunchThroughNetwork);
-  TSepiConstant.Create(Result, 'sDescription', sDescription);
-  TSepiConstant.Create(Result, 'sMessage', sMessage);
-  TSepiConstant.Create(Result, 'sTip', sTip);
-  TSepiConstant.Create(Result, 'sChoice', sChoice);
-  TSepiConstant.Create(Result, 'sError', sError);
-  TSepiConstant.Create(Result, 'sFailure', sFailure);
-  TSepiConstant.Create(Result, 'sBlindAlley', sBlindAlley);
-  TSepiConstant.Create(Result, 'sWon', sWon);
-  TSepiConstant.Create(Result, 'sLost', sLost);
-
-  // Constants
-  TSepiConstant.Create(Result, 'CurrentVersion', CurrentVersion);
-  TSepiConstant.Create(Result, 'FunLabyAuthorName', FunLabyAuthorName);
-  TSepiConstant.Create(Result, 'FunLabyAuthorEMail', FunLabyAuthorEMail);
-  TSepiConstant.Create(Result, 'FunLabyWebSite', FunLabyWebSite);
-  TSepiConstant.Create(Result, 'ScrewSize', ScrewSize);
-  TSepiConstant.Create(Result, 'MinViewSize', MinViewSize);
-  TSepiConstant.Create(Result, 'clTransparent', clTransparent);
-  TSepiConstant.Create(Result, 'NoRefCount', NoRefCount);
-  TSepiConstant.Create(Result, 'attrColor', attrColor);
-  TSepiConstant.Create(Result, 'attrShowCounter', attrShowCounter);
-  TSepiConstant.Create(Result, 'CommandShowDialog', CommandShowDialog);
-  TSepiConstant.Create(Result, 'CommandShowDialogRadio', CommandShowDialogRadio);
-  TSepiConstant.Create(Result, 'CommandChooseNumber', CommandChooseNumber);
-  TSepiConstant.Create(Result, 'ScrewIDDelim', ScrewIDDelim);
-  TSepiConstant.Create(Result, 'ScrewIDFormat', ScrewIDFormat);
-
-  // Types
-  TSepiType.LoadFromTypeInfo(Result, TypeInfo(TComponentID));
-  TSepiType.LoadFromTypeInfo(Result, TypeInfo(TDirection));
-  TSepiType.LoadFromTypeInfo(Result, TypeInfo(TPlayerAction));
-  TSepiType.LoadFromTypeInfo(Result, TypeInfo(TPlayState));
-  TSepiImportsEComponentNotFound.SepiImport(Result);
-  TSepiImportsEUnsupportedCommand.SepiImport(Result);
-  TSepiClass.ForwardDecl(Result, TypeInfo(TScrewComponent));
-  TSepiClass.ForwardDecl(Result, TypeInfo(TPlayer));
-  TSepiClass.ForwardDecl(Result, TypeInfo(TMap));
-  TSepiClass.ForwardDecl(Result, TypeInfo(TMaster));
-  SepiImportTQualifiedPos(Result);
-  TSepiType.LoadFromTypeInfo(Result, TypeInfo(TSendCommandEvent));
-  TSepiType.LoadFromTypeInfo(Result, TypeInfo(TRegisterSingleComponentProc));
-  TSepiType.LoadFromTypeInfo(Result, TypeInfo(TRegisterComponentSetProc));
-  TSepiImportsTImagesMaster.SepiImport(Result);
-  TSepiImportsTScrewBitmap.SepiImport(Result);
-  TSepiImportsTPainter.SepiImport(Result);
-  TSepiImportsTFunLabyComponent.SepiImport(Result);
-  TSepiImportsTVisualComponent.SepiImport(Result);
-  TSepiImportsTPlugin.SepiImport(Result);
-  TSepiImportsTObjectDef.SepiImport(Result);
-  TSepiImportsTScrewComponent.SepiImport(Result);
-  TSepiImportsTField.SepiImport(Result);
-  TSepiImportsTEffect.SepiImport(Result);
-  TSepiImportsTTool.SepiImport(Result);
-  TSepiImportsTObstacle.SepiImport(Result);
-  TSepiImportsTScrew.SepiImport(Result);
-  TSepiType.LoadFromTypeInfo(Result, TypeInfo(TUnnamed_1));
-  TSepiImportsTMap.SepiImport(Result);
-  TSepiImportsTPlayer.SepiImport(Result);
-  TSepiImportsTMaster.SepiImport(Result);
-
-  // Constants
-  TSepiConstant.Create(Result, 'fIniFileName', fIniFileName);
-  TSepiVariable.Create(Result, 'NoQPos',
-    NoQPos, 'TQualifiedPos', True);
-  TSepiConstant.Create(Result, 'DefaultTemporization', DefaultTemporization);
-  TSepiConstant.Create(Result, 'DefaultPlayerColor', DefaultPlayerColor);
-  TSepiArrayType.Create(Result, '$2',
-    [Integer(Low(TDirection)), Integer(High(TDirection))], TypeInfo(TDirection), True);
-  TSepiVariable.Create(Result, 'NegDir',
-    NegDir, '$2', True);
-
-  // Global variables
-  TSepiVariable.Create(Result, 'fFunLabyAppData',
-    fFunLabyAppData, TypeInfo(string));
-  TSepiVariable.Create(Result, 'fScrewsDir',
-    fScrewsDir, TypeInfo(string));
-  TSepiVariable.Create(Result, 'fSoundsDir',
-    fSoundsDir, TypeInfo(string));
-  TSepiVariable.Create(Result, 'fUnitsDir',
-    fUnitsDir, TypeInfo(string));
-  TSepiVariable.Create(Result, 'fMapsDir',
-    fMapsDir, TypeInfo(string));
-  TSepiVariable.Create(Result, 'fLabyrinthsDir',
-    fLabyrinthsDir, TypeInfo(string));
-  TSepiVariable.Create(Result, 'fSaveguardsDir',
-    fSaveguardsDir, TypeInfo(string));
-  TSepiVariable.Create(Result, 'fScrewFileName',
-    fScrewFileName, TypeInfo(string));
-
-  // Routines
-  TSepiMethod.Create(Result, 'CheckValidLaunch', @CheckValidLaunch,
-    'function: boolean');
-  TSepiMethod.Create(Result, 'ShowFunLabyAbout', @ShowFunLabyAbout,
-    'procedure');
-  TSepiMethod.Create(Result, 'PointBehind', @PointBehind,
-    'function(const Src : T3DPoint; Dir : TDirection) : T3DPoint');
-  TSepiMethod.Create(Result, 'ScrewRect', @ScrewRect,
-    'function(X : integer = 0; Y : integer = 0) : TRect');
-  TSepiMethod.Create(Result, 'EmptyRect', @EmptyRect,
-    'procedure(Canvas : TCanvas; Rect : TRect)');
-  TSepiMethod.Create(Result, 'EmptyScrewRect', @EmptyScrewRect,
-    'procedure(Canvas : TCanvas; X : integer = 0; Y : integer = 0)');
-  TSepiMethod.Create(Result, 'IsNoQPos', @IsNoQPos,
-    'function(const QPos : TQualifiedPos) : boolean');
-
-  Result.Complete;
+  Index := (Sender as TSepiMethod).Tag;
+  if Index >= 0 then
+    Code := MethodAddresses[Index];
 end;
 
+procedure GetTypeInfo(Self, Sender: TObject; var TypeInfo: PTypeInfo;
+  var Found: Boolean);
+var
+  Index: Integer;
+begin
+  Index := (Sender as TSepiType).Tag;
+  Found := Index >= -1;
+
+  if Index >= 0 then
+    TypeInfo := TypeInfoArray[Index];
+end;
+
+const
+  GetMethodCodeEvent: TMethod = (Code: @GetMethodCode; Data: nil);
+  GetTypeInfoEvent: TMethod = (Code: @GetTypeInfo; Data: nil);
+
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
+var
+  Stream: TStream;
+begin
+  Stream := TResourceStream.Create(SysInit.HInstance,
+    ResourceName, RT_RCDATA);
+  try
+    Result := TSepiUnit.LoadFromStream(Root, Stream,
+      SepiImportsFunLabyUtilsLazyLoad,
+      TGetMethodCodeEvent(GetMethodCodeEvent),
+      TGetTypeInfoEvent(GetTypeInfoEvent));
+
+    if SepiImportsFunLabyUtilsLazyLoad then
+      Result.AcquireObjResource(Stream);
+  finally
+    Stream.Free;
+  end;
+end;
+
+{$WARN SYMBOL_DEPRECATED OFF}
+
+procedure InitTypeInfoArray;
+begin
+  TypeInfoArray[0] := TypeInfo(TComponentID);
+  TypeInfoArray[1] := TypeInfo(TDirection);
+  TypeInfoArray[2] := TypeInfo(TPlayerAction);
+  TypeInfoArray[3] := TypeInfo(TPlayState);
+  TypeInfoArray[4] := TypeInfo(EComponentNotFound);
+  TypeInfoArray[5] := TypeInfo(EUnsupportedCommand);
+  TypeInfoArray[6] := TypeInfo(TImagesMaster);
+  TypeInfoArray[7] := TypeInfo(TScrewBitmap);
+  TypeInfoArray[8] := TypeInfo(TPainter);
+  TypeInfoArray[9] := TypeInfo(TFunLabyComponent);
+  TypeInfoArray[10] := TypeInfo(TVisualComponent);
+  TypeInfoArray[11] := TypeInfo(TPlugin);
+  TypeInfoArray[12] := TypeInfo(TObjectDef);
+  TypeInfoArray[13] := TypeInfo(TScrewComponent);
+  TypeInfoArray[14] := TypeInfo(TField);
+  TypeInfoArray[15] := TypeInfo(TEffect);
+  TypeInfoArray[16] := TypeInfo(TTool);
+  TypeInfoArray[17] := TypeInfo(TObstacle);
+  TypeInfoArray[18] := TypeInfo(TScrew);
+  TypeInfoArray[19] := TypeInfo(TMap);
+  TypeInfoArray[20] := TypeInfo(TPlayer);
+  TypeInfoArray[21] := TypeInfo(TMaster);
+end;
+
+procedure InitMethodAddresses;
+begin
+  TSepiImportsTImagesMaster.InitMethodAddresses;
+  TSepiImportsTScrewBitmap.InitMethodAddresses;
+  TSepiImportsTPainter.InitMethodAddresses;
+  TSepiImportsTFunLabyComponent.InitMethodAddresses;
+  TSepiImportsTVisualComponent.InitMethodAddresses;
+  TSepiImportsTPlugin.InitMethodAddresses;
+  TSepiImportsTField.InitMethodAddresses;
+  TSepiImportsTScrew.InitMethodAddresses;
+  TSepiImportsTMap.InitMethodAddresses;
+  TSepiImportsTPlayer.InitMethodAddresses;
+  TSepiImportsTMaster.InitMethodAddresses;
+  MethodAddresses[84] := @CheckValidLaunch;
+  MethodAddresses[85] := @ShowFunLabyAbout;
+  MethodAddresses[86] := @PointBehind;
+  MethodAddresses[87] := @ScrewRect;
+  MethodAddresses[88] := @EmptyRect;
+  MethodAddresses[89] := @EmptyScrewRect;
+  MethodAddresses[90] := @IsNoQPos;
+end;
+
+{$WARN SYMBOL_DEPRECATED ON}
+
 initialization
+  InitTypeInfoArray;
+  InitMethodAddresses;
+
   SepiRegisterImportedUnit('FunLabyUtils', ImportUnit);
 end.
 

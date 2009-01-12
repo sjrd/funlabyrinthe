@@ -168,8 +168,8 @@ Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension igno
 
 ; Fichiers temporaires pour l'installation
 
-Source: "Images\*"; flags: dontcopy
-Source: "Import4x.dll"; flags: dontcopy
+Source: "Images\*"; Flags: dontcopy
+Source: "Import4x.dll"; Flags: dontcopy
 
 [INI]
 Filename: "{app}\FunLabyrinthe.ini"; Section: "Directories"; Key: "AppData"; String: "{code:AppData}"

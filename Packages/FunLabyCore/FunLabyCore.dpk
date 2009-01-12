@@ -33,13 +33,13 @@ requires
   SCL90,
   SDL90,
   SepiReflection90,
-  SepiWinTypesImport90,
   SepiRTLCommonImport90,
   SepiRTLSysImport90,
   SepiSCLImport90,
   SepiSDLImport90,
   SepiSVCLImport90,
-  SepiVCLStdImport90;
+  SepiVCLStdImport90,
+  SepiWinTypesImport90;
 
 contains
   FunLabyUtils in 'FunLabyUtils.pas',

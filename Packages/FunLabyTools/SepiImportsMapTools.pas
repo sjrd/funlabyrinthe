@@ -8,16 +8,29 @@ unit SepiImportsMapTools;
 interface
 
 uses
-  TypInfo, SepiReflectionCore, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
-  SepiMembers, FunLabyUtils, MapTools;
+  Windows, SysUtils, Classes, TypInfo, SepiReflectionCore, SepiMembers, 
+  FunLabyUtils, MapTools;
+
+var
+  SepiImportsMapToolsLazyLoad: Boolean = False;
 
 implementation
 
-{ You must not localize any of the strings this unit contains! }
+{$R *.res}
 
-{-------------}
-{ Unit import }
-{-------------}
+const // don't localize
+  UnitName = 'MapTools';
+  ResourceName = 'SepiImportsMapTools';
+  TypeCount = 1;
+  MethodCount = 9;
+
+var
+  TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
+  MethodAddresses: array[0..MethodCount-1] of Pointer;
+
+{---------------------}
+{ Overloaded routines }
+{---------------------}
 
 function ChangeComp_0(Screw: TScrew; NewComp: TScrewComponent): TScrew;
 begin
@@ -29,40 +42,80 @@ begin
   Result := ChangeComp(Screw, NewComp);
 end;
 
-function ImportUnit(Root: TSepiRoot): TSepiUnit;
+{-------------}
+{ Unit import }
+{-------------}
+
+procedure GetMethodCode(Self, Sender: TObject; var Code: Pointer;
+  var CodeHandler: TObject);
+var
+  Index: Integer;
 begin
-  Result := TSepiUnit.Create(Root, 'MapTools',
-    ['ScUtils', 'FunLabyUtils']);
-
-  // Types
-  TSepiMethodRefType.Create(Result, 'TFindScrewProc',
-    'procedure(Map : TMap; var Pos : T3DPoint; Component : TScrewComponent )');
-
-  // Routines
-  TSepiMethod.Create(Result, 'ChangeField', @ChangeField,
-    'function(Screw : TScrew; const NewField : TComponentID = '''' ) : TScrew');
-  TSepiMethod.Create(Result, 'ChangeEffect', @ChangeEffect,
-    'function(Screw : TScrew; const NewEffect : TComponentID = '''' ) : TScrew');
-  TSepiMethod.Create(Result, 'ChangeTool', @ChangeTool,
-    'function(Screw : TScrew; const NewTool : TComponentID = '''' ) : TScrew');
-  TSepiMethod.Create(Result, 'ChangeObstacle', @ChangeObstacle,
-    'function(Screw : TScrew; const NewObstacle : TComponentID = '''' ) : TScrew');
-  TSepiOverloadedMethod.Create(Result, 'ChangeComp');
-  TSepiMethod.Create(Result, 'OL$ChangeComp$0', @ChangeComp_0,
-    'function(Screw : TScrew; NewComp : TScrewComponent ) : TScrew');
-  TSepiMethod.Create(Result, 'OL$ChangeComp$1', @ChangeComp_1,
-    'function(Screw : TScrew; const NewComp : TComponentID ) : TScrew');
-  TSepiMethod.Create(Result, 'FindNextScrew', @FindNextScrew,
-    'procedure(Map : TMap; var Pos : T3DPoint; Component : TScrewComponent )');
-  TSepiMethod.Create(Result, 'FindPreviousScrew', @FindPreviousScrew,
-    'procedure(Map : TMap; var Pos : T3DPoint; Component : TScrewComponent )');
-  TSepiMethod.Create(Result, 'FindScrewAtRandom', @FindScrewAtRandom,
-    'procedure(Map : TMap; var Pos : T3DPoint; Component : TScrewComponent )');
-
-  Result.Complete;
+  Index := (Sender as TSepiMethod).Tag;
+  if Index >= 0 then
+    Code := MethodAddresses[Index];
 end;
 
+procedure GetTypeInfo(Self, Sender: TObject; var TypeInfo: PTypeInfo;
+  var Found: Boolean);
+var
+  Index: Integer;
+begin
+  Index := (Sender as TSepiType).Tag;
+  Found := Index >= -1;
+
+  if Index >= 0 then
+    TypeInfo := TypeInfoArray[Index];
+end;
+
+const
+  GetMethodCodeEvent: TMethod = (Code: @GetMethodCode; Data: nil);
+  GetTypeInfoEvent: TMethod = (Code: @GetTypeInfo; Data: nil);
+
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
+var
+  Stream: TStream;
+begin
+  Stream := TResourceStream.Create(SysInit.HInstance,
+    ResourceName, RT_RCDATA);
+  try
+    Result := TSepiUnit.LoadFromStream(Root, Stream,
+      SepiImportsMapToolsLazyLoad,
+      TGetMethodCodeEvent(GetMethodCodeEvent),
+      TGetTypeInfoEvent(GetTypeInfoEvent));
+
+    if SepiImportsMapToolsLazyLoad then
+      Result.AcquireObjResource(Stream);
+  finally
+    Stream.Free;
+  end;
+end;
+
+{$WARN SYMBOL_DEPRECATED OFF}
+
+procedure InitTypeInfoArray;
+begin
+end;
+
+procedure InitMethodAddresses;
+begin
+  MethodAddresses[0] := @ChangeField;
+  MethodAddresses[1] := @ChangeEffect;
+  MethodAddresses[2] := @ChangeTool;
+  MethodAddresses[3] := @ChangeObstacle;
+  MethodAddresses[4] := @ChangeComp_0;
+  MethodAddresses[5] := @ChangeComp_1;
+  MethodAddresses[6] := @FindNextScrew;
+  MethodAddresses[7] := @FindPreviousScrew;
+  MethodAddresses[8] := @FindScrewAtRandom;
+end;
+
+{$WARN SYMBOL_DEPRECATED ON}
+
 initialization
+  InitTypeInfoArray;
+  InitMethodAddresses;
+
   SepiRegisterImportedUnit('MapTools', ImportUnit);
 end.
 

@@ -13,7 +13,7 @@ uses
 type
   {*
     Interface d'un éditeur d'unité de FunLabyEdit
-    Les classes implémentant cette interface doivent outrepasser la comptage de
+    Les classes implémentant cette interface doivent outrepasser le comptage de
     références, mais se libérer dans la méthode Release.
     @author sjrd
     @version 5.0
@@ -146,23 +146,6 @@ var
   /// Filtres d'unité
   UnitFilters: TUnitFilterList = nil;
 
-{procedure RegisterUnitEditor(const GUID : TGUID;
-  CreateProc : TCreateUnitEditorProc);
-procedure UnregisterUnitEditor(const GUID : TGUID);
-function FindUnitEditorCreateProc(const GUID : TGUID) : TCreateUnitEditorProc;
-function CreateUnitEditor(UnitFile : TUnitFile) : IUnitEditor50;
-function UnitEditorExists(const GUID : TGUID) : boolean;
-
-procedure RegisterUnitCreator(const Title, Description : string;
-  CreateProc : TCreateNewUnitProc; AskForFileName : boolean = True;
-  Filter : string = '');
-procedure UnregisterUnitCreator(CreateProc : TCreateNewUnitProc);
-procedure GetUnitCreators(out UnitCreatorArray : TUnitCreatorArray);
-
-procedure RegisterUnitFilter(const GUID : TGUID; const Filter : string);
-procedure UnregisterUnitFilter(const GUID : TGUID);
-procedure GetUnitFilters(out UnitFilterArray : TUnitFilterArray);}
-
 implementation
 
 {------------------------}
@@ -292,7 +275,7 @@ end;
 *}
 function TUnitFilterList.BucketFor(const Key): Cardinal;
 begin
-  Result := HashOfStr(string(Key)) mod BucketCount;
+  Result := HashOfStr(string(Key)) mod Cardinal(BucketCount);
 end;
 
 {*
