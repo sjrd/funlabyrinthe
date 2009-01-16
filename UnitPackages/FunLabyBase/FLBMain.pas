@@ -65,7 +65,7 @@ begin
   TPlankPlugin.Create(Master, idPlankPlugin);
   TBoatPlugin.Create(Master, idBoatPlugin);
 
-  // Défintions d'objet
+  // Définitions d'objet
   Buoys := TBuoys.Create(Master, idBuoys, sBuoys);
   Planks := TPlanks.Create(Master, idPlanks, sPlanks);
   SilverKeys := TSilverKeys.Create(Master, idSilverKeys, sSilverKeys);

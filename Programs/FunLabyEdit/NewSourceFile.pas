@@ -1,4 +1,4 @@
-unit NewUnit;
+unit NewSourceFile;
 
 interface
 
@@ -8,23 +8,22 @@ uses
   FunLabyUtils, FunLabyEditConsts;
 
 type
-  TFormCreateNewUnit = class(TForm)
-    LabelUnitType: TLabel;
-    ListBoxUnitType: TListBox;
+  TFormCreateNewSourceFile = class(TForm)
+    LabelSourceFileType: TLabel;
+    ListBoxSourceFileType: TListBox;
     LabelDescription: TLabel;
     MemoDescription: TMemo;
     ButtonOK: TBitBtn;
     ButtonCancel: TBitBtn;
-    SaveUnitDialog: TSaveDialog;
-    procedure ListBoxUnitTypeClick(Sender: TObject);
+    SaveSourceFileDialog: TSaveDialog;
+    procedure ListBoxSourceFileTypeClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
     { Déclarations privées }
     procedure AddCreator(const CreateProc, Info; var Continue: Boolean);
   public
     { Déclarations publiques }
-    class function NewUnit(out FileName: TFileName;
-      out GUID: TGUID): Boolean;
+    class function NewSourceFile(out FileName: TFileName): Boolean;
   end;
 
 implementation
@@ -32,17 +31,17 @@ implementation
 {$R *.dfm}
 
 type
-  /// Pointeur vers TUnitCreator
-  PUnitCreator = ^TUnitCreator;
+  /// Pointeur vers TSourceFileCreator
+  PSourceFileCreator = ^TSourceFileCreator;
 
   {*
     Créateur de fichier unité
     @author sjrd
     @version 5.0
   *}
-  TUnitCreator = record
-    CreateProc: TCreateNewUnitProc;
-    Info: TUnitCreatorInfo;
+  TSourceFileCreator = record
+    CreateProc: TCreateNewSourceFileProc;
+    Info: TSourceFileCreatorInfo;
   end;
 
 {*
@@ -51,65 +50,63 @@ type
   @param Info         Informations sur le créateur
   @param Continue     Positionner à False pour interrompre l'énumération
 *}
-procedure TFormCreateNewUnit.AddCreator(const CreateProc, Info;
+procedure TFormCreateNewSourceFile.AddCreator(const CreateProc, Info;
   var Continue: Boolean);
 var
-  Creator: PUnitCreator;
+  Creator: PSourceFileCreator;
 begin
   New(Creator);
-  Initialize(Creator^);
-  Creator.CreateProc := TCreateNewUnitProc(CreateProc);
-  Creator.Info := TUnitCreatorInfo(Info);
+  Creator.CreateProc := TCreateNewSourceFileProc(CreateProc);
+  Creator.Info := TSourceFileCreatorInfo(Info);
 
-  ListBoxUnitType.Items.AddObject(Creator.Info.Title, TObject(Creator));
+  ListBoxSourceFileType.Items.AddObject(Creator.Info.Title, TObject(Creator));
 end;
 
 {*
   Affiche la boîte de dialogue de création d'une nouvelle unité
   @param FileName   En sortie : nom du fichier unité créé
-  @param GUID       En sortie : GUID du type de fichier créé
   @return Éditeur de l'unité
 *}
-class function TFormCreateNewUnit.NewUnit(
-  out FileName: TFileName; out GUID: TGUID): Boolean;
+class function TFormCreateNewSourceFile.NewSourceFile(
+  out FileName: TFileName): Boolean;
 var
-  Creator: PUnitCreator;
+  Creator: PSourceFileCreator;
 begin
   // Initialisations
   Result := False;
 
   // Vérifier qu'il y a au moins un créateur d'unité enregistré
-  if UnitCreators.IsEmpty then
+  if SourceFileCreators.IsEmpty then
     Exit;
 
   with Create(Application) do
   try
     // Lister les créateurs
-    UnitCreators.ForEach(AddCreator);
-    ListBoxUnitType.Sorted := True;
-    ListBoxUnitType.ItemIndex := 0;
-    ListBoxUnitTypeClick(nil);
+    SourceFileCreators.ForEach(AddCreator);
+    ListBoxSourceFileType.Sorted := True;
+    ListBoxSourceFileType.ItemIndex := 0;
+    ListBoxSourceFileTypeClick(nil);
 
     // Afficher la boîte de dialogue
     if ShowModal <> mrOk then
       Exit;
 
-    with ListBoxUnitType do
-      Creator := PUnitCreator(Items.Objects[ItemIndex]);
+    with ListBoxSourceFileType do
+      Creator := PSourceFileCreator(Items.Objects[ItemIndex]);
 
     // Préparer le nom de fichier, si besoin
     if Creator.Info.AskForFileName then
     begin
-      SaveUnitDialog.Filter := Creator.Info.Filter;
-      SaveUnitDialog.InitialDir := fUnitsDir;
-      if not SaveUnitDialog.Execute then
+      SaveSourceFileDialog.Filter := Creator.Info.Filter;
+      SaveSourceFileDialog.InitialDir := fUnitsDir;
+      if not SaveSourceFileDialog.Execute then
         Exit;
-      FileName := SaveUnitDialog.FileName;
+      FileName := SaveSourceFileDialog.FileName;
     end else
       FileName := '';
 
     // Créer le fichier
-    Result := Creator.CreateProc(FileName, GUID);
+    Result := Creator.CreateProc(FileName);
   finally
     Release;
   end;
@@ -119,9 +116,9 @@ end;
   Gestionnaire d'événement OnClick de la list box des types d'unités
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormCreateNewUnit.ListBoxUnitTypeClick(Sender: TObject);
+procedure TFormCreateNewSourceFile.ListBoxSourceFileTypeClick(Sender: TObject);
 begin
-  with ListBoxUnitType, PUnitCreator(Items.Objects[ItemIndex])^ do
+  with ListBoxSourceFileType, PSourceFileCreator(Items.Objects[ItemIndex])^ do
     MemoDescription.Text := Info.Description;
 end;
 
@@ -129,15 +126,14 @@ end;
   Gestionnaire d'événement OnDestroy de la fiche
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormCreateNewUnit.FormDestroy(Sender: TObject);
+procedure TFormCreateNewSourceFile.FormDestroy(Sender: TObject);
 var
   I: Integer;
-  Creator: PUnitCreator;
+  Creator: PSourceFileCreator;
 begin
-  for I := 0 to ListBoxUnitType.Items.Count-1 do
+  for I := 0 to ListBoxSourceFileType.Items.Count-1 do
   begin
-    Creator := PUnitCreator(ListBoxUnitType.Items.Objects[I]);
-    Finalize(Creator^);
+    Creator := PSourceFileCreator(ListBoxSourceFileType.Items.Objects[I]);
     Dispose(Creator);
   end;
 end;

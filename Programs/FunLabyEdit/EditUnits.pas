@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ScLists, SdDialogs, FilesUtils, FunLabyUtils,
-  UnitEditorIntf, FunLabyEditConsts, NewUnit, EditParameters;
+  UnitEditorIntf, FunLabyEditConsts, EditParameters;
 
 type
   TFormEditUnits = class(TForm)
@@ -13,15 +13,13 @@ type
     ListBoxUnits: TListBox;
     ButtonOK: TBitBtn;
     ButtonCancel: TBitBtn;
-    ButtonAddExisting: TButton;
-    ButtonAddNew: TButton;
+    ButtonAdd: TButton;
     ButtonRemove: TButton;
     ButtonEditParams: TButton;
     OpenUnitDialog: TOpenDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure ButtonAddExistingClick(Sender: TObject);
-    procedure ButtonAddNewClick(Sender: TObject);
+    procedure ButtonAddClick(Sender: TObject);
     procedure ButtonRemoveClick(Sender: TObject);
     procedure ButtonEditParamsClick(Sender: TObject);
   private
@@ -71,7 +69,6 @@ begin
   end;
 
   New(DescPtr);
-  Initialize(DescPtr^);
   DescPtr^ := UnitFileDesc;
 
   ListBoxUnits.Items.AddObject(UnitFileDesc.HRef, TObject(DescPtr));
@@ -86,7 +83,7 @@ var
   DescPtr: PUnitFileDesc;
 begin
   DescPtr := PUnitFileDesc(ListBoxUnits.Items.Objects[Index]);
-  Finalize(DescPtr^);
+  Dispose(DescPtr);
 
   ListBoxUnits.Items.Delete(Index);
 end;
@@ -170,7 +167,7 @@ begin
   Filters := TStringList.Create;
   UnitFilters.ForEach(AddUnitFilter);
 
-  ButtonAddExisting.Enabled := Filters.Count > 0;
+  //ButtonAddExisting.Enabled := Filters.Count > 0;
   OpenUnitDialog.InitialDir := fUnitsDir;
 
   if Filters.Count > 0 then
@@ -184,7 +181,7 @@ begin
   end;
 
   // Vérifier qu'il y a au moins un créateur d'unités
-  ButtonAddNew.Enabled := not UnitCreators.IsEmpty;
+  ButtonAdd.Enabled := not SourceFileCreators.IsEmpty;
 end;
 
 {*
@@ -200,24 +197,11 @@ end;
   Gestionnaire d'événement pour ajouter une unité existante
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormEditUnits.ButtonAddExistingClick(Sender: TObject);
+procedure TFormEditUnits.ButtonAddClick(Sender: TObject);
 begin
   with OpenUnitDialog do
     if Execute then
       AddUnitFile(FileName, UnitFilters.GUID[Filters[FilterIndex-1]]);
-end;
-
-{*
-  Gestionnaire d'événement pour ajouter une nouvelle unité
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormEditUnits.ButtonAddNewClick(Sender: TObject);
-var
-  FileName: TFileName;
-  GUID: TGUID;
-begin
-  if TFormCreateNewUnit.NewUnit(FileName, GUID) then
-    AddUnitFile(FileName, GUID);
 end;
 
 {*

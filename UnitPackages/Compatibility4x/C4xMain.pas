@@ -130,11 +130,10 @@ begin
   try
     Counters.Delimiter := ' ';
 
-    if FileName = '' then
-      Exit;
     FileContents := TStringList.Create;
     try
-      FileContents.LoadFromFile(FileName);
+      if FileName <> '' then
+        FileContents.LoadFromFile(FileName);
       FileContents.Add('[]');
       Number := 0;
       SubContents := TStringList.Create;

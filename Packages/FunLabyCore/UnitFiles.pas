@@ -10,7 +10,8 @@ unit UnitFiles;
 interface
 
 uses
-  SysUtils, Classes, FunLabyUtils, FilesUtils;
+  SysUtils, Classes, FunLabyUtils, FilesUtils, SepiReflectionCore, SepiMembers,
+  SepiRuntime;
 
 resourcestring
   sCantLoadPackage = 'Impossible de charger le paquet "%s"';
@@ -112,6 +113,41 @@ type
   end;
 
   {*
+    Représente un fichier unité Sepi compilée
+    TSepiUnitFile représente un fichier unité Sepi compilée.
+    @author sjrd
+    @version 5.0
+  *}
+  TSepiUnitFile = class(TUnitFile)
+  private
+    FRuntimeUnit: TSepiRuntimeUnit; /// Unité Sepi runtime
+    FSepiUnit: TSepiUnit;           /// Unité Sepi
+
+    procedure CallSimpleProc(const Name: string);
+    procedure InitializeUnit(Params: TStrings);
+  public
+    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
+      const AFileName: TFileName; const AGUID: TGUID;
+      Params: TStrings); override;
+    destructor Destroy; override;
+
+    procedure Loaded; override;
+    procedure Unloading; override;
+
+    procedure GameStarted; override;
+    procedure GameEnded; override;
+
+    procedure RegisterComponents(
+      RegisterSingleComponentProc: TRegisterSingleComponentProc;
+      RegisterComponentSetProc: TRegisterComponentSetProc); override;
+
+    procedure GetParams(Params: TStrings); override;
+
+    property RuntimeUnit: TSepiRuntimeUnit read FRuntimeUnit;
+    property SepiUnit: TSepiUnit read FSepiUnit;
+  end;
+
+  {*
     Implémentation simple de l'interface IUnitFile50
     @author sjrd
     @version 5.0
@@ -142,6 +178,9 @@ type
 const
   /// GUID du gestionnaire d'unités de type package Borland
   BPLUnitHandlerGUID: TGUID = '{B28D4F92-6C46-4F22-87F9-432165EDA4C6}';
+
+  /// GUID du gestionnaire d'unités Sepi compilées
+  SepiUnitHandlerGUID: TGUID = '{AA09143C-74BF-48E5-984A-010EE900EE06}';
 
 implementation
 
@@ -248,6 +287,229 @@ begin
   UnitFileIntf.GetParams(Params);
 end;
 
+{----------------------}
+{ Classe TSepiUnitFile }
+{----------------------}
+
+{*
+  Crée une instance de TSepiUnitFile
+  @param AMasterFile   Fichier maître
+  @param AFileName     Nom du fichier
+  @param AMIMEType     Type MIME du fichier
+  @param Params        Paramètres envoyés à l'unité
+*}
+constructor TSepiUnitFile.Create(AMasterFile: TMasterFile; const AHRef: string;
+  const AFileName: TFileName; const AGUID: TGUID; Params: TStrings);
+begin
+  inherited;
+
+  FRuntimeUnit := TSepiRuntimeUnit.Create(MasterFile.SepiRoot, FileName);
+  FSepiUnit := FRuntimeUnit.SepiUnit;
+
+  // Set the unit ref-count to 1
+  SepiUnit.Root.LoadUnit(SepiUnit.Name);
+
+  InitializeUnit(Params);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TSepiUnitFile.Destroy;
+begin
+  CallSimpleProc('FinalizeUnit');
+  SepiUnit.Root.UnloadUnit(SepiUnit.Name);
+
+  inherited;
+end;
+
+procedure TSepiUnitFile.CallSimpleProc(const Name: string);
+var
+  Method: TSepiMethod;
+  Proc: TProcedure;
+begin
+  // Get method
+  if not (SepiUnit.GetMeta(Name) is TSepiMethod) then
+    Exit;
+  Method := TSepiMethod(SepiUnit.GetMeta(Name));
+
+  // Check signature
+  with Method.Signature do
+  begin
+    if Kind <> mkUnitProcedure then
+      Exit;
+    if ParamCount <> 0 then
+      Exit;
+    if CallingConvention <> ccRegister then
+      Exit;
+  end;
+
+  // Call the procedure
+  @Proc := Method.Code;
+  Proc;
+end;
+
+{*
+  Initialise l'unité
+*}
+procedure TSepiUnitFile.InitializeUnit(Params: TStrings);
+type
+  TInitializeUnitProc = procedure(Master: TMaster; Params: TStrings);
+var
+  Method: TSepiMethod;
+  FunLabyUtilsUnit, ClassesUnit: TSepiUnit;
+  InitializeUnitProc: TInitializeUnitProc;
+begin
+  // Don't localize strings in this method
+
+  // Get method
+  if not (SepiUnit.GetMeta('InitializeUnit') is TSepiMethod) then
+    Exit;
+  Method := TSepiMethod(SepiUnit.GetMeta('InitializeUnit'));
+
+  // Check signature
+  with Method.Signature do
+  begin
+    FunLabyUtilsUnit := SepiUnit.Root.GetMeta('FunLabyUtils') as TSepiUnit;
+    ClassesUnit := SepiUnit.Root.GetMeta('Classes') as TSepiUnit;
+
+    if Kind <> mkUnitProcedure then
+      Exit;
+    if ParamCount <> 2 then
+      Exit;
+    if not Params[0].CompatibleWith(FunLabyUtilsUnit.GetMeta(
+      'TMaster') as TSepiType) then
+      Exit;
+    if not Params[1].CompatibleWith(ClassesUnit.GetMeta(
+      'TStrings') as TSepiType) then
+      Exit;
+    if CallingConvention <> ccRegister then
+      Exit;
+  end;
+
+  // Call the procedure
+  @InitializeUnitProc := Method.Code;
+  InitializeUnitProc(Master, Params);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiUnitFile.Loaded;
+begin
+  CallSimpleProc('Loaded'); // don't localize
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiUnitFile.Unloading;
+begin
+  CallSimpleProc('Unloading'); // don't localize
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiUnitFile.GameStarted;
+begin
+  CallSimpleProc('GameStarted'); // don't localize
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiUnitFile.GameEnded;
+begin
+  CallSimpleProc('GameEnded'); // don't localize
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiUnitFile.RegisterComponents(
+  RegisterSingleComponentProc: TRegisterSingleComponentProc;
+  RegisterComponentSetProc: TRegisterComponentSetProc);
+type
+  TRegisterComponentsProc = procedure(
+    RegisterSingleComponentProc: TRegisterSingleComponentProc;
+    RegisterComponentSetProc: TRegisterComponentSetProc);
+var
+  Method: TSepiMethod;
+  FunLabyUtilsUnit: TSepiUnit;
+  RegisterComponentsProc: TRegisterComponentsProc;
+begin
+  // Don't localize strings in this method
+
+  // Get method
+  if not (SepiUnit.GetMeta('RegisterComponents') is TSepiMethod) then
+    Exit;
+  Method := TSepiMethod(SepiUnit.GetMeta('RegisterComponents'));
+
+  // Check signature
+  with Method.Signature do
+  begin
+    FunLabyUtilsUnit := SepiUnit.Root.GetMeta('FunLabyUtils') as TSepiUnit;
+
+    if Kind <> mkUnitProcedure then
+      Exit;
+    if ParamCount <> 2 then
+      Exit;
+    if not Params[0].CompatibleWith(FunLabyUtilsUnit.GetMeta(
+      'TRegisterSingleComponentProc') as TSepiType) then
+      Exit;
+    if not Params[1].CompatibleWith(FunLabyUtilsUnit.GetMeta(
+      'TRegisterComponentSetProc') as TSepiType) then
+      Exit;
+    if CallingConvention <> ccRegister then
+      Exit;
+  end;
+
+  // Call the procedure
+  @RegisterComponentsProc := Method.Code;
+  RegisterComponentsProc(RegisterSingleComponentProc,
+    RegisterComponentSetProc);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiUnitFile.GetParams(Params: TStrings);
+type
+  TGetParamsProc = procedure(Params: TStrings);
+var
+  Method: TSepiMethod;
+  ClassesUnit: TSepiUnit;
+  GetParamsProc: TGetParamsProc;
+begin
+  // Don't localize strings in this method
+
+  // Get method
+  if not (SepiUnit.GetMeta('GetParams') is TSepiMethod) then
+    Exit;
+  Method := TSepiMethod(SepiUnit.GetMeta('GetParams'));
+
+  // Check signature
+  with Method.Signature do
+  begin
+    ClassesUnit := SepiUnit.Root.GetMeta('Classes') as TSepiUnit;
+
+    if Kind <> mkUnitProcedure then
+      Exit;
+    if ParamCount <> 1 then
+      Exit;
+    if not Params[0].CompatibleWith(ClassesUnit.GetMeta(
+      'TStrings') as TSepiType) then
+      Exit;
+    if CallingConvention <> ccRegister then
+      Exit;
+  end;
+
+  // Call the procedure
+  @GetParamsProc := Method.Code;
+  GetParamsProc(Params);
+end;
+
 {----------------------------}
 { Classe TInterfacedUnitFile }
 {----------------------------}
@@ -310,7 +572,9 @@ end;
 
 initialization
   UnitFileClasses.Add(BPLUnitHandlerGUID, TBPLUnitFile);
+  UnitFileClasses.Add(SepiUnitHandlerGUID, TSepiUnitFile);
 finalization
   UnitFileClasses.Remove(BPLUnitHandlerGUID);
+  UnitFileClasses.Remove(SepiUnitHandlerGUID);
 end.
 

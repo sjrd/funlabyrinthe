@@ -39,7 +39,8 @@ requires
   SepiSDLImport90,
   SepiSVCLImport90,
   SepiVCLStdImport90,
-  SepiWinTypesImport90;
+  SepiWinTypesImport90,
+  SepiInterpreter90;
 
 contains
   FunLabyUtils in 'FunLabyUtils.pas',

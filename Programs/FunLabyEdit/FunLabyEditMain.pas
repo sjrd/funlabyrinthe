@@ -13,7 +13,7 @@ uses
   ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus, ToolWin,
   ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
   FilesUtils, UnitFiles, EditPluginManager, UnitEditorIntf, FileProperties,
-  FunLabyEditConsts, JvTabBar, EditUnits;
+  FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile;
 
 type
   {*
@@ -44,46 +44,56 @@ type
     ActionAbout: TAction;
     ActionTest: TAction;
     TabBarEditors: TJvTabBar;
-    ActionViewAllUnits: TAction;
+    ActionViewAllSources: TAction;
     OpenUnitDialog: TOpenDialog;
     ActionEditUnits: TAction;
-    procedure ActionEditUnitsExecute(Sender: TObject);
-    procedure TabBarEditorsTabSelected(Sender: TObject; Item: TJvTabBarItem);
-    procedure TabBarEditorsTabSelecting(Sender: TObject; Item: TJvTabBarItem;
-      var AllowSelect: Boolean);
-    procedure TabBarEditorsTabClosed(Sender: TObject; Item: TJvTabBarItem);
+    ActionAddExistingSource: TAction;
+    ActionAddNewSource: TAction;
+    ActionRemoveSource: TAction;
+    OpenSourceFileDialog: TOpenDialog;
+    ActionSaveAll: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure ApplicationHint(Sender: TObject);
     procedure ActionNewFileExecute(Sender: TObject);
     procedure ActionOpenFileExecute(Sender: TObject);
     procedure ActionSaveFileExecute(Sender: TObject);
     procedure ActionSaveFileAsExecute(Sender: TObject);
+    procedure ActionSaveAllExecute(Sender: TObject);
+    procedure ActionFilePropertiesExecute(Sender: TObject);
+    procedure ActionEditUnitsExecute(Sender: TObject);
     procedure ActionTestExecute(Sender: TObject);
     procedure ActionCloseFileExecute(Sender: TObject);
-    procedure ActionFilePropertiesExecute(Sender: TObject);
     procedure ActionExitExecute(Sender: TObject);
     procedure ActionAddMapExecute(Sender: TObject);
     procedure ActionRemoveMapExecute(Sender: TObject);
     procedure ActionHelpTopicsExecute(Sender: TObject);
     procedure ActionAboutExecute(Sender: TObject);
-    procedure ActionViewAllUnitsExecute(Sender: TObject);
-    procedure ActionViewUnitExecute(Sender: TObject);
+    procedure ActionAddExistingSourceExecute(Sender: TObject);
+    procedure ActionAddNewSourceExecute(Sender: TObject);
+    procedure ActionRemoveSourceExecute(Sender: TObject);
+    procedure ActionViewAllSourcesExecute(Sender: TObject);
+    procedure ActionViewSourceExecute(Sender: TObject);
+    procedure TabBarEditorsTabSelecting(Sender: TObject; Item: TJvTabBarItem;
+      var AllowSelect: Boolean);
+    procedure TabBarEditorsTabSelected(Sender: TObject; Item: TJvTabBarItem);
     procedure TabBarEditorsTabClosing(Sender: TObject; Item: TJvTabBarItem;
       var AllowClose: Boolean);
+    procedure TabBarEditorsTabClosed(Sender: TObject; Item: TJvTabBarItem);
+    procedure EditorStateChange(const Sender: ISourceEditor50);
   private
-    { Déclarations privées }
     /// Manager asynchrone de la racine Sepi
     SepiRootManager: TSepiAsynchronousRootManager;
     SepiRoot: TSepiRoot; /// Racine Sepi
 
     BigMenuMaps: TActionClient;  /// Menu des cartes
-    BigMenuUnits: TActionClient; /// Menu des unités
+    BigMenuSources: TActionClient; /// Menu des unités
 
     TabMapEditor: TJvTabBarItem;     /// Onglet d'édition des cartes
     FrameMapEditor: TFrameMapEditor; /// Cadre d'édition des cartes
 
-    UnitActions: array of TAction; /// Liste des actions du menu Unités
+    SourceActions: array of TAction; /// Liste des actions du menu Sources liés
 
     FModified: Boolean;      /// Indique si le fichier a été modifié
     MasterFile: TMasterFile; /// Fichier maître
@@ -92,23 +102,40 @@ type
     procedure LoadFile;
     procedure UnloadFile;
 
+    function IsEditor(Tab: TJvTabBarItem): Boolean; overload;
+    function IsEditor(Index: Integer): Boolean; overload;
+    function GetTabEditor(Tab: TJvTabBarItem): ISourceEditor50;
+    function FindTab(const Editor: ISourceEditor50): TJvTabBarItem; overload;
+    function FindTab(SourceFile: TSourceFile): TJvTabBarItem; overload;
+    procedure OpenTab(SourceFile: TSourceFile);
+    function CloseTab(Tab: TJvTabBarItem): Boolean;
+
     procedure NewFile;
     procedure OpenFile(const FileName: TFileName);
     function SaveFile(FileName: TFileName = ''): Boolean;
+    function SaveAll: Boolean;
     function CloseFile: Boolean;
 
     procedure MarkModified;
 
-    procedure MakeUnitActions;
-    procedure DeleteUnitActions;
+    function MakeSourceAction(SourceFile: TSourceFile): TAction;
+    procedure MakeSourceActions;
+    procedure DeleteSourceActions;
 
-    procedure AddUnitEditor(Editor: IUnitEditor50);
+    procedure AddSourceFile(const FileName: TFileName);
+    procedure RemoveSourceFile(SourceFile: TSourceFile);
 
     procedure SetModified(Value: Boolean);
 
+    function GetTabCount: Integer;
+    function GetTabs(Index: Integer): TJvTabBarItem;
+    function GetEditors(Index: Integer): ISourceEditor50;
+
     property Modified: Boolean read FModified write SetModified;
-  public
-    { Déclarations publiques }
+
+    property TabCount: Integer read GetTabCount;
+    property Tabs[Index: Integer]: TJvTabBarItem read GetTabs;
+    property Editors[Index: Integer]: ISourceEditor50 read GetEditors;
   end;
 
 const {don't localize}
@@ -124,7 +151,7 @@ implementation
 
 const
   MapEditorTag = 0;
-  UnitEditorTag = 1;
+  SourceEditorTag = 1;
 
 {------------------}
 { Classe TFormMain }
@@ -146,8 +173,10 @@ begin
   // Activation de l'interface utilisateur
   ActionSaveFile.Enabled := True;
   ActionSaveFileAs.Enabled := True;
+  ActionSaveAll.Enabled := True;
   ActionCloseFile.Enabled := True;
   ActionFileProperties.Enabled := True;
+  ActionEditUnits.Enabled := True;
   ActionTest.Enabled := True;
 
   // Menu des cartes
@@ -155,10 +184,11 @@ begin
   ActionAddMap.Enabled := True;
 
   // Menu des unités
-  BigMenuUnits.Visible := True;
-  ActionViewAllUnits.Enabled := True;
-  ActionEditUnits.Enabled := True;
-  MakeUnitActions;
+  BigMenuSources.Visible := True;
+  ActionAddExistingSource.Enabled := SourceEditors.FilterCount > 0;
+  ActionAddNewSource.Enabled := not SourceFileCreators.IsEmpty;
+  ActionViewAllSources.Enabled := True;
+  MakeSourceActions;
 
   // Chargement des cartes
   FrameMapEditor.LoadFile(SepiRoot, MasterFile);
@@ -176,8 +206,10 @@ begin
   // Désactivation de l'interface utilisateur
   ActionSaveFile.Enabled := False;
   ActionSaveFileAs.Enabled := False;
+  ActionSaveAll.Enabled := False;
   ActionCloseFile.Enabled := False;
   ActionFileProperties.Enabled := False;
+  ActionEditUnits.Enabled := False;
   ActionTest.Enabled := False;
 
   // Menu des cartes
@@ -185,16 +217,151 @@ begin
   ActionAddMap.Enabled := False;
 
   // Menu des unités
-  BigMenuUnits.Visible := False;
-  ActionViewAllUnits.Enabled := False;
-  ActionEditUnits.Enabled := False;
-  DeleteUnitActions;
+  BigMenuSources.Visible := False;
+  ActionAddExistingSource.Enabled := False;
+  ActionAddNewSource.Enabled := False;
+  ActionViewAllSources.Enabled := False;
+  DeleteSourceActions;
 
   // Autres variables
   Master := nil;
 
   // Ne pas laisser la croix de fermeture indiquer une modification
   Modified := False;
+end;
+
+{*
+  Indique si un onglet est un éditeur de source
+  @param Tab   Onglet
+  @return True si l'onglet est un éditeur de source, False sinon
+*}
+function TFormMain.IsEditor(Tab: TJvTabBarItem): Boolean;
+begin
+  Result := Tab.Tag = SourceEditorTag;
+end;
+
+{*
+  Indique si un onglet est un éditeur de source
+  @param Index   Index de l'onglet
+  @return True si l'onglet est un éditeur de source, False sinon
+*}
+function TFormMain.IsEditor(Index: Integer): Boolean;
+begin
+  Result := Tabs[Index].Tag = SourceEditorTag;
+end;
+
+{*
+  Éditeur de source correspondant à un onglet donné
+  @param Tab   Onglet
+  @return Éditeur de source correspondant, ou nil si ce n'est pas un source
+*}
+function TFormMain.GetTabEditor(Tab: TJvTabBarItem): ISourceEditor50;
+begin
+  if Tab.Tag = SourceEditorTag then
+    Result := ISourceEditor50(Pointer(Tab.Data))
+  else
+    Result := nil;
+end;
+
+{*
+  Trouve l'onglet qui contient un éditeur de source donné
+  @param Editor   Éditeur de source recherché
+  @return Onglet correspondant
+*}
+function TFormMain.FindTab(const Editor: ISourceEditor50): TJvTabBarItem;
+var
+  I: Integer;
+begin
+  for I := 0 to TabCount-1 do
+  begin
+    if Pointer(Tabs[I].Data) = Pointer(Editor) then
+    begin
+      Result := Tabs[I];
+      Exit;
+    end;
+  end;
+
+  Assert(False);
+  Result := nil;
+end;
+
+{*
+  Trouve l'onglet qui contient un éditeur de source donné
+  @param SourceFile   Fichier source recherché
+  @return Onglet correspondant, ou nil si n'existe pas
+*}
+function TFormMain.FindTab(SourceFile: TSourceFile): TJvTabBarItem;
+var
+  I: Integer;
+begin
+  for I := 0 to TabCount-1 do
+  begin
+    if IsEditor(I) and (Editors[I].SourceFile = SourceFile) then
+    begin
+      Result := Tabs[I];
+      Exit;
+    end;
+  end;
+
+  Result := nil;
+end;
+
+{*
+  Ajoute un éditeur de source à l'interface visuelle et l'affiche
+  @param Editor   Éditeur à ajouter
+*}
+procedure TFormMain.OpenTab(SourceFile: TSourceFile);
+var
+  Editor: ISourceEditor50;
+  EditorControl: TControl;
+  Tab: TJvTabBarItem;
+begin
+  // Créer l'éditeur
+  Editor := SourceEditors.CreateEditor(SourceFile);
+
+  // Configurer le contrôle d'édition
+  EditorControl := Editor.Control;
+  EditorControl.Align := alClient;
+  EditorControl.Visible := False;
+  EditorControl.Parent := Self;
+
+  // Enregistrer les événements de l'éditeur
+  Editor.OnStateChange := EditorStateChange;
+
+  // Créer un nouvel onglet pour l'éditeur et l'afficher
+  Tab := TJvTabBarItem(TabBarEditors.Tabs.Add);
+  Tab.Caption := ExtractFileName(Editor.SourceFile.FileName);
+  Tab.Data := TObject(Pointer(Editor));
+  Tab.Tag := SourceEditorTag;
+  Tab.Modified := Editor.Modified;
+  Tab.Selected := True;
+end;
+
+{*
+  Ferme un onglet d'édition de source
+  @param Tab   Onglet à fermer
+  @return True si l'onglet a bien été fermé, False sinon
+*}
+function TFormMain.CloseTab(Tab: TJvTabBarItem): Boolean;
+var
+  Editor: ISourceEditor50;
+begin
+  Result := False;
+
+  if not IsEditor(Tab) then
+    Exit;
+
+  if Tab.Data <> nil then
+  begin
+    Editor := GetTabEditor(Tab);
+    if not Editor.CanClose then
+      Exit;
+    Editor.Release;
+    Tab.Data := nil;
+  end;
+
+  TabBarEditors.Tabs.Delete(Tab.Index);
+  Result := True;
 end;
 
 {*
@@ -302,6 +469,25 @@ begin
 end;
 
 {*
+  Enregistre tous les fichiers
+  @return True si tous les fichiers ont bien été enregistrés, False sinon
+*}
+function TFormMain.SaveAll: Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+
+  for I := 0 to TabCount-1 do
+  begin
+    if IsEditor(I) and (not Editors[I].SaveFile) then
+      Exit;
+  end;
+
+  Result := SaveFile(MasterFile.FileName);
+end;
+
+{*
   Ferme le fichier
   @return True si le fichier a bien été fermé, False sinon
 *}
@@ -309,30 +495,18 @@ function TFormMain.CloseFile: Boolean;
 var
   I: Integer;
   Tab: TJvTabBarItem;
-  Editor: IUnitEditor50;
 begin
   Result := True;
 
   if MasterFile = nil then
     Exit;
 
-  // Fermer toutes les unités ouvertes : chacune peut empêcher la fermeture
-  for I := TabBarEditors.Tabs.Count-1 downto 0 do
+  // Fermer tous les sources ouverts : chacun peut empêcher la fermeture
+  for I := TabCount-1 downto 0 do
   begin
-    Tab := TabBarEditors.Tabs[I];
-    if Tab.Tag <> UnitEditorTag then
-      Continue;
-
-    if Tab.Data <> nil then
-    begin
-      Editor := IUnitEditor50(Pointer(Tab.Data));
-      if not Editor.CanClose then
-        Exit;
-      Editor.Release;
-      Tab.Data := nil;
-    end;
-
-    TabBarEditors.Tabs.Delete(I);
+    Tab := Tabs[I];
+    if IsEditor(Tab) and (not CloseTab(Tab)) then
+      Exit;
   end;
 
   // Demander de sauvegarder le projet, s'il est modifié
@@ -364,69 +538,116 @@ begin
 end;
 
 {*
-  Crée une entrée dans le menu des unités pour chaque unité
+  Crée une action Voir un source pour un fichier source donné
+  @param SourceFile   Fichier source à voir
+  @return L'action créée
 *}
-procedure TFormMain.MakeUnitActions;
+function TFormMain.MakeSourceAction(SourceFile: TSourceFile): TAction;
+begin
+  Result := TAction.Create(Self);
+  with Result do
+  begin
+    ActionList := ActionManager;
+    Caption := ExtractFileName(SourceFile.FileName);
+    Tag := Integer(SourceFile);
+    Enabled := SourceEditors.ExistsEditor(SourceFile);
+    OnExecute := ActionViewSourceExecute;
+  end;
+end;
+
+{*
+  Crée une entrée dans le menu des sources pour chaque fichier source
+*}
+procedure TFormMain.MakeSourceActions;
 var
   I: Integer;
   PreviousItem: TActionClientItem;
-  UnitFile: TUnitFile;
+  SourceFile: TSourceFile;
 begin
-  PreviousItem := BigMenuUnits.Items[BigMenuUnits.Items.Count-1];
-  SetLength(UnitActions, MasterFile.UnitFileCount);
+  PreviousItem := BigMenuSources.Items[BigMenuSources.Items.Count-1];
+  SetLength(SourceActions, MasterFile.SourceFileCount);
 
-  for I := 0 to MasterFile.UnitFileCount-1 do
+  for I := 0 to MasterFile.SourceFileCount-1 do
   begin
-    UnitFile := MasterFile.UnitFiles[I];
-    UnitActions[I] := TAction.Create(Self);
-    with UnitActions[I] do
-    begin
-      ActionList := ActionManager;
-      Caption := ExtractFileName(UnitFile.FileName);
-      Tag := Integer(UnitFile);
-      Enabled := UnitEditors.Exists(UnitFile.HandlerGUID);
-      OnExecute := ActionViewUnitExecute;
-    end;
-    PreviousItem := ActionManager.AddAction(UnitActions[I], PreviousItem);
+    SourceFile := MasterFile.SourceFiles[I];
+    SourceActions[I] := MakeSourceAction(SourceFile);
+    PreviousItem := ActionManager.AddAction(SourceActions[I], PreviousItem);
   end;
 end;
 
 {*
-  Supprime toutes les actions Voir une unité et leurs menus associés
+  Supprime toutes les actions Voir un fichier source et leurs menus associés
 *}
-procedure TFormMain.DeleteUnitActions;
+procedure TFormMain.DeleteSourceActions;
 var
   I: Integer;
 begin
-  for I := 0 to Length(UnitActions)-1 do
+  for I := 0 to Length(SourceActions)-1 do
   begin
-    ActionManager.DeleteActionItems([UnitActions[I]]);
-    UnitActions[I].Free;
+    ActionManager.DeleteActionItems([SourceActions[I]]);
+    SourceActions[I].Free;
   end;
-  SetLength(UnitActions, 0);
+  SetLength(SourceActions, 0);
 end;
 
 {*
-  Ajoute un éditeur d'unité à l'interface visuelle et l'affiche
-  @param Editor   Éditeur à ajouter
+  Ajoute un fichier source
+  @param FileName   Nom du fichier source
 *}
-procedure TFormMain.AddUnitEditor(Editor: IUnitEditor50);
+procedure TFormMain.AddSourceFile(const FileName: TFileName);
 var
-  EditorControl: TControl;
-  Tab: TJvTabBarItem;
+  SourceFile: TSourceFile;
+  Action: TAction;
 begin
-  // Configurer le contrôle d'édition
-  EditorControl := Editor.Control;
-  EditorControl.Align := alClient;
-  EditorControl.Visible := False;
-  EditorControl.Parent := Self;
+  // Créer le fichier source
+  SourceFile := MasterFile.AddSourceFile(FileName);
 
-  // Créer un nouvel onglet pour l'éditeur et l'afficher
-  Tab := TJvTabBarItem(TabBarEditors.Tabs.Add);
-  Tab.Caption := ExtractFileName(Editor.UnitFile.FileName);
-  Tab.Data := TObject(Pointer(Editor));
-  Tab.Tag := UnitEditorTag;
-  Tab.Selected := True;
+  // Ajouter l'action Voir le source
+  Action := MakeSourceAction(SourceFile);
+  SetLength(SourceActions, MasterFile.SourceFileCount);
+  SourceActions[MasterFile.SourceFileCount-1] := Action;
+  ActionManager.AddAction(Action,
+    BigMenuSources.Items[BigMenuSources.Items.Count-1]);
+
+  // Afficher le source
+  OpenTab(SourceFile);
+
+  MarkModified;
+end;
+
+{*
+  Retire un fichier source
+  @param SourceFile   Fichier source à retirer
+*}
+procedure TFormMain.RemoveSourceFile(SourceFile: TSourceFile);
+var
+  Action: TAction;
+  Index: Integer;
+begin
+  MasterFile.RemoveSourceFile(SourceFile);
+
+  // Find the action and remove it from the list
+  Action := nil;
+  for Index := 0 to Length(SourceActions)-1 do
+  begin
+    if TSourceFile(SourceActions[Index].Tag) = SourceFile then
+    begin
+      Action := SourceActions[Index];
+      Move(SourceActions[Index+1], SourceActions[Index],
+        Length(SourceActions)-Index-1);
+      Break;
+    end;
+  end;
+
+  // Free the action and its items
+  if Action <> nil then
+  begin
+    SetLength(SourceActions, Length(SourceActions)-1);
+    ActionManager.DeleteActionItems([Action]);
+    Action.Free;
+  end;
+
+  MarkModified;
 end;
 
 {*
@@ -446,16 +667,21 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   SepiRootManager := TSepiAsynchronousRootManager.Create;
-  SepiRootManager.LoadUnit('FunLabyUtils');
+  SepiRootManager.LoadUnit('FunLabyUtils'); {don't localize}
   SepiRoot := SepiRootManager.Root;
+
+  Application.OnHint := ApplicationHint;
 
   OpenDialog.InitialDir := fLabyrinthsDir;
   SaveDialog.InitialDir := fLabyrinthsDir;
 
+  OpenSourceFileDialog.InitialDir := fUnitsDir;
+  OpenSourceFileDialog.Filter := SourceEditors.FiltersAsText;
+
   MasterFile := nil;
 
   BigMenuMaps := MainMenuBar.ActionClient.Items[1];
-  BigMenuUnits := MainMenuBar.ActionClient.Items[2];
+  BigMenuSources := MainMenuBar.ActionClient.Items[2];
 
   TabMapEditor := TabBarEditors.Tabs[0];
   FrameMapEditor := TFrameMapEditor.Create(Self);
@@ -478,6 +704,8 @@ end;
 *}
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
+  Application.OnHint := nil;
+
   FrameMapEditor.Free;
   SepiRootManager.Free;
 end;
@@ -490,6 +718,14 @@ end;
 procedure TFormMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := CloseFile;
+end;
+
+{*
+  Gestionnaire d'événement OnHint de l'application
+*}
+procedure TFormMain.ApplicationHint(Sender: TObject);
+begin
+  StatusBar.Panels[0].Text := Application.Hint;
 end;
 
 {*
@@ -523,8 +759,15 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.ActionSaveFileExecute(Sender: TObject);
+var
+  Tab: TJvTabBarItem;
 begin
-  SaveFile(MasterFile.FileName);
+  Tab := TabBarEditors.SelectedTab;
+
+  case Tab.Tag of
+    MapEditorTag: SaveFile(MasterFile.FileName);
+    SourceEditorTag: GetTabEditor(Tab).SaveFile;
+  end;
 end;
 
 {*
@@ -537,12 +780,12 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnExecute de l'action Fermer
+  Gestionnaire d'événement OnExecute de l'action Enregistrer tout
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormMain.ActionCloseFileExecute(Sender: TObject);
+procedure TFormMain.ActionSaveAllExecute(Sender: TObject);
 begin
-  CloseFile;
+  SaveAll;
 end;
 
 {*
@@ -556,6 +799,25 @@ begin
 end;
 
 {*
+  Gestionnaire d'événement OnExecute de l'action Unités utilisées
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionEditUnitsExecute(Sender: TObject);
+var
+  FileName: TFileName;
+begin
+  if not SaveAll then
+    Exit;
+
+  if TFormEditUnits.EditUnits(MasterFile) then
+  begin
+    FileName := MasterFile.FileName;
+    CloseFile;
+    OpenFile(FileName);
+  end;
+end;
+
+{*
   Gestionnaire d'événement OnExecute de l'action Tester
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -563,8 +825,24 @@ procedure TFormMain.ActionTestExecute(Sender: TObject);
 begin
   {don't localize}
   if (not Modified) or SaveFile(MasterFile.FileName) then
-    ShellExecute(0, 'open', PChar(Dir+'Labyrinthe.exe'),
+    ShellExecute(0, 'open', PChar(Dir+'FunLaby.exe'),
       PChar('"'+MasterFile.FileName+'"'), nil, SW_SHOWNORMAL);
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Fermer
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionCloseFileExecute(Sender: TObject);
+var
+  Tab: TJvTabBarItem;
+begin
+  Tab := TabBarEditors.SelectedTab;
+
+  case Tab.Tag of
+    MapEditorTag: CloseFile;
+    SourceEditorTag: CloseTab(Tab);
+  end;
 end;
 
 {*
@@ -613,92 +891,80 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnExecute de l'action Voir toutes les unités
+  Gestionnaire d'événement Ajouter un source existant
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormMain.ActionViewAllUnitsExecute(Sender: TObject);
-var
-  I: Integer;
+procedure TFormMain.ActionAddExistingSourceExecute(Sender: TObject);
 begin
-  for I := 0 to Length(UnitActions)-1 do
-    UnitActions[I].Execute;
+  if OpenSourceFileDialog.Execute then
+    AddSourceFile(OpenSourceFileDialog.FileName);
 end;
 
 {*
-  Gestionnaire d'événement OnExecute de l'action Ajouter une unité
+  Gestionnaire d'événement Ajouter un nouveau fichier source
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormMain.ActionEditUnitsExecute(Sender: TObject);
+procedure TFormMain.ActionAddNewSourceExecute(Sender: TObject);
 var
   FileName: TFileName;
 begin
-  if Modified and (not SaveFile(MasterFile.FileName)) then
+  if TFormCreateNewSourceFile.NewSourceFile(FileName) then
+    AddSourceFile(FileName);
+end;
+
+{*
+  Gestionnaire d'événement Retirer le fichier source courant
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionRemoveSourceExecute(Sender: TObject);
+var
+  Tab: TJvTabBarItem;
+  SourceFile: TSourceFile;
+begin
+  Tab := TabBarEditors.SelectedTab;
+  if not IsEditor(Tab) then
     Exit;
 
-  if TFormEditUnits.EditUnits(MasterFile) then
-  begin
-    FileName := MasterFile.FileName;
-    CloseFile;
-    OpenFile(FileName);
-  end;
+  SourceFile := GetTabEditor(Tab).SourceFile;
+
+  if ShowDialog(sRemoveSourceTitle, sRemoveSource, dtConfirmation,
+    dbYesNo, 2) <> drYes then
+    Exit;
+
+  if CloseTab(Tab) then
+    RemoveSourceFile(SourceFile);
 end;
 
 {*
-  Gestionnaire d'événement OnExecute d'une action Voir une unité
+  Gestionnaire d'événement OnExecute de l'action Voir toutes les unités
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormMain.ActionViewUnitExecute(Sender: TObject);
+procedure TFormMain.ActionViewAllSourcesExecute(Sender: TObject);
 var
   I: Integer;
-  UnitFile: TUnitFile;
+begin
+  for I := 0 to Length(SourceActions)-1 do
+    SourceActions[I].Execute;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute d'une action Voir un source
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionViewSourceExecute(Sender: TObject);
+var
+  SourceFile: TSourceFile;
   Tab: TJvTabBarItem;
 begin
-  UnitFile := TUnitFile((Sender as TAction).Tag);
+  SourceFile := TSourceFile((Sender as TAction).Tag);
 
   // Si un éditeur est déjà ouvert pour ce fichier, le mettre en avant-plan
-  for I := 0 to TabBarEditors.Tabs.Count-1 do
-  begin
-    Tab := TabBarEditors.Tabs[I];
-    if (Tab.Tag = UnitEditorTag) and
-      (IUnitEditor50(Pointer(Tab.Data)).UnitFile = UnitFile) then
-    begin
-      Tab.Selected := True;
-      Exit;
-    end;
-  end;
-
-  // Créer l'éditeur
-  AddUnitEditor(UnitEditors.CreateEditor(UnitFile));
-end;
-
-{*
-  Gestionnaire d'événement OnTabClosing de la tab bar des éditeurs
-  @param Sender       Objet qui a déclenché l'événement
-  @param Item         Élément qui va être fermé
-  @param AllowClose   Positionner à False pour empêcher la fermeture
-*}
-procedure TFormMain.TabBarEditorsTabClosing(Sender: TObject;
-  Item: TJvTabBarItem; var AllowClose: Boolean);
-begin
-  if Item.Tag = UnitEditorTag then
-    AllowClose := IUnitEditor50(Pointer(Item.Data)).CanClose
+  // Sinon, ouvrir un nouvel onglet
+  Tab := FindTab(SourceFile);
+  if Tab <> nil then
+    Tab.Selected := True
   else
-    AllowClose := False;
-end;
-
-{*
-  Gestionnaire d'événement OnTabClosed de la tab bar des éditeurs
-  @param Sender   Objet qui a déclenché l'événement
-  @param Item     Élément qui est fermé
-*}
-procedure TFormMain.TabBarEditorsTabClosed(Sender: TObject;
-  Item: TJvTabBarItem);
-begin
-  if Item.Tag = UnitEditorTag then
-  begin
-    IUnitEditor50(Pointer(Item.Data)).Release;
-    Item.Data := nil;
-  end;
+    OpenTab(SourceFile);
 end;
 
 {*
@@ -716,7 +982,7 @@ begin
 
   case Item.Tag of
     MapEditorTag: TControl(Item.Data).Visible := False;
-    UnitEditorTag: IUnitEditor50(Pointer(Item.Data)).Control.Visible := False;
+    SourceEditorTag: GetTabEditor(Item).Control.Visible := False;
   end;
 end;
 
@@ -731,10 +997,100 @@ begin
   if (Item = nil) or (Item.Data = nil) then
     Exit;
 
+  ActionSaveFileAs.Enabled := not IsEditor(Item);
+  ActionRemoveSource.Enabled := IsEditor(Item);
+
   case Item.Tag of
     MapEditorTag: TControl(Item.Data).Visible := True;
-    UnitEditorTag: IUnitEditor50(Pointer(Item.Data)).Control.Visible := True;
+    SourceEditorTag: GetTabEditor(Item).Control.Visible := True;
   end;
+end;
+
+{*
+  Gestionnaire d'événement OnTabClosing de la tab bar des éditeurs
+  @param Sender       Objet qui a déclenché l'événement
+  @param Item         Élément qui va être fermé
+  @param AllowClose   Positionner à False pour empêcher la fermeture
+*}
+procedure TFormMain.TabBarEditorsTabClosing(Sender: TObject;
+  Item: TJvTabBarItem; var AllowClose: Boolean);
+var
+  CursorPosBefore, CursorPosAfter: TPoint;
+begin
+  GetCursorPos(CursorPosBefore);
+
+  if IsEditor(Item) then
+  begin
+    AllowClose := GetTabEditor(Item).CanClose;
+
+    // Work-around a bug of TJvTabBar
+    if AllowClose then
+    begin
+      GetCursorPos(CursorPosAfter);
+
+      mouse_event(MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE,
+        CursorPosBefore.X * 65535 div Screen.Width,
+        CursorPosBefore.Y * 65535 div Screen.Height, 0, 0);
+      mouse_event(MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_LEFTUP,
+        CursorPosBefore.X, CursorPosBefore.Y, 0, 0);
+      mouse_event(MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE,
+        CursorPosAfter.X * 65535 div Screen.Width,
+        CursorPosAfter.Y * 65535 div Screen.Height, 0, 0);
+    end;
+  end else
+    AllowClose := False;
+end;
+
+{*
+  Gestionnaire d'événement OnTabClosed de la tab bar des éditeurs
+  @param Sender   Objet qui a déclenché l'événement
+  @param Item     Élément qui est fermé
+*}
+procedure TFormMain.TabBarEditorsTabClosed(Sender: TObject;
+  Item: TJvTabBarItem);
+begin
+  if IsEditor(Item) then
+  begin
+    GetTabEditor(Item).Release;
+    Item.Data := nil;
+  end;
+end;
+
+{*
+  Gestionnaire d'événement OnChange des éditeurs de source
+*}
+procedure TFormMain.EditorStateChange(const Sender: ISourceEditor50);
+begin
+  FindTab(Sender).Modified := Sender.Modified;
+end;
+
+{*
+  Nombre d'onglets
+  @return Nombre d'onglets
+*}
+function TFormMain.GetTabCount: Integer;
+begin
+  Result := TabBarEditors.Tabs.Count;
+end;
+
+{*
+  Tableau zero-based des onglets ouverts
+  @param Index   Index d'un onglet
+  @return Onglet à l'index spécifié
+*}
+function TFormMain.GetTabs(Index: Integer): TJvTabBarItem;
+begin
+  Result := TabBarEditors.Tabs[Index];
+end;
+
+{*
+  Tableau zero-based des éditeurs de source ouverts
+  @param Index   Index d'un onglet
+  @return Éditeur de source de cet onglet, ou nil si ce n'en est pas un
+*}
+function TFormMain.GetEditors(Index: Integer): ISourceEditor50;
+begin
+  Result := GetTabEditor(Tabs[Index]);
 end;
 
 end.

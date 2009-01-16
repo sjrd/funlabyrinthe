@@ -1,8 +1,8 @@
-object FormCreateNewUnit: TFormCreateNewUnit
+object FormCreateNewSourceFile: TFormCreateNewSourceFile
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Cr'#233'er une nouvelle unit'#233
+  Caption = 'Cr'#233'er un nouveau fichier source'
   ClientHeight = 257
   ClientWidth = 361
   Color = clBtnFace
@@ -16,12 +16,12 @@ object FormCreateNewUnit: TFormCreateNewUnit
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
-  object LabelUnitType: TLabel
+  object LabelSourceFileType: TLabel
     Left = 16
     Top = 16
-    Width = 66
+    Width = 113
     Height = 13
-    Caption = 'Type d'#39'unit'#233' :'
+    Caption = 'Type de fichier source :'
   end
   object LabelDescription: TLabel
     Left = 192
@@ -30,14 +30,14 @@ object FormCreateNewUnit: TFormCreateNewUnit
     Height = 13
     Caption = 'Description :'
   end
-  object ListBoxUnitType: TListBox
+  object ListBoxSourceFileType: TListBox
     Left = 16
     Top = 32
     Width = 153
     Height = 169
     ItemHeight = 13
     TabOrder = 0
-    OnClick = ListBoxUnitTypeClick
+    OnClick = ListBoxSourceFileTypeClick
   end
   object MemoDescription: TMemo
     Left = 192
@@ -64,9 +64,9 @@ object FormCreateNewUnit: TFormCreateNewUnit
     TabOrder = 3
     Kind = bkCancel
   end
-  object SaveUnitDialog: TSaveDialog
+  object SaveSourceFileDialog: TSaveDialog
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing, ofDontAddToRecent]
-    Title = 'Veuillez choisir un nom de fichier pour l'#39'unit'#233
+    Title = 'Veuillez choisir un nom de fichier source'
     Left = 16
     Top = 208
   end

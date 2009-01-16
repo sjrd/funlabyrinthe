@@ -15,6 +15,9 @@ object FormEditUnits: TFormEditUnits
   Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  DesignSize = (
+    417
+    233)
   PixelsPerInch = 96
   TextHeight = 13
   object LabelUnits: TLabel
@@ -29,6 +32,7 @@ object FormEditUnits: TFormEditUnits
     Top = 32
     Width = 209
     Height = 145
+    Anchors = [akLeft, akTop, akRight, akBottom]
     ItemHeight = 13
     TabOrder = 0
   end
@@ -37,6 +41,7 @@ object FormEditUnits: TFormEditUnits
     Top = 192
     Width = 89
     Height = 25
+    Anchors = [akRight, akBottom]
     TabOrder = 1
     Kind = bkOK
   end
@@ -45,43 +50,38 @@ object FormEditUnits: TFormEditUnits
     Top = 192
     Width = 89
     Height = 25
+    Anchors = [akRight, akBottom]
     TabOrder = 2
     Kind = bkCancel
   end
-  object ButtonAddExisting: TButton
+  object ButtonAdd: TButton
     Left = 240
     Top = 32
     Width = 161
     Height = 25
-    Caption = 'Ajouter une unit'#233' existante...'
+    Anchors = [akTop, akRight]
+    Caption = 'Ajouter une unit'#233
     TabOrder = 3
-    OnClick = ButtonAddExistingClick
+    OnClick = ButtonAddClick
   end
-  object ButtonAddNew: TButton
+  object ButtonRemove: TButton
     Left = 240
     Top = 72
     Width = 161
     Height = 25
-    Caption = 'Ajouter une nouvelle unit'#233'...'
-    TabOrder = 4
-    OnClick = ButtonAddNewClick
-  end
-  object ButtonRemove: TButton
-    Left = 240
-    Top = 112
-    Width = 161
-    Height = 25
+    Anchors = [akTop, akRight]
     Caption = 'Retirer cette unit'#233
-    TabOrder = 5
+    TabOrder = 4
     OnClick = ButtonRemoveClick
   end
   object ButtonEditParams: TButton
     Left = 240
-    Top = 152
+    Top = 112
     Width = 161
     Height = 25
+    Anchors = [akTop, akRight]
     Caption = 'Param'#232'tres de l'#39'unit'#233'...'
-    TabOrder = 6
+    TabOrder = 5
     OnClick = ButtonEditParamsClick
   end
   object OpenUnitDialog: TOpenDialog

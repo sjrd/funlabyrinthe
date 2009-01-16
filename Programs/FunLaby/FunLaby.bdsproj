@@ -130,7 +130,7 @@
 			<Directories Name="UsePackages">True</Directories>
 		</Directories>
 		<Parameters>
-			<Parameters Name="RunParams"></Parameters>
+			<Parameters Name="RunParams">"C:\Documents and Settings\All Users\Application Data\SJRDoeraene\FunLabyrinthe\Labyrinths\Test.flp"</Parameters>
 			<Parameters Name="HostApplication"></Parameters>
 			<Parameters Name="Launcher"></Parameters>
 			<Parameters Name="UseLauncher">False</Parameters>
@@ -174,8 +174,7 @@
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
 			<VersionInfoKeys Name="OriginalFilename">Labyrinthe.exe</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
-		</VersionInfoKeys>  
-    <Excluded_Packages>
+		</VersionInfoKeys>  <Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDBD9D.bpl">JVCL Database Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvDlgsD9D.bpl">JVCL Dialog Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Sepi\Mes documents\Projets Borland Studio\Bpl\JvAppFrmD9D.bpl">JVCL Application and Form Components</Excluded_Packages>

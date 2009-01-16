@@ -23,6 +23,8 @@ resourcestring
   sThereMustBeOnePlayer = 'Il doit y avoir un et un seul joueur par fichier';
   sEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
   sCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
+  sSourcesNotHandledWhilePlaying =
+    'Les fichiers source ne sont pas gérés en mode jeu';
 
   sNoFileName = 'Aucun nom de fichier spécifié';
 
@@ -94,6 +96,18 @@ type
   TUnitFileClass = class of TUnitFile;
 
   {*
+    Représente un fichier source
+    @author sjrd
+    @version 5.0
+  *}
+  TSourceFile = class(TDependantFile)
+  public
+    procedure AfterConstruction; override;
+  end;
+
+  TSourceFileClass = class of TSourceFile;
+
+  {*
     Représente un fichier carte
     TMapFile représente un fichier carte FunLabyrinthe (extension .flm). Elle
     fournit des méthodes pour créer, charger et enregistrer des cartes.
@@ -153,7 +167,7 @@ type
 
   {*
     Représente un fichier maître FunLabyrinthe
-    TMasterFile représente un fichier maître FunLabyrinthe (extension .flg).
+    TMasterFile représente un fichier maître FunLabyrinthe (extension .flp).
     Elle est capable de charger tous les fichiers annexes au moyen des autres
     classes de l'unité.
     C'est la classe au plus haut niveau du fonctionnement de FunLabyrinthe.
@@ -179,8 +193,9 @@ type
 
     FMaster: TMaster; /// Maître FunLabyrinthe
 
-    FUnitFiles: TObjectList; /// Liste des fichiers unité
-    FMapFiles: TObjectList;  /// Liste des fichiers carte
+    FUnitFiles: TObjectList;   /// Liste des fichiers unité
+    FSourceFiles: TObjectList; /// Liste des fichiers source
+    FMapFiles: TObjectList;    /// Liste des fichiers carte
 
     procedure InvalidFormat;
 
@@ -189,6 +204,8 @@ type
 
     function GetUnitFileCount: Integer;
     function GetUnitFiles(Index: Integer): TUnitFile;
+    function GetSourceFileCount: Integer;
+    function GetSourceFiles(Index: Integer): TSourceFile;
     function GetMapFileCount: Integer;
     function GetMapFiles(Index: Integer): TMapFile;
   public
@@ -204,6 +221,9 @@ type
     function ResolveHRef(const HRef, DefaultDir: string): TFileName;
     function MakeHRef(const FileName: TFileName;
       const DefaultDir: string): string;
+
+    function AddSourceFile(const HRef: string): TSourceFile;
+    procedure RemoveSourceFile(SourceFile: TSourceFile);
 
     function AddMapFile(const ID: TComponentID; const HRef: string;
       MaxViewSize: Integer = 1): TMapFile;
@@ -244,6 +264,8 @@ type
 
     property UnitFileCount: Integer read GetUnitFileCount;
     property UnitFiles[Index: Integer]: TUnitFile read GetUnitFiles;
+    property SourceFileCount: Integer read GetSourceFileCount;
+    property SourceFiles[Index: Integer]: TSourceFile read GetSourceFiles;
     property MapFileCount: Integer read GetMapFileCount;
     property MapFiles[Index: Integer]: TMapFile read GetMapFiles;
   end;
@@ -477,6 +499,19 @@ procedure TUnitFile.GetParams(Params: TStrings);
 begin
 end;
 
+{--------------------}
+{ Classe TSourceFile }
+{--------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TSourceFile.AfterConstruction;
+begin
+  inherited;
+  MasterFile.FSourceFiles.Add(Self);
+end;
+
 {-----------------}
 { Classe TMapFile }
 {-----------------}
@@ -681,6 +716,7 @@ begin
   FMaster := TMaster.Create(Mode = fmEdit);
 
   FUnitFiles := TObjectList.Create;
+  FSourceFiles := TObjectList.Create;
   FMapFiles := TObjectList.Create;
 
   Document := CoDOMDocument.Create;
@@ -725,6 +761,7 @@ begin
   FMaster := TMaster.Create(True);
 
   FUnitFiles := TObjectList.Create;
+  FSourceFiles := TObjectList.Create;
   FMapFiles := TObjectList.Create;
 
   // Ajouter les unités décrites par UnitFileDescs
@@ -773,6 +810,7 @@ begin
     le destructeur. }
   FMaster.Free;
   FMapFiles.Free;
+  FSourceFiles.Free;
 
   { Dans la mesure où des unités pourraient être dépendantes d'autres, il faut
     absolument les libérer dans l'ordre inverse de chargement. }
@@ -917,6 +955,22 @@ begin
       Params.Free;
     end;
 
+    // Fichiers source liés - pas en mode jeu
+    if Mode <> fmPlay then
+    begin
+      with selectNodes('./sources/source') do
+      begin
+        for I := 0 to length-1 do
+        begin
+          with item[I] as IXMLDOMElement do
+          begin
+            HRef := getAttribute('href');
+            TSourceFile.Create(Self, HRef, ResolveHRef(HRef, fUnitsDir));
+          end;
+        end;
+      end;
+    end;
+
     // Cartes
     with selectNodes('./maps/map') do
     begin
@@ -1021,6 +1075,25 @@ begin
 end;
 
 {*
+  Nombre de fichiers source
+  @return Nombre de fichiers source
+*}
+function TMasterFile.GetSourceFileCount: Integer;
+begin
+  Result := FSourceFiles.Count;
+end;
+
+{*
+  Tableau zero-based des fichiers source
+  @param Index   Index du fichier source
+  @return Le fichier source dont l'index a été spécifié
+*}
+function TMasterFile.GetSourceFiles(Index: Integer): TSourceFile;
+begin
+  Result := TSourceFile(FSourceFiles[Index]);
+end;
+
+{*
   Nombre de fichiers carte
   @return Nombre de fichiers carte
 *}
@@ -1074,6 +1147,27 @@ begin
 
   Result := FileNameToHRef(FileName,
     [FilePath+SubDir, DefaultDir+SubDir, FilePath, DefaultDir]);
+end;
+
+{*
+  Ajoute un fichier source
+  @param HRef   Adresse du fichier
+  @return Le fichier source créé
+*}
+function TMasterFile.AddSourceFile(const HRef: string): TSourceFile;
+begin
+  if Mode = fmPlay then
+    raise EFileError.Create(sSourcesNotHandledWhilePlaying);
+  Result := TSourceFile.Create(Self, HRef, ResolveHRef(HRef, fUnitsDir));
+end;
+
+{*
+  Retire un fichier source
+  @param SourceFile   Fichier source à retirer
+*}
+procedure TMasterFile.RemoveSourceFile(SourceFile: TSourceFile);
+begin
+  FSourceFiles.Remove(SourceFile);
 end;
 
 {*
@@ -1198,7 +1292,8 @@ procedure TMasterFile.Save(const UnitFileDescs: TUnitFileDescs;
   const AFileName: TFileName = '');
 var
   Document: IXMLDOMDocument;
-  FunLabyrinthe, Units, Maps, Players, Player: IXMLDOMElement;
+  FunLabyrinthe, MasterNode, Units, Sources, Maps, Players: IXMLDOMElement;
+  Player: IXMLDOMElement;
   Element, Param: IXMLDOMElement;
   Params: TStrings;
   MapHRef: string;
@@ -1269,8 +1364,8 @@ begin
       appendChild(Element);
 
       // Attributs du maître
-      Element := Document.createElement('master');
-      with Element do
+      MasterNode := Document.createElement('master');
+      with MasterNode do
       begin
         if Master.Temporization <> DefaultTemporization then
         begin
@@ -1279,7 +1374,7 @@ begin
           appendChild(Element);
         end;
       end;
-      appendChild(Element);
+      appendChild(MasterNode);
 
       // Unités
       Units := Document.createElement('units');
@@ -1307,6 +1402,22 @@ begin
         end;
       end;
       appendChild(Units);
+
+      // Fichiers source - pas en mode jeu
+      if Mode <> fmPlay then
+      begin
+        Sources := Document.createElement('sources');
+        with Sources do
+        begin
+          for I := 0 to SourceFileCount-1 do
+          begin
+            Element := Document.createElement('source');
+            Element.setAttribute('href', SourceFiles[I].HRef);
+            appendChild(Element);
+          end;
+        end;
+        appendChild(Sources);
+      end;
 
       // Cartes
       Maps := Document.createElement('maps');

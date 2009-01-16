@@ -109,6 +109,9 @@ implementation
 *}
 procedure TFormMain.NewGame(FileName: TFileName);
 begin
+  while not SepiRootManager.Ready do
+    Sleep(100);
+
   MasterFile := TMasterFile.Create(SepiRoot, FileName, fmPlay);
   Master := MasterFile.Master;
   View := TPlayerView.Create(Master.Players[0]);

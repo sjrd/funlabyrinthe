@@ -8,30 +8,63 @@ unit UnitEditorIntf;
 interface
 
 uses
-  SysUtils, Classes, Controls, ScUtils, ScLists, ScStrUtils, FilesUtils;
+  SysUtils, Classes, Controls, ScUtils, ScLists, ScStrUtils, FilesUtils,
+  UnitFiles;
 
 type
+  ISourceEditor50 = interface;
+
   {*
-    Interface d'un éditeur d'unité de FunLabyEdit
+    Événement de notification dont l'envoyeur est un éditeur de source
+    @param Sender   Éditeur de source qui a déclenché l'événement
+  *}
+  TSourceEditorNotifyEvent = procedure(const Sender: ISourceEditor50) of object;
+
+  {*
+    Interface d'un éditeur de fichier source de FunLabyEdit
     Les classes implémentant cette interface doivent outrepasser le comptage de
     références, mais se libérer dans la méthode Release.
     @author sjrd
     @version 5.0
   *}
-  IUnitEditor50 = interface
-    ['{5AA72B3E-FFCB-4185-A846-A87353165647}']
+  ISourceEditor50 = interface
+    ['{301FC63B-E81A-4861-A1EA-90AFD1FA038F}']
 
     {*
-      Unité ouverte dans l'éditeur
-      @return Unité ouverte
+      Fichier source ouvert dans l'éditeur
+      @return Fichier source ouvert
     *}
-    function GetUnitFile: TUnitFile;
+    function GetSourceFile: TSourceFile;
 
     {*
       Contrôle d'édition à placer dans la fiche principale de FunLabyEdit
       @return Contrôle d'édition
     *}
     function GetControl: TControl;
+
+    {*
+      Indique si le fichier source a été modifié
+      @return True si le fichier source a été modifié, False sinon
+    *}
+    function GetModified: Boolean;
+
+    {*
+      Événement déclenché lorsque l'état de l'éditeur change
+      @return L'événement associé
+    *}
+    function GetOnStateChange: TSourceEditorNotifyEvent;
+
+    {*
+      Modifie l'événement OnStateChange
+      @param Value   Nouvel événement OnStateChange
+    *}
+    procedure SetOnStateChange(Value: TSourceEditorNotifyEvent);
+
+    {*
+      Enregistre le fichier source
+      @return True si le fichier a bien été enregistré, False sinon
+    *}
+    function SaveFile: Boolean;
 
     {*
       Teste si l'éditeur peut être fermé
@@ -44,36 +77,68 @@ type
     *}
     procedure Release;
 
-    property UnitFile: TUnitFile read GetUnitFile;
+    property SourceFile: TSourceFile read GetSourceFile;
     property Control: TControl read GetControl;
+    property Modified: Boolean read GetModified;
+
+    property OnStateChange: TSourceEditorNotifyEvent
+      read GetOnStateChange write SetOnStateChange;
   end;
 
   {*
-    Type de routine de call-back qui crée un éditeur d'unité
-    @param UnitFile   Fichier unité à éditer
+    Type de routine de call-back qui crée un éditeur de fichier source
+    @param SourceFile   Fichier source à éditer
     @return Interface vers l'éditeur créé
   *}
-  TCreateUnitEditorProc = function(UnitFile: TUnitFile): IUnitEditor50;
+  TCreateSourceEditorProc = function(SourceFile: TSourceFile): ISourceEditor50;
 
   {*
-    Collection d'éditeurs d'unité
+    Classe de base pour des tables associatives avec une clef de type string
     @author sjrd
     @version 5.0
   *}
-  TUnitEditorList = class(TCustomValueBucketList)
-  public
-    constructor Create;
-
-    procedure Add(const GUID: TGUID; CreateProc: TCreateUnitEditorProc);
-    procedure Remove(const GUID: TGUID);
-    function Exists(const GUID: TGUID): Boolean;
-    function Find(const GUID: TGUID): TCreateUnitEditorProc;
-
-    function CreateEditor(UnitFile: TUnitFile): IUnitEditor50;
+  TCustomStringKeyValueBucketList = class(TCustomValueBucketList)
+  protected
+    function BucketFor(const Key): Cardinal; override;
+    function KeyEquals(const Key1, Key2): Boolean; override;
   end;
 
   {*
-    Type de routine de call-back qui crée une nouvelle unité
+    Collection d'éditeurs de fichiers source
+    @author sjrd
+    @version 5.0
+  *}
+  TSourceEditorList = class(TCustomStringKeyValueBucketList)
+  private
+    FFilters: TStrings; /// Filtres d'ouverture de fichier source
+
+    function GetFilterCount: Integer;
+    function GetFilters(Index: Integer): string;
+    function GetFiltersAsText: string;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Add(const Extension: string; CreateProc: TCreateSourceEditorProc);
+    procedure Remove(const Extension: string);
+    function Exists(const Extension: string): Boolean;
+    function Find(const Extension: string): TCreateSourceEditorProc;
+
+    procedure AddFilter(const Filter: string);
+    procedure RemoveFilter(const Filter: string);
+
+    class function SourceFileKey(SourceFile: TSourceFile): string;
+
+    function ExistsEditor(SourceFile: TSourceFile): Boolean;
+    function CreateEditor(SourceFile: TSourceFile): ISourceEditor50;
+
+    property FilterCount: Integer read GetFilterCount;
+    property Filters[Index: Integer]: string read GetFilters;
+    property FiltersAsText: string read GetFiltersAsText;
+  end;
+
+  {*
+    Type de routine de call-back qui crée un nouveau fichier source
     Si l'enregistrement du créateur a spécifié qu'il ne fallait pas demander
     automatiquement un nom de fichier, le paramètre FileName est vide lors de
     l'appel.
@@ -81,21 +146,19 @@ type
     si la fonction renvoie True - le nom de fichier réel, qui doit exister.
     Si la fonction renvoie False, la valeur de FileName est indéfinie en sortie.
     @param FileName   Nom du fichier unité à créer
-    @param GUID       GUID du type du fichier créé
     @return True si le fichier a bien été créé, False sinon
   *}
-  TCreateNewUnitProc = function(var FileName: TFileName;
-    out GUID: TGUID): Boolean;
+  TCreateNewSourceFileProc = function(var FileName: TFileName): Boolean;
 
-  /// Pointeur vers TUnitCreatorInfo
-  PUnitCreatorInfo = ^TUnitCreatorInfo;
+  /// Pointeur vers TSourceFileCreatorInfo
+  PSourceFileCreatorInfo = ^TSourceFileCreatorInfo;
 
   {*
-    Informations sur un créateur de fichier unité
+    Informations sur un créateur de fichier source
     @author sjrd
     @version 5.0
   *}
-  TUnitCreatorInfo = record
+  TSourceFileCreatorInfo = record
     Title: string;           /// Titre du créateur
     Description: string;     /// Description longue
     AskForFileName: Boolean; /// Demander un nom de fichier
@@ -107,13 +170,13 @@ type
     @author sjrd
     @version 5.0
   *}
-  TUnitCreatorList = class(TCustomValueBucketList)
+  TSourceFileCreatorList = class(TCustomStringKeyValueBucketList)
   public
     constructor Create;
 
-    procedure Add(CreateProc: TCreateNewUnitProc;
-      const Info: TUnitCreatorInfo);
-    procedure Remove(CreateProc: TCreateNewUnitProc);
+    procedure Add(CreateProc: TCreateNewSourceFileProc;
+      const Info: TSourceFileCreatorInfo);
+    procedure Remove(CreateProc: TCreateNewSourceFileProc);
   end;
 
   {*
@@ -121,12 +184,9 @@ type
     @author sjrd
     @version 5.0
   *}
-  TUnitFilterList = class(TCustomValueBucketList)
+  TUnitFilterList = class(TCustomStringKeyValueBucketList)
   private
     function GetGUID(const Filter: string): TGUID;
-  protected
-    function BucketFor(const Key): Cardinal; override;
-    function KeyEquals(const Key1, Key2): Boolean; override;
   public
     constructor Create;
 
@@ -138,112 +198,248 @@ type
 
 var
   /// Éditeurs d'unité
-  UnitEditors: TUnitEditorList = nil;
+  SourceEditors: TSourceEditorList = nil;
 
   /// Créateurs d'unité
-  UnitCreators: TUnitCreatorList = nil;
+  SourceFileCreators: TSourceFileCreatorList = nil;
 
   /// Filtres d'unité
   UnitFilters: TUnitFilterList = nil;
 
+resourcestring
+  /// Filtre BPL
+  BPLFilter = 'Paquets Borland (*.bpl)|*.bpl';
+
+  /// Filtre SCU
+  SepiFilter = 'Unité Sepi compilée (*.scu)|*.scu';
+
 implementation
 
-{------------------------}
-{ Classe TUnitEditorList }
-{------------------------}
+{----------------------------------------}
+{ Classe TCustomStringKeyValueBucketList }
+{----------------------------------------}
 
 {*
-  Crée une nouvelle instance de TUnitEditorList
+  [@inheritDoc]
 *}
-constructor TUnitEditorList.Create;
+function TCustomStringKeyValueBucketList.BucketFor(const Key): Cardinal;
 begin
-  inherited Create(SizeOf(TGUID), SizeOf(TCreateUnitEditorProc));
+  Result := HashOfStr(string(Key)) mod Cardinal(BucketCount);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TCustomStringKeyValueBucketList.KeyEquals(const Key1, Key2): Boolean;
+begin
+  Result := string(Key1) = string(Key2);
+end;
+
+{--------------------------}
+{ Classe TSourceEditorList }
+{--------------------------}
+
+{*
+  Crée une nouvelle instance de TSourceEditorList
+*}
+constructor TSourceEditorList.Create;
+begin
+  inherited Create(SizeOf(string), SizeOf(TCreateSourceEditorProc));
+
+  FFilters := TStringList.Create;
+  FFilters.Delimiter := '|';
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TSourceEditorList.Destroy;
+begin
+  FFilters.Free;
+  inherited;
+end;
+
+{*
+  Nombre de filtres enregistrés
+  @return Nombre de filtres enregistrés
+*}
+function TSourceEditorList.GetFilterCount: Integer;
+begin
+  Result := FFilters.Count;
+end;
+
+{*
+  Tableau zero-based des filtres enregistrés
+  @param Index   Index d'un filtre
+  @return Filtre à l'index donné
+*}
+function TSourceEditorList.GetFilters(Index: Integer): string;
+begin
+  Result := FFilters[Index];
+end;
+
+{*
+  Filtres dans une chaîne unique
+  Cette chaîne peut être utilisée par les propriétés Filter des composants
+  boîte de dialogue.
+  @return Filtres dans une chaîne unique
+*}
+function TSourceEditorList.GetFiltersAsText: string;
+var
+  I: Integer;
+begin
+  if FFilters.Count = 0 then
+    Result := ''
+  else
+  begin
+    Result := FFilters[0];
+    for I := 1 to FFilters.Count-1 do
+      Result := Result + '|' + FFilters[I];
+  end;
 end;
 
 {*
   Ajoute un éditeur
-  @param GUID         GUID du type de fichiers géré
+  @param Extension    Extension du type de fichiers géré
   @param CreateProc   Routine de call-back créant l'éditeur
 *}
-procedure TUnitEditorList.Add(const GUID: TGUID;
-  CreateProc: TCreateUnitEditorProc);
+procedure TSourceEditorList.Add(const Extension: string;
+  CreateProc: TCreateSourceEditorProc);
 begin
-  AddData(GUID, CreateProc);
+  AddData(Extension, CreateProc);
 end;
 
 {*
   Supprime un éditeur
-  @param GUID   GUID du type de fichiers géré
+  @param Extension   Extension du type de fichiers géré
 *}
-procedure TUnitEditorList.Remove(const GUID: TGUID);
+procedure TSourceEditorList.Remove(const Extension: string);
 begin
-  RemoveData(GUID);
+  RemoveData(Extension);
 end;
 
 {*
   Teste s'il existe un éditeur enregistré pour un type de fichiers donné
-  @param GUID   GUID du type de fichiers
+  @param Extension   Extension du type de fichiers
   @return True s'il existe un éditeur approprié, False sinon
 *}
-function TUnitEditorList.Exists(const GUID: TGUID): Boolean;
+function TSourceEditorList.Exists(const Extension: string): Boolean;
 begin
-  Result := (inherited Exists(GUID));
+  Result := (inherited Exists(Extension));
 end;
 
 {*
   Trouve la routine de call-back correspondant à un type de fichiers
-  @param GUID   GUID du type de fichiers
+  @param Extension   Extension du type de fichiers
   @return Routine de call-back de création de l'éditeur
   @throws EFileError Type de fichier inconnu
 *}
-function TUnitEditorList.Find(const GUID: TGUID): TCreateUnitEditorProc;
+function TSourceEditorList.Find(
+  const Extension: string): TCreateSourceEditorProc;
 begin
-  if not (inherited Find(GUID, Result)) then
-    raise EFileError.CreateFmt(sUnknownUnitType, [GUIDToString(GUID)]);
+  if not (inherited Find(Extension, Result)) then
+    raise EFileError.CreateFmt(sUnknownUnitType, [Extension]);
 end;
 
 {*
-  Crée un éditeur pour un fichier unité donné
-  @param UnitFile   Fichier unité
-  @return Un nouvel éditeur pour le fichier UnitFile
+  Enregistre un filtre
+  @param Filter   Filtre à enregistrer
+*}
+procedure TSourceEditorList.AddFilter(const Filter: string);
+var
+  Index: Integer;
+begin
+  Index := FFilters.IndexOf(Filter);
+  if Index < 0 then
+    FFilters.Add(Filter)
+  else
+    FFilters.Objects[Index] := TObject(Integer(FFilters.Objects[Index])+1);
+end;
+
+{*
+  Supprime un filtre enregistré
+  @return Filter   Filtre à supprimer
+*}
+procedure TSourceEditorList.RemoveFilter(const Filter: string);
+var
+  Index, Count: Integer;
+begin
+  Index := FFilters.IndexOf(Filter);
+  if Index < 0 then
+    Exit;
+
+  Count := Integer(FFilters.Objects[Index]);
+  if Count = 0 then
+    FFilters.Delete(Index)
+  else
+    FFilters.Objects[Index] := TObject(Count-1);
+end;
+
+{*
+  Obtient la clef d'indexation pour un fichier source donné
+  Actuellement, il s'agit de l'extension du nom fichier, sans le point.
+  @param SourceFile   Fichier source
+  @return Clef d'indexation pour ce fichier source
+*}
+class function TSourceEditorList.SourceFileKey(SourceFile: TSourceFile): string;
+begin
+  Result := Copy(ExtractFileExt(SourceFile.FileName), 2, MaxInt);
+end;
+
+{*
+  Teste s'il existe un éditeur pour un fichier source donné
+  @param SourceFile   Fichier source
+  @return True s'il existe un éditeur pour ce fichier source, False sinon
+*}
+function TSourceEditorList.ExistsEditor(SourceFile: TSourceFile): Boolean;
+begin
+  Result := Exists(SourceFileKey(SourceFile));
+end;
+
+{*
+  Crée un éditeur pour un fichier source donné
+  @param SourceFile   Fichier source
+  @return Un nouvel éditeur pour le fichier SourceFile
   @throws EFileError Type de fichier inconnu
 *}
-function TUnitEditorList.CreateEditor(UnitFile: TUnitFile): IUnitEditor50;
+function TSourceEditorList.CreateEditor(
+  SourceFile: TSourceFile): ISourceEditor50;
 var
-  CreateProc: TCreateUnitEditorProc;
+  CreateProc: TCreateSourceEditorProc;
 begin
-  CreateProc := Find(UnitFile.HandlerGUID);
-  Result := CreateProc(UnitFile);
+  CreateProc := Find(SourceFileKey(SourceFile));
+  Result := CreateProc(SourceFile);
 end;
 
-{-------------------------}
-{ Classe TUnitCreatorList }
-{-------------------------}
+{-------------------------------}
+{ Classe TSourceFileCreatorList }
+{-------------------------------}
 
 {*
-  Crée une nouvelle instance de TUnitCreatorList
+  Crée une nouvelle instance de TSourceFileCreatorList
 *}
-constructor TUnitCreatorList.Create;
+constructor TSourceFileCreatorList.Create;
 begin
-  inherited Create(SizeOf(TCreateNewUnitProc), TypeInfo(TUnitCreatorInfo));
+  inherited Create(SizeOf(TCreateNewSourceFileProc),
+    TypeInfo(TSourceFileCreatorInfo));
 end;
 
 {*
-  Ajoute un créateur d'unité
-  @param CreateProc   Routine de call-back de création d'unité
-  @param Info         Informations sur ce créateur d'unité
+  Ajoute un créateur de fichier source
+  @param CreateProc   Routine de call-back de création de fichier source
+  @param Info         Informations sur ce créateur de fichier source
 *}
-procedure TUnitCreatorList.Add(CreateProc: TCreateNewUnitProc;
-  const Info: TUnitCreatorInfo);
+procedure TSourceFileCreatorList.Add(CreateProc: TCreateNewSourceFileProc;
+  const Info: TSourceFileCreatorInfo);
 begin
   AddData(CreateProc, Info);
 end;
 
 {*
-  Supprime un créateur d'unité
-  @param CreateProc   Routine de call-back de création d'unité
+  Supprime un créateur de fichier source
+  @param CreateProc   Routine de call-back de création de fichier source
 *}
-procedure TUnitCreatorList.Remove(CreateProc: TCreateNewUnitProc);
+procedure TSourceFileCreatorList.Remove(CreateProc: TCreateNewSourceFileProc);
 begin
   RemoveData(CreateProc);
 end;
@@ -271,22 +467,6 @@ begin
 end;
 
 {*
-  [@inheritDoc]
-*}
-function TUnitFilterList.BucketFor(const Key): Cardinal;
-begin
-  Result := HashOfStr(string(Key)) mod Cardinal(BucketCount);
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TUnitFilterList.KeyEquals(const Key1, Key2): Boolean;
-begin
-  Result := string(Key1) = string(Key2);
-end;
-
-{*
   Ajoute un filtre d'unité
   @param Filter   Filtre d'unité (tel qu'utilisé par TOpenDialog/TSaveDialog)
   @param GUID     GUID de type des fichiers correspondant à Filter
@@ -306,14 +486,17 @@ begin
 end;
 
 initialization
-  UnitEditors := TUnitEditorList.Create;
-  UnitCreators := TUnitCreatorList.Create;
+  SourceEditors := TSourceEditorList.Create;
+  SourceFileCreators := TSourceFileCreatorList.Create;
   UnitFilters := TUnitFilterList.Create;
+
+  UnitFilters.Add(BPLFilter, BPLUnitHandlerGUID);
+  UnitFilters.Add(SepiFilter, SepiUnitHandlerGUID);
 finalization
-  UnitEditors.Free;
-  UnitEditors := nil;
-  UnitCreators.Free;
-  UnitCreators := nil;
+  SourceEditors.Free;
+  SourceEditors := nil;
+  SourceFileCreators.Free;
+  SourceFileCreators := nil;
   UnitFilters.Free;
   UnitFilters := nil;
 end.

@@ -13,7 +13,7 @@ uses
   MapEditor in 'MapEditor.pas' {FrameMapEditor: TFrame},
   FunLabyEditConsts in 'FunLabyEditConsts.pas',
   EditPluginManager in 'EditPluginManager.pas',
-  NewUnit in 'NewUnit.pas' {FormCreateNewUnit},
+  NewSourceFile in 'NewSourceFile.pas' {FormCreateNewSourceFile},
   EditUnits in 'EditUnits.pas' {FormEditUnits};
 
 {$R *.res}

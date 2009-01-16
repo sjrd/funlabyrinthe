@@ -30,6 +30,10 @@ resourcestring
   sRemoveMapTitle = 'Retirer une carte';
   sRemoveMap = 'Êtes-vous certain de vouloir retirer cette carte du projet ?';
 
+  sRemoveSourceTitle = 'Retirer un fichier source';
+  sRemoveSource =
+    'Êtes-vous certain de vouloir retirer ce fichier source du projet ?';
+
   sNoUnitOpenerHandlerTitle = 'Pas de gestionnaire disponible';
   sNoUnitOpenerHandler = 'Aucun gestionnaire disponible pour l''ajout d''unité';
 
