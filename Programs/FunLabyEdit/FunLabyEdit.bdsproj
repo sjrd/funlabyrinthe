@@ -124,7 +124,7 @@
 			<Directories Name="PackageDLLOutputDir"></Directories>
 			<Directories Name="PackageDCPOutputDir"></Directories>
 			<Directories Name="SearchPath"></Directories>
-			<Directories Name="Packages">rtl;vcl;VclSmp;SCL90;SVCL90;SDL90;SepiCore90;SepiReflection90;FunLabyCore;FunLabyTools;FunLabyEditPlugin;vclx;Jcl;JclVcl;JvCoreD9R;JvSystemD9R;JvStdCtrlsD9R;JvCtrlsD9R;JvDlgsD9R;vcldb;JvGlobusD9R;JvPageCompsD9R;JvAppFrmD9R;JvCmpD9R;JvCustomD9R</Directories>
+			<Directories Name="Packages">rtl;vcl;VclSmp;SCL90;SVCL90;SDL90;SepiCore90;SepiReflection90;SepiInterpreter90;SepiCompiler90;SepiDelphiCompiler90;FunLabyCore;FunLabyTools;FunLabyEditPlugin;vclx;Jcl;JclVcl;JvCoreD9R;JvSystemD9R;JvStdCtrlsD9R;JvCtrlsD9R;JvDlgsD9R;vcldb;JvGlobusD9R;JvPageCompsD9R;JvAppFrmD9R;JvCmpD9R;JvCustomD9R;JvDockingD9R;JvXPCtrlsD9R</Directories>
 			<Directories Name="Conditionals"></Directories>
 			<Directories Name="DebugSourceDirs">C:\Projets\Sepi\source\run\SDL\;C:\Projets\Sepi\source\run\SepiSVCLImport\;C:\Projets\Sepi\source\run\SepiVCLStdImport\;C:\Projets\Sepi\source\run\SepiSCLImport\;C:\Projets\Sepi\source\run\SepiRTLCommonImport\;C:\Projets\Sepi\source\run\SepiWinTypesImport\;C:\Projets\Sepi\source\run\SepiRTLSysImport\;C:\Projets\Sepi\source\run\SepiInterpreter\</Directories>
 			<Directories Name="UsePackages">True</Directories>

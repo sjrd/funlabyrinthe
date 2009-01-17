@@ -14,7 +14,9 @@ uses
   FunLabyEditConsts in 'FunLabyEditConsts.pas',
   EditPluginManager in 'EditPluginManager.pas',
   NewSourceFile in 'NewSourceFile.pas' {FormCreateNewSourceFile},
-  EditUnits in 'EditUnits.pas' {FormEditUnits};
+  EditUnits in 'EditUnits.pas' {FormEditUnits},
+  CompilerMessages in 'CompilerMessages.pas' {FormCompilerMessages},
+  SepiCompilerRoot in 'SepiCompilerRoot.pas';
 
 {$R *.res}
 

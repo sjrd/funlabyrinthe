@@ -13,7 +13,8 @@ uses
   ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus, ToolWin,
   ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
   FilesUtils, UnitFiles, EditPluginManager, UnitEditorIntf, FileProperties,
-  FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile;
+  FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile, ExtCtrls,
+  CompilerMessages, SepiCompilerErrors, SepiCompilerRoot;
 
 type
   {*
@@ -43,7 +44,6 @@ type
     ActionHelpTopics: TAction;
     ActionAbout: TAction;
     ActionTest: TAction;
-    TabBarEditors: TJvTabBar;
     ActionViewAllSources: TAction;
     OpenUnitDialog: TOpenDialog;
     ActionEditUnits: TAction;
@@ -52,6 +52,9 @@ type
     ActionRemoveSource: TAction;
     OpenSourceFileDialog: TOpenDialog;
     ActionSaveAll: TAction;
+    ActionCompileAll: TAction;
+    PanelEditors: TPanel;
+    TabBarEditors: TJvTabBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -73,6 +76,7 @@ type
     procedure ActionAddExistingSourceExecute(Sender: TObject);
     procedure ActionAddNewSourceExecute(Sender: TObject);
     procedure ActionRemoveSourceExecute(Sender: TObject);
+    procedure ActionCompileAllExecute(Sender: TObject);
     procedure ActionViewAllSourcesExecute(Sender: TObject);
     procedure ActionViewSourceExecute(Sender: TObject);
     procedure TabBarEditorsTabSelecting(Sender: TObject; Item: TJvTabBarItem;
@@ -82,18 +86,25 @@ type
       var AllowClose: Boolean);
     procedure TabBarEditorsTabClosed(Sender: TObject; Item: TJvTabBarItem);
     procedure EditorStateChange(const Sender: ISourceEditor50);
+    procedure MessagesShowError(Sender: TObject; Error: TSepiCompilerError);
   private
     /// Manager asynchrone de la racine Sepi
     SepiRootManager: TSepiAsynchronousRootManager;
     SepiRoot: TSepiRoot; /// Racine Sepi
 
-    BigMenuMaps: TActionClient;  /// Menu des cartes
+    {/// Manager asynchrone de la racine Sepi de compilation
+    CompilerRootManager: TSepiAsynchronousRootManager;
+    CompilerRoot: TSepiRoot; /// Racine Sepi de compilation}
+
+    BigMenuMaps: TActionClient;    /// Menu des cartes
     BigMenuSources: TActionClient; /// Menu des unités
 
     TabMapEditor: TJvTabBarItem;     /// Onglet d'édition des cartes
     FrameMapEditor: TFrameMapEditor; /// Cadre d'édition des cartes
 
     SourceActions: array of TAction; /// Liste des actions du menu Sources liés
+
+    FormCompilerMessages: TFormCompilerMessages; /// Messages du compilateur
 
     FModified: Boolean;      /// Indique si le fichier a été modifié
     MasterFile: TMasterFile; /// Fichier maître
@@ -115,6 +126,10 @@ type
     function SaveFile(FileName: TFileName = ''): Boolean;
     function SaveAll: Boolean;
     function CloseFile: Boolean;
+
+    function CompilerLoadUnit(Sender: TSepiRoot;
+      const UnitName: string): TSepiUnit;
+    function CompileAll: Boolean;
 
     procedure MarkModified;
 
@@ -150,6 +165,7 @@ implementation
 {$R *.dfm}
 
 const
+  ClosedTabTag = -1;
   MapEditorTag = 0;
   SourceEditorTag = 1;
 
@@ -183,10 +199,11 @@ begin
   BigMenuMaps.Visible := True;
   ActionAddMap.Enabled := True;
 
-  // Menu des unités
+  // Menu des sources
   BigMenuSources.Visible := True;
   ActionAddExistingSource.Enabled := SourceEditors.FilterCount > 0;
   ActionAddNewSource.Enabled := not SourceFileCreators.IsEmpty;
+  ActionCompileAll.Enabled := True;
   ActionViewAllSources.Enabled := True;
   MakeSourceActions;
 
@@ -216,10 +233,11 @@ begin
   BigMenuMaps.Visible := False;
   ActionAddMap.Enabled := False;
 
-  // Menu des unités
+  // Menu des sources
   BigMenuSources.Visible := False;
   ActionAddExistingSource.Enabled := False;
   ActionAddNewSource.Enabled := False;
+  ActionCompileAll.Enabled := False;
   ActionViewAllSources.Enabled := False;
   DeleteSourceActions;
 
@@ -323,7 +341,7 @@ begin
   EditorControl := Editor.Control;
   EditorControl.Align := alClient;
   EditorControl.Visible := False;
-  EditorControl.Parent := Self;
+  EditorControl.Parent := PanelEditors;
 
   // Enregistrer les événements de l'éditeur
   Editor.OnStateChange := EditorStateChange;
@@ -360,6 +378,7 @@ begin
     Tab.Data := nil;
   end;
 
+  Tab.Tag := ClosedTabTag;
   TabBarEditors.Tabs.Delete(Tab.Index);
   Result := True;
 end;
@@ -530,6 +549,93 @@ begin
 end;
 
 {*
+  Charge une unité dans le compilateur
+  @param Sender     Racine Sepi
+  @param UnitName   Nom de l'unité
+  @return Unité Sepi chargée, ou nil si non trouvée
+*}
+function TFormMain.CompilerLoadUnit(Sender: TSepiRoot;
+  const UnitName: string): TSepiUnit;
+var
+  I: Integer;
+  Editor: ISourceEditor50;
+  UnitEditor: IUnitEditor50;
+  SourceCompiler: ISourceCompiler50;
+begin
+  for I := 0 to TabCount-1 do
+  begin
+    Editor := Editors[I];
+    if Editor = nil then
+      Continue;
+
+    if Supports(Editor, IUnitEditor50, UnitEditor) and
+      (UnitEditor.UnitName = UnitName) then
+    begin
+      // Éditeur qui peut charger directement une unité
+      Result := UnitEditor.LoadUnit(Sender);
+      Exit;
+    end else if Supports(Editor, ISourceCompiler50, SourceCompiler) and
+      (SourceCompiler.UnitName = UnitName) then
+    begin
+      // Compilateur de source
+      Result := SourceCompiler.CompileFile(Sender,
+        FormCompilerMessages.Errors);
+      Exit;
+    end;
+  end;
+
+  Result := nil;
+end;
+
+{*
+  Compile tous les sources ouverts
+  @return True si les sources ont bien été compilés, False sinon
+*}
+function TFormMain.CompileAll: Boolean;
+var
+  CompilerRoot: TSepiRoot;
+  I: Integer;
+  SourceCompiler: ISourceCompiler50;
+begin
+  FormCompilerMessages.Clear;
+
+  {while not CompilerRootManager.Ready do
+    Sleep(100);}
+
+  CompilerRoot := TSepiRootFork.Create(SepiRoot);
+  try
+    CompilerRoot.OnLoadUnit := CompilerLoadUnit;
+
+    try
+      for I := 0 to TabCount-1 do
+      begin
+        if IsEditor(I) and
+          Supports(Editors[I], ISourceCompiler50, SourceCompiler) then
+        begin
+          if CompilerRoot.GetMeta(SourceCompiler.UnitName) = nil then
+            SourceCompiler.CompileFile(CompilerRoot, FormCompilerMessages.Errors);
+        end;
+      end;
+
+      Result := True;
+    except
+      on Error: ESepiCompilerFatalError do
+        Result := False;
+    end;
+
+    FormCompilerMessages.Visible := FormCompilerMessages.Errors.Count > 0;
+  finally
+    CompilerRoot.Free;
+    {// Unload all units
+    while (CompilerRoot.UnitCount > 0) and
+      (CompilerRoot.Units[CompilerRoot.UnitCount-1].Name <> 'FunLabyUtils') do
+    begin
+      CompilerRoot.Units[CompilerRoot.UnitCount-1].Free;
+    end;}
+  end;
+end;
+
+{*
   Marque le fichier comme modifié
 *}
 procedure TFormMain.MarkModified;
@@ -661,14 +767,48 @@ begin
 end;
 
 {*
+  Nombre d'onglets
+  @return Nombre d'onglets
+*}
+function TFormMain.GetTabCount: Integer;
+begin
+  Result := TabBarEditors.Tabs.Count;
+end;
+
+{*
+  Tableau zero-based des onglets ouverts
+  @param Index   Index d'un onglet
+  @return Onglet à l'index spécifié
+*}
+function TFormMain.GetTabs(Index: Integer): TJvTabBarItem;
+begin
+  Result := TabBarEditors.Tabs[Index];
+end;
+
+{*
+  Tableau zero-based des éditeurs de source ouverts
+  @param Index   Index d'un onglet
+  @return Éditeur de source de cet onglet, ou nil si ce n'en est pas un
+*}
+function TFormMain.GetEditors(Index: Integer): ISourceEditor50;
+begin
+  Result := GetTabEditor(Tabs[Index]);
+end;
+
+{*
   Gestionnaire d'événement OnCreate
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   SepiRootManager := TSepiAsynchronousRootManager.Create;
-  SepiRootManager.LoadUnit('FunLabyUtils'); {don't localize}
   SepiRoot := SepiRootManager.Root;
+  SepiRootManager.LoadUnit('FunLabyUtils'); {don't localize}
+
+  {CompilerRootManager := TSepiAsynchronousRootManager.Create;
+  CompilerRoot := CompilerRootManager.Root;
+  CompilerRoot.OnLoadUnit := CompilerLoadUnit;
+  CompilerRootManager.LoadUnit('FunLabyUtils'); {don't localize}
 
   Application.OnHint := ApplicationHint;
 
@@ -687,12 +827,15 @@ begin
   FrameMapEditor := TFrameMapEditor.Create(Self);
   with FrameMapEditor do
   begin
-    Parent := Self;
+    Parent := PanelEditors;
     Align := alClient;
     MarkModified := Self.MarkModified;
   end;
   TabMapEditor.Data := FrameMapEditor;
   TabMapEditor.Tag := MapEditorTag;
+
+  FormCompilerMessages := TFormCompilerMessages.Create(Self);
+  FormCompilerMessages.OnShowError := MessagesShowError;
 
   if ParamCount > 0 then
     OpenFile(ParamStr(1));
@@ -707,6 +850,7 @@ begin
   Application.OnHint := nil;
 
   FrameMapEditor.Free;
+  //CompilerRootManager.Free;
   SepiRootManager.Free;
 end;
 
@@ -936,6 +1080,15 @@ begin
 end;
 
 {*
+  Gestionnaire d'événement OnExecute de l'action Compiler
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionCompileAllExecute(Sender: TObject);
+begin
+  CompileAll;
+end;
+
+{*
   Gestionnaire d'événement OnExecute de l'action Voir toutes les unités
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -1054,6 +1207,8 @@ begin
     GetTabEditor(Item).Release;
     Item.Data := nil;
   end;
+
+  Item.Tag := ClosedTabTag;
 end;
 
 {*
@@ -1065,32 +1220,37 @@ begin
 end;
 
 {*
-  Nombre d'onglets
-  @return Nombre d'onglets
+  Gestionnaire d'événement OnShowError de la liste des erreurs
+  @param Sender   Object qui a déclenché l'événement
+  @param Error    Erreur à montrer
 *}
-function TFormMain.GetTabCount: Integer;
+procedure TFormMain.MessagesShowError(Sender: TObject;
+  Error: TSepiCompilerError);
+var
+  I: Integer;
+  Tab: TJvTabBarItem;
+  SourceCompiler: ISourceCompiler50;
 begin
-  Result := TabBarEditors.Tabs.Count;
-end;
+  // Find tab
+  Tab := nil;
+  for I := 0 to TabCount-1 do
+  begin
+    if IsEditor(I) and (Editors[I].SourceFile.FileName = Error.FileName) then
+    begin
+      Tab := Tabs[I];
+      Break;
+    end;
+  end;
 
-{*
-  Tableau zero-based des onglets ouverts
-  @param Index   Index d'un onglet
-  @return Onglet à l'index spécifié
-*}
-function TFormMain.GetTabs(Index: Integer): TJvTabBarItem;
-begin
-  Result := TabBarEditors.Tabs[Index];
-end;
+  // Show error
+  if Tab <> nil then
+  begin
+    BringToFront;
+    Tab.Selected := True;
 
-{*
-  Tableau zero-based des éditeurs de source ouverts
-  @param Index   Index d'un onglet
-  @return Éditeur de source de cet onglet, ou nil si ce n'en est pas un
-*}
-function TFormMain.GetEditors(Index: Integer): ISourceEditor50;
-begin
-  Result := GetTabEditor(Tabs[Index]);
+    if Supports(GetTabEditor(Tab), ISourceCompiler50, SourceCompiler) then
+      SourceCompiler.ShowError(Error);
+  end;
 end;
 
 end.

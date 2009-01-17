@@ -9,7 +9,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, ScUtils, ScLists, ScStrUtils, FilesUtils,
-  UnitFiles;
+  UnitFiles, SepiReflectionCore, SepiCompilerErrors;
 
 type
   ISourceEditor50 = interface;
@@ -83,6 +83,58 @@ type
 
     property OnStateChange: TSourceEditorNotifyEvent
       read GetOnStateChange write SetOnStateChange;
+  end;
+
+  IUnitEditor50 = interface(ISourceEditor50)
+    ['{4F0CC4F1-D7F1-4D3A-B4A8-1DB7E713CEE4}']
+
+    {*
+      Nom de l'unité éditée
+      @return Nom de l'unité éditée
+    *}
+    function GetUnitName: string;
+
+    {*
+      Charge l'unité éditée
+      @param SepiRoot   Racine Sepi
+      @return Unité Sepi chargée
+    *}
+    function LoadUnit(SepiRoot: TSepiRoot): TSepiUnit;
+
+    property UnitName: string read GetUnitName;
+  end;
+
+  {*
+    Interface d'un éditeur de fichier source qui doit compiler son source
+    @author sjrd
+    @version 5.0
+  *}
+  ISourceCompiler50 = interface(ISourceEditor50)
+    ['{8B6345C1-7BCD-4C2D-8E1D-FE3549823006}']
+
+    {*
+      Nom de l'unité éditée
+      @return Nom de l'unité éditée
+    *}
+    function GetUnitName: string;
+
+    {*
+      Compile le fichier source
+      @param SepiRoot   Racine Sepi
+      @param Errors     Erreurs de compilation
+      @return Unité Sepi compilée
+      @throws ESepiCompilerFatalError Erreur fatale de compilation
+    *}
+    function CompileFile(SepiRoot: TSepiRoot;
+      Errors: TSepiCompilerErrorList): TSepiUnit;
+
+    {*
+      Montre une erreur dans le code source
+      @param Error   Erreur à montrer
+    *}
+    procedure ShowError(Error: TSepiCompilerError);
+
+    property UnitName: string read GetUnitName;
   end;
 
   {*

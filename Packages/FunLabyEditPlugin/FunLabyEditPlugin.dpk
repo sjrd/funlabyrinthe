@@ -30,7 +30,9 @@ requires
   rtl,
   vcl,
   VclSmp,
-  FunLabyCore;
+  FunLabyCore,
+  SepiReflection90,
+  SepiCompiler90;
 
 contains
   UnitEditorIntf in 'UnitEditorIntf.pas';
