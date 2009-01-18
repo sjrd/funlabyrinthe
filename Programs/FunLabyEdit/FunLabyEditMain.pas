@@ -624,6 +624,8 @@ begin
     end;
 
     FormCompilerMessages.Visible := FormCompilerMessages.Errors.Count > 0;
+    if FormCompilerMessages.Visible then
+      FormCompilerMessages.ShowFirst;
   finally
     CompilerRoot.Free;
     {// Unload all units

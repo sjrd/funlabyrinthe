@@ -34,6 +34,7 @@ type
     procedure ErrorAdded(Sender: TObject; Error: TSepiCompilerError);
   public
     procedure Clear;
+    procedure ShowFirst;
 
     property Errors: TSepiCompilerErrorList read FErrors;
 
@@ -81,6 +82,39 @@ procedure TFormCompilerMessages.Clear;
 begin
   ListBoxMessages.Clear;
   Errors.Clear;
+end;
+
+{*
+  Affiche le premier message le plus important
+*}
+procedure TFormCompilerMessages.ShowFirst;
+var
+  Items: TStrings;
+  First, Current: TSepiCompilerError;
+  I, FirstIndex: Integer;
+begin
+  Items := ListBoxMessages.Items;
+  First := nil;
+  FirstIndex := 0; // Default to 0
+
+  for I := 0 to Items.Count-1 do
+  begin
+    if Items.Objects[I] is TSepiCompilerError then
+    begin
+      Current := TSepiCompilerError(Items.Objects[I]);
+
+      if (First = nil) or (Ord(Current.Kind) > Ord(First.Kind)) then
+      begin
+        First := Current;
+        FirstIndex := I;
+        if First.Kind in [ekError, ekFatalError] then
+          Break;
+      end;
+    end;
+  end;
+
+  ListBoxMessages.ItemIndex := FirstIndex;
+  ListBoxMessagesDblClick(ListBoxMessages);
 end;
 
 {*
