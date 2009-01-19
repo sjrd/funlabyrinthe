@@ -83,8 +83,8 @@ type
     procedure TabBarEditorsTabSelecting(Sender: TObject; Item: TJvTabBarItem;
       var AllowSelect: Boolean);
     procedure TabBarEditorsTabSelected(Sender: TObject; Item: TJvTabBarItem);
-    procedure TabBarEditorsTabClosing(Sender: TObject; Item: TJvTabBarItem;
-      var AllowClose: Boolean);
+    procedure TabBarEditorsTabCloseQuery(Sender: TObject; Item: TJvTabBarItem;
+      var CanClose: Boolean);
     procedure TabBarEditorsTabClosed(Sender: TObject; Item: TJvTabBarItem);
     procedure EditorStateChange(const Sender: ISourceEditor50);
     procedure MessagesShowError(Sender: TObject; Error: TSepiCompilerError);
@@ -1146,38 +1146,18 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnTabClosing de la tab bar des éditeurs
-  @param Sender       Objet qui a déclenché l'événement
-  @param Item         Élément qui va être fermé
-  @param AllowClose   Positionner à False pour empêcher la fermeture
+  Gestionnaire d'événement OnTabCloseQuery de la tab bar des éditeurs
+  @param Sender     Objet qui a déclenché l'événement
+  @param Item       Élément qui va être fermé
+  @param CanClose   Positionner à False pour empêcher la fermeture
 *}
-procedure TFormMain.TabBarEditorsTabClosing(Sender: TObject;
-  Item: TJvTabBarItem; var AllowClose: Boolean);
-var
-  CursorPosBefore, CursorPosAfter: TPoint;
+procedure TFormMain.TabBarEditorsTabCloseQuery(Sender: TObject;
+  Item: TJvTabBarItem; var CanClose: Boolean);
 begin
-  GetCursorPos(CursorPosBefore);
-
   if IsEditor(Item) then
-  begin
-    AllowClose := GetTabEditor(Item).CanClose;
-
-    // Work-around a bug of TJvTabBar
-    if AllowClose then
-    begin
-      GetCursorPos(CursorPosAfter);
-
-      mouse_event(MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE,
-        CursorPosBefore.X * 65535 div Screen.Width,
-        CursorPosBefore.Y * 65535 div Screen.Height, 0, 0);
-      mouse_event(MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_LEFTUP,
-        CursorPosBefore.X, CursorPosBefore.Y, 0, 0);
-      mouse_event(MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE,
-        CursorPosAfter.X * 65535 div Screen.Width,
-        CursorPosAfter.Y * 65535 div Screen.Height, 0, 0);
-    end;
-  end else
-    AllowClose := False;
+    CanClose := GetTabEditor(Item).CanClose
+  else
+    CanClose := False;
 end;
 
 {*

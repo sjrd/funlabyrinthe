@@ -85,7 +85,7 @@ object FormMain: TFormMain
           Caption = 'Cartes et joueurs'
           Selected = True
         end>
-      OnTabClosing = TabBarEditorsTabClosing
+      OnTabCloseQuery = TabBarEditorsTabCloseQuery
       OnTabClosed = TabBarEditorsTabClosed
       OnTabSelecting = TabBarEditorsTabSelecting
       OnTabSelected = TabBarEditorsTabSelected
