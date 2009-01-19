@@ -59,6 +59,12 @@ type
     procedure SetCurrentMap(Value: TMap);
     procedure SetCurrentFloor(Value: Integer);
   public
+    procedure ShowPosition(const QPos: TQualifiedPos); overload;
+    procedure ShowPosition(Map: TMap; const Position: T3DPoint); overload;
+
+    procedure UpdateMaps;
+    procedure InvalidateMap;
+
     property Master: TMaster read FMaster write SetMaster;
 
     property CurrentMap: TMap read FCurrentMap write SetCurrentMap;
@@ -125,6 +131,57 @@ end;
 procedure TFrameBaseMapViewer.SetCurrentFloor(Value: Integer);
 begin
   EditFloor.Value := Value; // Will trigger EditFloor.OnChange
+end;
+
+{*
+  Centre la vue sur une position donnée
+  @param QPos   Position qualifiée à montrer
+*}
+procedure TFrameBaseMapViewer.ShowPosition(const QPos: TQualifiedPos);
+begin
+  ShowPosition(QPos.Map, QPos.Position);
+end;
+
+{*
+  Centre la vue sur une position donnée
+  @param Map        Carte à montrer
+  @param Position   Position à montrer
+*}
+procedure TFrameBaseMapViewer.ShowPosition(Map: TMap; const Position: T3DPoint);
+var
+  X, Y: Integer;
+begin
+  CurrentMap := Map;
+
+  X := Position.X * SquareSize + SquareSize div 2;
+  Y := Position.Y * SquareSize + SquareSize div 2;
+  CurrentFloor := Position.Z;
+
+  with ScrollBoxMap do
+  begin
+    HorzScrollBar.Position := X - ClientWidth  div 2;
+    VertScrollBar.Position := Y - ClientHeight div 2;
+  end;
+end;
+
+{*
+  Met à jour les onglets des cartes
+*}
+procedure TFrameBaseMapViewer.UpdateMaps;
+var
+  AMaster: TMaster;
+begin
+  AMaster := Master;
+  Master := nil;
+  Master := AMaster;
+end;
+
+{*
+  Invalide la carte affichée
+*}
+procedure TFrameBaseMapViewer.InvalidateMap;
+begin
+  PaintBoxMap.Invalidate;
 end;
 
 {*
