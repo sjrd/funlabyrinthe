@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, SepiCompilerErrors;
+  Dialogs, StdCtrls, SepiCompilerErrors, FunLabyEditOTA;
 
 type
   {*
@@ -20,7 +20,7 @@ type
     @author sjrd
     @version 1.0
   *}
-  TFormCompilerMessages = class(TForm)
+  TFormCompilerMessages = class(TForm, IOTACompilerMessages50)
     ListBoxMessages: TListBox;
     procedure ListBoxMessagesDblClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -32,6 +32,8 @@ type
     FOnShowError: TSepiErrorEvent;
 
     procedure ErrorAdded(Sender: TObject; Error: TSepiCompilerError);
+
+    function GetErrors: TSepiCompilerErrorList;
   public
     procedure Clear;
     procedure ShowFirst;
@@ -73,6 +75,14 @@ procedure TFormCompilerMessages.ErrorAdded(Sender: TObject;
   Error: TSepiCompilerError);
 begin
   ListBoxMessages.Items.AddObject(Error.AsText, Error);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TFormCompilerMessages.GetErrors: TSepiCompilerErrorList;
+begin
+  Result := FErrors;
 end;
 
 {*

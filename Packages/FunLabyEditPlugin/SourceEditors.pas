@@ -3,7 +3,7 @@
   @author sjrd
   @version 5.0
 *}
-unit UnitEditorIntf;
+unit SourceEditors;
 
 interface
 
@@ -85,6 +85,11 @@ type
       read GetOnStateChange write SetOnStateChange;
   end;
 
+  {*
+    Interface d'un éditeur de fichier source qui peut charger une unité
+    @author sjrd
+    @version 5.0
+  *}
   IUnitEditor50 = interface(ISourceEditor50)
     ['{4F0CC4F1-D7F1-4D3A-B4A8-1DB7E713CEE4}']
 
@@ -249,10 +254,10 @@ type
   end;
 
 var
-  /// Éditeurs d'unité
-  SourceEditors: TSourceEditorList = nil;
+  /// Éditeurs de source
+  SourceFileEditors: TSourceEditorList = nil;
 
-  /// Créateurs d'unité
+  /// Créateurs de source
   SourceFileCreators: TSourceFileCreatorList = nil;
 
   /// Filtres d'unité
@@ -538,15 +543,15 @@ begin
 end;
 
 initialization
-  SourceEditors := TSourceEditorList.Create;
+  SourceFileEditors := TSourceEditorList.Create;
   SourceFileCreators := TSourceFileCreatorList.Create;
   UnitFilters := TUnitFilterList.Create;
 
   UnitFilters.Add(BPLFilter, BPLUnitHandlerGUID);
   UnitFilters.Add(SepiFilter, SepiUnitHandlerGUID);
 finalization
-  SourceEditors.Free;
-  SourceEditors := nil;
+  SourceFileEditors.Free;
+  SourceFileEditors := nil;
   SourceFileCreators.Free;
   SourceFileCreators := nil;
   UnitFilters.Free;

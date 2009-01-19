@@ -12,10 +12,10 @@ uses
   Windows, SysUtils, Forms, Dialogs, Classes, ActnList, XPStyleActnCtrls,
   ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus, ToolWin,
   ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
-  FilesUtils, UnitFiles, EditPluginManager, UnitEditorIntf, FileProperties,
+  FilesUtils, UnitFiles, EditPluginManager, SourceEditors, FileProperties,
   FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile, ExtCtrls,
-  CompilerMessages, SepiCompilerErrors, SepiCompilerRoot,
-  SepiImportsFunLabyTools;
+  CompilerMessages, MapViewer, SepiCompilerErrors, SepiCompilerRoot,
+  SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA;
 
 type
   {*
@@ -23,7 +23,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFormMain = class(TForm)
+  TFormMain = class(TForm, IOTAFunLabyEditMainForm50)
     Images: TImageList;
     ActionManager: TActionManager;
     ActionExit: TAction;
@@ -56,6 +56,12 @@ type
     ActionCompileAll: TAction;
     PanelEditors: TPanel;
     TabBarEditors: TJvTabBar;
+    ActionViewCompilerMessages: TAction;
+    ActionViewMapViewer: TAction;
+    procedure ActionViewMapViewerExecute(Sender: TObject);
+    procedure ActionViewCompilerMessagesExecute(Sender: TObject);
+    procedure TabBarEditorsTabClosing(Sender: TObject; Item: TJvTabBarItem;
+      var AllowClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -102,6 +108,7 @@ type
     SourceActions: array of TAction; /// Liste des actions du menu Sources liés
 
     FormCompilerMessages: TFormCompilerMessages; /// Messages du compilateur
+    FormMapViewer: TFormMapViewer;               /// Visualisateur de cartes
 
     FModified: Boolean;      /// Indique si le fichier a été modifié
     MasterFile: TMasterFile; /// Fichier maître
@@ -142,6 +149,10 @@ type
     function GetTabCount: Integer;
     function GetTabs(Index: Integer): TJvTabBarItem;
     function GetEditors(Index: Integer): ISourceEditor50;
+
+    // IOTAFunLabyEditMainForm
+    function GetCompilerMessages: IOTACompilerMessages50;
+    function GetMapViewer: IOTAMapViewer50;
 
     property Modified: Boolean read FModified write SetModified;
 
@@ -198,7 +209,7 @@ begin
 
   // Menu des sources
   BigMenuSources.Visible := True;
-  ActionAddExistingSource.Enabled := SourceEditors.FilterCount > 0;
+  ActionAddExistingSource.Enabled := SourceFileEditors.FilterCount > 0;
   ActionAddNewSource.Enabled := not SourceFileCreators.IsEmpty;
   ActionCompileAll.Enabled := True;
   ActionViewAllSources.Enabled := True;
@@ -328,11 +339,16 @@ end;
 procedure TFormMain.OpenTab(SourceFile: TSourceFile);
 var
   Editor: ISourceEditor50;
+  EditorUsingOTA: ISourceEditorUsingOTA50;
   EditorControl: TControl;
   Tab: TJvTabBarItem;
 begin
   // Créer l'éditeur
-  Editor := SourceEditors.CreateEditor(SourceFile);
+  Editor := SourceFileEditors.CreateEditor(SourceFile);
+
+  // Set OTA main form
+  if Supports(Editor, ISourceEditorUsingOTA50, EditorUsingOTA) then
+    EditorUsingOTA.SetFunLabyEditMainForm(Self);
 
   // Configurer le contrôle d'édition
   EditorControl := Editor.Control;
@@ -608,7 +624,8 @@ begin
           Supports(Editors[I], ISourceCompiler50, SourceCompiler) then
         begin
           if CompilerRoot.GetMeta(SourceCompiler.UnitName) = nil then
-            SourceCompiler.CompileFile(CompilerRoot, FormCompilerMessages.Errors);
+            SourceCompiler.CompileFile(CompilerRoot,
+              FormCompilerMessages.Errors);
         end;
       end;
 
@@ -647,7 +664,7 @@ begin
     ActionList := ActionManager;
     Caption := ExtractFileName(SourceFile.FileName);
     Tag := Integer(SourceFile);
-    Enabled := SourceEditors.ExistsEditor(SourceFile);
+    Enabled := SourceFileEditors.ExistsEditor(SourceFile);
     OnExecute := ActionViewSourceExecute;
   end;
 end;
@@ -787,6 +804,22 @@ begin
 end;
 
 {*
+  [@inheritDoc]
+*}
+function TFormMain.GetCompilerMessages: IOTACompilerMessages50;
+begin
+  Result := FormCompilerMessages;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TFormMain.GetMapViewer: IOTAMapViewer50;
+begin
+  Result := FormMapViewer;
+end;
+
+{*
   Gestionnaire d'événement OnCreate
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -802,7 +835,7 @@ begin
   SaveDialog.InitialDir := fLabyrinthsDir;
 
   OpenSourceFileDialog.InitialDir := fUnitsDir;
-  OpenSourceFileDialog.Filter := SourceEditors.FiltersAsText;
+  OpenSourceFileDialog.Filter := SourceFileEditors.FiltersAsText;
 
   MasterFile := nil;
 
@@ -822,6 +855,8 @@ begin
 
   FormCompilerMessages := TFormCompilerMessages.Create(Self);
   FormCompilerMessages.OnShowError := MessagesShowError;
+
+  FormMapViewer := TFormMapViewer.Create(Self);
 
   if ParamCount > 0 then
     OpenFile(ParamStr(1));
@@ -1107,6 +1142,24 @@ begin
 end;
 
 {*
+  Gestionnaire d'événement OnExecute de l'action Voir les messages du compilo
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionViewCompilerMessagesExecute(Sender: TObject);
+begin
+  FormCompilerMessages.Show;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Voir le visualisateur de cartes
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionViewMapViewerExecute(Sender: TObject);
+begin
+  FormMapViewer.Show;
+end;
+
+{*
   Gestionnaire d'événement OnTabSelecting de la tab bar des éditeurs
   @param Sender        Objet qui a déclenché l'événement
   @param Item          Élément qui va être affiché
@@ -1114,6 +1167,9 @@ end;
 *}
 procedure TFormMain.TabBarEditorsTabSelecting(Sender: TObject;
   Item: TJvTabBarItem; var AllowSelect: Boolean);
+var
+  Editor: ISourceEditor50;
+  ActivatingEditor: IActivatingSourceEditor;
 begin
   Item := TabBarEditors.SelectedTab;
   if (Item = nil) or (Item.Data = nil) then
@@ -1121,7 +1177,13 @@ begin
 
   case Item.Tag of
     MapEditorTag: TControl(Item.Data).Visible := False;
-    SourceEditorTag: GetTabEditor(Item).Control.Visible := False;
+    SourceEditorTag:
+    begin
+      Editor := GetTabEditor(Item);
+      if Supports(Editor, IActivatingSourceEditor, ActivatingEditor) then
+        ActivatingEditor.Deactivate;
+      Editor.Control.Visible := False;
+    end;
   end;
 end;
 
@@ -1132,6 +1194,9 @@ end;
 *}
 procedure TFormMain.TabBarEditorsTabSelected(Sender: TObject;
   Item: TJvTabBarItem);
+var
+  Editor: ISourceEditor50;
+  ActivatingEditor: IActivatingSourceEditor;
 begin
   if (Item = nil) or (Item.Data = nil) then
     Exit;
@@ -1141,8 +1206,27 @@ begin
 
   case Item.Tag of
     MapEditorTag: TControl(Item.Data).Visible := True;
-    SourceEditorTag: GetTabEditor(Item).Control.Visible := True;
+    SourceEditorTag:
+    begin
+      Editor := GetTabEditor(Item);
+      Editor.Control.Visible := True;
+      if Supports(Editor, IActivatingSourceEditor, ActivatingEditor) then
+        ActivatingEditor.Activate;
+    end;
   end;
+end;
+
+{*
+  Gestionnaire d'événement OnTabClosing de la tab bar des éditeurs
+  @param Sender       Objet qui a déclenché l'événement
+  @param Item         Élément qui va être fermé
+  @param AllowClose   Positionner à False pour empêcher la fermeture
+*}
+procedure TFormMain.TabBarEditorsTabClosing(Sender: TObject;
+  Item: TJvTabBarItem; var AllowClose: Boolean);
+begin
+  if Item.Tag = MapEditorTag then
+    AllowClose := False;
 end;
 
 {*
@@ -1155,9 +1239,7 @@ procedure TFormMain.TabBarEditorsTabCloseQuery(Sender: TObject;
   Item: TJvTabBarItem; var CanClose: Boolean);
 begin
   if IsEditor(Item) then
-    CanClose := GetTabEditor(Item).CanClose
-  else
-    CanClose := False;
+    CanClose := GetTabEditor(Item).CanClose;
 end;
 
 {*

@@ -16,7 +16,8 @@ uses
   NewSourceFile in 'NewSourceFile.pas' {FormCreateNewSourceFile},
   EditUnits in 'EditUnits.pas' {FormEditUnits},
   CompilerMessages in 'CompilerMessages.pas' {FormCompilerMessages},
-  SepiCompilerRoot in 'SepiCompilerRoot.pas';
+  SepiCompilerRoot in 'SepiCompilerRoot.pas',
+  MapViewer in 'MapViewer.pas' {FormMapViewer};
 
 {$R *.res}
 

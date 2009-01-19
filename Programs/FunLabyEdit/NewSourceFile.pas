@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, SdDialogs, FilesUtils, UnitEditorIntf,
+  Dialogs, StdCtrls, Buttons, SdDialogs, FilesUtils, SourceEditors,
   FunLabyUtils, FunLabyEditConsts;
 
 type

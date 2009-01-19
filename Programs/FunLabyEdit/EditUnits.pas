@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ScLists, SdDialogs, FilesUtils, FunLabyUtils,
-  UnitEditorIntf, FunLabyEditConsts, EditParameters;
+  SourceEditors, FunLabyEditConsts, EditParameters;
 
 type
   TFormEditUnits = class(TForm)

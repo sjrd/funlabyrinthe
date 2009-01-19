@@ -85,6 +85,7 @@ object FormMain: TFormMain
           Caption = 'Cartes et joueurs'
           Selected = True
         end>
+      OnTabClosing = TabBarEditorsTabClosing
       OnTabCloseQuery = TabBarEditorsTabCloseQuery
       OnTabClosed = TabBarEditorsTabClosed
       OnTabSelecting = TabBarEditorsTabSelecting
@@ -804,6 +805,7 @@ object FormMain: TFormMain
               end
               item
                 Action = ActionCompileAll
+                Caption = '&Compiler'
                 ImageIndex = 9
               end
               item
@@ -815,6 +817,17 @@ object FormMain: TFormMain
               end>
             Visible = False
             Caption = '&Sources'
+          end
+          item
+            Items = <
+              item
+                Action = ActionViewCompilerMessages
+                Caption = '&Messages du compilateur'
+              end
+              item
+                Action = ActionViewMapViewer
+              end>
+            Caption = '&Voir'
           end
           item
             Items = <
@@ -1000,6 +1013,20 @@ object FormMain: TFormMain
         'Voir tous les fichiers sources|Ouvrir un '#233'diteur pour chaque fic' +
         'hier source li'#233' au projet'
       OnExecute = ActionViewAllSourcesExecute
+    end
+    object ActionViewCompilerMessages: TAction
+      Category = 'View'
+      Caption = 'Messages du compilateur'
+      Hint = 
+        'Voir les messages du compilateur|Voir les messages du compilateu' +
+        'r'
+      OnExecute = ActionViewCompilerMessagesExecute
+    end
+    object ActionViewMapViewer: TAction
+      Category = 'View'
+      Caption = 'Cartes'
+      Hint = 'Visualisateur de cartes|Voir le visualisateur de cartes'
+      OnExecute = ActionViewMapViewerExecute
     end
   end
   object ScrewsImages: TImageList

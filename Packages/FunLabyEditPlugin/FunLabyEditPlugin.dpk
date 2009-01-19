@@ -35,7 +35,9 @@ requires
   SepiCompiler90;
 
 contains
-  UnitEditorIntf in 'UnitEditorIntf.pas';
+  SourceEditors in 'SourceEditors.pas',
+  SourceEditorEvents in 'SourceEditorEvents.pas',
+  FunLabyEditOTA in 'FunLabyEditOTA.pas';
 
 end.
 
