@@ -38,9 +38,9 @@ implementation
 {$R *.dfm}
 
 const
-  idOutsideScrew = 'Grass-Outside--'; /// ID de la case d'extérieur
-  idWallScrew = 'Wall---';            /// ID de la case de mur
-  idGrassScrew = 'Grass---';          /// ID de la case d'herbe
+  idOutsideSquare = 'Grass-Outside--'; /// ID de la case d'extérieur
+  idWallSquare = 'Wall---';            /// ID de la case de mur
+  idGrassSquare = 'Grass---';          /// ID de la case d'herbe
 
 {*
   Génère la carte basique faite d'herbe et d'une ceinture de murs
@@ -51,7 +51,7 @@ var
 begin
   for Z := 0 to Map.Dimensions.Z-1 do
   begin
-    Map.Outside[Z] := Master.Screw[idOutsideScrew];
+    Map.Outside[Z] := Master.Square[idOutsideSquare];
 
     for X := 0 to Map.Dimensions.X-1 do
     begin
@@ -59,9 +59,9 @@ begin
       begin
         if (X = 0) or (X = Map.Dimensions.X-1) or
           (Y = 0) or (Y = Map.Dimensions.Y -1) then
-          Map[Point3D(X, Y, Z)] := Master.Screw[idWallScrew]
+          Map[Point3D(X, Y, Z)] := Master.Square[idWallSquare]
         else
-          Map[Point3D(X, Y, Z)] := Master.Screw[idGrassScrew];
+          Map[Point3D(X, Y, Z)] := Master.Square[idGrassSquare];
       end;
     end;
   end;

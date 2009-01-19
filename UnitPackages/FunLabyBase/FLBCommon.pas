@@ -96,9 +96,9 @@ begin
   with FMask do
   begin
     Assign(AMask);
-    for X := 0 to ScrewSize do
+    for X := 0 to SquareSize do
     begin
-      for Y := 0 to ScrewSize do
+      for Y := 0 to SquareSize do
       begin
         if Canvas.Pixels[X, Y] = clTransparent then
           Canvas.Pixels[X, Y] := clBlack
@@ -113,8 +113,8 @@ begin
   FBefore := TBitmap.Create;
   with FBefore do
   begin
-    Width := ScrewSize;
-    Height := ScrewSize;
+    Width := SquareSize;
+    Height := SquareSize;
     TransparentColor := clTransparent;
     Transparent := True;
   end;
@@ -143,7 +143,7 @@ end;
 procedure TMaskPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
   Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
-  Before.Canvas.CopyRect(ScrewRect, Canvas, ScrewRect(X, Y));
+  Before.Canvas.CopyRect(SquareRect, Canvas, SquareRect(X, Y));
   Before.Canvas.Draw(0, 0, Mask);
 end;
 

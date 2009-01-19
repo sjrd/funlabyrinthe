@@ -65,7 +65,7 @@ type
     Bitmap: TBitmap;          /// Bitmap
     OldOrigin: TQualifiedPos; /// Ancienne origine
     OldSize: TPoint;          /// Ancienne taille
-    OldView: array of TScrew; /// Ancienne vue
+    OldView: array of TSquare; /// Ancienne vue
 
     procedure Update;
 
@@ -162,7 +162,7 @@ var
   Origin: T3DPoint;
   X, Y, Z: Integer;
   QPos: TQualifiedPos;
-  Screw: TScrew;
+  Square: TSquare;
 begin
   // Mettre à jour le tick count de la partie avant de dessiner
   Master.UpdateTickCount;
@@ -210,8 +210,8 @@ begin
     SetLength(OldView, Width*Height);
     FillChar(OldView[0], 4*Width*Height, 0);
 
-    Bitmap.Width := Width*ScrewSize;
-    Bitmap.Height := Height*ScrewSize;
+    Bitmap.Width := Width*SquareSize;
+    Bitmap.Height := Height*SquareSize;
   end;
 
   // Dessin des cases
@@ -222,13 +222,13 @@ begin
     for Y := 0 to Height-1 do
     begin
       QPos.Position := Point3D(OrigX+X, OrigY+Y, Z);
-      Screw := Map[QPos.Position];
+      Square := Map[QPos.Position];
 
-      if OldView[Y*Width + X] <> Screw then
+      if OldView[Y*Width + X] <> Square then
       begin
-        Screw.Draw(QPos, Bitmap.Canvas, X*ScrewSize, Y*ScrewSize);
-        if Screw.StaticDraw then
-          OldView[Y*Width + X] := Screw
+        Square.Draw(QPos, Bitmap.Canvas, X*SquareSize, Y*SquareSize);
+        if Square.StaticDraw then
+          OldView[Y*Width + X] := Square
         else
           OldView[Y*Width + X] := nil;
       end;
@@ -310,8 +310,8 @@ begin
       if (Map = Player.Map) and (Position.Z = Player.Position.Z) then
       begin
         DrawInPlace(Canvas,
-          (Position.X-OldOrigin.Position.X)*ScrewSize,
-          (Position.Y-OldOrigin.Position.Y)*ScrewSize);
+          (Position.X-OldOrigin.Position.X)*SquareSize,
+          (Position.Y-OldOrigin.Position.Y)*SquareSize);
       end;
     end;
   end;

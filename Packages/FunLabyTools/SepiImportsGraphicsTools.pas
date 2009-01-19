@@ -89,7 +89,7 @@ end;
 
 procedure InitMethodAddresses;
 begin
-  MethodAddresses[0] := @DrawScrewNumber;
+  MethodAddresses[0] := @DrawSquareNumber;
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

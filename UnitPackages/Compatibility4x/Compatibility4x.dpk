@@ -37,7 +37,7 @@ contains
   C4xCommon in 'C4xCommon.pas',
   C4xInterpreter in 'C4xInterpreter.pas',
   C4xComponents in 'C4xComponents.pas',
-  C4xScrewsTable in 'C4xScrewsTable.pas',
-  C4xFields in 'C4xFields.pas';
+  C4xFields in 'C4xFields.pas',
+  C4xSquaresTable in 'C4xSquaresTable.pas';
 
 end.

@@ -30,7 +30,7 @@ type
     ToolBarFile: TActionToolBar;
     MainMenuBar: TActionMainMenuBar;
     StatusBar: TStatusBar;
-    ScrewsImages: TImageList;
+    SquaresImages: TImageList;
     ActionOpenFile: TAction;
     ActionSaveFile: TAction;
     ActionSaveFileAs: TAction;

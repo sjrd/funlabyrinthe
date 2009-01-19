@@ -527,9 +527,9 @@ constructor TMapFile.Create(AMasterFile: TMasterFile; const AHRef: string;
   const AFileName: TFileName; const AMapID: TComponentID);
 var
   Stream: TStream;
-  ZoneWidth, ZoneHeight, I, Count, Value, ScrewSize: Integer;
+  ZoneWidth, ZoneHeight, I, Count, Value, SquareSize: Integer;
   Dimensions: T3DPoint;
-  Palette: array of TScrew;
+  Palette: array of TSquare;
 begin
   inherited Create(AMasterFile, AHRef, AFileName);
   FMapID := AMapID;
@@ -558,17 +558,17 @@ begin
     Stream.ReadBuffer(Count, 4);
     SetLength(Palette, Count);
     for I := 0 to Count-1 do
-      Palette[I] := Master.Screw[ReadStrFromStream(Stream)];
+      Palette[I] := Master.Square[ReadStrFromStream(Stream)];
 
     // Lecture de la carte
     if Count <= 256 then
-      ScrewSize := 1
+      SquareSize := 1
     else
-      ScrewSize := 2;
+      SquareSize := 2;
     Value := 0;
     for I := 0 to Map.LinearMapCount-1 do
     begin
-      Stream.ReadBuffer(Value, ScrewSize);
+      Stream.ReadBuffer(Value, SquareSize);
       Map.LinearMap[I] := Palette[Value];
     end;
   finally
@@ -613,7 +613,7 @@ end;
 procedure TMapFile.Save(const AHRef: string = '';
   const AFileName: TFileName = '');
 var
-  I, Value, Count, PaletteCountPos, ScrewSize: Integer;
+  I, Value, Count, PaletteCountPos, SquareSize: Integer;
   Stream: TStream;
   Dimensions: T3DPoint;
 begin
@@ -641,9 +641,9 @@ begin
     Value := Map.ZoneHeight;
     Stream.WriteBuffer(Value, 4);
 
-    // Préparation de la palette (Screws.Tag) et écriture de celle-ci
-    for I := 0 to Master.ScrewCount-1 do
-      Master.Screws[I].Tag := -1;
+    // Préparation de la palette (Squares.Tag) et écriture de celle-ci
+    for I := 0 to Master.SquareCount-1 do
+      Master.Squares[I].Tag := -1;
     Count := 0;
     PaletteCountPos := Stream.Position;
     Stream.WriteBuffer(Count, 4); // On repassera changer çà plus tard
@@ -651,7 +651,7 @@ begin
     begin
       with Map.LinearMap[I] do
       begin
-        if ClassType <> TScrew then
+        if ClassType <> TSquare then
           raise EFileError.CreateFmt(sTemporaryStatedMap, [Map.ID]);
         if Tag < 0 then
         begin
@@ -664,13 +664,13 @@ begin
 
     // Écriture de la carte
     if Count <= 256 then
-      ScrewSize := 1
+      SquareSize := 1
     else
-      ScrewSize := 2;
+      SquareSize := 2;
     for I := 0 to Map.LinearMapCount-1 do
     begin
       Value := Map.LinearMap[I].Tag;
-      Stream.WriteBuffer(Value, ScrewSize);
+      Stream.WriteBuffer(Value, SquareSize);
     end;
 
     // On retourne écrire la taille de la palette

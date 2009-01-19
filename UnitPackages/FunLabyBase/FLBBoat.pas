@@ -24,8 +24,8 @@ const {don't localize}
   idBoat = 'Boat%d';               /// ID de la barque
   idBoatTemplate = 'BoatTemplate'; /// ID de la barque modèle
 
-  idBoatScrew = idGroundWater+'--'+idBoat+'-'; /// ID de la case barque
-  idBoatScrewTemplate = idGroundWater+'--'+idBoatTemplate+'-'; /// Barque modèle
+  idBoatSquare = idGroundWater+'--'+idBoat+'-'; /// ID de la case barque
+  idBoatSquareTemplate = idGroundWater+'--'+idBoatTemplate+'-'; /// Barque modèle
 
 const {don't localize}
   fBoat = 'Boat'; /// Fichier de la barque
@@ -204,7 +204,7 @@ begin
 
       // Placer un outil barque sur la case source
       with Map[Src] do
-        Map[Src] := Master.ScrewByComps(idGroundWater, Effect.SafeID,
+        Map[Src] := Master.SquareByComps(idGroundWater, Effect.SafeID,
           Format(idBoat, [Attribute[idBoatPlugin]]), Obstacle.SafeID);
 
       // Remettre à 0 l'attribut du joueur concernant la barque
@@ -259,7 +259,7 @@ begin
   inherited;
 
   if Master.Editing and (Number <> 0) then
-    DrawScrewNumber(Canvas, X, Y, Number);
+    DrawSquareNumber(Canvas, X, Y, Number);
 end;
 
 {*
@@ -275,7 +275,7 @@ begin
   begin
     // Remplacement de la case par de l'eau simple
     with Map[Pos] do
-      Map[Pos] := Master.ScrewByComps(idWater, Effect.SafeID,
+      Map[Pos] := Master.SquareByComps(idWater, Effect.SafeID,
         '', Obstacle.SafeID);
 
     // Indication du numéro de la barque dans l'attribut correspondant

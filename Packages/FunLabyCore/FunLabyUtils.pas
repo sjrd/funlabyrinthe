@@ -40,7 +40,7 @@ const {don't localize}
   FunLabyAuthorEMail = 'sjrd@redaction-developpez.com'; /// E-mail de l'auteur
   FunLabyWebSite = 'http://sjrd.developpez.com/programmes/funlaby/'; /// Site
 
-  ScrewSize = 30;         /// Taille (en largeur et hauteur) d'une case
+  SquareSize = 30;         /// Taille (en largeur et hauteur) d'une case
   MinViewSize = 1;        /// Taille minimale d'une vue
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
   NoRefCount = MaxInt;    /// Valeur sentinelle : pas de comptage des références
@@ -52,8 +52,8 @@ const {don't localize}
   CommandShowDialogRadio = 'ShowDialogRadio'; /// Commande ShowDialogRadio
   CommandChooseNumber = 'ChooseNumber';       /// Commande ChooseNumber
 
-  ScrewIDDelim = '-';            /// Délimiteur des parties d'un ID de case
-  ScrewIDFormat = '%s-%s-%s-%s'; /// Format d'un ID de case
+  SquareIDDelim = '-';            /// Délimiteur des parties d'un ID de case
+  SquareIDFormat = '%s-%s-%s-%s'; /// Format d'un ID de case
 
 type
   /// Identificateur de composant FunLabyrinthe
@@ -74,7 +74,7 @@ type
   /// Générée si une commande n'est pas supportée
   EUnsupportedCommand = class(Exception);
 
-  TScrewComponent = class;
+  TSquareComponent = class;
   TPlayer = class;
   TMap = class;
   TMaster = class;
@@ -105,7 +105,7 @@ type
     @param Component   Le composant à enregistrer
   *}
   TRegisterSingleComponentProc = procedure(
-    Component: TScrewComponent) of object; stdcall;
+    Component: TSquareComponent) of object; stdcall;
 
   {*
     Type de méthode call-back pour l'enregistrement d'un ensemble de composants
@@ -114,8 +114,8 @@ type
     @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
     @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
   *}
-  TRegisterComponentSetProc = procedure(Template: TScrewComponent;
-    const Components: array of TScrewComponent; BaseIndex: Integer;
+  TRegisterComponentSetProc = procedure(Template: TSquareComponent;
+    const Components: array of TSquareComponent; BaseIndex: Integer;
     const DialogTitle, DialogPrompt: string) of object; stdcall;
 
   {*
@@ -147,12 +147,12 @@ type
     @author sjrd
     @version 5.0
   *}
-  TScrewBitmap = class(TBitmap)
+  TSquareBitmap = class(TBitmap)
   public
     constructor Create; override;
 
-    procedure EmptyScrew;
-    procedure DrawScrew(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+    procedure EmptySquare;
+    procedure DrawSquare(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
   end;
 
   {*
@@ -166,7 +166,7 @@ type
   private
     FMaster: TImagesMaster;   /// Maître d'images
     FImgNames: TStrings;      /// Liste des noms des images
-    FCachedImg: TScrewBitmap; /// Copie cache de l'image résultante
+    FCachedImg: TSquareBitmap; /// Copie cache de l'image résultante
 
     procedure ImgNamesChange(Sender: TObject);
   public
@@ -220,7 +220,7 @@ type
   private
     FName: string;            /// Nom du composant
     FPainter: TPainter;       /// Peintre par défaut
-    FCachedImg: TScrewBitmap; /// Image en cache (pour les dessins invariants)
+    FCachedImg: TSquareBitmap; /// Image en cache (pour les dessins invariants)
 
     procedure PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
       X: Integer = 0; Y: Integer = 0); virtual;
@@ -308,7 +308,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TScrewComponent = class(TVisualComponent)
+  TSquareComponent = class(TVisualComponent)
   end;
 
   {*
@@ -318,7 +318,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TField = class(TScrewComponent)
+  TField = class(TSquareComponent)
   private
     FDelegateDrawTo: TField; /// Terrain délégué pour l'affichage
 
@@ -346,7 +346,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TEffect = class(TScrewComponent)
+  TEffect = class(TSquareComponent)
   public
     procedure Entered(Player: TPlayer; const Src, Pos: T3DPoint); virtual;
     procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); virtual;
@@ -362,7 +362,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TTool = class(TScrewComponent)
+  TTool = class(TSquareComponent)
   public
     procedure Find(Player: TPlayer; const Pos: T3DPoint); virtual;
   end;
@@ -374,7 +374,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TObstacle = class(TScrewComponent)
+  TObstacle = class(TSquareComponent)
   public
     procedure Pushing(Player: TPlayer; OldDirection: TDirection;
       KeyPressed: Boolean; const Src, Pos: T3DPoint;
@@ -383,13 +383,13 @@ type
 
   {*
     Représente une case du jeu
-    TScrew représente une case du jeu. Une case possède quatre composantes : le
+    TSquare représente une case du jeu. Une case possède quatre composantes : le
     terrain, l'effet, l'outil et l'obstacle. Chacune de ces composantes est
     optionnelle.
     @author sjrd
     @version 5.0
   *}
-  TScrew = class(TScrewComponent)
+  TSquare = class(TSquareComponent)
   private
     FField: TField;       /// Terrain
     FEffect: TEffect;     /// Effet
@@ -449,20 +449,20 @@ type
     FZoneWidth: Integer;     /// Largeur d'une zone de la carte
     FZoneHeight: Integer;    /// Hauteur d'une zone de la carte
     FMaxViewSize: Integer;   /// Taille maximale d'une vue pour cette carte
-    FMap: array of TScrew;   /// Carte stockée de façon linéaire
+    FMap: array of TSquare;   /// Carte stockée de façon linéaire
     FOutsideOffset: Integer; /// Offset de départ de l'extérieur
 
     procedure SetMaxViewSize(Value: Integer);
 
-    function GetMap(const Position: T3DPoint): TScrew;
-    procedure SetMap(const Position: T3DPoint; Value: TScrew);
+    function GetMap(const Position: T3DPoint): TSquare;
+    procedure SetMap(const Position: T3DPoint; Value: TSquare);
 
-    function GetOutside(Floor: Integer): TScrew;
-    procedure SetOutside(Floor: Integer; Value: TScrew);
+    function GetOutside(Floor: Integer): TSquare;
+    procedure SetOutside(Floor: Integer; Value: TSquare);
 
     function GetLinearMapCount: Integer;
-    function GetLinearMap(Index: Integer): TScrew;
-    procedure SetLinearMap(Index: Integer; Value: TScrew);
+    function GetLinearMap(Index: Integer): TSquare;
+    procedure SetLinearMap(Index: Integer; Value: TSquare);
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer);
@@ -476,14 +476,14 @@ type
     property ZoneHeight: Integer read FZoneHeight;
     property MaxViewSize: Integer read FMaxViewSize write SetMaxViewSize;
 
-    property Map[const Position: T3DPoint]: TScrew
+    property Map[const Position: T3DPoint]: TSquare
       read GetMap write SetMap; default;
 
-    property Outside[Floor: Integer]: TScrew
+    property Outside[Floor: Integer]: TSquare
       read GetOutside write SetOutside;
 
     property LinearMapCount: Integer read GetLinearMapCount;
-    property LinearMap[Index: Integer]: TScrew
+    property LinearMap[Index: Integer]: TSquare
       read GetLinearMap write SetLinearMap;
   end;
 
@@ -601,7 +601,7 @@ type
     FEffects: TObjectList;        /// Liste des effets
     FTools: TObjectList;          /// Liste des outils
     FObstacles: TObjectList;      /// Liste des obstacles
-    FScrews: TObjectList;         /// Liste des cases
+    FSquares: TObjectList;         /// Liste des cases
     FMaps: TObjectList;           /// Liste des cartes
     FPlayers: TObjectList;        /// Liste des joueurs
 
@@ -612,7 +612,7 @@ type
     FTerminated: Boolean;         /// Indique si la partie est terminée
 
     function GetComponent(const ID: TComponentID): TFunLabyComponent;
-    function GetScrewComponent(const ID: TComponentID): TScrewComponent;
+    function GetSquareComponent(const ID: TComponentID): TSquareComponent;
 
     function GetPlugin(const ID: TComponentID): TPlugin;
     function GetObjectDef(const ID: TComponentID): TObjectDef;
@@ -620,7 +620,7 @@ type
     function GetEffect(const ID: TComponentID): TEffect;
     function GetTool(const ID: TComponentID): TTool;
     function GetObstacle(const ID: TComponentID): TObstacle;
-    function GetScrew(const ID: TComponentID): TScrew;
+    function GetSquare(const ID: TComponentID): TSquare;
     function GetMap(const ID: TComponentID): TMap;
     function GetPlayer(const ID: TComponentID): TPlayer;
 
@@ -636,8 +636,8 @@ type
     function GetTools(Index: Integer): TTool;
     function GetObstacleCount: Integer;
     function GetObstacles(Index: Integer): TObstacle;
-    function GetScrewCount: Integer;
-    function GetScrews(Index: Integer): TScrew;
+    function GetSquareCount: Integer;
+    function GetSquares(Index: Integer): TSquare;
     function GetMapCount: Integer;
     function GetMaps(Index: Integer): TMap;
     function GetPlayerCount: Integer;
@@ -656,22 +656,22 @@ type
     procedure Temporize;
     procedure UpdateTickCount;
 
-    function ScrewByComps(
-      const Field, Effect, Tool, Obstacle: TComponentID): TScrew;
+    function SquareByComps(
+      const Field, Effect, Tool, Obstacle: TComponentID): TSquare;
 
     property ImagesMaster: TImagesMaster read FImagesMaster;
 
     property Component[const ID: TComponentID]: TFunLabyComponent
       read GetComponent;
-    property ScrewComponent[const ID: TComponentID]: TScrewComponent
-      read GetScrewComponent;
+    property SquareComponent[const ID: TComponentID]: TSquareComponent
+      read GetSquareComponent;
     property Plugin[const ID: TComponentID]: TPlugin read GetPlugin;
     property ObjectDef[const ID: TComponentID]: TObjectDef read GetObjectDef;
     property Field[const ID: TComponentID]: TField read GetField;
     property Effect[const ID: TComponentID]: TEffect read GetEffect;
     property Tool[const ID: TComponentID]: TTool read GetTool;
     property Obstacle[const ID: TComponentID]: TObstacle read GetObstacle;
-    property Screw[const ID: TComponentID]: TScrew read GetScrew;
+    property Square[const ID: TComponentID]: TSquare read GetSquare;
     property Map[const ID: TComponentID]: TMap read GetMap;
     property Player[const ID: TComponentID]: TPlayer read GetPlayer;
 
@@ -687,8 +687,8 @@ type
     property Tools[Index: Integer]: TTool read GetTools;
     property ObstacleCount: Integer read GetObstacleCount;
     property Obstacles[Index: Integer]: TObstacle read GetObstacles;
-    property ScrewCount: Integer read GetScrewCount;
-    property Screws[Index: Integer]: TScrew read GetScrews;
+    property SquareCount: Integer read GetSquareCount;
+    property Squares[Index: Integer]: TSquare read GetSquares;
     property MapCount: Integer read GetMapCount;
     property Maps[Index: Integer]: TMap read GetMaps;
     property PlayerCount: Integer read GetPlayerCount;
@@ -722,7 +722,7 @@ var {don't localize}
   /// Dossier de FunLabyrinthe dans Application Data
   fFunLabyAppData: string = '';
   /// Dossier des fichiers image
-  fScrewsDir: string = 'Screws\';
+  fSquaresDir: string = 'Squares\';
   /// Dossier des fichiers son
   fSoundsDir: string = 'Sounds\';
   /// Dossier des unités
@@ -737,15 +737,15 @@ var {don't localize}
   fEditPluginDir: string = 'EditPlugins\';
 
   /// Chaîne de format pour les fichiers image
-  fScrewFileName: string = '%s.bmp';
+  fSquareFileName: string = '%s.bmp';
 
 function CheckValidLaunch: Boolean;
 procedure ShowFunLabyAbout;
 
 function PointBehind(const Src: T3DPoint; Dir: TDirection): T3DPoint;
-function ScrewRect(X: Integer = 0; Y: Integer = 0): TRect;
+function SquareRect(X: Integer = 0; Y: Integer = 0): TRect;
 procedure EmptyRect(Canvas: TCanvas; Rect: TRect);
-procedure EmptyScrewRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure EmptySquareRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 
 function IsNoQPos(const QPos: TQualifiedPos): Boolean;
 
@@ -816,12 +816,12 @@ end;
   @param Y   Bord supérieur du rectangle
   @return Le rectangle de type TRect
 *}
-function ScrewRect(X: Integer = 0; Y: Integer = 0): TRect;
+function SquareRect(X: Integer = 0; Y: Integer = 0): TRect;
 begin
   Result.Left := X;
   Result.Top := Y;
-  Result.Right := X+ScrewSize;
-  Result.Bottom := Y+ScrewSize;
+  Result.Right := X+SquareSize;
+  Result.Bottom := Y+SquareSize;
 end;
 
 {*
@@ -847,9 +847,9 @@ end;
   @param X        Bord gauche du rectangle
   @param Y        Bord supérieur du rectangle
 *}
-procedure EmptyScrewRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure EmptySquareRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
-  EmptyRect(Canvas, ScrewRect(X, Y));
+  EmptyRect(Canvas, SquareRect(X, Y));
 end;
 
 {*
@@ -871,17 +871,17 @@ end;
 *}
 constructor TImagesMaster.Create;
 var
-  EmptyScrew: TBitmap;
+  EmptySquare: TBitmap;
 begin
   inherited Create;
-  FImgList := TImageList.CreateSize(ScrewSize, ScrewSize);
+  FImgList := TImageList.CreateSize(SquareSize, SquareSize);
   FImgNames := THashedStringList.Create;
 
-  EmptyScrew := TScrewBitmap.Create;
+  EmptySquare := TSquareBitmap.Create;
   try
-    Add('', EmptyScrew);
+    Add('', EmptySquare);
   finally
-    EmptyScrew.Free;
+    EmptySquare.Free;
   end;
 end;
 
@@ -939,7 +939,7 @@ begin
     NewImg := TBitmap.Create;
     try
       try
-        NewImg.LoadFromFile(Format(fScrewFileName, [ImgName]));
+        NewImg.LoadFromFile(Format(fSquareFileName, [ImgName]));
         Result := Add(ImgName, NewImg);
       except
         Result := 0; // Image vide
@@ -979,27 +979,27 @@ begin
 end;
 
 {---------------------}
-{ Classe TScrewBitmap }
+{ Classe TSquareBitmap }
 {---------------------}
 
 {*
-  Crée une instance de TScrewBitmap
+  Crée une instance de TSquareBitmap
 *}
-constructor TScrewBitmap.Create;
+constructor TSquareBitmap.Create;
 begin
   inherited;
 
-  Width := ScrewSize;
-  Height := ScrewSize;
-  EmptyScrew;
+  Width := SquareSize;
+  Height := SquareSize;
+  EmptySquare;
 end;
 
 {*
   Efface le contenu de la case
 *}
-procedure TScrewBitmap.EmptyScrew;
+procedure TSquareBitmap.EmptySquare;
 begin
-  EmptyScrewRect(Canvas);
+  EmptySquareRect(Canvas);
 end;
 
 {*
@@ -1008,14 +1008,14 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner l'image
   @param Y        Coordonnée Y du point à partir duquel dessiner l'image
 *}
-procedure TScrewBitmap.DrawScrew(Canvas: TCanvas;
+procedure TSquareBitmap.DrawSquare(Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
 var
   OldBrushStyle: TBrushStyle;
 begin
   OldBrushStyle := Canvas.Brush.Style;
   Canvas.Brush.Style := bsClear;
-  Canvas.BrushCopy(ScrewRect(X, Y), Self, ScrewRect, clTransparent);
+  Canvas.BrushCopy(SquareRect(X, Y), Self, SquareRect, clTransparent);
   Canvas.Brush.Style := OldBrushStyle;
 end;
 
@@ -1034,7 +1034,7 @@ begin
   FMaster := AMaster;
   FImgNames := TStringList.Create;
   TStringList(FImgNames).OnChange := ImgNamesChange;
-  FCachedImg := TScrewBitmap.Create;
+  FCachedImg := TSquareBitmap.Create;
   ImgNamesChange(nil);
 end;
 
@@ -1058,7 +1058,7 @@ procedure TPainter.ImgNamesChange(Sender: TObject);
 var
   I: Integer;
 begin
-  FCachedImg.EmptyScrew;
+  FCachedImg.EmptySquare;
   for I := 0 to FImgNames.Count-1 do
     FMaster.Draw(FImgNames[I], FCachedImg.Canvas);
 end;
@@ -1074,7 +1074,7 @@ end;
 *}
 procedure TPainter.Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
-  FCachedImg.DrawScrew(Canvas, X, Y);
+  FCachedImg.DrawSquare(Canvas, X, Y);
 end;
 
 {--------------------------}
@@ -1164,7 +1164,7 @@ begin
 
   if StaticDraw then
   begin
-    FCachedImg := TScrewBitmap.Create;
+    FCachedImg := TSquareBitmap.Create;
     PrivDraw(NoQPos, FCachedImg.Canvas);
   end;
 end;
@@ -1209,7 +1209,7 @@ procedure TVisualComponent.Draw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
 begin
   if StaticDraw then
-    FCachedImg.DrawScrew(Canvas, X, Y)
+    FCachedImg.DrawSquare(Canvas, X, Y)
   else
     PrivDraw(QPos, Canvas, X, Y);
 end;
@@ -1552,11 +1552,11 @@ begin
 end;
 
 {---------------}
-{ Classe TScrew }
+{ Classe TSquare }
 {---------------}
 
 {*
-  Crée une instance de TScrew
+  Crée une instance de TSquare
   @param AMaster     Maître FunLabyrinthe
   @param AID         ID de la case
   @param AName       Nom de la case
@@ -1565,7 +1565,7 @@ end;
   @param ATool       Outil
   @param AObstacle   Obstacle
 *}
-constructor TScrew.Create(AMaster: TMaster; const AID: TComponentID;
+constructor TSquare.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string; AField: TField; AEffect: TEffect; ATool: TTool;
   AObstacle: TObstacle);
 begin
@@ -1591,7 +1591,7 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner les images
   @param Y        Coordonnée Y du point à partir duquel dessiner les images
 *}
-procedure TScrew.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+procedure TSquare.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
 begin
   if Assigned(Field) then
@@ -1611,7 +1611,7 @@ end;
   BeforeDestruction est appelé avant l'exécution du premier destructeur.
   N'appelez pas directement BeforeDestruction.
 *}
-procedure TScrew.BeforeDestruction;
+procedure TSquare.BeforeDestruction;
 begin
   inherited;
   // Il ne faut surtout pas détruire une case déjà en cours de destruction
@@ -1621,7 +1621,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TScrew.DefaultHandler(var Msg);
+procedure TSquare.DefaultHandler(var Msg);
 begin
   if Assigned(Field) then
     Field.Dispatch(Msg);
@@ -1644,7 +1644,7 @@ end;
   @param Pos            Position de la case
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TScrew.Entering(Player: TPlayer; OldDirection: TDirection;
+procedure TSquare.Entering(Player: TPlayer; OldDirection: TDirection;
   KeyPressed: Boolean; const Src, Pos: T3DPoint; var Cancel: Boolean);
 begin
   AddRef;
@@ -1667,7 +1667,7 @@ end;
   @param Dest           Case de destination
   @param Cancel         À positionner à True pour annuler le déplacement
 *}
-procedure TScrew.Exiting(Player: TPlayer; OldDirection: TDirection;
+procedure TSquare.Exiting(Player: TPlayer; OldDirection: TDirection;
   KeyPressed: Boolean; const Pos, Dest: T3DPoint; var Cancel: Boolean);
 begin
   AddRef;
@@ -1685,7 +1685,7 @@ end;
   @param Src      Case de provenance
   @param Pos      Position de la case
 *}
-procedure TScrew.Entered(Player: TPlayer; const Src, Pos: T3DPoint);
+procedure TSquare.Entered(Player: TPlayer; const Src, Pos: T3DPoint);
 begin
   AddRef;
   try
@@ -1704,7 +1704,7 @@ end;
   @param Pos      Position de la case
   @param Dest     Case de destination
 *}
-procedure TScrew.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
+procedure TSquare.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
 begin
   AddRef;
   try
@@ -1723,7 +1723,7 @@ end;
   @param Pos          Position de la case
   @param GoOnMoving   À positionner à True pour réitérer le déplacement
 *}
-procedure TScrew.Execute(Player: TPlayer; const Pos: T3DPoint;
+procedure TSquare.Execute(Player: TPlayer; const Pos: T3DPoint;
   var GoOnMoving: Boolean);
 begin
   AddRef;
@@ -1751,7 +1751,7 @@ end;
   @param Cancel         À positionner à True pour annuler le déplacement
   @param AbortExecute   À positionner à True pour empêcher le Execute
 *}
-procedure TScrew.Pushing(Player: TPlayer; OldDirection: TDirection;
+procedure TSquare.Pushing(Player: TPlayer; OldDirection: TDirection;
   KeyPressed: Boolean; const Src, Pos: T3DPoint;
   var Cancel, AbortExecute: Boolean);
 begin
@@ -1771,7 +1771,7 @@ end;
   Incrémente le compteur de références de la case
   @return Nouvelle valeur du compteur de références
 *}
-function TScrew.AddRef: Integer;
+function TSquare.AddRef: Integer;
 begin
   if FRefCount <> NoRefCount then
     Inc(FRefCount);
@@ -1782,7 +1782,7 @@ end;
   Décrémente le compteur de références de la case
   @return Nouvelle valeur du compteur de références
 *}
-function TScrew.Release: Integer;
+function TSquare.Release: Integer;
 begin
   if FRefCount <> NoRefCount then
     Dec(FRefCount);
@@ -1834,7 +1834,7 @@ end;
   @param Position   Position sur la carte
   @return La case à la position spécifiée
 *}
-function TMap.GetMap(const Position: T3DPoint): TScrew;
+function TMap.GetMap(const Position: T3DPoint): TSquare;
 var
   Index: Integer;
 begin
@@ -1856,7 +1856,7 @@ end;
   @param Position   Position sur la carte
   @param Value      Nouvelle case
 *}
-procedure TMap.SetMap(const Position: T3DPoint; Value: TScrew);
+procedure TMap.SetMap(const Position: T3DPoint; Value: TSquare);
 var
   Index: Integer;
 begin
@@ -1877,7 +1877,7 @@ end;
   @param Floor   Étage
   @return La case hors de la carte à l'étage spécifié
 *}
-function TMap.GetOutside(Floor: Integer): TScrew;
+function TMap.GetOutside(Floor: Integer): TSquare;
 begin
   if Floor < 0 then
     Floor := 0
@@ -1891,7 +1891,7 @@ end;
   @param Floor   Étage
   @param Value   Nouvelle case
 *}
-procedure TMap.SetOutside(Floor: Integer; Value: TScrew);
+procedure TMap.SetOutside(Floor: Integer; Value: TSquare);
 begin
   if (Floor >= 0) and (Floor < FDimensions.Z) then
     LinearMap[Floor + FOutsideOffset] := Value;
@@ -1911,7 +1911,7 @@ end;
   @param Index   Index dans le tableau
   @return Case de la carte linéaire à l'index spécifié
 *}
-function TMap.GetLinearMap(Index: Integer): TScrew;
+function TMap.GetLinearMap(Index: Integer): TSquare;
 begin
   Result := FMap[Index];
 end;
@@ -1921,7 +1921,7 @@ end;
   @param Index   Index dans le tableau
   @param Value   Nouvelle case
 *}
-procedure TMap.SetLinearMap(Index: Integer; Value: TScrew);
+procedure TMap.SetLinearMap(Index: Integer; Value: TSquare);
 begin
   if FMap[Index] = Value then
     Exit;
@@ -2076,7 +2076,7 @@ begin
       Brush.Style := bsSolid;
       Brush.Color := FColor;
       Pen.Style := psClear;
-      Ellipse(X+6, Y+6, X+ScrewSize-6, Y+ScrewSize-6);
+      Ellipse(X+6, Y+6, X+SquareSize-6, Y+SquareSize-6);
     end;
   end;
 end;
@@ -2662,7 +2662,7 @@ begin
   FEffects    := TObjectList.Create(False);
   FTools      := TObjectList.Create(False);
   FObstacles  := TObjectList.Create(False);
-  FScrews     := TObjectList.Create(False);
+  FSquares     := TObjectList.Create(False);
   FMaps       := TObjectList.Create(False);
   FPlayers    := TObjectList.Create(False);
 
@@ -2687,7 +2687,7 @@ begin
 
   FPlayers.Free;
   FMaps.Free;
-  FScrews.Free;
+  FSquares.Free;
   FObstacles.Free;
   FTools.Free;
   FEffects.Free;
@@ -2730,15 +2730,15 @@ end;
   @throws EComponentNotFound : Aucun composant ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas de case
 *}
-function TMaster.GetScrewComponent(const ID: TComponentID): TScrewComponent;
+function TMaster.GetSquareComponent(const ID: TComponentID): TSquareComponent;
 begin
   try
-    Result := Component[ID] as TScrewComponent;
+    Result := Component[ID] as TSquareComponent;
   except
     on Error: EComponentNotFound do
     begin
-      if NberCharInStr(ScrewIDDelim, ID) = 3 then
-        Result := Screw[ID]
+      if NberCharInStr(SquareIDDelim, ID) = 3 then
+        Result := Square[ID]
       else
         raise;
     end;
@@ -2819,14 +2819,14 @@ end;
 
 {*
   Tableau des cases indexé par leur ID
-  Si la case n'a pas pu être trouvée, GetScrew essaye de trouver les terrain
+  Si la case n'a pas pu être trouvée, GetSquare essaye de trouver les terrain
   et effet correspondant à son ID et de créer la case automatiquement
   @param ID   ID de la case à trouver
   @return La case dont l'ID a été spécifié
   @throws EComponentNotFound : Aucune case ne correspond à l'ID spécifié
   @throws EInvalidCast : Le composant de l'ID spécifié n'est pas une case
 *}
-function TMaster.GetScrew(const ID: TComponentID): TScrew;
+function TMaster.GetSquare(const ID: TComponentID): TSquare;
 var
   AField: TField;
   AEffect: TEffect;
@@ -2835,18 +2835,18 @@ var
   AName: string;
 begin
   try
-    Result := Component[ID] as TScrew;
+    Result := Component[ID] as TSquare;
   except
     on Error: EComponentNotFound do
     begin
       Result := nil;
 
-      if NberCharInStr(ScrewIDDelim, ID) = 3 then
+      if NberCharInStr(SquareIDDelim, ID) = 3 then
       try
-        AField    := Field   [GetXToken(ID, ScrewIDDelim, 1)];
-        AEffect   := Effect  [GetXToken(ID, ScrewIDDelim, 2)];
-        ATool     := Tool    [GetXToken(ID, ScrewIDDelim, 3)];
-        AObstacle := Obstacle[GetXToken(ID, ScrewIDDelim, 4)];
+        AField    := Field   [GetXToken(ID, SquareIDDelim, 1)];
+        AEffect   := Effect  [GetXToken(ID, SquareIDDelim, 2)];
+        ATool     := Tool    [GetXToken(ID, SquareIDDelim, 3)];
+        AObstacle := Obstacle[GetXToken(ID, SquareIDDelim, 4)];
 
         if Assigned(AField) then
           AName := AField.Name
@@ -2859,7 +2859,7 @@ begin
         if Assigned(AObstacle) then
           AName := Format(sObstacleName, [AName, AObstacle.Name]);
 
-        Result := TScrew.Create(Self, ID, AName,
+        Result := TSquare.Create(Self, ID, AName,
           AField, AEffect, ATool, AObstacle);
       except
       end;
@@ -3012,9 +3012,9 @@ end;
   Nombre de cases
   @return Nombre de cases
 *}
-function TMaster.GetScrewCount: Integer;
+function TMaster.GetSquareCount: Integer;
 begin
-  Result := FScrews.Count;
+  Result := FSquares.Count;
 end;
 
 {*
@@ -3022,9 +3022,9 @@ end;
   @param Index   Index de la case
   @return La case à la position spécifiée
 *}
-function TMaster.GetScrews(Index: Integer): TScrew;
+function TMaster.GetSquares(Index: Integer): TSquare;
 begin
-  Result := TScrew(FScrews[Index]);
+  Result := TSquare(FSquares[Index]);
 end;
 
 {*
@@ -3095,8 +3095,8 @@ begin
     FTools.Add(Component)
   else if Component is TObstacle then
     FObstacles.Add(Component)
-  else if Component is TScrew then
-    FScrews.Add(Component)
+  else if Component is TSquare then
+    FSquares.Add(Component)
   else if Component is TMap then
     FMaps.Add(Component)
   else if Component is TPlayer then
@@ -3121,8 +3121,8 @@ begin
     FTools.Remove(Component)
   else if Component is TObstacle then
     FObstacles.Remove(Component)
-  else if Component is TScrew then
-    FScrews.Remove(Component)
+  else if Component is TSquare then
+    FSquares.Remove(Component)
   else if Component is TMap then
     FMaps.Remove(Component)
   else if Component is TPlayer then
@@ -3163,10 +3163,10 @@ end;
   @param Obstacle   ID de l'obstacle
   @return Case avec avec les composantes spécifiées
 *}
-function TMaster.ScrewByComps(
-  const Field, Effect, Tool, Obstacle: TComponentID): TScrew;
+function TMaster.SquareByComps(
+  const Field, Effect, Tool, Obstacle: TComponentID): TSquare;
 begin
-  Result := Screw[Format(ScrewIDFormat, [Field, Effect, Tool, Obstacle])];
+  Result := Square[Format(SquareIDFormat, [Field, Effect, Tool, Obstacle])];
 end;
 
 initialization
@@ -3176,7 +3176,7 @@ initialization
     fFunLabyAppData :=
       ReadString('Directories', 'AppData', Dir); {don't localize}
 
-    fScrewsDir := fFunLabyAppData + fScrewsDir;
+    fSquaresDir := fFunLabyAppData + fSquaresDir;
     fSoundsDir := fFunLabyAppData + fSoundsDir;
     FUnitsDir := fFunLabyAppData + fUnitsDir;
     FMapsDir := fFunLabyAppData + fMapsDir;
@@ -3184,7 +3184,7 @@ initialization
     fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
     fEditPluginDir := fFunLabyAppData + fEditPluginDir;
 
-    fScrewFileName := fScrewsDir+fScrewFileName;
+    fSquareFileName := fSquaresDir+fSquareFileName;
   finally
     Free;
   end;

@@ -144,21 +144,21 @@ procedure TFunLabyBaseUnit.RegisterComponents(
 
   procedure RegSingle(Component: TComponentID);
   begin
-    RegisterSingleComponentProc(Master.ScrewComponent[Component]);
+    RegisterSingleComponentProc(Master.SquareComponent[Component]);
   end;
 
   procedure RegSet(Template: TComponentID;
-    const Components: array of TScrewComponent; BaseIndex: Integer;
+    const Components: array of TSquareComponent; BaseIndex: Integer;
     const DialogTitle, DialogPrompt: string);
   begin
-    RegisterComponentSetProc(Master.ScrewComponent[Template],
+    RegisterComponentSetProc(Master.SquareComponent[Template],
       Components, BaseIndex, DialogTitle, DialogPrompt);
   end;
 
 var
   I: Integer;
-  Transporters: array[0..45] of TScrewComponent;
-  Boats: array[1..10] of TScrewComponent;
+  Transporters: array[0..45] of TSquareComponent;
+  Boats: array[1..10] of TSquareComponent;
 begin
   // Terrains
 
@@ -176,13 +176,13 @@ begin
   RegSingle(idWestArrow);
   RegSingle(idCrossroads);
 
-  Transporters[0] := Master.ScrewComponent[idInactiveTransporter];
+  Transporters[0] := Master.SquareComponent[idInactiveTransporter];
   for I := 1 to 15 do
-    Transporters[I] := Master.ScrewComponent[Format(idTransporterNext, [I])];
+    Transporters[I] := Master.SquareComponent[Format(idTransporterNext, [I])];
   for I := 16 to 30 do
-    Transporters[I] := Master.ScrewComponent[Format(idTransporterPrev, [I])];
+    Transporters[I] := Master.SquareComponent[Format(idTransporterPrev, [I])];
   for I := 31 to 45 do
-    Transporters[I] := Master.ScrewComponent[Format(idTransporterRandom, [I])];
+    Transporters[I] := Master.SquareComponent[Format(idTransporterRandom, [I])];
   RegSet(idTransporterTemplate, Transporters, Low(Transporters),
     sTransporterTitle, sTransporterPrompt);
 
@@ -209,10 +209,10 @@ begin
   // Cases
 
   for I := 1 to 10 do
-    Boats[I] := Master.ScrewComponent[Format(idBoatScrew, [I])];
-  RegSet(idBoatScrewTemplate, Boats, Low(Boats), sBoatTitle, sBoatPrompt);
+    Boats[I] := Master.SquareComponent[Format(idBoatSquare, [I])];
+  RegSet(idBoatSquareTemplate, Boats, Low(Boats), sBoatTitle, sBoatPrompt);
 
-  RegSingle(idOutsideScrew);
+  RegSingle(idOutsideSquare);
 end;
 
 {$IFNDEF DCTD}

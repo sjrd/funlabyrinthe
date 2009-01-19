@@ -1,9 +1,9 @@
-unit C4xScrewsTable;
+unit C4xSquaresTable;
 
 interface
 
 const
-  ScrewsTable: array[#33..#255] of string = (
+  SquaresTable: array[#33..#255] of string = (
     'Grass-ActionsEffect1--ActionsObstacle1',
     'Grass-ActionsEffect2--ActionsObstacle2',
     'Grass-ActionsEffect3--ActionsObstacle3',

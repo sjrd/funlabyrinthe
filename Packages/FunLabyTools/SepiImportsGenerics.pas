@@ -44,7 +44,7 @@ type
     class procedure InitMethodAddresses;
   end;
 
-  TSepiImportsTOverriddenScrew = class(TOverriddenScrew)
+  TSepiImportsTOverriddenSquare = class(TOverriddenSquare)
   private
     class procedure InitMethodAddresses;
   end;
@@ -76,13 +76,13 @@ begin
   MethodAddresses[2] := @TSepiImportsTObjectTool.Create;
 end;
 
-{-------------------------}
-{ TOverriddenScrew import }
-{-------------------------}
+{--------------------------}
+{ TOverriddenSquare import }
+{--------------------------}
 
-class procedure TSepiImportsTOverriddenScrew.InitMethodAddresses;
+class procedure TSepiImportsTOverriddenSquare.InitMethodAddresses;
 begin
-  MethodAddresses[3] := @TSepiImportsTOverriddenScrew.Create;
+  MethodAddresses[3] := @TSepiImportsTOverriddenSquare.Create;
 end;
 
 {---------------------}
@@ -145,7 +145,7 @@ begin
   TypeInfoArray[0] := TypeInfo(TDecorativeEffect);
   TypeInfoArray[1] := TypeInfo(TDecorativeObstacle);
   TypeInfoArray[2] := TypeInfo(TObjectTool);
-  TypeInfoArray[3] := TypeInfo(TOverriddenScrew);
+  TypeInfoArray[3] := TypeInfo(TOverriddenSquare);
 end;
 
 procedure InitMethodAddresses;
@@ -153,7 +153,7 @@ begin
   TSepiImportsTDecorativeEffect.InitMethodAddresses;
   TSepiImportsTDecorativeObstacle.InitMethodAddresses;
   TSepiImportsTObjectTool.InitMethodAddresses;
-  TSepiImportsTOverriddenScrew.InitMethodAddresses;
+  TSepiImportsTOverriddenSquare.InitMethodAddresses;
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

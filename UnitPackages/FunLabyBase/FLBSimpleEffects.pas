@@ -58,7 +58,7 @@ const {don't localize}
   idOutside = 'Outside';                         /// ID du dehors
   idTreasure = 'Treasure';                       /// ID du trésor
 
-  idOutsideScrew = idGrass+'-'+idOutside+'--';   /// ID de la case dehors
+  idOutsideSquare = idGrass+'-'+idOutside+'--';   /// ID de la case dehors
 
 const {don't localize}
   fNorthArrow = 'NorthArrow';               /// Fichier de la flèche nord
@@ -303,9 +303,9 @@ begin
   if Master.Editing then
   begin
     case FKind of
-      tkNext:     DrawScrewNumber(Canvas, X, Y, Number, clRed);
-      tkPrevious: DrawScrewNumber(Canvas, X, Y, Number, clGreen);
-      tkRandom:   DrawScrewNumber(Canvas, X, Y, Number, clBlue);
+      tkNext:     DrawSquareNumber(Canvas, X, Y, Number, clRed);
+      tkPrevious: DrawSquareNumber(Canvas, X, Y, Number, clGreen);
+      tkRandom:   DrawSquareNumber(Canvas, X, Y, Number, clBlue);
     end;
   end;
 end;
@@ -327,9 +327,9 @@ begin
 
   // Recherche de la case de destination
   case FKind of
-    tkNext:     FindNextScrew(Player.Map, Other, Self);
-    tkPrevious: FindPreviousScrew(Player.Map, Other, Self);
-    tkRandom:   FindScrewAtRandom(Player.Map, Other, Self);
+    tkNext:     FindNextSquare(Player.Map, Other, Self);
+    tkPrevious: FindPreviousSquare(Player.Map, Other, Self);
+    tkRandom:   FindSquareAtRandom(Player.Map, Other, Self);
   else
     Exit; // on évite des tests inutiles pour un inactif
   end;

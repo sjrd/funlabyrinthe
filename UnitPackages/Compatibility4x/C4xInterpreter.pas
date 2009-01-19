@@ -12,7 +12,7 @@ interface
 uses
   SysUtils, Classes, Graphics, StrUtils, Contnrs, ScUtils, ScStrUtils,
   ScWindows, SdDialogs, FunLabyUtils, FilesUtils, MapTools, FLBFields,
-  FLBSimpleObjects, FLBPlank, FLBBoat, FLBCommon, C4xComponents, C4xScrewsTable,
+  FLBSimpleObjects, FLBPlank, FLBBoat, FLBCommon, C4xComponents, C4xSquaresTable,
   C4xCommon;
 
 resourcestring
@@ -80,7 +80,7 @@ type
     HasMoved: Boolean;    /// Indique si un AllerA a été fait
     HasShownMsg: Boolean; /// Indique si un message a été affiché
     Successful: Boolean;  /// État de réussite
-    Inactive: TScrew;     /// Case à utiliser lors d'un Desactiver
+    Inactive: TSquare;     /// Case à utiliser lors d'un Desactiver
     AllowPlank: Boolean;  /// Indique si un AutoriserPlanche a été fait
 
     StrHere: string;   /// Case courante
@@ -99,7 +99,7 @@ type
 
     procedure ModifyReference(Reference, Value: Integer;
       ModificationKind: TModificationKind);
-    procedure ConvertScrews(FromScrew, ToScrew: TScrew);
+    procedure ConvertSquares(FromSquare, ToSquare: TSquare);
 
     function Information(var Params: string; const Title: string;
       DlgType: TDialogType;
@@ -598,16 +598,16 @@ end;
 
 {*
   Récupère une référence à une case dans la liste des paramètres
-  Attention ! GetScrewReference avance sur les sous-paramètres au fur et à
+  Attention ! GetSquareReference avance sur les sous-paramètres au fur et à
   mesure : si le premier sous-paramètre est bien Case, mais que les suivants
-  sont incorrects, l'entrée sera corrompue. Il faut n'appeler GetScrewReference
+  sont incorrects, l'entrée sera corrompue. Il faut n'appeler GetSquareReference
   qu'en dernier recours.
   @param Params        Liste des paramètres
   @param NoneAllowed   Indique si la référence Rien est admise
   @return Référence à la case lue
   @throws EBadParam : Le type du premier paramètre n'est pas une case
 *}
-function GetScrewReference(var Params: string;
+function GetSquareReference(var Params: string;
   NoneAllowed: Boolean = False): T3DPoint;
 begin
   if NoneAllowed and (GetCommandIndex(Params, ['Rien'], False) = 0) then
@@ -628,7 +628,7 @@ end;
   @return Valeur case lue
   @throws EBadParam : Le type du premier paramètre n'est pas une case
 *}
-function GetScrewParam(var Params: string; Map: TMap): TScrew;
+function GetSquareParam(var Params: string; Map: TMap): TSquare;
 var
   Master: TMaster;
   StartIndex, EndIndex: Integer;
@@ -644,15 +644,15 @@ begin
     EndIndex := ToNextChar(Params, StartIndex, ']');
     Param := Copy(Params, StartIndex, EndIndex-StartIndex);
     if Length(Param) = 1 then
-      Result := Master.Screw[ScrewsTable[Param[1]]]
+      Result := Master.Square[SquaresTable[Param[1]]]
     else
-      Result := Map[GetScrewReference(Param)];
+      Result := Map[GetSquareReference(Param)];
     Delete(Params, 1, EndIndex);
   end else
   begin
     // Case donnée par son caractère
     try
-      Result := Master.Screw[ScrewsTable[Params[StartIndex]]];
+      Result := Master.Square[SquaresTable[Params[StartIndex]]];
       Delete(Params, 1, StartIndex);
     except
       on Error: EComponentNotFound do
@@ -705,7 +705,7 @@ procedure TActionsInterpreter.TreatVariables(var Line: string);
     @param FindProc   Routine de recherche de la case à utiliser
   *}
   procedure TreatNextPreviousRandom(var Line: string; const Kind: string;
-    FindProc: TFindScrewProc);
+    FindProc: TFindSquareProc);
   var
     Len, ExprStart, IDPos: Integer;
     ID: TComponentID;
@@ -725,9 +725,9 @@ procedure TActionsInterpreter.TreatVariables(var Line: string);
       if IDPos > Length(Line) then
         raise EInvalidAction.CreateFmt(sBadNextPreviousRandom, [Kind]);
 
-      ID := ScrewsTable[Line[IDPos]];
+      ID := SquaresTable[Line[IDPos]];
       Dest := Position;
-      FindProc(Map, Dest, Master.ScrewComponent[ID]);
+      FindProc(Map, Dest, Master.SquareComponent[ID]);
 
       Delete(Line, ExprStart, IDPos-ExprStart+1);
       Insert('Case ' + Point3DToString(Dest), Line, ExprStart);
@@ -764,9 +764,9 @@ begin
   ReplaceNonStrVariable(Line, 'Devant', StrBefore);
   ReplaceNonStrVariable(Line, 'Derriere', StrBehind);
 
-  TreatNextPreviousRandom(Line, 'Suivant', FindNextScrew);
-  TreatNextPreviousRandom(Line, 'Precedent', FindPreviousScrew);
-  TreatNextPreviousRandom(Line, 'Aleatoire', FindScrewAtRandom);
+  TreatNextPreviousRandom(Line, 'Suivant', FindNextSquare);
+  TreatNextPreviousRandom(Line, 'Precedent', FindPreviousSquare);
+  TreatNextPreviousRandom(Line, 'Aleatoire', FindSquareAtRandom);
 
   ReplaceNonStrVariable(Line, 'X'        , PlayerPos.X);
   ReplaceNonStrVariable(Line, 'Y'        , PlayerPos.Y);
@@ -848,7 +848,7 @@ begin
   try
     IntOp1 := GetIntParam(Condition);
   except
-    IntOp1 := AnsiIndexText(GetScrewParam(Condition, Map).ID, ScrewsTable);
+    IntOp1 := AnsiIndexText(GetSquareParam(Condition, Map).ID, SquaresTable);
   end;
 
   Operation := GetCommandIndex(Condition,
@@ -857,7 +857,7 @@ begin
   try
     IntOp2 := GetIntParam(Condition);
   except
-    IntOp2 := AnsiIndexText(GetScrewParam(Condition, Map).ID, ScrewsTable);
+    IntOp2 := AnsiIndexText(GetSquareParam(Condition, Map).ID, SquaresTable);
   end;
 
   case Operation of
@@ -1063,18 +1063,18 @@ end;
 
 {*
   Convertit toutes les occurences d'une case en une autre
-  @param FromScrew   Case à rechercher
-  @param ToScrew     Case de remplacement
+  @param FromSquare   Case à rechercher
+  @param ToSquare     Case de remplacement
 *}
-procedure TActionsInterpreter.ConvertScrews(FromScrew, ToScrew: TScrew);
+procedure TActionsInterpreter.ConvertSquares(FromSquare, ToSquare: TSquare);
 var
   X, Y, Z: Integer;
 begin
   for X := 0 to Map.Dimensions.X-1 do
     for Y := 0 to Map.Dimensions.Y-1 do
       for Z := 0 to Map.Dimensions.Z-1 do
-        if Map[Point3D(X, Y, Z)] = FromScrew then
-          Map[Point3D(X, Y, Z)] := ToScrew;
+        if Map[Point3D(X, Y, Z)] = FromSquare then
+          Map[Point3D(X, Y, Z)] := ToSquare;
 end;
 
 {*
@@ -1106,8 +1106,8 @@ end;
 procedure TActionsInterpreter.ReplaceCmd(var Params: string);
 var
   Reference, Floor, Index: Integer;
-  Screw: TScrew;
-  ScrewRef: T3DPoint;
+  Square: TSquare;
+  SquareRef: T3DPoint;
   Replacements: TObjectList;
 begin
   Reference := GetCommandIndex(Params, ReferencesStrings, False);
@@ -1121,36 +1121,36 @@ begin
   begin
     Floor := 1;
     repeat
-      Screw := GetScrewParam(Params, Map);
-      Map.Outside[Floor] := Screw;
+      Square := GetSquareParam(Params, Map);
+      Map.Outside[Floor] := Square;
       Inc(Floor);
     until Params = '';
 
     while Floor < Map.Dimensions.Z do
     begin
-      Map.Outside[Floor] := Screw;
+      Map.Outside[Floor] := Square;
       Inc(Floor);
     end;
   end else
 
   // Case
   begin
-    ScrewRef := GetScrewReference(Params);
+    SquareRef := GetSquareReference(Params);
     Replacements := TObjectList.Create(False);
     try
       repeat
-        Replacements.Add(GetScrewParam(Params, Map));
+        Replacements.Add(GetSquareParam(Params, Map));
       until Params = '';
 
       if Replacements.Count = 1 then
-        Map[ScrewRef] := TScrew(Replacements.First)
+        Map[SquareRef] := TSquare(Replacements.First)
       else
       begin
-        Index := Replacements.IndexOf(Map[ScrewRef]);
+        Index := Replacements.IndexOf(Map[SquareRef]);
         if Index >= 0 then
         begin
-          Map[ScrewRef] :=
-            TScrew(Replacements[(Index + 1) mod Replacements.Count]);
+          Map[SquareRef] :=
+            TSquare(Replacements[(Index + 1) mod Replacements.Count]);
         end;
       end;
     finally
@@ -1165,11 +1165,11 @@ end;
 *}
 procedure TActionsInterpreter.ConvertCmd(var Params: string);
 var
-  FromScrew, ToScrew: TScrew;
+  FromSquare, ToSquare: TSquare;
 begin
-  FromScrew := GetScrewParam(Params, Map);
-  ToScrew := GetScrewParam(Params, Map);
-  ConvertScrews(FromScrew, ToScrew);
+  FromSquare := GetSquareParam(Params, Map);
+  ToSquare := GetSquareParam(Params, Map);
+  ConvertSquares(FromSquare, ToSquare);
 end;
 
 {*
@@ -1178,20 +1178,20 @@ end;
 *}
 procedure TActionsInterpreter.MoveCmd(var Params: string);
 var
-  Screw, Replacement: TScrew;
-  ScrewRef: T3DPoint;
+  Square, Replacement: TSquare;
+  SquareRef: T3DPoint;
 begin
-  Screw := GetScrewParam(Params, Map);
-  ScrewRef := GetScrewReference(Params, True);
+  Square := GetSquareParam(Params, Map);
+  SquareRef := GetSquareReference(Params, True);
 
-  if Copy(Screw.ID, 1, Length(idGroundWater)) = idGroundWater then
-    Replacement := Master.Screw[idWaterScrew]
+  if Copy(Square.ID, 1, Length(idGroundWater)) = idGroundWater then
+    Replacement := Master.Square[idWaterSquare]
   else
-    Replacement := Master.Screw[idGrassScrew];
-  ConvertScrews(Screw, Replacement);
+    Replacement := Master.Square[idGrassSquare];
+  ConvertSquares(Square, Replacement);
 
-  if not IsNo3DPoint(ScrewRef) then
-    Map[ScrewRef] := Screw;
+  if not IsNo3DPoint(SquareRef) then
+    Map[SquareRef] := Square;
 end;
 
 {*
@@ -1200,14 +1200,14 @@ end;
 *}
 procedure TActionsInterpreter.DeactivateCmd(var Params: string);
 var
-  Screw: TScrew;
+  Square: TSquare;
 begin
   if Params = '' then
-    Screw := Inactive
+    Square := Inactive
   else
-    Screw := GetScrewParam(Params, Map);
+    Square := GetSquareParam(Params, Map);
 
-  Map[Position] := Screw;
+  Map[Position] := Square;
 end;
 
 {*
@@ -1380,11 +1380,11 @@ end;
 *}
 procedure TActionsInterpreter.GoToCmd(var Params: string);
 var
-  ScrewRef: T3DPoint;
+  SquareRef: T3DPoint;
 begin
-  ScrewRef := GetScrewReference(Params, True);
-  if not IsNo3DPoint(ScrewRef) then
-    PlayerPos := ScrewRef;
+  SquareRef := GetSquareReference(Params, True);
+  if not IsNo3DPoint(SquareRef) then
+    PlayerPos := SquareRef;
   HasMoved := True;
 end;
 
@@ -1490,7 +1490,7 @@ begin
   if AllowPlank and Same3DPoint(PlayerPos, Position) and (not Successful) and
     (Master.ObjectDef[idPlanks].Count[Player] > 0) then
   begin
-    TPlankScrew.Create(Master, Map, Position, Player);
+    TPlankSquare.Create(Master, Map, Position, Player);
     Master.Temporize;
 
     Successful := True;
@@ -1543,7 +1543,7 @@ begin
     KeyPressed := AKeyPressed;
     Position := APos;
     DoNextPhase := ADoNextPhase;
-    Inactive := Master.Screw[idGrass+'-'+AInactive+'--'];
+    Inactive := Master.Square[idGrass+'-'+AInactive+'--'];
 
     // Détermination des Ici, Devant et Derriere
     StrHere := 'Case '+Point3DToString(Position);

@@ -5,7 +5,7 @@ object FrameMapEditor: TFrameMapEditor
   Height = 421
   TabOrder = 0
   TabStop = True
-  object SplitterScrews: TSplitter
+  object SplitterSquares: TSplitter
     Left = 150
     Top = 0
     Height = 421
@@ -18,7 +18,7 @@ object FrameMapEditor: TFrameMapEditor
     Align = alRight
     MinSize = 100
   end
-  object ScrewsContainer: TCategoryButtons
+  object SquaresContainer: TCategoryButtons
     Left = 0
     Top = 0
     Width = 150
@@ -28,7 +28,7 @@ object FrameMapEditor: TFrameMapEditor
     ButtonHeight = 36
     ButtonWidth = 38
     ButtonOptions = [boGradientFill, boBoldCaptions, boCaptionOnlyBorder]
-    Images = ScrewsImages
+    Images = SquaresImages
     Categories = <
       item
         Caption = 'Terrains'
@@ -71,7 +71,7 @@ object FrameMapEditor: TFrameMapEditor
     SelectedButtonColor = 15711942
     ShowHint = True
     TabOrder = 0
-    OnButtonClicked = ScrewsContainerButtonClicked
+    OnButtonClicked = SquaresContainerButtonClicked
   end
   object PlayersContainer: TCategoryButtons
     Left = 520
@@ -250,7 +250,7 @@ object FrameMapEditor: TFrameMapEditor
       end
     end
   end
-  object ScrewsImages: TImageList
+  object SquaresImages: TImageList
     Height = 30
     Width = 30
     Left = 248

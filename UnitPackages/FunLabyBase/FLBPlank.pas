@@ -76,7 +76,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TPlankScrew = class(TOverriddenScrew)
+  TPlankSquare = class(TOverriddenSquare)
   private
     FPlayer: TPlayer; /// Joueur qui passe sur la case
   public
@@ -123,13 +123,13 @@ begin
     Exit;
 
   // Détermination de l'endroit où dessiner réellement la planche
-  if not (Player.Map[Player.Position] is TPlankScrew) then
+  if not (Player.Map[Player.Position] is TPlankSquare) then
   begin
     case Player.Direction of
-      diNorth: Dec(Y, ScrewSize);
-      diEast:  Inc(X, ScrewSize);
-      diSouth: Inc(Y, ScrewSize);
-      diWest:  Dec(X, ScrewSize);
+      diNorth: Dec(Y, SquareSize);
+      diEast:  Inc(X, SquareSize);
+      diSouth: Inc(Y, SquareSize);
+      diWest:  Dec(X, SquareSize);
     end;
   end;
 
@@ -142,9 +142,9 @@ begin
     Pen.Style := psSolid;
 
     if Player.Direction in [diNorth, diSouth] then
-      Rectangle(X+6, Y-5, X+ScrewSize-6, Y+ScrewSize+5)
+      Rectangle(X+6, Y-5, X+SquareSize-6, Y+SquareSize+5)
     else
-      Rectangle(X-5, Y+6, X+ScrewSize+5, Y+ScrewSize-6);
+      Rectangle(X-5, Y+6, X+SquareSize+5, Y+SquareSize-6);
   end;
 end;
 
@@ -193,7 +193,7 @@ begin
         Exit;
     end;
 
-    TPlankScrew.Create(Master, Map, Msg.Pos, Player);
+    TPlankSquare.Create(Master, Map, Msg.Pos, Player);
     Master.Temporize;
   end;
 end;
@@ -246,17 +246,17 @@ begin
 end;
 
 {--------------------}
-{ Classe TPlankScrew }
+{ Classe TPlankSquare }
 {--------------------}
 
 {*
-  Crée une instance de TPlankScrew
+  Crée une instance de TPlankSquare
   @param AMaster     Maître FunLabyrinthe
   @param AMap        Carte
   @param APosition   Position
   @param APlayer     Joueur qui passe sur la case
 *}
-constructor TPlankScrew.Create(AMaster: TMaster; AMap: TMap;
+constructor TPlankSquare.Create(AMaster: TMaster; AMap: TMap;
   const APosition: T3DPoint; APlayer: TPlayer);
 begin
   inherited Create(AMaster, '', AMap, APosition);
@@ -267,7 +267,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankScrew.Entering(Player: TPlayer; OldDirection: TDirection;
+procedure TPlankSquare.Entering(Player: TPlayer; OldDirection: TDirection;
   KeyPressed: Boolean; const Src, Pos: T3DPoint;
   var Cancel: Boolean);
 begin
@@ -279,7 +279,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankScrew.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
+procedure TPlankSquare.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
 begin
   inherited;
   FPlayer.Attribute[attrUsePlank] := 0;
@@ -289,7 +289,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankScrew.Execute(Player: TPlayer; const Pos: T3DPoint;
+procedure TPlankSquare.Execute(Player: TPlayer; const Pos: T3DPoint;
   var GoOnMoving: Boolean);
 begin
   inherited;

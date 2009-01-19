@@ -152,7 +152,7 @@ begin
     Brush.Style := bsSolid;
     Pen.Color := clYellow;
     Pen.Style := psSolid;
-    Ellipse(X+1, Y+1, X+ScrewSize-1, Y+ScrewSize-1);
+    Ellipse(X+1, Y+1, X+SquareSize-1, Y+SquareSize-1);
   end;
 end;
 

@@ -50,8 +50,8 @@ begin
   try
     Bitmap := TBitmap.Create;
     try
-      Bitmap.Width := ScrewSize;
-      Bitmap.Height := ScrewSize;
+      Bitmap.Width := SquareSize;
+      Bitmap.Height := SquareSize;
 
       Master := Player.Master;
 
@@ -62,7 +62,7 @@ begin
           Infos := ShownInfos[Player];
           if Infos <> '' then
           begin
-            EmptyScrewRect(Bitmap.Canvas);
+            EmptySquareRect(Bitmap.Canvas);
             Draw(NoQPos, Bitmap.Canvas);
 
             with ListViewObjects.Items.Add do

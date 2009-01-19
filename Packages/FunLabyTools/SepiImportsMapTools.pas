@@ -32,14 +32,14 @@ var
 { Overloaded routines }
 {---------------------}
 
-function ChangeComp_0(Screw: TScrew; NewComp: TScrewComponent): TScrew;
+function ChangeComp_0(Square: TSquare; NewComp: TSquareComponent): TSquare;
 begin
-  Result := ChangeComp(Screw, NewComp);
+  Result := ChangeComp(Square, NewComp);
 end;
 
-function ChangeComp_1(Screw: TScrew; const NewComp: TComponentID): TScrew;
+function ChangeComp_1(Square: TSquare; const NewComp: TComponentID): TSquare;
 begin
-  Result := ChangeComp(Screw, NewComp);
+  Result := ChangeComp(Square, NewComp);
 end;
 
 {-------------}
@@ -105,9 +105,9 @@ begin
   MethodAddresses[3] := @ChangeObstacle;
   MethodAddresses[4] := @ChangeComp_0;
   MethodAddresses[5] := @ChangeComp_1;
-  MethodAddresses[6] := @FindNextScrew;
-  MethodAddresses[7] := @FindPreviousScrew;
-  MethodAddresses[8] := @FindScrewAtRandom;
+  MethodAddresses[6] := @FindNextSquare;
+  MethodAddresses[7] := @FindPreviousSquare;
+  MethodAddresses[8] := @FindSquareAtRandom;
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

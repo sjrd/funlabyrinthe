@@ -60,17 +60,17 @@ type
 
   {*
     Classe de base pour les cases en « surchargeant » d'autres
-    TOverriddenScrew est la classe de base pour les cases spéciales qui
+    TOverriddenSquare est la classe de base pour les cases spéciales qui
     surchargent momentanément une autre case. Elle fournit des propriétés et
     méthodes pour identifier la case en question et la dessiner.
     @author sjrd
     @version 5.0
   *}
-  TOverriddenScrew = class(TScrew)
+  TOverriddenSquare = class(TSquare)
   private
     FMap: TMap;             /// Carte
     FPosition: T3DPoint;    /// Position
-    FOriginalScrew: TScrew; /// Case originale
+    FOriginalSquare: TSquare; /// Case originale
   protected
     procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
       X: Integer = 0; Y: Integer = 0); override;
@@ -83,7 +83,7 @@ type
 
     property Map: TMap read FMap;
     property Position: T3DPoint read FPosition;
-    property OriginalScrew: TScrew read FOriginalScrew;
+    property OriginalSquare: TSquare read FOriginalSquare;
   end;
 
 implementation
@@ -180,11 +180,11 @@ begin
 end;
 
 {-------------------------}
-{ Classe TOverriddenScrew }
+{ Classe TOverriddenSquare }
 {-------------------------}
 
 {*
-  Crée une instance de TOverriddenScrew
+  Crée une instance de TOverriddenSquare
   @param AMaster     Maître FunLabyrinthe
   @param AID         ID de la case
   @param AMap        Carte
@@ -194,34 +194,34 @@ end;
   @param ATool       Outil
   @param AObstacle   Obstacle
 *}
-constructor TOverriddenScrew.Create(AMaster: TMaster; const AID: TComponentID;
+constructor TOverriddenSquare.Create(AMaster: TMaster; const AID: TComponentID;
   AMap: TMap; const APosition: T3DPoint; AField: TField = nil;
   AEffect: TEffect = nil; ATool: TTool = nil; AObstacle: TObstacle = nil);
 var
-  AOriginalScrew: TScrew;
+  AOriginalSquare: TSquare;
 begin
-  AOriginalScrew := AMap[APosition];
-  inherited Create(AMaster, AID, AOriginalScrew.Name,
+  AOriginalSquare := AMap[APosition];
+  inherited Create(AMaster, AID, AOriginalSquare.Name,
     AField, AEffect, ATool, AObstacle);
   FRefCount := NoRefCount;
 
-  if not AOriginalScrew.StaticDraw then
+  if not AOriginalSquare.StaticDraw then
     FStaticDraw := False;
   FMap := AMap;
   FPosition := APosition;
-  FOriginalScrew := AOriginalScrew;
+  FOriginalSquare := AOriginalSquare;
 
-  OriginalScrew.AddRef;
+  OriginalSquare.AddRef;
   Map[Position] := Self;
 end;
 
 {*
   Détruit l'instance
 *}
-destructor TOverriddenScrew.Destroy;
+destructor TOverriddenSquare.Destroy;
 begin
-  Map[Position] := OriginalScrew;
-  OriginalScrew.Release;
+  Map[Position] := OriginalSquare;
+  OriginalSquare.Release;
 
   inherited;
 end;
@@ -229,10 +229,10 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TOverriddenScrew.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
+procedure TOverriddenSquare.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
 begin
-  OriginalScrew.Draw(QPos, Canvas, X, Y);
+  OriginalSquare.Draw(QPos, Canvas, X, Y);
   inherited;
 end;
 

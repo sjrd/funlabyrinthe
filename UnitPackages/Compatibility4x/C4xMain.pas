@@ -13,7 +13,7 @@ interface
 uses
   Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
   SdDialogs, FunLabyUtils, FilesUtils, UnitFiles, Generics, FLBFields,
-  C4xCommon, C4xComponents, C4xFields, C4xScrewsTable;
+  C4xCommon, C4xComponents, C4xFields, C4xSquaresTable;
 
 resourcestring
   sAskForTipsTitle = 'Activation des indices';
@@ -240,8 +240,8 @@ begin
   // Les composants de compatibilité ne gèrent pas le comptage de références
   // On s'assure donc que les cases utilisées sont les mêmes du début à la fin
   for C := #33 to #255 do
-    if ScrewsTable[C] <> '' then
-      Master.Screw[ScrewsTable[C]].AddRef;
+    if SquaresTable[C] <> '' then
+      Master.Square[SquaresTable[C]].AddRef;
 end;
 
 {*
@@ -307,21 +307,21 @@ procedure TCompatibility4xUnit.RegisterComponents(
 
   procedure RegSingle(Component: TComponentID);
   begin
-    RegisterSingleComponentProc(Master.ScrewComponent[Component]);
+    RegisterSingleComponentProc(Master.SquareComponent[Component]);
   end;
 
   procedure RegSet(Template: TComponentID;
-    const Components: array of TScrewComponent; BaseIndex: Integer;
+    const Components: array of TSquareComponent; BaseIndex: Integer;
     const DialogTitle, DialogPrompt: string);
   begin
-    RegisterComponentSetProc(Master.ScrewComponent[Template],
+    RegisterComponentSetProc(Master.SquareComponent[Template],
       Components, BaseIndex, DialogTitle, DialogPrompt);
   end;
 
 var
   Infos: TC4xInfos;
   I: Integer;
-  Components: array of TScrewComponent;
+  Components: array of TSquareComponent;
 begin
   // Effets
 
@@ -336,13 +336,13 @@ begin
 
     for I := 0 to Infos.ActionsCount-1 do
     begin
-      if Infos.Actions[I].Kind in ActionsKindsWithoutScrew then
+      if Infos.Actions[I].Kind in ActionsKindsWithoutSquare then
         Components[I] := nil
       else
-        Components[I] := Master.Screw[Format(idActionsScrew, [I])];
+        Components[I] := Master.Square[Format(idActionsSquare, [I])];
     end;
 
-    RegSet(idActionsScrewTemplate, Components, 0,
+    RegSet(idActionsSquareTemplate, Components, 0,
       sButtonTitle, Format(sButtonPrompt, [Infos.ActionsCount-1]));
   end;
 end;

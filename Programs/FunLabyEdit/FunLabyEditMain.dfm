@@ -1029,7 +1029,7 @@ object FormMain: TFormMain
       OnExecute = ActionViewMapViewerExecute
     end
   end
-  object ScrewsImages: TImageList
+  object SquaresImages: TImageList
     Height = 30
     Width = 30
     Left = 16

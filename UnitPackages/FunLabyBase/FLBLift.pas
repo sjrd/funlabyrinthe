@@ -34,7 +34,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TEngagedLiftScrew = class(TOverriddenScrew)
+  TEngagedLiftSquare = class(TOverriddenSquare)
   private
     FIsExit: Boolean; /// Indique si c'est là que sort le joueur
   public
@@ -73,18 +73,18 @@ type
 implementation
 
 {--------------------------}
-{ Classe TEngagedLiftScrew }
+{ Classe TEngagedLiftSquare }
 {--------------------------}
 
 {*
-  Crée une instance de TEngagedLiftScrew
+  Crée une instance de TEngagedLiftSquare
   @param AMaster     Maître FunLabyrinthe
   @param AMap        Carte
   @param APosition   Position
   @param Opened      Indique si l'ascenseur apparaît ouvert
   @param AIsExit     Indique si c'est là que sort le joueur
 *}
-constructor TEngagedLiftScrew.Create(AMaster: TMaster; AMap: TMap;
+constructor TEngagedLiftSquare.Create(AMaster: TMaster; AMap: TMap;
   const APosition: T3DPoint; Opened: Boolean = False;
   AIsExit: Boolean = False);
 begin
@@ -98,18 +98,18 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftScrew.Entering(Player: TPlayer;
+procedure TEngagedLiftSquare.Entering(Player: TPlayer;
   OldDirection: TDirection; KeyPressed: Boolean; const Src, Pos: T3DPoint;
   var Cancel: Boolean);
 begin
-  OriginalScrew.Entering(Player, OldDirection, KeyPressed,
+  OriginalSquare.Entering(Player, OldDirection, KeyPressed,
     Src, Pos, Cancel);
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftScrew.Exited(Player: TPlayer;
+procedure TEngagedLiftSquare.Exited(Player: TPlayer;
   const Pos, Dest: T3DPoint);
 var
   Other: T3DPoint;
@@ -120,7 +120,7 @@ begin
   // Suppression des étages inférieurs
   Other := Pos;
   Dec(Other.Z);
-  while Player.Map[Other] is TEngagedLiftScrew do
+  while Player.Map[Other] is TEngagedLiftSquare do
   begin
     Player.Map[Other].Free;
     Dec(Other.Z);
@@ -129,7 +129,7 @@ begin
   // Suppression des étages supérieurs
   Other := Pos;
   Inc(Other.Z);
-  while Player.Map[Other] is TEngagedLiftScrew do
+  while Player.Map[Other] is TEngagedLiftSquare do
   begin
     Player.Map[Other].Free;
     Inc(Other.Z);
@@ -142,11 +142,11 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftScrew.Pushing(Player: TPlayer; OldDirection: TDirection;
+procedure TEngagedLiftSquare.Pushing(Player: TPlayer; OldDirection: TDirection;
   KeyPressed: Boolean; const Src, Pos: T3DPoint;
   var Cancel, AbortExecute: Boolean);
 begin
-  OriginalScrew.Pushing(Player, OldDirection, KeyPressed,
+  OriginalSquare.Pushing(Player, OldDirection, KeyPressed,
     Src, Pos, Cancel, AbortExecute);
   if Cancel then
     Exit;
@@ -190,7 +190,7 @@ begin
   Dec(Other.Z);
   while Player.Map[Other].Effect = Self do
   begin
-    TEngagedLiftScrew.Create(Master, Player.Map, Other);
+    TEngagedLiftSquare.Create(Master, Player.Map, Other);
     Dec(Other.Z);
   end;
   MinFloor := Other.Z+1;
@@ -200,13 +200,13 @@ begin
   Inc(Other.Z);
   while Player.Map[Other].Effect = Self do
   begin
-    TEngagedLiftScrew.Create(Master, Player.Map, Other);
+    TEngagedLiftSquare.Create(Master, Player.Map, Other);
     Inc(Other.Z);
   end;
   MaxFloor := Other.Z-1;
 
   // Affichage de l'ascenseur ouvert pendant un temps
-  with TEngagedLiftScrew.Create(Master, Player.Map, Pos, True) do
+  with TEngagedLiftSquare.Create(Master, Player.Map, Pos, True) do
   try
     Master.Temporize;
   finally
@@ -214,7 +214,7 @@ begin
   end;
 
   // Fermer l'ascenseur et cacher le joueur complètement
-  TEngagedLiftScrew.Create(Master, Player.Map, Pos);
+  TEngagedLiftSquare.Create(Master, Player.Map, Pos);
   Player.Hide;
 
   // Demande au joueur de l'étage auquel il souhaite aller
@@ -227,7 +227,7 @@ begin
   // Après un temps, ouvrir l'ascenseur et remontrer le joueur
   Master.Temporize;
   Player.Map[Other].Free;
-  TEngagedLiftScrew.Create(Master, Player.Map, Other, True, True);
+  TEngagedLiftSquare.Create(Master, Player.Map, Other, True, True);
   Player.Show;
 end;
 

@@ -221,8 +221,8 @@ begin
     ImgHeight := 270;
   end else
   begin
-    ImgWidth := View.Width * ScrewSize;
-    ImgHeight := View.Height * ScrewSize;
+    ImgWidth := View.Width * SquareSize;
+    ImgHeight := View.Height * SquareSize;
   end;
 
   ClientWidth := ImgWidth;

@@ -23,14 +23,14 @@ type
   private
     FMinIndex: Integer;                    /// Index minimal
     FMaxIndex: Integer;                    /// Index maximal
-    FComponents: array of TScrewComponent; /// Ensemble des composants
+    FComponents: array of TSquareComponent; /// Ensemble des composants
     FDialogTitle: string;                  /// Titre de la boîte de dialogue
     FDialogPrompt: string;                 /// Invite de la boîte de dialogue
   public
-    constructor Create(const AComponents: array of TScrewComponent;
+    constructor Create(const AComponents: array of TSquareComponent;
       BaseIndex: Integer; const ADialogTitle, ADialogPrompt: string);
 
-    function ChooseComponent(var LastIndex: Integer): TScrewComponent;
+    function ChooseComponent(var LastIndex: Integer): TSquareComponent;
   end;
 
   {*
@@ -39,9 +39,9 @@ type
     @version 5.0
   *}
   TFrameMapEditor = class(TFrame)
-    SplitterScrews: TSplitter;
+    SplitterSquares: TSplitter;
     SplitterPlayers: TSplitter;
-    ScrewsContainer: TCategoryButtons;
+    SquaresContainer: TCategoryButtons;
     PlayersContainer: TCategoryButtons;
     PanelCenter: TPanel;
     MapTabSet: TTabSet;
@@ -59,13 +59,13 @@ type
     StaticObstacle: TStaticText;
     ScrollBoxMap: TScrollBox;
     PaintBoxMap: TPaintBox;
-    ScrewsImages: TImageList;
+    SquaresImages: TImageList;
     EditFloor: TSpinEdit;
     procedure MapTabSetChange(Sender: TObject; NewTab: Integer;
       var AllowChange: Boolean);
     procedure PaintBoxMapPaint(Sender: TObject);
     procedure EditFloorChange(Sender: TObject);
-    procedure ScrewsContainerButtonClicked(Sender: TObject;
+    procedure SquaresContainerButtonClicked(Sender: TObject;
       const Button: TButtonItem);
     procedure PlayersContainerButtonClicked(Sender: TObject;
       const Button: TButtonItem);
@@ -80,7 +80,7 @@ type
     MasterFile: TMasterFile; /// Fichier maître
     Master: TMaster;         /// Maître FunLabyrinthe
 
-    ScrewBmp: TScrewBitmap; /// Bitmap de case à tout faire
+    SquareBmp: TSquareBitmap; /// Bitmap de case à tout faire
     LastCompIndex: Integer; /// Dernier index de composant choisi
 
     CurrentMap: TMap;       /// Carte courante
@@ -93,10 +93,10 @@ type
 
     procedure SetCurrentFloor(Value: Integer);
 
-    function AddScrewButton(Template: TVisualComponent): TButtonItem;
-    procedure RegisterSingleComponent(Component: TScrewComponent); stdcall;
-    procedure RegisterComponentSet(Template: TScrewComponent;
-      const Components: array of TScrewComponent; BaseIndex: Integer;
+    function AddSquareButton(Template: TVisualComponent): TButtonItem;
+    procedure RegisterSingleComponent(Component: TSquareComponent); stdcall;
+    procedure RegisterComponentSet(Template: TSquareComponent;
+      const Components: array of TSquareComponent; BaseIndex: Integer;
       const DialogTitle, DialogPrompt: string); stdcall;
 
     procedure LoadPlayers;
@@ -141,7 +141,7 @@ const
   @param ADialogTitle    Titre de la boîte de dialogue
   @param ADialogPrompt   Invite de la boîte de dialogue
 *}
-constructor TComponentSet.Create(const AComponents: array of TScrewComponent;
+constructor TComponentSet.Create(const AComponents: array of TSquareComponent;
   BaseIndex: Integer; const ADialogTitle, ADialogPrompt: string);
 var
   Len, I: Integer;
@@ -156,8 +156,8 @@ begin
   for I := 0 to Len-1 do
   begin
     FComponents[I] := AComponents[Low(AComponents) + I];
-    if FComponents[I] is TScrew then
-      TScrew(FComponents[I]).AddRef;
+    if FComponents[I] is TSquare then
+      TSquare(FComponents[I]).AddRef;
   end;
 
   FDialogTitle := ADialogTitle;
@@ -170,7 +170,7 @@ end;
   @return Référence au composant choisi
 *}
 function TComponentSet.ChooseComponent(
-  var LastIndex: Integer): TScrewComponent;
+  var LastIndex: Integer): TSquareComponent;
 begin
   LastIndex := QueryNumber(FDialogTitle, FDialogPrompt,
     MinMax(LastIndex, FMinIndex, FMaxIndex), FMinIndex, FMaxIndex);
@@ -188,7 +188,7 @@ constructor TFrameMapEditor.Create(AOwner: TComponent);
 begin
   inherited;
 
-  ScrewBmp := TScrewBitmap.Create;
+  SquareBmp := TSquareBitmap.Create;
 
   LastCompIndex := 0;
   CurrentMap := nil;
@@ -201,7 +201,7 @@ end;
 *}
 destructor TFrameMapEditor.Destroy;
 begin
-  ScrewBmp.Free;
+  SquareBmp.Free;
 
   inherited;
 end;
@@ -221,30 +221,30 @@ end;
   @param Template   Modèle de case, pour l'image et le hint du bouton
   @return Le bouton nouvellement créé
 *}
-function TFrameMapEditor.AddScrewButton(
+function TFrameMapEditor.AddSquareButton(
   Template: TVisualComponent): TButtonItem;
 var
   ImageIndex: Integer;
   Category: TButtonCategory;
 begin
   // Ajout de l'image du composant dans la liste d'images
-  ScrewBmp.EmptyScrew;
-  Template.Draw(NoQPos, ScrewBmp.Canvas);
-  ImageIndex := ScrewsImages.AddMasked(ScrewBmp, clTransparent);
+  SquareBmp.EmptySquare;
+  Template.Draw(NoQPos, SquareBmp.Canvas);
+  ImageIndex := SquaresImages.AddMasked(SquareBmp, clTransparent);
 
   // Choix de la catégorie
   if Template is TField then
-    Category := ScrewsContainer.Categories[0]
+    Category := SquaresContainer.Categories[0]
   else if Template is TEffect then
-    Category := ScrewsContainer.Categories[1]
+    Category := SquaresContainer.Categories[1]
   else if Template is TTool then
-    Category := ScrewsContainer.Categories[2]
+    Category := SquaresContainer.Categories[2]
   else if Template is TObstacle then
-    Category := ScrewsContainer.Categories[3]
-  else if Template is TScrew then
-    Category := ScrewsContainer.Categories[4]
+    Category := SquaresContainer.Categories[3]
+  else if Template is TSquare then
+    Category := SquaresContainer.Categories[4]
   else
-    Category := ScrewsContainer.Categories[5];
+    Category := SquaresContainer.Categories[5];
 
   // Ajout du bouton
   Result := Category.Items.Add;
@@ -256,14 +256,14 @@ end;
   Enregistre un unique composant
   @param Component   Le composant à enregistrer
 *}
-procedure TFrameMapEditor.RegisterSingleComponent(Component: TScrewComponent);
+procedure TFrameMapEditor.RegisterSingleComponent(Component: TSquareComponent);
 var
   Button: TButtonItem;
 begin
-  Button := AddScrewButton(Component);
+  Button := AddSquareButton(Component);
   Button.Data := Component;
-  if Component is TScrew then
-    TScrew(Component).AddRef;
+  if Component is TSquare then
+    TSquare(Component).AddRef;
 end;
 
 {*
@@ -273,13 +273,13 @@ end;
   @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
   @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
 *}
-procedure TFrameMapEditor.RegisterComponentSet(Template: TScrewComponent;
-  const Components: array of TScrewComponent; BaseIndex: Integer;
+procedure TFrameMapEditor.RegisterComponentSet(Template: TSquareComponent;
+  const Components: array of TSquareComponent; BaseIndex: Integer;
   const DialogTitle, DialogPrompt: string);
 var
   Button: TButtonItem;
 begin
-  Button := AddScrewButton(Template);
+  Button := AddSquareButton(Template);
   Button.Data := TComponentSet.Create(Components,
     BaseIndex, DialogTitle, DialogPrompt);
 end;
@@ -296,7 +296,7 @@ begin
   begin
     Player := Master.Players[I];
 
-    AddScrewButton(Player).Data := Player;
+    AddSquareButton(Player).Data := Player;
 
     with PlayersContainer.Categories.Add do
     begin
@@ -357,8 +357,8 @@ begin
       Dec(TabIndex);
   MapTabSet.TabIndex := TabIndex;
 
-  X := Player.Position.X * ScrewSize + ScrewSize div 2;
-  Y := Player.Position.Y * ScrewSize + ScrewSize div 2;
+  X := Player.Position.X * SquareSize + SquareSize div 2;
+  Y := Player.Position.Y * SquareSize + SquareSize div 2;
   CurrentFloor := Player.Position.Z;
 
   with ScrollBoxMap do
@@ -412,7 +412,7 @@ begin
   PlayersContainer.Categories.Clear;
 
   // Vider les composants d'édition
-  with ScrewsContainer do
+  with SquaresContainer do
   begin
     for I := 0 to Categories.Count-1 do
     begin
@@ -427,7 +427,7 @@ begin
       end;
     end;
   end;
-  ScrewsImages.Clear;
+  SquaresImages.Clear;
 
   // Autres variables
   Component := nil;
@@ -518,8 +518,8 @@ begin
     if CurrentFloor >= CurrentMap.Dimensions.Z then
       CurrentFloor := CurrentMap.Dimensions.Z-1;
 
-    PaintBoxMap.Width  := (CurrentMap.Dimensions.X + 2*MinViewSize) * ScrewSize;
-    PaintBoxMap.Height := (CurrentMap.Dimensions.Y + 2*MinViewSize) * ScrewSize;
+    PaintBoxMap.Width  := (CurrentMap.Dimensions.X + 2*MinViewSize) * SquareSize;
+    PaintBoxMap.Height := (CurrentMap.Dimensions.Y + 2*MinViewSize) * SquareSize;
   end;
   PaintBoxMap.Invalidate;
 end;
@@ -539,10 +539,10 @@ begin
     Exit;
 
   // Calcul des coordonnées à afficher
-  Left := ScrollBoxMap.HorzScrollBar.Position div ScrewSize - MinViewSize;
-  Top  := ScrollBoxMap.VertScrollBar.Position div ScrewSize - MinViewSize;
-  Right  := Left + ScrollBoxMap.ClientWidth  div ScrewSize + 1;
-  Bottom := Top  + ScrollBoxMap.ClientHeight div ScrewSize + 1;
+  Left := ScrollBoxMap.HorzScrollBar.Position div SquareSize - MinViewSize;
+  Top  := ScrollBoxMap.VertScrollBar.Position div SquareSize - MinViewSize;
+  Right  := Left + ScrollBoxMap.ClientWidth  div SquareSize + 1;
+  Bottom := Top  + ScrollBoxMap.ClientHeight div SquareSize + 1;
 
   LeftZone := Left div CurrentMap.ZoneWidth;
   TopZone  := Top  div CurrentMap.ZoneHeight;
@@ -557,7 +557,7 @@ begin
     begin
       QPos.Position := Point3D(X, Y, CurrentFloor);
       CurrentMap[QPos.Position].Draw(QPos, PaintBoxMap.Canvas,
-        (MinViewSize+X) * ScrewSize, (MinViewSize+Y) * ScrewSize);
+        (MinViewSize+X) * SquareSize, (MinViewSize+Y) * SquareSize);
     end;
   end;
 
@@ -568,8 +568,8 @@ begin
     begin
       if (Map = CurrentMap) and (Position.Z = CurrentFloor) then
       begin
-        DrawInPlace(PaintBoxMap.Canvas, (MinViewSize+Position.X) * ScrewSize,
-          (MinViewSize+Position.Y) * ScrewSize);
+        DrawInPlace(PaintBoxMap.Canvas, (MinViewSize+Position.X) * SquareSize,
+          (MinViewSize+Position.Y) * SquareSize);
       end;
     end;
   end;
@@ -583,16 +583,16 @@ begin
 
     for X := LeftZone to RightZone do
     begin
-      MoveTo((CurrentMap.ZoneWidth * X + 1) * ScrewSize, Top * ScrewSize);
-      LineTo((CurrentMap.ZoneWidth * X + 1) * ScrewSize,
-        (Bottom+2) * ScrewSize);
+      MoveTo((CurrentMap.ZoneWidth * X + 1) * SquareSize, Top * SquareSize);
+      LineTo((CurrentMap.ZoneWidth * X + 1) * SquareSize,
+        (Bottom+2) * SquareSize);
     end;
 
     for Y := TopZone to BottomZone do
     begin
-      MoveTo(Left * ScrewSize, (CurrentMap.ZoneHeight * Y + 1) * ScrewSize);
-      LineTo((Right+2) * ScrewSize,
-        (CurrentMap.ZoneHeight * Y + 1) * ScrewSize);
+      MoveTo(Left * SquareSize, (CurrentMap.ZoneHeight * Y + 1) * SquareSize);
+      LineTo((Right+2) * SquareSize,
+        (CurrentMap.ZoneHeight * Y + 1) * SquareSize);
     end;
 
     Pen.Width := 1;
@@ -614,13 +614,13 @@ end;
   @param Sender   Objet qui a déclenché l'événement
   @param Button   Référence au bouton cliqué
 *}
-procedure TFrameMapEditor.ScrewsContainerButtonClicked(Sender: TObject;
+procedure TFrameMapEditor.SquaresContainerButtonClicked(Sender: TObject;
   const Button: TButtonItem);
 begin
   if TObject(Button.Data) is TComponentSet then
     Component := TComponentSet(Button.Data).ChooseComponent(LastCompIndex)
   else
-    Component := TScrewComponent(Button.Data);
+    Component := TSquareComponent(Button.Data);
 end;
 
 {*
@@ -670,7 +670,7 @@ begin
   if (Button <> mbLeft) or (CurrentMap = nil) or (Component = nil) then
     Exit;
 
-  Position := Point3D(X div ScrewSize - 1, Y div ScrewSize - 1, CurrentFloor);
+  Position := Point3D(X div SquareSize - 1, Y div SquareSize - 1, CurrentFloor);
 
   if Component is TPlayer then
   begin
@@ -702,13 +702,13 @@ begin
 
     if CurrentMap.InMap(Position) then
     begin
-      CurrentMap[Position] := Master.Screw[NewID];
+      CurrentMap[Position] := Master.Square[NewID];
     end else
     begin
       if ShowDialog(sReplaceOutsideTitle, sReplaceOutside,
         dtConfirmation, dbOKCancel) <> drOK then
         Exit;
-      CurrentMap.Outside[CurrentFloor] := Master.Screw[NewID];
+      CurrentMap.Outside[CurrentFloor] := Master.Square[NewID];
     end;
   end;
 
@@ -731,7 +731,7 @@ begin
   if CurrentMap = nil then
     Exit;
 
-  Position := Point3D(X div ScrewSize - 1, Y div ScrewSize - 1, CurrentFloor);
+  Position := Point3D(X div SquareSize - 1, Y div SquareSize - 1, CurrentFloor);
   StaticPosition.Caption := Point3DToString(Position, ', ');
 
   with CurrentMap[Position] do

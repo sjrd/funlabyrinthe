@@ -36,7 +36,7 @@ type
     class procedure InitMethodAddresses;
   end;
 
-  TSepiImportsTScrewBitmap = class(TScrewBitmap)
+  TSepiImportsTSquareBitmap = class(TSquareBitmap)
   private
     class procedure InitMethodAddresses;
   end;
@@ -67,7 +67,7 @@ type
     class procedure InitMethodAddresses;
   end;
 
-  TSepiImportsTScrew = class(TScrew)
+  TSepiImportsTSquare = class(TSquare)
   private
     class procedure InitMethodAddresses;
   end;
@@ -75,13 +75,13 @@ type
   TSepiImportsTMap = class(TMap)
   private
     procedure SetMaxViewSize(Value: Integer);
-    function GetMap(const Position: T3DPoint): TScrew;
-    procedure SetMap(const Position: T3DPoint; Value: TScrew);
-    function GetOutside(Floor: Integer): TScrew;
-    procedure SetOutside(Floor: Integer; Value: TScrew);
+    function GetMap(const Position: T3DPoint): TSquare;
+    procedure SetMap(const Position: T3DPoint; Value: TSquare);
+    function GetOutside(Floor: Integer): TSquare;
+    procedure SetOutside(Floor: Integer; Value: TSquare);
     function GetLinearMapCount: Integer;
-    function GetLinearMap(Index: Integer): TScrew;
-    procedure SetLinearMap(Index: Integer; Value: TScrew);
+    function GetLinearMap(Index: Integer): TSquare;
+    procedure SetLinearMap(Index: Integer; Value: TSquare);
     class procedure InitMethodAddresses;
   end;
 
@@ -98,14 +98,14 @@ type
   TSepiImportsTMaster = class(TMaster)
   private
     function GetComponent(const ID: TComponentID): TFunLabyComponent;
-    function GetScrewComponent(const ID: TComponentID): TScrewComponent;
+    function GetSquareComponent(const ID: TComponentID): TSquareComponent;
     function GetPlugin(const ID: TComponentID): TPlugin;
     function GetObjectDef(const ID: TComponentID): TObjectDef;
     function GetField(const ID: TComponentID): TField;
     function GetEffect(const ID: TComponentID): TEffect;
     function GetTool(const ID: TComponentID): TTool;
     function GetObstacle(const ID: TComponentID): TObstacle;
-    function GetScrew(const ID: TComponentID): TScrew;
+    function GetSquare(const ID: TComponentID): TSquare;
     function GetMap(const ID: TComponentID): TMap;
     function GetPlayer(const ID: TComponentID): TPlayer;
     function GetPluginCount: Integer;
@@ -120,8 +120,8 @@ type
     function GetTools(Index: Integer): TTool;
     function GetObstacleCount: Integer;
     function GetObstacles(Index: Integer): TObstacle;
-    function GetScrewCount: Integer;
-    function GetScrews(Index: Integer): TScrew;
+    function GetSquareCount: Integer;
+    function GetSquares(Index: Integer): TSquare;
     function GetMapCount: Integer;
     function GetMaps(Index: Integer): TMap;
     function GetPlayerCount: Integer;
@@ -153,14 +153,14 @@ begin
   MethodAddresses[4] := @TSepiImportsTImagesMaster.Draw_1;
 end;
 
-{---------------------}
-{ TScrewBitmap import }
-{---------------------}
+{----------------------}
+{ TSquareBitmap import }
+{----------------------}
 
-class procedure TSepiImportsTScrewBitmap.InitMethodAddresses;
+class procedure TSepiImportsTSquareBitmap.InitMethodAddresses;
 begin
-  MethodAddresses[5] := @TSepiImportsTScrewBitmap.EmptyScrew;
-  MethodAddresses[6] := @TSepiImportsTScrewBitmap.DrawScrew;
+  MethodAddresses[5] := @TSepiImportsTSquareBitmap.EmptySquare;
+  MethodAddresses[6] := @TSepiImportsTSquareBitmap.DrawSquare;
 end;
 
 {-----------------}
@@ -216,13 +216,13 @@ begin
   MethodAddresses[14] := @TSepiImportsTField.Create;
 end;
 
-{---------------}
-{ TScrew import }
-{---------------}
+{----------------}
+{ TSquare import }
+{----------------}
 
-class procedure TSepiImportsTScrew.InitMethodAddresses;
+class procedure TSepiImportsTSquare.InitMethodAddresses;
 begin
-  MethodAddresses[15] := @TSepiImportsTScrew.Create;
+  MethodAddresses[15] := @TSepiImportsTSquare.Create;
 end;
 
 {-------------}
@@ -234,22 +234,22 @@ begin
   MaxViewSize := Value;
 end;
 
-function TSepiImportsTMap.GetMap(const Position: T3DPoint): TScrew;
+function TSepiImportsTMap.GetMap(const Position: T3DPoint): TSquare;
 begin
   Result := Map[Position];
 end;
 
-procedure TSepiImportsTMap.SetMap(const Position: T3DPoint; Value: TScrew);
+procedure TSepiImportsTMap.SetMap(const Position: T3DPoint; Value: TSquare);
 begin
   Map[Position] := Value;
 end;
 
-function TSepiImportsTMap.GetOutside(Floor: Integer): TScrew;
+function TSepiImportsTMap.GetOutside(Floor: Integer): TSquare;
 begin
   Result := Outside[Floor];
 end;
 
-procedure TSepiImportsTMap.SetOutside(Floor: Integer; Value: TScrew);
+procedure TSepiImportsTMap.SetOutside(Floor: Integer; Value: TSquare);
 begin
   Outside[Floor] := Value;
 end;
@@ -259,12 +259,12 @@ begin
   Result := LinearMapCount;
 end;
 
-function TSepiImportsTMap.GetLinearMap(Index: Integer): TScrew;
+function TSepiImportsTMap.GetLinearMap(Index: Integer): TSquare;
 begin
   Result := LinearMap[Index];
 end;
 
-procedure TSepiImportsTMap.SetLinearMap(Index: Integer; Value: TScrew);
+procedure TSepiImportsTMap.SetLinearMap(Index: Integer; Value: TSquare);
 begin
   LinearMap[Index] := Value;
 end;
@@ -349,9 +349,9 @@ begin
   Result := Component[ID];
 end;
 
-function TSepiImportsTMaster.GetScrewComponent(const ID: TComponentID): TScrewComponent;
+function TSepiImportsTMaster.GetSquareComponent(const ID: TComponentID): TSquareComponent;
 begin
-  Result := ScrewComponent[ID];
+  Result := SquareComponent[ID];
 end;
 
 function TSepiImportsTMaster.GetPlugin(const ID: TComponentID): TPlugin;
@@ -384,9 +384,9 @@ begin
   Result := Obstacle[ID];
 end;
 
-function TSepiImportsTMaster.GetScrew(const ID: TComponentID): TScrew;
+function TSepiImportsTMaster.GetSquare(const ID: TComponentID): TSquare;
 begin
-  Result := Screw[ID];
+  Result := Square[ID];
 end;
 
 function TSepiImportsTMaster.GetMap(const ID: TComponentID): TMap;
@@ -459,14 +459,14 @@ begin
   Result := Obstacles[Index];
 end;
 
-function TSepiImportsTMaster.GetScrewCount: Integer;
+function TSepiImportsTMaster.GetSquareCount: Integer;
 begin
-  Result := ScrewCount;
+  Result := SquareCount;
 end;
 
-function TSepiImportsTMaster.GetScrews(Index: Integer): TScrew;
+function TSepiImportsTMaster.GetSquares(Index: Integer): TSquare;
 begin
-  Result := Screws[Index];
+  Result := Squares[Index];
 end;
 
 function TSepiImportsTMaster.GetMapCount: Integer;
@@ -497,14 +497,14 @@ end;
 class procedure TSepiImportsTMaster.InitMethodAddresses;
 begin
   MethodAddresses[50] := @TSepiImportsTMaster.GetComponent;
-  MethodAddresses[51] := @TSepiImportsTMaster.GetScrewComponent;
+  MethodAddresses[51] := @TSepiImportsTMaster.GetSquareComponent;
   MethodAddresses[52] := @TSepiImportsTMaster.GetPlugin;
   MethodAddresses[53] := @TSepiImportsTMaster.GetObjectDef;
   MethodAddresses[54] := @TSepiImportsTMaster.GetField;
   MethodAddresses[55] := @TSepiImportsTMaster.GetEffect;
   MethodAddresses[56] := @TSepiImportsTMaster.GetTool;
   MethodAddresses[57] := @TSepiImportsTMaster.GetObstacle;
-  MethodAddresses[58] := @TSepiImportsTMaster.GetScrew;
+  MethodAddresses[58] := @TSepiImportsTMaster.GetSquare;
   MethodAddresses[59] := @TSepiImportsTMaster.GetMap;
   MethodAddresses[60] := @TSepiImportsTMaster.GetPlayer;
   MethodAddresses[61] := @TSepiImportsTMaster.GetPluginCount;
@@ -519,8 +519,8 @@ begin
   MethodAddresses[70] := @TSepiImportsTMaster.GetTools;
   MethodAddresses[71] := @TSepiImportsTMaster.GetObstacleCount;
   MethodAddresses[72] := @TSepiImportsTMaster.GetObstacles;
-  MethodAddresses[73] := @TSepiImportsTMaster.GetScrewCount;
-  MethodAddresses[74] := @TSepiImportsTMaster.GetScrews;
+  MethodAddresses[73] := @TSepiImportsTMaster.GetSquareCount;
+  MethodAddresses[74] := @TSepiImportsTMaster.GetSquares;
   MethodAddresses[75] := @TSepiImportsTMaster.GetMapCount;
   MethodAddresses[76] := @TSepiImportsTMaster.GetMaps;
   MethodAddresses[77] := @TSepiImportsTMaster.GetPlayerCount;
@@ -529,7 +529,7 @@ begin
   MethodAddresses[80] := @TSepiImportsTMaster.Create;
   MethodAddresses[81] := @TSepiImportsTMaster.Temporize;
   MethodAddresses[82] := @TSepiImportsTMaster.UpdateTickCount;
-  MethodAddresses[83] := @TSepiImportsTMaster.ScrewByComps;
+  MethodAddresses[83] := @TSepiImportsTMaster.SquareByComps;
 end;
 
 {---------------------}
@@ -596,18 +596,18 @@ begin
   TypeInfoArray[4] := TypeInfo(EComponentNotFound);
   TypeInfoArray[5] := TypeInfo(EUnsupportedCommand);
   TypeInfoArray[6] := TypeInfo(TImagesMaster);
-  TypeInfoArray[7] := TypeInfo(TScrewBitmap);
+  TypeInfoArray[7] := TypeInfo(TSquareBitmap);
   TypeInfoArray[8] := TypeInfo(TPainter);
   TypeInfoArray[9] := TypeInfo(TFunLabyComponent);
   TypeInfoArray[10] := TypeInfo(TVisualComponent);
   TypeInfoArray[11] := TypeInfo(TPlugin);
   TypeInfoArray[12] := TypeInfo(TObjectDef);
-  TypeInfoArray[13] := TypeInfo(TScrewComponent);
+  TypeInfoArray[13] := TypeInfo(TSquareComponent);
   TypeInfoArray[14] := TypeInfo(TField);
   TypeInfoArray[15] := TypeInfo(TEffect);
   TypeInfoArray[16] := TypeInfo(TTool);
   TypeInfoArray[17] := TypeInfo(TObstacle);
-  TypeInfoArray[18] := TypeInfo(TScrew);
+  TypeInfoArray[18] := TypeInfo(TSquare);
   TypeInfoArray[19] := TypeInfo(TMap);
   TypeInfoArray[20] := TypeInfo(TPlayer);
   TypeInfoArray[21] := TypeInfo(TMaster);
@@ -616,22 +616,22 @@ end;
 procedure InitMethodAddresses;
 begin
   TSepiImportsTImagesMaster.InitMethodAddresses;
-  TSepiImportsTScrewBitmap.InitMethodAddresses;
+  TSepiImportsTSquareBitmap.InitMethodAddresses;
   TSepiImportsTPainter.InitMethodAddresses;
   TSepiImportsTFunLabyComponent.InitMethodAddresses;
   TSepiImportsTVisualComponent.InitMethodAddresses;
   TSepiImportsTPlugin.InitMethodAddresses;
   TSepiImportsTField.InitMethodAddresses;
-  TSepiImportsTScrew.InitMethodAddresses;
+  TSepiImportsTSquare.InitMethodAddresses;
   TSepiImportsTMap.InitMethodAddresses;
   TSepiImportsTPlayer.InitMethodAddresses;
   TSepiImportsTMaster.InitMethodAddresses;
   MethodAddresses[84] := @CheckValidLaunch;
   MethodAddresses[85] := @ShowFunLabyAbout;
   MethodAddresses[86] := @PointBehind;
-  MethodAddresses[87] := @ScrewRect;
+  MethodAddresses[87] := @SquareRect;
   MethodAddresses[88] := @EmptyRect;
-  MethodAddresses[89] := @EmptyScrewRect;
+  MethodAddresses[89] := @EmptySquareRect;
   MethodAddresses[90] := @IsNoQPos;
 end;
 

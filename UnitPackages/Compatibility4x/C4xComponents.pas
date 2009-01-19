@@ -1,6 +1,6 @@
 {*
   Décrit les classes de composants de compatibilité 4.x
-  L'unité C4xScrews regroupe les différentes classes de composants de
+  L'unité C4xSquares regroupe les différentes classes de composants de
   compatibilité 4.x de FunLabyrinthe.
   @author sjrd
   @version 5.0
@@ -35,9 +35,9 @@ const {don't localize}
   idButtonTemplate = 'ButtonTemplate';     /// ID du bouton modèle
 
   /// ID de la case à actions
-  idActionsScrew = idGrass+'-ActionsEffect%0:d--ActionsObstacle%0:d';
+  idActionsSquare = idGrass+'-ActionsEffect%0:d--ActionsObstacle%0:d';
   /// ID de la case à actions modèle
-  idActionsScrewTemplate = idGrass+'-'+idButtonTemplate+'--';
+  idActionsSquareTemplate = idGrass+'-'+idButtonTemplate+'--';
 
   idActions = 'Actions%d';                /// ID d'un ensemble d'actions
   idZoneActions = 'ZoneActions:%d:%d:%d'; /// ID d'un ensemble d'actions de zone
@@ -239,7 +239,7 @@ type
 
 const {don't localize}
   /// Ensemble des types d'actions qui ne sont pas associées à une case
-  ActionsKindsWithoutScrew: set of TActionsKind =
+  ActionsKindsWithoutSquare: set of TActionsKind =
     [akGameStarted, akZone];
 
   /// Ensemble des types d'actions personnalisés
@@ -334,7 +334,7 @@ begin
   begin
     Pos := QPos.Position;
     Other := Pos;
-    FindNextScrew(QPos.Map, Other, Self);
+    FindNextSquare(QPos.Map, Other, Self);
 
     if (Other.Z < Pos.Z) or ((Other.Z = Pos.Z) and
       (Other.Y < Pos.Y) or ((Other.Y = Pos.Y) and (Other.X < Pos.X))) then
@@ -360,7 +360,7 @@ begin
   inherited;
 
   Other := Pos;
-  FindNextScrew(Player.Map, Other, Self);
+  FindNextSquare(Player.Map, Other, Self);
 
   if not Same3DPoint(Pos, Other) then
   begin
@@ -513,9 +513,9 @@ begin
 
       // Recherche de la case de destination
       case Actions.Kind of
-        akTransporterNext     : FindNextScrew    (Player.Map, Other, Self);
-        akTransporterPrevious : FindPreviousScrew(Player.Map, Other, Self);
-        akTransporterRandom   : FindScrewAtRandom(Player.Map, Other, Self);
+        akTransporterNext     : FindNextSquare    (Player.Map, Other, Self);
+        akTransporterPrevious : FindPreviousSquare(Player.Map, Other, Self);
+        akTransporterRandom   : FindSquareAtRandom(Player.Map, Other, Self);
       end;
 
       // Si l'on a trouvé une autre case, on déplace le joueur
@@ -617,7 +617,7 @@ begin
     FInactive := '';
   end;
 
-  if Kind in ActionsKindsWithoutScrew then
+  if Kind in ActionsKindsWithoutSquare then
   begin
     FObjectDef := nil;
     FEffect := nil;

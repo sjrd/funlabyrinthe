@@ -94,7 +94,7 @@ begin
       if (DestObstacle = SrcObstacle) and
         (Master.ObjectDef[idPlanks].Count[Player] > 0) then
       begin
-        TPlankScrew.Create(Master, Map, Pos, Player);
+        TPlankSquare.Create(Master, Map, Pos, Player);
         Master.Temporize;
         Exit;
       end;
@@ -146,7 +146,7 @@ begin
       if (DestObstacle = SrcObstacle) and
         (Master.ObjectDef[idPlanks].Count[Player] > 0) then
       begin
-        TPlankScrew.Create(Master, Map, Pos, Player);
+        TPlankSquare.Create(Master, Map, Pos, Player);
         Master.Temporize;
         Exit;
       end;
