@@ -1,7 +1,7 @@
 object FormMain: TFormMain
   Left = 0
   Top = 0
-  Width = 689
+  Width = 736
   Height = 542
   Caption = #201'diteur FunLabyrinthe'
   Color = clBtnFace
@@ -31,7 +31,7 @@ object FormMain: TFormMain
   object ToolBarFile: TActionToolBar
     Left = 0
     Top = 24
-    Width = 681
+    Width = 728
     Height = 26
     ActionManager = ActionManager
     Caption = 'File'
@@ -43,7 +43,7 @@ object FormMain: TFormMain
   object MainMenuBar: TActionMainMenuBar
     Left = 0
     Top = 0
-    Width = 681
+    Width = 728
     Height = 24
     UseSystemFont = False
     ActionManager = ActionManager
@@ -61,7 +61,7 @@ object FormMain: TFormMain
   object StatusBar: TStatusBar
     Left = 0
     Top = 489
-    Width = 681
+    Width = 728
     Height = 19
     Panels = <
       item
@@ -71,7 +71,7 @@ object FormMain: TFormMain
   object PanelEditors: TPanel
     Left = 0
     Top = 50
-    Width = 681
+    Width = 728
     Height = 439
     Align = alClient
     BevelOuter = bvNone
@@ -79,7 +79,7 @@ object FormMain: TFormMain
     object TabBarEditors: TJvTabBar
       Left = 0
       Top = 0
-      Width = 681
+      Width = 728
       Tabs = <
         item
           Caption = 'Cartes et joueurs'

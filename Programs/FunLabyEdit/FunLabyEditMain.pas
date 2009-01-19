@@ -372,6 +372,7 @@ begin
     if not Editor.CanClose then
       Exit;
     Editor.Release;
+    Pointer(Editor) := nil;
     Tab.Data := nil;
   end;
 
@@ -1186,10 +1187,17 @@ end;
 *}
 procedure TFormMain.TabBarEditorsTabClosed(Sender: TObject;
   Item: TJvTabBarItem);
+var
+  Editor: ISourceEditor50;
 begin
   if IsEditor(Item) then
   begin
-    GetTabEditor(Item).Release;
+    Editor := GetTabEditor(Item);
+    if Editor <> nil then
+    begin
+      Editor.Release;
+      Pointer(Editor) := nil;
+    end;
     Item.Data := nil;
   end;
 
