@@ -43,7 +43,7 @@ fr.CustomInstall=Installation personnalisée (recommandé pour les utilisateurs av
 
 fr.CompPrograms=Fichiers programme
 fr.CompRuntime=Fichiers de runtime de FunLabyrinthe
-fr.CompLabyrinthe=Labyrinthe, le programme de jeu
+fr.CompFunLaby=FunLaby, le programme de jeu
 fr.CompGeneLaby=GeneLaby, un générateur de labyrinthes
 fr.CompFunLabyEdit=FunLabyEdit, l'éditeur de labyrinthes
 
@@ -56,7 +56,7 @@ fr.CompAppData=Fichiers de labyrinthe, cartes, sons, graphismes, etc.
 
 ; Texte des raccourcis
 
-fr.IconLabyrinthe=Joueur à FunLabyrinthe
+fr.IconFunLaby=Jouer à FunLabyrinthe
 fr.IconGeneLaby=Générateur de labyrinthes
 fr.IconFunLabyEdit=Éditeur de labyrinthes
 
@@ -134,7 +134,7 @@ Name: "custom"  ; Description: {cm:CustomInstall}  ; Flags: iscustom
 [Components]
 Name: "programs"            ; Description: {cm:CompPrograms}   ; Types: full playonly custom
 Name: "programs\runtime"    ; Description: {cm:CompRuntime}    ; Types: full playonly custom; Flags: fixed
-Name: "programs\labyrinthe" ; Description: {cm:CompLabyrinthe} ; Types: full playonly custom; Flags: fixed
+Name: "programs\funlaby"    ; Description: {cm:CompFunLaby}    ; Types: full playonly custom; Flags: fixed
 Name: "programs\genelaby"   ; Description: {cm:CompGeneLaby}   ; Types: full playonly custom
 Name: "programs\funlabyedit"; Description: {cm:CompFunLabyEdit}; Types: full custom
 
@@ -147,7 +147,7 @@ Name: "appdata"; Description: {cm:CompAppData}; Types: full playonly custom; Fla
 
 [Tasks]
 Name: "desktopicon"            ; Description: "{cm:CreateDesktopIcon}"                                ; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "desktopicon\labyrinthe" ; Description: "{cm:IconLabyrinthe}" ; Components: programs\labyrinthe ; GroupDescription: "{cm:AdditionalIcons}"
+Name: "desktopicon\funlaby"    ; Description: "{cm:IconFunLaby}"    ; Components: programs\funlaby    ; GroupDescription: "{cm:AdditionalIcons}"
 Name: "desktopicon\genelaby"   ; Description: "{cm:IconGeneLaby}"   ; Components: programs\genelaby   ; GroupDescription: "{cm:AdditionalIcons}"
 Name: "desktopicon\funlabyedit"; Description: "{cm:IconFunLabyEdit}"; Components: programs\funlabyedit; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
@@ -156,9 +156,9 @@ Name: "regext\flp"; Description: "{cm:RegFLP}"       ; GroupDescription: {cm:Add
 Name: "regext\flm"; Description: "{cm:RegFLM}"       ; GroupDescription: {cm:AdditionalTasks}
 
 [Files]
-Source: "..\FunLabyCore.bpl";  DestDir: "{app}"; Components: programs\runtime;     Flags: ignoreversion
-Source: "..\FunLabyTools.bpl"; DestDir: "{app}"; Components: programs\runtime;     Flags: ignoreversion
-Source: "..\Labyrinthe.exe";   DestDir: "{app}"; Components: programs\labyrinthe ; Flags: ignoreversion
+Source: "..\FunLabyCore.bpl";  DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
+Source: "..\FunLabyTools.bpl"; DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
+Source: "..\FunLaby.exe";      DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
 Source: "..\GeneLaby.exe";     DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
 Source: "..\FunLabyEdit.exe";  DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
 
@@ -177,29 +177,29 @@ Filename: "{app}\FunLabyrinthe.ini"; Section: "Directories"; Key: "AppData"; Str
 [Registry]
 Root: HKCR; SubKey: ".flp"                                    ; ValueType: string; ValueName: ""; ValueData: "FunLabyrinthe.Project"           ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project"                   ; ValueType: string; ValueName: ""; ValueData: "{cm:FunLabyProject}"             ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Project\DefaultIcon"       ; ValueType: string; ValueName: ""; ValueData: "{app}\Labyrinthe.exe,0"          ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Project\shell"             ; ValueType: string; ValueName: ""; ValueData: "open,edit"                       ; Tasks: regext\flp; Components: not programs\funlabyedit; Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Project\shell"             ; ValueType: string; ValueName: ""; ValueData: "open"                            ; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Project\DefaultIcon"       ; ValueType: string; ValueName: ""; ValueData: "{app}\FunLaby.exe,0"             ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Project\shell"             ; ValueType: string; ValueName: ""; ValueData: "open,edit"                       ; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Project\shell"             ; ValueType: string; ValueName: ""; ValueData: "open"                            ; Tasks: regext\flp; Components: not programs\funlabyedit; Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\open"        ; ValueType: string; ValueName: ""; ValueData: "{cm:Open}"                       ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\Labyrinthe.exe"" ""%1""" ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FunLaby.exe"" ""%1"""    ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit"        ; ValueType: string; ValueName: ""; ValueData: "{cm:Edit}"                       ; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FunLabyEdit.exe"" ""%1"""; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
 
-Root: HKCR; SubKey: ".flm"                         ; ValueType: string; ValueName: ""; ValueData: "FunLabyrinthe.Map"     ; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Map"            ; ValueType: string; ValueName: ""; ValueData: "{cm:FunLabyMap}"       ; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Map\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\Labyrinthe.exe,0"; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: ".flm"                         ; ValueType: string; ValueName: ""; ValueData: "FunLabyrinthe.Map"  ; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Map"            ; ValueType: string; ValueName: ""; ValueData: "{cm:FunLabyMap}"    ; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKCR; SubKey: "FunLabyrinthe.Map\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\FunLaby.exe,0"; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
 
 [Icons]
-Name: "{group}\{cm:IconLabyrinthe}" ; Filename: "{app}\Labyrinthe.exe" ; Components: programs\labyrinthe
+Name: "{group}\{cm:IconFunLaby}"    ; Filename: "{app}\FunLaby.exe"    ; Components: programs\funlaby
 Name: "{group}\{cm:IconGeneLaby}"   ; Filename: "{app}\GeneLaby.exe"   ; Components: programs\genelaby
 Name: "{group}\{cm:IconFunLabyEdit}"; Filename: "{app}\FunLabyEdit.exe"; Components: programs\funlabyedit
 
-Name: "{commondesktop}\{cm:IconLabyrinthe}" ; Filename: "{app}\Labyrinthe.exe" ; Tasks: desktopicon\labyrinthe
+Name: "{commondesktop}\{cm:IconFunLaby}"    ; Filename: "{app}\FunLaby.exe"    ; Tasks: desktopicon\funlaby
 Name: "{commondesktop}\{cm:IconGeneLaby}"   ; Filename: "{app}\GeneLaby.exe"   ; Tasks: desktopicon\genelaby
 Name: "{commondesktop}\{cm:IconFunLabyEdit}"; Filename: "{app}\FunLabyEdit.exe"; Tasks: desktopicon\funlabyedit
 
 [Run]
-Filename: "{app}\Labyrinthe.exe"; Description: "{cm:LaunchProgram,FunLabyrinthe}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\FunLaby.exe"; Description: "{cm:LaunchProgram,FunLabyrinthe}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: files; Name: "{app}\FunLabyrinthe.ini"
