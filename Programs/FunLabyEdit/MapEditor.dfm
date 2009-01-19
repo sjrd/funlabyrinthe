@@ -98,155 +98,32 @@ object FrameMapEditor: TFrameMapEditor
     BevelKind = bkTile
     BevelOuter = bvNone
     TabOrder = 2
-    object MapTabSet: TTabSet
+    inline MapViewer: TFrameBaseMapViewer
       Left = 0
       Top = 0
       Width = 360
-      Height = 21
-      Align = alTop
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Style = tsModernTabs
-      TabPosition = tpTop
-      OnChange = MapTabSetChange
-    end
-    object PanelMapInfos: TPanel
-      Left = 0
-      Top = 311
-      Width = 360
-      Height = 106
-      Align = alBottom
-      BevelOuter = bvNone
-      TabOrder = 1
-      DesignSize = (
-        360
-        106)
-      object LabelPosition: TLabel
-        Left = 8
-        Top = 8
-        Width = 44
-        Height = 13
-        Caption = 'Position :'
-      end
-      object LabelField: TLabel
-        Left = 8
-        Top = 32
-        Width = 41
-        Height = 13
-        Caption = 'Terrain :'
-      end
-      object LabelEffect: TLabel
-        Left = 8
-        Top = 48
-        Width = 31
-        Height = 13
-        Caption = 'Effet :'
-      end
-      object LabelObstacle: TLabel
-        Left = 8
-        Top = 80
-        Width = 49
-        Height = 13
-        Caption = 'Obstacle :'
-      end
-      object LabelFloor: TLabel
-        Left = 256
-        Top = 16
-        Width = 35
-        Height = 13
-        Anchors = [akTop, akRight]
-        Caption = #201'tage :'
-      end
-      object LabelTool: TLabel
-        Left = 8
-        Top = 64
-        Width = 29
-        Height = 13
-        Caption = 'Outil :'
-      end
-      object StaticPosition: TStaticText
-        Left = 64
-        Top = 8
-        Width = 160
-        Height = 17
-        AutoSize = False
-        BorderStyle = sbsSunken
-        TabOrder = 0
-      end
-      object StaticField: TStaticText
-        Left = 64
-        Top = 32
-        Width = 160
-        Height = 17
-        AutoSize = False
-        BorderStyle = sbsSunken
-        TabOrder = 1
-      end
-      object StaticEffect: TStaticText
-        Left = 64
-        Top = 48
-        Width = 160
-        Height = 17
-        AutoSize = False
-        BorderStyle = sbsSunken
-        TabOrder = 2
-      end
-      object StaticTool: TStaticText
-        Left = 64
-        Top = 64
-        Width = 160
-        Height = 17
-        AutoSize = False
-        BorderStyle = sbsSunken
-        TabOrder = 4
-      end
-      object StaticObstacle: TStaticText
-        Left = 64
-        Top = 80
-        Width = 160
-        Height = 17
-        AutoSize = False
-        BorderStyle = sbsSunken
-        TabOrder = 3
-      end
-      object EditFloor: TSpinEdit
-        Left = 296
-        Top = 8
-        Width = 49
-        Height = 22
-        Anchors = [akTop, akRight]
-        EditorEnabled = False
-        Enabled = False
-        MaxValue = 0
-        MinValue = 0
-        TabOrder = 5
-        Value = 0
-        OnChange = EditFloorChange
-      end
-    end
-    object ScrollBoxMap: TScrollBox
-      Left = 0
-      Top = 21
-      Width = 360
-      Height = 290
-      HorzScrollBar.Increment = 30
-      VertScrollBar.Increment = 30
+      Height = 417
       Align = alClient
-      BorderStyle = bsNone
-      Constraints.MinHeight = 280
+      Constraints.MinHeight = 407
       Constraints.MinWidth = 360
-      TabOrder = 2
-      object PaintBoxMap: TPaintBox
-        Left = 0
-        Top = 0
-        Width = 100
-        Height = 100
-        OnMouseDown = PaintBoxMapMouseDown
-        OnMouseMove = PaintBoxMapMouseMove
-        OnPaint = PaintBoxMapPaint
+      TabOrder = 0
+      TabStop = True
+      inherited MapTabSet: TTabSet
+        Width = 360
+      end
+      inherited ScrollBoxMap: TScrollBox
+        Width = 360
+        Height = 290
+      end
+      inherited PanelMapInfos: TPanel
+        Top = 311
+        Width = 360
+        inherited LabelFloor: TLabel
+          Left = 256
+        end
+        inherited EditFloor: TSpinEdit
+          Left = 296
+        end
       end
     end
   end
