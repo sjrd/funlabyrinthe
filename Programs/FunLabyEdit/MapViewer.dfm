@@ -1,8 +1,8 @@
 object FormMapViewer: TFormMapViewer
   Left = 0
   Top = 0
-  Width = 265
-  Height = 411
+  Width = 372
+  Height = 447
   BorderStyle = bsSizeToolWin
   Caption = 'Cartes'
   Color = clBtnFace
@@ -15,4 +15,15 @@ object FormMapViewer: TFormMapViewer
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
+  inline FrameBaseMapViewer: TFrameBaseMapViewer
+    Left = 0
+    Top = 0
+    Width = 364
+    Height = 421
+    Align = alClient
+    Constraints.MinHeight = 407
+    Constraints.MinWidth = 360
+    TabOrder = 0
+    TabStop = True
+  end
 end

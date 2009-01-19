@@ -217,6 +217,7 @@ begin
 
   // Chargement des cartes
   FrameMapEditor.LoadFile(SepiRoot, MasterFile);
+  FormMapViewer.Master := Master;
 end;
 
 {*
@@ -226,6 +227,8 @@ end;
 procedure TFormMain.UnloadFile;
 begin
   // Déchargement des cartes
+  FormMapViewer.Hide;
+  FormMapViewer.Master := nil;
   FrameMapEditor.UnloadFile;
 
   // Désactivation de l'interface utilisateur
@@ -1025,7 +1028,13 @@ end;
 *}
 procedure TFormMain.ActionAddMapExecute(Sender: TObject);
 begin
-  FrameMapEditor.AddMap;
+  FormMapViewer.Hide;
+  FormMapViewer.Master := nil;
+  try
+    FrameMapEditor.AddMap;
+  finally
+    FormMapViewer.Master := Master;
+  end;
 end;
 
 {*
@@ -1034,7 +1043,13 @@ end;
 *}
 procedure TFormMain.ActionRemoveMapExecute(Sender: TObject);
 begin
-  FrameMapEditor.RemoveCurrentMap;
+  FormMapViewer.Hide;
+  FormMapViewer.Master := nil;
+  try
+    FrameMapEditor.RemoveCurrentMap;
+  finally
+    FormMapViewer.Master := Master;
+  end;
 end;
 
 {*

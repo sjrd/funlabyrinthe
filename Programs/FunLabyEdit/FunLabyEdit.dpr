@@ -17,7 +17,8 @@ uses
   EditUnits in 'EditUnits.pas' {FormEditUnits},
   CompilerMessages in 'CompilerMessages.pas' {FormCompilerMessages},
   SepiCompilerRoot in 'SepiCompilerRoot.pas',
-  MapViewer in 'MapViewer.pas' {FormMapViewer};
+  MapViewer in 'MapViewer.pas' {FormMapViewer},
+  BaseMapViewer in 'BaseMapViewer.pas' {FrameBaseMapViewer: TFrame};
 
 {$R *.res}
 
