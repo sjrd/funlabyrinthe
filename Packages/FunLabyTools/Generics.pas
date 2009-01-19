@@ -20,6 +20,19 @@ type
   end;
 
   {*
+    Obstacle décoratif
+    La classe TDecorativeObstacle permet de créer facilement un obstacle qui ne
+    fait rien, qui ajoute juste une touche décorative.
+    @author sjrd
+    @version 5.0
+  *}
+  TDecorativeObstacle = class(TObstacle)
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName, AImgName: string);
+  end;
+
+  {*
     Outil lié à une définition d'objet
     La classe TObjectTool permet de créer facilement un outil qui est lié à une
     définition d'objet. C'est-à-dire que trouver cet outil incrémente le nombre
@@ -90,6 +103,24 @@ uses
   @param AImgName   Nom du fichier image
 *}
 constructor TDecorativeEffect.Create(AMaster: TMaster;
+  const AID: TComponentID; const AName, AImgName: string);
+begin
+  inherited Create(AMaster, AID, AName);
+  Painter.ImgNames.Add(AImgName);
+end;
+
+{----------------------------}
+{ Classe TDecorativeObstacle }
+{----------------------------}
+
+{*
+  Crée une instance de TDecorativeObstacle
+  @param AMaster    Maître FunLabyrinthe
+  @param AID        ID de l'obstacle de case
+  @param AName      Nom de l'obstacle de case
+  @param AImgName   Nom du fichier image
+*}
+constructor TDecorativeObstacle.Create(AMaster: TMaster;
   const AID: TComponentID; const AName, AImgName: string);
 begin
   inherited Create(AMaster, AID, AName);

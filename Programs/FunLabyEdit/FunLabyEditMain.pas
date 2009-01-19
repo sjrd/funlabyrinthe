@@ -14,7 +14,8 @@ uses
   ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
   FilesUtils, UnitFiles, EditPluginManager, UnitEditorIntf, FileProperties,
   FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile, ExtCtrls,
-  CompilerMessages, SepiCompilerErrors, SepiCompilerRoot;
+  CompilerMessages, SepiCompilerErrors, SepiCompilerRoot,
+  SepiImportsFunLabyTools;
 
 type
   {*
@@ -91,10 +92,6 @@ type
     /// Manager asynchrone de la racine Sepi
     SepiRootManager: TSepiAsynchronousRootManager;
     SepiRoot: TSepiRoot; /// Racine Sepi
-
-    {/// Manager asynchrone de la racine Sepi de compilation
-    CompilerRootManager: TSepiAsynchronousRootManager;
-    CompilerRoot: TSepiRoot; /// Racine Sepi de compilation}
 
     BigMenuMaps: TActionClient;    /// Menu des cartes
     BigMenuSources: TActionClient; /// Menu des unités
@@ -599,9 +596,6 @@ var
 begin
   FormCompilerMessages.Clear;
 
-  {while not CompilerRootManager.Ready do
-    Sleep(100);}
-
   CompilerRoot := TSepiRootFork.Create(SepiRoot);
   try
     CompilerRoot.OnLoadUnit := CompilerLoadUnit;
@@ -628,12 +622,6 @@ begin
       FormCompilerMessages.ShowFirst;
   finally
     CompilerRoot.Free;
-    {// Unload all units
-    while (CompilerRoot.UnitCount > 0) and
-      (CompilerRoot.Units[CompilerRoot.UnitCount-1].Name <> 'FunLabyUtils') do
-    begin
-      CompilerRoot.Units[CompilerRoot.UnitCount-1].Free;
-    end;}
   end;
 end;
 
@@ -806,11 +794,6 @@ begin
   SepiRootManager := TSepiAsynchronousRootManager.Create;
   SepiRoot := SepiRootManager.Root;
   SepiRootManager.LoadUnit('FunLabyUtils'); {don't localize}
-
-  {CompilerRootManager := TSepiAsynchronousRootManager.Create;
-  CompilerRoot := CompilerRootManager.Root;
-  CompilerRoot.OnLoadUnit := CompilerLoadUnit;
-  CompilerRootManager.LoadUnit('FunLabyUtils'); {don't localize}
 
   Application.OnHint := ApplicationHint;
 

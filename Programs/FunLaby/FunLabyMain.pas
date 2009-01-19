@@ -12,7 +12,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, SdDialogs, ShellAPI,
   FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
-  UnitFiles, SepiImportsFunLaby;
+  UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools;
 
 resourcestring
   sViewSize = 'Taille de la vue';

@@ -41,7 +41,8 @@ contains
   SepiImportsGenerics in 'SepiImportsGenerics.pas',
   SepiImportsGraphicsTools in 'SepiImportsGraphicsTools.pas',
   SepiImportsMapTools in 'SepiImportsMapTools.pas',
-  SepiImportsPlayerObjects in 'SepiImportsPlayerObjects.pas';
+  SepiImportsPlayerObjects in 'SepiImportsPlayerObjects.pas',
+  SepiImportsFunLabyTools in 'SepiImportsFunLabyTools.pas';
 
 end.
 

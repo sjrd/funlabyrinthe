@@ -21,8 +21,8 @@ implementation
 const // don't localize
   UnitName = 'Generics';
   ResourceName = 'SepiImportsGenerics';
-  TypeCount = 3;
-  MethodCount = 3;
+  TypeCount = 4;
+  MethodCount = 4;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -30,6 +30,11 @@ var
 
 type
   TSepiImportsTDecorativeEffect = class(TDecorativeEffect)
+  private
+    class procedure InitMethodAddresses;
+  end;
+
+  TSepiImportsTDecorativeObstacle = class(TDecorativeObstacle)
   private
     class procedure InitMethodAddresses;
   end;
@@ -53,13 +58,22 @@ begin
   MethodAddresses[0] := @TSepiImportsTDecorativeEffect.Create;
 end;
 
+{----------------------------}
+{ TDecorativeObstacle import }
+{----------------------------}
+
+class procedure TSepiImportsTDecorativeObstacle.InitMethodAddresses;
+begin
+  MethodAddresses[1] := @TSepiImportsTDecorativeObstacle.Create;
+end;
+
 {--------------------}
 { TObjectTool import }
 {--------------------}
 
 class procedure TSepiImportsTObjectTool.InitMethodAddresses;
 begin
-  MethodAddresses[1] := @TSepiImportsTObjectTool.Create;
+  MethodAddresses[2] := @TSepiImportsTObjectTool.Create;
 end;
 
 {-------------------------}
@@ -68,7 +82,7 @@ end;
 
 class procedure TSepiImportsTOverriddenScrew.InitMethodAddresses;
 begin
-  MethodAddresses[2] := @TSepiImportsTOverriddenScrew.Create;
+  MethodAddresses[3] := @TSepiImportsTOverriddenScrew.Create;
 end;
 
 {---------------------}
@@ -129,13 +143,15 @@ end;
 procedure InitTypeInfoArray;
 begin
   TypeInfoArray[0] := TypeInfo(TDecorativeEffect);
-  TypeInfoArray[1] := TypeInfo(TObjectTool);
-  TypeInfoArray[2] := TypeInfo(TOverriddenScrew);
+  TypeInfoArray[1] := TypeInfo(TDecorativeObstacle);
+  TypeInfoArray[2] := TypeInfo(TObjectTool);
+  TypeInfoArray[3] := TypeInfo(TOverriddenScrew);
 end;
 
 procedure InitMethodAddresses;
 begin
   TSepiImportsTDecorativeEffect.InitMethodAddresses;
+  TSepiImportsTDecorativeObstacle.InitMethodAddresses;
   TSepiImportsTObjectTool.InitMethodAddresses;
   TSepiImportsTOverriddenScrew.InitMethodAddresses;
 end;

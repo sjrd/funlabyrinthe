@@ -1923,6 +1923,9 @@ end;
 *}
 procedure TMap.SetLinearMap(Index: Integer; Value: TScrew);
 begin
+  if FMap[Index] = Value then
+    Exit;
+
   if Assigned(FMap[Index]) then
     FMap[Index].Release;
 
