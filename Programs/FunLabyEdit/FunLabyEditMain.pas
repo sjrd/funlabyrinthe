@@ -216,7 +216,7 @@ begin
   MakeSourceActions;
 
   // Chargement des cartes
-  FrameMapEditor.LoadFile(SepiRoot, MasterFile);
+  FrameMapEditor.LoadFile(MasterFile);
   FormMapViewer.Master := Master;
 end;
 

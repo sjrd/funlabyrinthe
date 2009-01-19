@@ -53,14 +53,10 @@ type
       const Button: TButtonItem);
     procedure MapViewerClickSquare(Sender: TObject; const QPos: TQualifiedPos);
   private
-    SepiRoot: TSepiRoot; /// Racine Sepi
-
     MasterFile: TMasterFile; /// Fichier maître
     Master: TMaster;         /// Maître FunLabyrinthe
 
-    SquareBmp: TSquareBitmap; /// Bitmap de case à tout faire
-    LastCompIndex: Integer;   /// Dernier index de composant choisi
-
+    LastCompIndex: Integer;      /// Dernier index de composant choisi
     Component: TVisualComponent; /// Composant à placer
 
     /// Call-back marquant le fichier comme modifé
@@ -75,11 +71,10 @@ type
     procedure LoadPlayers;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
 
     procedure CenterToPlayerPosition(Player: TPlayer);
 
-    procedure LoadFile(ASepiRoot: TSepiRoot; AMasterFile: TMasterFile);
+    procedure LoadFile(AMasterFile: TMasterFile);
     procedure UnloadFile;
 
     procedure AddMap;
@@ -158,22 +153,10 @@ constructor TFrameMapEditor.Create(AOwner: TComponent);
 begin
   inherited;
 
-  SquareBmp := TSquareBitmap.Create;
-
   LastCompIndex := 0;
   Component := nil;
 
   MapViewer.OnClickSquare := MapViewerClickSquare;
-end;
-
-{*
-  [@inheritDoc]
-*}
-destructor TFrameMapEditor.Destroy;
-begin
-  SquareBmp.Free;
-
-  inherited;
 end;
 
 {*
@@ -184,13 +167,18 @@ end;
 function TFrameMapEditor.AddSquareButton(
   Template: TVisualComponent): TButtonItem;
 var
+  SquareBmp: TSquareBitmap;
   ImageIndex: Integer;
   Category: TButtonCategory;
 begin
   // Ajout de l'image du composant dans la liste d'images
-  SquareBmp.EmptySquare;
-  Template.Draw(NoQPos, SquareBmp.Canvas);
-  ImageIndex := SquaresImages.AddMasked(SquareBmp, clTransparent);
+  SquareBmp := TSquareBitmap.Create;
+  try
+    Template.Draw(NoQPos, SquareBmp.Canvas);
+    ImageIndex := SquaresImages.AddMasked(SquareBmp, clTransparent);
+  finally
+    SquareBmp.Free;
+  end;
 
   // Choix de la catégorie
   if Template is TField then
@@ -314,10 +302,8 @@ end;
   @param ASepiRoot     Racine Sepi
   @param AMasterFile   Fichier maître
 *}
-procedure TFrameMapEditor.LoadFile(ASepiRoot: TSepiRoot;
-  AMasterFile: TMasterFile);
+procedure TFrameMapEditor.LoadFile(AMasterFile: TMasterFile);
 begin
-  SepiRoot := ASepiRoot;
   MasterFile := AMasterFile;
   Master := MasterFile.Master;
 
@@ -366,7 +352,6 @@ begin
   Component := nil;
   Master := nil;
   MasterFile := nil;
-  SepiRoot := nil;
 end;
 
 {*
