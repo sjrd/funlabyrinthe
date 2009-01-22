@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <PersonalityInfo>
+    <Option>
+      <Option Name="Personality">Default.Personality</Option>
+      <Option Name="ProjectType"></Option>
+      <Option Name="Version">1.0</Option>
+      <Option Name="GUID">{954DBB38-EBDB-4D85-9C49-1076C51A76DD}</Option>
+    </Option>
+  </PersonalityInfo>
+  <Default.Personality>
+    
+    
+    <Projects>
+      <Projects Name="DelphiSourceEditor.bpl">EditPlugins\DelphiSourceEditor\DelphiSourceEditor.bdsproj</Projects>
+      <Projects Name="SimpleSquaresEditor.bpl">EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.bdsproj</Projects>
+      <Projects Name="Targets">DelphiSourceEditor.bpl SimpleSquaresEditor.bpl</Projects>
+    </Projects>
+    <Dependencies/>
+  </Default.Personality>
+</BorlandProject>
