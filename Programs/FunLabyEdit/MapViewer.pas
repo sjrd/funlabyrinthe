@@ -36,6 +36,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
 
+    procedure ShowPosition(const QPos: TQualifiedPos);
+
     property Master: TMaster read GetMaster write SetMaster;
 
     property SelectedSquare: TQualifiedPos
@@ -152,6 +154,14 @@ procedure TFormMapViewer.SetSelectedPos(const Value: T3DPoint);
 begin
   FSelectedSquare.Position := Value;
   MapViewer.InvalidateMap;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFormMapViewer.ShowPosition(const QPos: TQualifiedPos);
+begin
+  MapViewer.ShowPosition(QPos);
 end;
 
 {*

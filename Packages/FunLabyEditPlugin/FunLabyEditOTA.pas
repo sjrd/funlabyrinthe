@@ -107,6 +107,12 @@ type
     *}
     procedure SetSelectedPos(const Value: T3DPoint);
 
+    {*
+      Montre une position donnée
+      @param QPos   Position qualifiée à montrer
+    *}
+    procedure ShowPosition(const QPos: TQualifiedPos);
+
     property Visible: Boolean read GetVisible write SetVisible;
 
     property SelectedSquare: TQualifiedPos
