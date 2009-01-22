@@ -58,10 +58,6 @@ type
     TabBarEditors: TJvTabBar;
     ActionViewCompilerMessages: TAction;
     ActionViewMapViewer: TAction;
-    procedure ActionViewMapViewerExecute(Sender: TObject);
-    procedure ActionViewCompilerMessagesExecute(Sender: TObject);
-    procedure TabBarEditorsTabClosing(Sender: TObject; Item: TJvTabBarItem;
-      var AllowClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -78,17 +74,21 @@ type
     procedure ActionExitExecute(Sender: TObject);
     procedure ActionAddMapExecute(Sender: TObject);
     procedure ActionRemoveMapExecute(Sender: TObject);
-    procedure ActionHelpTopicsExecute(Sender: TObject);
-    procedure ActionAboutExecute(Sender: TObject);
     procedure ActionAddExistingSourceExecute(Sender: TObject);
     procedure ActionAddNewSourceExecute(Sender: TObject);
     procedure ActionRemoveSourceExecute(Sender: TObject);
     procedure ActionCompileAllExecute(Sender: TObject);
     procedure ActionViewAllSourcesExecute(Sender: TObject);
     procedure ActionViewSourceExecute(Sender: TObject);
+    procedure ActionViewCompilerMessagesExecute(Sender: TObject);
+    procedure ActionViewMapViewerExecute(Sender: TObject);
+    procedure ActionHelpTopicsExecute(Sender: TObject);
+    procedure ActionAboutExecute(Sender: TObject);
     procedure TabBarEditorsTabSelecting(Sender: TObject; Item: TJvTabBarItem;
       var AllowSelect: Boolean);
     procedure TabBarEditorsTabSelected(Sender: TObject; Item: TJvTabBarItem);
+    procedure TabBarEditorsTabClosing(Sender: TObject; Item: TJvTabBarItem;
+      var AllowClose: Boolean);
     procedure TabBarEditorsTabCloseQuery(Sender: TObject; Item: TJvTabBarItem;
       var CanClose: Boolean);
     procedure TabBarEditorsTabClosed(Sender: TObject; Item: TJvTabBarItem);
@@ -151,6 +151,7 @@ type
     function GetEditors(Index: Integer): ISourceEditor50;
 
     // IOTAFunLabyEditMainForm
+    function GetMasterFile: TMasterFile;
     function GetCompilerMessages: IOTACompilerMessages50;
     function GetMapViewer: IOTAMapViewer50;
 
@@ -809,6 +810,14 @@ end;
 {*
   [@inheritDoc]
 *}
+function TFormMain.GetMasterFile: TMasterFile;
+begin
+  Result := MasterFile;
+end;
+
+{*
+  [@inheritDoc]
+*}
 function TFormMain.GetCompilerMessages: IOTACompilerMessages50;
 begin
   Result := FormCompilerMessages;
@@ -1053,24 +1062,6 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnExecute de l'action Rubriques d'aide
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormMain.ActionHelpTopicsExecute(Sender: TObject);
-begin
-// Don't delete this comment
-end;
-
-{*
-  Gestionnaire d'événement OnExecute de l'action À propos...
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormMain.ActionAboutExecute(Sender: TObject);
-begin
-  ShowFunLabyAbout;
-end;
-
-{*
   Gestionnaire d'événement Ajouter un source existant
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -1172,6 +1163,24 @@ end;
 procedure TFormMain.ActionViewMapViewerExecute(Sender: TObject);
 begin
   FormMapViewer.Show;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Rubriques d'aide
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionHelpTopicsExecute(Sender: TObject);
+begin
+// Don't delete this comment
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action À propos...
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionAboutExecute(Sender: TObject);
+begin
+  ShowFunLabyAbout;
 end;
 
 {*

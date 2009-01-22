@@ -15,7 +15,7 @@ object FormMapViewer: TFormMapViewer
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
-  inline FrameBaseMapViewer: TFrameBaseMapViewer
+  inline MapViewer: TFrameBaseMapViewer
     Left = 0
     Top = 0
     Width = 364

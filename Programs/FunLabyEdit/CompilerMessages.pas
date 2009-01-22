@@ -33,6 +33,9 @@ type
 
     procedure ErrorAdded(Sender: TObject; Error: TSepiCompilerError);
 
+    function GetVisible: Boolean;
+    procedure SetVisible(Value: Boolean);
+
     function GetErrors: TSepiCompilerErrorList;
   public
     procedure Clear;
@@ -75,6 +78,22 @@ procedure TFormCompilerMessages.ErrorAdded(Sender: TObject;
   Error: TSepiCompilerError);
 begin
   ListBoxMessages.Items.AddObject(Error.AsText, Error);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TFormCompilerMessages.GetVisible: Boolean;
+begin
+  Result := Visible;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFormCompilerMessages.SetVisible(Value: Boolean);
+begin
+  Visible := Value;
 end;
 
 {*
