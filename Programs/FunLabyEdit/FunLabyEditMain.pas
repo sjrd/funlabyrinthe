@@ -13,7 +13,7 @@ uses
   ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus, ToolWin,
   ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
   FilesUtils, UnitFiles, EditPluginManager, SourceEditors, FileProperties,
-  FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile, ExtCtrls,
+  FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile, ExtCtrls, ScSyncObjs,
   CompilerMessages, MapViewer, SepiCompilerErrors, SepiCompilerRoot,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA;
 
@@ -95,9 +95,10 @@ type
     procedure EditorStateChange(const Sender: ISourceEditor50);
     procedure MessagesShowError(Sender: TObject; Error: TSepiCompilerError);
   private
-    /// Manager asynchrone de la racine Sepi
-    SepiRootManager: TSepiAsynchronousRootManager;
-    SepiRoot: TSepiRoot; /// Racine Sepi
+    BackgroundTasks: TScTaskQueue; /// Tâches d'arrière-plan
+
+    BaseSepiRoot: TSepiRoot;       /// Racine Sepi de base
+    BaseSepiRootLoadTask: TScTask; /// Tâche de chargement de la racine de base
 
     BigMenuMaps: TActionClient;    /// Menu des cartes
     BigMenuSources: TActionClient; /// Menu des unités
@@ -111,8 +112,13 @@ type
     FormMapViewer: TFormMapViewer;               /// Visualisateur de cartes
 
     FModified: Boolean;      /// Indique si le fichier a été modifié
+    SepiRoot: TSepiRoot;     /// Racine Sepi du fichier en cours
     MasterFile: TMasterFile; /// Fichier maître
     Master: TMaster;         /// Maître FunLabyrinthe
+
+    procedure LoadBaseSepiRoot;
+    procedure NeedBaseSepiRoot;
+    procedure BackgroundDiscard(var Obj);
 
     procedure LoadFile;
     procedure UnloadFile;
@@ -181,6 +187,60 @@ const
 {------------------}
 { Classe TFormMain }
 {------------------}
+
+{*
+  Charge la racine Sepi de base
+  Cette méthode est appelée dans le thread des tâches en arrière-plan
+*}
+procedure TFormMain.LoadBaseSepiRoot;
+begin
+  BaseSepiRoot.LoadUnit('FunLabyUtils');
+  BaseSepiRoot.LoadUnit('Generics');
+  BaseSepiRoot.LoadUnit('GraphicsTools');
+  BaseSepiRoot.LoadUnit('MapTools');
+  BaseSepiRoot.LoadUnit('PlayerObjects');
+end;
+
+{*
+  Attend que la racine Sepi de base soit chargée, et vérifie l'état d'erreur
+  En cas d'erreur pendant le chargement de la racine de base, un message
+  avertit l'utilisateur et le programme est arrêté brutalement.
+*}
+procedure TFormMain.NeedBaseSepiRoot;
+begin
+  try
+    BaseSepiRootLoadTask.WaitFor;
+    BaseSepiRootLoadTask.RaiseException;
+  except
+    on Error: Exception do
+    begin
+      ShowDialog(sFatalErrorTitle,
+        Format(sBaseSepiRootLoadError, [Error.Message]), dtError);
+      System.Halt(1);
+    end;
+    on Error: TObject do
+    begin
+      ShowDialog(sFatalErrorTitle,
+        Format(sBaseSepiRootLoadError, [Error.ClassName]), dtError);
+      System.Halt(1);
+    end;
+  end;
+end;
+
+{*
+  Crée une nouvelle tâche d'arrière-plan de libération d'un objet
+  @param Obj   Objet à libérer en arrière-plan (mis à nil)
+*}
+procedure TFormMain.BackgroundDiscard(var Obj);
+var
+  AObj: TObject;
+begin
+  AObj := TObject(Obj);
+  if AObj = nil then
+    Exit;
+  TObject(Obj) := nil;
+  TScMethodTask.Create(BackgroundTasks, AObj.Free);
+end;
 
 {*
   Charge le MasterFile créé
@@ -412,19 +472,25 @@ begin
   UnitFileDescs[0].GUID := BPLUnitHandlerGUID;
   UnitFileDescs[0].HRef := FunLabyBaseHRef;
 
-  while not SepiRootManager.Ready do
-    Sleep(100);
+  NeedBaseSepiRoot;
 
-  MasterFile := TMasterFile.CreateNew(SepiRoot, UnitFileDescs);
-  if TFormFileProperties.ManageProperties(MasterFile) then
-  begin
-    TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName,
-      nil, Point3D(0, 0, 0));
-    LoadFile;
-  end else
-  begin
-    MasterFile.Free;
-    MasterFile := nil;
+  SepiRoot := TSepiRootFork.Create(BaseSepiRoot);
+  try
+    MasterFile := TMasterFile.CreateNew(SepiRoot, UnitFileDescs);
+    if TFormFileProperties.ManageProperties(MasterFile) then
+    begin
+      TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName,
+        nil, Point3D(0, 0, 0));
+      LoadFile;
+    end else
+    begin
+      BackgroundDiscard(MasterFile);
+      BackgroundDiscard(SepiRoot);
+    end;
+  except
+    BackgroundDiscard(MasterFile);
+    BackgroundDiscard(SepiRoot);
+    raise;
   end;
 end;
 
@@ -434,11 +500,17 @@ end;
 *}
 procedure TFormMain.OpenFile(const FileName: TFileName);
 begin
-  while not SepiRootManager.Ready do
-    Sleep(100);
+  NeedBaseSepiRoot;
 
-  MasterFile := TMasterFile.Create(SepiRoot, FileName, fmEdit);
-  LoadFile;
+  SepiRoot := TSepiRootFork.Create(BaseSepiRoot);
+  try
+    MasterFile := TMasterFile.Create(SepiRoot, FileName, fmEdit);
+    LoadFile;
+  except
+    BackgroundDiscard(MasterFile);
+    BackgroundDiscard(SepiRoot);
+    raise;
+  end;
 end;
 
 {*
@@ -562,8 +634,8 @@ begin
   // Tout décharger
   UnloadFile;
 
-  MasterFile.Free;
-  MasterFile := nil;
+  BackgroundDiscard(MasterFile);
+  BackgroundDiscard(SepiRoot);
 end;
 
 {*
@@ -627,9 +699,7 @@ begin
         if IsEditor(I) and
           Supports(Editors[I], ISourceCompiler50, SourceCompiler) then
         begin
-          if CompilerRoot.GetMeta(SourceCompiler.UnitName) = nil then
-            SourceCompiler.CompileFile(CompilerRoot,
-              FormCompilerMessages.Errors);
+          CompilerRoot.LoadUnit(SourceCompiler.UnitName);
         end;
       end;
 
@@ -837,9 +907,11 @@ end;
 *}
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  SepiRootManager := TSepiAsynchronousRootManager.Create;
-  SepiRoot := SepiRootManager.Root;
-  SepiRootManager.LoadUnit('FunLabyUtils'); {don't localize}
+  BackgroundTasks := TScTaskQueue.Create(True, False);
+
+  BaseSepiRoot := TSepiRoot.Create;
+  BaseSepiRootLoadTask := TScMethodTask.Create(BackgroundTasks,
+    LoadBaseSepiRoot, False);
 
   Application.OnHint := ApplicationHint;
 
@@ -883,8 +955,13 @@ begin
   Application.OnHint := nil;
 
   FrameMapEditor.Free;
-  //CompilerRootManager.Free;
-  SepiRootManager.Free;
+
+  BackgroundDiscard(BaseSepiRoot);
+  BackgroundDiscard(BaseSepiRootLoadTask);
+
+  while not BackgroundTasks.Ready do
+    Sleep(100);
+  BackgroundTasks.Free;
 end;
 
 {*

@@ -3,6 +3,12 @@ unit FunLabyEditConsts;
 interface
 
 resourcestring
+  sFatalErrorTitle = 'Erreur fatale';
+
+  sBaseSepiRootLoadError =
+    'Erreur au chargement des fonctionnalités coeur de FunLabyrinthe avec le '+
+    'message "%s". FunLabyrinthe ne peut continuer et doit fermer.';
+
   sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
 
   sDefaultPlayerName = 'Joueur';

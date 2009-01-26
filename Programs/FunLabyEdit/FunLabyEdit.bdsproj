@@ -126,7 +126,7 @@
 			<Directories Name="SearchPath"></Directories>
 			<Directories Name="Packages">rtl;vcl;VclSmp;SCL90;SVCL90;SDL90;SepiCore90;SepiReflection90;SepiInterpreter90;SepiCompiler90;SepiDelphiCompiler90;FunLabyCore;FunLabyTools;FunLabyEditPlugin;vclx;Jcl;JclVcl;JvCoreD9R;JvSystemD9R;JvStdCtrlsD9R;JvCtrlsD9R;JvDlgsD9R;vcldb;JvGlobusD9R;JvPageCompsD9R;JvAppFrmD9R;JvCmpD9R;JvCustomD9R;JvDockingD9R;JvXPCtrlsD9R</Directories>
 			<Directories Name="Conditionals"></Directories>
-			<Directories Name="DebugSourceDirs">C:\Projets\Sepi\source\run\SDL\;C:\Projets\Sepi\source\run\SepiSVCLImport\;C:\Projets\Sepi\source\run\SepiVCLStdImport\;C:\Projets\Sepi\source\run\SepiSCLImport\;C:\Projets\Sepi\source\run\SepiRTLCommonImport\;C:\Projets\Sepi\source\run\SepiWinTypesImport\;C:\Projets\Sepi\source\run\SepiRTLSysImport\;C:\Projets\Sepi\source\run\SepiInterpreter\</Directories>
+			<Directories Name="DebugSourceDirs">C:\Projets\Sepi\source\run\SDL\;C:\Projets\Sepi\source\run\SepiSVCLImport\;C:\Projets\Sepi\source\run\SepiVCLStdImport\;C:\Projets\Sepi\source\run\SepiSCLImport\;C:\Projets\Sepi\source\run\SepiRTLCommonImport\;C:\Projets\Sepi\source\run\SepiWinTypesImport\;C:\Projets\Sepi\source\run\SepiRTLSysImport\;C:\Projets\Sepi\source\run\SepiInterpreter\;C:\Projets\Sepi\source\run\SepiDelphiCompiler\;C:\Projets\FunLabyrinthe\EditPlugins\DelphiSourceEditor\</Directories>
 			<Directories Name="UsePackages">True</Directories>
 		</Directories>
 		<Parameters>
@@ -174,7 +174,8 @@
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
 			<VersionInfoKeys Name="OriginalFilename">FunLabyEdit.exe</VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
-		</VersionInfoKeys>  <Excluded_Packages>
+		</VersionInfoKeys>  
+    <Excluded_Packages>
       <Excluded_Packages Name="C:\Program Files\RemObjects Software\Pascal Script for Delphi\Dcu\D9\PascalScript_Core_D9.bpl">RemObjects Pascal Script - Core Package</Excluded_Packages>
       <Excluded_Packages Name="C:\DOCUME~1\Sepi\MESDOC~1\PROJET~1\Bpl\JclUsesExpert90.bpl">JCL Uses Wizard</Excluded_Packages>
     </Excluded_Packages>
