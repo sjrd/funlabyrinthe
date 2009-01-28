@@ -14,7 +14,7 @@ uses
   ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
   FilesUtils, UnitFiles, EditPluginManager, SourceEditors, FileProperties,
   FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile, ExtCtrls, ScSyncObjs,
-  CompilerMessages, MapViewer, SepiCompilerErrors, SepiCompilerRoot,
+  CompilerMessages, MapViewer, SepiCompilerErrors,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA;
 
 type
