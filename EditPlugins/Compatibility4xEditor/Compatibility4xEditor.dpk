@@ -39,7 +39,8 @@ requires
   FunLabyCore;
 
 contains
-  Compatibility4xEditorMain in 'Compatibility4xEditorMain.pas' {FrameCompatibility4xEditor: TFrame};
+  Compatibility4xEditorMain in 'Compatibility4xEditorMain.pas' {FrameCompatibility4xEditor: TFrame},
+  Compatibility4xSyn in 'Compatibility4xSyn.pas';
 
 end.
 
