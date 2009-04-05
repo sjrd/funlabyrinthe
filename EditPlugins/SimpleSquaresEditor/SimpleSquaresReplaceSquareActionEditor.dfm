@@ -3,7 +3,6 @@ object FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
   Top = 0
   Width = 257
   Height = 393
-  Align = alClient
   Constraints.MinHeight = 304
   Constraints.MinWidth = 257
   TabOrder = 0

@@ -1,8 +1,8 @@
 object FrameEffectEditor: TFrameEffectEditor
   Left = 0
   Top = 0
-  Width = 449
-  Height = 297
+  Width = 451
+  Height = 304
   Align = alClient
   TabOrder = 0
   TabStop = True
@@ -10,18 +10,18 @@ object FrameEffectEditor: TFrameEffectEditor
   object SplitterActionList: TSplitter
     Left = 241
     Top = 0
-    Height = 297
+    Height = 304
   end
   object PanelActionList: TPanel
     Left = 0
     Top = 0
     Width = 241
-    Height = 297
+    Height = 304
     Align = alLeft
     TabOrder = 0
     DesignSize = (
       241
-      297)
+      304)
     object LabelActionList: TLabel
       Left = 16
       Top = 16

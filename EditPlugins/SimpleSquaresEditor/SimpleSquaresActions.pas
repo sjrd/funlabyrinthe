@@ -3,12 +3,14 @@ unit SimpleSquaresActions;
 interface
 
 uses
-  SysUtils, Classes, TypInfo, ScUtils, ScDelphiLanguage, SdDialogs,
+  SysUtils, Classes, Graphics, TypInfo, ScUtils, ScDelphiLanguage, SdDialogs,
   FunLabyUtils, SimpleSquaresUtils;
 
 resourcestring
   SReplaceSquareActionTitle = 'Remplacer la case (%d, %d, %d)';
+  SDeactivateEffectActionTitle = 'Désactiver';
   SMessageActionTitle = 'Afficher %s';
+  SPlayerColorActionTitle = 'Changer la couleur du pion en %s';
 
 type
   {*
@@ -105,6 +107,27 @@ type
   end;
 
   {*
+    Action qui désactive l'effet courant (ou le remplace par un autre)
+    @author sjrd
+    @version 5.0
+  *}
+  TDeactivateEffectAction = class(TSimpleAction)
+  private
+    FEffectID: TComponentID; /// ID de l'effet à mettre à la place
+  protected
+    procedure Save(Stream: TStream); override;
+
+    function GetTitle: string; override;
+  public
+    constructor Load(Stream: TStream); override;
+    constructor Create; override;
+
+    procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
+
+    property EffectID: TComponentID read FEffectID write FEffectID;
+  end;
+
+  {*
     Type de message simple
     mkMessage : Message
     mkTip : Indice
@@ -140,7 +163,6 @@ type
   public
     constructor Load(Stream: TStream); override;
     constructor Create; override;
-    destructor Destroy; override;
 
     procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
 
@@ -149,6 +171,27 @@ type
     property Text: string read FText write FText;
     property DialogType: TDialogType read FDialogType write SetDialogType;
     property OnlyFirstTime: Boolean read FOnlyFirstTime write FOnlyFirstTime;
+  end;
+
+  {*
+    Action changer la couleur du pion
+    @author sjrd
+    @version 5.0
+  *}
+  TPlayerColorAction = class(TSimpleAction)
+  private
+    FColor: TColor; /// Couleur de remplacement
+  protected
+    procedure Save(Stream: TStream); override;
+
+    function GetTitle: string; override;
+  public
+    constructor Load(Stream: TStream); override;
+    constructor Create; override;
+
+    procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
+
+    property Color: TColor read FColor write FColor;
   end;
 
 implementation
@@ -396,6 +439,58 @@ begin
   Code.Add(Indent + Format('  %s;', [ReplaceBy.GetDelphiCode]));
 end;
 
+{-------------------------------}
+{ TDeactivateEffectAction class }
+{-------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TDeactivateEffectAction.Load(Stream: TStream);
+begin
+  inherited;
+
+  FEffectID := ReadStrFromStream(Stream);
+end;
+
+{*
+  [@inheritDoc]
+*}
+constructor TDeactivateEffectAction.Create;
+begin
+  inherited;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TDeactivateEffectAction.Save(Stream: TStream);
+begin
+  inherited;
+
+  WriteStrToStream(Stream, FEffectID);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TDeactivateEffectAction.GetTitle: string;
+begin
+  Result := SDeactivateEffectActionTitle;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TDeactivateEffectAction.ProduceDelphiCode(Code: TStrings;
+  const Indent: string);
+const
+  StatementFormat =
+    'Player.Map.Map[Pos] := ChangeEffect(Player.Map.Map[Pos], %s);';
+begin
+  Code.Add(Indent + Format(StatementFormat, [StrToStrRepres(EffectID)]));
+end;
+
 {----------------------}
 { TMessageAction class }
 {----------------------}
@@ -429,14 +524,6 @@ begin
   inherited;
 
   SetKind(mkMessage);
-end;
-
-{*
-  [@inheritDoc]
-*}
-destructor TMessageAction.Destroy;
-begin
-  inherited;
 end;
 
 {*
@@ -535,13 +622,66 @@ begin
     [GetEnumName(TypeInfo(TDialogType), Ord(DialogType))]));
 end;
 
+{--------------------------}
+{ TPlayerColorAction class }
+{--------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TPlayerColorAction.Load(Stream: TStream);
+begin
+  inherited;
+
+  Stream.ReadBuffer(FColor, SizeOf(TColor));
+end;
+
+{*
+  [@inheritDoc]
+*}
+constructor TPlayerColorAction.Create;
+begin
+  inherited;
+
+  FColor := clBlue;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPlayerColorAction.Save(Stream: TStream);
+begin
+  inherited;
+
+  Stream.WriteBuffer(FColor, SizeOf(TColor));
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TPlayerColorAction.GetTitle: string;
+begin
+  Result := Format(SPlayerColorActionTitle, [ColorToString(Color)]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPlayerColorAction.ProduceDelphiCode(Code: TStrings;
+  const Indent: string);
+begin
+  Code.Add(Indent + Format('Player.Color := %s', [ColorToString(Color)]));
+end;
+
 initialization
   RegisterClasses([
-    TReplaceSquareAction, TMessageAction
+    TReplaceSquareAction, TDeactivateEffectAction, TMessageAction,
+    TPlayerColorAction
   ]);
 finalization
   UnRegisterClasses([
-    TReplaceSquareAction, TMessageAction
+    TReplaceSquareAction, TDeactivateEffectAction, TMessageAction,
+    TPlayerColorAction
   ]);
 end.
 

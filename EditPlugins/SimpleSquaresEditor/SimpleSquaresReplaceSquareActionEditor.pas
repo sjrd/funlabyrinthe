@@ -5,10 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ImgList, StdCtrls, ComCtrls, ScUtils, FunLabyUtils, FilesUtils,
-  FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresActions;
-
-resourcestring
-  SNone = '(aucun)';
+  FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresActions,
+  SimpleSquaresConsts;
 
 type
   {*
@@ -49,6 +47,8 @@ type
 
     procedure SetCurrentAction(Value: TReplaceSquareAction);
   public
+    constructor Create(AOwner: TComponent); override;
+
     procedure MarkModified;
 
     property CurrentAction: TReplaceSquareAction
@@ -58,6 +58,19 @@ type
 implementation
 
 {$R *.dfm}
+
+{---------------------------------------}
+{ TFrameReplaceSquareActionEditor class }
+{---------------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TFrameReplaceSquareActionEditor.Create(AOwner: TComponent);
+begin
+  inherited;
+  Align := alClient;
+end;
 
 {*
   Enregistre un unique composant

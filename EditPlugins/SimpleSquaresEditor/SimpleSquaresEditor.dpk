@@ -50,7 +50,9 @@ contains
   SimpleSquaresReplaceSquareActionEditor in 'SimpleSquaresReplaceSquareActionEditor.pas' {FrameReplaceSquareActionEditor: TFrame},
   SimpleSquaresMessageActionEditor in 'SimpleSquaresMessageActionEditor.pas' {FrameMessageActionEditor: TFrame},
   SimpleSquaresObjectEditor in 'SimpleSquaresObjectEditor.pas' {FrameObjectEditor: TFrame},
-  SimpleSquaresObstacleEditor in 'SimpleSquaresObstacleEditor.pas' {FrameObstacleEditor: TFrame};
+  SimpleSquaresObstacleEditor in 'SimpleSquaresObstacleEditor.pas' {FrameObstacleEditor: TFrame},
+  SimpleSquaresDeactivateEffectActionEditor in 'SimpleSquaresDeactivateEffectActionEditor.pas' {FrameDeactivateEffectActionEditor: TFrame},
+  SimpleSquaresConsts in 'SimpleSquaresConsts.pas';
 
 end.
 

@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, StdCtrls, ExtCtrls,
   Buttons, SimpleSquaresActions, SimpleSquaresReplaceSquareActionEditor,
-  SimpleSquaresMessageActionEditor;
+  SimpleSquaresMessageActionEditor, SimpleSquaresDeactivateEffectActionEditor;
 
 type
   {*
@@ -39,6 +39,8 @@ type
 
     /// Éditeur d'action Remplacement de case
     ReplaceSquareActionEditor: TFrameReplaceSquareActionEditor;
+    /// Éditeur d'action Remplacement de case
+    DeactivateEffectActionEditor: TFrameDeactivateEffectActionEditor;
     /// Éditeur d'action Afficher un message
     MessageActionEditor: TFrameMessageActionEditor;
 
@@ -82,6 +84,10 @@ begin
 
   ReplaceSquareActionEditor := TFrameReplaceSquareActionEditor.Create(Self);
   ReplaceSquareActionEditor.Parent := Self;
+
+  DeactivateEffectActionEditor :=
+    TFrameDeactivateEffectActionEditor.Create(Self);
+  DeactivateEffectActionEditor.Parent := Self;
 
   MessageActionEditor := TFrameMessageActionEditor.Create(Self);
   MessageActionEditor.Parent := Self;
@@ -162,6 +168,8 @@ procedure TFrameEffectEditor.SetCurrentAction(Value: TSimpleAction);
 begin
   if CurrentAction is TReplaceSquareAction then
     ReplaceSquareActionEditor.CurrentAction := nil
+  else if CurrentAction is TDeactivateEffectAction then
+    DeactivateEffectActionEditor.CurrentAction := nil
   else if CurrentAction is TMessageAction then
     MessageActionEditor.CurrentAction := nil;
 
@@ -178,6 +186,9 @@ begin
   if CurrentAction is TReplaceSquareAction then
     ReplaceSquareActionEditor.CurrentAction :=
       TReplaceSquareAction(CurrentAction)
+  else if CurrentAction is TDeactivateEffectAction then
+    DeactivateEffectActionEditor.CurrentAction :=
+      TDeactivateEffectAction(CurrentAction)
   else if CurrentAction is TMessageAction then
     MessageActionEditor.CurrentAction := TMessageAction(CurrentAction);
 end;
@@ -193,6 +204,7 @@ begin
   begin
     AddObject('Remplacer la case sélectionnée par...',
       TObject(TReplaceSquareAction));
+    AddObject('Désactiver l''effet', TObject(TDeactivateEffectAction));
     AddObject('Afficher un message', TObject(TMessageAction));
   end;
 end;
