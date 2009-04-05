@@ -18,8 +18,9 @@ uses
 resourcestring
   sIfStatCannotMixAndOr = 'Ne peut mélanger les Et et les Ou';
 
-  sIfStatMustBeIfAndThen = 'Une instruction Si doit avoir un Si et un Sinon';
-  sIfStatBadOrder = 'Les opérateurs doivent dans l''ordre Si-Alors-Sinon-FinSi';
+  sIfStatMustBeIfAndThen = 'Une instruction Si doit avoir un Si et un Alors';
+  sIfStatBadOrder =
+    'Les opérateurs doivent être dans l''ordre Si-Alors-Sinon-FinSi';
   sIfStatInvalidThenClause = 'Clause Alors invalide';
   sIfStatInvalidElseClause = 'Clause Sinon invalide';
 
@@ -80,7 +81,7 @@ type
     HasMoved: Boolean;    /// Indique si un AllerA a été fait
     HasShownMsg: Boolean; /// Indique si un message a été affiché
     Successful: Boolean;  /// État de réussite
-    Inactive: TSquare;     /// Case à utiliser lors d'un Desactiver
+    Inactive: TSquare;    /// Case à utiliser lors d'un Desactiver
     AllowPlank: Boolean;  /// Indique si un AutoriserPlanche a été fait
 
     StrHere: string;   /// Case courante
