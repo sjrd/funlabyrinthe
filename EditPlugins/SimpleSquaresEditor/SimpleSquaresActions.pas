@@ -16,6 +16,7 @@ resourcestring
   SPlayerWinTitle = 'Le joueur gagne';
   SPlayerLoseTitle = 'Le joueur perd';
   SMasterTemporizeTitle = 'Temporisation standard';
+  SGoOnMovingTitle = 'Continuer le déplacement';
 
 type
   {*
@@ -206,10 +207,11 @@ type
     - smPlayerWin : Player.Win;
     - smPlayerLose : Player.Lose;
     - smMasterTemporize : Master.Temporize;
+    - smGoOnMoving : GoOnMoving := True;
   *}
   TSimpleMethodKind = (
     smPlayerShow, smPlayerHide, smPlayerWin, smPlayerLose,
-    smMasterTemporize
+    smMasterTemporize, smGoOnMoving
   );
 
   {*
@@ -757,9 +759,10 @@ begin
     smPlayerWin:  Result := SPlayerWinTitle;
     smPlayerLose: Result := SPlayerLoseTitle;
     smMasterTemporize: Result := SMasterTemporizeTitle;
+    smGoOnMoving: Result := SGoOnMovingTitle;
   end;
 
-{$IF Ord(High(TSimpleMethodKind)) <> 4}
+{$IF Ord(High(TSimpleMethodKind)) <> 5}
   {$MESSAGE ERROR
     'Every possible value of TSimpleMethodKind must be handled here'}
 {$IFEND}
@@ -773,7 +776,7 @@ procedure TSimpleMethodAction.ProduceDelphiCode(Code: TStrings;
 const {don't localize}
   Statements: array[TSimpleMethodKind] of string = (
     'Player.Show;', 'Player.Hide;', 'Player.Win;', 'Player.Lose;',
-    'Master.Temporize;'
+    'Master.Temporize;', 'GoOnMoving := True;'
   );
 begin
   Code.Add(Indent + Statements[Kind]);

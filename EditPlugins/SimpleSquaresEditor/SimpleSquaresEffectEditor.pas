@@ -3,12 +3,13 @@ unit SimpleSquaresEffectEditor;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, StdCtrls, ExtCtrls,
-  Buttons, SimpleSquaresActions, SimpleSquaresReplaceSquareActionEditor,
-  SimpleSquaresMessageActionEditor, SimpleSquaresDeactivateEffectActionEditor,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, Contnrs, StdCtrls, ExtCtrls, Buttons, FunLabyUtils, FunLabyEditOTA,
+  SimpleSquaresUtils, SimpleSquaresEditorPart, SimpleSquaresActions,
+  SimpleSquaresReplaceSquareActionEditor, SimpleSquaresMessageActionEditor,
+  SimpleSquaresDeactivateEffectActionEditor,
   SimpleSquaresPlayerColorActionEditor, SimpleSquaresActionEditor,
-  SimpleSquaresEditorPart;
+  SimpleSquaresSimpleMethodActionEditor;
 
 type
   {*
@@ -37,18 +38,15 @@ type
     Actions: TSimpleActionList;    /// Actions de l'effet en cours d'édition
     FCurrentAction: TSimpleAction; /// Action courante
 
-    MapViewer: IOTAMapViewer50;
+    MapViewer: IOTAMapViewer50; /// Visualisateur de cartes
 
-    /// Éditeur d'action Remplacement de case
-    ReplaceSquareActionEditor: TFrameActionEditor;
-    /// Éditeur d'action Remplacement de case
-    DeactivateEffectActionEditor: TFrameActionEditor;
-    /// Éditeur d'action Afficher un message
-    MessageActionEditor: TFrameActionEditor;
-    /// Éditeur d'action Changer la couleur du pion
-    PlayerColorActionEditor: TFrameActionEditor;
+    ActionEditors: TObjectList;              /// Éditeurs d'actions disponibles
+    CurrentActionEditor: TFrameActionEditor; /// Éditeur d'action courante
 
     procedure UpdateActions;
+
+    procedure AddActionEditor(ActionEditor: TFrameActionEditor);
+    function GetActionEditor(Action: TSimpleAction): TFrameActionEditor;
 
     procedure SetCurrentEffect(Value: TSimpleEffect);
     procedure SetCurrentAction(Value: TSimpleAction);
@@ -57,6 +55,7 @@ type
       read FCurrentAction write SetCurrentAction;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
 
     procedure AfterConstruction; override;
 
@@ -84,18 +83,23 @@ constructor TFrameEffectEditor.Create(AOwner: TComponent);
 begin
   inherited;
 
-  ReplaceSquareActionEditor := TFrameReplaceSquareActionEditor.Create(Self);
-  ReplaceSquareActionEditor.Parent := Self;
+  ActionEditors := TObjectList.Create(False);
 
-  DeactivateEffectActionEditor :=
-    TFrameDeactivateEffectActionEditor.Create(Self);
-  DeactivateEffectActionEditor.Parent := Self;
+  AddActionEditor(TFrameReplaceSquareActionEditor.Create(Self));
+  AddActionEditor(TFrameDeactivateEffectActionEditor.Create(Self));
+  AddActionEditor(TFrameMessageActionEditor.Create(Self));
+  AddActionEditor(TFramePlayerColorActionEditor.Create(Self));
+  AddActionEditor(TFrameSimpleMethodActionEditor.Create(Self));
+end;
 
-  MessageActionEditor := TFrameMessageActionEditor.Create(Self);
-  MessageActionEditor.Parent := Self;
+{*
+  [@inheritDoc]
+*}
+destructor TFrameEffectEditor.Destroy;
+begin
+  ActionEditors.Free;
 
-  PlayerColorActionEditor := TFramePlayerColorActionEditor.Create(Self);
-  PlayerColorActionEditor.Parent := Self;
+  inherited;
 end;
 
 {*
@@ -121,6 +125,36 @@ begin
     CurrentAction := nil
   else
     CurrentAction := Actions[Index];
+end;
+
+{*
+  Ajoute un éditeur d'actions
+  @param ActionEditor   Éditeur d'action à ajouter
+*}
+procedure TFrameEffectEditor.AddActionEditor(ActionEditor: TFrameActionEditor);
+begin
+  ActionEditor.Parent := Self;
+  ActionEditors.Add(ActionEditor);
+end;
+
+{*
+  Obtient un éditeur d'action pour une action donnée
+  @param Action   Action pour laquelle obtenir un éditeur
+  @return Éditeur d'action, ou nil si aucun éditeur d'action n'est adapté
+*}
+function TFrameEffectEditor.GetActionEditor(
+  Action: TSimpleAction): TFrameActionEditor;
+var
+  I: Integer;
+begin
+  for I := 0 to ActionEditors.Count-1 do
+  begin
+    Result := TFrameActionEditor(ActionEditors.Items[I]);
+    if Action is Result.ActionClass then
+      Exit;
+  end;
+
+  Result := nil;
 end;
 
 {*
@@ -163,14 +197,8 @@ end;
 *}
 procedure TFrameEffectEditor.SetCurrentAction(Value: TSimpleAction);
 begin
-  if CurrentAction is TReplaceSquareAction then
-    ReplaceSquareActionEditor.CurrentAction := nil
-  else if CurrentAction is TDeactivateEffectAction then
-    DeactivateEffectActionEditor.CurrentAction := nil
-  else if CurrentAction is TMessageAction then
-    MessageActionEditor.CurrentAction := nil
-  else if CurrentAction is TPlayerColorAction then
-    PlayerColorActionEditor.CurrentAction := nil;
+  if CurrentActionEditor <> nil then
+    CurrentActionEditor.CurrentAction := nil;
 
   FCurrentAction := Value;
 
@@ -182,14 +210,9 @@ begin
     MapViewer.ShowPosition(MapViewer.SelectedSquare);
   end;
 
-  if CurrentAction is TReplaceSquareAction then
-    ReplaceSquareActionEditor.CurrentAction := CurrentAction
-  else if CurrentAction is TDeactivateEffectAction then
-    DeactivateEffectActionEditor.CurrentAction := CurrentAction
-  else if CurrentAction is TMessageAction then
-    MessageActionEditor.CurrentAction := CurrentAction
-  else if CurrentAction is TPlayerColorAction then
-    PlayerColorActionEditor.CurrentAction := CurrentAction;
+  CurrentActionEditor := GetActionEditor(CurrentAction);
+  if CurrentActionEditor <> nil then
+    CurrentActionEditor.CurrentAction := CurrentAction;
 end;
 
 {*
@@ -206,6 +229,7 @@ begin
     AddObject('Désactiver l''effet', TObject(TDeactivateEffectAction));
     AddObject('Afficher un message', TObject(TMessageAction));
     AddObject('Changer la couleur du pion', TObject(TPlayerColorAction));
+    AddObject('Action simple', TObject(TSimpleMethodAction));
   end;
 end;
 
