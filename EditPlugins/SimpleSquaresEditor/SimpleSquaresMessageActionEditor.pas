@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils,
-  SimpleSquaresActions, StdCtrls, ExtCtrls;
+  Dialogs, StdCtrls, ExtCtrls, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils,
+  SimpleSquaresActions, SimpleSquaresActionEditor;
 
 type
   {*
@@ -13,7 +13,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameMessageActionEditor = class(TFrame, ISimpleSquaresEditor)
+  TFrameMessageActionEditor = class(TFrameActionEditor)
     RadioGroupKind: TRadioGroup;
     EditDialogTitle: TEdit;
     EditText: TMemo;
@@ -26,17 +26,12 @@ type
     procedure EditTextChange(Sender: TObject);
   private
     FCurrentAction: TMessageAction; /// Action courante
-
-    function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-
-    procedure SetCurrentAction(Value: TMessageAction);
-  public
-    constructor Create(AOwner: TComponent); override;
-
-    procedure MarkModified;
-
+  protected
+    procedure ActivateAction; override;
+    procedure DeactivateAction; override;
+  published
     property CurrentAction: TMessageAction
-      read FCurrentAction write SetCurrentAction;
+      read FCurrentAction write FCurrentAction;
   end;
 
 implementation
@@ -50,62 +45,28 @@ implementation
 {*
   [@inheritDoc]
 *}
-constructor TFrameMessageActionEditor.Create(AOwner: TComponent);
+procedure TFrameMessageActionEditor.ActivateAction;
 begin
-  inherited;
-  Align := alClient;
+  RadioGroupKind.ItemIndex := Ord(CurrentAction.Kind);
+  EditDialogTitle.Text := CurrentAction.DialogTitle;
+  EditText.Text := CurrentAction.Text;
+  CheckBoxOnlyFirstTime.Checked := CurrentAction.OnlyFirstTime;
+
+  RadioGroupKind.OnClick := RadioGroupKindClick;
+  EditDialogTitle.OnChange := EditDialogTitleChange;
+  EditText.OnChange := EditTextChange;
+  CheckBoxOnlyFirstTime.OnClick := CheckBoxOnlyFirstTimeClick;
 end;
 
 {*
   [@inheritDoc]
 *}
-function TFrameMessageActionEditor.GetFunLabyEditMainForm:
-  IOTAFunLabyEditMainForm50;
+procedure TFrameMessageActionEditor.DeactivateAction;
 begin
-  Result := (Owner as ISimpleSquaresEditor).FunLabyEditMainForm;
-end;
-
-{*
-  Modifie l'action à éditer
-  @param Value   Nouvelle action
-*}
-procedure TFrameMessageActionEditor.SetCurrentAction(
-  Value: TMessageAction);
-begin
-  if CurrentAction <> nil then
-  begin
-    Visible := False;
-
-    RadioGroupKind.OnClick := nil;
-    EditDialogTitle.OnChange := nil;
-    EditText.OnChange := nil;
-    CheckBoxOnlyFirstTime.OnClick := nil;
-  end;
-
-  FCurrentAction := Value;
-
-  if CurrentAction <> nil then
-  begin
-    RadioGroupKind.ItemIndex := Ord(CurrentAction.Kind);
-    EditDialogTitle.Text := CurrentAction.DialogTitle;
-    EditText.Text := CurrentAction.Text;
-    CheckBoxOnlyFirstTime.Checked := CurrentAction.OnlyFirstTime;
-
-    RadioGroupKind.OnClick := RadioGroupKindClick;
-    EditDialogTitle.OnChange := EditDialogTitleChange;
-    EditText.OnChange := EditTextChange;
-    CheckBoxOnlyFirstTime.OnClick := CheckBoxOnlyFirstTimeClick;
-
-    Visible := True;
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TFrameMessageActionEditor.MarkModified;
-begin
-  (Owner as ISimpleSquaresEditor).MarkModified;
+  RadioGroupKind.OnClick := nil;
+  EditDialogTitle.OnChange := nil;
+  EditText.OnChange := nil;
+  CheckBoxOnlyFirstTime.OnClick := nil;
 end;
 
 {*

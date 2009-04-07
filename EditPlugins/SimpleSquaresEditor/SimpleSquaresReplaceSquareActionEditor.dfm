@@ -1,13 +1,8 @@
-object FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
-  Left = 0
-  Top = 0
+inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
   Width = 257
   Height = 393
   Constraints.MinHeight = 304
   Constraints.MinWidth = 257
-  TabOrder = 0
-  TabStop = True
-  Visible = False
   object ButtonResetSquarePos: TButton
     Left = 16
     Top = 16

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, StdCtrls, ExtCtrls, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils,
-  SimpleSquaresActions;
+  SimpleSquaresActions, SimpleSquaresActionEditor;
 
 type
   {*
@@ -13,23 +13,18 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFramePlayerColorActionEditor = class(TFrame, ISimpleSquaresEditor)
+  TFramePlayerColorActionEditor = class(TFrameActionEditor)
     LabelColor: TStaticText;
     ListBoxColor: TColorBox;
     procedure ListBoxColorChange(Sender: TObject);
   private
     FCurrentAction: TPlayerColorAction; /// Action courante
-
-    function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-
-    procedure SetCurrentAction(Value: TPlayerColorAction);
-  public
-    constructor Create(AOwner: TComponent); override;
-
-    procedure MarkModified;
-
+  protected
+    procedure ActivateAction; override;
+    procedure DeactivateAction; override;
+  published
     property CurrentAction: TPlayerColorAction
-      read FCurrentAction write SetCurrentAction;
+      read FCurrentAction write FCurrentAction;
   end;
 
 implementation
@@ -43,54 +38,20 @@ implementation
 {*
   [@inheritDoc]
 *}
-constructor TFramePlayerColorActionEditor.Create(AOwner: TComponent);
+procedure TFramePlayerColorActionEditor.ActivateAction;
 begin
-  inherited;
-  Align := alClient;
+  ListBoxColor.HandleNeeded; // work around bug of SetSelected
+  ListBoxColor.Selected := CurrentAction.Color;
+
+  ListBoxColor.OnChange := ListBoxColorChange;
 end;
 
 {*
   [@inheritDoc]
 *}
-function TFramePlayerColorActionEditor.GetFunLabyEditMainForm:
-  IOTAFunLabyEditMainForm50;
+procedure TFramePlayerColorActionEditor.DeactivateAction;
 begin
-  Result := (Owner as ISimpleSquaresEditor).FunLabyEditMainForm;
-end;
-
-{*
-  Modifie l'action à éditer
-  @param Value   Nouvelle action
-*}
-procedure TFramePlayerColorActionEditor.SetCurrentAction(
-  Value: TPlayerColorAction);
-begin
-  if CurrentAction <> nil then
-  begin
-    Visible := False;
-
-    ListBoxColor.OnChange := nil;
-  end;
-
-  FCurrentAction := Value;
-
-  if CurrentAction <> nil then
-  begin
-    ListBoxColor.HandleNeeded; // work around bug of SetSelected
-    ListBoxColor.Selected := CurrentAction.Color;
-
-    ListBoxColor.OnChange := ListBoxColorChange;
-
-    Visible := True;
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TFramePlayerColorActionEditor.MarkModified;
-begin
-  (Owner as ISimpleSquaresEditor).MarkModified;
+  ListBoxColor.OnChange := nil;
 end;
 
 {*

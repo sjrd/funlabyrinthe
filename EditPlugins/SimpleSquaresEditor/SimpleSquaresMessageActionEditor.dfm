@@ -1,13 +1,8 @@
-object FrameMessageActionEditor: TFrameMessageActionEditor
-  Left = 0
-  Top = 0
+inherited FrameMessageActionEditor: TFrameMessageActionEditor
   Width = 249
   Height = 369
   Constraints.MinHeight = 321
   Constraints.MinWidth = 249
-  TabOrder = 0
-  TabStop = True
-  Visible = False
   DesignSize = (
     249
     369)

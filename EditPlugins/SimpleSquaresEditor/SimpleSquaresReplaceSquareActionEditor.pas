@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ImgList, StdCtrls, ComCtrls, ScUtils, FunLabyUtils, FilesUtils,
   FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresActions,
-  SimpleSquaresConsts;
+  SimpleSquaresConsts, SimpleSquaresActionEditor;
 
 type
   {*
@@ -14,7 +14,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameReplaceSquareActionEditor = class(TFrame, ISimpleSquaresEditor)
+  TFrameReplaceSquareActionEditor = class(TFrameActionEditor)
     ButtonResetSquarePos: TButton;
     GroupBoxReplaceBy: TGroupBox;
     LabelFieldID: TLabel;
@@ -42,17 +42,12 @@ type
       const DialogTitle, DialogPrompt: string); stdcall;
 
     procedure FillIDEdits;
-
-    function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-
-    procedure SetCurrentAction(Value: TReplaceSquareAction);
-  public
-    constructor Create(AOwner: TComponent); override;
-
-    procedure MarkModified;
-
+  protected
+    procedure ActivateAction; override;
+    procedure DeactivateAction; override;
+  published
     property CurrentAction: TReplaceSquareAction
-      read FCurrentAction write SetCurrentAction;
+      read FCurrentAction write FCurrentAction;
   end;
 
 implementation
@@ -62,15 +57,6 @@ implementation
 {---------------------------------------}
 { TFrameReplaceSquareActionEditor class }
 {---------------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-constructor TFrameReplaceSquareActionEditor.Create(AOwner: TComponent);
-begin
-  inherited;
-  Align := alClient;
-end;
 
 {*
   Enregistre un unique composant
@@ -150,73 +136,52 @@ end;
 {*
   [@inheritDoc]
 *}
-function TFrameReplaceSquareActionEditor.GetFunLabyEditMainForm:
-  IOTAFunLabyEditMainForm50;
+procedure TFrameReplaceSquareActionEditor.ActivateAction;
 begin
-  Result := (Owner as ISimpleSquaresEditor).FunLabyEditMainForm;
-end;
-
-{*
-  Modifie l'action à éditer
-  @param Value   Nouvelle action
-*}
-procedure TFrameReplaceSquareActionEditor.SetCurrentAction(
-  Value: TReplaceSquareAction);
-begin
-  if CurrentAction <> nil then
+  // Initialize
+  if MasterFile = nil then // first time
   begin
-    Visible := False;
+    EditEffectID.ItemsEx.Add.Caption := SNone;
+    EditToolID.ItemsEx.Add.Caption := SNone;
+    EditObstacleID.ItemsEx.Add.Caption := SNone;
 
-    EditFieldID.OnChange := nil;
-    EditEffectID.OnChange := nil;
-    EditToolID.OnChange := nil;
-    EditObstacleID.OnChange := nil;
+    MasterFile := GetFunLabyEditMainForm.MasterFile;
+    MasterFile.RegisterComponents(RegisterSingleComponent,
+      RegisterComponentSet);
+
+    MapViewer := GetFunLabyEditMainForm.MapViewer;
   end;
 
-  FCurrentAction := Value;
-
-  if CurrentAction <> nil then
+  // Never have an action with FieldID = ''
+  with CurrentAction do
   begin
-    if MasterFile = nil then // first time
+    if ReplaceBy.FieldID = '' then
     begin
-      EditEffectID.ItemsEx.Add.Caption := SNone;
-      EditToolID.ItemsEx.Add.Caption := SNone;
-      EditObstacleID.ItemsEx.Add.Caption := SNone;
-
-      MasterFile := GetFunLabyEditMainForm.MasterFile;
-      MasterFile.RegisterComponents(RegisterSingleComponent,
-        RegisterComponentSet);
-
-      MapViewer := GetFunLabyEditMainForm.MapViewer;
+      // Just created - use selected square as base
+      ReplaceBy.SetToSquare(
+        MasterFile.Master.Map[SquarePos.MapID].Map[SquarePos.Position]);
     end;
-
-    with CurrentAction do
-    begin
-      if ReplaceBy.FieldID = '' then
-      begin
-        // Just created - use selected square as base
-        ReplaceBy.SetToSquare(
-          MasterFile.Master.Map[SquarePos.MapID].Map[SquarePos.Position]);
-      end;
-    end;
-
-    FillIDEdits;
-
-    EditFieldID.OnChange := EditComponentIDChange;
-    EditEffectID.OnChange := EditComponentIDChange;
-    EditToolID.OnChange := EditComponentIDChange;
-    EditObstacleID.OnChange := EditComponentIDChange;
-
-    Visible := True;
   end;
+
+  // Activate action
+  
+  FillIDEdits;
+
+  EditFieldID.OnChange := EditComponentIDChange;
+  EditEffectID.OnChange := EditComponentIDChange;
+  EditToolID.OnChange := EditComponentIDChange;
+  EditObstacleID.OnChange := EditComponentIDChange;
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TFrameReplaceSquareActionEditor.MarkModified;
+procedure TFrameReplaceSquareActionEditor.DeactivateAction;
 begin
-  (Owner as ISimpleSquaresEditor).MarkModified;
+  EditFieldID.OnChange := nil;
+  EditEffectID.OnChange := nil;
+  EditToolID.OnChange := nil;
+  EditObstacleID.OnChange := nil;
 end;
 
 {*

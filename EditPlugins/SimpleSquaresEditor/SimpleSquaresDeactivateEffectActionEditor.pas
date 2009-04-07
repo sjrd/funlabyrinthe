@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ImgList, ScUtils, FunLabyUtils, FilesUtils,
-  FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresActions, SimpleSquaresConsts;
+  FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresActions, SimpleSquaresConsts,
+  SimpleSquaresActionEditor;
 
 type
   {*
@@ -13,7 +14,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameDeactivateEffectActionEditor = class(TFrame, ISimpleSquaresEditor)
+  TFrameDeactivateEffectActionEditor = class(TFrameActionEditor)
     LabelEffectID: TLabel;
     SquaresImages: TImageList;
     EditEffectID: TComboBoxEx;
@@ -29,17 +30,12 @@ type
       const DialogTitle, DialogPrompt: string); stdcall;
 
     procedure FillIDEdits;
-
-    function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-
-    procedure SetCurrentAction(Value: TDeactivateEffectAction);
-  public
-    constructor Create(AOwner: TComponent); override;
-
-    procedure MarkModified;
-
+  protected
+    procedure ActivateAction; override;
+    procedure DeactivateAction; override;
+  published
     property CurrentAction: TDeactivateEffectAction
-      read FCurrentAction write SetCurrentAction;
+      read FCurrentAction write FCurrentAction;
   end;
 
 implementation
@@ -49,15 +45,6 @@ implementation
 {------------------------------------------}
 { TFrameDeactivateEffectActionEditor class }
 {------------------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-constructor TFrameDeactivateEffectActionEditor.Create(AOwner: TComponent);
-begin
-  inherited;
-  Align := alClient;
-end;
 
 {*
   Enregistre un unique composant
@@ -121,53 +108,31 @@ end;
 {*
   [@inheritDoc]
 *}
-function TFrameDeactivateEffectActionEditor.GetFunLabyEditMainForm:
-  IOTAFunLabyEditMainForm50;
+procedure TFrameDeactivateEffectActionEditor.ActivateAction;
 begin
-  Result := (Owner as ISimpleSquaresEditor).FunLabyEditMainForm;
-end;
-
-{*
-  Modifie l'action à éditer
-  @param Value   Nouvelle action
-*}
-procedure TFrameDeactivateEffectActionEditor.SetCurrentAction(
-  Value: TDeactivateEffectAction);
-begin
-  if CurrentAction <> nil then
+  // Initialize
+  if MasterFile = nil then // first time
   begin
-    Visible := False;
+    EditEffectID.ItemsEx.Add.Caption := SNone;
 
-    EditEffectID.OnChange := nil;
+    MasterFile := GetFunLabyEditMainForm.MasterFile;
+    MasterFile.RegisterComponents(RegisterSingleComponent,
+      RegisterComponentSet);
   end;
 
-  FCurrentAction := Value;
+  // Activate action
 
-  if CurrentAction <> nil then
-  begin
-    if MasterFile = nil then // first time
-    begin
-      EditEffectID.ItemsEx.Add.Caption := SNone;
+  FillIDEdits;
 
-      MasterFile := GetFunLabyEditMainForm.MasterFile;
-      MasterFile.RegisterComponents(RegisterSingleComponent,
-        RegisterComponentSet);
-    end;
-
-    FillIDEdits;
-
-    EditEffectID.OnChange := EditEffectIDChange;
-
-    Visible := True;
-  end;
+  EditEffectID.OnChange := EditEffectIDChange;
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TFrameDeactivateEffectActionEditor.MarkModified;
+procedure TFrameDeactivateEffectActionEditor.DeactivateAction;
 begin
-  (Owner as ISimpleSquaresEditor).MarkModified;
+  EditEffectID.OnChange := nil;
 end;
 
 {*

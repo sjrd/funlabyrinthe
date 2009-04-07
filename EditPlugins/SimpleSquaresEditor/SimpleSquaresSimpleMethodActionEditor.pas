@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, StdCtrls, ExtCtrls, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils,
-  SimpleSquaresActions;
+  SimpleSquaresActions, SimpleSquaresActionEditor;
 
 type
   {*
@@ -13,22 +13,17 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameSimpleMethodActionEditor = class(TFrame, ISimpleSquaresEditor)
+  TFrameSimpleMethodActionEditor = class(TFrameActionEditor)
     RadioGroupKind: TRadioGroup;
     procedure RadioGroupKindClick(Sender: TObject);
   private
     FCurrentAction: TSimpleMethodAction; /// Action courante
-
-    function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-
-    procedure SetCurrentAction(Value: TSimpleMethodAction);
-  public
-    constructor Create(AOwner: TComponent); override;
-
-    procedure MarkModified;
-
+  protected
+    procedure ActivateAction; override;
+    procedure DeactivateAction; override;
+  published
     property CurrentAction: TSimpleMethodAction
-      read FCurrentAction write SetCurrentAction;
+      read FCurrentAction write FCurrentAction;
   end;
 
 implementation
@@ -42,53 +37,19 @@ implementation
 {*
   [@inheritDoc]
 *}
-constructor TFrameSimpleMethodActionEditor.Create(AOwner: TComponent);
+procedure TFrameSimpleMethodActionEditor.ActivateAction;
 begin
-  inherited;
-  Align := alClient;
+  RadioGroupKind.ItemIndex := Ord(CurrentAction.Kind);
+
+  RadioGroupKind.OnClick := RadioGroupKindClick;
 end;
 
 {*
   [@inheritDoc]
 *}
-function TFrameSimpleMethodActionEditor.GetFunLabyEditMainForm:
-  IOTAFunLabyEditMainForm50;
+procedure TFrameSimpleMethodActionEditor.DeactivateAction;
 begin
-  Result := (Owner as ISimpleSquaresEditor).FunLabyEditMainForm;
-end;
-
-{*
-  Modifie l'action à éditer
-  @param Value   Nouvelle action
-*}
-procedure TFrameSimpleMethodActionEditor.SetCurrentAction(
-  Value: TSimpleMethodAction);
-begin
-  if CurrentAction <> nil then
-  begin
-    Visible := False;
-
-    RadioGroupKind.OnClick := nil;
-  end;
-
-  FCurrentAction := Value;
-
-  if CurrentAction <> nil then
-  begin
-    RadioGroupKind.ItemIndex := Ord(CurrentAction.Kind);
-
-    RadioGroupKind.OnClick := RadioGroupKindClick;
-
-    Visible := True;
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TFrameSimpleMethodActionEditor.MarkModified;
-begin
-  (Owner as ISimpleSquaresEditor).MarkModified;
+  RadioGroupKind.OnClick := nil;
 end;
 
 {*

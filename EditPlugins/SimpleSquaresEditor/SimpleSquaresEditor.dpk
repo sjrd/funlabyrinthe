@@ -54,7 +54,8 @@ contains
   SimpleSquaresDeactivateEffectActionEditor in 'SimpleSquaresDeactivateEffectActionEditor.pas' {FrameDeactivateEffectActionEditor: TFrame},
   SimpleSquaresConsts in 'SimpleSquaresConsts.pas',
   SimpleSquaresPlayerColorActionEditor in 'SimpleSquaresPlayerColorActionEditor.pas' {FramePlayerColorActionEditor: TFrame},
-  SimpleSquaresSimpleMethodActionEditor in 'SimpleSquaresSimpleMethodActionEditor.pas' {FrameSimpleMethodActionEditor: TFrame};
+  SimpleSquaresSimpleMethodActionEditor in 'SimpleSquaresSimpleMethodActionEditor.pas' {FrameSimpleMethodActionEditor: TFrame},
+  SimpleSquaresActionEditor in 'SimpleSquaresActionEditor.pas' {FrameActionEditor: TFrame};
 
 end.
 

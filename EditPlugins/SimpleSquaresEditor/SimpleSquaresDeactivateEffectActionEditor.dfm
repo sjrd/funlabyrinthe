@@ -1,11 +1,6 @@
-object FrameDeactivateEffectActionEditor: TFrameDeactivateEffectActionEditor
-  Left = 0
-  Top = 0
+inherited FrameDeactivateEffectActionEditor: TFrameDeactivateEffectActionEditor
   Width = 257
   Height = 153
-  TabOrder = 0
-  TabStop = True
-  Visible = False
   object LabelEffectID: TLabel
     Left = 16
     Top = 16

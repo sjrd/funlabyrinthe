@@ -7,7 +7,7 @@ uses
   Dialogs, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, StdCtrls, ExtCtrls,
   Buttons, SimpleSquaresActions, SimpleSquaresReplaceSquareActionEditor,
   SimpleSquaresMessageActionEditor, SimpleSquaresDeactivateEffectActionEditor,
-  SimpleSquaresPlayerColorActionEditor;
+  SimpleSquaresPlayerColorActionEditor, SimpleSquaresActionEditor;
 
 type
   {*
@@ -39,13 +39,13 @@ type
     MapViewer: IOTAMapViewer50;
 
     /// Éditeur d'action Remplacement de case
-    ReplaceSquareActionEditor: TFrameReplaceSquareActionEditor;
+    ReplaceSquareActionEditor: TFrameActionEditor;
     /// Éditeur d'action Remplacement de case
-    DeactivateEffectActionEditor: TFrameDeactivateEffectActionEditor;
+    DeactivateEffectActionEditor: TFrameActionEditor;
     /// Éditeur d'action Afficher un message
-    MessageActionEditor: TFrameMessageActionEditor;
+    MessageActionEditor: TFrameActionEditor;
     /// Éditeur d'action Changer la couleur du pion
-    PlayerColorActionEditor: TFramePlayerColorActionEditor;
+    PlayerColorActionEditor: TFrameActionEditor;
 
     procedure UpdateActions;
 
@@ -192,15 +192,13 @@ begin
   end;
 
   if CurrentAction is TReplaceSquareAction then
-    ReplaceSquareActionEditor.CurrentAction :=
-      TReplaceSquareAction(CurrentAction)
+    ReplaceSquareActionEditor.CurrentAction := CurrentAction
   else if CurrentAction is TDeactivateEffectAction then
-    DeactivateEffectActionEditor.CurrentAction :=
-      TDeactivateEffectAction(CurrentAction)
+    DeactivateEffectActionEditor.CurrentAction := CurrentAction
   else if CurrentAction is TMessageAction then
-    MessageActionEditor.CurrentAction := TMessageAction(CurrentAction)
+    MessageActionEditor.CurrentAction := CurrentAction
   else if CurrentAction is TPlayerColorAction then
-    PlayerColorActionEditor.CurrentAction := TPlayerColorAction(CurrentAction);
+    PlayerColorActionEditor.CurrentAction := CurrentAction;
 end;
 
 {*

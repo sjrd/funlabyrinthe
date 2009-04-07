@@ -1,11 +1,6 @@
-object FrameSimpleMethodActionEditor: TFrameSimpleMethodActionEditor
-  Left = 0
-  Top = 0
+inherited FrameSimpleMethodActionEditor: TFrameSimpleMethodActionEditor
   Width = 289
   Height = 201
-  TabOrder = 0
-  TabStop = True
-  Visible = False
   object RadioGroupKind: TRadioGroup
     Left = 16
     Top = 16
