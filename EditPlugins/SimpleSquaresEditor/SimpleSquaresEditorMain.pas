@@ -474,8 +474,8 @@ begin
   Code.Add('interface');
   Code.Add('');
   Code.Add('uses');
-  Code.Add('  SysUtils, Classes, ScUtils, SdDialogs, FunLabyUtils, Generics,');
-  Code.Add('  MapTools, GenericButtons;');
+  Code.Add('  SysUtils, Classes, Graphics, ScUtils, SdDialogs, FunLabyUtils,');
+  Code.Add('  Generics, MapTools, GenericButtons;');
   Code.Add('');
   Code.Add('const');
 

@@ -13,7 +13,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameDeactivateEffectActionEditor = class(TFrame)
+  TFrameDeactivateEffectActionEditor = class(TFrame, ISimpleSquaresEditor)
     LabelEffectID: TLabel;
     SquaresImages: TImageList;
     EditEffectID: TComboBoxEx;

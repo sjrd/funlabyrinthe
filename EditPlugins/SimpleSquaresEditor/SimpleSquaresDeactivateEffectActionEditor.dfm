@@ -5,6 +5,7 @@ object FrameDeactivateEffectActionEditor: TFrameDeactivateEffectActionEditor
   Height = 153
   TabOrder = 0
   TabStop = True
+  Visible = False
   object LabelEffectID: TLabel
     Left = 16
     Top = 16
@@ -20,7 +21,6 @@ object FrameDeactivateEffectActionEditor: TFrameDeactivateEffectActionEditor
     ItemsEx = <>
     ItemHeight = 16
     TabOrder = 0
-    OnChange = EditEffectIDChange
     Images = SquaresImages
     DropDownCount = 24
   end

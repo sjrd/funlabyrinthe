@@ -11,6 +11,11 @@ resourcestring
   SDeactivateEffectActionTitle = 'Désactiver';
   SMessageActionTitle = 'Afficher %s';
   SPlayerColorActionTitle = 'Changer la couleur du pion en %s';
+  SPlayerShowTitle = 'Montrer le joueur';
+  SPlayerHideTitle = 'Cacher le joueur';
+  SPlayerWinTitle = 'Le joueur gagne';
+  SPlayerLoseTitle = 'Le joueur perd';
+  SMasterTemporizeTitle = 'Temporisation standard';
 
 type
   {*
@@ -192,6 +197,40 @@ type
     procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
 
     property Color: TColor read FColor write FColor;
+  end;
+
+  {*
+    Type de méthode simple
+    - smPlayerShow : Player.Show;
+    - smPlayerHide : Player.Hide;
+    - smPlayerWin : Player.Win;
+    - smPlayerLose : Player.Lose;
+    - smMasterTemporize : Master.Temporize;
+  *}
+  TSimpleMethodKind = (
+    smPlayerShow, smPlayerHide, smPlayerWin, smPlayerLose,
+    smMasterTemporize
+  );
+
+  {*
+    Action méthode simple
+    @author sjrd
+    @version 5.0
+  *}
+  TSimpleMethodAction = class(TSimpleAction)
+  private
+    FKind: TSimpleMethodKind; /// Type de l'action
+  protected
+    procedure Save(Stream: TStream); override;
+
+    function GetTitle: string; override;
+  public
+    constructor Load(Stream: TStream); override;
+    constructor Create; override;
+
+    procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
+
+    property Kind: TSimpleMethodKind read FKind write FKind;
   end;
 
 implementation
@@ -670,18 +709,85 @@ end;
 procedure TPlayerColorAction.ProduceDelphiCode(Code: TStrings;
   const Indent: string);
 begin
-  Code.Add(Indent + Format('Player.Color := %s', [ColorToString(Color)]));
+  Code.Add(Indent + Format('Player.Color := %s;', [ColorToString(Color)]));
+end;
+
+{---------------------------}
+{ TSimpleMethodAction class }
+{---------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TSimpleMethodAction.Load(Stream: TStream);
+begin
+  inherited;
+
+  Stream.ReadBuffer(FKind, SizeOf(TSimpleMethodKind));
+end;
+
+{*
+  [@inheritDoc]
+*}
+constructor TSimpleMethodAction.Create;
+begin
+  inherited;
+
+  FKind := smMasterTemporize;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleMethodAction.Save(Stream: TStream);
+begin
+  inherited;
+
+  Stream.WriteBuffer(FKind, SizeOf(TSimpleMethodKind));
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSimpleMethodAction.GetTitle: string;
+begin
+  case Kind of
+    smPlayerShow: Result := SPlayerShowTitle;
+    smPlayerHide: Result := SPlayerHideTitle;
+    smPlayerWin:  Result := SPlayerWinTitle;
+    smPlayerLose: Result := SPlayerLoseTitle;
+    smMasterTemporize: Result := SMasterTemporizeTitle;
+  end;
+
+{$IF Ord(High(TSimpleMethodKind)) <> 4}
+  {$MESSAGE ERROR
+    'Every possible value of TSimpleMethodKind must be handled here'}
+{$IFEND}
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleMethodAction.ProduceDelphiCode(Code: TStrings;
+  const Indent: string);
+const {don't localize}
+  Statements: array[TSimpleMethodKind] of string = (
+    'Player.Show;', 'Player.Hide;', 'Player.Win;', 'Player.Lose;',
+    'Master.Temporize;'
+  );
+begin
+  Code.Add(Indent + Statements[Kind]);
 end;
 
 initialization
   RegisterClasses([
     TReplaceSquareAction, TDeactivateEffectAction, TMessageAction,
-    TPlayerColorAction
+    TPlayerColorAction, TSimpleMethodAction
   ]);
 finalization
   UnRegisterClasses([
     TReplaceSquareAction, TDeactivateEffectAction, TMessageAction,
-    TPlayerColorAction
+    TPlayerColorAction, TSimpleMethodAction
   ]);
 end.
 

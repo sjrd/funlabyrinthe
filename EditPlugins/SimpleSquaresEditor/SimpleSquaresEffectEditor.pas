@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, StdCtrls, ExtCtrls,
   Buttons, SimpleSquaresActions, SimpleSquaresReplaceSquareActionEditor,
-  SimpleSquaresMessageActionEditor, SimpleSquaresDeactivateEffectActionEditor;
+  SimpleSquaresMessageActionEditor, SimpleSquaresDeactivateEffectActionEditor,
+  SimpleSquaresPlayerColorActionEditor;
 
 type
   {*
@@ -43,6 +44,8 @@ type
     DeactivateEffectActionEditor: TFrameDeactivateEffectActionEditor;
     /// Éditeur d'action Afficher un message
     MessageActionEditor: TFrameMessageActionEditor;
+    /// Éditeur d'action Changer la couleur du pion
+    PlayerColorActionEditor: TFramePlayerColorActionEditor;
 
     procedure UpdateActions;
 
@@ -91,6 +94,9 @@ begin
 
   MessageActionEditor := TFrameMessageActionEditor.Create(Self);
   MessageActionEditor.Parent := Self;
+
+  PlayerColorActionEditor := TFramePlayerColorActionEditor.Create(Self);
+  PlayerColorActionEditor.Parent := Self;
 end;
 
 {*
@@ -171,7 +177,9 @@ begin
   else if CurrentAction is TDeactivateEffectAction then
     DeactivateEffectActionEditor.CurrentAction := nil
   else if CurrentAction is TMessageAction then
-    MessageActionEditor.CurrentAction := nil;
+    MessageActionEditor.CurrentAction := nil
+  else if CurrentAction is TPlayerColorAction then
+    PlayerColorActionEditor.CurrentAction := nil;
 
   FCurrentAction := Value;
 
@@ -190,7 +198,9 @@ begin
     DeactivateEffectActionEditor.CurrentAction :=
       TDeactivateEffectAction(CurrentAction)
   else if CurrentAction is TMessageAction then
-    MessageActionEditor.CurrentAction := TMessageAction(CurrentAction);
+    MessageActionEditor.CurrentAction := TMessageAction(CurrentAction)
+  else if CurrentAction is TPlayerColorAction then
+    PlayerColorActionEditor.CurrentAction := TPlayerColorAction(CurrentAction);
 end;
 
 {*
@@ -206,6 +216,7 @@ begin
       TObject(TReplaceSquareAction));
     AddObject('Désactiver l''effet', TObject(TDeactivateEffectAction));
     AddObject('Afficher un message', TObject(TMessageAction));
+    AddObject('Changer la couleur du pion', TObject(TPlayerColorAction));
   end;
 end;
 

@@ -15,11 +15,11 @@ type
   *}
   TFrameMessageActionEditor = class(TFrame, ISimpleSquaresEditor)
     RadioGroupKind: TRadioGroup;
-    LabelDialogTitle: TLabel;
     EditDialogTitle: TEdit;
-    LabelText: TLabel;
     EditText: TMemo;
     CheckBoxOnlyFirstTime: TCheckBox;
+    LabelText: TStaticText;
+    LabelDialogTitle: TStaticText;
     procedure CheckBoxOnlyFirstTimeClick(Sender: TObject);
     procedure RadioGroupKindClick(Sender: TObject);
     procedure EditDialogTitleChange(Sender: TObject);

@@ -52,7 +52,9 @@ contains
   SimpleSquaresObjectEditor in 'SimpleSquaresObjectEditor.pas' {FrameObjectEditor: TFrame},
   SimpleSquaresObstacleEditor in 'SimpleSquaresObstacleEditor.pas' {FrameObstacleEditor: TFrame},
   SimpleSquaresDeactivateEffectActionEditor in 'SimpleSquaresDeactivateEffectActionEditor.pas' {FrameDeactivateEffectActionEditor: TFrame},
-  SimpleSquaresConsts in 'SimpleSquaresConsts.pas';
+  SimpleSquaresConsts in 'SimpleSquaresConsts.pas',
+  SimpleSquaresPlayerColorActionEditor in 'SimpleSquaresPlayerColorActionEditor.pas' {FramePlayerColorActionEditor: TFrame},
+  SimpleSquaresSimpleMethodActionEditor in 'SimpleSquaresSimpleMethodActionEditor.pas' {FrameSimpleMethodActionEditor: TFrame};
 
 end.
 

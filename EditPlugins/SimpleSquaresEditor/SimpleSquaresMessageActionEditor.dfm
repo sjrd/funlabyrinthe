@@ -2,7 +2,7 @@ object FrameMessageActionEditor: TFrameMessageActionEditor
   Left = 0
   Top = 0
   Width = 249
-  Height = 337
+  Height = 369
   Constraints.MinHeight = 321
   Constraints.MinWidth = 249
   TabOrder = 0
@@ -10,20 +10,22 @@ object FrameMessageActionEditor: TFrameMessageActionEditor
   Visible = False
   DesignSize = (
     249
-    337)
-  object LabelDialogTitle: TLabel
-    Left = 16
-    Top = 168
-    Width = 140
-    Height = 13
-    Caption = 'Titre de la bo'#238'te de dialogue :'
-  end
-  object LabelText: TLabel
+    369)
+  object LabelText: TStaticText
     Left = 16
     Top = 216
-    Width = 95
-    Height = 13
+    Width = 99
+    Height = 17
     Caption = 'Texte du message :'
+    TabOrder = 4
+  end
+  object LabelDialogTitle: TStaticText
+    Left = 16
+    Top = 168
+    Width = 144
+    Height = 17
+    Caption = 'Titre de la bo'#238'te de dialogue :'
+    TabOrder = 5
   end
   object RadioGroupKind: TRadioGroup
     Left = 16
@@ -54,7 +56,7 @@ object FrameMessageActionEditor: TFrameMessageActionEditor
     Left = 16
     Top = 232
     Width = 217
-    Height = 90
+    Height = 97
     Anchors = [akLeft, akTop, akRight, akBottom]
     Lines.Strings = (
       'EditText')
@@ -62,8 +64,8 @@ object FrameMessageActionEditor: TFrameMessageActionEditor
   end
   object CheckBoxOnlyFirstTime: TCheckBox
     Left = 16
-    Top = 351
-    Width = 15
+    Top = 335
+    Width = 217
     Height = 17
     Anchors = [akLeft, akRight, akBottom]
     Caption = 'Afficher seulement au premier passage'
