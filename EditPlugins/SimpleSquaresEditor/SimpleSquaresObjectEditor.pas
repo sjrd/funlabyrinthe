@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, Spin, StdCtrls;
+  Dialogs, Spin, StdCtrls, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils,
+  SimpleSquaresEditorPart;
 
 type
   {*
@@ -12,7 +13,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameObjectEditor = class(TFrame, ISimpleSquaresEditor)
+  TFrameObjectEditor = class(TFrameSimpleSquaresEditorPart)
     LabelFindMessage: TLabel;
     EditFindMessage: TMemo;
     CheckBoxHandleAction: TCheckBox;
@@ -30,14 +31,8 @@ type
 
     procedure UpdateHandledActionControls;
 
-    function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-
     procedure SetCurrentObject(Value: TSimpleObject);
   public
-    constructor Create(AOwner: TComponent); override;
-
-    procedure MarkModified;
-
     property CurrentObject: TSimpleObject
       read FCurrentObject write SetCurrentObject;
   end;
@@ -51,15 +46,6 @@ implementation
 {--------------------------}
 
 {*
-  [@inheritDoc]
-*}
-constructor TFrameObjectEditor.Create(AOwner: TComponent);
-begin
-  inherited;
-  Align := alClient;
-end;
-
-{*
   Met à jour les contrôles de l'action gérée
 *}
 procedure TFrameObjectEditor.UpdateHandledActionControls;
@@ -67,14 +53,6 @@ begin
   EditHandledAction.Enabled := CheckBoxHandleAction.Checked;
   EditMinimumCount.Enabled := CheckBoxHandleAction.Checked;
   CheckBoxDecrementOnUse.Enabled := CheckBoxHandleAction.Checked;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameObjectEditor.GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-begin
-  Result := (Owner as ISimpleSquaresEditor).FunLabyEditMainForm;
 end;
 
 {*
@@ -118,14 +96,6 @@ begin
 
     Visible := True;
   end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TFrameObjectEditor.MarkModified;
-begin
-  (Owner as ISimpleSquaresEditor).MarkModified;
 end;
 
 {*
@@ -180,6 +150,8 @@ end;
 procedure TFrameObjectEditor.CheckBoxDecrementOnUseClick(Sender: TObject);
 begin
   CurrentObject.DecrementOnUse := CheckBoxDecrementOnUse.Checked;
+
+  MarkModified;
 end;
 
 end.

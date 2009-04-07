@@ -57,7 +57,7 @@ type
   end;
 
   {*
-    Éditeur d'unité BPL
+    Éditeur d'unité SimpleSquares (*.ssq)
     @author sjrd
     @version 5.0
   *}

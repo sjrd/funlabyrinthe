@@ -7,7 +7,8 @@ uses
   Dialogs, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, StdCtrls, ExtCtrls,
   Buttons, SimpleSquaresActions, SimpleSquaresReplaceSquareActionEditor,
   SimpleSquaresMessageActionEditor, SimpleSquaresDeactivateEffectActionEditor,
-  SimpleSquaresPlayerColorActionEditor, SimpleSquaresActionEditor;
+  SimpleSquaresPlayerColorActionEditor, SimpleSquaresActionEditor,
+  SimpleSquaresEditorPart;
 
 type
   {*
@@ -15,7 +16,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameEffectEditor = class(TFrame, ISimpleSquaresEditor)
+  TFrameEffectEditor = class(TFrameSimpleSquaresEditorPart)
     PanelActionList: TPanel;
     SplitterActionList: TSplitter;
     LabelActionList: TLabel;
@@ -49,8 +50,6 @@ type
 
     procedure UpdateActions;
 
-    function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-
     procedure SetCurrentEffect(Value: TSimpleEffect);
     procedure SetCurrentAction(Value: TSimpleAction);
 
@@ -61,7 +60,7 @@ type
 
     procedure AfterConstruction; override;
 
-    procedure MarkModified;
+    procedure MarkModified; override;
 
     property FunLabyEditMainForm: IOTAFunLabyEditMainForm50
       read GetFunLabyEditMainForm;
@@ -122,14 +121,6 @@ begin
     CurrentAction := nil
   else
     CurrentAction := Actions[Index];
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameEffectEditor.GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-begin
-  Result := (Owner as ISimpleSquaresEditor).FunLabyEditMainForm;
 end;
 
 {*
@@ -225,7 +216,7 @@ procedure TFrameEffectEditor.MarkModified;
 begin
   ListBoxActions.Invalidate;
 
-  (Owner as ISimpleSquaresEditor).MarkModified;
+  inherited;
 end;
 
 {*

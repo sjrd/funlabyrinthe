@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, TypInfo, ScCompilerMagic, FunLabyUtils, FunLabyEditOTA,
-  SimpleSquaresUtils;
+  SimpleSquaresUtils, SimpleSquaresEditorPart;
 
 type
   {*
@@ -19,7 +19,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameActionEditor = class(TFrame, ISimpleSquaresEditor)
+  TFrameActionEditor = class(TFrameSimpleSquaresEditorPart)
   private
     FCurrentActionProp: PPropInfo;    /// PropInfo de la propriété CurrentAction
     FActionClass: TSimpleActionClass; /// Classe d'actions prises en charge
@@ -27,14 +27,10 @@ type
     function GetCurrentAction: TSimpleAction;
     procedure SetCurrentAction(Value: TSimpleAction);
   protected
-    function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-
     procedure ActivateAction; virtual;
     procedure DeactivateAction; virtual;
   public
     constructor Create(AOwner: TComponent); override;
-
-    procedure MarkModified; virtual;
 
     property ActionClass: TSimpleActionClass read FActionClass;
     property CurrentAction: TSimpleAction
@@ -60,9 +56,6 @@ var
 begin
   inherited;
 
-  Visible := False;
-  Align := alClient;
-
   // Fetch FCurrentActionProp and FActionClass from RTTI
 
   FCurrentActionProp := GetPropInfo(Self, CurrentActionPropName, [tkClass]);
@@ -73,15 +66,6 @@ begin
   if not TempClass.InheritsFrom(TSimpleAction) then
     AbstractError;
   FActionClass := TSimpleActionClass(TempClass);
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameActionEditor.GetFunLabyEditMainForm:
-  IOTAFunLabyEditMainForm50;
-begin
-  Result := (Owner as ISimpleSquaresEditor).FunLabyEditMainForm;
 end;
 
 {*
@@ -127,14 +111,6 @@ end;
 *}
 procedure TFrameActionEditor.DeactivateAction;
 begin
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TFrameActionEditor.MarkModified;
-begin
-  (Owner as ISimpleSquaresEditor).MarkModified;
 end;
 
 end.

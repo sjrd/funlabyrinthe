@@ -55,7 +55,8 @@ contains
   SimpleSquaresConsts in 'SimpleSquaresConsts.pas',
   SimpleSquaresPlayerColorActionEditor in 'SimpleSquaresPlayerColorActionEditor.pas' {FramePlayerColorActionEditor: TFrame},
   SimpleSquaresSimpleMethodActionEditor in 'SimpleSquaresSimpleMethodActionEditor.pas' {FrameSimpleMethodActionEditor: TFrame},
-  SimpleSquaresActionEditor in 'SimpleSquaresActionEditor.pas' {FrameActionEditor: TFrame};
+  SimpleSquaresActionEditor in 'SimpleSquaresActionEditor.pas' {FrameActionEditor: TFrame},
+  SimpleSquaresEditorPart in 'SimpleSquaresEditorPart.pas' {FrameSimpleSquaresEditorPart: TFrame};
 
 end.
 

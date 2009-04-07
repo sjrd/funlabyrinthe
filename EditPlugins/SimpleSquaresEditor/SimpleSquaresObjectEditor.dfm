@@ -1,13 +1,8 @@
-object FrameObjectEditor: TFrameObjectEditor
-  Left = 0
-  Top = 0
+inherited FrameObjectEditor: TFrameObjectEditor
   Width = 297
   Height = 225
   Constraints.MinHeight = 225
   Constraints.MinWidth = 297
-  TabOrder = 0
-  TabStop = True
-  Visible = False
   DesignSize = (
     297
     225)

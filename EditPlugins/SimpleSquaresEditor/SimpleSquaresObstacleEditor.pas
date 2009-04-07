@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, StdCtrls;
+  Dialogs, StdCtrls, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils,
+  SimpleSquaresEditorPart;
 
 type
   {*
@@ -12,7 +13,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameObstacleEditor = class(TFrame, ISimpleSquaresEditor)
+  TFrameObstacleEditor = class(TFrameSimpleSquaresEditorPart)
     ButtonAlways: TRadioButton;
     ButtonNever: TRadioButton;
     ButtonPlayerAction: TRadioButton;
@@ -25,14 +26,8 @@ type
   private
     FCurrentObstacle: TSimpleObstacle; /// Obstacle en cours d'édition
 
-    function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-
     procedure SetCurrentObstacle(Value: TSimpleObstacle);
   public
-    constructor Create(AOwner: TComponent); override;
-
-    procedure MarkModified;
-
     property CurrentObstacle: TSimpleObstacle
       read FCurrentObstacle write SetCurrentObstacle;
   end;
@@ -44,23 +39,6 @@ implementation
 {----------------------------}
 { TFrameObstacleEditor class }
 {----------------------------}
-
-{*
-  [@inheritDoc]
-*}
-constructor TFrameObstacleEditor.Create(AOwner: TComponent);
-begin
-  inherited;
-  Align := alClient;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameObstacleEditor.GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
-begin
-  Result := (Owner as ISimpleSquaresEditor).FunLabyEditMainForm;
-end;
 
 {*
   Modifie l'obstacle à éditer
@@ -106,14 +84,6 @@ begin
 
     Visible := True;
   end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TFrameObstacleEditor.MarkModified;
-begin
-  (Owner as ISimpleSquaresEditor).MarkModified;
 end;
 
 {*

@@ -1,11 +1,6 @@
-object FrameObstacleEditor: TFrameObstacleEditor
-  Left = 0
-  Top = 0
+inherited FrameObstacleEditor: TFrameObstacleEditor
   Width = 441
   Height = 217
-  TabOrder = 0
-  TabStop = True
-  Visible = False
   DesignSize = (
     441
     217)
