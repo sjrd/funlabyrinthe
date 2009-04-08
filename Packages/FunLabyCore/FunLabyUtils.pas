@@ -550,6 +550,7 @@ type
       out Redo: Boolean); overload;
     procedure MoveTo(const Dest: TQualifiedPos); overload;
 
+    procedure Temporize;
     procedure NaturalMoving;
 
     procedure ChangePosition(AMap: TMap; const APosition: T3DPoint);
@@ -743,6 +744,8 @@ function CheckValidLaunch: Boolean;
 procedure ShowFunLabyAbout;
 
 function PointBehind(const Src: T3DPoint; Dir: TDirection): T3DPoint;
+function PointBefore(const Src: T3DPoint; Dir: TDirection): T3DPoint;
+
 function SquareRect(X: Integer = 0; Y: Integer = 0): TRect;
 procedure EmptyRect(Canvas: TCanvas; Rect: TRect);
 procedure EmptySquareRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
@@ -808,6 +811,17 @@ begin
     diSouth: Inc(Result.Y);
     diWest:  Dec(Result.X);
   end;
+end;
+
+{*
+  Renvoie le point situé devant un point depuis la direction indiquée
+  @param Src   Point origine
+  @param Dir   Direction depuis laquelle on vient
+  @return Le point situé devant le point Src selon la direction Dir
+*}
+function PointBefore(const Src: T3DPoint; Dir: TDirection): T3DPoint;
+begin
+  Result := PointBehind(Src, NegDir[Dir]);
 end;
 
 {*
@@ -2445,6 +2459,14 @@ var
   Redo: Boolean;
 begin
   MoveTo(Dest, False, Redo);
+end;
+
+{*
+  Temporise l'exécution
+*}
+procedure TPlayer.Temporize;
+begin
+  Master.Temporize;
 end;
 
 {*
