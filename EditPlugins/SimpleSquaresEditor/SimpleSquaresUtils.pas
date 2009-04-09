@@ -1090,8 +1090,8 @@ begin
   case ConditionKind of
     ockAlways:
     begin
-      Code.Add('  Player.Map.Map[Pos] := ChangeObstacle('+
-        'Player.Map.Map[Pos], '''');');
+      Code.Add('  Player.Map[Pos] := ChangeObstacle('+
+        'Player.Map[Pos], '''');');
     end;
 
     ockNever:
@@ -1105,8 +1105,8 @@ begin
     begin
       Code.Add(Format('  if Player.DoAction(%s) then',
         [StrToStrRepres(PlayerAction)]));
-      Code.Add('    Player.Map.Map[Pos] := ChangeObstacle('+
-        'Player.Map.Map[Pos], '''')');
+      Code.Add('    Player.Map[Pos] := ChangeObstacle('+
+        'Player.Map[Pos], '''')');
       Code.Add('  else');
       Code.Add('  begin');
       Code.Add('    Player.ShowDialog(sBlindAlley,');

@@ -312,9 +312,9 @@ begin
   if MapID = '' then
     Result := 'Player.Map'
   else
-    Result := Format('Master.Map[''%s'']', [MapID]);
+    Result := Format('Master.Map[''%s''].Map', [MapID]);
 
-  Result := Result + Format('.Map[Point3D(%d, %d, %d)]',
+  Result := Result + Format('[Point3D(%d, %d, %d)]',
     [Position.X, Position.Y, Position.Z]);
 end;
 
@@ -527,7 +527,7 @@ procedure TDeactivateEffectAction.ProduceDelphiCode(Code: TStrings;
   const Indent: string);
 const
   StatementFormat =
-    'Player.Map.Map[Pos] := ChangeEffect(Player.Map.Map[Pos], %s);';
+    'Player.Map[Pos] := ChangeEffect(Player.Map[Pos], %s);';
 begin
   Code.Add(Indent + Format(StatementFormat, [StrToStrRepres(EffectID)]));
 end;
