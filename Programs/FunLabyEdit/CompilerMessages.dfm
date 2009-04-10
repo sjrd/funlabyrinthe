@@ -13,6 +13,7 @@ object FormCompilerMessages: TFormCompilerMessages
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  Scaled = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96

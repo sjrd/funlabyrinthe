@@ -26,6 +26,7 @@ object FormMain: TFormMain
   KeyPreview = True
   OldCreateOrder = True
   Position = poScreenCenter
+  Scaled = False
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy

@@ -25,6 +25,7 @@ object FormPrincipale: TFormPrincipale
     0000C01B0000DFFB0000DFFB0000C0030000FFFF0000FFFF0000FFFF0000}
   OldCreateOrder = True
   Position = poScreenCenter
+  Scaled = False
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13

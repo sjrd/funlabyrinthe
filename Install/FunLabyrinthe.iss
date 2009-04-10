@@ -156,11 +156,12 @@ Name: "regext\flp"; Description: "{cm:RegFLP}"       ; GroupDescription: {cm:Add
 Name: "regext\flm"; Description: "{cm:RegFLM}"       ; GroupDescription: {cm:AdditionalTasks}
 
 [Files]
-Source: "..\FunLabyCore.bpl";  DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
-Source: "..\FunLabyTools.bpl"; DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
-Source: "..\FunLaby.exe";      DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
-Source: "..\GeneLaby.exe";     DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
-Source: "..\FunLabyEdit.exe";  DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
+Source: "..\FunLabyCore.bpl";       DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
+Source: "..\FunLabyTools.bpl";      DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
+Source: "..\FunLabyEditPlugin.bpl"; DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
+Source: "..\FunLaby.exe";           DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
+Source: "..\GeneLaby.exe";          DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
+Source: "..\FunLabyEdit.exe";       DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
 
 Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile
 
@@ -206,49 +207,50 @@ Type: files; Name: "{app}\FunLabyrinthe.ini"
 
 [Code]
 const
-  OldVersionRegKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\';
-  
+  OldVersionRegKey =
+    'Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\';
+
   InfoBitmapFileName = 'Info.bmp';
 
 var
-  InfoBitmap : TBitmap;
-  
-  HasOldVersion : boolean;
-  OldVersionDisplayVersion : string;
-  OldVersionInstallDir : string;
-  OldVersionUninstallString : string;
-  
-  PageWidth : integer;
-  DirEdits : TStrings;
+  InfoBitmap: TBitmap;
 
-  SelectDirPage : TNewNotebookPage;
-  EditFunLabyAppData : TEdit;
-  
-  PageImportOld : TWizardPage;
-  CheckBoxImportOld : TCheckBox;
-  EditOldInstallDir : TEdit;
-  ImportDir : string;
-  
-  PageSelectImports : TWizardPage;
-  CheckListBoxImports : TNewCheckListBox;
-  LabyrinthsToImport : TStrings;
-  
-  PageUninstallOldVersion : TOutputProgressWizardPage;
-  PageImportingOld : TOutputProgressWizardPage;
+  HasOldVersion: Boolean;
+  OldVersionDisplayVersion: string;
+  OldVersionInstallDir: string;
+  OldVersionUninstallString: string;
 
-function FunLabyAppData : string;
+  PageWidth: Integer;
+  DirEdits: TStrings;
+
+  SelectDirPage: TNewNotebookPage;
+  EditFunLabyAppData: TEdit;
+
+  PageImportOld: TWizardPage;
+  CheckBoxImportOld: TCheckBox;
+  EditOldInstallDir: TEdit;
+  ImportDir: string;
+
+  PageSelectImports: TWizardPage;
+  CheckListBoxImports: TNewCheckListBox;
+  LabyrinthsToImport: TStrings;
+
+  PageUninstallOldVersion: TOutputProgressWizardPage;
+  PageImportingOld: TOutputProgressWizardPage;
+
+function FunLabyAppData: string;
 begin
   Result := EditFunLabyAppData.Text;
   if (Result <> '') and (Result[Length(Result)] <> '\') then
     Result := Result+'\';
 end;
 
-function AppData(Param : string) : string;
+function AppData(Param: string): string;
 begin
   Result := FunLabyAppData;
 end;
 
-function OldVersionInfo(Param : string) : string;
+function OldVersionInfo(Param: string): string;
 begin
   if Param = 'version' then
     Result := OldVersionDisplayVersion
@@ -260,7 +262,7 @@ begin
     Result := '';
 end;
 
-function CheckValidAppData : boolean;
+function CheckValidAppData: Boolean;
 begin
   Result := True;
 end;
@@ -274,14 +276,18 @@ begin
 
   if HasOldVersion then
   begin
-    RegQueryStringValue(HKLM, OldVersionRegKey, 'DisplayVersion', OldVersionDisplayVersion);
-    RegQueryStringValue(HKLM, OldVersionRegKey, 'InstallLocation', OldVersionInstallDir);
-    RegQueryStringValue(HKLM, OldVersionRegKey, 'QuietUninstallString', OldVersionUninstallString);
+    RegQueryStringValue(HKLM, OldVersionRegKey, 'DisplayVersion',
+      OldVersionDisplayVersion);
+    RegQueryStringValue(HKLM, OldVersionRegKey, 'InstallLocation',
+      OldVersionInstallDir);
+    RegQueryStringValue(HKLM, OldVersionRegKey, 'QuietUninstallString',
+      OldVersionUninstallString);
   end;
 end;
 
-function ExpandConstants(const Str : string) : string;
-var Old : string;
+function ExpandConstants(const Str: string): string;
+var
+  Old: string;
 begin
   Result := Str;
   repeat
@@ -290,10 +296,10 @@ begin
   until Result = Old;
 end;
 
-function AddLabel(AParent : TWinControl; var Bottom : integer;
-  const ACaption : string) : TNewStaticText;
+function AddLabel(AParent: TWinControl; var Bottom: Integer;
+  const ACaption: string): TNewStaticText;
 begin
-  Result := TNewStaticText.Create(AParent)
+  Result := TNewStaticText.Create(AParent);
   with Result do
   begin
     WordWrap := True;
@@ -305,8 +311,8 @@ begin
   end;
 end;
 
-function AddBitmapImage(AParent : TWinControl; var Bottom : integer;
-  Image : TBitmap) : TBitmapImage;
+function AddBitmapImage(AParent: TWinControl; var Bottom: Integer;
+  Image: TBitmap): TBitmapImage;
 begin
   Result := TBitmapImage.Create(AParent);
   with Result do
@@ -321,9 +327,10 @@ begin
   end;
 end;
 
-function AddImgText(AParent : TNewNotebookPage; var Bottom : integer;
-  Image : TBitmap; const Text : string) : TNewStaticText;
-var LabelBottom : integer;
+function AddImgText(AParent: TNewNotebookPage; var Bottom: Integer;
+  Image: TBitmap; const Text: string): TNewStaticText;
+var
+  LabelBottom: Integer;
 begin
   LabelBottom := Bottom;
 
@@ -335,13 +342,13 @@ begin
     Width := Width - Left;
     Bottom := Top + Height;
   end;
-  
+
   if LabelBottom > Bottom then
     Bottom := LabelBottom;
 end;
 
-function AddCheckBox(AParent : TNewNotebookPage; var Bottom : integer;
-  const ACaption : string; AChecked : boolean) : TCheckBox;
+function AddCheckBox(AParent: TNewNotebookPage; var Bottom: Integer;
+  const ACaption: string; AChecked: Boolean): TCheckBox;
 begin
   Result := TCheckBox.Create(AParent);
   with Result do
@@ -355,8 +362,8 @@ begin
   end;
 end;
 
-function AddEdit(AParent : TNewNotebookPage; var Bottom : integer;
-  const DefaultText : string) : TEdit;
+function AddEdit(AParent: TNewNotebookPage; var Bottom: Integer;
+  const DefaultText: string): TEdit;
 begin
   Result := TEdit.Create(AParent);
   with Result do
@@ -370,31 +377,32 @@ begin
   end;
 end;
 
-procedure BrowseForDirOfEdit(Sender : TObject);
-var Index : integer;
-    Edit : TEdit;
-    Dir : string;
+procedure BrowseForDirOfEdit(Sender: TObject);
+var
+  Index: Integer;
+  Edit: TEdit;
+  Dir: string;
 begin
   Index := TComponent(Sender).Tag;
   Edit := TEdit(DirEdits.Objects[Index]);
-  
+
   Dir := Edit.Text;
   if BrowseForFolder(DirEdits[Index], Dir, False) then
     Edit.Text := Dir;
 end;
 
-function AddDirEdit(AParent : TNewNotebookPage; var Bottom : integer;
-  const DefaultDir, Prompt : string) : TEdit;
+function AddDirEdit(AParent: TNewNotebookPage; var Bottom: Integer;
+  const DefaultDir, Prompt: string): TEdit;
 begin
   Result := AddEdit(AParent, Bottom, DefaultDir);
   Result.Width := WizardForm.DirEdit.Width;
-  
+
   with WizardForm, TButton.Create(AParent) do
   begin
-    Left    := DirBrowseButton.Left;
-    Top     := DirBrowseButton.Top + Result.Top - DirEdit.Top;
-    Width   := DirBrowseButton.Width;
-    Height  := DirBrowseButton.Height;
+    Left := DirBrowseButton.Left;
+    Top := DirBrowseButton.Top + Result.Top - DirEdit.Top;
+    Width := DirBrowseButton.Width;
+    Height := DirBrowseButton.Height;
     Caption := DirBrowseButton.Caption;
     Parent := AParent;
     Tag := DirEdits.Add(Prompt);
@@ -403,8 +411,9 @@ begin
   end;
 end;
 
-procedure SetEditReadOnly(Edit : TEdit; ReadOnly : boolean);
-var I : integer;
+procedure SetEditReadOnly(Edit: TEdit; ReadOnly: Boolean);
+var
+  I: Integer;
 begin
   Edit.ReadOnly := ReadOnly;
   Edit.TabStop := not ReadOnly;
@@ -426,10 +435,11 @@ begin
 end;
 
 procedure AddFunLabyAppDataField;
-var Bottom : integer;
+var
+  Bottom: Integer;
 begin
   // Ajouter un champ à la page de sélection de répertoire
-  
+
   SelectDirPage := WizardForm.SelectDirPage;
 
   with WizardForm.DirEdit do
@@ -440,18 +450,19 @@ begin
 
   EditFunLabyAppData := AddDirEdit(SelectDirPage, Bottom,
     GetPreviousData('AppData',
-      ExpandConstant('{commonappdata}\SJRDoeraene\FunLabyrinthe\')),
+    ExpandConstant('{commonappdata}\SJRDoeraene\FunLabyrinthe\')),
     ExpandConstants('{cm:AppDataSelectDirPrompt}'));
 end;
 
-procedure CheckBoxImportOldClick(Sender : TObject);
+procedure CheckBoxImportOldClick(Sender: TObject);
 begin
   SetEditReadOnly(EditOldInstallDir, not CheckBoxImportOld.Checked);
 end;
 
 procedure AddImportOldPage;
-var Surface : TNewNotebookPage;
-    Bottom : integer;
+var
+  Surface: TNewNotebookPage;
+  Bottom: Integer;
 begin
   // Ajouter la page d'import d'anciens labyrinthes
 
@@ -460,7 +471,7 @@ begin
     ExpandConstants('{cm:PageImportOldDescription}'));
   Surface := PageImportOld.Surface;
   Bottom := -8;
-  
+
   if HasOldVersion then
   begin
     AddLabel(Surface, Bottom,
@@ -483,12 +494,12 @@ begin
     HasOldVersion);
   if not HasOldVersion then
     CheckBoxImportOld.OnClick := @CheckBoxImportOldClick;
-    
+
   if not HasOldVersion then
   begin
     AddLabel(Surface, Bottom,
       ExpandConstants('{cm:OldVersionInstallDirPrompt}'));
-      
+
     EditOldInstallDir := AddDirEdit(Surface, Bottom,
       ExpandConstant('{pf}\SJRDoeraene\FunLabyrinthe\'),
       ExpandConstants('{cm:SelectOldVersionInstallDirPrompt}'));
@@ -499,11 +510,12 @@ begin
     ExpandConstants('{cm:ImportInfos}'));
 end;
 
-function CheckValidImportDir : boolean;
-var OldImportDir : string;
+function CheckValidImportDir: Boolean;
+var
+  OldImportDir: string;
 begin
   OldImportDir := ImportDir;
-  
+
   if not CheckBoxImportOld.Checked then
   begin
     ImportDir := '';
@@ -513,7 +525,7 @@ begin
     ImportDir := EditOldInstallDir.Text;
     if (ImportDir <> '') and (ImportDir[Length(ImportDir)] <> '\') then
       ImportDir := ImportDir + '\';
-    Result := DirExists(ImportDir + 'Labyrinthes')
+    Result := DirExists(ImportDir + 'Labyrinthes');
     if not Result then
     begin
       if HasOldVersion then
@@ -530,18 +542,19 @@ begin
 end;
 
 procedure AddSelectImportsPage;
-var Surface : TNewNotebookPage;
-    Bottom : integer;
+var
+  Surface: TNewNotebookPage;
+  Bottom: Integer;
 begin
   PageSelectImports := CreateCustomPage(PageImportOld.ID,
     ExpandConstants('{cm:PageSelectImportsTitle}'),
     ExpandConstants('{cm:PageSelectImportsDescription}'));
   Surface := PageSelectImports.Surface;
   Bottom := -8;
-  
+
   AddLabel(Surface, Bottom,
     ExpandConstants('{cm:PageSelectImportsPrompt}'));
-    
+
   CheckListBoxImports := TNewCheckListBox.Create(Surface);
   with CheckListBoxImports do
   begin
@@ -554,27 +567,30 @@ begin
 end;
 
 procedure PageSelectImportsShow;
-var OldUnchecked : TStrings;
-    I : integer;
-    FindRec : TFindRec;
-    FileName : string;
+var
+  OldUnchecked: TStrings;
+  I: Integer;
+  FindRec: TFindRec;
+  FileName: string;
 begin
   OldUnchecked := TStringList.Create;
   try
-    with CheckListBoxImports do for I := 0 to Items.Count-1 do
-      if not Checked[I] then OldUnchecked.Add(Items[I]);
-  
+    with CheckListBoxImports do
+      for I := 0 to Items.Count-1 do
+        if not Checked[I] then
+          OldUnchecked.Add(Items[I]);
+
     CheckListBoxImports.Items.Clear;
     if FindFirst(ImportDir + 'Labyrinthes\*.lab', FindRec) then
-    try
-      repeat
-        FileName := FindRec.Name;
-        CheckListBoxImports.AddCheckBox(FileName, '', 0,
-          OldUnchecked.IndexOf(FileName) < 0, True, False, False, nil);
-      until not FindNext(FindRec);
-    finally
-      FindClose(FindRec);
-    end;
+      try
+        repeat
+          FileName := FindRec.Name;
+          CheckListBoxImports.AddCheckBox(FileName, '', 0,
+            OldUnchecked.IndexOf(FileName) < 0, True, False, False, nil);
+        until not FindNext(FindRec);
+      finally
+        FindClose(FindRec);
+      end;
   finally
     OldUnchecked.Free;
   end;
@@ -586,12 +602,15 @@ begin
   end;
 end;
 
-function PageSelectImportsValidate : boolean;
-var I : integer;
+function PageSelectImportsValidate: Boolean;
+var
+  I: Integer;
 begin
   LabyrinthsToImport := TStringList.Create;
-  with CheckListBoxImports do for I := 0 to Items.Count-1 do
-    if Checked[I] then LabyrinthsToImport.Add(Items[I]);
+  with CheckListBoxImports do
+    for I := 0 to Items.Count-1 do
+      if Checked[I] then
+        LabyrinthsToImport.Add(Items[I]);
   Result := True;
 end;
 
@@ -603,15 +622,16 @@ begin
 end;
 
 procedure UninstallOldVersion;
-var FileName, Params : string;
-    I : integer;
-    ResultCode : integer;
+var
+  FileName, Params: string;
+  I: Integer;
+  ResultCode: Integer;
 begin
   PageUninstallOldVersion.Show;
 
   PageUninstallOldVersion.SetText(
     ExpandConstants('{cm:UninstallingOldVersion}'), '');
-    
+
   FileName := OldVersionUninstallString;
   if FileName[1] = '"' then
   begin
@@ -625,12 +645,12 @@ begin
     Params := Copy(FileName, I+1, MaxInt);
     Delete(FileName, I, MaxInt);
   end;
-    
+
   if (not Exec(FileName, Params, '', SW_HIDE,
     ewWaitUntilTerminated, ResultCode)) or (ResultCode <> 0) then
   begin
     if MsgBox(ExpandConstants('{cm:CouldntUninstallOldVersion}'),
-      mbError, MB_YESNO or MB_DEFBUTTON2) <> IDYES then
+      mbError, MB_YESNO or MB_DEFBUTTON2) <> idYes then
       Abort;
   end;
 
@@ -644,12 +664,13 @@ begin
     ExpandConstants('{cm:PageImportingOldDescription}'));
 end;
 
-function ImportLabyrinth(FileName, AppData : PChar) : boolean;
+function ImportLabyrinth(FileName, AppData: PChar): Boolean;
   external 'ImportLabyrinth@files:Import4x.dll stdcall delayload setuponly';
 
 procedure ImportOld;
-var I : integer;
-    FileName : string;
+var
+  I: Integer;
+  FileName: string;
 begin
   PageImportingOld.Show;
   try
@@ -668,21 +689,21 @@ begin
   end;
 end;
 
-function CreateBitmap(const FileName : string) : TBitmap;
+function CreateBitmap(const FileName: string): TBitmap;
 begin
   ExtractTemporaryFile(FileName);
   Result := TBitmap.Create;
   Result.LoadFromFile(ExpandConstant('{tmp}\'+FileName));
 end;
 
-function InitializeSetup : boolean;
+function InitializeSetup: Boolean;
 begin
   InfoBitmap := CreateBitmap(InfoBitmapFileName);
   DirEdits := TStringList.Create;
-  
+
   ImportDir := '';
   LabyrinthsToImport := nil;
-  
+
   CheckOldVersion;
 
   Result := True;
@@ -692,7 +713,7 @@ procedure DeinitializeSetup;
 begin
   if LabyrinthsToImport <> nil then
     LabyrinthsToImport.Free;
-    
+
   DirEdits.Free;
   InfoBitmap.Free;
 end;
@@ -700,7 +721,7 @@ end;
 procedure InitializeWizard;
 begin
   PageWidth := WizardForm.DiskSpaceLabel.Width;
-  
+
   AddFunLabyAppDataField;
   AddImportOldPage;
   AddSelectImportsPage;
@@ -708,7 +729,7 @@ begin
   AddImportingOldPage;
 end;
 
-function ShouldSkipPage(PageID : integer) : boolean;
+function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   if PageID = PageSelectImports.ID then
     Result := ImportDir = ''
@@ -716,7 +737,7 @@ begin
     Result := False;
 end;
 
-function NextButtonClick(CurPageID : integer) : boolean;
+function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   if CurPageID = wpSelectDir then
     Result := CheckValidAppData
@@ -728,21 +749,25 @@ begin
     Result := True;
 end;
 
-procedure CurPageChanged(CurPageID : integer);
+procedure CurPageChanged(CurPageID: Integer);
 begin
   if CurPageID = PageSelectImports.ID then
     PageSelectImportsShow;
 end;
 
-procedure CurStepChanged(CurStep : TSetupStep);
+procedure CurStepChanged(CurStep: TSetupStep);
 begin
   case CurStep of
-    ssInstall : if HasOldVersion then UninstallOldVersion;
-    ssPostInstall : if ImportDir <> '' then ImportOld;
+    {ssInstall:
+      if HasOldVersion then
+        UninstallOldVersion;}
+    ssPostInstall:
+      if ImportDir <> '' then
+        ImportOld;
   end;
 end;
 
-procedure RegisterPreviousData(PreviousDataKey : integer);
+procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;

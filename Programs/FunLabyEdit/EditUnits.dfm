@@ -13,6 +13,7 @@ object FormEditUnits: TFormEditUnits
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  Scaled = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   DesignSize = (

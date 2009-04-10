@@ -23,6 +23,7 @@ object FormMain: TFormMain
     0000C01B0000DFFB0000DFFB0000C0030000FFFF0000FFFF0000FFFF0000}
   OldCreateOrder = False
   Position = poScreenCenter
+  Scaled = False
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy

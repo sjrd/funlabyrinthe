@@ -13,6 +13,7 @@ object FormCreateNewSourceFile: TFormCreateNewSourceFile
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  Scaled = False
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13

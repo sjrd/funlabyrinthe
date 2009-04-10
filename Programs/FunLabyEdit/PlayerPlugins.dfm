@@ -9,6 +9,7 @@ object FormPlugins: TFormPlugins
   ParentFont = True
   OldCreateOrder = True
   Position = poScreenCenter
+  Scaled = False
   PixelsPerInch = 96
   TextHeight = 13
   object LabelAvailablePlugins: TLabel
