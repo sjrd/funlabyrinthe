@@ -1,4 +1,4 @@
-package DelphiSourceEditor;
+package FunLabyEditPluginUtils;
 
 {$R *.res}
 {$ALIGN 8}
@@ -22,24 +22,25 @@ package DelphiSourceEditor;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Editor for Delphi sources'}
+{$DESCRIPTION 'FunLabyEdit plugin utils'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  VclSmp,
-  FunLabyCore,
-  FunLabyEditPlugin,
   SynEdit_R2005,
-  SepiDelphiCompiler90,
-  SepiReflection90,
-  SepiCompiler90,
-  FunLabyEditPluginUtils;
+  vclx,
+  vcldb,
+  dbrtl,
+  VclSmp,
+  FunLabyEditPlugin,
+  FunLabyCore;
 
 contains
-  DelphiSourceEditorMain in 'DelphiSourceEditorMain.pas' {FrameDelphiSourceEditor};
+  FunLabySourceEditorFrame in 'FunLabySourceEditorFrame.pas' {FrameFunLabySourceEditor: TFrame},
+  FunLabySourceSynEditEditorFrame in 'FunLabySourceSynEditEditorFrame.pas' {FrameFunLabySynEditSourceEditor: TFrame},
+  FunLabySynEdit in 'FunLabySynEdit.pas';
 
 end.
 

@@ -36,7 +36,8 @@ requires
   VclSmp,
   FunLabyEditPlugin,
   SDL90,
-  FunLabyCore;
+  FunLabyCore,
+  FunLabyEditPluginUtils;
 
 contains
   Compatibility4xEditorMain in 'Compatibility4xEditorMain.pas' {FrameCompatibility4xEditor: TFrame},

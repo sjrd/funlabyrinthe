@@ -1,0 +1,2 @@
+inherited FrameFunLabySynEditSourceEditor: TFrameFunLabySynEditSourceEditor
+end

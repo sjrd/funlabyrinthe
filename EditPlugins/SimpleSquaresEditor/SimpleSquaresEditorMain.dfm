@@ -1,10 +1,6 @@
-object FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
-  Left = 0
-  Top = 0
+inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
   Width = 649
   Height = 457
-  TabOrder = 0
-  TabStop = True
   object SplitterSquares: TSplitter
     Left = 150
     Top = 0

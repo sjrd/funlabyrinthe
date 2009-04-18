@@ -7,23 +7,16 @@ uses
   Dialogs, SepiReflectionCore, SepiCompiler, SepiCompilerErrors, SepiParseTrees,
   FilesUtils, UnitFiles, SourceEditors, SdDialogs, Buttons, StdCtrls, ExtCtrls,
   ImgList, CategoryButtons, ExtDlgs, Contnrs, FunLabyUtils, SimpleSquareEdit,
-  SimpleSquaresUtils, SimpleSquareNew, FunLabyEditOTA, SepiDelphiCompiler;
+  SimpleSquaresUtils, SimpleSquareNew, FunLabyEditOTA, SepiDelphiCompiler,
+  FunLabySourceEditorFrame;
 
 resourcestring
   SimpleSquaresFilter = 'Définitions de cases simples (*.ssq)|*.ssq';
-
-  sConfirmExitTitle = 'Enregistrer le fichier';
-  sConfirmExit = 'Le fichier a été modifié. Voulez-vous l''enregistrer ?';
 
   sConfirmDeleteTitle = 'Supprimer ce composant ?';
   sConfirmDelete = 'Êtes-vous certain de vouloir supprimer ce composant ? '+
     'Si un labyrinthe l''utilise déjà, celui-ci risque de ne plus être '+
     'utilisable !';
-
-  // Compiler errors
-  SCantOpenSourceFile = 'Impossible de créer le fichier source %s';
-  SCantOpenDestFile = 'Impossible de créer le fichier de sortie %s';
-  SSepiInternalError = 'Erreur interne : %s';
 
 const {don't localize}
   SimpleSquaresExtension = 'ssq';
@@ -61,8 +54,8 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameSimpleSquaresEditor = class(TFrame, ISourceEditor50, ISourceCompiler50,
-    ISourceEditorUsingOTA50, ISimpleSquaresEditor)
+  TFrameSimpleSquaresEditor = class(TFrameFunLabySourceEditor,
+    ISourceCompiler50, ISourceEditorUsingOTA50, ISimpleSquaresEditor)
     SquaresContainer: TCategoryButtons;
     SplitterSquares: TSplitter;
     SquaresImages: TImageList;
@@ -75,35 +68,19 @@ type
       const Button: TButtonItem);
     procedure SquareEditorNameImageChange(Sender: TObject);
   private
-    FSourceFile: TSourceFile; /// Fichier source
-    FModified: Boolean;       /// Indique si le source a été modifié
-
-    FOnStateChange: TSourceEditorNotifyEvent; /// Événement OnStateChange
-
     /// Fiche principale de FunLabyEdit
     FFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
 
     ImagesMaster: TImagesMaster;      /// Maître d'images
     SimpleSquares: TSimpleSquareList; /// Liste des composants
-
-    procedure LoadFile(ASourceFile: TSourceFile);
-    function SaveFile: Boolean;
+  protected
+    procedure LoadFile(ASourceFile: TSourceFile); override;
+    function SaveFile: Boolean; override;
 
     function CompileFile(SepiRoot: TSepiRoot;
       Errors: TSepiCompilerErrorList): TSepiUnit;
     procedure ShowError(Error: TSepiCompilerError);
 
-    function GetSourceFile: TSourceFile;
-    function GetControl: TControl;
-    function GetModified: Boolean;
-
-    function GetOnStateChange: TSourceEditorNotifyEvent;
-    procedure SetOnStateChange(Value: TSourceEditorNotifyEvent);
-
-    function GetUnitName: string;
-
-    function CanClose: Boolean;
-    procedure ISourceEditor50.Release = Free;
     procedure ISourceCompiler50.Release = Free;
     procedure ISourceEditorUsingOTA50.Release = Free;
 
@@ -112,8 +89,6 @@ type
 
     procedure ProduceDelphiCode(Code: TStrings);
   protected
-    procedure DoStateChange; virtual;
-
     function FindButton(SimpleSquare: TSimpleSquare): TButtonItem;
 
     procedure SimpleSquareAdded(SimpleSquare: TSimpleSquare); virtual;
@@ -126,12 +101,6 @@ type
     procedure BeforeDestruction; override;
 
     procedure MarkModified;
-
-    property SourceFile: TSourceFile read FSourceFile;
-    property Modified: Boolean read FModified;
-
-    property OnStateChange: TSourceEditorNotifyEvent
-      read FOnStateChange write FOnStateChange;
   end;
 
 implementation
@@ -292,7 +261,7 @@ var
   Stream: TStream;
   MagicNumber, Version, Count, I: Integer;
 begin
-  FSourceFile := ASourceFile;
+  inherited;
 
   Stream := TFileStream.Create(SourceFile.FileName,
     fmOpenRead or fmShareDenyWrite);
@@ -310,7 +279,7 @@ begin
     Stream.Free;
   end;
 
-  FModified := False;
+  Modified := False;
 end;
 
 {*
@@ -338,10 +307,7 @@ begin
     Stream.Free;
   end;
 
-  FModified := False;
-  DoStateChange;
-
-  Result := True;
+  Result := inherited SaveFile;
 end;
 
 {*
@@ -373,74 +339,6 @@ end;
 procedure TFrameSimpleSquaresEditor.ShowError(Error: TSepiCompilerError);
 begin
   // Nothing to do
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameSimpleSquaresEditor.GetSourceFile: TSourceFile;
-begin
-  Result := FSourceFile;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameSimpleSquaresEditor.GetControl: TControl;
-begin
-  Result := Self;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameSimpleSquaresEditor.GetModified: Boolean;
-begin
-  Result := FModified;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameSimpleSquaresEditor.GetOnStateChange: TSourceEditorNotifyEvent;
-begin
-  Result := FOnStateChange;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TFrameSimpleSquaresEditor.SetOnStateChange(
-  Value: TSourceEditorNotifyEvent);
-begin
-  FOnStateChange := Value;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameSimpleSquaresEditor.GetUnitName: string;
-begin
-  Result := ChangeFileExt(ExtractFileName(SourceFile.FileName), '');
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TFrameSimpleSquaresEditor.CanClose: Boolean;
-begin
-  if not Modified then
-    Result := True
-  else
-  begin
-    case ShowDialog(sConfirmExitTitle, sConfirmExit, dtConfirmation,
-      dbYesNoCancel) of
-      drYes: Result := SaveFile;
-      drNo: Result := True;
-    else
-      Result := False;
-    end;
-  end;
 end;
 
 {*
@@ -516,15 +414,6 @@ begin
 
   Code.Add('');
   Code.Add('end.');
-end;
-
-{*
-  Notifie un changement de l'état
-*}
-procedure TFrameSimpleSquaresEditor.DoStateChange;
-begin
-  if Assigned(OnStateChange) then
-    OnStateChange(Self);
 end;
 
 {*
@@ -649,8 +538,7 @@ end;
 *}
 procedure TFrameSimpleSquaresEditor.MarkModified;
 begin
-  FModified := True;
-  DoStateChange;
+  Modified := True;
 end;
 
 {*

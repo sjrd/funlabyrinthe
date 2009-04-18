@@ -8,13 +8,12 @@
 			<Option Name="GUID">{954DBB38-EBDB-4D85-9C49-1076C51A76DD}</Option>
 		</Option>
 	</PersonalityInfo>
-	<Default.Personality>  
-    
-    <Projects>
+	<Default.Personality>  <Projects>
+      <Projects Name="FunLabyEditPluginUtils.bpl">EditPlugins\FunLabyEditPluginUtils\FunLabyEditPluginUtils.bdsproj</Projects>
       <Projects Name="DelphiSourceEditor.bpl">EditPlugins\DelphiSourceEditor\DelphiSourceEditor.bdsproj</Projects>
       <Projects Name="SimpleSquaresEditor.bpl">EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.bdsproj</Projects>
       <Projects Name="Compatibility4xEditor.bpl">EditPlugins\Compatibility4xEditor\Compatibility4xEditor.bdsproj</Projects>
-      <Projects Name="Targets">DelphiSourceEditor.bpl SimpleSquaresEditor.bpl Compatibility4xEditor.bpl</Projects>
+      <Projects Name="Targets">FunLabyEditPluginUtils.bpl DelphiSourceEditor.bpl SimpleSquaresEditor.bpl Compatibility4xEditor.bpl</Projects>
     </Projects>
     <Dependencies/>
   </Default.Personality>
