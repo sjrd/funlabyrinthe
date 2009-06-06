@@ -336,7 +336,7 @@ begin
   // Check signature
   with Method.Signature do
   begin
-    if Kind <> mkUnitProcedure then
+    if Kind <> skStaticProcedure then
       Exit;
     if ParamCount <> 0 then
       Exit;
@@ -373,7 +373,7 @@ begin
     FunLabyUtilsUnit := SepiUnit.Root.GetMeta('FunLabyUtils') as TSepiUnit;
     ClassesUnit := SepiUnit.Root.GetMeta('Classes') as TSepiUnit;
 
-    if Kind <> mkUnitProcedure then
+    if Kind <> skStaticProcedure then
       Exit;
     if ParamCount <> 2 then
       Exit;
@@ -451,7 +451,7 @@ begin
   begin
     FunLabyUtilsUnit := SepiUnit.Root.GetMeta('FunLabyUtils') as TSepiUnit;
 
-    if Kind <> mkUnitProcedure then
+    if Kind <> skStaticProcedure then
       Exit;
     if ParamCount <> 2 then
       Exit;
@@ -494,7 +494,7 @@ begin
   begin
     ClassesUnit := SepiUnit.Root.GetMeta('Classes') as TSepiUnit;
 
-    if Kind <> mkUnitProcedure then
+    if Kind <> skStaticProcedure then
       Exit;
     if ParamCount <> 1 then
       Exit;
