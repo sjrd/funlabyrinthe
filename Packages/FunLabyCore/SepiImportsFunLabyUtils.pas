@@ -23,10 +23,12 @@ const // don't localize
   ResourceName = 'SepiImportsFunLabyUtils';
   TypeCount = 22;
   MethodCount = 93;
+  VariableCount = 11;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
   MethodAddresses: array[0..MethodCount-1] of Pointer;
+  VarAddresses: array[0..VariableCount-1] of Pointer;
 
 type
   TSepiImportsTImagesMaster = class(TImagesMaster)
@@ -563,9 +565,19 @@ begin
     TypeInfo := TypeInfoArray[Index];
 end;
 
+procedure GetVarAddress(Self, Sender: TObject; var VarAddress: Pointer);
+var
+  Index: Integer;
+begin
+  Index := (Sender as TSepiVariable).Tag;
+  if Index >= 0 then
+    VarAddress := VarAddresses[Index];
+end;
+
 const
   GetMethodCodeEvent: TMethod = (Code: @GetMethodCode; Data: nil);
   GetTypeInfoEvent: TMethod = (Code: @GetTypeInfo; Data: nil);
+  GetVarAddressEvent: TMethod = (Code: @GetVarAddress; Data: nil);
 
 function ImportUnit(Root: TSepiRoot): TSepiUnit;
 var
@@ -577,7 +589,8 @@ begin
     Result := TSepiUnit.LoadFromStream(Root, Stream,
       SepiImportsFunLabyUtilsLazyLoad,
       TGetMethodCodeEvent(GetMethodCodeEvent),
-      TGetTypeInfoEvent(GetTypeInfoEvent));
+      TGetTypeInfoEvent(GetTypeInfoEvent),
+      TGetVarAddressEvent(GetVarAddressEvent));
 
     if SepiImportsFunLabyUtilsLazyLoad then
       Result.AcquireObjResource(Stream);
@@ -637,11 +650,27 @@ begin
   MethodAddresses[92] := @IsNoQPos;
 end;
 
+procedure InitVarAddresses;
+begin
+  VarAddresses[0] := @NoQPos;
+  VarAddresses[1] := @NegDir;
+  VarAddresses[2] := @fFunLabyAppData;
+  VarAddresses[3] := @fSquaresDir;
+  VarAddresses[4] := @fSoundsDir;
+  VarAddresses[5] := @fUnitsDir;
+  VarAddresses[6] := @fMapsDir;
+  VarAddresses[7] := @fLabyrinthsDir;
+  VarAddresses[8] := @fSaveguardsDir;
+  VarAddresses[9] := @fEditPluginDir;
+  VarAddresses[10] := @fSquareFileName;
+end;
+
 {$WARN SYMBOL_DEPRECATED ON}
 
 initialization
   InitTypeInfoArray;
   InitMethodAddresses;
+  InitVarAddresses;
 
   SepiRegisterImportedUnit('FunLabyUtils', ImportUnit);
 end.

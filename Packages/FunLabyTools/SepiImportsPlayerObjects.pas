@@ -23,10 +23,12 @@ const // don't localize
   ResourceName = 'SepiImportsPlayerObjects';
   TypeCount = 1;
   MethodCount = 1;
+  VariableCount = 1;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
   MethodAddresses: array[0..MethodCount-1] of Pointer;
+  VarAddresses: array[0..VariableCount-1] of Pointer;
 
 type
   TSepiImportsTFormObjects = class(TFormObjects)
@@ -73,9 +75,19 @@ begin
     TypeInfo := TypeInfoArray[Index];
 end;
 
+procedure GetVarAddress(Self, Sender: TObject; var VarAddress: Pointer);
+var
+  Index: Integer;
+begin
+  Index := (Sender as TSepiVariable).Tag;
+  if Index >= 0 then
+    VarAddress := VarAddresses[Index];
+end;
+
 const
   GetMethodCodeEvent: TMethod = (Code: @GetMethodCode; Data: nil);
   GetTypeInfoEvent: TMethod = (Code: @GetTypeInfo; Data: nil);
+  GetVarAddressEvent: TMethod = (Code: @GetVarAddress; Data: nil);
 
 function ImportUnit(Root: TSepiRoot): TSepiUnit;
 var
@@ -87,7 +99,8 @@ begin
     Result := TSepiUnit.LoadFromStream(Root, Stream,
       SepiImportsPlayerObjectsLazyLoad,
       TGetMethodCodeEvent(GetMethodCodeEvent),
-      TGetTypeInfoEvent(GetTypeInfoEvent));
+      TGetTypeInfoEvent(GetTypeInfoEvent),
+      TGetVarAddressEvent(GetVarAddressEvent));
 
     if SepiImportsPlayerObjectsLazyLoad then
       Result.AcquireObjResource(Stream);
@@ -108,11 +121,16 @@ begin
   TSepiImportsTFormObjects.InitMethodAddresses;
 end;
 
+procedure InitVarAddresses;
+begin
+end;
+
 {$WARN SYMBOL_DEPRECATED ON}
 
 initialization
   InitTypeInfoArray;
   InitMethodAddresses;
+  InitVarAddresses;
 
   SepiRegisterImportedUnit('PlayerObjects', ImportUnit);
 end.
