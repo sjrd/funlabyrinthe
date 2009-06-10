@@ -1,0 +1,669 @@
+Ce fichier décrit la grammaire du langage FunDelphi.
+
+#####
+
+tkEof	Fin de fichier
+tkIdentifier	Identificateur
+tkInteger	Nombre entier
+tkFloat	Nombre en virgule flottante
+tkStringCst	Chaine
+
+tkOpenBracket	(
+tkCloseBracket	)
+tkOpenSqBracket	[
+tkCloseSqBracket	]
+tkEquals	=
+tkComma	,
+tkColon	:
+tkSemiColon	;
+tkDot	.
+tkRange	..
+tkHat	^
+tkAt	@
+tkAssign	:=
+
+tkUnit	unit
+tkUses	uses
+tkConst	const
+tkResourceString	resourcestring
+tkVar	var
+tkOut	out
+
+tkProcedure	procedure
+tkFunction	function
+tkPrivate	private
+tkPublic	public
+tkForward	forward
+
+tkPlugin	plugin
+tkObject	object
+tkField	field
+tkEffect	effect
+tkTool	tool
+tkObstacle	obstacle
+tkComponents	components
+tkAttributes	attributes
+tkActions	actions
+
+tkConstructor	constructor
+tkDestructor	destructor
+tkImage	image
+tkAction	action
+
+tkPlus	+
+tkMinus	-
+tkTimes	*
+tkDivide	/
+tkDiv	div
+tkMod	mod
+tkShl	shl
+tkShr	shr
+tkOr	or
+tkAnd	and
+tkXor	xor
+tkNot	not
+tkLowerThan	<
+tkLowerEq	<=
+tkGreaterThan	>
+tkGreaterEq	>=
+tkNotEqual	<>
+tkIs	is
+tkAs	as
+
+tkBegin	begin
+tkEnd	end
+
+tkString	string
+tkNil	nil
+
+tkIf	if
+tkThen	then
+tkElse	else
+tkWhile	while
+tkDo	do
+tkRepeat	repeat
+tkUntil	until
+tkFor	for
+tkTo	to
+tkDownTo	downto
+tkCase	case
+tkOf	of
+tkTry	try
+tkExcept	except
+tkOn	on
+tkFinally	finally
+tkRaise	raise
+tkInherited	inherited
+
+tkCan	can
+tkHas	has
+tkAtKw	at
+tkLeast	least
+tkMost	most
+tkMore	more
+tkLess	less
+tkThan	than
+tkExactly	exactly
+tkReceives	receives
+tkDiscards	discards
+
+#####
+
+ntSource	Source
+	'unit'* Identifier ';'* UsesSection (ImplSection)* 'end'* '.'* tkEof*
+
+ntImplSection	ImplSection	Simplify
+	ActionsSection
+	AttributesSection
+	ComponentsSection
+	PluginSection
+	ObjectSection
+	FieldSection
+	EffectSection
+	ToolSection
+	ObstacleSection
+	ConstSection
+	VarSection
+	RoutineImpl
+
+ntIdentifier	Identifier
+	tkIdentifier
+	'string'
+	'at'
+	'least'
+	'most'
+	'more'
+	'less'
+	'than'
+	'exactly'
+
+ntUsesSection	UsesSection
+	'uses'* CommaIdentList ';'*
+	@
+
+ntCommaIdentList	CommaIdentList	Simplify
+	Identifier (','* Identifier)*
+
+ntCommaIdentDeclList	CommaIdentDeclList
+	IdentifierDecl (','* IdentifierDecl)*
+
+ntQualifiedIdent	QualifiedIdent	AsText
+	Identifier ('.'* Identifier)*
+
+ntIdentifierDecl	IdentifierDecl	AsText
+	Identifier
+
+ntTypeName	TypeName
+	QualifiedIdent
+
+ntInitializationExpression	InitializationExpression
+	0 ArrayInitializationExpression
+	1 RecordInitializationExpression
+	2 GUIDInitializationExpression
+	3 OtherInitializationExpression
+
+ntArrayInitializationExpression	ArrayInitializationExpression
+	ArrayInitialization
+
+ntArrayInitialization	ArrayInitialization
+	'('* InitializationExpression (','* InitializationExpression)* ')'*
+
+ntRecordInitializationExpression	RecordInitializationExpression
+	RecordInitialization
+
+ntRecordInitialization	RecordInitialization
+	'('* Identifier ':'* InitializationExpression (';'* Identifier ':'* InitializationExpression)* ')'*
+
+ntGUIDInitializationExpression	GUIDInitializationExpression
+	GUIDInitialization
+
+ntGUIDInitialization	GUIDInitialization
+	RecordInitialization
+	tkStringCst
+
+ntOtherInitializationExpression	OtherInitializationExpression
+	OtherInitialization
+
+ntOtherInitialization	OtherInitialization
+	ConstExpression
+
+ntExpression	Expression
+	SingleExpr NextExpression
+
+ntNextExpression	NextExpression	Simplify
+	-1 BinaryOp SingleExpr NextExpression
+	@
+
+ntConstExpression	ConstExpression
+	Expression
+
+ntSingleExpr	SingleExpr
+	ParenthesizedExpr NextExprList
+	SingleValue NextExprList
+	UnaryOpExpr
+
+ntUnaryOpExpr	UnaryOpExpr
+	UnaryOp SingleExpr
+	AddressOfOp SingleExpr
+
+ntParenthesizedExpr	ParenthesizedExpr
+	'('* Expression ')'*
+
+ntNextExprList	NextExprList	Simplify
+	1 NextExpr NextExprList
+	@
+
+ntNextExpr	NextExpr	Simplify
+	UnaryOpModifier
+	Parameters
+	ArrayIndices
+	FieldSelection
+
+ntUnaryOpModifier	UnaryOpModifier
+	DereferenceOp
+
+ntDereferenceOp	DereferenceOp
+	'^'
+
+ntParameters	Parameters
+	'('* ExprListOrEmpty ')'*
+
+ntExprListOrEmpty	ExprListOrEmpty	Simplify
+	ExprList
+	@
+
+ntArrayIndices	ArrayIndices
+	'['* ExprList ']'*
+
+ntExprList	ExprList	Simplify
+	Expression (','* Expression)*
+
+ntFieldSelection	FieldSelection
+	'.'* Identifier
+
+ntSingleValue	SingleValue
+	IntegerConst
+	FloatConst
+	StringConst
+	IdentifierSingleValue
+	InheritedSingleValue
+	NilValue
+	'['* SetValue ']'*
+
+ntIntegerConst	IntegerConst
+	tkInteger
+
+ntFloatConst	FloatConst
+	tkFloat
+
+ntStringConst	StringConst
+	tkStringCst
+
+ntIdentifierSingleValue	IdentifierSingleValue
+	Identifier
+
+ntInheritedSingleValue	InheritedSingleValue
+	'inherited'* Identifier
+
+ntNilValue	NilValue
+	'nil'
+
+ntSetValue	SetValue
+	SetRange (','* SetRange)*
+	@
+
+ntSetRange	SetRange
+	Expression ('..'* Expression)?
+
+ntBinaryOp	BinaryOp	Simplify
+	DelphiBinaryOp
+	IsAsBinaryOp
+	CanOp
+	HasOp
+
+ntDelphiBinaryOp	DelphiBinaryOp
+	'+'
+	'-'
+	'*'
+	'/'
+	'div'
+	'mod'
+	'shl'
+	'shr'
+	'or'
+	'and'
+	'xor'
+	'='
+	'<'
+	'<='
+	'>'
+	'>='
+	'<>'
+
+ntIsAsBinaryOp	IsAsBinaryOp
+	'is'
+	'as'
+
+ntCanOp	CanOp
+	'can'
+
+ntHasOp	HasOp
+	'has'* HasComparison SingleExpr
+
+ntHasComparison	HasComparison
+	1 'at'* AtLeastOrAtMost
+	1 MoreThan
+	1 LessThan
+	1 Exactly
+	@
+
+ntAtLeastOrAtMost	AtLeastOrAtMost	Simplify
+	AtLeast
+	AtMost
+
+ntAtLeast	AtLeast
+	'least'
+
+ntAtMost	AtMost
+	'most'
+
+ntMoreThan	MoreThan
+	'more' 'than'*
+
+ntLessThan	LessThan
+	'less' 'than'*
+
+ntExactly	Exactly
+	'exactly'
+
+ntUnaryOp	UnaryOp
+	'+'
+	'-'
+	'not'
+
+ntAddressOfOp	AddressOfOp
+	'@'
+
+ntConstSection	ConstSection
+	ConstKeyWord* (ConstDecl)+
+
+ntConstKeyWord	ConstKeyWord
+	'const'
+	'resourcestring'
+
+ntConstDecl	ConstDecl
+	IdentifierDecl InnerConstDecl ';'*
+
+ntInnerConstDecl	InnerConstDecl	Simplify
+	':'* TypeName '='* InitializationExpression
+	'='* ConstExpression
+
+ntVarSection	VarSection
+	'var'* (GlobalVar)+
+
+ntGlobalVar	GlobalVar
+	IdentifierDecl InnerGlobalVar ';'*
+
+ntInnerGlobalVar	InnerGlobalVar	Simplify
+	':'* TypeName ('='* InitializationExpression)?
+	(','* Identifier)+ ':'* TypeName
+
+ntActionsSection	ActionsSection
+	'actions'* CommaIdentDeclList ';'*
+
+ntAttributesSection	AttributesSection
+	'attributes'* CommaIdentDeclList ';'*
+
+ntComponentsSection	ComponentsSection
+	'components'* (Component)+
+
+ntComponent	Component
+	IdentifierDecl ':'* QualifiedIdent ComponentParameters ';'*
+
+ntComponentParameters	ComponentParameters
+	'('* ExprListOrEmpty ')'*
+	@
+
+ntPluginSection	PluginSection
+	'plugin'* IdentifierDecl ParentClass PluginMembers 'end'* ';'*
+
+ntPluginMembers	PluginMembers
+	(PluginMember)*
+
+ntPluginMember	PluginMember	Simplify
+	Fields
+	Constructor
+	Destructor
+	Event
+	PluginAction
+
+ntObjectSection	ObjectSection
+	'object'* IdentifierDecl ParentClass ObjectMembers 'end'* ';'*
+
+ntObjectMembers	ObjectMembers
+	(ObjectMember)*
+
+ntObjectMember	ObjectMember	Simplify
+	Fields
+	Constructor
+	Destructor
+	Image
+	Event
+	ObjectAction
+
+ntFieldSection	FieldSection
+	'field'* IdentifierDecl ParentClass SquareCompMembers 'end'* ';'*
+
+ntEffectSection	EffectSection
+	'effect'* IdentifierDecl ParentClass SquareCompMembers 'end'* ';'*
+
+ntToolSection	ToolSection
+	'tool'* IdentifierDecl ParentClass SquareCompMembers 'end'* ';'*
+
+ntObstacleSection	ObstacleSection
+	'obstacle'* IdentifierDecl ParentClass SquareCompMembers 'end'* ';'*
+
+ntSquareCompMembers	SquareCompMembers
+	(SquareCompMember)*
+
+ntSquareCompMember	SquareCompMember	Simplify
+	Fields
+	Constructor
+	Destructor
+	Image
+	Event
+
+ntParentClass	ParentClass
+	'('* QualifiedIdent ')'*
+	@
+
+ntFields	Fields	Simplify
+	'var'* (Field)+
+
+ntField	Field
+	CommaIdentDeclList ':'* TypeName ';'*
+
+ntConstructor	Constructor
+	ConstructorHeader ConstructorBody
+
+ntConstructorHeader	ConstructorHeader
+	'constructor'* IdentifierDecl ConstructorSignature ';'*
+
+ntDestructor	Destructor
+	DestructorHeader DestructorBody
+
+ntDestructorHeader	DestructorHeader
+	'destructor'* IdentifierDecl DestructorSignature AutoOverride ';'*
+
+ntAutoOverride	AutoOverride
+	@
+
+ntImage	Image
+	'image'* ConstExpression (','* ConstExpression)* ';'*
+
+ntEvent	Event
+	EventHeader MethodBody
+
+ntEventHeader	EventHeader
+	'on'* IdentifierDecl AutoOverride 'do'*
+
+ntPluginAction	PluginAction
+	'action'* ActionList ActionCondition ';'*
+
+ntObjectAction	ObjectAction
+	'action'* ActionList ActionCondition ActionOnUse ';'*
+
+ntActionList	ActionList
+	ConstExpression (','* ConstExpression)*
+
+ntActionCondition	ActionCondition
+	'if'* Expression
+	@
+
+ntActionOnUse	ActionOnUse	Simplify
+	'then'* Instruction
+	@
+
+ntRoutineImpl	RoutineImpl
+	RoutineImplHeader ForwardOrMethodBody
+
+ntRoutineImplHeader	RoutineImplHeader
+	RoutineKind RoutineName RoutineSignature RoutineVisibility ';'*
+
+ntRoutineKind	RoutineKind
+	'procedure'
+	'function'
+
+ntRoutineName	RoutineName
+	IdentifierDecl
+
+ntRoutineVisibility	RoutineVisibility
+	'private'
+	'public'
+	@
+
+ntForwardOrMethodBody	ForwardOrMethodBody	Simplify
+	ForwardMarker
+	MethodBody
+
+ntForwardMarker	ForwardMarker
+	'forward' ';'*
+
+ntConstructorSignature	ConstructorSignature
+	('('* ParamList ')'*)?
+
+ntDestructorSignature	DestructorSignature
+	@
+
+ntRoutineSignature	RoutineSignature
+	('('* ParamList ')'*)? ReturnType
+
+ntParamList	ParamList	Simplify
+	Param (';'* Param)*
+	@
+
+ntReturnType	ReturnType
+	':'* TypeName
+	@
+
+ntParam	Param
+	ParamKind ParamNameList ParamType
+
+ntParamKind	ParamKind
+	'const'
+	'var'
+	'out'
+	@
+
+ntParamNameList	ParamNameList
+	ParamName (','* ParamName)*
+
+ntParamName	ParamName
+	Identifier
+
+ntParamType	ParamType	Simplify
+	':'* TypeName
+
+ntConstructorBody	ConstructorBody
+	CommonMethodBody
+
+ntDestructorBody	DestructorBody
+	CommonMethodBody
+
+ntMethodBody	MethodBody
+	CommonMethodBody
+
+ntCommonMethodBody	CommonMethodBody	Simplify
+	(InMethodSection)* BeginEndBlock ';'*
+
+ntInMethodSection	InMethodSection	Simplify
+	ConstSection
+	LocalVarSection
+
+ntLocalVarSection	LocalVarSection
+	'var'* (LocalVar)+
+
+ntLocalVar	LocalVar
+	CommaIdentDeclList ':'* TypeName ';'*
+
+ntInstructionList	InstructionList
+	(Instruction ';'*)*
+
+ntInstruction	Instruction	Simplify
+	NoInstruction
+	BeginEndBlock
+	IfThenElseInstruction
+	WhileInstruction
+	RepeatInstruction
+	ForInstruction
+	TryInstruction
+	RaiseInstruction
+	ExpressionInstruction
+
+ntNoInstruction	NoInstruction
+	@
+
+ntBeginEndBlock	BeginEndBlock
+	'begin'* InstructionList 'end'*
+
+ntIfThenElseInstruction	IfThenElseInstruction
+	'if'* Expression 'then'* Instruction ElseBranch
+
+ntElseBranch	ElseBranch	Simplify
+	1 'else'* Instruction
+	NoInstruction
+
+ntWhileInstruction	WhileInstruction
+	'while'* Expression 'do'* Instruction
+
+ntRepeatInstruction	RepeatInstruction
+	'repeat'* InstructionList 'until'* Expression
+
+ntForInstruction	ForInstruction
+	'for'* ForControlVar ':='* Expression ForToDownTo Expression 'do'* Instruction
+
+ntForControlVar	ForControlVar
+	Identifier
+
+ntForToDownTo	ForToDownTo	Simplify
+	ForTo
+	ForDownTo
+
+ntForTo	ForTo
+	'to'
+
+ntForDownTo	ForDownTo
+	'downto'
+
+ntTryInstruction	TryInstruction
+	'try'* InstructionList NextTryInstruction 'end'*
+
+ntNextTryInstruction	NextTryInstruction	Simplify
+	ExceptClause
+	FinallyClause
+
+ntExceptClause	ExceptClause
+	'except'* NextExceptClause
+
+ntNextExceptClause	NextExceptClause	Simplify
+	InstructionList
+	MultiOn
+
+ntMultiOn	MultiOn
+	(OnClause)+ MultiOnElseClause
+
+ntOnClause	OnClause
+	'on'* ExceptionVarAndType 'do'* InstructionList
+
+ntExceptionVarAndType	ExceptionVarAndType
+	QualifiedIdent (':'* QualifiedIdent)?
+
+ntMultiOnElseClause	MultiOnElseClause
+	'else'* InstructionList
+	@
+
+ntFinallyClause	FinallyClause
+	'finally'* InstructionList
+
+ntRaiseInstruction	RaiseInstruction
+	'raise'* (Expression)?
+
+ntExpressionInstruction	ExpressionInstruction
+	ExecutableExpression
+
+ntExecutableExpression	ExecutableExpression
+	Expression (ExecutableOp Expression)?
+
+ntExecutableOp	ExecutableOp	Simplify
+	AssignmentOp
+	ReceivesOp
+	DiscardsOp
+
+ntAssignmentOp	AssignmentOp
+	':='
+
+ntReceivesOp	ReceivesOp
+	'receives'* SingleExpr
+
+ntDiscardsOp	DiscardsOp
+	'discards'* SingleExpr
