@@ -193,7 +193,8 @@ begin
           if Key = 'end'            then SymbolClass := tkEnd else
           if Key = 'exactly'        then SymbolClass := tkExactly else
           if Key = 'except'         then SymbolClass := tkExcept;
-    'f' : if Key = 'finally'        then SymbolClass := tkFinally else
+    'f' : if Key = 'field'          then SymbolClass := tkField else
+          if Key = 'finally'        then SymbolClass := tkFinally else
           if Key = 'for'            then SymbolClass := tkFor else
           if Key = 'forward'        then SymbolClass := tkForward else
           if Key = 'function'       then SymbolClass := tkFunction;

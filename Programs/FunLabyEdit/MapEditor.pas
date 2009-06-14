@@ -63,10 +63,10 @@ type
     FMarkModified: TMarkModifiedProc;
 
     function AddSquareButton(Template: TVisualComponent): TButtonItem;
-    procedure RegisterSingleComponent(Component: TSquareComponent); stdcall;
+    procedure RegisterSingleComponent(Component: TSquareComponent);
     procedure RegisterComponentSet(Template: TSquareComponent;
       const Components: array of TSquareComponent; BaseIndex: Integer;
-      const DialogTitle, DialogPrompt: string); stdcall;
+      const DialogTitle, DialogPrompt: string);
 
     procedure LoadPlayers;
   public

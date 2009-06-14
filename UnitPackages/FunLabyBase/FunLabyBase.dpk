@@ -30,7 +30,8 @@ requires
   rtl,
   SCL90,
   FunLabyCore,
-  FunLabyTools;
+  FunLabyTools,
+  SepiReflection90;
 
 contains
   FLBBoat in 'FLBBoat.pas',
@@ -41,7 +42,15 @@ contains
   FLBObstacles in 'FLBObstacles.pas',
   FLBPlank in 'FLBPlank.pas',
   FLBSimpleEffects in 'FLBSimpleEffects.pas',
-  FLBSimpleObjects in 'FLBSimpleObjects.pas';
+  FLBSimpleObjects in 'FLBSimpleObjects.pas',
+  SepiImportsFLBSimpleObjects in 'SepiImportsFLBSimpleObjects.pas',
+  SepiImportsFLBBoat in 'SepiImportsFLBBoat.pas',
+  SepiImportsFLBCommon in 'SepiImportsFLBCommon.pas',
+  SepiImportsFLBFields in 'SepiImportsFLBFields.pas',
+  SepiImportsFLBLift in 'SepiImportsFLBLift.pas',
+  SepiImportsFLBObstacles in 'SepiImportsFLBObstacles.pas',
+  SepiImportsFLBPlank in 'SepiImportsFLBPlank.pas',
+  SepiImportsFLBSimpleEffects in 'SepiImportsFLBSimpleEffects.pas';
 
 end.
 

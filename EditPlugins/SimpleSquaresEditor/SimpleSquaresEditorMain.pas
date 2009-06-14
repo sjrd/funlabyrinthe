@@ -386,20 +386,15 @@ begin
   Code.Add('');
   Code.Add('implementation');
   Code.Add('');
-  Code.Add('var');
-  Code.Add('  Master: TMaster;');
-  Code.Add('');
-  Code.Add('procedure InitializeUnit(AMaster: TMaster; Params: TStrings);');
+  Code.Add('procedure InitializeUnit(Master: TMaster; Params: TStrings);');
   Code.Add('begin');
-  Code.Add('  Master := AMaster;');
-  Code.Add('');
 
   for I := 0 to SimpleSquares.Count-1 do
     SimpleSquares[I].ProduceCreateComponents(Code);
 
   Code.Add('end;');
   Code.Add('');
-  Code.Add('procedure RegisterComponents(');
+  Code.Add('procedure RegisterComponents(Master: TMaster;');
   Code.Add('  RegisterSingleComponentProc: TRegisterSingleComponentProc;');
   Code.Add('  RegisterComponentSetProc: TRegisterComponentSetProc);');
   Code.Add('begin');

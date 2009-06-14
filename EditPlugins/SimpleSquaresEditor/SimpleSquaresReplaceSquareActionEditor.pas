@@ -36,10 +36,10 @@ type
 
     FCurrentAction: TReplaceSquareAction; /// Action courante
 
-    procedure RegisterSingleComponent(Component: TSquareComponent); stdcall;
+    procedure RegisterSingleComponent(Component: TSquareComponent);
     procedure RegisterComponentSet(Template: TSquareComponent;
       const Components: array of TSquareComponent; BaseIndex: Integer;
-      const DialogTitle, DialogPrompt: string); stdcall;
+      const DialogTitle, DialogPrompt: string);
 
     procedure FillIDEdits;
   protected

@@ -206,7 +206,7 @@ constructor TBPLUnitFile.Create(AMasterFile: TMasterFile; const AHRef: string;
   const AFileName: TFileName; const AGUID: TGUID; Params: TStrings);
 type
   TCreateUnitFileProc = function(BPLHandler: TBPLUnitFile; Master: TMaster;
-      Params: TStrings): IUnitFile50; stdcall;
+    Params: TStrings): IUnitFile50;
 var
   CreateUnitFile: TCreateUnitFileProc;
 begin
@@ -324,9 +324,11 @@ begin
 end;
 
 procedure TSepiUnitFile.CallSimpleProc(const Name: string);
+type
+  TSimpleProc = procedure(Master: TMaster);
 var
   Method: TSepiMethod;
-  Proc: TProcedure;
+  Proc: TSimpleProc;
 begin
   // Get method
   if not (SepiUnit.GetMeta(Name) is TSepiMethod) then
@@ -338,7 +340,11 @@ begin
   begin
     if Kind <> skStaticProcedure then
       Exit;
-    if ParamCount <> 0 then
+    if ParamCount <> 1 then
+      Exit;
+    if (Params[0].Kind <> pkValue) or
+      (not Params[0].CompatibleWith(MasterFile.SepiRoot.FindMeta(
+        'FunLabyUtils.TMaster') as TSepiType)) then
       Exit;
     if CallingConvention <> ccRegister then
       Exit;
@@ -346,7 +352,7 @@ begin
 
   // Call the procedure
   @Proc := Method.Code;
-  Proc;
+  Proc(Master);
 end;
 
 {*
@@ -431,7 +437,7 @@ procedure TSepiUnitFile.RegisterComponents(
   RegisterSingleComponentProc: TRegisterSingleComponentProc;
   RegisterComponentSetProc: TRegisterComponentSetProc);
 type
-  TRegisterComponentsProc = procedure(
+  TRegisterComponentsProc = procedure(Master: TMaster;
     RegisterSingleComponentProc: TRegisterSingleComponentProc;
     RegisterComponentSetProc: TRegisterComponentSetProc);
 var
@@ -453,12 +459,15 @@ begin
 
     if Kind <> skStaticProcedure then
       Exit;
-    if ParamCount <> 2 then
+    if ParamCount <> 3 then
       Exit;
     if not Params[0].CompatibleWith(FunLabyUtilsUnit.GetMeta(
-      'TRegisterSingleComponentProc') as TSepiType) then
+      'TMaster') as TSepiType) then
       Exit;
     if not Params[1].CompatibleWith(FunLabyUtilsUnit.GetMeta(
+      'TRegisterSingleComponentProc') as TSepiType) then
+      Exit;
+    if not Params[2].CompatibleWith(FunLabyUtilsUnit.GetMeta(
       'TRegisterComponentSetProc') as TSepiType) then
       Exit;
     if CallingConvention <> ccRegister then
@@ -467,7 +476,7 @@ begin
 
   // Call the procedure
   @RegisterComponentsProc := Method.Code;
-  RegisterComponentsProc(RegisterSingleComponentProc,
+  RegisterComponentsProc(Master, RegisterSingleComponentProc,
     RegisterComponentSetProc);
 end;
 

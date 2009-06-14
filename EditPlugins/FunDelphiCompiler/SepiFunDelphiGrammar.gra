@@ -136,6 +136,16 @@ ntIdentifier	Identifier
 	'less'
 	'than'
 	'exactly'
+	'actions'
+	'attributes'
+	'components'
+	'plugin'
+	'field'
+	'effect'
+	'tool'
+	'obstacle'
+	'image'
+	'action'
 
 ntUsesSection	UsesSection
 	'uses'* CommaIdentList ';'*
@@ -246,7 +256,7 @@ ntSingleValue	SingleValue
 	FloatConst
 	StringConst
 	IdentifierSingleValue
-	InheritedSingleValue
+	'inherited'* InheritedSingleValue
 	NilValue
 	'['* SetValue ']'*
 
@@ -262,8 +272,15 @@ ntStringConst	StringConst
 ntIdentifierSingleValue	IdentifierSingleValue
 	Identifier
 
-ntInheritedSingleValue	InheritedSingleValue
-	'inherited'* Identifier
+ntInheritedSingleValue	InheritedSingleValue	Simplify
+	1 InheritedExpression
+	0 PureInheritedExpression
+
+ntInheritedExpression	InheritedExpression
+	Identifier
+
+ntPureInheritedExpression	PureInheritedExpression
+	@
 
 ntNilValue	NilValue
 	'nil'
@@ -345,11 +362,15 @@ ntAddressOfOp	AddressOfOp
 	'@'
 
 ntConstSection	ConstSection
-	ConstKeyWord* (ConstDecl)+
+	ConstKeyWord* ConstDecl ConstDecls
 
 ntConstKeyWord	ConstKeyWord
 	'const'
 	'resourcestring'
+
+ntConstDecls	ConstDecls	Simplify
+	-1 ConstDecl ConstDecls
+	@
 
 ntConstDecl	ConstDecl
 	IdentifierDecl InnerConstDecl ';'*
@@ -359,7 +380,11 @@ ntInnerConstDecl	InnerConstDecl	Simplify
 	'='* ConstExpression
 
 ntVarSection	VarSection
-	'var'* (GlobalVar)+
+	'var'* GlobalVar GlobalVars
+
+ntGlobalVars	GlobalVars	Simplify
+	-1 GlobalVar GlobalVars
+	@
 
 ntGlobalVar	GlobalVar
 	IdentifierDecl InnerGlobalVar ';'*
@@ -375,7 +400,11 @@ ntAttributesSection	AttributesSection
 	'attributes'* CommaIdentDeclList ';'*
 
 ntComponentsSection	ComponentsSection
-	'components'* (Component)+
+	'components'* Component Components
+
+ntComponents	Components	Simplify
+	-1 Component Components
+	@
 
 ntComponent	Component
 	IdentifierDecl ':'* QualifiedIdent ComponentParameters ';'*
@@ -438,7 +467,11 @@ ntParentClass	ParentClass
 	@
 
 ntFields	Fields	Simplify
-	'var'* (Field)+
+	'var'* Field FieldsEx
+
+ntFieldsEx	FieldsEx	Simplify
+	-1 Field FieldsEx
+	@
 
 ntField	Field
 	CommaIdentDeclList ':'* TypeName ';'*

@@ -39,7 +39,7 @@ type
   end;
 
 function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
-  Params: TStrings): IUnitFile50; stdcall;
+  Params: TStrings): IUnitFile50;
 
 implementation
 
@@ -51,7 +51,7 @@ implementation
   @return Interface de l'unité Compatibility4x créée
 *}
 function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
-  Params: TStrings): IUnitFile50; stdcall;
+  Params: TStrings): IUnitFile50;
 begin
   Result := TCompatibility4xUnit.Create(BPLHandler.MasterFile, Params);
 end;

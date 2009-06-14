@@ -105,7 +105,7 @@ type
     @param Component   Le composant à enregistrer
   *}
   TRegisterSingleComponentProc = procedure(
-    Component: TSquareComponent) of object; stdcall;
+    Component: TSquareComponent) of object;
 
   {*
     Type de méthode call-back pour l'enregistrement d'un ensemble de composants
@@ -116,7 +116,7 @@ type
   *}
   TRegisterComponentSetProc = procedure(Template: TSquareComponent;
     const Components: array of TSquareComponent; BaseIndex: Integer;
-    const DialogTitle, DialogPrompt: string) of object; stdcall;
+    const DialogTitle, DialogPrompt: string) of object;
 
   {*
     Gère le chargement des images d'après leur nom
@@ -407,6 +407,8 @@ type
     procedure BeforeDestruction; override;
 
     procedure DefaultHandler(var Msg); override;
+
+    function Contains(Component: TSquareComponent): Boolean;
 
     procedure Entering(Player: TPlayer; OldDirection: TDirection;
       KeyPressed: Boolean; const Src, Pos: T3DPoint;
@@ -1645,6 +1647,30 @@ begin
     Tool.Dispatch(Msg);
   if Assigned(Obstacle) then
     Obstacle.Dispatch(Msg);
+end;
+
+{*
+  Teste si cette case contient un composant donné
+  Si le composant est une case entière, renvoie True si c'est cette case. Sinon,
+  renvoie True si le sous-composant correspondant à la classe de Component
+  (ex. : Field pour TField) est le composant indiqué.
+  @param Component   Composant à tester
+  @return True si cette case contient le composant spécifié, False sinon
+*}
+function TSquare.Contains(Component: TSquareComponent): Boolean;
+begin
+  if Component is TField then
+    Result := Field = Component
+  else if Component is TEffect then
+    Result := Effect = Component
+  else if Component is TTool then
+    Result := Tool = Component
+  else if Component is TObstacle then
+    Result := Obstacle = Component
+  else if Component is TSquare then
+    Result := Self = Component
+  else
+    Result := False;
 end;
 
 {*

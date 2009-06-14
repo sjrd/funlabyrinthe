@@ -32,6 +32,7 @@ type
   private
     FComponentDeclNodes: TObjectList; /// Liste des noeuds déclaration de compo
 
+    procedure PrepareInitializeUnitProc;
     procedure MakeInitializeUnitProc;
     procedure MakeRegisterComponentsProc;
 
@@ -165,12 +166,17 @@ type
   *}
   TFunDelphiComponentDeclNode = class(TSepiNonTerminal)
   private
+    FInitializeUnitCompiler: TSepiMethodCompiler; /// Compilateur InitializeUnit
+
     FIDConstant: TSepiConstant; /// Constante représentant l'ID du composant
     FRegisterable: Boolean;     /// True si peut être recensé
   protected
     procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
   public
+    procedure BeginParsing; override;
     procedure EndParsing; override;
+
+    function ResolveIdent(const Identifier: string): ISepiExpression; override;
 
     procedure MakeInitialize(Compiler: TSepiMethodCompiler;
       Instructions: TSepiInstructionList);
@@ -331,8 +337,6 @@ type
     @version 5.0
   *}
   TFunDelphiConstructorBodyBode = class(TSepiMethodBodyNode)
-  protected
-    procedure ChildBeginParsing(Child: TSepiParseTreeNode); override;
   end;
 
   {*
@@ -351,8 +355,6 @@ type
     @version 5.0
   *}
   TFunDelphiDestructorBodyBode = class(TSepiMethodBodyNode)
-  protected
-    procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
   end;
 
   {*
@@ -553,7 +555,7 @@ begin
   NonTerminalClasses[ntCanOp]          := TFunDelphiCanOpNode;
   NonTerminalClasses[ntHasOp]          := TFunDelphiHasOpNode;
   NonTerminalClasses[ntHasComparison]  := TFunDelphiHasComparisonNode;
-  NonTerminalClasses[ntUnaryOp]        := TDelphiUnaryOpNode;
+  NonTerminalClasses[ntUnaryOp]        := TFunDelphiUnaryOpNode;
   NonTerminalClasses[ntAddressOfOp]    := TSepiAddressOfOpNode;
 
   NonTerminalClasses[ntSingleExpr]        := TDelphiSingleExprNode;
@@ -565,7 +567,9 @@ begin
   NonTerminalClasses[ntFloatConst]            := TSepiConstFloatNode;
   NonTerminalClasses[ntStringConst]           := TSepiConstStringNode;
   NonTerminalClasses[ntIdentifierSingleValue] := TSepiIdentifierExpressionNode;
-  NonTerminalClasses[ntInheritedSingleValue]  := TSepiInheritedExpressionNode;
+  NonTerminalClasses[ntInheritedExpression]   := TSepiInheritedExpressionNode;
+  NonTerminalClasses[ntPureInheritedExpression] :=
+    TSepiPureInheritedExpressionNode;
   NonTerminalClasses[ntNilValue]              := TSepiNilValueNode;
   NonTerminalClasses[ntSetValue]              := TSepiSetValueNode;
 
@@ -649,55 +653,20 @@ begin
 end;
 
 {*
-  Compile un appel inherited avec tous les paramètres
+  Compile un appel inherited pur
   @param Compiler   Compilateur
 *}
-procedure CompileFullInheritedCall(Compiler: TSepiMethodCompiler);
-const
-  ForceStaticCall = True;
+procedure CompilePureInheritedCall(Compiler: TSepiMethodCompiler);
 var
-  SepiMethod, Previous: TSepiMethod;
-  SelfParam, ParamValue: ISepiValue;
-  WantingParams: ISepiWantingParams;
-  I: Integer;
-  CallValue: ISepiReadableValue;
-  ResultValue: ISepiWritableValue;
   Executable: ISepiExecutable;
+  Instruction: TSepiExecuteExpression;
 begin
-  SepiMethod := Compiler.SepiMethod;
-  Previous := (SepiMethod.Owner as TSepiClass).Parent.LookForMember(
-    SepiMethod.Name, SepiMethod.OwningUnit,
-    TSepiClass(SepiMethod.Owner)) as TSepiMethod;
+  Executable := TSepiPureInheritedCall.Create;
+  Executable.AttachToExpression(TSepiExpression.Create(Compiler));
 
-  SelfParam := TSepiLocalVarValue.MakeValue(Compiler,
-    Compiler.Locals.SelfVar);
-
-  WantingParams := TSepiMethodCall.Create(Previous,
-    SelfParam as ISepiReadableValue, ForceStaticCall);
-  WantingParams.AttachToExpression(TSepiExpression.Create(Compiler));
-
-  for I := 0 to Previous.Signature.ParamCount-1 do
-  begin
-    ParamValue := TSepiLocalVarValue.MakeValue(Compiler,
-      Compiler.Locals.GetVarByName(Previous.Signature.Params[I].Name));
-    WantingParams.AddParam(ParamValue as ISepiExpression);
-  end;
-
-  WantingParams.CompleteParams;
-
-  if SepiMethod.Signature.ReturnType <> nil then
-  begin
-    CallValue := WantingParams as ISepiReadableValue;
-    ResultValue := TSepiLocalVarValue.MakeValue(Compiler,
-      Compiler.Locals.ResultVar) as ISepiWritableValue;
-    Executable := TSepiAssignmentOperation.MakeOperation(
-      ResultValue, CallValue) as ISepiExecutable;
-  end else
-  begin
-    Executable := WantingParams as ISepiExecutable;
-  end;
-
-  Executable.CompileExecute(Compiler, Compiler.Instructions);
+  Instruction := TSepiExecuteExpression.Create(Compiler);
+  Instruction.Executable := Executable;
+  Compiler.Instructions.Add(Instruction);
 end;
 
 {--------------------------}
@@ -715,25 +684,32 @@ begin
 end;
 
 {*
+  Prépare la procédure InitializeUnit
+*}
+procedure TFunDelphiRootNode.PrepareInitializeUnitProc;
+var
+  SepiMethod: TSepiMethod;
+begin
+  SepiContext.CurrentVisibility := mvPrivate;
+
+  SepiMethod := TSepiMethod.Create(SepiContext, 'InitializeUnit', nil,
+    'procedure(Master: FunLabyUtils.TMaster; Params: Classes.TStrings)');
+  UnitCompiler.FindMethodCompiler(SepiMethod, True);
+
+  SepiContext.CurrentVisibility := mvPublic;
+end;
+
+{*
   Construit la procédure InitializeUnit
 *}
 procedure TFunDelphiRootNode.MakeInitializeUnitProc;
 var
   SepiMethod: TSepiMethod;
   Compiler: TSepiMethodCompiler;
-  AssignInstr: TSepiAssignment;
   I: Integer;
 begin
-  SepiMethod := TSepiMethod.Create(SepiContext, 'InitializeUnit', nil,
-    'procedure(AMaster: FunLabyUtils.TMaster; Params: Classes.TStrings)');
-  Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
-
-  AssignInstr := TSepiAssignment.Create(Compiler, False);
-  AssignInstr.Destination := MethodResolveIdent(Compiler,
-    'Master') as ISepiWritableValue;
-  AssignInstr.Source := MethodResolveIdent(Compiler,
-    'AMaster') as ISepiReadableValue;
-  Compiler.Instructions.Add(AssignInstr);
+  SepiMethod := SepiContext.FindMeta('InitializeUnit') as TSepiMethod;
+  Compiler := UnitCompiler.FindMethodCompiler(SepiMethod);
 
   for I := 0 to FComponentDeclNodes.Count-1 do
     TFunDelphiComponentDeclNode(FComponentDeclNodes[I]).MakeInitialize(
@@ -750,7 +726,8 @@ var
   I: Integer;
 begin
   SepiMethod := TSepiMethod.Create(SepiContext, 'RegisterComponents', nil,
-    'procedure(RegisterSingleComponentProc: TRegisterSingleComponentProc; '+
+    'procedure(Master: TMaster; '+
+    'RegisterSingleComponentProc: TRegisterSingleComponentProc; '+
     'RegisterComponentSetProc: TRegisterComponentSetProc)');
   Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
 
@@ -765,7 +742,6 @@ end;
 procedure TFunDelphiRootNode.MakeTopLevelProcs;
 begin
   SepiContext.CurrentVisibility := mvPrivate;
-  TSepiVariable.Create(SepiContext, MasterName, 'FunLabyUtils.TMaster');
 
   MakeInitializeUnitProc;
   MakeRegisterComponentsProc;
@@ -781,7 +757,10 @@ const
   );
 begin
   if Child.SymbolClass = ntIdentifier then
+  begin
     SetSepiUnit(TSepiUnit.Create(SepiRoot, Child.AsText, ImpliedUses));
+    PrepareInitializeUnitProc;
+  end;
 
   inherited;
 end;
@@ -914,8 +893,25 @@ end;
 *}
 function TFunDelphiCanOpNode.MakeOperation(
   const Left, Right: ISepiExpression): ISepiExpression;
+var
+  LeftValue, RightValue: ISepiReadableValue;
+  WantingParams: ISepiWantingParams;
 begin
-  // TODO
+  RequireReadableValue(Left, LeftValue);
+  RequireReadableValue(Right, RightValue);
+
+  LeftValue := TSepiConvertOperation.ConvertValue(
+    SepiRoot.FindMeta('FunLabyUtils.TPlayer') as TSepiType, LeftValue);
+  RightValue := TSepiConvertOperation.ConvertValue(
+    SystemUnit.LongString, RightValue);
+
+  WantingParams := FieldSelection(SepiContext, LeftValue as ISepiExpression,
+    'DoAction') as ISepiWantingParams;
+  WantingParams.AddParam(RightValue as ISepiExpression);
+  WantingParams.CompleteParams;
+
+  Result := WantingParams as ISepiExpression;
+  Result.SourcePos := SourcePos;
 end;
 
 {---------------------------}
@@ -935,8 +931,29 @@ end;
 *}
 function TFunDelphiHasOpNode.MakeOperation(
   const Left, Right: ISepiExpression): ISepiExpression;
+var
+  LeftValue, RightValue: ISepiReadableValue;
+  CountProp: ISepiProperty;
 begin
-  // TODO
+  RequireReadableValue(Left, LeftValue);
+  RequireReadableValue(Right, RightValue);
+
+  LeftValue := TSepiConvertOperation.ConvertValue(
+    SepiRoot.FindMeta('FunLabyUtils.TPlayer') as TSepiType, LeftValue);
+  RightValue := TSepiConvertOperation.ConvertValue(
+    SepiRoot.FindMeta('FunLabyUtils.TObjectDef') as TSepiType, RightValue);
+
+  CountProp := FieldSelection(SepiContext, RightValue as ISepiExpression,
+    'Count') as ISepiProperty;
+  Assert(CountProp.ParamCount = 1);
+  CountProp.Params[0] := LeftValue as ISepiExpression;
+  CountProp.CompleteParams;
+
+  Result := CountProp as ISepiExpression;
+  Result.SourcePos := SourcePos;
+
+  Result := (Children[0] as TSepiBinaryOpNode).MakeOperation(
+    Result, (Children[1] as TSepiExpressionNode).Expression);
 end;
 
 {-----------------------------------}
@@ -1050,6 +1067,19 @@ end;
 {*
   [@inheritDoc]
 *}
+procedure TFunDelphiComponentDeclNode.BeginParsing;
+var
+  SepiMethod: TSepiMethod;
+begin
+  inherited;
+
+  SepiMethod := SepiContext.FindMeta('InitializeUnit') as TSepiMethod;
+  FInitializeUnitCompiler := UnitCompiler.FindMethodCompiler(SepiMethod);
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TFunDelphiComponentDeclNode.ChildEndParsing(
   Child: TSepiParseTreeNode);
 var
@@ -1073,6 +1103,15 @@ begin
   (RootNode as TFunDelphiRootNode).AddComponentDeclNode(Self);
 
   inherited;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiComponentDeclNode.ResolveIdent(
+  const Identifier: string): ISepiExpression;
+begin
+  Result := MethodResolveIdent(FInitializeUnitCompiler, Identifier);
 end;
 
 {*
@@ -1196,7 +1235,7 @@ begin
 
     Compiler := UnitCompiler.FindMethodCompiler(SepiMethod);
 
-    CompileFullInheritedCall(Compiler);
+    CompilePureInheritedCall(Compiler);
   end;
 end;
 
@@ -1475,22 +1514,6 @@ begin
     SepiRoot.FindType('FunLabyUtils.TComponentID'), pkConst);
 end;
 
-{-------------------------------------}
-{ TFunDelphiConstructorBodyBode class }
-{-------------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-procedure TFunDelphiConstructorBodyBode.ChildBeginParsing(
-  Child: TSepiParseTreeNode);
-begin
-  inherited;
-
-  if Child is TSepiInstructionNode then
-    CompileFullInheritedCall(MethodCompiler);
-end;
-
 {--------------------------------------}
 { TFunDelphiDestructorHeaderNode class }
 {--------------------------------------}
@@ -1503,22 +1526,6 @@ begin
   inherited;
 
   Signature.Kind := skDestructor;
-end;
-
-{------------------------------------}
-{ TFunDelphiDestructorBodyBode class }
-{------------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-procedure TFunDelphiDestructorBodyBode.ChildEndParsing(
-  Child: TSepiParseTreeNode);
-begin
-  if Child is TSepiInstructionNode then
-    CompileFullInheritedCall(MethodCompiler);
-
-  inherited;
 end;
 
 {----------------------------------}
@@ -1547,12 +1554,13 @@ var
   Compiler: TSepiMethodCompiler;
 begin
   Previous := (SepiContext as TSepiClass).LookForMember(
-    'Create') as TSepiMethod;
+    CreateName) as TSepiMethod;
 
-  Result := TSepiMethod.Create(SepiContext, 'Create', nil, Previous.Signature);
+  Result := TSepiMethod.Create(SepiContext, CreateName, nil,
+    Previous.Signature);
   Compiler := UnitCompiler.FindMethodCompiler(Result, True);
 
-  CompileFullInheritedCall(Compiler);
+  CompilePureInheritedCall(Compiler);
 end;
 
 {*
