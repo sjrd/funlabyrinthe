@@ -7,8 +7,8 @@ uses
   Dialogs, SepiReflectionCore, SepiCompiler, SepiCompilerErrors, SepiParseTrees,
   FilesUtils, UnitFiles, SourceEditors, SdDialogs, Buttons, StdCtrls, ExtCtrls,
   ImgList, CategoryButtons, ExtDlgs, Contnrs, FunLabyUtils, SimpleSquareEdit,
-  SimpleSquaresUtils, SimpleSquareNew, FunLabyEditOTA, SepiDelphiCompiler,
-  FunLabySourceEditorFrame;
+  SimpleSquaresUtils, SimpleSquareNew, FunLabyEditOTA, SepiFunDelphiCompiler,
+  FunLabySourceEditorFrame, ScUtils;
 
 resourcestring
   SimpleSquaresFilter = 'Définitions de cases simples (*.ssq)|*.ssq';
@@ -20,7 +20,7 @@ resourcestring
 
 const {don't localize}
   SimpleSquaresExtension = 'ssq';
-  DelphiExtension = 'pas';
+  FunDelphiExtension = 'fnd';
   SepiExtension = 'scu';
 
 type
@@ -87,7 +87,7 @@ type
     function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
     procedure SetFunLabyEditMainForm(const Value: IOTAFunLabyEditMainForm50);
 
-    procedure ProduceDelphiCode(Code: TStrings);
+    procedure ProduceFunDelphiCode(Code: TStrings);
   protected
     function FindButton(SimpleSquare: TSimpleSquare): TButtonItem;
 
@@ -324,10 +324,11 @@ begin
 
   SourceFile := TStringList.Create;
   try
-    ProduceDelphiCode(SourceFile);
+    ProduceFunDelphiCode(SourceFile);
 
     Errors.CurrentFileName := SrcFileName;
-    Result := CompileDelphiSource(SepiRoot, Errors, SourceFile, DestFileName);
+    Result := CompileFunDelphiSource(SepiRoot, Errors, SourceFile,
+      DestFileName);
   finally
     SourceFile.Free;
   end;
@@ -363,51 +364,71 @@ end;
   Produit le code Delphi de cette unité
   @param Code   Code produit
 *}
-procedure TFrameSimpleSquaresEditor.ProduceDelphiCode(Code: TStrings);
+procedure TFrameSimpleSquaresEditor.ProduceFunDelphiCode(Code: TStrings);
 var
+  Strings: TStringList;
   I: Integer;
 begin
   Code.Add(Format('unit %s;', [GetUnitName]));
   Code.Add('');
-  Code.Add('interface');
-  Code.Add('');
   Code.Add('uses');
-  Code.Add('  SysUtils, Classes, Graphics, ScUtils, SdDialogs, FunLabyUtils,');
-  Code.Add('  Generics, MapTools, GenericButtons;');
+  Code.Add('  ScUtils, SdDialogs, Generics, MapTools, GenericButtons;');
   Code.Add('');
-  Code.Add('const');
+
+  if SimpleSquares.Count = 0 then
+  begin
+    Code.Add('end.');
+    Exit;
+  end;
+
+  Strings := TStringList.Create;
+  try
+    Strings.CaseSensitive := False;
+    Strings.Sorted := True;
+    Strings.Duplicates := dupIgnore;
+
+    // Actions
+
+    for I := 0 to SimpleSquares.Count-1 do
+      SimpleSquares[I].RegisterActions(Strings);
+
+    if Strings.Count > 0 then
+    begin
+      Code.Add('actions');
+      for I := 0 to Strings.Count-1 do
+        Code.Add('  '+Strings[I] + IIF(I = Strings.Count-1, ';', ','));
+      Code.Add('');
+    end;
+
+    // Attributes
+
+    Strings.Clear;
+    for I := 0 to SimpleSquares.Count-1 do
+      SimpleSquares[I].RegisterAttributes(Strings);
+
+    if Strings.Count > 0 then
+    begin
+      Code.Add('attributes');
+      for I := 0 to Strings.Count-1 do
+        Code.Add('  '+Strings[I] + IIF(I = Strings.Count-1, ';', ','));
+      Code.Add('');
+    end;
+  finally
+    Strings.Free;
+  end;
+
+  // Components
+
+  Code.Add('components');
+  for I := 0 to SimpleSquares.Count-1 do
+    SimpleSquares[I].ProduceComponents(Code);
+  Code.Add('');
+
+  // Class definitions
 
   for I := 0 to SimpleSquares.Count-1 do
-    SimpleSquares[I].ProduceIDConst(Code);
+    SimpleSquares[I].ProduceClass(Code);
 
-  for I := 0 to SimpleSquares.Count-1 do
-    SimpleSquares[I].ProduceClassDef(Code);
-
-  Code.Add('');
-  Code.Add('implementation');
-  Code.Add('');
-  Code.Add('procedure InitializeUnit(Master: TMaster; Params: TStrings);');
-  Code.Add('begin');
-
-  for I := 0 to SimpleSquares.Count-1 do
-    SimpleSquares[I].ProduceCreateComponents(Code);
-
-  Code.Add('end;');
-  Code.Add('');
-  Code.Add('procedure RegisterComponents(Master: TMaster;');
-  Code.Add('  RegisterSingleComponentProc: TRegisterSingleComponentProc;');
-  Code.Add('  RegisterComponentSetProc: TRegisterComponentSetProc);');
-  Code.Add('begin');
-
-  for I := 0 to SimpleSquares.Count-1 do
-    SimpleSquares[I].ProduceRegisterComponents(Code);
-
-  Code.Add('end;');
-
-  for I := 0 to SimpleSquares.Count-1 do
-    SimpleSquares[I].ProduceImplementation(Code);
-
-  Code.Add('');
   Code.Add('end.');
 end;
 
@@ -583,13 +604,13 @@ var
   Output: TStrings;
 begin
   SaveSourceDialog.InitialDir := fUnitsDir;
-  SaveSourceDialog.FileName := GetUnitName + '.' + DelphiExtension;
+  SaveSourceDialog.FileName := GetUnitName + '.' + FunDelphiExtension;
 
   if SaveSourceDialog.Execute then
   begin
     Output := TStringList.Create;
     try
-      ProduceDelphiCode(Output);
+      ProduceFunDelphiCode(Output);
       Output.SaveToFile(SaveSourceDialog.FileName);
     finally
       Output.Free;

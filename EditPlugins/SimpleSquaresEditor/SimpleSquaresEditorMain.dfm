@@ -587,10 +587,10 @@ inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
       000000000000}
   end
   object SaveSourceDialog: TSaveDialog
-    DefaultExt = 'pas'
-    Filter = 'Source Delphi (*.pas)|*.pas'
+    DefaultExt = 'fnd'
+    Filter = 'Source FunDelphi (*.fnd)|*.fnd'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofNoReadOnlyReturn, ofEnableSizing]
-    Title = 'Enregistrer le code source Delphi sous...'
+    Title = 'Enregistrer le code source FunDelphi sous...'
     Left = 88
     Top = 264
   end

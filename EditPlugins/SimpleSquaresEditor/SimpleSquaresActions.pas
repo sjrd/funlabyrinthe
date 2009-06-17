@@ -39,7 +39,7 @@ type
 
     function GetQPos(Master: TMaster): TQualifiedPos;
 
-    function GetDelphiCode: string;
+    function GetFunDelphiCode: string;
 
     property MapID: TComponentID read FMapID write FMapID;
     property Position: T3DPoint read FPosition write FPosition;
@@ -64,7 +64,7 @@ type
 
     procedure SetToSquare(Square: TSquare);
 
-    function GetDelphiCode: string;
+    function GetFunDelphiCode: string;
 
     property FieldID: TComponentID read FFieldID write FFieldID;
     property EffectID: TComponentID read FEffectID write FEffectID;
@@ -107,7 +107,8 @@ type
     constructor Create; override;
     destructor Destroy; override;
 
-    procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
+    procedure ProduceFunDelphiCode(Code: TStrings;
+      const Indent: string); override;
 
     property ReplaceBy: TSquareDef read FReplaceBy;
   end;
@@ -128,7 +129,8 @@ type
     constructor Load(Stream: TStream); override;
     constructor Create; override;
 
-    procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
+    procedure ProduceFunDelphiCode(Code: TStrings;
+      const Indent: string); override;
 
     property EffectID: TComponentID read FEffectID write FEffectID;
   end;
@@ -170,7 +172,8 @@ type
     constructor Load(Stream: TStream); override;
     constructor Create; override;
 
-    procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
+    procedure ProduceFunDelphiCode(Code: TStrings;
+      const Indent: string); override;
 
     property Kind: TSimpleMessageKind read FKind write SetKind;
     property DialogTitle: string read FDialogTitle write SetDialogTitle;
@@ -195,7 +198,8 @@ type
     constructor Load(Stream: TStream); override;
     constructor Create; override;
 
-    procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
+    procedure ProduceFunDelphiCode(Code: TStrings;
+      const Indent: string); override;
 
     property Color: TColor read FColor write FColor;
   end;
@@ -230,7 +234,8 @@ type
     constructor Load(Stream: TStream); override;
     constructor Create; override;
 
-    procedure ProduceDelphiCode(Code: TStrings; const Indent: string); override;
+    procedure ProduceFunDelphiCode(Code: TStrings;
+      const Indent: string); override;
 
     property Kind: TSimpleMethodKind read FKind write FKind;
   end;
@@ -306,7 +311,7 @@ end;
   Code Delphi représentant la case à la position indiquée
   @return Code Delphi représentant la case à la position indiquée
 *}
-function TSquarePos.GetDelphiCode: string;
+function TSquarePos.GetFunDelphiCode: string;
 begin
   // don't localize
   if MapID = '' then
@@ -372,7 +377,7 @@ end;
   Code Delphi représentant la case à la position indiquée
   @return Code Delphi représentant la case à la position indiquée
 *}
-function TSquareDef.GetDelphiCode: string;
+function TSquareDef.GetFunDelphiCode: string;
 begin
   Result := Format('Master.Square[%s]',
     [StrToStrRepres(Format(SquareIDFormat,
@@ -473,11 +478,11 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TReplaceSquareAction.ProduceDelphiCode(Code: TStrings;
+procedure TReplaceSquareAction.ProduceFunDelphiCode(Code: TStrings;
   const Indent: string);
 begin
-  Code.Add(Indent + Format('%s := ', [SquarePos.GetDelphiCode]));
-  Code.Add(Indent + Format('  %s;', [ReplaceBy.GetDelphiCode]));
+  Code.Add(Indent + Format('%s := ', [SquarePos.GetFunDelphiCode]));
+  Code.Add(Indent + Format('  %s;', [ReplaceBy.GetFunDelphiCode]));
 end;
 
 {-------------------------------}
@@ -523,7 +528,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TDeactivateEffectAction.ProduceDelphiCode(Code: TStrings;
+procedure TDeactivateEffectAction.ProduceFunDelphiCode(Code: TStrings;
   const Indent: string);
 const
   StatementFormat =
@@ -644,7 +649,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TMessageAction.ProduceDelphiCode(Code: TStrings;
+procedure TMessageAction.ProduceFunDelphiCode(Code: TStrings;
   const Indent: string);
 var
   NewIndent: string;
@@ -652,7 +657,7 @@ begin
   if OnlyFirstTime then
   begin
     Code.Add(Indent + 'if IsFirstTime(Player) then');
-    NewIndent := Indent + DefaultIndent;
+    NewIndent := Indent + '  ';
   end else
     NewIndent := Indent;
 
@@ -708,7 +713,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlayerColorAction.ProduceDelphiCode(Code: TStrings;
+procedure TPlayerColorAction.ProduceFunDelphiCode(Code: TStrings;
   const Indent: string);
 begin
   Code.Add(Indent + Format('Player.Color := %s;', [ColorToString(Color)]));
@@ -771,7 +776,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TSimpleMethodAction.ProduceDelphiCode(Code: TStrings;
+procedure TSimpleMethodAction.ProduceFunDelphiCode(Code: TStrings;
   const Indent: string);
 const {don't localize}
   Statements: array[TSimpleMethodKind] of string = (

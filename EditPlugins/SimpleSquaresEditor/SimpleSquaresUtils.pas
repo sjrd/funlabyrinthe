@@ -51,12 +51,11 @@ type
   protected
     procedure Save(Stream: TStream); virtual;
 
-    procedure ProduceDefaultClassHeader(Code: TStrings);
-    procedure ProduceDefaultClassFooter(Code: TStrings);
+    function GetComponentType: string; virtual; abstract;
+    function GetParentClassName: string; virtual;
 
     procedure ProduceDefaultImgNames(Code: TStrings);
-
-    function GetParentClassName: string; virtual; abstract;
+    procedure ProduceInnerClass(Code: TStrings); virtual;
 
     function GetCanEditImgNames: Boolean; virtual;
   public
@@ -74,11 +73,10 @@ type
 
     procedure Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); virtual;
 
-    procedure ProduceIDConst(Code: TStrings); virtual;
-    procedure ProduceClassDef(Code: TStrings); virtual;
-    procedure ProduceCreateComponents(Code: TStrings); virtual;
-    procedure ProduceRegisterComponents(Code: TStrings); virtual;
-    procedure ProduceImplementation(Code: TStrings); virtual;
+    procedure RegisterActions(Actions: TStrings); virtual;
+    procedure RegisterAttributes(Attributes: TStrings); virtual;
+    procedure ProduceComponents(Code: TStrings); virtual;
+    procedure ProduceClass(Code: TStrings);
 
     property ID: TComponentID read FID;
     property Name: string read FName write FName;
@@ -108,7 +106,8 @@ type
     class function LoadFromStream(Stream: TStream): TSimpleAction;
     procedure SaveToStream(Stream: TStream);
 
-    procedure ProduceDelphiCode(Code: TStrings; const Indent: string); virtual;
+    procedure ProduceFunDelphiCode(Code: TStrings;
+      const Indent: string); virtual;
 
     property Title: string read GetTitle;
   end;
@@ -132,7 +131,7 @@ type
 
     function AddNew(ActionClass: TSimpleActionClass): TSimpleAction;
 
-    procedure ProduceDelphiCode(Code: TStrings);
+    procedure ProduceFunDelphiCode(Code: TStrings);
 
     property Items[Index: Integer]: TSimpleAction read GetItems; default;
   end;
@@ -143,8 +142,8 @@ type
     @version 5.0
   *}
   TSimpleField = class(TSimpleSquare)
-  public
-    procedure ProduceClassDef(Code: TStrings); override;
+  protected
+    function GetComponentType: string; override;
   end;
 
   {*
@@ -158,7 +157,10 @@ type
   protected
     procedure Save(Stream: TStream); override;
 
+    function GetComponentType: string; override;
     function GetParentClassName: string; override;
+
+    procedure ProduceInnerClass(Code: TStrings); override;
   public
     constructor Load(AImagesMaster: TImagesMaster;
       Stream: TStream); override;
@@ -167,9 +169,6 @@ type
     destructor Destroy; override;
 
     class function ClassTitle: string; override;
-
-    procedure ProduceClassDef(Code: TStrings); override;
-    procedure ProduceImplementation(Code: TStrings); override;
 
     property Actions: TSimpleActionList read FActions;
   end;
@@ -189,7 +188,9 @@ type
   protected
     procedure Save(Stream: TStream); override;
 
-    function GetParentClassName: string; override;
+    function GetComponentType: string; override;
+
+    procedure ProduceInnerClass(Code: TStrings); override;
   public
     constructor Load(AImagesMaster: TImagesMaster;
       Stream: TStream); override;
@@ -198,11 +199,8 @@ type
 
     class function ClassTitle: string; override;
 
-    procedure ProduceIDConst(Code: TStrings); override;
-    procedure ProduceClassDef(Code: TStrings); override;
-    procedure ProduceCreateComponents(Code: TStrings); override;
-    procedure ProduceRegisterComponents(Code: TStrings); override;
-    procedure ProduceImplementation(Code: TStrings); override;
+    procedure RegisterActions(Actions: TStrings); override;
+    procedure ProduceComponents(Code: TStrings); override;
 
     property FindMessage: string read FFindMessage write FFindMessage;
 
@@ -234,7 +232,9 @@ type
   protected
     procedure Save(Stream: TStream); override;
 
-    function GetParentClassName: string; override;
+    function GetComponentType: string; override;
+
+    procedure ProduceInnerClass(Code: TStrings); override;
   public
     constructor Load(AImagesMaster: TImagesMaster;
       Stream: TStream); override;
@@ -243,8 +243,7 @@ type
 
     class function ClassTitle: string; override;
 
-    procedure ProduceClassDef(Code: TStrings); override;
-    procedure ProduceImplementation(Code: TStrings); override;
+    procedure RegisterActions(Actions: TStrings); override;
 
     property ConditionKind: TObstacleConditionKind
       read FConditionKind write FConditionKind;
@@ -254,8 +253,8 @@ type
   end;
 
 const {don't localize}
-  DefaultIndent = '  '; /// Indentation par défaut
-  ToolSuffix = 'Tool';  /// Suffixe 'Tool' pour les outils des objets
+  DefaultIndent = '    '; /// Indentation par défaut
+  ToolSuffix = 'Tool';    /// Suffixe 'Tool' pour les outils des objets
 
 implementation
 
@@ -335,23 +334,12 @@ begin
 end;
 
 {*
-  Produit le code Delphi par défaut pour l'en-tête de la classe
-  @param Code   Code produit
+  Nom de la classe parent
+  @return Nom de la classe parent
 *}
-procedure TSimpleSquare.ProduceDefaultClassHeader(Code: TStrings);
+function TSimpleSquare.GetParentClassName: string;
 begin
-  Code.Add('');
-  Code.Add('type');
-  Code.Add(Format('  T%s = class(%s)', [ID, ParentClassName]));
-end;
-
-{*
-  Produit le code Delphi par défaut pour le pied de la classe
-  @param Code   Code produit
-*}
-procedure TSimpleSquare.ProduceDefaultClassFooter(Code: TStrings);
-begin
-  Code.Add('  end;');
+  Result := '';
 end;
 
 {*
@@ -365,12 +353,21 @@ begin
   if (not CanEditImgNames) or (ImgNames.Count = 0) then
     Exit;
 
-  Code.Add('');
+  Code.Add('  image');
   for I := 0 to ImgNames.Count-1 do
-  begin
-    Code.Add(Format('  Painter.ImgNames.Add(%s);',
-      [StrToStrRepres(ImgNames[I])]));
-  end;
+    Code.Add('    '+StrToStrRepres(ImgNames[I]) +
+      IIF(I = ImgNames.Count-1, ';', ','));
+
+  Code.Add('');
+end;
+
+{*
+  Produit le contenu de la classe
+  @param Code   Code produit
+*}
+procedure TSimpleSquare.ProduceInnerClass(Code: TStrings);
+begin
+  ProduceDefaultImgNames(Code);
 end;
 
 {*
@@ -428,58 +425,52 @@ begin
 end;
 
 {*
-  Produit le code Delphi pour la partie constantes d'ID
-  @param Code   Code produit
+  Recense les actions utilisées
+  @param Actions   Liste de toutes les actions utilisées
 *}
-procedure TSimpleSquare.ProduceIDConst(Code: TStrings);
+procedure TSimpleSquare.RegisterActions(Actions: TStrings);
 begin
-  Code.Add(Format('  id%s = ''%0:s'';', [ID]));
 end;
 
 {*
-  Produit le code Delphi pour la partie définition de classe
-  @param Code   Code produit
+  Recense les attributs utilisés
+  @param Attributs   Liste de tous les attributs utilisés
 *}
-procedure TSimpleSquare.ProduceClassDef(Code: TStrings);
+procedure TSimpleSquare.RegisterAttributes(Attributes: TStrings);
 begin
-  ProduceDefaultClassHeader(Code);
-  ProduceDefaultClassFooter(Code);
 end;
 
 {*
-  Produit le code Delphi pour la partie création des composants
+  Produit la définition des composants
   @param Code   Code produit
 *}
-procedure TSimpleSquare.ProduceCreateComponents(Code: TStrings);
+procedure TSimpleSquare.ProduceComponents(Code: TStrings);
 const
-  LineFormat =
-    '  T%s.Create(Master, id%0:s, %s);';
+  Statement = '  %s: T%0:s(%s);';
 begin
-  Code.Add(Format(LineFormat, [ID, StrToStrRepres(Name)]));
+  Code.Add(Format(Statement, [ID, StrToStrRepres(Name)]));
 end;
 
 {*
-  Produit le code Delphi pour la partie enregistrement des composants
+  Produit la définition de la classe
   @param Code   Code produit
 *}
-procedure TSimpleSquare.ProduceRegisterComponents(Code: TStrings);
-const
-  LineFormat =
-    '  RegisterSingleComponentProc(Master.SquareComponent[id%s]);';
+procedure TSimpleSquare.ProduceClass(Code: TStrings);
+var
+  ParentClassName: string;
 begin
-  Code.Add(Format(LineFormat, [ID]));
-end;
+  ParentClassName := GetParentClassName;
+  if ParentClassName <> '' then
+    ParentClassName := '('+ParentClassName+')';
 
-{*
-  Produit le code Delphi pour la partie implémentation
-  @param Code   Code produit
-*}
-procedure TSimpleSquare.ProduceImplementation(Code: TStrings);
-begin
+  Code.Add(GetComponentType + ' T' + ID + ParentClassName);
+
+  ProduceInnerClass(Code);
+
+  if Code[Code.Count-1] = '' then
+    Code.Delete(Code.Count-1);
+  Code.Add('end;');
   Code.Add('');
-  Code.Add('{--' + StringOfChar('-', Length(ID)) + '-------}');
-  Code.Add('{ T' + ID                            + ' class }');
-  Code.Add('{--' + StringOfChar('-', Length(ID)) + '-------}');
 end;
 
 {---------------------}
@@ -536,11 +527,12 @@ begin
 end;
 
 {*
-  Produit le code Delphi de l'action
+  Produit le code FunDelphi de l'action
   @param Code     Code sortie
   @param Indent   Indentation
 *}
-procedure TSimpleAction.ProduceDelphiCode(Code: TStrings; const Indent: string);
+procedure TSimpleAction.ProduceFunDelphiCode(Code: TStrings;
+  const Indent: string);
 begin
 end;
 
@@ -614,12 +606,12 @@ end;
   Produit le code Delphi de la liste d'actions
   @param Code   Code sortie
 *}
-procedure TSimpleActionList.ProduceDelphiCode(Code: TStrings);
+procedure TSimpleActionList.ProduceFunDelphiCode(Code: TStrings);
 var
   I: Integer;
 begin
   for I := 0 to Count-1 do
-    Items[I].ProduceDelphiCode(Code, DefaultIndent);
+    Items[I].ProduceFunDelphiCode(Code, DefaultIndent);
 end;
 
 {--------------------}
@@ -629,9 +621,9 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TSimpleField.ProduceClassDef(Code: TStrings);
+function TSimpleField.GetComponentType: string;
 begin
-  inherited;
+  Result := 'field'; {don't localize}
 end;
 
 {---------------------}
@@ -682,6 +674,14 @@ end;
 {*
   [@inheritDoc]
 *}
+function TSimpleEffect.GetComponentType: string;
+begin
+  Result := 'effect'; {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
 function TSimpleEffect.GetParentClassName: string;
 begin
   Result := 'TCounterEffect'; {don't localize}
@@ -690,77 +690,28 @@ end;
 {*
   [@inheritDoc]
 *}
-class function TSimpleEffect.ClassTitle: string;
-begin
-  Result := SSimpleEffectTitle;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleEffect.ProduceClassDef(Code: TStrings);
-begin
-  ProduceDefaultClassHeader(Code);
-
-  Code.Add('  public');
-
-  if CanEditImgNames and (ImgNames.Count > 0) then
-  begin
-    Code.Add(
-      '    constructor Create(AMaster: TMaster; const AID: TComponentID;');
-    Code.Add(
-      '      const AName: string);');
-    Code.Add('');
-  end;
-
-  Code.Add('    procedure Execute(Player: TPlayer; const Pos: T3DPoint;');
-  Code.Add('      var GoOnMoving: Boolean); override;');
-
-  ProduceDefaultClassFooter(Code);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleEffect.ProduceImplementation(Code: TStrings);
+procedure TSimpleEffect.ProduceInnerClass(Code: TStrings);
 begin
   inherited;
 
-  if CanEditImgNames and (ImgNames.Count > 0) then
-  begin
-    Code.Add('');
-    Code.Add('{*');
-    Code.Add('  [@inheritDoc]');
-    Code.Add('*}');
-    Code.Add(Format(
-      'constructor T%s.Create(AMaster: TMaster; const AID: TComponentID;',
-      [ID]));
-    Code.Add('  const AName: string);');
-    Code.Add('begin');
-    Code.Add('  inherited Create(AMaster, AID, AName);');
-
-    ProduceDefaultImgNames(Code);
-
-    Code.Add('end;');
-  end;
-
-  Code.Add('');
-  Code.Add('{*');
-  Code.Add('  [@inheritDoc]');
-  Code.Add('*}');
-  Code.Add(Format('procedure T%s.Execute(Player: TPlayer; const Pos: T3DPoint;',
-    [ID]));
-  Code.Add('  var GoOnMoving: Boolean);');
-  Code.Add('begin');
-  Code.Add('  inherited Execute(Player, Pos, GoOnMoving);');
-
   if Actions.Count > 0 then
   begin
+    Code.Add('  on Execute do');
+    Code.Add('  begin');
+    Code.Add('    inherited;');
     Code.Add('');
-    Actions.ProduceDelphiCode(Code);
+    Actions.ProduceFunDelphiCode(Code);
+    Code.Add('  end;');
+    Code.Add('');
   end;
+end;
 
-  Code.Add('end;');
+{*
+  [@inheritDoc]
+*}
+class function TSimpleEffect.ClassTitle: string;
+begin
+  Result := SSimpleEffectTitle;
 end;
 
 {---------------------}
@@ -818,9 +769,37 @@ end;
 {*
   [@inheritDoc]
 *}
-function TSimpleObject.GetParentClassName: string;
+function TSimpleObject.GetComponentType: string;
 begin
-  Result := 'TObjectDef'; {don't localize}
+  Result := 'object'; {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleObject.ProduceInnerClass(Code: TStrings);
+var
+  Line: string;
+begin
+  inherited;
+
+  if HandledAction <> '' then
+  begin
+    Line := '  action '+HandledAction;
+    if MinimumCount = 0 then
+      Line := Line + ' if True'
+    else if MinimumCount > 1 then
+      Line := Line + Format(' if Player has %d Self', [MinimumCount]);
+    if DecrementOnUse then
+      Line := Line + ' then';
+    Code.Add(Line);
+
+    if DecrementOnUse then
+      Code.Add(Format('    Count[Player] := Count[Player]-%d;',
+        [MinimumCount]));
+
+    Code.Add('');
+  end;
 end;
 
 {*
@@ -834,130 +813,21 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TSimpleObject.ProduceIDConst(Code: TStrings);
+procedure TSimpleObject.RegisterActions(Actions: TStrings);
 begin
-  inherited;
-
-  Code.Add(Format('  id%sTool = ''%0:sTool'';', [ID]));
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleObject.ProduceClassDef(Code: TStrings);
-begin
-  ProduceDefaultClassHeader(Code);
-
-  Code.Add('  public');
-
-  if CanEditImgNames and (ImgNames.Count > 0) then
-  begin
-    Code.Add(
-      '    constructor Create(AMaster: TMaster; const AID: TComponentID;');
-    Code.Add(
-      '      const AName: string);');
-
-    if HandledAction <> '' then
-      Code.Add('');
-  end;
-
   if HandledAction <> '' then
-  begin
-    Code.Add('    function AbleTo(Player: TPlayer;');
-    Code.Add('      const Action: TPlayerAction): Boolean; override;');
-
-    if DecrementOnUse then
-    begin
-      Code.Add('    procedure UseFor(Player: TPlayer; const Action: '+
-        'TPlayerAction); override;');
-    end;
-  end;
-
-  ProduceDefaultClassFooter(Code);
+    Actions.Add(HandledAction);
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TSimpleObject.ProduceCreateComponents(Code: TStrings);
+procedure TSimpleObject.ProduceComponents(Code: TStrings);
 begin
   inherited;
 
-  Code.Add(Format('  TObjectTool.Create(Master, id%0:sTool,', [ID]));
-  Code.Add(Format('    Master.ObjectDef[id%s],', [ID]));
+  Code.Add(Format('  %sTool: TObjectTool(%0:s,', [ID]));
   Code.Add(Format('    %s, '''', '''');', [StrToStrRepres(FindMessage)]));
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleObject.ProduceRegisterComponents(Code: TStrings);
-const
-  LineFormat =
-    '  RegisterSingleComponentProc(Master.SquareComponent[id%sTool]);';
-begin
-  Code.Add(Format(LineFormat, [ID]));
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleObject.ProduceImplementation(Code: TStrings);
-begin
-  inherited;
-
-  // Constructor
-  if CanEditImgNames and (ImgNames.Count > 0) then
-  begin
-    Code.Add('');
-    Code.Add('{*');
-    Code.Add('  [@inheritDoc]');
-    Code.Add('*}');
-    Code.Add(Format(
-      'constructor T%s.Create(AMaster: TMaster; const AID: TComponentID;',
-      [ID]));
-    Code.Add('  const AName: string);');
-    Code.Add('begin');
-    Code.Add('  inherited Create(AMaster, AID, AName);');
-
-    ProduceDefaultImgNames(Code);
-
-    Code.Add('end;');
-  end;
-
-  if HandledAction <> '' then
-  begin
-    // AbleTo method
-    Code.Add('');
-    Code.Add('{*');
-    Code.Add('  [@inheritDoc]');
-    Code.Add('*}');
-    Code.Add(Format('function T%s.AbleTo(Player: TPlayer;', [ID]));
-    Code.Add('  const Action: TPlayerAction): Boolean;');
-    Code.Add('begin');
-    Code.Add(Format('  Result := ((Action = %s) and (Count[Player] >= %d)) or',
-      [StrToStrRepres(HandledAction), MinimumCount]));
-    Code.Add('    (inherited AbleTo(Player, Action));');
-    Code.Add('end;');
-
-    // UseFor method
-    if DecrementOnUse then
-    begin
-      Code.Add('');
-      Code.Add('{*');
-      Code.Add('  [@inheritDoc]');
-      Code.Add('*}');
-      Code.Add(Format('procedure T%s.UseFor(Player: TPlayer; const Action: '+
-        'TPlayerAction);', [ID]));
-      Code.Add('begin');
-      Code.Add(Format('  if Action = %s then',
-        [StrToStrRepres(HandledAction)]));
-      Code.Add('    Count[Player] := Count[Player]-1');
-      Code.Add('  else');
-      Code.Add('    inherited UseFor(Player, Action);');
-      Code.Add('end;');
-    end;
-  end;
 end;
 
 {-----------------------}
@@ -1004,9 +874,64 @@ end;
 {*
   [@inheritDoc]
 *}
-function TSimpleObstacle.GetParentClassName: string;
+function TSimpleObstacle.GetComponentType: string;
 begin
-  Result := 'TObstacle'; {don't localize}
+  Result := 'obstacle'; {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleObstacle.ProduceInnerClass(Code: TStrings);
+begin
+  inherited;
+
+  if (ConditionKind = ockNever) and (FailMessage = '') then
+    Exit;
+
+  Code.Add('  on Pushing do');
+  Code.Add('  begin');
+  Code.Add('    inherited;');
+  Code.Add('');
+  Code.Add('    if not KeyPressed then');
+  Code.Add('      Exit;');
+  Code.Add('');
+
+  case ConditionKind of
+    ockAlways:
+    begin
+      Code.Add('    Player.Map[Pos] := ChangeObstacle('+
+        'Player.Map[Pos], '''');');
+    end;
+
+    ockNever:
+    begin
+      Assert(FailMessage <> '');
+      Code.Add('    Player.ShowDialog(sBlindAlley,');
+      Code.Add(Format('      %s,', [StrToStrRepres(FailMessage)]));
+      Code.Add('      dtError, dbOK, 1, 0);');
+    end;
+
+    ockPlayerAction:
+    begin
+      Code.Add(Format('    if Player can %s then', [PlayerAction]));
+      Code.Add('      Player.Map[Pos] := ChangeObstacle('+
+        'Player.Map[Pos], '''')' + IIF(FailMessage = '', ';', ''));
+
+      if FailMessage <> '' then
+      begin
+        Code.Add('    else');
+        Code.Add('    begin');
+        Code.Add('      Player.ShowDialog(sBlindAlley,');
+        Code.Add(Format('        %s,', [StrToStrRepres(FailMessage)]));
+        Code.Add('        dtError, dbOK, 1, 0);');
+        Code.Add('    end;');
+      end;
+    end;
+  end;
+
+  Code.Add('  end;');
+  Code.Add('');
 end;
 
 {*
@@ -1020,103 +945,10 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TSimpleObstacle.ProduceClassDef(Code: TStrings);
+procedure TSimpleObstacle.RegisterActions(Actions: TStrings);
 begin
-  ProduceDefaultClassHeader(Code);
-
-  Code.Add('  public');
-
-  if CanEditImgNames and (ImgNames.Count > 0) then
-  begin
-    Code.Add(
-      '    constructor Create(AMaster: TMaster; const AID: TComponentID;');
-    Code.Add(
-      '      const AName: string);');
-    Code.Add('');
-  end;
-
-  Code.Add('    procedure Pushing(Player: TPlayer; OldDirection: TDirection;');
-  Code.Add('      KeyPressed: Boolean; const Src, Pos: T3DPoint;');
-  Code.Add('      var Cancel, AbortExecute: Boolean); override;');
-
-  ProduceDefaultClassFooter(Code);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleObstacle.ProduceImplementation(Code: TStrings);
-begin
-  inherited;
-
-  if CanEditImgNames and (ImgNames.Count > 0) then
-  begin
-    Code.Add('');
-    Code.Add('{*');
-    Code.Add('  [@inheritDoc]');
-    Code.Add('*}');
-    Code.Add(Format(
-      'constructor T%s.Create(AMaster: TMaster; const AID: TComponentID;',
-      [ID]));
-    Code.Add('  const AName: string);');
-    Code.Add('begin');
-    Code.Add('  inherited Create(AMaster, AID, AName);');
-
-    ProduceDefaultImgNames(Code);
-
-    Code.Add('end;');
-  end;
-
-  Code.Add('');
-  Code.Add('{*');
-  Code.Add('  [@inheritDoc]');
-  Code.Add('*}');
-  Code.Add(Format('procedure T%s.Pushing(Player: TPlayer; OldDirection: '+
-    'TDirection;', [ID]));
-  Code.Add('  KeyPressed: Boolean; const Src, Pos: T3DPoint;');
-  Code.Add('  var Cancel, AbortExecute: Boolean);');
-  Code.Add('begin');
-  Code.Add('  inherited Pushing(Player, OldDirection, KeyPressed, Src, Pos,');
-  Code.Add('    Cancel, AbortExecute);');
-
-  if (ConditionKind <> ockNever) or (FailMessage <> '') then
-  begin
-    Code.Add('');
-    Code.Add('  if not KeyPressed then');
-    Code.Add('    Exit;');
-    Code.Add('');
-  end;
-
-  case ConditionKind of
-    ockAlways:
-    begin
-      Code.Add('  Player.Map[Pos] := ChangeObstacle('+
-        'Player.Map[Pos], '''');');
-    end;
-
-    ockNever:
-    begin
-      Code.Add('  Player.ShowDialog(sBlindAlley,');
-      Code.Add(Format('    %s,', [StrToStrRepres(FailMessage)]));
-      Code.Add('    dtError, dbOK, 1, 0);');
-    end;
-
-    ockPlayerAction:
-    begin
-      Code.Add(Format('  if Player.DoAction(%s) then',
-        [StrToStrRepres(PlayerAction)]));
-      Code.Add('    Player.Map[Pos] := ChangeObstacle('+
-        'Player.Map[Pos], '''')');
-      Code.Add('  else');
-      Code.Add('  begin');
-      Code.Add('    Player.ShowDialog(sBlindAlley,');
-      Code.Add(Format('      %s,', [StrToStrRepres(FailMessage)]));
-      Code.Add('      dtError, dbOK, 1, 0);');
-      Code.Add('  end;');
-    end;
-  end;
-
-  Code.Add('end;');
+  if ConditionKind = ockPlayerAction then
+    Actions.Add(PlayerAction);
 end;
 
 initialization

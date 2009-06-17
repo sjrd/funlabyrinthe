@@ -38,7 +38,8 @@ requires
   FunLabyEditPlugin,
   FunLabyCore,
   SepiDelphiCompiler90,
-  FunLabyEditPluginUtils;
+  FunLabyEditPluginUtils,
+  FunDelphiCompiler;
 
 contains
   SimpleSquaresEditorMain in 'SimpleSquaresEditorMain.pas' {FrameSimpleSquaresEditor},
