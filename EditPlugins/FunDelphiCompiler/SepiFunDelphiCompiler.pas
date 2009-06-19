@@ -479,14 +479,28 @@ type
   end;
 
   {*
+    Classe de base pour les noeuds opérateur receives et discards
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiReceivesDiscardsOpNode = class(TSepiBinaryOpNode)
+  protected
+    function GetOperation: TSepiOperation; virtual; abstract;
+  public
+    function MakeOperation(
+      const Left, Right: ISepiExpression): ISepiExpression; override;
+
+    property Operation: TSepiOperation read GetOperation;
+  end;
+
+  {*
     Noeud opérateur receives
     @author sjrd
     @version 5.0
   *}
-  TFunDelphiReceivesOpNode = class(TSepiBinaryOpNode)
-  public
-    function MakeOperation(
-      const Left, Right: ISepiExpression): ISepiExpression; override;
+  TFunDelphiReceivesOpNode = class(TFunDelphiReceivesDiscardsOpNode)
+  protected
+    function GetOperation: TSepiOperation; override;
   end;
 
   {*
@@ -494,10 +508,9 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFunDelphiDiscardsOpNode = class(TSepiBinaryOpNode)
+  TFunDelphiDiscardsOpNode = class(TFunDelphiReceivesDiscardsOpNode)
   public
-    function MakeOperation(
-      const Left, Right: ISepiExpression): ISepiExpression; override;
+    function GetOperation: TSepiOperation; override;
   end;
 
 function CompileFunDelphiSource(SepiRoot: TSepiRoot;
@@ -1957,6 +1970,48 @@ begin
   Result := MethodResolveIdent(MethodCompiler, Identifier);
 end;
 
+{----------------------------------------}
+{ TFunDelphiReceivesDiscardsOpNode class }
+{----------------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiReceivesDiscardsOpNode.MakeOperation(
+  const Left, Right: ISepiExpression): ISepiExpression;
+var
+  PlayerValue, ObjectValue, CountValue, NewCountValue: ISepiReadableValue;
+  CountProp: ISepiProperty;
+  WritableCount: ISepiWritableValue;
+begin
+  RequireReadableValue(Left, PlayerValue);
+  RequireReadableValue(Right, ObjectValue);
+
+  PlayerValue := TSepiConvertOperation.ConvertValue(
+    SepiRoot.FindMeta('FunLabyUtils.TPlayer') as TSepiType, PlayerValue);
+  ObjectValue := TSepiConvertOperation.ConvertValue(
+    SepiRoot.FindMeta('FunLabyUtils.TObjectDef') as TSepiType, ObjectValue);
+
+  CountProp := FieldSelection(SepiContext, ObjectValue as ISepiExpression,
+    'Count') as ISepiProperty;
+  Assert(CountProp.ParamCount = 1);
+  CountProp.Params[0] := PlayerValue as ISepiExpression;
+  CountProp.CompleteParams;
+
+  Result := CountProp as ISepiExpression;
+  Result.SourcePos := SourcePos;
+  CountValue := Result as ISepiReadableValue;
+  WritableCount := Result as ISepiWritableValue;
+
+  NewCountValue := TSepiBinaryOperation.MakeOperation(Operation,
+    CountValue, (Children[0] as TSepiExpressionNode).AsReadableValue(
+    SystemUnit.Integer));
+
+  Result := TSepiAssignmentOperation.MakeOperation(
+    WritableCount, NewCountValue) as ISepiExpression;
+  Result.SourcePos := SourcePos;
+end;
+
 {--------------------------------}
 { TFunDelphiReceivesOpNode class }
 {--------------------------------}
@@ -1964,10 +2019,9 @@ end;
 {*
   [@inheritDoc]
 *}
-function TFunDelphiReceivesOpNode.MakeOperation(
-  const Left, Right: ISepiExpression): ISepiExpression;
+function TFunDelphiReceivesOpNode.GetOperation: TSepiOperation;
 begin
-  // TODO
+  Result := opAdd;
 end;
 
 {--------------------------------}
@@ -1977,10 +2031,9 @@ end;
 {*
   [@inheritDoc]
 *}
-function TFunDelphiDiscardsOpNode.MakeOperation(
-  const Left, Right: ISepiExpression): ISepiExpression;
+function TFunDelphiDiscardsOpNode.GetOperation: TSepiOperation;
 begin
-  // TODO
+  Result := opSubtract;
 end;
 
 initialization

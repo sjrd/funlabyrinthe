@@ -240,6 +240,53 @@ begin
 end;
 
 {*
+  Sélection du nombre d'un certain objet possédés par un joueur
+  @param SepiContext      Contexte Sepi depuis lequel chercher
+  @param BaseExpression   Expression de base
+  @param ObjectID         ID de l'objet
+  @return Expression représentant l'attribut sélectionné (ou nil si inexistant)
+*}
+function ObjectCountSelection(SepiContext: TSepiMeta;
+  const BaseExpression: ISepiExpression;
+  const ObjectID: string): ISepiExpression;
+var
+  TPlayerType: TSepiType;
+  ReadableBase: ISepiReadableValue;
+  ObjectExpr, CountExpr: ISepiExpression;
+  CountProp: ISepiProperty;
+begin
+  TPlayerType := SepiContext.Root.FindType('FunLabyUtils.TPlayer');
+
+  if not Supports(BaseExpression, ISepiReadableValue, ReadableBase) then
+    Exit;
+  if not TSepiConvertOperation.ConvertionExists(TPlayerType, ReadableBase) then
+    Exit;
+
+  ObjectExpr := TSepiExpression.Create(BaseExpression);
+  if not ResolveComponentID(BaseExpression.MethodCompiler.SepiMethod,
+    ObjectID, ObjectExpr) then
+    Exit;
+
+  ((ObjectExpr as ISepiReadableValue) as ISepiTypeForceableValue).ForceType(
+    SepiContext.Root.FindType('FunLabyUtils.TObjectDef'));
+
+  CountExpr := SepiDelphiLikeCompilerUtils.FieldSelection(SepiContext,
+    ObjectExpr, 'Count');
+
+  if not Supports(CountExpr, ISepiProperty, CountProp) then
+    Exit;
+  if (CountProp.ParamsCompleted) or (CountProp.ParamCount <> 1) then
+    Exit;
+
+  CountProp.Params[0] :=
+    TSepiConvertOperation.ConvertValue(TPlayerType,
+      ReadableBase) as ISepiExpression;
+  CountProp.CompleteParams;
+
+  Result := CountProp as ISepiExpression;
+end;
+
+{*
   Sélection de champ d'une expression selon les règles du FunDelphi
   @param SepiContext      Contexte Sepi depuis lequel chercher
   @param BaseExpression   Expression de base
@@ -258,6 +305,11 @@ begin
 
   // Player attribute
   Result := AttributeSelection(SepiContext, BaseExpression, FieldName);
+  if Result <> nil then
+    Exit;
+
+  // Object count
+  Result := ObjectCountSelection(SepiContext, BaseExpression, FieldName);
 end;
 
 {---------------------------}

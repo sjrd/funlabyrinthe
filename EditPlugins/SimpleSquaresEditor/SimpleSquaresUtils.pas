@@ -795,7 +795,7 @@ begin
     Code.Add(Line);
 
     if DecrementOnUse then
-      Code.Add(Format('    Count[Player] := Count[Player]-%d;',
+      Code.Add(Format('    Player discards %d Self;',
         [MinimumCount]));
 
     Code.Add('');
