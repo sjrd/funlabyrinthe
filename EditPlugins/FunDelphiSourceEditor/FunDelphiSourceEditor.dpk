@@ -42,7 +42,8 @@ requires
   FunDelphiCompiler;
 
 contains
-  FunDelphiSourceEditorMain in 'FunDelphiSourceEditorMain.pas' {FrameFunDelphiSourceEditor: TFrame};
+  FunDelphiSourceEditorMain in 'FunDelphiSourceEditorMain.pas' {FrameFunDelphiSourceEditor: TFrame},
+  SynHighlighterFunDelphi in 'SynHighlighterFunDelphi.pas';
 
 end.
 

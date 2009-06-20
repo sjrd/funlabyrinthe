@@ -7,7 +7,7 @@ uses
   Dialogs, SynEditHighlighter, SynHighlighterPas, SynEdit, SdDialogs,
   SepiCompiler, SepiParseTrees, SepiCompilerErrors, SepiFunDelphiCompiler,
   SepiReflectionCore, FilesUtils, UnitFiles, SourceEditors,
-  FunLabySourceSynEditEditorFrame;
+  FunLabySourceSynEditEditorFrame, SynHighlighterFunDelphi;
 
 resourcestring
   FunDelphiFilter = 'Unité FunDelphi (*.fnd)|*.fnd';
@@ -24,12 +24,15 @@ type
   *}
   TFrameFunDelphiSourceEditor = class(TFrameFunLabySynEditSourceEditor,
     ISourceCompiler50)
-    SourceHighlighter: TSynPasSyn;
   protected
     function CompileFile(SepiRoot: TSepiRoot;
       Errors: TSepiCompilerErrorList): TSepiUnit;
 
     procedure ISourceCompiler50.Release = Free;
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    SourceHighlighter: TSynFunDelphiSyn;
   end;
 
 implementation
@@ -79,6 +82,24 @@ begin
     // Don't localize
     Add(Format('unit %s;', [UnitName]));
     Add('');
+    Add('uses');
+    Add('  Generics, GenericButtons;');
+    Add('');
+    Add('// Modèle de définition d''un type d''action');
+    Add('actions');
+    Add('  Dive;');
+    Add('');
+    Add('// Modèle de définition d''un terrain');
+    Add('field TFieldName');
+    Add('  image ''Grass'';');
+    Add('');
+    Add('  on Entering do');
+    Add('  begin');
+    Add('    if not (Player can Dive) then');
+    Add('      Cancel;');
+    Add('  end;');
+    Add('end;');
+    Add('');
     Add('end.');
 
     SaveToFile(FileName);
@@ -92,6 +113,16 @@ end;
 {-----------------------------------}
 { TFrameFunDelphiSourceEditor class }
 {-----------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TFrameFunDelphiSourceEditor.Create(AOwner: TComponent);
+begin
+  inherited;
+
+  SourceHighlighter := TSynFunDelphiSyn.Create(Self);
+end;
 
 {*
   [@inheritDoc]
