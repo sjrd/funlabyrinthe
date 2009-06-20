@@ -82,7 +82,7 @@ type
   *}
   TZonesPlugin = class(TPlugin)
   public
-    procedure Moved(Player: TPlayer; const Src, Dest: T3DPoint); override;
+    procedure Moved(Context: TMoveContext); override;
   end;
 
   {*
@@ -99,8 +99,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
   end;
 
   {*
@@ -140,8 +139,7 @@ type
     constructor Create(AActions: TActions);
     procedure AfterConstruction; override;
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
 
     property Actions: TActions read FActions;
   end;
@@ -158,9 +156,7 @@ type
   public
     constructor Create(AActions: TActions);
 
-    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel, AbortExecute: Boolean); override;
+    procedure Pushing(Context: TMoveContext); override;
 
     property Actions: TActions read FActions;
   end;
@@ -258,40 +254,46 @@ uses
 { Classe TZonesPlugin }
 {---------------------}
 
-procedure TZonesPlugin.Moved(Player: TPlayer; const Src, Dest: T3DPoint);
+{*
+  [@inheritDoc]
+*}
+procedure TZonesPlugin.Moved(Context: TMoveContext);
 var
   Zone: T3DPoint;
   ActionsID: TComponentID;
   Actions: TActions;
   DoNextPhase, HasMoved, HasShownMsg, Successful, Redo: Boolean;
 begin
-  Zone.X := Dest.X div 7;
-  Zone.Y := Dest.Y div 7;
-  Zone.Z := Dest.Z;
-
-  if (Src.X div 7 = Zone.X) and (Src.Y div 7 = Zone.Y) and
-    (Src.Z = Zone.Z) then
-    Exit;
-
-  ActionsID := Format(idZoneActions, [Zone.X, Zone.Y, Zone.Z]);
-  Actions := nil;
-  try
-    Actions := Master.Component[ActionsID] as TActions;
-  except
-    on Error: EComponentNotFound do;
-    on Error: EInvalidCast do;
-  end;
-
-  if Actions <> nil then
+  with Context do
   begin
-    DoNextPhase := False;
-    Actions.Execute(phExecute, Player, True, Dest,
-      DoNextPhase, HasMoved, HasShownMsg, Successful);
-    if DoNextPhase then
+    Zone.X := Dest.X div 7;
+    Zone.Y := Dest.Y div 7;
+    Zone.Z := Dest.Z;
+
+    if (Src.X div 7 = Zone.X) and (Src.Y div 7 = Zone.Y) and
+      (Src.Z = Zone.Z) then
+      Exit;
+
+    ActionsID := Format(idZoneActions, [Zone.X, Zone.Y, Zone.Z]);
+    Actions := nil;
+    try
+      Actions := Master.Component[ActionsID] as TActions;
+    except
+      on Error: EComponentNotFound do;
+      on Error: EInvalidCast do;
+    end;
+
+    if Actions <> nil then
     begin
-      Player.MoveTo(Player.Position, True, Redo);
-      if Redo then
-        Player.NaturalMoving;
+      DoNextPhase := False;
+      Actions.Execute(phExecute, Player, True, Dest,
+        DoNextPhase, HasMoved, HasShownMsg, Successful);
+      if DoNextPhase then
+      begin
+        Player.MoveTo(Player.Position, True, Redo);
+        if Redo then
+          Player.NaturalMoving;
+      end;
     end;
   end;
 end;
@@ -314,11 +316,7 @@ begin
 end;
 
 {*
-  Dessine les escaliers sur le canevas indiqué
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le terrain
-  @param X        Coordonnée X du point à partir duquel dessiner le terrain
-  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+  [@inheritDoc]
 *}
 procedure TOldStairs.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
@@ -347,25 +345,22 @@ begin
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TOldStairs.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TOldStairs.Execute(Context: TMoveContext);
 var
   Other: T3DPoint;
 begin
-  inherited;
-
-  Other := Pos;
-  FindNextSquare(Player.Map, Other, Self);
-
-  if not Same3DPoint(Pos, Other) then
+  with Context do
   begin
-    Master.Temporize;
-    Player.MoveTo(Other);
+    Other := Pos;
+    FindNextSquare(Map, Other, Self);
+
+    if not Same3DPoint(Pos, Other) then
+    begin
+      Master.Temporize;
+      Player.MoveTo(Other);
+    end;
   end;
 end;
 
@@ -381,15 +376,14 @@ constructor TActionsObject.Create(AActions: TActions);
 begin
   inherited Create(AActions.Master, Format(idActionsObject, [AActions.Number]),
     AActions.FileName);
+
   FActions := AActions;
 
   Painter.ImgNames.Add(fCompatibility + Name);
 end;
 
 {*
-  Nombre d'objets de ce type possédés par un joueur
-  @param Player   Joueur concerné
-  @return Nombre d'objets que ce joueur possède
+  [@inheritDoc]
 *}
 function TActionsObject.GetCount(Player: TPlayer): Integer;
 begin
@@ -397,9 +391,7 @@ begin
 end;
 
 {*
-  Modifie le nombre d'objets de ce type possédés par un joueur
-  @param Player   Joueur concerné
-  @param Value    Nouveau nombre d'objets
+  [@inheritDoc]
 *}
 procedure TActionsObject.SetCount(Player: TPlayer; Value: Integer);
 begin
@@ -418,6 +410,7 @@ constructor TActionsEffect.Create(AActions: TActions);
 begin
   inherited Create(AActions.Master, Format(idActionsEffect, [AActions.Number]),
     Format(sButton, [AActions.Number]));
+
   FActions := AActions;
 
   FAlternatePainter := TPainter.Create(Master.ImagesMaster);
@@ -450,9 +443,7 @@ begin
 end;
 
 {*
-  Exécuté après la construction de l'objet
-  AfterConstruction est appelé après l'exécution du dernier constructeur.
-  N'appelez pas directement AfterConstruction.
+  [@inheritDoc]
 *}
 procedure TActionsEffect.AfterConstruction;
 begin
@@ -461,12 +452,7 @@ begin
 end;
 
 {*
-  Dessine le composant sur un canevas
-  DoDraw dessine le composant sur un canevas à la position indiquée.
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le composant
-  @param X        Coordonnée X du point à partir duquel dessiner le composant
-  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+  [@inheritDoc]
 *}
 procedure TActionsEffect.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
@@ -488,54 +474,56 @@ begin
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TActionsEffect.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TActionsEffect.Execute(Context: TMoveContext);
 var
-  HasMoved, HasShownMsg, Successful: Boolean;
+  VarGoOnMoving, HasMoved, HasShownMsg, Successful: Boolean;
   Other: T3DPoint;
 begin
-  GoOnMoving := Actions.Kind = akDirection;
-  FActions.Execute(phExecute, Player, True, Pos, GoOnMoving,
-    HasMoved, HasShownMsg, Successful);
-
-  if Actions.Kind in [akTransporterNext..akTransporterRandom] then
+  with Context do
   begin
-    if (not HasMoved) and (Player.Map[Pos].Effect = Self) then
+    VarGoOnMoving := Actions.Kind = akDirection;
+
+    FActions.Execute(phExecute, Player, True, Pos, VarGoOnMoving,
+      HasMoved, HasShownMsg, Successful);
+
+    GoOnMoving := VarGoOnMoving;
+
+    if Actions.Kind in [akTransporterNext..akTransporterRandom] then
     begin
-      // Action par défaut des actions de type téléporteur
-
-      Other := Pos;
-
-      // Recherche de la case de destination
-      case Actions.Kind of
-        akTransporterNext     : FindNextSquare    (Player.Map, Other, Self);
-        akTransporterPrevious : FindPreviousSquare(Player.Map, Other, Self);
-        akTransporterRandom   : FindSquareAtRandom(Player.Map, Other, Self);
-      end;
-
-      // Si l'on a trouvé une autre case, on déplace le joueur
-      if Same3DPoint(Other, Pos) then
-        Exit;
-      Master.Temporize;
-      Player.MoveTo(Other);
-    end;
-  end else if Actions.Kind in [akOutside..akTreasure] then
-  begin
-    if Player.Map[Player.Position].Effect = Self then
-    begin
-      // Action par défaut des actions de type case de fin
-      Player.Win;
-      if not HasShownMsg then
+      if (not HasMoved) and (Square.Effect = Self) then
       begin
-        if Actions.Kind = akOutside then
-          Player.ShowDialog(sWon, sGotOutsideMaze)
-        else
-          Player.ShowDialog(sWon, sFoundTreasure);
+        // Action par défaut des actions de type téléporteur
+
+        Other := Pos;
+
+        // Recherche de la case de destination
+        case Actions.Kind of
+          akTransporterNext     : FindNextSquare    (Map, Other, Self);
+          akTransporterPrevious : FindPreviousSquare(Map, Other, Self);
+          akTransporterRandom   : FindSquareAtRandom(Map, Other, Self);
+        end;
+
+        // Si l'on a trouvé une autre case, on déplace le joueur
+        if Same3DPoint(Other, Pos) then
+          Exit;
+        Master.Temporize;
+        Player.MoveTo(Other);
+      end;
+    end else if Actions.Kind in [akOutside..akTreasure] then
+    begin
+      if Player.Map[Player.Position].Effect = Self then
+      begin
+        // Action par défaut des actions de type case de fin
+        Player.Win;
+        if not HasShownMsg then
+        begin
+          if Actions.Kind = akOutside then
+            Player.ShowDialog(sWon, sGotOutsideMaze)
+          else
+            Player.ShowDialog(sWon, sFoundTreasure);
+        end;
       end;
     end;
   end;
@@ -557,32 +545,22 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur pousse sur l'obstacle
-  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Execute de la case ne soit exécutée, il faut positionner
-  AbortExecute à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortExecute   À positionner à True pour empêcher le Execute
+  [@inheritDoc]
 *}
-procedure TActionsObstacle.Pushing(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel, AbortExecute: Boolean);
+procedure TActionsObstacle.Pushing(Context: TMoveContext);
 var
   DoNextPhase, HasMoved, HasShownMsg, Successful: Boolean;
 begin
   if FActions.Kind <> akObstacle then
     Exit;
-  DoNextPhase := False;
-  FActions.Execute(phPushing, Player, KeyPressed, Pos, DoNextPhase,
-    HasMoved, HasShownMsg, Successful);
-  AbortExecute := not DoNextPhase;
-  Cancel := Same3DPoint(Src, Player.Position) and (not Successful);
+
+  with Context do
+  begin
+    DoNextPhase := False;
+    FActions.Execute(phPushing, Player, KeyPressed, Pos, DoNextPhase,
+      HasMoved, HasShownMsg, Successful);
+    Cancelled := Same3DPoint(Src, Player.Position) and (not Successful);
+  end;
 end;
 
 {-----------------}
@@ -634,7 +612,7 @@ begin
 end;
 
 {*
-  Détruit l'instance
+  [@inheritDoc]
 *}
 destructor TActions.Destroy;
 begin
@@ -675,6 +653,7 @@ constructor TC4xInfos.Create(AMasterFile: TMasterFile;
   AActions: TObjectList);
 begin
   inherited Create(AMasterFile.Master, idC4xInfos);
+
   FMasterFile := AMasterFile;
   FKnowShowTips := False;
   FShowTips := False;

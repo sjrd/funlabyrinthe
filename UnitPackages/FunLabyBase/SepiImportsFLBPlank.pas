@@ -150,5 +150,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('FLBPlank', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('FLBPlank');
 end.
 

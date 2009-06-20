@@ -52,7 +52,7 @@ type
       AObjectDef: TObjectDef; const AFindMessage: string;
       const AName: string = ''; const AImgName: string = '');
 
-    procedure Find(Player: TPlayer; const Pos: T3DPoint); override;
+    procedure Find(Context: TMoveContext); override;
 
     property ObjectDef: TObjectDef read FObjectDef;
     property FindMessage: string read FFindMessage;
@@ -171,12 +171,15 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TObjectTool.Find(Player: TPlayer; const Pos: T3DPoint);
+procedure TObjectTool.Find(Context: TMoveContext);
 begin
-  Player.Map[Pos] := ChangeTool(Player.Map[Pos]);
-  ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
-  if FindMessage <> '' then
-    Player.ShowDialog(sMessage, FindMessage);
+  with Context do
+  begin
+    Square := ChangeTool(Square);
+    ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
+    if FindMessage <> '' then
+      Player.ShowDialog(sMessage, FindMessage);
+  end;
 end;
 
 {-------------------------}

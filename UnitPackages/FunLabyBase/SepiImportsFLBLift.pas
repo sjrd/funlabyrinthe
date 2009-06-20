@@ -148,5 +148,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('FLBLift', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('FLBLift');
 end.
 

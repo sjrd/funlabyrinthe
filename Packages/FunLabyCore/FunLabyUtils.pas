@@ -40,7 +40,7 @@ const {don't localize}
   FunLabyAuthorEMail = 'sjrd@redaction-developpez.com'; /// E-mail de l'auteur
   FunLabyWebSite = 'http://sjrd.developpez.com/programmes/funlaby/'; /// Site
 
-  SquareSize = 30;         /// Taille (en largeur et hauteur) d'une case
+  SquareSize = 30;        /// Taille (en largeur et hauteur) d'une case
   MinViewSize = 1;        /// Taille minimale d'une vue
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
   NoRefCount = MaxInt;    /// Valeur sentinelle : pas de comptage des références
@@ -75,6 +75,7 @@ type
   EUnsupportedCommand = class(Exception);
 
   TSquareComponent = class;
+  TSquare = class;
   TPlayer = class;
   TMap = class;
   TMaster = class;
@@ -179,6 +180,66 @@ type
   end;
 
   {*
+    Contexte d'un mouvement du joueur
+    @author sjrd
+    @version 5.0
+  *}
+  TMoveContext = class(TObject)
+  private
+    FPlayer: TPlayer; /// Joueur qui se déplace
+
+    FSrcMap: TMap;   /// Carte source
+    FSrc: T3DPoint;  /// Case source
+    FDestMap: TMap;  /// Carte destination
+    FDest: T3DPoint; /// Case destination
+    FMap: TMap;      /// Carte courante
+    FPos: T3DPoint;  /// Position courante
+
+    FOldDirection: TDirection; /// Ancienne direction du joueur
+    FKeyPressed: Boolean;      /// True si une touche a été pressée
+
+    FCancelled: Boolean;  /// True si le déplacement a été annulé
+    FGoOnMoving: Boolean; /// True s'il faut réitérer le déplacement
+
+    procedure SwitchToSrc;
+    procedure SwitchToDest;
+
+    function GetSrcSquare: TSquare;
+    procedure SetSrcSquare(Value: TSquare);
+    function GetDestSquare: TSquare;
+    procedure SetDestSquare(Value: TSquare);
+    function GetSquare: TSquare;
+    procedure SetSquare(Value: TSquare);
+  public
+    constructor Create(APlayer: TPlayer; const ADest: TQualifiedPos;
+      AKeyPressed: Boolean); overload;
+    constructor Create(APlayer: TPlayer; const ADest: T3DPoint;
+      AKeyPressed: Boolean); overload;
+
+    procedure Cancel;
+
+    property Player: TPlayer read FPlayer;
+
+    property SrcMap: TMap read FSrcMap;
+    property Src: T3DPoint read FSrc;
+    property SrcSquare: TSquare read GetSrcSquare write SetSrcSquare;
+
+    property DestMap: TMap read FDestMap;
+    property Dest: T3DPoint read FDest;
+    property DestSquare: TSquare read GetDestSquare write SetDestSquare;
+
+    property Map: TMap read FMap;
+    property Pos: T3DPoint read FPos;
+    property Square: TSquare read GetSquare write SetSquare;
+
+    property OldDirection: TDirection read FOldDirection;
+    property KeyPressed: Boolean read FKeyPressed;
+
+    property Cancelled: Boolean read FCancelled write FCancelled;
+    property GoOnMoving: Boolean read FGoOnMoving write FGoOnMoving;
+  end;
+
+  {*
     Classe de base pour les composants de FunLabyrinthe
     TFunLabyComponent est la classe de base pour tous les composants de
     FunLabyrinthe. Elle fournit des propriétés et des méthodes pour repérer le
@@ -218,8 +279,8 @@ type
   *}
   TVisualComponent = class(TFunLabyComponent)
   private
-    FName: string;            /// Nom du composant
-    FPainter: TPainter;       /// Peintre par défaut
+    FName: string;             /// Nom du composant
+    FPainter: TPainter;        /// Peintre par défaut
     FCachedImg: TSquareBitmap; /// Image en cache (pour les dessins invariants)
 
     procedure PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
@@ -271,10 +332,8 @@ type
     procedure DrawAfter(Player: TPlayer; const QPos: TQualifiedPos;
       Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); virtual;
 
-    procedure Moving(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Dest: T3DPoint;
-      var Cancel: Boolean); virtual;
-    procedure Moved(Player: TPlayer; const Src, Dest: T3DPoint); virtual;
+    procedure Moving(Context: TMoveContext); virtual;
+    procedure Moved(Context: TMoveContext); virtual;
 
     function AbleTo(Player: TPlayer;
       const Action: TPlayerAction): Boolean; virtual;
@@ -328,15 +387,11 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ADelegateDrawTo: TField = nil);
 
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); virtual;
-    procedure Exiting(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Pos, Dest: T3DPoint;
-      var Cancel: Boolean); virtual;
+    procedure Entering(Context: TMoveContext); virtual;
+    procedure Exiting(Context: TMoveContext); virtual;
 
-    procedure Entered(Player: TPlayer; const Src, Pos: T3DPoint); virtual;
-    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); virtual;
+    procedure Entered(Context: TMoveContext); virtual;
+    procedure Exited(Context: TMoveContext); virtual;
   end;
 
   {*
@@ -348,11 +403,10 @@ type
   *}
   TEffect = class(TSquareComponent)
   public
-    procedure Entered(Player: TPlayer; const Src, Pos: T3DPoint); virtual;
-    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); virtual;
+    procedure Entered(Context: TMoveContext); virtual;
+    procedure Exited(Context: TMoveContext); virtual;
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); virtual;
+    procedure Execute(Context: TMoveContext); virtual;
   end;
 
   {*
@@ -364,7 +418,7 @@ type
   *}
   TTool = class(TSquareComponent)
   public
-    procedure Find(Player: TPlayer; const Pos: T3DPoint); virtual;
+    procedure Find(Context: TMoveContext); virtual;
   end;
 
   {*
@@ -376,9 +430,7 @@ type
   *}
   TObstacle = class(TSquareComponent)
   public
-    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel, AbortExecute: Boolean); virtual;
+    procedure Pushing(Context: TMoveContext); virtual;
   end;
 
   {*
@@ -410,22 +462,15 @@ type
 
     function Contains(Component: TSquareComponent): Boolean;
 
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); virtual;
-    procedure Exiting(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Pos, Dest: T3DPoint;
-      var Cancel: Boolean); virtual;
+    procedure Entering(Context: TMoveContext); virtual;
+    procedure Exiting(Context: TMoveContext); virtual;
 
-    procedure Entered(Player: TPlayer; const Src, Pos: T3DPoint); virtual;
-    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); virtual;
+    procedure Entered(Context: TMoveContext); virtual;
+    procedure Exited(Context: TMoveContext); virtual;
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); virtual;
+    procedure Execute(Context: TMoveContext); virtual;
 
-    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel, AbortExecute: Boolean); virtual;
+    procedure Pushing(Context: TMoveContext); virtual;
 
     function AddRef: Integer; virtual;
     function Release: Integer; virtual;
@@ -451,7 +496,7 @@ type
     FZoneWidth: Integer;     /// Largeur d'une zone de la carte
     FZoneHeight: Integer;    /// Hauteur d'une zone de la carte
     FMaxViewSize: Integer;   /// Taille maximale d'une vue pour cette carte
-    FMap: array of TSquare;   /// Carte stockée de façon linéaire
+    FMap: array of TSquare;  /// Carte stockée de façon linéaire
     FOutsideOffset: Integer; /// Offset de départ de l'extérieur
 
     procedure SetMaxViewSize(Value: Integer);
@@ -511,6 +556,9 @@ type
 
     procedure PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
       X: Integer = 0; Y: Integer = 0); override;
+
+    function IsMoveAllowed(Context: TMoveContext): Boolean;
+    procedure MoveTo(Context: TMoveContext; Execute: Boolean = True); overload;
 
     function GetVisible: Boolean;
 
@@ -1093,6 +1141,134 @@ begin
   FCachedImg.DrawSquare(Canvas, X, Y);
 end;
 
+{--------------------}
+{ TMoveContext class }
+{--------------------}
+
+{*
+  Crée un contexte de déplacement du joueur
+  @param APlayer       Joueur qui se déplace
+  @param ADest         Destination
+  @param AKeyPressed   True si une touche a été pressée
+*}
+constructor TMoveContext.Create(APlayer: TPlayer; const ADest: TQualifiedPos;
+  AKeyPressed: Boolean);
+begin
+  inherited Create;
+
+  FPlayer := APlayer;
+
+  FSrcMap := Player.Map;
+  FSrc := Player.Position;
+  FDestMap := ADest.Map;
+  FDest := ADest.Position;
+
+  SwitchToSrc;
+
+  FOldDirection := Player.Direction;
+  FKeyPressed := AKeyPressed;
+
+  FCancelled := False;
+  FGoOnMoving := False;
+end;
+
+{*
+  Crée un contexte de déplacement du joueur restant sur la même carte
+  @param APlayer       Joueur qui se déplace
+  @param ADest         Destination
+  @param AKeyPressed   True si une touche a été pressée
+*}
+constructor TMoveContext.Create(APlayer: TPlayer; const ADest: T3DPoint;
+  AKeyPressed: Boolean);
+var
+  DestQPos: TQualifiedPos;
+begin
+  DestQPos.Map := APlayer.Map;
+  DestQPos.Position := ADest;
+
+  Create(APlayer, DestQPos, AKeyPressed);
+end;
+
+{*
+  Passe la case courante à la source
+*}
+procedure TMoveContext.SwitchToSrc;
+begin
+  FMap := SrcMap;
+  FPos := Src;
+end;
+
+{*
+  Passe la case courante à la destination
+*}
+procedure TMoveContext.SwitchToDest;
+begin
+  FMap := DestMap;
+  FPos := Dest;
+end;
+
+{*
+  Case source
+  @return Case source
+*}
+function TMoveContext.GetSrcSquare: TSquare;
+begin
+  Result := SrcMap[Src];
+end;
+
+{*
+  Modifie la case source
+  @return Nouvelle case source
+*}
+procedure TMoveContext.SetSrcSquare(Value: TSquare);
+begin
+  SrcMap[Src] := Value;
+end;
+
+{*
+  Case destination
+  @return Case destination
+*}
+function TMoveContext.GetDestSquare: TSquare;
+begin
+  Result := DestMap[Dest];
+end;
+
+{*
+  Modifie la case destination
+  @return Nouvelle case destination
+*}
+procedure TMoveContext.SetDestSquare(Value: TSquare);
+begin
+  DestMap[Dest] := Value;
+end;
+
+{*
+  Case courante
+  @return Case courante
+*}
+function TMoveContext.GetSquare: TSquare;
+begin
+  Result := Map[Pos];
+end;
+
+{*
+  Modifie la case courante
+  @return Nouvelle case courante
+*}
+procedure TMoveContext.SetSquare(Value: TSquare);
+begin
+  Map[Pos] := Value;
+end;
+
+{*
+  Annule le déplacement
+*}
+procedure TMoveContext.Cancel;
+begin
+  FCancelled := True;
+end;
+
 {--------------------------}
 { Classe TFunLabyComponent }
 {--------------------------}
@@ -1306,26 +1482,18 @@ end;
   Un joueur se déplace
   Moving est exécuté lorsqu'un joueur se déplace d'une case à une autre. Pour
   annuler le déplacement, Moving peut positionner le paramètre Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de départ
-  @param Dest           Case d'arrivée
-  @param Cancel         À positionner à True pour annuler le déplacement
+  @param Context   Contexte du déplacement
 *}
-procedure TPlugin.Moving(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Dest: T3DPoint; var Cancel: Boolean);
+procedure TPlugin.Moving(Context: TMoveContext);
 begin
 end;
 
 {*
   Un joueur s'est déplacé
   Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
-  @param Player   Joueur qui se déplace
-  @param Src      Case de départ
-  @param Dest     Case d'arrivée
+  @param Context   Contexte du déplacement
 *}
-procedure TPlugin.Moved(Player: TPlayer; const Src, Dest: T3DPoint);
+procedure TPlugin.Moved(Context: TMoveContext);
 begin
 end;
 
@@ -1444,15 +1612,9 @@ end;
   Exécuté lorsque le joueur tente de venir sur la case
   Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
   annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
+  @param Context   Contexte du déplacement
 *}
-procedure TField.Entering(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint; var Cancel: Boolean);
+procedure TField.Entering(Context: TMoveContext);
 begin
 end;
 
@@ -1460,35 +1622,25 @@ end;
   Exécuté lorsque le joueur tente de sortir de la case
   Exiting est exécuté lorsque le joueur tente de sortir de la case. Pour
   annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Pos            Position de la case
-  @param Dest           Case de destination
-  @param Cancel         À positionner à True pour annuler le déplacement
+  @param Context   Contexte du déplacement
 *}
-procedure TField.Exiting(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Pos, Dest: T3DPoint; var Cancel: Boolean);
+procedure TField.Exiting(Context: TMoveContext);
 begin
 end;
 
 {*
   Exécuté lorsque le joueur est arrivé sur la case
-  @param Player   Joueur qui se déplace
-  @param Src      Case de provenance
-  @param Pos      Position de la case
+  @param Context   Contexte du déplacement
 *}
-procedure TField.Entered(Player: TPlayer; const Src, Pos: T3DPoint);
+procedure TField.Entered(Context: TMoveContext);
 begin
 end;
 
 {*
   Exécuté lorsque le joueur est sorti de la case
-  @param Player   Joueur qui se déplace
-  @param Pos      Position de la case
-  @param Dest     Case de destination
+  @param Context   Contexte du déplacement
 *}
-procedure TField.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
+procedure TField.Exited(Context: TMoveContext);
 begin
 end;
 
@@ -1498,32 +1650,25 @@ end;
 
 {*
   Exécuté lorsque le joueur est arrivé sur la case
-  @param Player   Joueur qui se déplace
-  @param Src      Case de provenance
-  @param Pos      Position de la case
+  @param Context   Contexte du déplacement
 *}
-procedure TEffect.Entered(Player: TPlayer; const Src, Pos: T3DPoint);
+procedure TEffect.Entered(Context: TMoveContext);
 begin
 end;
 
 {*
   Exécuté lorsque le joueur est sorti de la case
-  @param Player   Joueur qui se déplace
-  @param Pos      Position de la case
-  @param Dest     Case de destination
+  @param Context   Contexte du déplacement
 *}
-procedure TEffect.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
+procedure TEffect.Exited(Context: TMoveContext);
 begin
 end;
 
 {*
   Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  @param Context   Contexte du déplacement
 *}
-procedure TEffect.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TEffect.Execute(Context: TMoveContext);
 begin
 end;
 
@@ -1535,10 +1680,9 @@ end;
   Exécuté lorsque le joueur trouve l'outil
   Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
   arrive sur une case sur laquelle se trouve l'outil.
-  @param Player   Joueur qui a trouvé l'outil
-  @param Pos      Position de la case
+  @param Context   Contexte du déplacement
 *}
-procedure TTool.Find(Player: TPlayer; const Pos: T3DPoint);
+procedure TTool.Find(Context: TMoveContext);
 begin
 end;
 
@@ -1552,24 +1696,16 @@ end;
   annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
   la méthode Execute de la case ne soit exécutée, il faut positionner
   AbortExecute à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortExecute   À positionner à True pour empêcher le Execute
+  @param Context   Contexte du déplacement
 *}
-procedure TObstacle.Pushing(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel, AbortExecute: Boolean);
+procedure TObstacle.Pushing(Context: TMoveContext);
 begin
-  Cancel := True;
+  Context.Cancel;
 end;
 
-{---------------}
+{----------------}
 { Classe TSquare }
-{---------------}
+{----------------}
 
 {*
   Crée une instance de TSquare
@@ -1677,20 +1813,14 @@ end;
   Exécuté lorsque le joueur tente de venir sur la case
   Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
   annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
+  @param Context   Contexte du déplacement
 *}
-procedure TSquare.Entering(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint; var Cancel: Boolean);
+procedure TSquare.Entering(Context: TMoveContext);
 begin
   AddRef;
   try
     if Assigned(Field) then
-      Field.Entering(Player, OldDirection, KeyPressed, Src, Pos, Cancel);
+      Field.Entering(Context);
   finally
     Release;
   end;
@@ -1700,20 +1830,14 @@ end;
   Exécuté lorsque le joueur tente de sortir de la case
   Exiting est exécuté lorsque le joueur tente de sortir de la case. Pour
   annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Pos            Position de la case
-  @param Dest           Case de destination
-  @param Cancel         À positionner à True pour annuler le déplacement
+  @param Context   Contexte du déplacement
 *}
-procedure TSquare.Exiting(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Pos, Dest: T3DPoint; var Cancel: Boolean);
+procedure TSquare.Exiting(Context: TMoveContext);
 begin
   AddRef;
   try
     if Assigned(Field) then
-      Field.Exiting(Player, OldDirection, KeyPressed, Pos, Dest, Cancel);
+      Field.Exiting(Context);
   finally
     Release;
   end;
@@ -1721,18 +1845,16 @@ end;
 
 {*
   Exécuté lorsque le joueur est arrivé sur la case
-  @param Player   Joueur qui se déplace
-  @param Src      Case de provenance
-  @param Pos      Position de la case
+  @param Context   Contexte du déplacement
 *}
-procedure TSquare.Entered(Player: TPlayer; const Src, Pos: T3DPoint);
+procedure TSquare.Entered(Context: TMoveContext);
 begin
   AddRef;
   try
     if Assigned(Field) then
-      Field.Entered(Player, Src, Pos);
+      Field.Entered(Context);
     if Assigned(Effect) then
-      Effect.Entered(Player, Src, Pos);
+      Effect.Entered(Context);
   finally
     Release;
   end;
@@ -1740,18 +1862,16 @@ end;
 
 {*
   Exécuté lorsque le joueur est sorti de la case
-  @param Player   Joueur qui se déplace
-  @param Pos      Position de la case
-  @param Dest     Case de destination
+  @param Context   Contexte du déplacement
 *}
-procedure TSquare.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
+procedure TSquare.Exited(Context: TMoveContext);
 begin
   AddRef;
   try
     if Assigned(Field) then
-      Field.Exited(Player, Pos, Dest);
+      Field.Exited(Context);
     if Assigned(Effect) then
-      Effect.Exited(Player, Pos, Dest);
+      Effect.Exited(Context);
   finally
     Release;
   end;
@@ -1759,19 +1879,16 @@ end;
 
 {*
   Trouve l'objet et exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  @param Context   Contexte du déplacement
 *}
-procedure TSquare.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TSquare.Execute(Context: TMoveContext);
 begin
   AddRef;
   try
     if Assigned(Tool) then
-      Tool.Find(Player, Pos);
+      Tool.Find(Context);
     if Assigned(Effect) then
-      Effect.Execute(Player, Pos, GoOnMoving);
+      Effect.Execute(Context);
   finally
     Release;
   end;
@@ -1783,25 +1900,14 @@ end;
   annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
   la méthode Entered de la case ne soit exécutée, il faut positionner
   AbortEntered à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortExecute   À positionner à True pour empêcher le Execute
+  @param Context   Contexte du déplacement
 *}
-procedure TSquare.Pushing(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel, AbortExecute: Boolean);
+procedure TSquare.Pushing(Context: TMoveContext);
 begin
   AddRef;
   try
     if Assigned(Obstacle) then
-    begin
-      Obstacle.Pushing(Player, OldDirection, KeyPressed,
-        Src, Pos, Cancel, AbortExecute);
-    end;
+      Obstacle.Pushing(Context);
   finally
     Release;
   end;
@@ -2074,6 +2180,86 @@ begin
     Plugins[I].DrawAfter(Self, QPos, Canvas, X, Y);
 end;
 
+{*
+  Teste si un déplacement est permis
+  @param Context   Contexte de déplacement
+  @return True si le déplacement est permis, False sinon
+*}
+function TPlayer.IsMoveAllowed(Context: TMoveContext): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+
+  with Context do
+  begin
+    SwitchToSrc;
+
+    // Case source : exiting
+    SrcSquare.Exiting(Context);
+    if Cancelled then
+      Exit;
+
+    // Plug-in : moving
+    for I := 0 to PluginCount-1 do
+      Plugins[I].Moving(Context);
+    if Cancelled then
+      Exit;
+
+    SwitchToDest;
+
+    // Case destination : entering
+    DestSquare.Entering(Context);
+    if Cancelled then
+      Exit;
+
+    // Case destination : pushing
+    DestSquare.Pushing(Context);
+    if Cancelled then
+      Exit;
+  end;
+
+  Result := True;
+end;
+
+{*
+  Déplace le joueur
+  @param Context   Contexte de déplacement
+  @param Execute   Indique s'il faut exécuter la case d'arrivée (défaut = True)
+*}
+procedure TPlayer.MoveTo(Context: TMoveContext; Execute: Boolean = True);
+var
+  I: Integer;
+begin
+  FMap := Context.DestMap;
+  FPosition := Context.Dest;
+
+  with Context do
+  begin
+    SwitchToSrc;
+
+    // Case source : exited
+    SrcSquare.Exited(Context);
+
+    SwitchToDest;
+
+    // Plug-in : moved
+    for I := 0 to PluginCount-1 do
+      Plugins[I].Moved(Context);
+
+    // Case destination : entered
+    DestSquare.Entered(Context);
+  end;
+
+  // Case destination : execute (seulement si Execute vaut True)
+  if Execute then
+    Map[Position].Execute(Context);
+end;
+
+{*
+  Indique si le joueur est visible
+  @return True s'il est visible, False sinon
+*}
 function TPlayer.GetVisible: Boolean;
 begin
   Result := FShowCounter >= 0;
@@ -2328,52 +2514,28 @@ end;
 procedure TPlayer.Move(Dir: TDirection; KeyPressed: Boolean;
   out Redo: Boolean);
 var
-  I: Integer;
-  Src, Dest: T3DPoint;
-  OldDir: TDirection;
-  Cancel, AbortExecute: Boolean;
+  Context: TMoveContext;
 begin
-  // Initialisation des variables
   Redo := False;
-  Src := FPosition;
-  Dest := PointBehind(FPosition, Dir);
-  OldDir := FDirection;
-  FDirection := Dir;
-  Cancel := False;
-  AbortExecute := False;
 
   // Le joueur est-il toujours en train de jouer ?
   if PlayState <> psPlaying then
     Exit;
 
-  // Le déplacement est-il permis ?
-  begin
-    // Case source : exiting
-    Map[Src].Exiting(Self, OldDir, KeyPressed, Src, Dest, Cancel);
-    if Cancel then
+  Context := TMoveContext.Create(Self, PointBehind(Position, Dir), KeyPressed);
+  try
+    FDirection := Dir;
+
+    if not IsMoveAllowed(Context) then
       Exit;
 
-    // Plug-in : moving
-    for I := 0 to PluginCount-1 do
-      Plugins[I].Moving(Self, OldDir, KeyPressed, Src, Dest, Cancel);
-    if Cancel then
-      Exit;
+    if Same3DPoint(Position, Context.Src) and (Map = Context.SrcMap) then
+      MoveTo(Context);
 
-    // Case destination : entering
-    Map[Dest].Entering(Self, OldDir, KeyPressed, Src, Dest, Cancel);
-    if Cancel then
-      Exit;
-
-    // Case destination : pushing
-    Map[Dest].Pushing(Self, OldDir, KeyPressed, Src, Dest, Cancel,
-      AbortExecute);
-    if Cancel then
-      Exit;
+    Redo := Context.GoOnMoving;
+  finally
+    Context.Free;
   end;
-
-  // Déplacement du joueur (à moins qu'il ait été déplacé par ailleurs)
-  if Same3DPoint(FPosition, Src) then
-    MoveTo(Dest, not AbortExecute, Redo);
 end;
 
 {*
@@ -2385,29 +2547,12 @@ end;
 procedure TPlayer.MoveTo(const Dest: T3DPoint; Execute: Boolean;
   out Redo: Boolean);
 var
-  Src: T3DPoint;
-  I: Integer;
+  DestQPos: TQualifiedPos;
 begin
-  // Le joueur est-il toujours en train de jouer ?
-  if PlayState <> psPlaying then
-    Exit;
+  DestQPos.Map := Map;
+  DestQPos.Position := Dest;
 
-  Src := Position;
-  FPosition := Dest;
-
-  // Case source : exited
-  Map[Src].Exited(Self, Src, Dest);
-
-  // Plug-in : moved
-  for I := 0 to PluginCount-1 do
-    Plugins[I].Moved(Self, Src, Dest);
-
-  // Case destination : entered
-  Map[Dest].Entered(Self, Src, Dest);
-
-  // Case destination : execute (seulement si Execute vaut True)
-  if Execute then
-    Map[Position].Execute(Self, Dest, Redo);
+  MoveTo(DestQPos, Execute, Redo);
 end;
 
 {*
@@ -2431,47 +2576,20 @@ end;
 procedure TPlayer.MoveTo(const Dest: TQualifiedPos; Execute: Boolean;
   out Redo: Boolean);
 var
-  Src: T3DPoint;
-  I: Integer;
+  Context: TMoveContext;
 begin
+  Redo := False;
+
   // Le joueur est-il toujours en train de jouer ?
   if PlayState <> psPlaying then
     Exit;
 
-  if Dest.Map = Map then
-  begin
-    MoveTo(Dest.Position, Execute, Redo);
-    Exit;
-  end;
-
-  Src := Position;
-
-  if Assigned(Map) then
-  begin
-    // Case source : exited
-    Map[Src].Exited(Self, Src, No3DPoint);
-
-    // Plug-in : moved
-    for I := 0 to PluginCount-1 do
-      Plugins[I].Moved(Self, Src, No3DPoint);
-  end;
-
-  // Déplacement
-  FMap := Dest.Map;
-  FPosition := Dest.Position;
-
-  if Assigned(Map) then
-  begin
-    // Plug-in : moved
-    for I := 0 to PluginCount-1 do
-      Plugins[I].Moved(Self, No3DPoint, Dest.Position);
-
-    // Case destination : entered
-    Map[Dest.Position].Entered(Self, No3DPoint, Dest.Position);
-
-    // Case destination : execute (seulement si Execute vaut True)
-    if Execute then
-      Map[Position].Execute(Self, Dest.Position, Redo);
+  Context := TMoveContext.Create(Self, Dest, False);
+  try
+    MoveTo(Context, Execute);
+    Redo := Context.GoOnMoving;
+  finally
+    Context.Free;
   end;
 end;
 

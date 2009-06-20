@@ -49,9 +49,7 @@ type
     procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
       Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
 
-    procedure Moving(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Dest: T3DPoint;
-      var Cancel: Boolean); override;
+    procedure Moving(Context: TMoveContext); override;
   end;
 
   {*
@@ -83,14 +81,11 @@ type
     constructor Create(AMaster: TMaster; AMap: TMap;
       const APosition: T3DPoint; APlayer: TPlayer);
 
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); override;
+    procedure Entering(Context: TMoveContext); override;
 
-    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); override;
+    procedure Exited(Context: TMoveContext); override;
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
 
     property Player: TPlayer read FPlayer;
   end;
@@ -105,14 +100,7 @@ implementation
 {---------------------}
 
 {*
-  Dessine sous le joueur
-  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
-  effectué dans DrawBefore se retrouve donc sous le joueur.
-  @param Player   Joueur qui est dessiné
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+  [@inheritDoc]
 *}
 procedure TPlankPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
   Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
@@ -151,44 +139,36 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankPlugin.Moving(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Dest: T3DPoint; var Cancel: Boolean);
+procedure TPlankPlugin.Moving(Context: TMoveContext);
 var
   Behind: T3DPoint;
   Msg: TPlankMessage;
-  Field: TField;
 begin
-  Behind := PointBehind(Dest, Player.Direction);
-
-  Msg.MsgID := msgPlank;
-  Msg.Kind := pmkPassOver;
-  Msg.Result := False;
-  Msg.Player := Player;
-  Msg.Pos := Dest;
-  Msg.Src := Src;
-  Msg.Dest := Behind;
-
-  with Player do
+  with Context do
   begin
+    Behind := PointBehind(Dest, Player.Direction);
+
+    Msg.MsgID := msgPlank;
+    Msg.Kind := pmkPassOver;
+    Msg.Result := False;
+    Msg.Player := Player;
+    Msg.Pos := Dest;
+    Msg.Src := Src;
+    Msg.Dest := Behind;
+
     // On vérifie que la case du milieu peut être survolée
-    Field := Map[Msg.Pos].Field;
-    if Assigned(Field) then
-      Field.Dispatch(Msg);
+    DestSquare.Field.Dispatch(Msg);
     if not Msg.Result then
       Exit;
 
     // On vérifie que la case de départ ou d'arrivée autorise le déplacement
     Msg.Kind := pmkLeaveFrom;
     Msg.Result := False;
-    Field := Map[Msg.Src].Field;
-    if Assigned(Field) then
-      Field.Dispatch(Msg);
+    SrcSquare.Field.Dispatch(Msg);
     if not Msg.Result then
     begin
       Msg.Kind := pmkArriveAt;
-      Field := Map[Msg.Dest].Field;
-      if Assigned(Field) then
-        Field.Dispatch(Msg);
+      Map[Msg.Dest].Field.Dispatch(Msg);
       if not Msg.Result then
         Exit;
     end;
@@ -229,10 +209,7 @@ begin
 end;
 
 {*
-  Informations textuelles sur l'objet
-  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
-  @param Player   Joueur pour lequel on veut obtenir les infos
-  @return Informations textuelles, ou une chaîne vide si rien à afficher
+  [@inheritDoc]
 *}
 function TPlanks.GetShownInfos(Player: TPlayer): string;
 var
@@ -267,21 +244,17 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankSquare.Entering(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel: Boolean);
+procedure TPlankSquare.Entering(Context: TMoveContext);
 begin
-  inherited;
-  if Player <> FPlayer then
-    Cancel := True;
+  if Context.Player <> Player then
+    Context.Cancel;
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TPlankSquare.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
+procedure TPlankSquare.Exited(Context: TMoveContext);
 begin
-  inherited;
   FPlayer.Attribute[attrUsePlank] := 0;
   Free;
 end;
@@ -289,12 +262,16 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankSquare.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TPlankSquare.Execute(Context: TMoveContext);
+var
+  Redo: Boolean;
 begin
-  inherited;
-  Master.Temporize;
-  Player.MoveTo(PointBehind(Pos, Player.Direction), True, GoOnMoving);
+  with Context do
+  begin
+    Master.Temporize;
+    Player.MoveTo(PointBehind(Pos, Player.Direction), True, Redo);
+    GoOnMoving := Redo;
+  end;
 end;
 
 end.

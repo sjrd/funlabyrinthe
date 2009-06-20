@@ -43,9 +43,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel, AbortExecute: Boolean); override;
+    procedure Pushing(Context: TMoveContext); override;
   end;
 
   {*
@@ -59,9 +57,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel, AbortExecute: Boolean); override;
+    procedure Pushing(Context: TMoveContext); override;
   end;
 
   {*
@@ -78,9 +74,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel, AbortExecute: Boolean); override;
+    procedure Pushing(Context: TMoveContext); override;
   end;
 
 implementation
@@ -99,35 +93,23 @@ constructor TSilverBlock.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
+
   Painter.ImgNames.Add(fSilverBlock);
 end;
 
 {*
-  Exécuté lorsque le joueur pousse sur l'obstacle
-  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Execute de la case ne soit exécutée, il faut positionner
-  AbortExecute à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortExecute   À positionner à True pour empêcher le Execute
+  [@inheritDoc]
 *}
-procedure TSilverBlock.Pushing(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel, AbortExecute: Boolean);
+procedure TSilverBlock.Pushing(Context: TMoveContext);
 begin
   inherited;
 
-  if KeyPressed then
+  with Context do
   begin
-    with Player do
+    if KeyPressed then
     begin
-      if DoAction(actOpenSilverLock) then
-        Map[Pos] := ChangeObstacle(Map[Pos])
+      if Player.DoAction(actOpenSilverLock) then
+        Square := ChangeObstacle(Square)
       else
         ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
     end;
@@ -148,35 +130,23 @@ constructor TGoldenBlock.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
+
   Painter.ImgNames.Add(fGoldenBlock);
 end;
 
 {*
-  Exécuté lorsque le joueur pousse sur l'obstacle
-  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Execute de la case ne soit exécutée, il faut positionner
-  AbortExecute à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortExecute   À positionner à True pour empêcher le Execute
+  [@inheritDoc]
 *}
-procedure TGoldenBlock.Pushing(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel, AbortExecute: Boolean);
+procedure TGoldenBlock.Pushing(Context: TMoveContext);
 begin
   inherited;
 
-  if KeyPressed then
+  with Context do
   begin
-    with Player do
+    if KeyPressed then
     begin
-      if DoAction(actOpenGoldenLock) then
-        Map[Pos] := ChangeObstacle(Map[Pos])
+      if Player.DoAction(actOpenGoldenLock) then
+        Square := ChangeObstacle(Square)
       else
         ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
     end;
@@ -197,15 +167,12 @@ constructor TSecretWay.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
+
   Painter.ImgNames.Add(fWall);
 end;
 
 {*
-  Dessine le passage secret sur le canevas indiqué
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le terrain
-  @param X        Coordonnée X du point à partir duquel dessiner le terrain
-  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+  [@inheritDoc]
 *}
 procedure TSecretWay.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
@@ -227,28 +194,15 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur pousse sur l'obstacle
-  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
-  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
-  la méthode Execute de la case ne soit exécutée, il faut positionner
-  AbortExecute à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
-  @param AbortExecute   À positionner à True pour empêcher le Execute
+  [@inheritDoc]
 *}
-procedure TSecretWay.Pushing(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel, AbortExecute: Boolean);
+procedure TSecretWay.Pushing(Context: TMoveContext);
 begin
   inherited;
 
-  if KeyPressed then
-    with Player do
-      Map[Pos] := ChangeObstacle(Map[Pos]);
+  with Context do
+    if KeyPressed then
+      Square := ChangeObstacle(Square);
 end;
 
 end.

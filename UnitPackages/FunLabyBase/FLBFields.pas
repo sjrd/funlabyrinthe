@@ -70,9 +70,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ADelegateDrawTo: TField = nil);
 
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); override;
+    procedure Entering(Context: TMoveContext); override;
   end;
 
   {*
@@ -98,9 +96,7 @@ type
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); override;
+    procedure Entering(Context: TMoveContext); override;
   end;
 
   {*
@@ -117,9 +113,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ADelegateDrawTo: TField = nil);
 
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); override;
+    procedure Entering(Context: TMoveContext); override;
   end;
 
   {*
@@ -133,9 +127,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ADelegateDrawTo: TField = nil);
 
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); override;
+    procedure Entering(Context: TMoveContext); override;
   end;
 
 implementation
@@ -198,21 +190,11 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur tente de venir sur la case
-  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
+  [@inheritDoc]
 *}
-procedure TWall.Entering(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel: Boolean);
+procedure TWall.Entering(Context: TMoveContext);
 begin
-  Cancel := True;
+  Context.Cancel;
 end;
 
 {---------------}
@@ -241,7 +223,7 @@ begin
 end;
 
 {*
-  Détruit l'instance
+  [@inheritDoc]
 *}
 destructor TWater.Destroy;
 begin
@@ -262,12 +244,7 @@ begin
 end;
 
 {*
-  Dessine le terrain sur le canevas indiqué
-  Les descendants de TField doivent réimplémenter DrawField plutôt que Draw.
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le terrain
-  @param X        Coordonnée X du point à partir duquel dessiner le terrain
-  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+  [@inheritDoc]
 *}
 procedure TWater.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
@@ -279,9 +256,7 @@ begin
 end;
 
 {*
-  Exécuté après la construction de l'objet
-  AfterConstruction est appelé après l'exécution du dernier constructeur.
-  N'appelez pas directement AfterConstruction.
+  [@inheritDoc]
 *}
 procedure TWater.AfterConstruction;
 begin
@@ -290,28 +265,18 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur tente de venir sur la case
-  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
+  [@inheritDoc]
 *}
-procedure TWater.Entering(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel: Boolean);
+procedure TWater.Entering(Context: TMoveContext);
 begin
-  with Player do
+  with Context do
   begin
-    if DoAction(actGoOnWater) then
+    if Player.DoAction(actGoOnWater) then
       Exit;
 
     if KeyPressed then
-      ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
-    Cancel := True;
+      Player.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
+    Cancel;
   end;
 end;
 
@@ -345,23 +310,16 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur tente de venir sur la case
-  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
+  [@inheritDoc]
 *}
-procedure THole.Entering(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel: Boolean);
+procedure THole.Entering(Context: TMoveContext);
 begin
-  if KeyPressed then
-    Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
-  Cancel := True;
+  with Context do
+  begin
+    if KeyPressed then
+      Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
+    Cancel;
+  end;
 end;
 
 {-------------}
@@ -383,23 +341,16 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur tente de venir sur la case
-  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
-  annuler le déplacement, il faut positionner Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de provenance
-  @param Pos            Position de la case
-  @param Cancel         À positionner à True pour annuler le déplacement
+  [@inheritDoc]
 *}
-procedure TSky.Entering(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel: Boolean);
+procedure TSky.Entering(Context: TMoveContext);
 begin
-  if KeyPressed then
-    Player.ShowDialog(sBlindAlley, sCantGoOnSky, dtError);
-  Cancel := True;
+  with Context do
+  begin
+    if KeyPressed then
+      Player.ShowDialog(sBlindAlley, sCantGoOnSky, dtError);
+    Cancel;
+  end;
 end;
 
 end.

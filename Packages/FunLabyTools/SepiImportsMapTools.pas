@@ -135,5 +135,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('MapTools', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('MapTools');
 end.
 

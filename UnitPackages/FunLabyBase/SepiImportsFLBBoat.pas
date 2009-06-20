@@ -133,5 +133,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('FLBBoat', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('FLBBoat');
 end.
 

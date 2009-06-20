@@ -66,7 +66,7 @@ type
     procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
       Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
 
-    procedure Moved(Player: TPlayer; const Src, Dest: T3DPoint); override;
+    procedure Moved(Context: TMoveContext); override;
 
     function AbleTo(Player: TPlayer;
       const Action: TPlayerAction): Boolean; override;
@@ -133,14 +133,7 @@ implementation
 {--------------------}
 
 {*
-  Dessine sous le joueur
-  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
-  effectué dans DrawBefore se retrouve donc sous le joueur.
-  @param Player   Joueur qui est dessiné
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+  [@inheritDoc]
 *}
 procedure TBuoyPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
   Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
@@ -157,25 +150,19 @@ begin
 end;
 
 {*
-  Un joueur s'est déplacé
-  Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
-  @param Player   Joueur qui se déplace
-  @param Src      Case de départ
-  @param Dest     Case d'arrivée
+  [@inheritDoc]
 *}
-procedure TBuoyPlugin.Moved(Player: TPlayer; const Src, Dest: T3DPoint);
+procedure TBuoyPlugin.Moved(Context: TMoveContext);
 begin
-  if not (Player.Map[Dest].Field is TWater) then
-    Player.RemovePlugin(Self);
+  with Context do
+  begin
+    if not (DestSquare.Field is TWater) then
+      Player.RemovePlugin(Self);
+  end;
 end;
 
 {*
-  Indique si le plug-in permet au joueur d'effectuer une action donnée
-  CanYou doit renvoyer True si le plug-in permet au joueur d'effectuer
-  l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à tester
-  @return True si le joueur est capable d'effectuer l'action, False sinon
+  [@inheritDoc]
 *}
 function TBuoyPlugin.AbleTo(Player: TPlayer;
   const Action: TPlayerAction): Boolean;
@@ -201,10 +188,7 @@ begin
 end;
 
 {*
-  Informations textuelles sur l'objet
-  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
-  @param Player   Joueur pour lequel on veut obtenir les infos
-  @return Informations textuelles, ou une chaîne vide si rien à afficher
+  [@inheritDoc]
 *}
 function TBuoys.GetShownInfos(Player: TPlayer): string;
 var
@@ -218,12 +202,7 @@ begin
 end;
 
 {*
-  Indique si l'objet permet au joueur d'effectuer une action donnée
-  CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
-  d'effectuer l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à tester
-  @return True si l'objet permet d'effectuer l'action, False sinon
+  [@inheritDoc]
 *}
 function TBuoys.AbleTo(Player: TPlayer;
   const Action: TPlayerAction): Boolean;
@@ -233,11 +212,7 @@ begin
 end;
 
 {*
-  Utiliser l'objet pour effectuer l'action donnée
-  UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
-  effectuer l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à effectuer
+  [@inheritDoc]
 *}
 procedure TBuoys.UseFor(Player: TPlayer; const Action: TPlayerAction);
 begin
@@ -265,10 +240,7 @@ begin
 end;
 
 {*
-  Informations textuelles sur l'objet
-  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
-  @param Player   Joueur pour lequel on veut obtenir les infos
-  @return Informations textuelles, ou une chaîne vide si rien à afficher
+  [@inheritDoc]
 *}
 function TSilverKeys.GetShownInfos(Player: TPlayer): string;
 var
@@ -282,12 +254,7 @@ begin
 end;
 
 {*
-  Indique si l'objet permet au joueur d'effectuer une action donnée
-  CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
-  d'effectuer l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à tester
-  @return True si l'objet permet d'effectuer l'action, False sinon
+  [@inheritDoc]
 *}
 function TSilverKeys.AbleTo(Player: TPlayer;
   const Action: TPlayerAction): Boolean;
@@ -297,11 +264,7 @@ begin
 end;
 
 {*
-  Utiliser l'objet pour effectuer l'action donnée
-  UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
-  effectuer l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à effectuer
+  [@inheritDoc]
 *}
 procedure TSilverKeys.UseFor(Player: TPlayer; const Action: TPlayerAction);
 begin
@@ -329,10 +292,7 @@ begin
 end;
 
 {*
-  Informations textuelles sur l'objet
-  GetShownInfos renvoie les informations textuelles à afficher pour l'objet.
-  @param Player   Joueur pour lequel on veut obtenir les infos
-  @return Informations textuelles, ou une chaîne vide si rien à afficher
+  [@inheritDoc]
 *}
 function TGoldenKeys.GetShownInfos(Player: TPlayer): string;
 var
@@ -346,12 +306,7 @@ begin
 end;
 
 {*
-  Indique si l'objet permet au joueur d'effectuer une action donnée
-  CanYou doit renvoyer True si l'objet permet au joueur, en l'utilisant,
-  d'effectuer l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à tester
-  @return True si l'objet permet d'effectuer l'action, False sinon
+  [@inheritDoc]
 *}
 function TGoldenKeys.AbleTo(Player: TPlayer;
   const Action: TPlayerAction): Boolean;
@@ -361,11 +316,7 @@ begin
 end;
 
 {*
-  Utiliser l'objet pour effectuer l'action donnée
-  UseFor est appelée lorsque le joueur choisit d'utiliser cet objet pour
-  effectuer l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à effectuer
+  [@inheritDoc]
 *}
 procedure TGoldenKeys.UseFor(Player: TPlayer; const Action: TPlayerAction);
 begin

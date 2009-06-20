@@ -117,5 +117,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('GraphicsTools', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('GraphicsTools');
 end.
 

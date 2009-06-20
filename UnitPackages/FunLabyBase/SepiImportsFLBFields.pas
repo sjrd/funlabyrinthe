@@ -197,5 +197,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('FLBFields', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('FLBFields');
 end.
 

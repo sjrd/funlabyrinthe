@@ -133,5 +133,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('PlayerObjects', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('PlayerObjects');
 end.
 

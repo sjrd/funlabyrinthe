@@ -181,5 +181,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('Generics', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('Generics');
 end.
 

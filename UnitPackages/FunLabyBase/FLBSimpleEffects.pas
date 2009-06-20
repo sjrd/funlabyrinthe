@@ -108,8 +108,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ADirection: TDirection);
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
 
     property Direction: TDirection read FDirection;
   end;
@@ -132,8 +131,7 @@ type
       const AName: string; ANumber: Integer;
       AKind: TTransporterKind = tkInactive);
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
 
     property Number: Integer read FNumber;
     property Kind: TTransporterKind read FKind;
@@ -152,8 +150,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; AUp: Boolean);
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
 
     property Up: Boolean read FUp;
   end;
@@ -170,10 +167,9 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); override;
+    procedure Exited(Context: TMoveContext); override;
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
   end;
 
   {*
@@ -188,10 +184,9 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); override;
+    procedure Exited(Context: TMoveContext); override;
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
   end;
 
   {*
@@ -206,8 +201,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
   end;
 
   {*
@@ -221,8 +215,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
   end;
 
 implementation
@@ -242,6 +235,7 @@ constructor TArrow.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string; ADirection: TDirection);
 begin
   inherited Create(AMaster, AID, AName);
+
   FDirection := ADirection;
   case FDirection of
     diNone:  Painter.ImgNames.Add(fCrossroads);
@@ -253,18 +247,16 @@ begin
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TArrow.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TArrow.Execute(Context: TMoveContext);
 begin
-  inherited;
-  if FDirection <> diNone then
-    Player.Direction := FDirection;
-  GoOnMoving := True;
+  with Context do
+  begin
+    if Direction <> diNone then
+      Player.Direction := FDirection;
+    GoOnMoving := True;
+  end;
 end;
 
 {---------------------}
@@ -283,17 +275,14 @@ constructor TTransporter.Create(AMaster: TMaster; const AID: TComponentID;
   AKind: TTransporterKind = tkInactive);
 begin
   inherited Create(AMaster, Format(AID, [ANumber]), Format(AName, [ANumber]));
+
   FNumber := ANumber;
   FKind := AKind;
   Painter.ImgNames.Add(fTransporter);
 end;
 
 {*
-  Dessine le téléporteur sur le canevas indiqué
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le terrain
-  @param X        Coordonnée X du point à partir duquel dessiner le terrain
-  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+  [@inheritDoc]
 *}
 procedure TTransporter.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
@@ -311,34 +300,31 @@ begin
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TTransporter.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TTransporter.Execute(Context: TMoveContext);
 var
   Other: T3DPoint;
 begin
-  inherited;
+  with Context do
+  begin
+    Other := Pos;
 
-  Other := Pos;
+    // Recherche de la case de destination
+    case FKind of
+      tkNext:     FindNextSquare(Map, Other, Self);
+      tkPrevious: FindPreviousSquare(Map, Other, Self);
+      tkRandom:   FindSquareAtRandom(Map, Other, Self);
+    else
+      Exit; // on évite des tests inutiles pour un inactif
+    end;
 
-  // Recherche de la case de destination
-  case FKind of
-    tkNext:     FindNextSquare(Player.Map, Other, Self);
-    tkPrevious: FindPreviousSquare(Player.Map, Other, Self);
-    tkRandom:   FindSquareAtRandom(Player.Map, Other, Self);
-  else
-    Exit; // on évite des tests inutiles pour un inactif
+    // Si l'on a trouvé une autre case, on déplace le joueur
+    if Same3DPoint(Other, Pos) then
+      Exit;
+    Master.Temporize;
+    Player.MoveTo(Other);
   end;
-
-  // Si l'on a trouvé une autre case, on déplace le joueur
-  if Same3DPoint(Other, Pos) then
-    Exit;
-  Master.Temporize;
-  Player.MoveTo(Other);
 end;
 
 {----------------}
@@ -356,6 +342,7 @@ constructor TStairs.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string; AUp: Boolean);
 begin
   inherited Create(AMaster, AID, AName);
+
   FUp := AUp;
   if Up then
     Painter.ImgNames.Add(fUpStairs)
@@ -364,26 +351,20 @@ begin
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TStairs.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TStairs.Execute(Context: TMoveContext);
 var
   Other: T3DPoint;
 begin
-  inherited;
-
-  Other := Pos;
+  Other := Context.Pos;
   if Up then
     Inc(Other.Z)
   else
     Dec(Other.Z);
 
   Master.Temporize;
-  Player.MoveTo(Other);
+  Context.Player.MoveTo(Other);
 end;
 
 {-------------------------}
@@ -400,49 +381,46 @@ constructor TDirectTurnstile.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
+
   Painter.ImgNames.Add(fDirectTurnstile);
 end;
 
 {*
-  Exécuté lorsque le joueur est sorti de la case
-  Exiting est exécuté lorsque le joueur est sorti de la case.
-  @param Player   Joueur qui se déplace
-  @param Pos      Position de la case
-  @param Dest     Case de destination
+  [@inheritDoc]
 *}
-procedure TDirectTurnstile.Exited(Player: TPlayer; const Pos, Dest: T3DPoint);
+procedure TDirectTurnstile.Exited(Context: TMoveContext);
 begin
-  inherited;
-  Player.Map[Pos] := ChangeEffect(Player.Map[Pos], idIndirectTurnstile);
+  with Context do
+    Square := ChangeEffect(Square, idIndirectTurnstile);
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TDirectTurnstile.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TDirectTurnstile.Execute(Context: TMoveContext);
 var
   Dir: TDirection;
+  Redo: Boolean;
 begin
-  inherited;
+  with Context do
+  begin
+    Master.Temporize;
 
-  Master.Temporize;
-
-  if Player.Direction = diWest then
-    Dir := diNorth
-  else
-    Dir := Succ(Player.Direction);
-
-  repeat
-    Player.Move(Dir, False, GoOnMoving);
-    if Player.Direction = diNorth then
-      Dir := diWest
+    if Player.Direction = diWest then
+      Dir := diNorth
     else
-      Dir := Pred(Player.Direction);
-  until not Same3DPoint(Player.Position, Pos);
+      Dir := Succ(Player.Direction);
+
+    repeat
+      Player.Move(Dir, False, Redo);
+      GoOnMoving := Redo;
+
+      if Player.Direction = diNorth then
+        Dir := diWest
+      else
+        Dir := Pred(Player.Direction);
+    until not Same3DPoint(Player.Position, Pos);
+  end;
 end;
 
 {---------------------------}
@@ -459,50 +437,46 @@ constructor TIndirectTurnstile.Create(AMaster: TMaster;
   const AID: TComponentID; const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
+
   Painter.ImgNames.Add(fIndirectTurnstile);
 end;
 
 {*
-  Exécuté lorsque le joueur est sorti de la case
-  Exiting est exécuté lorsque le joueur est sorti de la case.
-  @param Player   Joueur qui se déplace
-  @param Pos      Position de la case
-  @param Dest     Case de destination
+  [@inheritDoc]
 *}
-procedure TIndirectTurnstile.Exited(Player: TPlayer;
-  const Pos, Dest: T3DPoint);
+procedure TIndirectTurnstile.Exited(Context: TMoveContext);
 begin
-  inherited;
-  Player.Map[Pos] := ChangeEffect(Player.Map[Pos], idDirectTurnstile);
+  with Context do
+    Square := ChangeEffect(Square, idDirectTurnstile);
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TIndirectTurnstile.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TIndirectTurnstile.Execute(Context: TMoveContext);
 var
   Dir: TDirection;
+  Redo: Boolean;
 begin
-  inherited;
+  with Context do
+  begin
+    Master.Temporize;
 
-  Master.Temporize;
-
-  if Player.Direction = diNorth then
-    Dir := diWest
-  else
-    Dir := Pred(Player.Direction);
-
-  repeat
-    Player.Move(Dir, False, GoOnMoving);
-    if Player.Direction = diWest then
-      Dir := diNorth
+    if Player.Direction = diNorth then
+      Dir := diWest
     else
-      Dir := Succ(Player.Direction);
-  until not Same3DPoint(Player.Position, Pos);
+      Dir := Pred(Player.Direction);
+
+    repeat
+      Player.Move(Dir, False, Redo);
+      GoOnMoving := Redo;
+
+      if Player.Direction = diWest then
+        Dir := diNorth
+      else
+        Dir := Succ(Player.Direction);
+    until not Same3DPoint(Player.Position, Pos);
+  end;
 end;
 
 {-----------------}
@@ -519,21 +493,20 @@ constructor TOutside.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
+
   Painter.ImgNames.Add(fOutside);
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TOutside.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TOutside.Execute(Context: TMoveContext);
 begin
-  inherited;
-  Player.Win;
-  Player.ShowDialog(sWon, sGotOutsideMaze);
+  with Context.Player do
+  begin
+    Win;
+    ShowDialog(sWon, sGotOutsideMaze);
+  end;
 end;
 
 {------------------}
@@ -550,21 +523,20 @@ constructor TTreasure.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
+
   Painter.ImgNames.Add(fTreasure);
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TTreasure.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TTreasure.Execute(Context: TMoveContext);
 begin
-  inherited;
-  Player.Win;
-  Player.ShowDialog(sWon, sFoundTreasure);
+  with Context.Player do
+  begin
+    Win;
+    ShowDialog(sWon, sFoundTreasure);
+  end;
 end;
 
 end.

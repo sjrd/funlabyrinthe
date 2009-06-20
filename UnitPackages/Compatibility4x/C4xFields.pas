@@ -28,9 +28,7 @@ type
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); override;
+    procedure Entering(Context: TMoveContext); override;
   end;
 
   {*
@@ -44,9 +42,7 @@ type
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); override;
+    procedure Entering(Context: TMoveContext); override;
   end;
 
 implementation
@@ -67,21 +63,21 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TOldWater.Entering(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint; var Cancel: Boolean);
+procedure TOldWater.Entering(Context: TMoveContext);
 var
   Behind: T3DPoint;
   SrcObstacle, DestObstacle: TObstacle;
 begin
-  with Player do
+  with Context do
   begin
-    if DoAction(actGoOnWater) then
+    if Player.DoAction(actGoOnWater) then
       Exit;
 
-    Behind := PointBehind(Pos, Direction);
+    Behind := PointBehind(Pos, Player.Direction);
+
     if Map[Behind].Field is TGround then
     begin
-      SrcObstacle := Map[Src].Obstacle;
+      SrcObstacle := SrcSquare.Obstacle;
       if (SrcObstacle is TActionsObstacle) and
         (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
         SrcObstacle := nil;
@@ -102,7 +98,7 @@ begin
 
     if KeyPressed then
       Player.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
-    Cancel := True;
+    Cancel;
   end;
 end;
 
@@ -122,18 +118,18 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TOldHole.Entering(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint; var Cancel: Boolean);
+procedure TOldHole.Entering(Context: TMoveContext);
 var
   Behind: T3DPoint;
   SrcObstacle, DestObstacle: TObstacle;
 begin
-  with Player do
+  with Context do
   begin
-    Behind := PointBehind(Pos, Direction);
+    Behind := PointBehind(Pos, Player.Direction);
+
     if Map[Behind].Field is TGround then
     begin
-      SrcObstacle := Map[Src].Obstacle;
+      SrcObstacle := SrcSquare.Obstacle;
       if (SrcObstacle is TActionsObstacle) and
         (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
         SrcObstacle := nil;
@@ -154,7 +150,7 @@ begin
 
     if KeyPressed then
       Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
-    Cancel := True;
+    Cancel;
   end;
 end;
 

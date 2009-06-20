@@ -230,5 +230,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('FLBSimpleEffects', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('FLBSimpleEffects');
 end.
 

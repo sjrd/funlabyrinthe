@@ -166,5 +166,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('FLBSimpleObjects', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('FLBSimpleObjects');
 end.
 

@@ -165,5 +165,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('FLBObstacles', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('FLBObstacles');
 end.
 

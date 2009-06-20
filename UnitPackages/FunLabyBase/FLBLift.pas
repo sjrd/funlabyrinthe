@@ -42,15 +42,11 @@ type
       const APosition: T3DPoint; Opened: Boolean = False;
       AIsExit: Boolean = False);
 
-    procedure Entering(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel: Boolean); override;
+    procedure Entering(Context: TMoveContext); override;
 
-    procedure Exited(Player: TPlayer; const Pos, Dest: T3DPoint); override;
+    procedure Exited(Context: TMoveContext); override;
 
-    procedure Pushing(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Pos: T3DPoint;
-      var Cancel, AbortExecute: Boolean); override;
+    procedure Pushing(Context: TMoveContext); override;
 
     property IsExit: Boolean read FIsExit;
   end;
@@ -66,8 +62,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    procedure Execute(Player: TPlayer; const Pos: T3DPoint;
-      var GoOnMoving: Boolean); override;
+    procedure Execute(Context: TMoveContext); override;
   end;
 
 implementation
@@ -98,62 +93,61 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftSquare.Entering(Player: TPlayer;
-  OldDirection: TDirection; KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel: Boolean);
+procedure TEngagedLiftSquare.Entering(Context: TMoveContext);
 begin
-  OriginalSquare.Entering(Player, OldDirection, KeyPressed,
-    Src, Pos, Cancel);
+  OriginalSquare.Entering(Context);
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftSquare.Exited(Player: TPlayer;
-  const Pos, Dest: T3DPoint);
+procedure TEngagedLiftSquare.Exited(Context: TMoveContext);
 var
   Other: T3DPoint;
 begin
   if not IsExit then
     Exit;
 
-  // Suppression des étages inférieurs
-  Other := Pos;
-  Dec(Other.Z);
-  while Player.Map[Other] is TEngagedLiftSquare do
+  with Context do
   begin
-    Player.Map[Other].Free;
+    // Suppression des étages inférieurs
+    Other := Pos;
     Dec(Other.Z);
-  end;
+    while Map[Other] is TEngagedLiftSquare do
+    begin
+      Map[Other].Free;
+      Dec(Other.Z);
+    end;
 
-  // Suppression des étages supérieurs
-  Other := Pos;
-  Inc(Other.Z);
-  while Player.Map[Other] is TEngagedLiftSquare do
-  begin
-    Player.Map[Other].Free;
+    // Suppression des étages supérieurs
+    Other := Pos;
     Inc(Other.Z);
-  end;
+    while Player.Map[Other] is TEngagedLiftSquare do
+    begin
+      Map[Other].Free;
+      Inc(Other.Z);
+    end;
 
-  // Suppresion de cet étage-ci
-  Player.Map[Pos].Free;
+    // Suppresion de cet étage-ci
+    Map[Pos].Free;
+  end;
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftSquare.Pushing(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Pos: T3DPoint;
-  var Cancel, AbortExecute: Boolean);
+procedure TEngagedLiftSquare.Pushing(Context: TMoveContext);
 begin
-  OriginalSquare.Pushing(Player, OldDirection, KeyPressed,
-    Src, Pos, Cancel, AbortExecute);
-  if Cancel then
-    Exit;
+  with Context do
+  begin
+    OriginalSquare.Pushing(Context);
+    if Cancelled then
+      Exit;
 
-  if KeyPressed then
-    Player.ShowDialog(sBlindAlley, sLiftIsEngaged, dtError);
-  Cancel := True;
+    if KeyPressed then
+      Player.ShowDialog(sBlindAlley, sLiftIsEngaged, dtError);
+    Cancel;
+  end;
 end;
 
 {--------------}
@@ -174,61 +168,60 @@ begin
 end;
 
 {*
-  Exécute l'effet
-  @param Player       Joueur concerné
-  @param Pos          Position de la case
-  @param GoOnMoving   À positionner à True pour réitérer le déplacement
+  [@inheritDoc]
 *}
-procedure TLift.Execute(Player: TPlayer; const Pos: T3DPoint;
-  var GoOnMoving: Boolean);
+procedure TLift.Execute(Context: TMoveContext);
 var
   Other: T3DPoint;
   MinFloor, MaxFloor: Integer;
 begin
-  // Occupation des étages inférieurs
-  Other := Pos;
-  Dec(Other.Z);
-  while Player.Map[Other].Effect = Self do
+  with Context do
   begin
-    TEngagedLiftSquare.Create(Master, Player.Map, Other);
+    // Occupation des étages inférieurs
+    Other := Pos;
     Dec(Other.Z);
-  end;
-  MinFloor := Other.Z+1;
+    while Map[Other].Effect = Self do
+    begin
+      TEngagedLiftSquare.Create(Master, Map, Other);
+      Dec(Other.Z);
+    end;
+    MinFloor := Other.Z+1;
 
-  // Occupation des étages supérieurs
-  Other := Pos;
-  Inc(Other.Z);
-  while Player.Map[Other].Effect = Self do
-  begin
-    TEngagedLiftSquare.Create(Master, Player.Map, Other);
+    // Occupation des étages supérieurs
+    Other := Pos;
     Inc(Other.Z);
-  end;
-  MaxFloor := Other.Z-1;
+    while Map[Other].Effect = Self do
+    begin
+      TEngagedLiftSquare.Create(Master, Map, Other);
+      Inc(Other.Z);
+    end;
+    MaxFloor := Other.Z-1;
 
-  // Affichage de l'ascenseur ouvert pendant un temps
-  with TEngagedLiftSquare.Create(Master, Player.Map, Pos, True) do
-  try
+    // Affichage de l'ascenseur ouvert pendant un temps
+    with TEngagedLiftSquare.Create(Master, Map, Pos, True) do
+    try
+      Master.Temporize;
+    finally
+      Free;
+    end;
+
+    // Fermer l'ascenseur et cacher le joueur complètement
+    TEngagedLiftSquare.Create(Master, Map, Pos);
+    Player.Hide;
+
+    // Demande au joueur de l'étage auquel il souhaite aller
+    Other.Z := Player.ChooseNumber(sChooseFloorTitle, sChooseFloor,
+      Pos.Z, MinFloor, MaxFloor);
+
+    // Déplacement du joueur
+    Player.MoveTo(Other);
+
+    // Après un temps, ouvrir l'ascenseur et remontrer le joueur
     Master.Temporize;
-  finally
-    Free;
+    Map[Other].Free;
+    TEngagedLiftSquare.Create(Master, Map, Other, True, True);
+    Player.Show;
   end;
-
-  // Fermer l'ascenseur et cacher le joueur complètement
-  TEngagedLiftSquare.Create(Master, Player.Map, Pos);
-  Player.Hide;
-
-  // Demande au joueur de l'étage auquel il souhaite aller
-  Other.Z := Player.ChooseNumber(sChooseFloorTitle, sChooseFloor,
-    Pos.Z, MinFloor, MaxFloor);
-
-  // Déplacement du joueur
-  Player.MoveTo(Other);
-
-  // Après un temps, ouvrir l'ascenseur et remontrer le joueur
-  Master.Temporize;
-  Player.Map[Other].Free;
-  TEngagedLiftSquare.Create(Master, Player.Map, Other, True, True);
-  Player.Show;
 end;
 
 end.

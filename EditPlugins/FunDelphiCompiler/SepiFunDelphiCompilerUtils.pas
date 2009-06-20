@@ -62,6 +62,7 @@ const {don't localize}
   AbleToName = 'AbleTo';
   UseForName = 'UseFor';
   ActionName = 'Action';
+  ContextName = 'Context';
 
 implementation
 
@@ -185,7 +186,30 @@ end;
 *}
 function MethodResolveIdent(Compiler: TSepiMethodCompiler;
   const Identifier: string): ISepiExpression;
+var
+  LocalVar: TSepiLocalVar;
+  ContextExpression, FieldExpression: ISepiExpression;
 begin
+  // Field selection on the Context parameter
+  if (Compiler.SepiMethod.Signature.GetParam(ContextName) <> nil) and
+    (Compiler.Locals.GetVarByName(Identifier) = nil) then
+  begin
+    LocalVar := Compiler.Locals.GetVarByName(ContextName);
+
+    ContextExpression := TSepiExpression.Create(Compiler);
+    ISepiExpressionPart(TSepiLocalVarValue.Create(
+      LocalVar)).AttachToExpression(ContextExpression);
+
+    FieldExpression := FieldSelection(Compiler.SepiMethod,
+      ContextExpression, Identifier);
+
+    if FieldExpression <> nil then
+    begin
+      Result := FieldExpression;
+      Exit;
+    end;
+  end;
+
   // Standart Delphi expression
   Result := SepiDelphiLikeCompilerUtils.MethodResolveIdent(Compiler,
     Identifier);

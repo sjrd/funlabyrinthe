@@ -134,5 +134,7 @@ initialization
   InitVarAddresses;
 
   SepiRegisterImportedUnit('FLBCommon', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('FLBCommon');
 end.
 

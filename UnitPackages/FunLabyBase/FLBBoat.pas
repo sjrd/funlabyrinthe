@@ -47,10 +47,8 @@ type
     procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
       Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
 
-    procedure Moving(Player: TPlayer; OldDirection: TDirection;
-      KeyPressed: Boolean; const Src, Dest: T3DPoint;
-      var Cancel: Boolean); override;
-    procedure Moved(Player: TPlayer; const Src, Dest: T3DPoint); override;
+    procedure Moving(Context: TMoveContext); override;
+    procedure Moved(Context: TMoveContext); override;
 
     function AbleTo(Player: TPlayer;
       const Action: TPlayerAction): Boolean; override;
@@ -72,7 +70,7 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ANumber: Integer);
 
-    procedure Find(Player: TPlayer; const Pos: T3DPoint); override;
+    procedure Find(Context: TMoveContext); override;
 
     property Number: Integer read FNumber;
   end;
@@ -88,14 +86,7 @@ implementation
 {--------------------}
 
 {*
-  Dessine sous le joueur
-  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
-  effectué dans DrawBefore se retrouve donc sous le joueur.
-  @param Player   Joueur qui est dessiné
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+  [@inheritDoc]
 *}
 procedure TBoatPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
   Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
@@ -169,57 +160,42 @@ begin
 end;
 
 {*
-  Un joueur se déplace
-  Moving est exécuté lorsqu'un joueur se déplace d'une case à une autre. Pour
-  annuler le déplacement, Moving peut positionner le paramètre Cancel à True.
-  @param Player         Joueur qui se déplace
-  @param OldDirection   Direction du joueur avant ce déplacement
-  @param KeyPressed     True si une touche a été pressée pour le déplacement
-  @param Src            Case de départ
-  @param Dest           Case d'arrivée
-  @param Cancel         À positionner à True pour annuler le déplacement
+  [@inheritDoc]
 *}
-procedure TBoatPlugin.Moving(Player: TPlayer; OldDirection: TDirection;
-  KeyPressed: Boolean; const Src, Dest: T3DPoint; var Cancel: Boolean);
+procedure TBoatPlugin.Moving(Context: TMoveContext);
 begin
-  if Player.Direction <> OldDirection then
-    Cancel := True;
+  with Context do
+  begin
+    if Player.Direction <> OldDirection then
+      Cancel;
+  end;
 end;
 
 {*
-  Un joueur s'est déplacé
-  Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
-  @param Player   Joueur qui se déplace
-  @param Src      Case de départ
-  @param Dest     Case d'arrivée
+  [@inheritDoc]
 *}
-procedure TBoatPlugin.Moved(Player: TPlayer; const Src, Dest: T3DPoint);
+procedure TBoatPlugin.Moved(Context: TMoveContext);
 begin
-  with Player do
+  with Context do
   begin
-    if not (Map[Dest].Field is TWater) then
+    if not (DestSquare.Field is TWater) then
     begin
       // Retirer le plug-in barque
-      RemovePlugin(Self);
+      Player.RemovePlugin(Self);
 
       // Placer un outil barque sur la case source
-      with Map[Src] do
-        Map[Src] := Master.SquareByComps(idGroundWater, Effect.SafeID,
-          Format(idBoat, [Attribute[idBoatPlugin]]), Obstacle.SafeID);
+      with SrcSquare do
+        SrcSquare := Master.SquareByComps(idGroundWater, Effect.SafeID,
+          Format(idBoat, [Player.Attribute[idBoatPlugin]]), Obstacle.SafeID);
 
       // Remettre à 0 l'attribut du joueur concernant la barque
-      Attribute[idBoatPlugin] := 0;
+      Player.Attribute[idBoatPlugin] := 0;
     end;
   end;
 end;
 
 {*
-  Indique si le plug-in permet au joueur d'effectuer une action donnée
-  CanYou doit renvoyer True si le plug-in permet au joueur d'effectuer
-  l'action donnée en paramètre.
-  @param Player   Joueur concerné
-  @param Action   Action à tester
-  @return True si le joueur est capable d'effectuer l'action, False sinon
+  [@inheritDoc]
 *}
 function TBoatPlugin.AbleTo(Player: TPlayer;
   const Action: TPlayerAction): Boolean;
@@ -247,11 +223,7 @@ begin
 end;
 
 {*
-  Dessine la barque sur le canevas indiqué
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le terrain
-  @param X        Coordonnée X du point à partir duquel dessiner le terrain
-  @param Y        Coordonnée Y du point à partir duquel dessiner le terrain
+  [@inheritDoc]
 *}
 procedure TBoat.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
@@ -263,26 +235,22 @@ begin
 end;
 
 {*
-  Exécuté lorsque le joueur trouve l'outil
-  Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
-  arrive sur une case sur laquelle se trouve l'outil.
-  @param Player   Joueur qui a trouvé l'outil
-  @param Pos      Position de la case
+  [@inheritDoc]
 *}
-procedure TBoat.Find(Player: TPlayer; const Pos: T3DPoint);
+procedure TBoat.Find(Context: TMoveContext);
 begin
-  with Player do
+  with Context do
   begin
     // Remplacement de la case par de l'eau simple
-    with Map[Pos] do
-      Map[Pos] := Master.SquareByComps(idWater, Effect.SafeID,
+    with Square do
+      Square := Master.SquareByComps(idWater, Effect.SafeID,
         '', Obstacle.SafeID);
 
     // Indication du numéro de la barque dans l'attribut correspondant
-    Attribute[idBoatPlugin] := Number;
+    Player.Attribute[idBoatPlugin] := Number;
 
     // Ajout du plug-in barque
-    AddPlugin(Master.Plugin[idBoatPlugin]);
+    Player.AddPlugin(Master.Plugin[idBoatPlugin]);
   end;
 end;
 
