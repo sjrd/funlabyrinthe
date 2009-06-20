@@ -348,16 +348,18 @@ end;
 *}
 procedure TSimpleSquare.ProduceDefaultImgNames(Code: TStrings);
 var
+  Line: string;
   I: Integer;
 begin
   if (not CanEditImgNames) or (ImgNames.Count = 0) then
     Exit;
 
-  Code.Add('  image');
+  Line := '  image';
   for I := 0 to ImgNames.Count-1 do
-    Code.Add('    '+StrToStrRepres(ImgNames[I]) +
-      IIF(I = ImgNames.Count-1, ';', ','));
+    Line := Line + ' ' + StrToStrRepres(ImgNames[I]) + ',';
+  Line[Length(Line)] := ';';
 
+  Code.Add(Line);
   Code.Add('');
 end;
 
