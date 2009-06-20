@@ -129,23 +129,6 @@ ntImplSection	ImplSection	Simplify
 ntIdentifier	Identifier
 	tkIdentifier
 	'string'
-	'at'
-	'least'
-	'most'
-	'more'
-	'less'
-	'than'
-	'exactly'
-	'actions'
-	'attributes'
-	'components'
-	'plugin'
-	'field'
-	'effect'
-	'tool'
-	'obstacle'
-	'image'
-	'action'
 
 ntUsesSection	UsesSection
 	'uses'* CommaIdentList ';'*
@@ -328,10 +311,10 @@ ntHasOp	HasOp
 	'has'* HasComparison SingleExpr
 
 ntHasComparison	HasComparison
-	1 'at'* AtLeastOrAtMost
-	1 MoreThan
-	1 LessThan
-	1 Exactly
+	'at'* AtLeastOrAtMost
+	MoreThan
+	LessThan
+	Exactly
 	@
 
 ntAtLeastOrAtMost	AtLeastOrAtMost	Simplify
@@ -362,15 +345,11 @@ ntAddressOfOp	AddressOfOp
 	'@'
 
 ntConstSection	ConstSection
-	ConstKeyWord* ConstDecl ConstDecls
+	ConstKeyWord* (ConstDecl)+
 
 ntConstKeyWord	ConstKeyWord
 	'const'
 	'resourcestring'
-
-ntConstDecls	ConstDecls	Simplify
-	-1 ConstDecl ConstDecls
-	@
 
 ntConstDecl	ConstDecl
 	IdentifierDecl InnerConstDecl ';'*
@@ -380,11 +359,7 @@ ntInnerConstDecl	InnerConstDecl	Simplify
 	'='* ConstExpression
 
 ntVarSection	VarSection
-	'var'* GlobalVar GlobalVars
-
-ntGlobalVars	GlobalVars	Simplify
-	-1 GlobalVar GlobalVars
-	@
+	'var'* (GlobalVar)+
 
 ntGlobalVar	GlobalVar
 	IdentifierDecl InnerGlobalVar ';'*
@@ -400,11 +375,7 @@ ntAttributesSection	AttributesSection
 	'attributes'* CommaIdentDeclList ';'*
 
 ntComponentsSection	ComponentsSection
-	'components'* Component Components
-
-ntComponents	Components	Simplify
-	-1 Component Components
-	@
+	'components'* (Component)+
 
 ntComponent	Component
 	IdentifierDecl ':'* QualifiedIdent ComponentParameters ';'*
@@ -467,11 +438,7 @@ ntParentClass	ParentClass
 	@
 
 ntFields	Fields	Simplify
-	'var'* Field FieldsEx
-
-ntFieldsEx	FieldsEx	Simplify
-	-1 Field FieldsEx
-	@
+	'var'* (Field)+
 
 ntField	Field
 	CommaIdentDeclList ':'* TypeName ';'*

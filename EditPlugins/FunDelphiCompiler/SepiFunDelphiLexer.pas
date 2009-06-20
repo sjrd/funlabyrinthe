@@ -168,7 +168,7 @@ procedure TSepiFunDelphiLexer.IdentifyKeyword(const OrigKey: string;
 var
   Key: string;
 begin
-  Key := LowerCase(OrigKey);
+  Key := OrigKey;
 
   case Key[1] of
     'a' : if Key = 'action'         then SymbolClass := tkAction else
