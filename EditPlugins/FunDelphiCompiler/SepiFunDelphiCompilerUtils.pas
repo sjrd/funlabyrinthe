@@ -47,7 +47,7 @@ function UnitResolveIdent(UnitCompiler: TSepiUnitCompiler;
 function MethodResolveIdent(Compiler: TSepiMethodCompiler;
   const Identifier: string): ISepiExpression;
 
-function FieldSelection(SepiContext: TSepiMeta;
+function FieldSelection(SepiContext: TSepiComponent;
   const BaseExpression: ISepiExpression;
   const FieldName: string): ISepiExpression;
 
@@ -87,10 +87,10 @@ const {don't localize}
   @param Name      Nom de la constante
   @return Constante chaîne recherchée, ou nil si non trouvée
 *}
-function LookForStringConstant(Context: TSepiMeta;
+function LookForStringConstant(Context: TSepiComponent;
   const Name: string): TSepiConstant;
 var
-  Meta: TSepiMeta;
+  Meta: TSepiComponent;
 begin
   Result := nil;
 
@@ -111,8 +111,8 @@ end;
   @param Expression    Expression à construire
   @return True en cas de succès, False sinon
 *}
-function ResolveComponentID(SepiContext: TSepiMeta; const Identifier: string;
-  const Expression: ISepiExpression): Boolean;
+function ResolveComponentID(SepiContext: TSepiComponent;
+  const Identifier: string; const Expression: ISepiExpression): Boolean;
 var
   Constant: TSepiConstant;
   MasterExpr: ISepiExpression;
@@ -139,7 +139,7 @@ end;
   @param Expression    Expression à construire
   @return True en cas de succès, False sinon
 *}
-function ResolveAction(SepiContext: TSepiMeta; const Identifier: string;
+function ResolveAction(SepiContext: TSepiComponent; const Identifier: string;
   const Expression: ISepiExpression): Boolean;
 var
   Constant: TSepiConstant;
@@ -233,7 +233,7 @@ end;
   @param AttrName         Nom de l'attribut
   @return Expression représentant l'attribut sélectionné (ou nil si inexistant)
 *}
-function AttributeSelection(SepiContext: TSepiMeta;
+function AttributeSelection(SepiContext: TSepiComponent;
   const BaseExpression: ISepiExpression;
   const AttrName: string): ISepiExpression;
 var
@@ -270,7 +270,7 @@ end;
   @param ObjectID         ID de l'objet
   @return Expression représentant l'attribut sélectionné (ou nil si inexistant)
 *}
-function ObjectCountSelection(SepiContext: TSepiMeta;
+function ObjectCountSelection(SepiContext: TSepiComponent;
   const BaseExpression: ISepiExpression;
   const ObjectID: string): ISepiExpression;
 var
@@ -317,7 +317,7 @@ end;
   @param FieldName        Nom du champ
   @return Expression représentant le champ sélectionné (ou nil si inexistant)
 *}
-function FieldSelection(SepiContext: TSepiMeta;
+function FieldSelection(SepiContext: TSepiComponent;
   const BaseExpression: ISepiExpression;
   const FieldName: string): ISepiExpression;
 begin
@@ -352,7 +352,7 @@ begin
 
   FMasterExpr := AMasterExpr;
   FIDConstant := AIDConstant;
-  FFunLabyUtilsUnit := FIDConstant.Root.FindMeta(
+  FFunLabyUtilsUnit := FIDConstant.Root.FindComponent(
     FunLabyUtilsUnitName) as TSepiUnit;
 
   SetValueType(FunLabyUtilsUnit.FindClass(TFunLabyComponent));

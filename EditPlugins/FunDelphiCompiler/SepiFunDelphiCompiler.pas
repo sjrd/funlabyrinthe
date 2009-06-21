@@ -220,7 +220,7 @@ type
 
     procedure CompleteMethods;
   protected
-    function GetSepiContext: TSepiMeta; override;
+    function GetSepiContext: TSepiComponent; override;
     function GetMasterClass: TSepiClass; virtual;
 
     procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
@@ -745,7 +745,7 @@ var
   Compiler: TSepiMethodCompiler;
   I: Integer;
 begin
-  SepiMethod := SepiContext.FindMeta('InitializeUnit') as TSepiMethod;
+  SepiMethod := SepiContext.FindComponent('InitializeUnit') as TSepiMethod;
   Compiler := UnitCompiler.FindMethodCompiler(SepiMethod);
 
   for I := 0 to FComponentDeclNodes.Count-1 do
@@ -1198,7 +1198,7 @@ begin
   if (ChildCount = 3) and (Prop.ParamCount = 1) then
   begin
     WantingParams := TSepiMethodCall.Create(
-      SepiRoot.FindMeta('ScUtils.Point3D') as TSepiMethod);
+      SepiRoot.FindComponent('ScUtils.Point3D') as TSepiMethod);
     WantingParams.AttachToExpression(TSepiExpression.Create(Base));
 
     for I := 0 to 2 do
@@ -1286,7 +1286,7 @@ var
 begin
   inherited;
 
-  SepiMethod := SepiContext.FindMeta('InitializeUnit') as TSepiMethod;
+  SepiMethod := SepiContext.FindComponent('InitializeUnit') as TSepiMethod;
   FInitializeUnitCompiler := UnitCompiler.FindMethodCompiler(SepiMethod);
 end;
 
@@ -1441,7 +1441,7 @@ var
 begin
   for I := Low(MethodNames) to High(MethodNames) do
   begin
-    SepiMethod := SepiClass.GetMeta(MethodNames[I]) as TSepiMethod;
+    SepiMethod := SepiClass.GetComponent(MethodNames[I]) as TSepiMethod;
     if SepiMethod = nil then
       Continue;
 
@@ -1454,7 +1454,7 @@ end;
 {*
   [@inheritDoc]
 *}
-function TFunDelphiClassDefNode.GetSepiContext: TSepiMeta;
+function TFunDelphiClassDefNode.GetSepiContext: TSepiComponent;
 begin
   if SepiClass <> nil then
     Result := SepiClass
@@ -1508,15 +1508,15 @@ end;
 function TFunDelphiClassDefNode.ResolveIdent(
   const Identifier: string): ISepiExpression;
 var
-  Meta: TSepiMeta;
+  Component: TSepiComponent;
 begin
   if SepiClass <> nil then
   begin
-    Meta := SepiContext.LookFor(Identifier);
-    if Meta <> nil then
+    Component := SepiContext.LookFor(Identifier);
+    if Component <> nil then
     begin
       Result := MakeExpression;
-      AddMetaToExpression(Result, Meta);
+      AddComponentToExpression(Result, Component);
       Exit;
     end;
   end;
@@ -1686,9 +1686,9 @@ end;
 *}
 function TFunDelphiMethodDeclNode.GetSepiMethod: TSepiMethod;
 var
-  Created: TSepiMeta;
+  Created: TSepiComponent;
 begin
-  Created := SepiContext.FindMeta(Name);
+  Created := SepiContext.FindComponent(Name);
 
   if Created is TSepiOverloadedMethod then
     with TSepiOverloadedMethod(Created) do
@@ -1806,7 +1806,7 @@ var
 begin
   inherited;
 
-  SepiConstructor := SepiContext.GetMeta('Create') as TSepiMethod;
+  SepiConstructor := SepiContext.GetComponent('Create') as TSepiMethod;
 
   if SepiConstructor = nil then
     SepiConstructor := MakeEmptyConstructor;
@@ -1844,7 +1844,7 @@ end;
 *}
 procedure TFunDelphiEventHeaderNode.FillSignature;
 var
-  InheritedMeta: TSepiMeta;
+  InheritedMeta: TSepiComponent;
   InheritedSignature: TSepiSignature;
   I: Integer;
 begin

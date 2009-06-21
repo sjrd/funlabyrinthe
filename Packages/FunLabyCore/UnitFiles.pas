@@ -331,9 +331,9 @@ var
   Proc: TSimpleProc;
 begin
   // Get method
-  if not (SepiUnit.GetMeta(Name) is TSepiMethod) then
+  if not (SepiUnit.GetComponent(Name) is TSepiMethod) then
     Exit;
-  Method := TSepiMethod(SepiUnit.GetMeta(Name));
+  Method := TSepiMethod(SepiUnit.GetComponent(Name));
 
   // Check signature
   with Method.Signature do
@@ -343,8 +343,8 @@ begin
     if ParamCount <> 1 then
       Exit;
     if (Params[0].Kind <> pkValue) or
-      (not Params[0].CompatibleWith(MasterFile.SepiRoot.FindMeta(
-        'FunLabyUtils.TMaster') as TSepiType)) then
+      (not Params[0].CompatibleWith(MasterFile.SepiRoot.FindClass(
+      TMaster))) then
       Exit;
     if CallingConvention <> ccRegister then
       Exit;
@@ -369,25 +369,23 @@ begin
   // Don't localize strings in this method
 
   // Get method
-  if not (SepiUnit.GetMeta('InitializeUnit') is TSepiMethod) then
+  if not (SepiUnit.GetComponent('InitializeUnit') is TSepiMethod) then
     Exit;
-  Method := TSepiMethod(SepiUnit.GetMeta('InitializeUnit'));
+  Method := TSepiMethod(SepiUnit.GetComponent('InitializeUnit'));
 
   // Check signature
   with Method.Signature do
   begin
-    FunLabyUtilsUnit := SepiUnit.Root.GetMeta('FunLabyUtils') as TSepiUnit;
-    ClassesUnit := SepiUnit.Root.GetMeta('Classes') as TSepiUnit;
+    FunLabyUtilsUnit := SepiUnit.Root.GetComponent('FunLabyUtils') as TSepiUnit;
+    ClassesUnit := SepiUnit.Root.GetComponent('Classes') as TSepiUnit;
 
     if Kind <> skStaticProcedure then
       Exit;
     if ParamCount <> 2 then
       Exit;
-    if not Params[0].CompatibleWith(FunLabyUtilsUnit.GetMeta(
-      'TMaster') as TSepiType) then
+    if not Params[0].CompatibleWith(FunLabyUtilsUnit.FindClass(TMaster)) then
       Exit;
-    if not Params[1].CompatibleWith(ClassesUnit.GetMeta(
-      'TStrings') as TSepiType) then
+    if not Params[1].CompatibleWith(ClassesUnit.FindClass(TStrings)) then
       Exit;
     if CallingConvention <> ccRegister then
       Exit;
@@ -448,26 +446,25 @@ begin
   // Don't localize strings in this method
 
   // Get method
-  if not (SepiUnit.GetMeta('RegisterComponents') is TSepiMethod) then
+  if not (SepiUnit.GetComponent('RegisterComponents') is TSepiMethod) then
     Exit;
-  Method := TSepiMethod(SepiUnit.GetMeta('RegisterComponents'));
+  Method := TSepiMethod(SepiUnit.GetComponent('RegisterComponents'));
 
   // Check signature
   with Method.Signature do
   begin
-    FunLabyUtilsUnit := SepiUnit.Root.GetMeta('FunLabyUtils') as TSepiUnit;
+    FunLabyUtilsUnit := SepiUnit.Root.GetComponent('FunLabyUtils') as TSepiUnit;
 
     if Kind <> skStaticProcedure then
       Exit;
     if ParamCount <> 3 then
       Exit;
-    if not Params[0].CompatibleWith(FunLabyUtilsUnit.GetMeta(
-      'TMaster') as TSepiType) then
+    if not Params[0].CompatibleWith(FunLabyUtilsUnit.FindClass(TMaster)) then
       Exit;
-    if not Params[1].CompatibleWith(FunLabyUtilsUnit.GetMeta(
+    if not Params[1].CompatibleWith(FunLabyUtilsUnit.FindComponent(
       'TRegisterSingleComponentProc') as TSepiType) then
       Exit;
-    if not Params[2].CompatibleWith(FunLabyUtilsUnit.GetMeta(
+    if not Params[2].CompatibleWith(FunLabyUtilsUnit.FindComponent(
       'TRegisterComponentSetProc') as TSepiType) then
       Exit;
     if CallingConvention <> ccRegister then
@@ -494,21 +491,20 @@ begin
   // Don't localize strings in this method
 
   // Get method
-  if not (SepiUnit.GetMeta('GetParams') is TSepiMethod) then
+  if not (SepiUnit.GetComponent('GetParams') is TSepiMethod) then
     Exit;
-  Method := TSepiMethod(SepiUnit.GetMeta('GetParams'));
+  Method := TSepiMethod(SepiUnit.GetComponent('GetParams'));
 
   // Check signature
   with Method.Signature do
   begin
-    ClassesUnit := SepiUnit.Root.GetMeta('Classes') as TSepiUnit;
+    ClassesUnit := SepiUnit.Root.GetComponent('Classes') as TSepiUnit;
 
     if Kind <> skStaticProcedure then
       Exit;
     if ParamCount <> 1 then
       Exit;
-    if not Params[0].CompatibleWith(ClassesUnit.GetMeta(
-      'TStrings') as TSepiType) then
+    if not Params[0].CompatibleWith(ClassesUnit.FindClass(TStrings)) then
       Exit;
     if CallingConvention <> ccRegister then
       Exit;
