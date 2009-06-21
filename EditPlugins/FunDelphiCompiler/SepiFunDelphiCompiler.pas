@@ -50,6 +50,16 @@ type
   end;
 
   {*
+    Noeud section uses
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiUsesNode = class(TSepiUsesNode)
+  protected
+    function IsRedeclared(const UnitName: string): Boolean; override;
+  end;
+
+  {*
     Noeud d'expression d'initialisation
     @author sjrd
     @version 5.0
@@ -125,7 +135,7 @@ type
   {*
     Noeud opérateur unaire
     @author sjrd
-    @version 1.0
+    @version 5.0
   *}
   TFunDelphiUnaryOpNode = class(TSepiDelphiLikeUnaryOpNode)
   protected
@@ -133,9 +143,19 @@ type
   end;
 
   {*
+    Noeud index de tableau ou de propriété tableau
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiArrayIndicesModifierNode = class(TSepiArrayIndicesModifierNode)
+  protected
+    procedure CompileProperty(const Prop: ISepiProperty); override;
+  end;
+
+  {*
     Noeud sélection de champ
     @author sjrd
-    @version 1.0
+    @version 5.0
   *}
   TFunDelphiFieldSelectionModifierNode = class(TSepiFieldSelectionModifierNode)
   protected
@@ -549,7 +569,7 @@ end;
 procedure InitNonTerminalClasses;
 begin
   NonTerminalClasses[ntSource]      := TFunDelphiRootNode;
-  NonTerminalClasses[ntUsesSection] := TSepiUsesNode;
+  NonTerminalClasses[ntUsesSection] := TFunDelphiUsesNode;
 
   NonTerminalClasses[ntCommaIdentDeclList] := TSepiIdentifierDeclListNode;
   NonTerminalClasses[ntQualifiedIdent]     := TSepiQualifiedIdentNode;
@@ -593,7 +613,7 @@ begin
   NonTerminalClasses[ntUnaryOpModifier] := TSepiUnaryOpModifierNode;
   NonTerminalClasses[ntDereferenceOp]   := TSepiDereferenceOpNode;
   NonTerminalClasses[ntParameters]      := TDelphiParametersNode;
-  NonTerminalClasses[ntArrayIndices]    := TSepiArrayIndicesModifierNode;
+  NonTerminalClasses[ntArrayIndices]    := TFunDelphiArrayIndicesModifierNode;
   NonTerminalClasses[ntFieldSelection]  := TFunDelphiFieldSelectionModifierNode;
 
   NonTerminalClasses[ntConstDecl]         := TDelphiConstantDeclNode;
@@ -769,8 +789,9 @@ end;
 *}
 procedure TFunDelphiRootNode.ChildEndParsing(Child: TSepiParseTreeNode);
 const
-  ImpliedUses: array[0..3] of string = (
-    'SysUtils', 'Classes', 'Graphics', 'FunLabyUtils'
+  ImpliedUses: array[0..10] of string = (
+    'Types', 'SysUtils', 'Classes', 'Graphics', 'Contnrs', 'Controls',
+    'Dialogs', 'TypInfo', 'ScUtils', 'SdDialogs', 'FunLabyUtils'
   );
 begin
   if Child.SymbolClass = ntIdentifier then
@@ -820,6 +841,37 @@ begin
     FComponentDeclNodes := TObjectList.Create(False);
 
   FComponentDeclNodes.Add(Node);
+end;
+
+{--------------------------}
+{ TFunDelphiUsesNode class }
+{--------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiUsesNode.IsRedeclared(const UnitName: string): Boolean;
+var
+  I: Integer;
+begin
+  // Same as the current unit name?
+  if AnsiSameText(UnitName, SepiUnit.Name) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  // Already present in this list?
+  for I := 0 to ChildCount-2 do
+  begin
+    if AnsiSameText(UnitName, Children[I].AsText) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  Result := False;
 end;
 
 {----------------------------------------------}
@@ -1104,7 +1156,7 @@ begin
     ntAtMost:   Result := opCmpLE;
     ntMoreThan: Result := opCmpGT;
     ntLessThan: Result := opCmpLT;
-    tkExactly:  Result := opCmpEQ;
+    ntExactly:  Result := opCmpEQ;
   else
     Assert(False);
     Result := opCmpGE;
@@ -1128,6 +1180,39 @@ begin
   else
     Result := opAdd;
   end;
+end;
+
+{------------------------------------------}
+{ TFunDelphiArrayIndicesModifierNode class }
+{------------------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiArrayIndicesModifierNode.CompileProperty(
+  const Prop: ISepiProperty);
+var
+  WantingParams: ISepiWantingParams;
+  I: Integer;
+begin
+  if (ChildCount = 3) and (Prop.ParamCount = 1) then
+  begin
+    WantingParams := TSepiMethodCall.Create(
+      SepiRoot.FindMeta('ScUtils.Point3D') as TSepiMethod);
+    WantingParams.AttachToExpression(TSepiExpression.Create(Base));
+
+    for I := 0 to 2 do
+      WantingParams.AddParam((Children[I] as TSepiExpressionNode).Expression);
+    WantingParams.CompleteParams;
+
+    Prop.Params[0] := WantingParams as ISepiExpression;
+    Prop.CompleteParams;
+
+    SetExpression(Base);
+    Exit;
+  end;
+
+  inherited;
 end;
 
 {--------------------------------------------}

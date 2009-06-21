@@ -8,9 +8,9 @@ unit SepiFunDelphiCompilerUtils;
 interface
 
 uses
-  Windows, SysUtils, StrUtils, TypInfo, ScUtils, SepiReflectionCore,
-  SepiOrdTypes, SepiStrTypes, SepiMembers, SepiSystemUnit, SepiCompiler,
-  SepiExpressions, SepiInstructions, SepiCompilerConsts,
+  Windows, SysUtils, StrUtils, TypInfo, ScUtils, FunLabyUtils,
+  SepiReflectionCore, SepiOrdTypes, SepiStrTypes, SepiMembers, SepiSystemUnit,
+  SepiCompiler, SepiExpressions, SepiInstructions, SepiCompilerConsts,
   SepiDelphiLikeCompilerUtils;
 
 type
@@ -279,7 +279,7 @@ var
   ObjectExpr, CountExpr: ISepiExpression;
   CountProp: ISepiProperty;
 begin
-  TPlayerType := SepiContext.Root.FindType('FunLabyUtils.TPlayer');
+  TPlayerType := SepiContext.Root.FindClass(TPlayer);
 
   if not Supports(BaseExpression, ISepiReadableValue, ReadableBase) then
     Exit;
@@ -292,7 +292,7 @@ begin
     Exit;
 
   ((ObjectExpr as ISepiReadableValue) as ISepiTypeForceableValue).ForceType(
-    SepiContext.Root.FindType('FunLabyUtils.TObjectDef'));
+    SepiContext.Root.FindClass(TObjectDef));
 
   CountExpr := SepiDelphiLikeCompilerUtils.FieldSelection(SepiContext,
     ObjectExpr, 'Count');
@@ -355,7 +355,7 @@ begin
   FFunLabyUtilsUnit := FIDConstant.Root.FindMeta(
     FunLabyUtilsUnitName) as TSepiUnit;
 
-  SetValueType(FunLabyUtilsUnit.FindMeta('TFunLabyComponent') as TSepiType);
+  SetValueType(FunLabyUtilsUnit.FindClass(TFunLabyComponent));
 end;
 
 {*
