@@ -42,7 +42,9 @@ contains
   SepiImportsGraphicsTools in 'SepiImportsGraphicsTools.pas',
   SepiImportsMapTools in 'SepiImportsMapTools.pas',
   SepiImportsPlayerObjects in 'SepiImportsPlayerObjects.pas',
-  SepiImportsFunLabyTools in 'SepiImportsFunLabyTools.pas';
+  SepiImportsFunLabyTools in 'SepiImportsFunLabyTools.pas',
+  FunLabyToolsConsts in 'FunLabyToolsConsts.pas',
+  SepiImportsFunLabyToolsConsts in 'SepiImportsFunLabyToolsConsts.pas';
 
 end.
 

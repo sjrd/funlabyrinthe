@@ -21,7 +21,7 @@ implementation
 const // don't localize
   UnitName = 'FunLabyUtils';
   ResourceName = 'SepiImportsFunLabyUtils';
-  TypeCount = 23;
+  TypeCount = 25;
   MethodCount = 103;
   VariableCount = 11;
 
@@ -678,25 +678,27 @@ begin
   TypeInfoArray[1] := TypeInfo(TDirection);
   TypeInfoArray[2] := TypeInfo(TPlayerAction);
   TypeInfoArray[3] := TypeInfo(TPlayState);
-  TypeInfoArray[4] := TypeInfo(EComponentNotFound);
-  TypeInfoArray[5] := TypeInfo(EUnsupportedCommand);
-  TypeInfoArray[6] := TypeInfo(TImagesMaster);
-  TypeInfoArray[7] := TypeInfo(TSquareBitmap);
-  TypeInfoArray[8] := TypeInfo(TPainter);
-  TypeInfoArray[9] := TypeInfo(TMoveContext);
-  TypeInfoArray[10] := TypeInfo(TFunLabyComponent);
-  TypeInfoArray[11] := TypeInfo(TVisualComponent);
-  TypeInfoArray[12] := TypeInfo(TPlugin);
-  TypeInfoArray[13] := TypeInfo(TObjectDef);
-  TypeInfoArray[14] := TypeInfo(TSquareComponent);
-  TypeInfoArray[15] := TypeInfo(TField);
-  TypeInfoArray[16] := TypeInfo(TEffect);
-  TypeInfoArray[17] := TypeInfo(TTool);
-  TypeInfoArray[18] := TypeInfo(TObstacle);
-  TypeInfoArray[19] := TypeInfo(TSquare);
-  TypeInfoArray[20] := TypeInfo(TMap);
-  TypeInfoArray[21] := TypeInfo(TPlayer);
-  TypeInfoArray[22] := TypeInfo(TMaster);
+  TypeInfoArray[4] := TypeInfo(EFunLabyException);
+  TypeInfoArray[5] := TypeInfo(EComponentNotFound);
+  TypeInfoArray[6] := TypeInfo(EUnsupportedCommand);
+  TypeInfoArray[7] := TypeInfo(EBadSquareDefException);
+  TypeInfoArray[8] := TypeInfo(TImagesMaster);
+  TypeInfoArray[9] := TypeInfo(TSquareBitmap);
+  TypeInfoArray[10] := TypeInfo(TPainter);
+  TypeInfoArray[11] := TypeInfo(TMoveContext);
+  TypeInfoArray[12] := TypeInfo(TFunLabyComponent);
+  TypeInfoArray[13] := TypeInfo(TVisualComponent);
+  TypeInfoArray[14] := TypeInfo(TPlugin);
+  TypeInfoArray[15] := TypeInfo(TObjectDef);
+  TypeInfoArray[16] := TypeInfo(TSquareComponent);
+  TypeInfoArray[17] := TypeInfo(TField);
+  TypeInfoArray[18] := TypeInfo(TEffect);
+  TypeInfoArray[19] := TypeInfo(TTool);
+  TypeInfoArray[20] := TypeInfo(TObstacle);
+  TypeInfoArray[21] := TypeInfo(TSquare);
+  TypeInfoArray[22] := TypeInfo(TMap);
+  TypeInfoArray[23] := TypeInfo(TPlayer);
+  TypeInfoArray[24] := TypeInfo(TMaster);
 end;
 
 procedure InitMethodAddresses;

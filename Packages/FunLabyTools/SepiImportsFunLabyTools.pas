@@ -3,8 +3,8 @@ unit SepiImportsFunLabyTools;
 interface
 
 uses
-  SepiImportsGenerics, SepiImportsGraphicsTools, SepiImportsMapTools,
-  SepiImportsPlayerObjects;
+  SepiImportsFunLabyToolsConsts, SepiImportsGenerics, SepiImportsGraphicsTools,
+  SepiImportsMapTools, SepiImportsPlayerObjects;
 
 implementation
 

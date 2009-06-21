@@ -10,8 +10,10 @@ unit MapTools;
 
 interface
 
+{$ASSERTIONS ON}
+
 uses
-  ScUtils, FunLabyUtils;
+  SysUtils, ScUtils, FunLabyUtils, FunLabyToolsConsts;
 
 type
   {*
@@ -37,6 +39,12 @@ function ChangeComp(Square: TSquare;
 function ChangeComp(Square: TSquare;
   const NewComp: TComponentID): TSquare; overload;
 
+function MakeSquare(const Components: array of TSquareComponent): TSquare;
+
+function MakeSquareNoOpenArray(Component1: TSquareComponent;
+  Component2: TSquareComponent = nil; Component3: TSquareComponent = nil;
+  Component4: TSquareComponent = nil): TSquare;
+
 procedure FindNextSquare(Map: TMap; var Pos: T3DPoint;
   Component: TSquareComponent);
 procedure FindPreviousSquare(Map: TMap; var Pos: T3DPoint;
@@ -48,7 +56,7 @@ implementation
 
 {*
   Change le terrain d'une case et renvoie la case modifiée
-  @param Square      Case originale
+  @param Square     Case originale
   @param NewField   ID du nouveau terrain
   @return Une case identique à Square mais avec le terrain indiqué
 *}
@@ -62,7 +70,7 @@ end;
 
 {*
   Change l'effet d'une case et renvoie la case modifiée
-  @param Square       Case originale
+  @param Square      Case originale
   @param NewEffect   ID du nouvel effet
   @return Une case identique à Square mais avec l'effet indiqué
 *}
@@ -76,7 +84,7 @@ end;
 
 {*
   Change l'outil d'une case et renvoie la case modifiée
-  @param Square     Case originale
+  @param Square    Case originale
   @param NewTool   ID du nouvel outil
   @return Une case identique à Square mais avec l'outil indiqué
 *}
@@ -90,7 +98,7 @@ end;
 
 {*
   Change l'obstacle d'une case et renvoie la case modifiée
-  @param Square         Case originale
+  @param Square        Case originale
   @param NewObstacle   ID du nouvel obstacle
   @return Une case identique à Square mais avec l'obstacle indiqué
 *}
@@ -104,7 +112,7 @@ end;
 
 {*
   Change un des composants d'une case et renvoie la case modifiée
-  @param Square     Case originale
+  @param Square    Case originale
   @param NewComp   Composant à modifier
   @return Une case identique à Square mais avec le composant indiqué
 *}
@@ -126,13 +134,106 @@ end;
 
 {*
   Change un des composants d'une case et renvoie la case modifiée
-  @param Square     Case originale
+  @param Square    Case originale
   @param NewComp   ID du composant à modifier
   @return Une case identique à Square mais avec le composant indiqué
 *}
 function ChangeComp(Square: TSquare; const NewComp: TComponentID): TSquare;
 begin
   Result := ChangeComp(Square, Square.Master.SquareComponent[NewComp]);
+end;
+
+{*
+  Renseigne un ID partiel de case
+  @param DestID     ID destination
+  @param SourceID   ID source
+  @param ErrorMsg   Message d'erreur si DestID était déjà renseigné
+  @throw EBadSquareDefException L'ID destination était déjà renseigné
+*}
+procedure SetSquarePartialID(var DestID: TComponentID;
+  const SourceID: TComponentID; const ErrorMsg: string);
+begin
+  if SourceID = '' then
+    Exit;
+
+  if DestID <> '' then
+    raise EBadSquareDefException.Create(ErrorMsg);
+
+  DestID := SourceID;
+end;
+
+{*
+  Construit une case à partir de un à plusieurs composants
+  @param Components   Composants de la case
+  @return Case construite
+*}
+function MakeSquare(const Components: array of TSquareComponent): TSquare;
+var
+  FieldID, EffectID, ToolID, ObstacleID: TComponentID;
+  I: Integer;
+  Component: TSquareComponent;
+  Square: TSquare;
+begin
+  Assert(Length(Components) > 0);
+
+  for I := Low(Components) to High(Components) do
+  begin
+    Component := Components[I];
+
+    if Component is TField then
+      SetSquarePartialID(FieldID, Component.ID, SDuplicateField)
+    else if Component is TEffect then
+      SetSquarePartialID(EffectID, Component.ID, SDuplicateEffect)
+    else if Component is TTool then
+      SetSquarePartialID(ToolID, Component.ID, SDuplicateTool)
+    else if Component is TObstacle then
+      SetSquarePartialID(ObstacleID, Component.ID, SDuplicateObstacle)
+    else if Component is TSquare then
+    begin
+      Square := TSquare(Component);
+      SetSquarePartialID(FieldID, Square.Field.SafeID, SDuplicateField);
+      SetSquarePartialID(EffectID, Square.Effect.SafeID, SDuplicateEffect);
+      SetSquarePartialID(ToolID, Square.Tool.SafeID, SDuplicateTool);
+      SetSquarePartialID(ObstacleID, Square.Obstacle.SafeID,
+        SDuplicateObstacle);
+    end else
+      Assert(False);
+  end;
+
+  if FieldID = '' then
+    raise EBadSquareDefException.Create(SMissingField);
+
+  Result := Components[0].Master.Square[Format(SquareIDFormat,
+    [FieldID, EffectID, ToolID, ObstacleID])];
+end;
+
+{*
+  Construit une case à partir de un à plusieurs composants
+  Cette variante de MakeSquare n'utilise pas de tableau ouvert, ce qui permet
+  de s'en servir dans la version actuelle de Sepi.
+  @param Component1   Premier composant de la case
+  @param Component2   Deuxième composant de la case
+  @param Component3   Troisième composant de la case
+  @param Component4   Quatrième composant de la case
+  @return Case construite
+*}
+function MakeSquareNoOpenArray(Component1: TSquareComponent;
+  Component2: TSquareComponent = nil; Component3: TSquareComponent = nil;
+  Component4: TSquareComponent = nil): TSquare;
+var
+  Components: array[0..3] of TSquareComponent;
+  Count: Integer;
+begin
+  Components[0] := Component1;
+  Components[1] := Component2;
+  Components[2] := Component3;
+  Components[3] := Component4;
+
+  Count := 1;
+  while (Count < 4) and (Components[Count] <> nil) do
+    Inc(Count);
+
+  Result := MakeSquare(Slice(Components, Count));
 end;
 
 {*

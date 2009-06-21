@@ -68,11 +68,17 @@ type
   /// État de victoire/défaite d'un joueur
   TPlayState = (psPlaying, psWon, psLost);
 
+  /// Classe de base des exceptions FunLabyrinthe
+  EFunLabyException = class(Exception);
+
   /// Générée si un composant recherché n'est pas trouvé
-  EComponentNotFound = class(Exception);
+  EComponentNotFound = class(EFunLabyException);
 
   /// Générée si une commande n'est pas supportée
-  EUnsupportedCommand = class(Exception);
+  EUnsupportedCommand = class(EFunLabyException);
+
+  /// Générée en cas de mauvaise définition d'une case
+  EBadSquareDefException = class(EFunLabyException);
 
   TSquareComponent = class;
   TSquare = class;

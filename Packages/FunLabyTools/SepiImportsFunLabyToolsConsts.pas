@@ -1,28 +1,28 @@
 {*
-  Importe l'unité MapTools dans un environnement Sepi
+  Importe l'unité FunLabyToolsConsts dans un environnement Sepi
   @author sjrd
   @version 1.0
 *}
-unit SepiImportsMapTools;
+unit SepiImportsFunLabyToolsConsts;
 
 interface
 
 uses
   Windows, SysUtils, Classes, TypInfo, SepiReflectionCore, SepiMembers, 
-  FunLabyUtils, MapTools;
+  FunLabyToolsConsts;
 
 var
-  SepiImportsMapToolsLazyLoad: Boolean = False;
+  SepiImportsFunLabyToolsConstsLazyLoad: Boolean = False;
 
 implementation
 
 {$R *.res}
 
 const // don't localize
-  UnitName = 'MapTools';
-  ResourceName = 'SepiImportsMapTools';
+  UnitName = 'FunLabyToolsConsts';
+  ResourceName = 'SepiImportsFunLabyToolsConsts';
   TypeCount = 1;
-  MethodCount = 11;
+  MethodCount = 1;
   VariableCount = 1;
 
 var
@@ -33,16 +33,6 @@ var
 {---------------------}
 { Overloaded routines }
 {---------------------}
-
-function ChangeComp_0(Square: TSquare; NewComp: TSquareComponent): TSquare;
-begin
-  Result := ChangeComp(Square, NewComp);
-end;
-
-function ChangeComp_1(Square: TSquare; const NewComp: TComponentID): TSquare;
-begin
-  Result := ChangeComp(Square, NewComp);
-end;
 
 {-------------}
 { Unit import }
@@ -92,12 +82,12 @@ begin
     ResourceName, RT_RCDATA);
   try
     Result := TSepiUnit.LoadFromStream(Root, Stream,
-      SepiImportsMapToolsLazyLoad,
+      SepiImportsFunLabyToolsConstsLazyLoad,
       TGetMethodCodeEvent(GetMethodCodeEvent),
       TGetTypeInfoEvent(GetTypeInfoEvent),
       TGetVarAddressEvent(GetVarAddressEvent));
 
-    if SepiImportsMapToolsLazyLoad then
+    if SepiImportsFunLabyToolsConstsLazyLoad then
       Result.AcquireObjResource(Stream);
   finally
     Stream.Free;
@@ -112,17 +102,6 @@ end;
 
 procedure InitMethodAddresses;
 begin
-  MethodAddresses[0] := @ChangeField;
-  MethodAddresses[1] := @ChangeEffect;
-  MethodAddresses[2] := @ChangeTool;
-  MethodAddresses[3] := @ChangeObstacle;
-  MethodAddresses[4] := @ChangeComp_0;
-  MethodAddresses[5] := @ChangeComp_1;
-  MethodAddresses[6] := @MakeSquare;
-  MethodAddresses[7] := @MakeSquareNoOpenArray;
-  MethodAddresses[8] := @FindNextSquare;
-  MethodAddresses[9] := @FindPreviousSquare;
-  MethodAddresses[10] := @FindSquareAtRandom;
 end;
 
 procedure InitVarAddresses;
@@ -136,8 +115,8 @@ initialization
   InitMethodAddresses;
   InitVarAddresses;
 
-  SepiRegisterImportedUnit('MapTools', ImportUnit);
+  SepiRegisterImportedUnit('FunLabyToolsConsts', ImportUnit);
 finalization
-  SepiUnregisterImportedUnit('MapTools');
+  SepiUnregisterImportedUnit('FunLabyToolsConsts');
 end.
 
