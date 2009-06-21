@@ -9,7 +9,7 @@ interface
 
 uses
   Windows, Types, SysUtils, Classes, StrUtils, TypInfo, Contnrs, SysConst,
-  ScUtils, ScStrUtils, ScDelphiLanguage,
+  ScUtils, ScStrUtils, ScDelphiLanguage, FunLabyUtils,
   SepiCore,
   SepiReflectionCore, SepiMembers, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
   SepiOpCodes,
@@ -71,12 +71,15 @@ type
   end;
 
   {*
-    Noeud opération binaire is ou as
+    Noeud opération is
     @author sjrd
     @version 5.0
   *}
-  TFunDelphiIsAsBinaryOpNode = class(TSepiBinaryOpNode)
+  TFunDelphiIsOperationNode = class(TSepiIsOperationNode)
   protected
+    function MakeSquareOperation(const ALeftValue: ISepiReadableValue;
+      const RightValue: ISepiReadableValue): ISepiExpression;
+
     function GetPriority: Integer; override;
   public
     function MakeOperation(
@@ -564,7 +567,8 @@ begin
   NonTerminalClasses[ntConstExpression] := TSepiConstExpressionNode;
 
   NonTerminalClasses[ntDelphiBinaryOp] := TFunDelphiBinaryOpNode;
-  NonTerminalClasses[ntIsAsBinaryOp]   := TFunDelphiIsAsBinaryOpNode;
+  NonTerminalClasses[ntIsOperation]    := TFunDelphiIsOperationNode;
+  NonTerminalClasses[ntAsOperation]    := TSepiAsOperationNode;
   NonTerminalClasses[ntCanOp]          := TFunDelphiCanOpNode;
   NonTerminalClasses[ntHasOp]          := TFunDelphiHasOpNode;
   NonTerminalClasses[ntHasComparison]  := TFunDelphiHasComparisonNode;
@@ -868,25 +872,136 @@ begin
     Result := SymbolClassToOperation[SymbolClass];
 end;
 
-{----------------------------------}
-{ TFunDelphiIsAsBinaryOpNode class }
-{----------------------------------}
+{---------------------------------}
+{ TFunDelphiIsOperationNode class }
+{---------------------------------}
 
 {*
-  [@inheritDoc]
+  Construit une opération avec des cases
+  @param LeftValue   Valeur gauche
+  @param RightValue   Valeur droite
+  @return Expression résultat, ou nil si non applicable
 *}
-function TFunDelphiIsAsBinaryOpNode.GetPriority: Integer;
+function TFunDelphiIsOperationNode.MakeSquareOperation(
+  const ALeftValue, RightValue: ISepiReadableValue): ISepiExpression;
+const
+  SqCompClasses: array[0..3] of TClass = (TField, TEffect, TTool, TObstacle);
+  SqCompFields: array[0..3] of string = ('Field', 'Effect', 'Tool', 'Obstacle');
+var
+  LeftValue: ISepiReadableValue;
+  TFunLabyComponentType, TSquareComponentType, TSquareType: TSepiClass;
+  LeftClass, RightClass: TSepiClass;
+  TypeForceable: ISepiTypeForceableValue;
+  I: Integer;
+  WantingParams: ISepiWantingParams;
 begin
-  Result := 6;
+  LeftValue := ALeftValue;
+
+  // Fetch TSquareComponent and TSquare classes
+  TFunLabyComponentType := TSepiClass(SepiRoot.FindClass(TFunLabyComponent));
+  TSquareComponentType := TSepiClass(SepiRoot.FindClass(TSquareComponent));
+  TSquareType := TSepiClass(SepiRoot.FindClass(TSquare));
+
+  // Fetch left class
+  if LeftValue.ValueType is TSepiClass then
+    LeftClass := TSepiClass(LeftValue.ValueType)
+  else
+    Exit;
+
+  // Left class must be descendant of TSquareComponent
+  if not LeftClass.ClassInheritsFrom(TSquareComponentType) then
+    Exit;
+
+  // Fetch right class
+  if RightValue.ValueType is TSepiClass then
+  begin
+    RightClass := TSepiClass(RightValue.ValueType);
+
+    // SquareComp is Component may force the component to be a TSquareComponent
+    if RightClass = TFunLabyComponentType then
+    begin
+      if Supports(RightValue, ISepiTypeForceableValue, TypeForceable) and
+        TypeForceable.CanForceType(TSquareComponentType) then
+      begin
+        TypeForceable.ForceType(TSquareComponentType);
+        RightClass := TSquareComponentType;
+      end;
+    end;
+  end else if RightValue.ValueType is TSepiMetaClass then
+    RightClass := TSepiMetaClass(RightValue.ValueType).SepiClass
+  else
+    Exit;
+
+  // Right class must be descendant of TSquareComponent
+  if not RightClass.ClassInheritsFrom(TSquareComponentType) then
+    Exit;
+
+  // Select the subpart to the left following the right class
+  if LeftClass.ClassInheritsFrom(TSquareType) then
+  begin
+    for I := Low(SqCompClasses) to High(SqCompClasses) do
+    begin
+      if RightClass.ClassInheritsFrom(TSepiClass(
+        SepiRoot.FindClass(SqCompClasses[I]))) then
+      begin
+        LeftValue := FieldSelection(SepiContext, LeftValue as ISepiExpression,
+          SqCompFields[I]) as ISepiReadableValue;
+        Break;
+      end;
+    end;
+  end;
+
+  // SquareComponent is TClass: use standart is operation
+  if RightValue.ValueType is TSepiMetaClass then
+  begin
+    Result := TSepiIsOperation.MakeOperation(LeftValue,
+      RightValue) as ISepiExpression;
+  end else
+
+  // Square is Component: use TSquare.Contains
+  if LeftClass.ClassInheritsFrom(TSquareType) then
+  begin
+    WantingParams := FieldSelection(SepiContext, LeftValue as ISepiExpression,
+      'Contains') as ISepiWantingParams;
+    WantingParams.AddParam(RightValue as ISepiExpression);
+    WantingParams.CompleteParams;
+
+    Result := WantingParams as ISepiExpression;
+  end else
+
+  // Component is Component: use = comparison
+  begin
+    Result := TSepiBinaryOperation.MakeOperation(opCmpEQ,
+      LeftValue, RightValue) as ISepiExpression;
+  end;
 end;
 
 {*
   [@inheritDoc]
 *}
-function TFunDelphiIsAsBinaryOpNode.MakeOperation(
-  const Left, Right: ISepiExpression): ISepiExpression;
+function TFunDelphiIsOperationNode.GetPriority: Integer;
 begin
-  // TODO
+  Result := 2;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiIsOperationNode.MakeOperation(
+  const Left, Right: ISepiExpression): ISepiExpression;
+var
+  LeftValue, RightValue: ISepiReadableValue;
+begin
+  if RequireReadableValue(Left, LeftValue) and
+    RequireReadableValue(Right, RightValue) then
+  begin
+    Result := MakeSquareOperation(LeftValue, RightValue);
+    if Result <> nil then
+      Result.SourcePos := SourcePos;
+  end;
+
+  if Result = nil then
+    Result := inherited MakeOperation(Left, Right);
 end;
 
 {---------------------------}
@@ -914,7 +1029,7 @@ begin
   RequireReadableValue(Right, RightValue);
 
   LeftValue := TSepiConvertOperation.ConvertValue(
-    SepiRoot.FindMeta('FunLabyUtils.TPlayer') as TSepiType, LeftValue);
+    SepiRoot.FindClass(TPlayer), LeftValue);
   RightValue := TSepiConvertOperation.ConvertValue(
     SystemUnit.LongString, RightValue);
 
@@ -952,9 +1067,9 @@ begin
   RequireReadableValue(Right, RightValue);
 
   LeftValue := TSepiConvertOperation.ConvertValue(
-    SepiRoot.FindMeta('FunLabyUtils.TPlayer') as TSepiType, LeftValue);
+    SepiRoot.FindClass(TPlayer), LeftValue);
   RightValue := TSepiConvertOperation.ConvertValue(
-    SepiRoot.FindMeta('FunLabyUtils.TObjectDef') as TSepiType, RightValue);
+    SepiRoot.FindClass(TObjectDef), RightValue);
 
   CountProp := FieldSelection(SepiContext, RightValue as ISepiExpression,
     'Count') as ISepiProperty;
@@ -1148,8 +1263,7 @@ begin
     Exit;
   Expression.SourcePos := Children[1].SourcePos;
 
-  ComponentClass := SepiRoot.FindMeta(
-    'FunLabyUtils.TFunLabyComponent') as TSepiClass;
+  ComponentClass := TSepiClass(SepiRoot.FindClass(TFunLabyComponent));
 
   if (not Supports(Expression, ISepiTypeExpression, TypeExpr)) or
     (not (TypeExpr.ExprType is TSepiClass)) or
@@ -1160,7 +1274,7 @@ begin
   end;
 
   if TSepiClass(TypeExpr.ExprType).ClassInheritsFrom(
-    SepiRoot.FindMeta('FunLabyUtils.TSquareComponent') as TSepiClass) then
+    TSepiClass(SepiRoot.FindClass(TSquareComponent))) then
   begin
     FRegisterable := True;
   end;
@@ -1334,7 +1448,7 @@ end;
 *}
 function TFunDelphiPluginNode.GetMasterClass: TSepiClass;
 begin
-  Result := SepiRoot.FindMeta('FunLabyUtils.TPlugin') as TSepiClass;
+  Result := TSepiClass(SepiRoot.FindClass(TPlugin));
 end;
 
 {----------------------------}
@@ -1346,7 +1460,7 @@ end;
 *}
 function TFunDelphiObjectNode.GetMasterClass: TSepiClass;
 begin
-  Result := SepiRoot.FindMeta('FunLabyUtils.TObjectDef') as TSepiClass;
+  Result := TSepiClass(SepiRoot.FindClass(TObjectDef));
 end;
 
 {---------------------------}
@@ -1358,7 +1472,7 @@ end;
 *}
 function TFunDelphiFieldNode.GetMasterClass: TSepiClass;
 begin
-  Result := SepiRoot.FindMeta('FunLabyUtils.TField') as TSepiClass;
+  Result := TSepiClass(SepiRoot.FindClass(TField));
 end;
 
 {----------------------------}
@@ -1370,7 +1484,7 @@ end;
 *}
 function TFunDelphiEffectNode.GetMasterClass: TSepiClass;
 begin
-  Result := SepiRoot.FindMeta('FunLabyUtils.TEffect') as TSepiClass;
+  Result := TSepiClass(SepiRoot.FindClass(TEffect));
 end;
 
 {--------------------------}
@@ -1382,7 +1496,7 @@ end;
 *}
 function TFunDelphiToolNode.GetMasterClass: TSepiClass;
 begin
-  Result := SepiRoot.FindMeta('FunLabyUtils.TTool') as TSepiClass;
+  Result := TSepiClass(SepiRoot.FindClass(TTool));
 end;
 
 {------------------------------}
@@ -1394,7 +1508,7 @@ end;
 *}
 function TFunDelphiObstacleNode.GetMasterClass: TSepiClass;
 begin
-  Result := SepiRoot.FindMeta('FunLabyUtils.TObstacle') as TSepiClass;
+  Result := TSepiClass(SepiRoot.FindClass(TObstacle));
 end;
 
 {---------------------------------}
@@ -1521,8 +1635,7 @@ begin
 
   Signature.Kind := skConstructor;
 
-  TSepiParam.Create(Signature, 'AMaster',
-    SepiRoot.FindType('FunLabyUtils.TMaster'));
+  TSepiParam.Create(Signature, 'AMaster', SepiRoot.FindClass(TMaster));
   TSepiParam.Create(Signature, 'AID',
     SepiRoot.FindType('FunLabyUtils.TComponentID'), pkConst);
 end;
@@ -1988,9 +2101,9 @@ begin
   RequireReadableValue(Right, ObjectValue);
 
   PlayerValue := TSepiConvertOperation.ConvertValue(
-    SepiRoot.FindMeta('FunLabyUtils.TPlayer') as TSepiType, PlayerValue);
+    SepiRoot.FindClass(TPlayer), PlayerValue);
   ObjectValue := TSepiConvertOperation.ConvertValue(
-    SepiRoot.FindMeta('FunLabyUtils.TObjectDef') as TSepiType, ObjectValue);
+    SepiRoot.FindClass(TObjectDef), ObjectValue);
 
   CountProp := FieldSelection(SepiContext, ObjectValue as ISepiExpression,
     'Count') as ISepiProperty;

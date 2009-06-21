@@ -277,7 +277,8 @@ ntSetRange	SetRange
 
 ntBinaryOp	BinaryOp	Simplify
 	DelphiBinaryOp
-	IsAsBinaryOp
+	IsOperation
+	AsOperation
 	CanOp
 	HasOp
 
@@ -300,8 +301,10 @@ ntDelphiBinaryOp	DelphiBinaryOp
 	'>='
 	'<>'
 
-ntIsAsBinaryOp	IsAsBinaryOp
+ntIsOperation	IsOperation
 	'is'
+
+ntAsOperation	AsOperation
 	'as'
 
 ntCanOp	CanOp

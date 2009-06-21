@@ -32,7 +32,8 @@ requires
   SepiReflection90,
   SCL90,
   SepiCompiler90,
-  SepiDelphiCompiler90;
+  SepiDelphiCompiler90,
+  FunLabyCore;
 
 contains
   SepiFunDelphiLexer in 'SepiFunDelphiLexer.pas',
