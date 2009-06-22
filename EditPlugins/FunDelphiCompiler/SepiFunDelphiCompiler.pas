@@ -77,7 +77,13 @@ type
   *}
   TFunDelphiBinaryOpNode = class(TSepiDelphiLikeBinaryOpNode)
   protected
+    function MakeSquareAddOperation(
+      const Left, Right: ISepiExpression): ISepiExpression;
+
     function GetOperation: TSepiOperation; override;
+  public
+    function MakeOperation(
+      const Left, Right: ISepiExpression): ISepiExpression; override;
   end;
 
   {*
@@ -789,9 +795,10 @@ end;
 *}
 procedure TFunDelphiRootNode.ChildEndParsing(Child: TSepiParseTreeNode);
 const
-  ImpliedUses: array[0..10] of string = (
+  ImpliedUses: array[0..14] of string = (
     'Types', 'SysUtils', 'Classes', 'Graphics', 'Contnrs', 'Controls',
-    'Dialogs', 'TypInfo', 'ScUtils', 'SdDialogs', 'FunLabyUtils'
+    'Dialogs', 'TypInfo', 'ScUtils', 'SdDialogs', 'FunLabyUtils',
+    'FunLabyToolsConsts', 'Generics', 'GraphicsTools', 'MapTools'
   );
 begin
   if Child.SymbolClass = ntIdentifier then
@@ -902,6 +909,72 @@ end;
 {------------------------------}
 
 {*
+  Construit une opération d'addition de composants de case
+  @param Left    Opérande gauche
+  @param Right   Opérande droit
+  @return Expression résultat, ou nil si non applicable
+*}
+function TFunDelphiBinaryOpNode.MakeSquareAddOperation(
+  const Left, Right: ISepiExpression): ISepiExpression;
+var
+  LeftValue, RightValue: ISepiReadableValue;
+  TSquareComponentType: TSepiType;
+  LeftMakeSquareValue, RightMakeSquareValue: ISepiMakeSquareValue;
+begin
+  if (not Supports(Left, ISepiReadableValue, LeftValue)) or
+    (not Supports(Right, ISepiReadableValue, RightValue)) then
+    Exit;
+
+  TSquareComponentType := SepiRoot.FindClass(TSquareComponent);
+
+  if not TSepiConvertOperation.ConvertionExists(TSquareComponentType,
+    LeftValue) then
+    Exit;
+  if not TSepiConvertOperation.ConvertionExists(TSquareComponentType,
+    RightValue) then
+    Exit;
+
+  if not Supports(LeftValue, ISepiMakeSquareValue, LeftMakeSquareValue) then
+  begin
+    LeftMakeSquareValue := nil;
+    if not TSquareComponentType.CompatibleWith(LeftValue.ValueType) then
+      LeftValue := TSepiConvertOperation.ConvertValue(TSquareComponentType,
+        LeftValue);
+  end;
+
+  if not Supports(RightValue, ISepiMakeSquareValue, RightMakeSquareValue) then
+  begin
+    RightMakeSquareValue := nil;
+    if not TSquareComponentType.CompatibleWith(RightValue.ValueType) then
+      RightValue := TSepiConvertOperation.ConvertValue(TSquareComponentType,
+        RightValue);
+  end;
+
+  if (LeftMakeSquareValue <> nil) and (RightMakeSquareValue <> nil) then
+    Exit;
+
+  if LeftMakeSquareValue <> nil then
+  begin
+    LeftMakeSquareValue.AddComponent(RightValue);
+    Result := LeftMakeSquareValue as ISepiExpression;
+    Exit;
+  end;
+
+  if RightMakeSquareValue <> nil then
+  begin
+    RightMakeSquareValue.AddComponent(LeftValue);
+    Result := RightMakeSquareValue as ISepiExpression;
+    Exit;
+  end;
+
+  Result := MakeExpression;
+  LeftMakeSquareValue := TSepiMakeSquareValue.Create(SepiRoot);
+  LeftMakeSquareValue.AttachToExpression(Result);
+  LeftMakeSquareValue.AddComponent(LeftValue);
+  LeftMakeSquareValue.AddComponent(RightValue);
+end;
+
+{*
   [@inheritDoc]
 *}
 function TFunDelphiBinaryOpNode.GetOperation: TSepiOperation;
@@ -922,6 +995,21 @@ begin
     Result := opCmpEQ
   else
     Result := SymbolClassToOperation[SymbolClass];
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiBinaryOpNode.MakeOperation(
+  const Left, Right: ISepiExpression): ISepiExpression;
+begin
+  if Operation = opAdd then
+    Result := MakeSquareAddOperation(Left, Right);
+
+  if Result <> nil then
+    Result.SourcePos := SourcePos
+  else
+    Result := inherited MakeOperation(Left, Right);
 end;
 
 {---------------------------------}

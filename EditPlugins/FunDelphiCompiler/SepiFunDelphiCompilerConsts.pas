@@ -10,6 +10,7 @@ interface
 resourcestring
   SClassOfRequired = 'Sous-classe de %s requise';
   SMethodNotFoundInBaseClass = 'Méthode non trouvée dans la classe de base';
+  SSquareComponentValueRequired = 'Valeur de type TSquareComponent requise';
 
 implementation
 
