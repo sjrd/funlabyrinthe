@@ -28,12 +28,18 @@ package FunLabyBase;
 
 requires
   rtl,
-  SCL90,
-  FunLabyCore,
+  vcl,
+  SCL110,
+  SDL110,
+  SVCL110,
+  vclx,
+  VclSmp,
   FunLabyTools,
-  SepiReflection90;
+  SepiReflection110,
+  FunLabyCore;
 
 contains
+  SepiImportsFLBSimpleObjects in 'SepiImportsFLBSimpleObjects.pas',
   FLBBoat in 'FLBBoat.pas',
   FLBCommon in 'FLBCommon.pas',
   FLBFields in 'FLBFields.pas',
@@ -43,7 +49,6 @@ contains
   FLBPlank in 'FLBPlank.pas',
   FLBSimpleEffects in 'FLBSimpleEffects.pas',
   FLBSimpleObjects in 'FLBSimpleObjects.pas',
-  SepiImportsFLBSimpleObjects in 'SepiImportsFLBSimpleObjects.pas',
   SepiImportsFLBBoat in 'SepiImportsFLBBoat.pas',
   SepiImportsFLBCommon in 'SepiImportsFLBCommon.pas',
   SepiImportsFLBFields in 'SepiImportsFLBFields.pas',

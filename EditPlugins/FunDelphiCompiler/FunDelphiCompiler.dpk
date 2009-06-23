@@ -22,25 +22,34 @@ package FunDelphiCompiler;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Sepi compiler for FunDelphi language'}
+{$DESCRIPTION 'FunDelphi compiler'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
+  SCL110,
   vcl,
-  SepiReflection90,
-  SCL90,
-  SepiCompiler90,
-  SepiDelphiCompiler90,
-  FunLabyCore;
+  SepiCore110,
+  SDL110,
+  SVCL110,
+  vclx,
+  VclSmp,
+  FunLabyEditPluginUtils,
+  FunLabyTools,
+  SepiCompiler110,
+  SepiDelphiCompiler110,
+  SepiInterpreter110,
+  SepiReflection110,
+  FunLabyCore,
+  FunLabyEditPlugin;
 
 contains
-  SepiFunDelphiLexer in 'SepiFunDelphiLexer.pas',
-  SepiFunDelphiParser in 'SepiFunDelphiParser.pas',
   SepiFunDelphiCompiler in 'SepiFunDelphiCompiler.pas',
   SepiFunDelphiCompilerConsts in 'SepiFunDelphiCompilerConsts.pas',
-  SepiFunDelphiCompilerUtils in 'SepiFunDelphiCompilerUtils.pas';
+  SepiFunDelphiCompilerUtils in 'SepiFunDelphiCompilerUtils.pas',
+  SepiFunDelphiLexer in 'SepiFunDelphiLexer.pas',
+  SepiFunDelphiParser in 'SepiFunDelphiParser.pas';
 
 end.
 

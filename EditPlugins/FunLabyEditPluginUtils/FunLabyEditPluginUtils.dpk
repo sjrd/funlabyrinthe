@@ -22,24 +22,29 @@ package FunLabyEditPluginUtils;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'FunLabyEdit plugin utils'}
+{$DESCRIPTION 'FunLabyEdit plugin utilities'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  SynEdit_R2005,
+  SDL110,
+  SCL110,
+  SVCL110,
   vclx,
-  vcldb,
-  dbrtl,
   VclSmp,
+  SepiCore110,
+  SynEdit_R2007,
+  SepiReflection110,
   FunLabyEditPlugin,
+  SepiInterpreter110,
   FunLabyCore;
 
 contains
-  FunLabySourceEditorFrame in 'FunLabySourceEditorFrame.pas' {FrameFunLabySourceEditor: TFrame},
-  FunLabySourceSynEditEditorFrame in 'FunLabySourceSynEditEditorFrame.pas' {FrameFunLabySynEditSourceEditor: TFrame},
+  FunLabyEdit in 'FunLabyEdit.pas',
+  FunLabySourceEditorFrame in 'FunLabySourceEditorFrame.pas',
+  FunLabySourceSynEditEditorFrame in 'FunLabySourceSynEditEditorFrame.pas',
   FunLabySynEdit in 'FunLabySynEdit.pas';
 
 end.

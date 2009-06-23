@@ -227,7 +227,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TSourceFileCreatorList = class(TCustomStringKeyValueBucketList)
+  TSourceFileCreatorList = class(TCustomValueBucketList)
   public
     constructor Create;
 

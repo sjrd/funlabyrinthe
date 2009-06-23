@@ -22,25 +22,28 @@ package Compatibility4xEditor;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Editor for Compatiblity 4.x sources'}
+{$DESCRIPTION 'Compatibility4x source editor for FunLabyEdit'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  SynEdit_R2005,
+  SDL110,
+  SCL110,
+  SVCL110,
   vclx,
-  vcldb,
-  dbrtl,
   VclSmp,
-  FunLabyEditPlugin,
-  SDL90,
+  SynEdit_R2007,
+  bdertl,
+  dbrtl,
+  vcldb,
+  FunLabyEditPluginUtils,
   FunLabyCore,
-  FunLabyEditPluginUtils;
+  FunLabyEditPlugin;
 
 contains
-  Compatibility4xEditorMain in 'Compatibility4xEditorMain.pas' {FrameCompatibility4xEditor: TFrame},
+  Compatibility4xEditorMain in 'Compatibility4xEditorMain.pas',
   Compatibility4xSyn in 'Compatibility4xSyn.pas';
 
 end.

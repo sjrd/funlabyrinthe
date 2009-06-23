@@ -22,29 +22,29 @@ package FunLabyTools;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'FunLabyrinthe helper tools'}
+{$DESCRIPTION 'FunLabyrinthe tools'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  VclSmp,
-  FunLabyCore,
-  SepiReflection90;
+  SCL110,
+  SepiReflection110,
+  FunLabyCore;
 
 contains
+  FunLabyToolsConsts in 'FunLabyToolsConsts.pas',
+  Generics in 'Generics.pas',
+  GraphicsTools in 'GraphicsTools.pas',
   MapTools in 'MapTools.pas',
   PlayerObjects in 'PlayerObjects.pas',
-  GraphicsTools in 'GraphicsTools.pas',
-  Generics in 'Generics.pas',
+  SepiImportsFunLabyTools in 'SepiImportsFunLabyTools.pas',
+  SepiImportsFunLabyToolsConsts in 'SepiImportsFunLabyToolsConsts.pas',
   SepiImportsGenerics in 'SepiImportsGenerics.pas',
   SepiImportsGraphicsTools in 'SepiImportsGraphicsTools.pas',
   SepiImportsMapTools in 'SepiImportsMapTools.pas',
-  SepiImportsPlayerObjects in 'SepiImportsPlayerObjects.pas',
-  SepiImportsFunLabyTools in 'SepiImportsFunLabyTools.pas',
-  FunLabyToolsConsts in 'FunLabyToolsConsts.pas',
-  SepiImportsFunLabyToolsConsts in 'SepiImportsFunLabyToolsConsts.pas';
+  SepiImportsPlayerObjects in 'SepiImportsPlayerObjects.pas';
 
 end.
 

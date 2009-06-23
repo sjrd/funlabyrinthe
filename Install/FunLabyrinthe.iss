@@ -13,7 +13,7 @@ AppUpdatesURL=http://sjrd.developpez.com/programmes/funlaby/
 AppVersion=5.0
 
 VersionInfoDescription=Setup of FunLabyrinthe 5.0
-VersionInfoTextVersion=FunLabyrinthe v5.0, copyright 2000-2006 SJRDoeraene
+VersionInfoTextVersion=FunLabyrinthe v5.0, copyright 2000-2009 SJRDoeraene
 VersionInfoVersion=5.0
 
 DefaultDirName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,InstallLocation|{pf}\SJRDoeraene\{cm:AppName}}

@@ -1,0 +1,104 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{0edfd2fa-b6c4-457c-8b5f-cd10d162ae17}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Projects Include="Packages\FunLabyCore\FunLabyCore.dproj" />
+    <Projects Include="Packages\FunLabyEditPlugin\FunLabyEditPlugin.dproj" />
+    <Projects Include="Packages\FunLabyTools\FunLabyTools.dproj" />
+    <Projects Include="Programs\FunLabyEdit\FunLabyEdit.dproj" />
+    <Projects Include="Programs\FunLaby\FunLaby.dproj" />
+    <Projects Include="Programs\GeneLaby\GeneLaby.dproj" />
+    <Projects Include="UnitPackages\Compatibility4x\Compatibility4x.dproj" />
+    <Projects Include="UnitPackages\FunLabyBase\FunLabyBase.dproj" />
+  </ItemGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Default.Personality</Borland.Personality>
+    <Borland.ProjectType />
+    <BorlandProject>
+<BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Target Name="FunLabyCore">
+    <MSBuild Projects="Packages\FunLabyCore\FunLabyCore.dproj" Targets="" />
+  </Target>
+  <Target Name="FunLabyCore:Clean">
+    <MSBuild Projects="Packages\FunLabyCore\FunLabyCore.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="FunLabyCore:Make">
+    <MSBuild Projects="Packages\FunLabyCore\FunLabyCore.dproj" Targets="Make" />
+  </Target>
+  <Target Name="FunLabyTools">
+    <MSBuild Projects="Packages\FunLabyTools\FunLabyTools.dproj" Targets="" />
+  </Target>
+  <Target Name="FunLabyTools:Clean">
+    <MSBuild Projects="Packages\FunLabyTools\FunLabyTools.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="FunLabyTools:Make">
+    <MSBuild Projects="Packages\FunLabyTools\FunLabyTools.dproj" Targets="Make" />
+  </Target>
+  <Target Name="FunLaby">
+    <MSBuild Projects="Programs\FunLaby\FunLaby.dproj" Targets="" />
+  </Target>
+  <Target Name="FunLaby:Clean">
+    <MSBuild Projects="Programs\FunLaby\FunLaby.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="FunLaby:Make">
+    <MSBuild Projects="Programs\FunLaby\FunLaby.dproj" Targets="Make" />
+  </Target>
+  <Target Name="FunLabyEditPlugin">
+    <MSBuild Projects="Packages\FunLabyEditPlugin\FunLabyEditPlugin.dproj" Targets="" />
+  </Target>
+  <Target Name="FunLabyEditPlugin:Clean">
+    <MSBuild Projects="Packages\FunLabyEditPlugin\FunLabyEditPlugin.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="FunLabyEditPlugin:Make">
+    <MSBuild Projects="Packages\FunLabyEditPlugin\FunLabyEditPlugin.dproj" Targets="Make" />
+  </Target>
+  <Target Name="FunLabyEdit">
+    <MSBuild Projects="Programs\FunLabyEdit\FunLabyEdit.dproj" Targets="" />
+  </Target>
+  <Target Name="FunLabyEdit:Clean">
+    <MSBuild Projects="Programs\FunLabyEdit\FunLabyEdit.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="FunLabyEdit:Make">
+    <MSBuild Projects="Programs\FunLabyEdit\FunLabyEdit.dproj" Targets="Make" />
+  </Target>
+  <Target Name="GeneLaby">
+    <MSBuild Projects="Programs\GeneLaby\GeneLaby.dproj" Targets="" />
+  </Target>
+  <Target Name="GeneLaby:Clean">
+    <MSBuild Projects="Programs\GeneLaby\GeneLaby.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="GeneLaby:Make">
+    <MSBuild Projects="Programs\GeneLaby\GeneLaby.dproj" Targets="Make" />
+  </Target>
+  <Target Name="FunLabyBase">
+    <MSBuild Projects="UnitPackages\FunLabyBase\FunLabyBase.dproj" Targets="" />
+  </Target>
+  <Target Name="FunLabyBase:Clean">
+    <MSBuild Projects="UnitPackages\FunLabyBase\FunLabyBase.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="FunLabyBase:Make">
+    <MSBuild Projects="UnitPackages\FunLabyBase\FunLabyBase.dproj" Targets="Make" />
+  </Target>
+  <Target Name="Compatibility4x">
+    <MSBuild Projects="UnitPackages\Compatibility4x\Compatibility4x.dproj" Targets="" />
+  </Target>
+  <Target Name="Compatibility4x:Clean">
+    <MSBuild Projects="UnitPackages\Compatibility4x\Compatibility4x.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="Compatibility4x:Make">
+    <MSBuild Projects="UnitPackages\Compatibility4x\Compatibility4x.dproj" Targets="Make" />
+  </Target>
+  <Target Name="Build">
+    <CallTarget Targets="FunLabyCore;FunLabyTools;FunLaby;FunLabyEditPlugin;FunLabyEdit;GeneLaby;FunLabyBase;Compatibility4x" />
+  </Target>
+  <Target Name="Clean">
+    <CallTarget Targets="FunLabyCore:Clean;FunLabyTools:Clean;FunLaby:Clean;FunLabyEditPlugin:Clean;FunLabyEdit:Clean;GeneLaby:Clean;FunLabyBase:Clean;Compatibility4x:Clean" />
+  </Target>
+  <Target Name="Make">
+    <CallTarget Targets="FunLabyCore:Make;FunLabyTools:Make;FunLaby:Make;FunLabyEditPlugin:Make;FunLabyEdit:Make;GeneLaby:Make;FunLabyBase:Make;Compatibility4x:Make" />
+  </Target>
+  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
+</Project>

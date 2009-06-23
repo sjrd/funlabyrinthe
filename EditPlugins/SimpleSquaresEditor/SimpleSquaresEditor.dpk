@@ -22,43 +22,44 @@ package SimpleSquaresEditor;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Editor for SimpleSquares source'}
+{$DESCRIPTION 'Simple squares editor for FunLabyEdit'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
+  SCL110,
+  SDL110,
+  SVCL110,
+  vclx,
   VclSmp,
-  SVCL90,
-  SCL90,
-  SDL90,
-  SepiCompiler90,
-  SepiReflection90,
-  FunLabyEditPlugin,
+  FunDelphiCompiler,
   FunLabyCore,
-  SepiDelphiCompiler90,
+  FunLabyEditPlugin,
   FunLabyEditPluginUtils,
-  FunDelphiCompiler;
+  FunLabyTools,
+  SepiCompiler110,
+  SepiReflection110;
 
 contains
-  SimpleSquaresEditorMain in 'SimpleSquaresEditorMain.pas' {FrameSimpleSquaresEditor},
   SimpleSquaresUtils in 'SimpleSquaresUtils.pas',
-  SimpleSquareEdit in 'SimpleSquareEdit.pas' {FrameEditSimpleSquare: TFrame},
-  SimpleSquareNew in 'SimpleSquareNew.pas' {FormNewSimpleSquare},
-  SimpleSquaresEffects in 'SimpleSquaresEffects.pas',
-  SimpleSquaresEffectEditor in 'SimpleSquaresEffectEditor.pas' {FrameEffectEditor: TFrame},
+  SimpleSquareEdit in 'SimpleSquareEdit.pas',
+  SimpleSquareNew in 'SimpleSquareNew.pas',
+  SimpleSquaresActionEditor in 'SimpleSquaresActionEditor.pas',
   SimpleSquaresActions in 'SimpleSquaresActions.pas',
-  SimpleSquaresReplaceSquareActionEditor in 'SimpleSquaresReplaceSquareActionEditor.pas' {FrameReplaceSquareActionEditor: TFrame},
-  SimpleSquaresMessageActionEditor in 'SimpleSquaresMessageActionEditor.pas' {FrameMessageActionEditor: TFrame},
-  SimpleSquaresObjectEditor in 'SimpleSquaresObjectEditor.pas' {FrameObjectEditor: TFrame},
-  SimpleSquaresObstacleEditor in 'SimpleSquaresObstacleEditor.pas' {FrameObstacleEditor: TFrame},
-  SimpleSquaresDeactivateEffectActionEditor in 'SimpleSquaresDeactivateEffectActionEditor.pas' {FrameDeactivateEffectActionEditor: TFrame},
   SimpleSquaresConsts in 'SimpleSquaresConsts.pas',
-  SimpleSquaresPlayerColorActionEditor in 'SimpleSquaresPlayerColorActionEditor.pas' {FramePlayerColorActionEditor: TFrame},
-  SimpleSquaresSimpleMethodActionEditor in 'SimpleSquaresSimpleMethodActionEditor.pas' {FrameSimpleMethodActionEditor: TFrame},
-  SimpleSquaresActionEditor in 'SimpleSquaresActionEditor.pas' {FrameActionEditor: TFrame},
-  SimpleSquaresEditorPart in 'SimpleSquaresEditorPart.pas' {FrameSimpleSquaresEditorPart: TFrame};
+  SimpleSquaresDeactivateEffectActionEditor in 'SimpleSquaresDeactivateEffectActionEditor.pas',
+  SimpleSquaresEditorMain in 'SimpleSquaresEditorMain.pas',
+  SimpleSquaresEditorPart in 'SimpleSquaresEditorPart.pas',
+  SimpleSquaresEffectEditor in 'SimpleSquaresEffectEditor.pas',
+  SimpleSquaresEffects in 'SimpleSquaresEffects.pas',
+  SimpleSquaresMessageActionEditor in 'SimpleSquaresMessageActionEditor.pas',
+  SimpleSquaresObjectEditor in 'SimpleSquaresObjectEditor.pas',
+  SimpleSquaresObstacleEditor in 'SimpleSquaresObstacleEditor.pas',
+  SimpleSquaresPlayerColorActionEditor in 'SimpleSquaresPlayerColorActionEditor.pas',
+  SimpleSquaresReplaceSquareActionEditor in 'SimpleSquaresReplaceSquareActionEditor.pas',
+  SimpleSquaresSimpleMethodActionEditor in 'SimpleSquaresSimpleMethodActionEditor.pas';
 
 end.
 

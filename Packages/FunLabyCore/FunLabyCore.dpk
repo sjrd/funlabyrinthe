@@ -22,32 +22,34 @@ package FunLabyCore;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Core units for FunLabyrinthe'}
+{$DESCRIPTION 'FunLabyrinthe core features'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  SVCL90,
-  SCL90,
-  SDL90,
-  SepiReflection90,
-  SepiRTLCommonImport90,
-  SepiRTLSysImport90,
-  SepiSCLImport90,
-  SepiSDLImport90,
-  SepiSVCLImport90,
-  SepiVCLStdImport90,
-  SepiWinTypesImport90,
-  SepiInterpreter90;
+  SCL110,
+  SDL110,
+  SVCL110,
+  vclx,
+  VclSmp,
+  SepiInterpreter110,
+  SepiReflection110,
+  SepiWinTypesImport110,
+  SepiRTLCommonImport110,
+  SepiRTLSysImport110,
+  SepiSCLImport110,
+  SepiSDLImport110,
+  SepiSVCLImport110,
+  SepiVCLStdImport110;
 
 contains
-  FunLabyUtils in 'FunLabyUtils.pas',
   FilesUtils in 'FilesUtils.pas',
-  UnitFiles in 'UnitFiles.pas',
+  FunLabyUtils in 'FunLabyUtils.pas',
+  SepiImportsFunLaby in 'SepiImportsFunLaby.pas',
   SepiImportsFunLabyUtils in 'SepiImportsFunLabyUtils.pas',
-  SepiImportsFunLaby in 'SepiImportsFunLaby.pas';
+  UnitFiles in 'UnitFiles.pas';
 
 end.
 

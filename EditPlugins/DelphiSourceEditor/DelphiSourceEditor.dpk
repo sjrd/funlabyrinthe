@@ -22,24 +22,32 @@ package DelphiSourceEditor;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Editor for Delphi sources'}
+{$DESCRIPTION 'Delphi source editor for FunLabyEdit'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
+  SDL110,
+  SCL110,
+  SVCL110,
+  vclx,
   VclSmp,
+  SynEdit_R2007,
+  bdertl,
+  dbrtl,
+  vcldb,
+  SepiCompiler110,
+  SepiDelphiCompiler110,
+  SepiInterpreter110,
+  SepiReflection110,
+  FunLabyEditPluginUtils,
   FunLabyCore,
-  FunLabyEditPlugin,
-  SynEdit_R2005,
-  SepiDelphiCompiler90,
-  SepiReflection90,
-  SepiCompiler90,
-  FunLabyEditPluginUtils;
+  FunLabyEditPlugin;
 
 contains
-  DelphiSourceEditorMain in 'DelphiSourceEditorMain.pas' {FrameDelphiSourceEditor};
+  DelphiSourceEditorMain in 'DelphiSourceEditorMain.pas';
 
 end.
 

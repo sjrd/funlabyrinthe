@@ -22,22 +22,23 @@ package FunLabyEditPlugin;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Plug-in system of FunLabyEdit'}
+{$DESCRIPTION 'FunLabyrinthe editor plugin API'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  VclSmp,
+  SCL110,
+  FunLabyTools,
+  SepiReflection110,
   FunLabyCore,
-  SepiReflection90,
-  SepiCompiler90;
+  SepiCompiler110;
 
 contains
-  SourceEditors in 'SourceEditors.pas',
+  FunLabyEditOTA in 'FunLabyEditOTA.pas',
   SourceEditorEvents in 'SourceEditorEvents.pas',
-  FunLabyEditOTA in 'FunLabyEditOTA.pas';
+  SourceEditors in 'SourceEditors.pas';
 
 end.
 

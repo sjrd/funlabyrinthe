@@ -22,22 +22,29 @@ package Compatibility4x;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'FunLabyrinthe components for 4.x compatibility'}
+{$DESCRIPTION 'FunLabyrinthe compatibility components for 4.x labyrinths'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
+  vcl,
+  SCL110,
+  SDL110,
+  SVCL110,
+  vclx,
+  VclSmp,
+  FunLabyBase,
   FunLabyCore,
-  FunLabyTools,
-  FunLabyBase;
+  FunLabyTools;
 
 contains
-  C4xMain in 'C4xMain.pas',
   C4xCommon in 'C4xCommon.pas',
-  C4xInterpreter in 'C4xInterpreter.pas',
   C4xComponents in 'C4xComponents.pas',
   C4xFields in 'C4xFields.pas',
+  C4xInterpreter in 'C4xInterpreter.pas',
+  C4xMain in 'C4xMain.pas',
   C4xSquaresTable in 'C4xSquaresTable.pas';
 
 end.
+
