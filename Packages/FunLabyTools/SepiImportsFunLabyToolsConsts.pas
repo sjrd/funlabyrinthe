@@ -18,6 +18,8 @@ implementation
 
 {$R *.res}
 
+{$WARN SYMBOL_DEPRECATED OFF}
+
 const // don't localize
   UnitName = 'FunLabyToolsConsts';
   ResourceName = 'SepiImportsFunLabyToolsConsts';
@@ -93,8 +95,6 @@ begin
     Stream.Free;
   end;
 end;
-
-{$WARN SYMBOL_DEPRECATED OFF}
 
 procedure InitTypeInfoArray;
 begin

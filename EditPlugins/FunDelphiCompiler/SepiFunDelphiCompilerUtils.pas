@@ -81,14 +81,42 @@ type
     constructor Create(ASepiRoot: TSepiRoot);
   end;
 
-function UnitResolveIdent(UnitCompiler: TSepiUnitCompiler;
-  const Identifier: string): ISepiExpression;
-function MethodResolveIdent(Compiler: TSepiMethodCompiler;
-  const Identifier: string): ISepiExpression;
+  {*
+    Règles sémantiques du langage FunDelphi
+    @author sjrd
+    @version 1.0
+  *}
+  TSepiFunDelphiLanguageRules = class(TSepiDelphiLanguageRules)
+  protected
+    function LookForStringConstant(Context: TSepiComponent;
+      const Name: string): TSepiConstant; virtual;
 
-function FieldSelection(SepiContext: TSepiComponent;
-  const BaseExpression: ISepiExpression;
-  const FieldName: string): ISepiExpression;
+    function ResolveComponentID(SepiContext: TSepiComponent;
+      const Identifier: string;
+      const Expression: ISepiExpression): Boolean; virtual;
+
+    function ResolveAction(SepiContext: TSepiComponent;
+      const Identifier: string;
+      const Expression: ISepiExpression): Boolean; virtual;
+
+    function AttributeSelection(SepiContext: TSepiComponent;
+      const BaseExpression: ISepiExpression;
+      const AttrName: string): ISepiExpression; virtual;
+
+    function ObjectCountSelection(SepiContext: TSepiComponent;
+      const BaseExpression: ISepiExpression;
+      const ObjectID: string): ISepiExpression; virtual;
+  public
+    function ResolveIdent(Context: TSepiComponent;
+      const Identifier: string): ISepiExpression; override;
+
+    function ResolveIdentInMethod(Compiler: TSepiMethodCompiler;
+      const Identifier: string): ISepiExpression; override;
+
+    function FieldSelection(SepiContext: TSepiComponent;
+      const BaseExpression: ISepiExpression;
+      const FieldName: string): ISepiExpression; override;
+  end;
 
 const {don't localize}
   FunLabyUtilsUnitName = 'FunLabyUtils';
@@ -126,8 +154,8 @@ const {don't localize}
   @param Name      Nom de la constante
   @return Constante chaîne recherchée, ou nil si non trouvée
 *}
-function LookForStringConstant(Context: TSepiComponent;
-  const Name: string): TSepiConstant;
+function TSepiFunDelphiLanguageRules.LookForStringConstant(
+  Context: TSepiComponent; const Name: string): TSepiConstant;
 var
   Meta: TSepiComponent;
 begin
@@ -150,8 +178,9 @@ end;
   @param Expression    Expression à construire
   @return True en cas de succès, False sinon
 *}
-function ResolveComponentID(SepiContext: TSepiComponent;
-  const Identifier: string; const Expression: ISepiExpression): Boolean;
+function TSepiFunDelphiLanguageRules.ResolveComponentID(
+  SepiContext: TSepiComponent; const Identifier: string;
+  const Expression: ISepiExpression): Boolean;
 var
   Constant: TSepiConstant;
   MasterExpr: ISepiExpression;
@@ -162,7 +191,7 @@ begin
   if Constant = nil then
     Exit;
 
-  MasterExpr := MethodResolveIdent(Expression.MethodCompiler, MasterName);
+  MasterExpr := ResolveIdentInMethod(Expression.MethodCompiler, MasterName);
   if MasterExpr = nil then
     Exit;
 
@@ -178,8 +207,8 @@ end;
   @param Expression    Expression à construire
   @return True en cas de succès, False sinon
 *}
-function ResolveAction(SepiContext: TSepiComponent; const Identifier: string;
-  const Expression: ISepiExpression): Boolean;
+function TSepiFunDelphiLanguageRules.ResolveAction(SepiContext: TSepiComponent;
+  const Identifier: string; const Expression: ISepiExpression): Boolean;
 var
   Constant: TSepiConstant;
 begin
@@ -195,17 +224,96 @@ begin
 end;
 
 {*
-  Résoud un identificateur dans le contexte d'une unité
-  @param UnitCompiler   Compilateur d'unité
-  @param Identifier     Identificateur recherché
-  @return Expression représentant l'identificateur, ou nil si non trouvé
+  Sélection d'un attribut d'une expression selon les règles du FunDelphi
+  @param SepiContext      Contexte Sepi depuis lequel chercher
+  @param BaseExpression   Expression de base
+  @param AttrName         Nom de l'attribut
+  @return Expression représentant l'attribut sélectionné (ou nil si inexistant)
 *}
-function UnitResolveIdent(UnitCompiler: TSepiUnitCompiler;
+function TSepiFunDelphiLanguageRules.AttributeSelection(
+  SepiContext: TSepiComponent; const BaseExpression: ISepiExpression;
+  const AttrName: string): ISepiExpression;
+var
+  Constant: TSepiConstant;
+  Prop: ISepiProperty;
+  Expression: ISepiExpression;
+begin
+  Constant := LookForStringConstant(SepiContext, AttributePrefix+AttrName);
+  if Constant = nil then
+    Exit;
+
+  Expression := inherited FieldSelection(SepiContext, BaseExpression,
+    'Attribute');
+
+  if not Supports(Expression, ISepiProperty, Prop) then
+    Exit;
+  if (Prop.ParamsCompleted) or (Prop.ParamCount <> 1) then
+    Exit;
+
+  Expression := TSepiExpression.Create(Expression);
+  ISepiExpressionPart(TSepiTrueConstValue.Create(
+    Constant)).AttachToExpression(Expression);
+
+  Prop.Params[0] := Expression;
+  Prop.CompleteParams;
+
+  Result := Prop as ISepiExpression;
+end;
+
+{*
+  Sélection du nombre d'un certain objet possédés par un joueur
+  @param SepiContext      Contexte Sepi depuis lequel chercher
+  @param BaseExpression   Expression de base
+  @param ObjectID         ID de l'objet
+  @return Expression représentant l'attribut sélectionné (ou nil si inexistant)
+*}
+function TSepiFunDelphiLanguageRules.ObjectCountSelection(
+  SepiContext: TSepiComponent; const BaseExpression: ISepiExpression;
+  const ObjectID: string): ISepiExpression;
+var
+  TPlayerType: TSepiType;
+  ReadableBase: ISepiReadableValue;
+  ObjectExpr, CountExpr: ISepiExpression;
+  CountProp: ISepiProperty;
+begin
+  TPlayerType := SepiContext.Root.FindClass(TPlayer);
+
+  if not Supports(BaseExpression, ISepiReadableValue, ReadableBase) then
+    Exit;
+  if not TSepiConvertOperation.ConvertionExists(TPlayerType, ReadableBase) then
+    Exit;
+
+  ObjectExpr := TSepiExpression.Create(BaseExpression);
+  if not ResolveComponentID(BaseExpression.MethodCompiler.SepiMethod,
+    ObjectID, ObjectExpr) then
+    Exit;
+
+  ((ObjectExpr as ISepiReadableValue) as ISepiTypeForceableValue).ForceType(
+    SepiContext.Root.FindClass(TObjectDef));
+
+  CountExpr := inherited FieldSelection(SepiContext, ObjectExpr, 'Count');
+
+  if not Supports(CountExpr, ISepiProperty, CountProp) then
+    Exit;
+  if (CountProp.ParamsCompleted) or (CountProp.ParamCount <> 1) then
+    Exit;
+
+  CountProp.Params[0] :=
+    TSepiConvertOperation.ConvertValue(TPlayerType,
+      ReadableBase) as ISepiExpression;
+  CountProp.CompleteParams;
+
+  Result := CountProp as ISepiExpression;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSepiFunDelphiLanguageRules.ResolveIdent(Context: TSepiComponent;
   const Identifier: string): ISepiExpression;
 begin
   // Standart Delphi expression
-  Result := SepiDelphiLikeCompilerUtils.UnitResolveIdent(UnitCompiler,
-    Identifier);
+  Result := inherited ResolveIdent(Context, Identifier);
   if Result <> nil then
     Exit;
 
@@ -218,13 +326,10 @@ begin
 end;
 
 {*
-  Résoud un identificateur dans le contexte d'une méthode
-  @param Compiler     Compilateur de méthode
-  @param Identifier   Identificateur recherché
-  @return Expression représentant l'identificateur, ou nil si non trouvé
+  [@inheritDoc]
 *}
-function MethodResolveIdent(Compiler: TSepiMethodCompiler;
-  const Identifier: string): ISepiExpression;
+function TSepiFunDelphiLanguageRules.ResolveIdentInMethod(
+  Compiler: TSepiMethodCompiler; const Identifier: string): ISepiExpression;
 var
   LocalVar: TSepiLocalVar;
   ContextExpression, FieldExpression: ISepiExpression;
@@ -250,8 +355,7 @@ begin
   end;
 
   // Standart Delphi expression
-  Result := SepiDelphiLikeCompilerUtils.MethodResolveIdent(Compiler,
-    Identifier);
+  Result := inherited ResolveIdentInMethod(Compiler, Identifier);
   if Result <> nil then
     Exit;
 
@@ -266,103 +370,14 @@ begin
 end;
 
 {*
-  Sélection d'un attribut d'une expression selon les règles du FunDelphi
-  @param SepiContext      Contexte Sepi depuis lequel chercher
-  @param BaseExpression   Expression de base
-  @param AttrName         Nom de l'attribut
-  @return Expression représentant l'attribut sélectionné (ou nil si inexistant)
+  [@inheritDoc]
 *}
-function AttributeSelection(SepiContext: TSepiComponent;
-  const BaseExpression: ISepiExpression;
-  const AttrName: string): ISepiExpression;
-var
-  Constant: TSepiConstant;
-  Prop: ISepiProperty;
-  Expression: ISepiExpression;
-begin
-  Constant := LookForStringConstant(SepiContext, AttributePrefix+AttrName);
-  if Constant = nil then
-    Exit;
-
-  Expression := SepiDelphiLikeCompilerUtils.FieldSelection(SepiContext,
-    BaseExpression, 'Attribute');
-
-  if not Supports(Expression, ISepiProperty, Prop) then
-    Exit;
-  if (Prop.ParamsCompleted) or (Prop.ParamCount <> 1) then
-    Exit;
-
-  Expression := TSepiExpression.Create(Expression);
-  ISepiExpressionPart(TSepiTrueConstValue.Create(
-    Constant)).AttachToExpression(Expression);
-
-  Prop.Params[0] := Expression;
-  Prop.CompleteParams;
-
-  Result := Prop as ISepiExpression;
-end;
-
-{*
-  Sélection du nombre d'un certain objet possédés par un joueur
-  @param SepiContext      Contexte Sepi depuis lequel chercher
-  @param BaseExpression   Expression de base
-  @param ObjectID         ID de l'objet
-  @return Expression représentant l'attribut sélectionné (ou nil si inexistant)
-*}
-function ObjectCountSelection(SepiContext: TSepiComponent;
-  const BaseExpression: ISepiExpression;
-  const ObjectID: string): ISepiExpression;
-var
-  TPlayerType: TSepiType;
-  ReadableBase: ISepiReadableValue;
-  ObjectExpr, CountExpr: ISepiExpression;
-  CountProp: ISepiProperty;
-begin
-  TPlayerType := SepiContext.Root.FindClass(TPlayer);
-
-  if not Supports(BaseExpression, ISepiReadableValue, ReadableBase) then
-    Exit;
-  if not TSepiConvertOperation.ConvertionExists(TPlayerType, ReadableBase) then
-    Exit;
-
-  ObjectExpr := TSepiExpression.Create(BaseExpression);
-  if not ResolveComponentID(BaseExpression.MethodCompiler.SepiMethod,
-    ObjectID, ObjectExpr) then
-    Exit;
-
-  ((ObjectExpr as ISepiReadableValue) as ISepiTypeForceableValue).ForceType(
-    SepiContext.Root.FindClass(TObjectDef));
-
-  CountExpr := SepiDelphiLikeCompilerUtils.FieldSelection(SepiContext,
-    ObjectExpr, 'Count');
-
-  if not Supports(CountExpr, ISepiProperty, CountProp) then
-    Exit;
-  if (CountProp.ParamsCompleted) or (CountProp.ParamCount <> 1) then
-    Exit;
-
-  CountProp.Params[0] :=
-    TSepiConvertOperation.ConvertValue(TPlayerType,
-      ReadableBase) as ISepiExpression;
-  CountProp.CompleteParams;
-
-  Result := CountProp as ISepiExpression;
-end;
-
-{*
-  Sélection de champ d'une expression selon les règles du FunDelphi
-  @param SepiContext      Contexte Sepi depuis lequel chercher
-  @param BaseExpression   Expression de base
-  @param FieldName        Nom du champ
-  @return Expression représentant le champ sélectionné (ou nil si inexistant)
-*}
-function FieldSelection(SepiContext: TSepiComponent;
+function TSepiFunDelphiLanguageRules.FieldSelection(SepiContext: TSepiComponent;
   const BaseExpression: ISepiExpression;
   const FieldName: string): ISepiExpression;
 begin
   // Standart Delphi field
-  Result := SepiDelphiLikeCompilerUtils.FieldSelection(SepiContext,
-    BaseExpression, FieldName);
+  Result := inherited FieldSelection(SepiContext, BaseExpression, FieldName);
   if Result <> nil then
     Exit;
 
@@ -454,8 +469,7 @@ begin
   Assert(Index >= 0);
   PropName := MasterPropNames[Index];
 
-  Expression := SepiDelphiLikeCompilerUtils.FieldSelection(
-    Compiler.SepiMethod, MasterExpr, PropName);
+  Expression := LanguageRules.FieldSelection(Compiler.SepiMethod, MasterExpr, PropName);
   Prop := Expression as ISepiProperty;
 
   Expression := TSepiExpression.Create(Expression);

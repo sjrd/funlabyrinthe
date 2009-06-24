@@ -159,16 +159,6 @@ type
   end;
 
   {*
-    Noeud sélection de champ
-    @author sjrd
-    @version 5.0
-  *}
-  TFunDelphiFieldSelectionModifierNode = class(TSepiFieldSelectionModifierNode)
-  protected
-    function MakeFieldSelection: ISepiExpression; override;
-  end;
-
-  {*
     Noeud déclarations de types d'actions
     @author sjrd
     @version 5.0
@@ -361,14 +351,6 @@ type
   end;
 
   {*
-    Noeud corps de constructeur
-    @author sjrd
-    @version 5.0
-  *}
-  TFunDelphiConstructorBodyBode = class(TSepiMethodBodyNode)
-  end;
-
-  {*
     Noeud en-tête de destructeur
     @author sjrd
     @version 5.0
@@ -376,14 +358,6 @@ type
   TFunDelphiDestructorHeaderNode = class(TFunDelphiMethodDeclNode)
   public
     procedure BeginParsing; override;
-  end;
-
-  {*
-    Noeud corps de destructeur
-    @author sjrd
-    @version 5.0
-  *}
-  TFunDelphiDestructorBodyBode = class(TSepiMethodBodyNode)
   end;
 
   {*
@@ -495,16 +469,6 @@ type
   TFunDelphiRoutineNode = class(TSepiMethodImplementationNode)
   public
     procedure EndParsing; override;
-  end;
-
-  {*
-    Noeud du corps d'une méthode
-    @author sjrd
-    @version 1.0
-  *}
-  TFunDelphiMethodBodyNode = class(TSepiMethodBodyNode)
-  public
-    function ResolveIdent(const Identifier: string): ISepiExpression; override;
   end;
 
   {*
@@ -620,7 +584,7 @@ begin
   NonTerminalClasses[ntDereferenceOp]   := TSepiDereferenceOpNode;
   NonTerminalClasses[ntParameters]      := TDelphiParametersNode;
   NonTerminalClasses[ntArrayIndices]    := TFunDelphiArrayIndicesModifierNode;
-  NonTerminalClasses[ntFieldSelection]  := TFunDelphiFieldSelectionModifierNode;
+  NonTerminalClasses[ntFieldSelection]  := TSepiFieldSelectionModifierNode;
 
   NonTerminalClasses[ntConstDecl]         := TDelphiConstantDeclNode;
   NonTerminalClasses[ntGlobalVar]         := TDelphiVariableDeclNode;
@@ -664,7 +628,7 @@ begin
   NonTerminalClasses[ntReturnType]           := TSepiSignatureReturnTypeNode;
 
   NonTerminalClasses[ntForwardMarker] := TSepiForwardMarkerNode;
-  NonTerminalClasses[ntMethodBody]    := TFunDelphiMethodBodyNode;
+  NonTerminalClasses[ntMethodBody]    := TSepiMethodBodyNode;
   NonTerminalClasses[ntLocalVar]      := TSepiLocalVarNode;
 
   NonTerminalClasses[ntInstructionList]       := TSepiInstructionListNode;
@@ -803,7 +767,8 @@ const
 begin
   if Child.SymbolClass = ntIdentifier then
   begin
-    SetSepiUnit(TSepiUnit.Create(SepiRoot, Child.AsText, ImpliedUses));
+    SetSepiUnit(TSepiUnit.Create(SepiRoot, Child.AsText, ImpliedUses),
+      TSepiFunDelphiLanguageRules);
     PrepareInitializeUnitProc;
   end;
 
@@ -834,7 +799,7 @@ end;
 function TFunDelphiRootNode.ResolveIdent(
   const Identifier: string): ISepiExpression;
 begin
-  Result := UnitResolveIdent(UnitCompiler, Identifier);
+  Result := LanguageRules.ResolveIdent(SepiUnit, Identifier);
 end;
 
 {*
@@ -1084,8 +1049,8 @@ begin
       if RightClass.ClassInheritsFrom(TSepiClass(
         SepiRoot.FindClass(SqCompClasses[I]))) then
       begin
-        LeftValue := FieldSelection(SepiContext, LeftValue as ISepiExpression,
-          SqCompFields[I]) as ISepiReadableValue;
+        LeftValue := LanguageRules.FieldSelection(SepiContext,
+          LeftValue as ISepiExpression, SqCompFields[I]) as ISepiReadableValue;
         Break;
       end;
     end;
@@ -1101,8 +1066,8 @@ begin
   // Square is Component: use TSquare.Contains
   if LeftClass.ClassInheritsFrom(TSquareType) then
   begin
-    WantingParams := FieldSelection(SepiContext, LeftValue as ISepiExpression,
-      'Contains') as ISepiWantingParams;
+    WantingParams := LanguageRules.FieldSelection(SepiContext,
+      LeftValue as ISepiExpression, 'Contains') as ISepiWantingParams;
     WantingParams.AddParam(RightValue as ISepiExpression);
     WantingParams.CompleteParams;
 
@@ -1173,8 +1138,8 @@ begin
   RightValue := TSepiConvertOperation.ConvertValue(
     SystemUnit.LongString, RightValue);
 
-  WantingParams := FieldSelection(SepiContext, LeftValue as ISepiExpression,
-    'DoAction') as ISepiWantingParams;
+  WantingParams := LanguageRules.FieldSelection(SepiContext,
+    LeftValue as ISepiExpression, 'DoAction') as ISepiWantingParams;
   WantingParams.AddParam(RightValue as ISepiExpression);
   WantingParams.CompleteParams;
 
@@ -1211,8 +1176,8 @@ begin
   RightValue := TSepiConvertOperation.ConvertValue(
     SepiRoot.FindClass(TObjectDef), RightValue);
 
-  CountProp := FieldSelection(SepiContext, RightValue as ISepiExpression,
-    'Count') as ISepiProperty;
+  CountProp := LanguageRules.FieldSelection(SepiContext,
+    RightValue as ISepiExpression, 'Count') as ISepiProperty;
   Assert(CountProp.ParamCount = 1);
   CountProp.Params[0] := LeftValue as ISepiExpression;
   CountProp.CompleteParams;
@@ -1301,15 +1266,6 @@ begin
   end;
 
   inherited;
-end;
-
-{--------------------------------------------}
-{ TFunDelphiFieldSelectionModifierNode class }
-{--------------------------------------------}
-
-function TFunDelphiFieldSelectionModifierNode.MakeFieldSelection: ISepiExpression;
-begin
-  Result := FieldSelection(SepiContext, Base, Children[0].AsText);
 end;
 
 {-----------------------------}
@@ -1412,7 +1368,8 @@ end;
 function TFunDelphiComponentDeclNode.ResolveIdent(
   const Identifier: string): ISepiExpression;
 begin
-  Result := MethodResolveIdent(FInitializeUnitCompiler, Identifier);
+  Result := LanguageRules.ResolveIdentInMethod(FInitializeUnitCompiler,
+    Identifier);
 end;
 
 {*
@@ -1431,7 +1388,8 @@ var
   I: Integer;
   Executable: ISepiExecutable;
 begin
-  Expression := MethodResolveIdent(Compiler, Children[1].AsText);
+  Expression := LanguageRules.ResolveIdentInMethod(Compiler,
+    Children[1].AsText);
   if not CheckIdentFound(Expression, Children[1].AsText, Children[1]) then
     Exit;
   Expression.SourcePos := Children[1].SourcePos;
@@ -1452,7 +1410,8 @@ begin
     FRegisterable := True;
   end;
 
-  Expression := FieldSelection(Compiler.SepiMethod, Expression, CreateName);
+  Expression := LanguageRules.FieldSelection(Compiler.SepiMethod, Expression,
+    CreateName);
   Assert(Expression <> nil);
   Expression.SourcePos := Children[1].SourcePos;
 
@@ -1463,7 +1422,8 @@ begin
   ISepiExpressionPart(TSepiTrueConstValue.Create(
     IDConstant)).AttachToExpression(IDExpr);
 
-  WantingParams.AddParam(MethodResolveIdent(Compiler, MasterName));
+  WantingParams.AddParam(LanguageRules.ResolveIdentInMethod(Compiler,
+    MasterName));
   WantingParams.AddParam(IDExpr);
 
   ParamsNode := Children[2];
@@ -1493,11 +1453,12 @@ begin
   if not FRegisterable then
     Exit;
 
-  ComponentExpr := MethodResolveIdent(Compiler, Children[0].AsText);
+  ComponentExpr := LanguageRules.ResolveIdentInMethod(Compiler,
+    Children[0].AsText);
   Assert(ComponentExpr <> nil);
   ComponentExpr.SourcePos := Children[0].SourcePos;
 
-  ProcValue := MethodResolveIdent(Compiler,
+  ProcValue := LanguageRules.ResolveIdentInMethod(Compiler,
     'RegisterSingleComponentProc') as ISepiReadableValue;
   Assert(ProcValue.ValueType is TSepiMethodRefType);
 
@@ -1595,21 +1556,11 @@ end;
 *}
 function TFunDelphiClassDefNode.ResolveIdent(
   const Identifier: string): ISepiExpression;
-var
-  Component: TSepiComponent;
 begin
   if SepiClass <> nil then
-  begin
-    Component := SepiContext.LookFor(Identifier);
-    if Component <> nil then
-    begin
-      Result := MakeExpression;
-      AddComponentToExpression(Result, Component);
-      Exit;
-    end;
-  end;
-
-  Result := inherited ResolveIdent(Identifier);
+    Result := LanguageRules.ResolveIdent(SepiContext, Identifier)
+  else
+    Result := inherited ResolveIdent(Identifier);
 end;
 
 {----------------------------}
@@ -1872,9 +1823,10 @@ var
   WantingParams: ISepiWantingParams;
   Executable: ISepiExecutable;
 begin
-  Expression := MethodResolveIdent(FCompiler, 'Painter');
-  Expression := FieldSelection(SepiContext, Expression, 'ImgNames');
-  Expression := FieldSelection(SepiContext, Expression, 'Add');
+  Expression := LanguageRules.ResolveIdentInMethod(FCompiler, 'Painter');
+  Expression := LanguageRules.FieldSelection(SepiContext, Expression,
+    'ImgNames');
+  Expression := LanguageRules.FieldSelection(SepiContext, Expression, 'Add');
 
   WantingParams := Expression as ISepiWantingParams;
   WantingParams.AddParam(ImageValue as ISepiExpression);
@@ -2008,7 +1960,7 @@ var
   IfInstr: TSepiIfThenElse;
 begin
   Compiler := Instructions.MethodCompiler;
-  ActionVarValue := MethodResolveIdent(Compiler,
+  ActionVarValue := LanguageRules.ResolveIdentInMethod(Compiler,
     ActionName) as ISepiReadableValue;
   TestValue := nil;
 
@@ -2114,7 +2066,7 @@ function TFunDelphiPluginActionNode.ResolveIdent(
   const Identifier: string): ISepiExpression;
 begin
   if MethodCompiler <> nil then
-    Result := MethodResolveIdent(MethodCompiler, Identifier)
+    Result := LanguageRules.ResolveIdentInMethod(MethodCompiler, Identifier)
   else
     Result := inherited ResolveIdent(Identifier);
 end;
@@ -2243,19 +2195,6 @@ begin
   inherited;
 end;
 
-{--------------------------------}
-{ TFunDelphiMethodBodyNode class }
-{--------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-function TFunDelphiMethodBodyNode.ResolveIdent(
-  const Identifier: string): ISepiExpression;
-begin
-  Result := MethodResolveIdent(MethodCompiler, Identifier);
-end;
-
 {----------------------------------------}
 { TFunDelphiReceivesDiscardsOpNode class }
 {----------------------------------------}
@@ -2278,8 +2217,8 @@ begin
   ObjectValue := TSepiConvertOperation.ConvertValue(
     SepiRoot.FindClass(TObjectDef), ObjectValue);
 
-  CountProp := FieldSelection(SepiContext, ObjectValue as ISepiExpression,
-    'Count') as ISepiProperty;
+  CountProp := LanguageRules.FieldSelection(SepiContext,
+    ObjectValue as ISepiExpression, 'Count') as ISepiProperty;
   Assert(CountProp.ParamCount = 1);
   CountProp.Params[0] := PlayerValue as ISepiExpression;
   CountProp.CompleteParams;
