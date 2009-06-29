@@ -82,12 +82,35 @@ type
   end;
 
   {*
+    Valeur propriété composant de case
+    @author sjrd
+    @version 5.0
+  *}
+  TSepiSquareCompPropertyValue = class(TSepiPropertyValue)
+  protected
+    function QueryInterface(const IID: TGUID;
+      out Obj): HResult; override; stdcall;
+
+    procedure AttachToExpression(const Expression: ISepiExpression); override;
+
+    procedure CompileWrite(Compiler: TSepiMethodCompiler;
+      Instructions: TSepiInstructionList; Source: ISepiReadableValue); override;
+  public
+    constructor Create(const AObjectValue: ISepiReadableValue;
+      AProperty: TSepiProperty);
+  end;
+
+  {*
     Règles sémantiques du langage FunDelphi
     @author sjrd
     @version 1.0
   *}
   TSepiFunDelphiLanguageRules = class(TSepiDelphiLanguageRules)
   protected
+    function AddClassIntfMemberToExpression(const Expression: ISepiExpression;
+      Context: TSepiComponent; const BaseValue: ISepiReadableValue;
+      Member: TSepiMember): Boolean; override;
+
     function LookForStringConstant(Context: TSepiComponent;
       const Name: string): TSepiConstant; virtual;
 
@@ -144,9 +167,342 @@ const {don't localize}
     'Field', 'Effect', 'Tool', 'Obstacle', 'Square', 'Map', 'Player'
   );
 
-{-----------------}
-{ Global routines }
-{-----------------}
+{---------------------------}
+{ TSepiComponentValue class }
+{---------------------------}
+
+{*
+  Crée une valeur composant
+  @param AMasterExpr   Expression Master
+  @param AIDConstant   Constante représentant l'ID du composant
+*}
+constructor TSepiComponentValue.Create(const AMasterExpr: ISepiExpression;
+  AIDConstant: TSepiConstant);
+begin
+  inherited Create;
+
+  FMasterExpr := AMasterExpr;
+  FIDConstant := AIDConstant;
+  FFunLabyUtilsUnit := FIDConstant.Root.FindComponent(
+    FunLabyUtilsUnitName) as TSepiUnit;
+
+  SetValueType(FunLabyUtilsUnit.FindClass(TFunLabyComponent));
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSepiComponentValue.CanForceType(AValueType: TSepiType;
+  Explicit: Boolean = False): Boolean;
+begin
+  Result := (AValueType is TSepiClass) and
+    TSepiClass(AValueType).ClassInheritsFrom(ValueType as TSepiClass) and
+    (AValueType.Owner = FunLabyUtilsUnit) and
+    AnsiMatchStr(AValueType.Name, ComponentClassNames) and
+    (FMakeSquareValue = nil);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiComponentValue.ForceType(AValueType: TSepiType);
+var
+  SubComponentValue: ISepiReadableValue;
+begin
+  Assert(CanForceType(AValueType));
+
+  SetValueType(AValueType);
+
+  if (AValueType as TSepiClass).DelphiClass = TSquare then
+  begin
+    SubComponentValue := TSepiComponentValue.Create(MasterExpr, IDConstant);
+    SubComponentValue.AttachToExpression(TSepiExpression.Create(Expression));
+
+    FMakeSquareValue := TSepiMakeSquareValue.Create(SepiRoot);
+    FMakeSquareValue.AttachToExpression(TSepiExpression.Create(Expression));
+    FMakeSquareValue.AddComponent(SubComponentValue);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiComponentValue.CompileCompute(Compiler: TSepiMethodCompiler;
+  Instructions: TSepiInstructionList; var Destination: TSepiMemoryReference;
+  TempVars: TSepiTempVarsLifeManager);
+var
+  Index: Integer;
+  PropName: string;
+  Expression: ISepiExpression;
+  Prop: ISepiProperty;
+begin
+  if FMakeSquareValue <> nil then
+  begin
+    FMakeSquareValue.CompileRead(Compiler, Instructions, Destination, TempVars);
+    Exit;
+  end;
+
+  Index := AnsiIndexStr(ValueType.Name, ComponentClassNames);
+  Assert(Index >= 0);
+  PropName := MasterPropNames[Index];
+
+  Expression := LanguageRules.FieldSelection(Compiler.SepiMethod, MasterExpr, PropName);
+  Prop := Expression as ISepiProperty;
+
+  Expression := TSepiExpression.Create(Expression);
+  ISepiExpressionPart(TSepiTrueConstValue.Create(
+    IDConstant)).AttachToExpression(Expression);
+
+  Assert(Prop.ParamCount = 1);
+  Prop.Params[0] := Expression;
+  Prop.CompleteParams;
+
+  (Prop as ISepiReadableValue).CompileRead(Compiler, Instructions,
+    Destination, TempVars);
+end;
+
+{----------------------------}
+{ TSepiMakeSquareValue class }
+{----------------------------}
+
+{*
+  Crée un constructeur de case
+*}
+constructor TSepiMakeSquareValue.Create(ASepiRoot: TSepiRoot);
+begin
+  inherited Create;
+
+  FComponents := TInterfaceList.Create;
+
+  SetValueType(ASepiRoot.FindClass(TSquare));
+end;
+
+{*
+  Vérifie le type d'un composant
+  @param AComponent   Composant à vérifier
+  @return True si le type est valide, False sinon
+*}
+function TSepiMakeSquareValue.CheckComponentType(
+  const AComponent: ISepiReadableValue): Boolean;
+var
+  TSquareComponentType: TSepiType;
+  TypeForceable: ISepiTypeForceableValue;
+begin
+  Result := True;
+  TSquareComponentType := SepiRoot.FindClass(TSquareComponent);
+
+  if TSquareComponentType.CompatibleWith(AComponent.ValueType) then
+    Exit;
+
+  if Supports(AComponent, ISepiTypeForceableValue, TypeForceable) and
+    TypeForceable.CanForceType(TSquareComponentType) then
+  begin
+    TypeForceable.ForceType(TSquareComponentType);
+    Exit;
+  end;
+
+  (AComponent as ISepiExpression).MakeError(SSquareComponentValueRequired);
+  Result := False;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiMakeSquareValue.AddComponent(
+  const AComponent: ISepiReadableValue);
+begin
+  if CheckComponentType(AComponent) then
+    FComponents.Add(AComponent);
+end;
+
+{*
+  Compile les paramètres dans une instruction assembleur CALL
+  @param CallInstr      Instruction CALL
+  @param Compiler       Compilateur de méthode
+  @param Instructions   Liste d'instructions
+  @param Destination    Référence mémoire à la variable résultat
+  @parma TempVars       Gestionnaire de variables temporaires
+*}
+procedure TSepiMakeSquareValue.CompileParams(CallInstr: TSepiAsmCall;
+  Compiler: TSepiMethodCompiler; Instructions: TSepiInstructionList;
+  Destination: TSepiMemoryReference; TempVars: TSepiTempVarsLifeManager);
+var
+  Parameters: TSepiAsmCallParams;
+  OpenArrayTempVar: TSepiLocalVar;
+  OpenArrayValue: ISepiValue;
+  OpenArrayItemValue: ISepiWritableValue;
+  I, HighValue: Integer;
+  InstrParamMemory: TSepiMemoryReference;
+begin
+  Parameters := CallInstr.Parameters;
+
+  // Set result memory space
+  Parameters.Result.Assign(Destination);
+
+  // Make open array temp var
+  OpenArrayTempVar := Compiler.Locals.AddTempVar(
+    TSepiStaticArrayType.Create(Compiler.LocalNamespace, '',
+      UnitCompiler.SystemUnit.Integer, 0, FComponents.Count-1,
+      SepiRoot.FindClass(TSquareComponent)));
+
+  // Begin life of open array temp var
+  OpenArrayTempVar.HandleLife;
+  OpenArrayTempVar.Life.BeginInstrInterval(Instructions.GetCurrentEndRef);
+  TempVars.Acquire(OpenArrayTempVar);
+
+  // Make open array value
+  OpenArrayValue := TSepiLocalVarValue.MakeValue(Compiler, OpenArrayTempVar);
+
+  // Read components
+  for I := 0 to FComponents.Count-1 do
+  begin
+    OpenArrayItemValue := TSepiArrayItemValue.MakeArrayItemValue(
+      OpenArrayValue, TSepiTrueConstValue.MakeIntegerLiteral(
+      Compiler, I)) as ISepiWritableValue;
+
+    OpenArrayItemValue.CompileWrite(Compiler, Instructions,
+      FComponents[I] as ISepiReadableValue);
+  end;
+
+  // Open array parameter
+  InstrParamMemory := Parameters.Parameters[0].MemoryRef;
+  InstrParamMemory.SetSpace(OpenArrayTempVar);
+  InstrParamMemory.Seal;
+
+  // High hidden parameter
+  HighValue := FComponents.Count-1;
+  InstrParamMemory := Parameters.Parameters[1].MemoryRef;
+  InstrParamMemory.SetSpace(msConstant, SizeOf(Integer));
+  InstrParamMemory.SetConstant(HighValue);
+  InstrParamMemory.Seal;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiMakeSquareValue.CompileCompute(Compiler: TSepiMethodCompiler;
+  Instructions: TSepiInstructionList; var Destination: TSepiMemoryReference;
+  TempVars: TSepiTempVarsLifeManager);
+var
+  SepiMethod: TSepiMethod;
+  CallInstr: TSepiAsmRefCall;
+begin
+  NeedDestination(Destination, ValueType, Compiler, TempVars,
+    Instructions.GetCurrentEndRef);
+
+  if FComponents.Count = 0 then
+    Exit;
+
+  SepiMethod := SepiRoot.FindComponent('MapTools.MakeSquare') as TSepiMethod;
+
+  CallInstr := TSepiAsmStaticCall.Create(Compiler);
+  CallInstr.SourcePos := Expression.SourcePos;
+  CallInstr.SetMethod(SepiMethod, False);
+  CallInstr.Prepare(SepiMethod.Signature);
+
+  CompileParams(CallInstr, Compiler, Instructions, Destination, TempVars);
+
+  Instructions.Add(CallInstr);
+end;
+
+{------------------------------------}
+{ TSepiSquareCompPropertyValue class }
+{------------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TSepiSquareCompPropertyValue.Create(
+  const AObjectValue: ISepiReadableValue; AProperty: TSepiProperty);
+begin
+  inherited Create(AObjectValue, AProperty);
+
+  Assert(Supports(AObjectValue, ISepiWritableValue));
+  Assert(AObjectValue.ValueType = AProperty.Root.FindClass(TSquare));
+  Assert(AProperty.WriteAccess.Kind = pakNone);
+  Assert(ParamsCompleted);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSepiSquareCompPropertyValue.QueryInterface(const IID: TGUID;
+  out Obj): HResult;
+begin
+  if SameGUID(IID, ISepiWritableValue) then
+  begin
+    ISepiWritableValue(Obj) := Self;
+    Result := S_OK;
+    Exit;
+  end;
+
+  Result := inherited QueryInterface(IID, Obj);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiSquareCompPropertyValue.AttachToExpression(
+  const Expression: ISepiExpression);
+var
+  AsExpressionPart: ISepiExpressionPart;
+begin
+  AsExpressionPart := Self;
+
+  inherited;
+
+  Expression.Attach(ISepiWritableValue, AsExpressionPart);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiSquareCompPropertyValue.CompileWrite(
+  Compiler: TSepiMethodCompiler; Instructions: TSepiInstructionList;
+  Source: ISepiReadableValue);
+var
+  ChangeCompMethod: TSepiMethodBase;
+  ChangeCompCall: ISepiWantingParams;
+begin
+  ChangeCompMethod := SepiRoot.FindComponent(
+    'MapTools.Change'+ObjectProperty.Name) as TSepiMethodBase;
+
+  ChangeCompCall := TSepiMethodCall.Create(ChangeCompMethod);
+  ChangeCompCall.AttachToExpression(TSepiExpression.Create(Compiler));
+
+  ChangeCompCall.AddParam(ObjectValue as ISepiExpression);
+  ChangeCompCall.AddParam(Source as ISepiExpression);
+  ChangeCompCall.CompleteParams;
+
+  (ObjectValue as ISepiWritableValue).CompileWrite(Compiler, Instructions,
+    ChangeCompCall as ISepiReadableValue);
+end;
+
+{-----------------------------------}
+{ TSepiFunDelphiLanguageRules class }
+{-----------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TSepiFunDelphiLanguageRules.AddClassIntfMemberToExpression(
+  const Expression: ISepiExpression; Context: TSepiComponent;
+  const BaseValue: ISepiReadableValue; Member: TSepiMember): Boolean;
+begin
+  if (Member is TSepiProperty) and
+    (BaseValue.ValueType = SepiRoot.FindClass(TSquare)) and
+    Supports(BaseValue, ISepiWritableValue) and
+    AnsiMatchText(Member.Name, ['Field', 'Effect', 'Tool', 'Obstacle']) then
+  begin
+    ISepiExpressionPart(TSepiSquareCompPropertyValue.Create(
+      BaseValue, TSepiProperty(Member))).AttachToExpression(Expression);
+    Result := True;
+    Exit;
+  end;
+
+  Result := inherited AddClassIntfMemberToExpression(Expression, Context,
+    BaseValue, Member);
+end;
 
 {*
   Recherche une constante chaîne
@@ -388,244 +744,6 @@ begin
 
   // Object count
   Result := ObjectCountSelection(SepiContext, BaseExpression, FieldName);
-end;
-
-{---------------------------}
-{ TSepiComponentValue class }
-{---------------------------}
-
-{*
-  Crée une valeur composant
-  @param AMasterExpr   Expression Master
-  @param AIDConstant   Constante représentant l'ID du composant
-*}
-constructor TSepiComponentValue.Create(const AMasterExpr: ISepiExpression;
-  AIDConstant: TSepiConstant);
-begin
-  inherited Create;
-
-  FMasterExpr := AMasterExpr;
-  FIDConstant := AIDConstant;
-  FFunLabyUtilsUnit := FIDConstant.Root.FindComponent(
-    FunLabyUtilsUnitName) as TSepiUnit;
-
-  SetValueType(FunLabyUtilsUnit.FindClass(TFunLabyComponent));
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TSepiComponentValue.CanForceType(AValueType: TSepiType;
-  Explicit: Boolean = False): Boolean;
-begin
-  Result := (AValueType is TSepiClass) and
-    TSepiClass(AValueType).ClassInheritsFrom(ValueType as TSepiClass) and
-    (AValueType.Owner = FunLabyUtilsUnit) and
-    AnsiMatchStr(AValueType.Name, ComponentClassNames) and
-    (FMakeSquareValue = nil);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSepiComponentValue.ForceType(AValueType: TSepiType);
-var
-  SubComponentValue: ISepiReadableValue;
-begin
-  Assert(CanForceType(AValueType));
-
-  SetValueType(AValueType);
-
-  if (AValueType as TSepiClass).DelphiClass = TSquare then
-  begin
-    SubComponentValue := TSepiComponentValue.Create(MasterExpr, IDConstant);
-    SubComponentValue.AttachToExpression(TSepiExpression.Create(Expression));
-
-    FMakeSquareValue := TSepiMakeSquareValue.Create(SepiRoot);
-    FMakeSquareValue.AttachToExpression(TSepiExpression.Create(Expression));
-    FMakeSquareValue.AddComponent(SubComponentValue);
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSepiComponentValue.CompileCompute(Compiler: TSepiMethodCompiler;
-  Instructions: TSepiInstructionList; var Destination: TSepiMemoryReference;
-  TempVars: TSepiTempVarsLifeManager);
-var
-  Index: Integer;
-  PropName: string;
-  Expression: ISepiExpression;
-  Prop: ISepiProperty;
-begin
-  if FMakeSquareValue <> nil then
-  begin
-    FMakeSquareValue.CompileRead(Compiler, Instructions, Destination, TempVars);
-    Exit;
-  end;
-
-  Index := AnsiIndexStr(ValueType.Name, ComponentClassNames);
-  Assert(Index >= 0);
-  PropName := MasterPropNames[Index];
-
-  Expression := LanguageRules.FieldSelection(Compiler.SepiMethod, MasterExpr, PropName);
-  Prop := Expression as ISepiProperty;
-
-  Expression := TSepiExpression.Create(Expression);
-  ISepiExpressionPart(TSepiTrueConstValue.Create(
-    IDConstant)).AttachToExpression(Expression);
-
-  Assert(Prop.ParamCount = 1);
-  Prop.Params[0] := Expression;
-  Prop.CompleteParams;
-
-  (Prop as ISepiReadableValue).CompileRead(Compiler, Instructions,
-    Destination, TempVars);
-end;
-
-{----------------------------}
-{ TSepiMakeSquareValue class }
-{----------------------------}
-
-{*
-  Crée un constructeur de case
-*}
-constructor TSepiMakeSquareValue.Create(ASepiRoot: TSepiRoot);
-begin
-  inherited Create;
-
-  FComponents := TInterfaceList.Create;
-
-  SetValueType(ASepiRoot.FindClass(TSquare));
-end;
-
-{*
-  Vérifie le type d'un composant
-  @param AComponent   Composant à vérifier
-  @return True si le type est valide, False sinon
-*}
-function TSepiMakeSquareValue.CheckComponentType(
-  const AComponent: ISepiReadableValue): Boolean;
-var
-  TSquareComponentType: TSepiType;
-  TypeForceable: ISepiTypeForceableValue;
-begin
-  Result := True;
-  TSquareComponentType := SepiRoot.FindClass(TSquareComponent);
-
-  if TSquareComponentType.CompatibleWith(AComponent.ValueType) then
-    Exit;
-
-  if Supports(AComponent, ISepiTypeForceableValue, TypeForceable) and
-    TypeForceable.CanForceType(TSquareComponentType) then
-  begin
-    TypeForceable.ForceType(TSquareComponentType);
-    Exit;
-  end;
-
-  (AComponent as ISepiExpression).MakeError(SSquareComponentValueRequired);
-  Result := False;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSepiMakeSquareValue.AddComponent(
-  const AComponent: ISepiReadableValue);
-begin
-  if CheckComponentType(AComponent) then
-    FComponents.Add(AComponent);
-end;
-
-{*
-  Compile les paramètres dans une instruction assembleur CALL
-  @param CallInstr      Instruction CALL
-  @param Compiler       Compilateur de méthode
-  @param Instructions   Liste d'instructions
-  @param Destination    Référence mémoire à la variable résultat
-  @parma TempVars       Gestionnaire de variables temporaires
-*}
-procedure TSepiMakeSquareValue.CompileParams(CallInstr: TSepiAsmCall;
-  Compiler: TSepiMethodCompiler; Instructions: TSepiInstructionList;
-  Destination: TSepiMemoryReference; TempVars: TSepiTempVarsLifeManager);
-var
-  Parameters: TSepiAsmCallParams;
-  OpenArrayTempVar: TSepiLocalVar;
-  OpenArrayValue: ISepiValue;
-  OpenArrayItemValue: ISepiWritableValue;
-  I, HighValue: Integer;
-  InstrParamMemory: TSepiMemoryReference;
-begin
-  Parameters := CallInstr.Parameters;
-
-  // Set result memory space
-  Parameters.Result.Assign(Destination);
-
-  // Make open array temp var
-  OpenArrayTempVar := Compiler.Locals.AddTempVar(
-    TSepiStaticArrayType.Create(Compiler.LocalNamespace, '',
-      UnitCompiler.SystemUnit.Integer, 0, FComponents.Count-1,
-      SepiRoot.FindClass(TSquareComponent)));
-
-  // Begin life of open array temp var
-  OpenArrayTempVar.HandleLife;
-  OpenArrayTempVar.Life.BeginInstrInterval(Instructions.GetCurrentEndRef);
-  TempVars.Acquire(OpenArrayTempVar);
-
-  // Make open array value
-  OpenArrayValue := TSepiLocalVarValue.MakeValue(Compiler, OpenArrayTempVar);
-
-  // Read components
-  for I := 0 to FComponents.Count-1 do
-  begin
-    OpenArrayItemValue := TSepiArrayItemValue.MakeArrayItemValue(
-      OpenArrayValue, TSepiTrueConstValue.MakeIntegerLiteral(
-      Compiler, I)) as ISepiWritableValue;
-
-    OpenArrayItemValue.CompileWrite(Compiler, Instructions,
-      FComponents[I] as ISepiReadableValue);
-  end;
-
-  // Open array parameter
-  InstrParamMemory := Parameters.Parameters[0].MemoryRef;
-  InstrParamMemory.SetSpace(OpenArrayTempVar);
-  InstrParamMemory.Seal;
-
-  // High hidden parameter
-  HighValue := FComponents.Count-1;
-  InstrParamMemory := Parameters.Parameters[1].MemoryRef;
-  InstrParamMemory.SetSpace(msConstant, SizeOf(Integer));
-  InstrParamMemory.SetConstant(HighValue);
-  InstrParamMemory.Seal;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSepiMakeSquareValue.CompileCompute(Compiler: TSepiMethodCompiler;
-  Instructions: TSepiInstructionList; var Destination: TSepiMemoryReference;
-  TempVars: TSepiTempVarsLifeManager);
-var
-  SepiMethod: TSepiMethod;
-  CallInstr: TSepiAsmRefCall;
-begin
-  NeedDestination(Destination, ValueType, Compiler, TempVars,
-    Instructions.GetCurrentEndRef);
-
-  if FComponents.Count = 0 then
-    Exit;
-
-  SepiMethod := SepiRoot.FindComponent('MapTools.MakeSquare') as TSepiMethod;
-
-  CallInstr := TSepiAsmStaticCall.Create(Compiler);
-  CallInstr.SourcePos := Expression.SourcePos;
-  CallInstr.SetMethod(SepiMethod, False);
-  CallInstr.Prepare(SepiMethod.Signature);
-
-  CompileParams(CallInstr, Compiler, Instructions, Destination, TempVars);
-
-  Instructions.Add(CallInstr);
 end;
 
 end.

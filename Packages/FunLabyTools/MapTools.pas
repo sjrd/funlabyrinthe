@@ -25,14 +25,25 @@ type
   TFindSquareProc = procedure(Map: TMap; var Pos: T3DPoint;
     Component: TSquareComponent);
 
+function ChangeField(Square: TSquare; NewField: TField): TSquare; overload;
 function ChangeField(Square: TSquare;
-  const NewField: TComponentID = ''): TSquare;
+  const NewField: TComponentID): TSquare; overload;
+
+function ChangeEffect(Square: TSquare; NewEffect: TEffect): TSquare; overload;
 function ChangeEffect(Square: TSquare;
-  const NewEffect: TComponentID = ''): TSquare;
+  const NewEffect: TComponentID): TSquare; overload;
+function RemoveEffect(Square: TSquare): TSquare;
+
+function ChangeTool(Square: TSquare; NewTool: TTool): TSquare; overload;
 function ChangeTool(Square: TSquare;
-  const NewTool: TComponentID = ''): TSquare;
+  const NewTool: TComponentID): TSquare; overload;
+function RemoveTool(Square: TSquare): TSquare;
+
 function ChangeObstacle(Square: TSquare;
-  const NewObstacle: TComponentID = ''): TSquare;
+  NewObstacle: TObstacle): TSquare; overload;
+function ChangeObstacle(Square: TSquare;
+  const NewObstacle: TComponentID): TSquare; overload;
+function RemoveObstacle(Square: TSquare): TSquare;
 
 function ChangeComp(Square: TSquare;
   NewComp: TSquareComponent): TSquare; overload;
@@ -40,10 +51,6 @@ function ChangeComp(Square: TSquare;
   const NewComp: TComponentID): TSquare; overload;
 
 function MakeSquare(const Components: array of TSquareComponent): TSquare;
-
-function MakeSquareNoOpenArray(Component1: TSquareComponent;
-  Component2: TSquareComponent = nil; Component3: TSquareComponent = nil;
-  Component4: TSquareComponent = nil): TSquare;
 
 procedure FindNextSquare(Map: TMap; var Pos: T3DPoint;
   Component: TSquareComponent);
@@ -57,11 +64,21 @@ implementation
 {*
   Change le terrain d'une case et renvoie la case modifiée
   @param Square     Case originale
+  @param NewField   Nouveau terrain
+  @return Une case identique à Square mais avec le terrain indiqué
+*}
+function ChangeField(Square: TSquare; NewField: TField): TSquare;
+begin
+  Result := ChangeField(Square, NewField.SafeID);
+end;
+
+{*
+  Change le terrain d'une case et renvoie la case modifiée
+  @param Square     Case originale
   @param NewField   ID du nouveau terrain
   @return Une case identique à Square mais avec le terrain indiqué
 *}
-function ChangeField(Square: TSquare;
-  const NewField: TComponentID = ''): TSquare;
+function ChangeField(Square: TSquare; const NewField: TComponentID): TSquare;
 begin
   with Square do
     Result := Master.SquareByComps(
@@ -71,15 +88,46 @@ end;
 {*
   Change l'effet d'une case et renvoie la case modifiée
   @param Square      Case originale
+  @param NewEffect   Nouvel effet
+  @return Une case identique à Square mais avec l'effet indiqué
+*}
+function ChangeEffect(Square: TSquare; NewEffect: TEffect): TSquare;
+begin
+  Result := ChangeEffect(Square, NewEffect.SafeID);
+end;
+
+{*
+  Change l'effet d'une case et renvoie la case modifiée
+  @param Square      Case originale
   @param NewEffect   ID du nouvel effet
   @return Une case identique à Square mais avec l'effet indiqué
 *}
-function ChangeEffect(Square: TSquare;
-  const NewEffect: TComponentID = ''): TSquare;
+function ChangeEffect(Square: TSquare; const NewEffect: TComponentID): TSquare;
 begin
   with Square do
     Result := Master.SquareByComps(
       Field.SafeID, NewEffect, Tool.SafeID, Obstacle.SafeID);
+end;
+
+{*
+  Retire l'effet d'une case et renvoie la case modifiée
+  @param Square   Case originale
+  @return Une case identique à Square mais sans effect
+*}
+function RemoveEffect(Square: TSquare): TSquare;
+begin
+  Result := ChangeEffect(Square, '');
+end;
+
+{*
+  Change l'outil d'une case et renvoie la case modifiée
+  @param Square    Case originale
+  @param NewTool   Nouvel outil
+  @return Une case identique à Square mais avec l'outil indiqué
+*}
+function ChangeTool(Square: TSquare; NewTool: TTool): TSquare;
+begin
+  Result := ChangeTool(Square, NewTool.SafeID);
 end;
 
 {*
@@ -88,12 +136,32 @@ end;
   @param NewTool   ID du nouvel outil
   @return Une case identique à Square mais avec l'outil indiqué
 *}
-function ChangeTool(Square: TSquare;
-  const NewTool: TComponentID = ''): TSquare;
+function ChangeTool(Square: TSquare; const NewTool: TComponentID): TSquare;
 begin
   with Square do
     Result := Master.SquareByComps(
       Field.SafeID, Effect.SafeID, NewTool, Obstacle.SafeID);
+end;
+
+{*
+  Retire l'outil d'une case et renvoie la case modifiée
+  @param Square   Case originale
+  @return Une case identique à Square mais sans outil
+*}
+function RemoveTool(Square: TSquare): TSquare;
+begin
+  Result := ChangeTool(Square, '');
+end;
+
+{*
+  Change l'obstacle d'une case et renvoie la case modifiée
+  @param Square        Case originale
+  @param NewObstacle   Nouvel obstacle
+  @return Une case identique à Square mais avec l'obstacle indiqué
+*}
+function ChangeObstacle(Square: TSquare; NewObstacle: TObstacle): TSquare;
+begin
+  Result := ChangeObstacle(Square, NewObstacle.SafeID);
 end;
 
 {*
@@ -103,11 +171,21 @@ end;
   @return Une case identique à Square mais avec l'obstacle indiqué
 *}
 function ChangeObstacle(Square: TSquare;
-  const NewObstacle: TComponentID = ''): TSquare;
+  const NewObstacle: TComponentID): TSquare;
 begin
   with Square do
     Result := Master.SquareByComps(
       Field.SafeID, Effect.SafeID, Tool.SafeID, NewObstacle);
+end;
+
+{*
+  Retire l'obstacle d'une case et renvoie la case modifiée
+  @param Square   Case originale
+  @return Une case identique à Square mais sans obstacle
+*}
+function RemoveObstacle(Square: TSquare): TSquare;
+begin
+  Result := ChangeObstacle(Square, '');
 end;
 
 {*
@@ -205,35 +283,6 @@ begin
 
   Result := Components[0].Master.Square[Format(SquareIDFormat,
     [FieldID, EffectID, ToolID, ObstacleID])];
-end;
-
-{*
-  Construit une case à partir de un à plusieurs composants
-  Cette variante de MakeSquare n'utilise pas de tableau ouvert, ce qui permet
-  de s'en servir dans la version actuelle de Sepi.
-  @param Component1   Premier composant de la case
-  @param Component2   Deuxième composant de la case
-  @param Component3   Troisième composant de la case
-  @param Component4   Quatrième composant de la case
-  @return Case construite
-*}
-function MakeSquareNoOpenArray(Component1: TSquareComponent;
-  Component2: TSquareComponent = nil; Component3: TSquareComponent = nil;
-  Component4: TSquareComponent = nil): TSquare;
-var
-  Components: array[0..3] of TSquareComponent;
-  Count: Integer;
-begin
-  Components[0] := Component1;
-  Components[1] := Component2;
-  Components[2] := Component3;
-  Components[3] := Component4;
-
-  Count := 1;
-  while (Count < 4) and (Components[Count] <> nil) do
-    Inc(Count);
-
-  Result := MakeSquare(Slice(Components, Count));
 end;
 
 {*

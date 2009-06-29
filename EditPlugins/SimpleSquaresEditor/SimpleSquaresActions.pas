@@ -315,11 +315,11 @@ function TSquarePos.GetFunDelphiCode: string;
 begin
   // don't localize
   if MapID = '' then
-    Result := 'Player.Map'
+    Result := 'Map'
   else
     Result := Format('Master.Map[''%s''].Map', [MapID]);
 
-  Result := Result + Format('[Point3D(%d, %d, %d)]',
+  Result := Result + Format('[%d, %d, %d]',
     [Position.X, Position.Y, Position.Z]);
 end;
 
@@ -531,10 +531,16 @@ end;
 procedure TDeactivateEffectAction.ProduceFunDelphiCode(Code: TStrings;
   const Indent: string);
 const
-  StatementFormat =
-    'Player.Map[Pos] := ChangeEffect(Player.Map[Pos], %s);';
+  StatementFormat = 'Square.Effect := %s;';
+var
+  NewEffect: string;
 begin
-  Code.Add(Indent + Format(StatementFormat, [StrToStrRepres(EffectID)]));
+  if EffectID = '' then
+    NewEffect := 'nil'
+  else
+    NewEffect := Format('Master.Effect[%s]', [StrToStrRepres(EffectID)]);
+
+  Code.Add(Indent + Format(StatementFormat, [NewEffect]));
 end;
 
 {----------------------}

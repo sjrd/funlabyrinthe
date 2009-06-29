@@ -902,8 +902,7 @@ begin
   case ConditionKind of
     ockAlways:
     begin
-      Code.Add('    Player.Map[Pos] := ChangeObstacle('+
-        'Player.Map[Pos], '''');');
+      Code.Add('    Square.Obstacle := nil;');
     end;
 
     ockNever:
@@ -917,8 +916,7 @@ begin
     ockPlayerAction:
     begin
       Code.Add(Format('    if Player can %s then', [PlayerAction]));
-      Code.Add('      Player.Map[Pos] := ChangeObstacle('+
-        'Player.Map[Pos], '''')' + IIF(FailMessage = '', ';', ''));
+      Code.Add('      Square.Obstacle := nil' + IIF(FailMessage = '', ';', ''));
 
       if FailMessage <> '' then
       begin

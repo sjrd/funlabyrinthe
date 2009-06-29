@@ -175,7 +175,7 @@ procedure TObjectTool.Find(Context: TMoveContext);
 begin
   with Context do
   begin
-    Square := ChangeTool(Square);
+    Square := RemoveTool(Square);
     ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
     if FindMessage <> '' then
       Player.ShowDialog(sMessage, FindMessage);

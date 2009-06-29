@@ -109,7 +109,7 @@ begin
     if KeyPressed then
     begin
       if Player.DoAction(actOpenSilverLock) then
-        Square := ChangeObstacle(Square)
+        Square := RemoveObstacle(Square)
       else
         ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
     end;
@@ -146,7 +146,7 @@ begin
     if KeyPressed then
     begin
       if Player.DoAction(actOpenGoldenLock) then
-        Square := ChangeObstacle(Square)
+        Square := RemoveObstacle(Square)
       else
         ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
     end;
@@ -202,7 +202,7 @@ begin
 
   with Context do
     if KeyPressed then
-      Square := ChangeObstacle(Square);
+      Square := RemoveObstacle(Square);
 end;
 
 end.

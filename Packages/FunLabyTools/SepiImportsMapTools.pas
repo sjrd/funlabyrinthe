@@ -24,7 +24,7 @@ const // don't localize
   UnitName = 'MapTools';
   ResourceName = 'SepiImportsMapTools';
   TypeCount = 1;
-  MethodCount = 11;
+  MethodCount = 17;
   VariableCount = 1;
 
 var
@@ -35,6 +35,46 @@ var
 {---------------------}
 { Overloaded routines }
 {---------------------}
+
+function ChangeField_0(Square: TSquare; NewField: TField): TSquare;
+begin
+  Result := ChangeField(Square, NewField);
+end;
+
+function ChangeField_1(Square: TSquare; const NewField: TComponentID): TSquare;
+begin
+  Result := ChangeField(Square, NewField);
+end;
+
+function ChangeEffect_0(Square: TSquare; NewEffect: TEffect): TSquare;
+begin
+  Result := ChangeEffect(Square, NewEffect);
+end;
+
+function ChangeEffect_1(Square: TSquare; const NewEffect: TComponentID): TSquare;
+begin
+  Result := ChangeEffect(Square, NewEffect);
+end;
+
+function ChangeTool_0(Square: TSquare; NewTool: TTool): TSquare;
+begin
+  Result := ChangeTool(Square, NewTool);
+end;
+
+function ChangeTool_1(Square: TSquare; const NewTool: TComponentID): TSquare;
+begin
+  Result := ChangeTool(Square, NewTool);
+end;
+
+function ChangeObstacle_0(Square: TSquare; NewObstacle: TObstacle): TSquare;
+begin
+  Result := ChangeObstacle(Square, NewObstacle);
+end;
+
+function ChangeObstacle_1(Square: TSquare; const NewObstacle: TComponentID): TSquare;
+begin
+  Result := ChangeObstacle(Square, NewObstacle);
+end;
 
 function ChangeComp_0(Square: TSquare; NewComp: TSquareComponent): TSquare;
 begin
@@ -112,17 +152,23 @@ end;
 
 procedure InitMethodAddresses;
 begin
-  MethodAddresses[0] := @ChangeField;
-  MethodAddresses[1] := @ChangeEffect;
-  MethodAddresses[2] := @ChangeTool;
-  MethodAddresses[3] := @ChangeObstacle;
-  MethodAddresses[4] := @ChangeComp_0;
-  MethodAddresses[5] := @ChangeComp_1;
-  MethodAddresses[6] := @MakeSquare;
-  MethodAddresses[7] := @MakeSquareNoOpenArray;
-  MethodAddresses[8] := @FindNextSquare;
-  MethodAddresses[9] := @FindPreviousSquare;
-  MethodAddresses[10] := @FindSquareAtRandom;
+  MethodAddresses[0] := @ChangeField_0;
+  MethodAddresses[1] := @ChangeField_1;
+  MethodAddresses[2] := @ChangeEffect_0;
+  MethodAddresses[3] := @ChangeEffect_1;
+  MethodAddresses[4] := @RemoveEffect;
+  MethodAddresses[5] := @ChangeTool_0;
+  MethodAddresses[6] := @ChangeTool_1;
+  MethodAddresses[7] := @RemoveTool;
+  MethodAddresses[8] := @ChangeObstacle_0;
+  MethodAddresses[9] := @ChangeObstacle_1;
+  MethodAddresses[10] := @RemoveObstacle;
+  MethodAddresses[11] := @ChangeComp_0;
+  MethodAddresses[12] := @ChangeComp_1;
+  MethodAddresses[13] := @MakeSquare;
+  MethodAddresses[14] := @FindNextSquare;
+  MethodAddresses[15] := @FindPreviousSquare;
+  MethodAddresses[16] := @FindSquareAtRandom;
 end;
 
 procedure InitVarAddresses;
