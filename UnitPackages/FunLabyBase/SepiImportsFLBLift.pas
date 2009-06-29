@@ -17,6 +17,8 @@ implementation
 
 {$R *.res}
 
+{$WARN SYMBOL_DEPRECATED OFF}
+
 const // don't localize
   UnitName = 'FLBLift';
   ResourceName = 'SepiImportsFLBLift';
@@ -121,8 +123,6 @@ begin
     Stream.Free;
   end;
 end;
-
-{$WARN SYMBOL_DEPRECATED OFF}
 
 procedure InitTypeInfoArray;
 begin

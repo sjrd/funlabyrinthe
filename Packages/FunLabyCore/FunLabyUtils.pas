@@ -454,15 +454,12 @@ type
     FTool: TTool;         /// Outil
     FObstacle: TObstacle; /// Obstacle
   protected
-    FRefCount: Integer; /// Compteur de références
-
     procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
       X: Integer = 0; Y: Integer = 0); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; AField: TField; AEffect: TEffect; ATool: TTool;
       AObstacle: TObstacle);
-    procedure BeforeDestruction; override;
 
     procedure DefaultHandler(var Msg); override;
 
@@ -478,15 +475,10 @@ type
 
     procedure Pushing(Context: TMoveContext); virtual;
 
-    function AddRef: Integer; virtual;
-    function Release: Integer; virtual;
-
     property Field: TField read FField;
     property Effect: TEffect read FEffect;
     property Tool: TTool read FTool;
     property Obstacle: TObstacle read FObstacle;
-
-    property RefCount: Integer read FRefCount;
   end;
 
   {*
@@ -1733,7 +1725,6 @@ begin
   FEffect := AEffect;
   FTool := ATool;
   FObstacle := AObstacle;
-  FRefCount := 0;
 
   FStaticDraw :=
     ((not Assigned(FField)) or FField.StaticDraw) and
@@ -1762,18 +1753,6 @@ begin
     Obstacle.Draw(QPos, Canvas, X, Y);
 
   inherited;
-end;
-
-{*
-  Exécuté avant la destruction de l'objet
-  BeforeDestruction est appelé avant l'exécution du premier destructeur.
-  N'appelez pas directement BeforeDestruction.
-*}
-procedure TSquare.BeforeDestruction;
-begin
-  inherited;
-  // Il ne faut surtout pas détruire une case déjà en cours de destruction
-  FRefCount := NoRefCount;
 end;
 
 {*
@@ -1823,13 +1802,8 @@ end;
 *}
 procedure TSquare.Entering(Context: TMoveContext);
 begin
-  AddRef;
-  try
-    if Assigned(Field) then
-      Field.Entering(Context);
-  finally
-    Release;
-  end;
+  if Assigned(Field) then
+    Field.Entering(Context);
 end;
 
 {*
@@ -1840,13 +1814,8 @@ end;
 *}
 procedure TSquare.Exiting(Context: TMoveContext);
 begin
-  AddRef;
-  try
-    if Assigned(Field) then
-      Field.Exiting(Context);
-  finally
-    Release;
-  end;
+  if Assigned(Field) then
+    Field.Exiting(Context);
 end;
 
 {*
@@ -1855,15 +1824,10 @@ end;
 *}
 procedure TSquare.Entered(Context: TMoveContext);
 begin
-  AddRef;
-  try
-    if Assigned(Field) then
-      Field.Entered(Context);
-    if Assigned(Effect) then
-      Effect.Entered(Context);
-  finally
-    Release;
-  end;
+  if Assigned(Field) then
+    Field.Entered(Context);
+  if Assigned(Effect) then
+    Effect.Entered(Context);
 end;
 
 {*
@@ -1872,15 +1836,10 @@ end;
 *}
 procedure TSquare.Exited(Context: TMoveContext);
 begin
-  AddRef;
-  try
-    if Assigned(Field) then
-      Field.Exited(Context);
-    if Assigned(Effect) then
-      Effect.Exited(Context);
-  finally
-    Release;
-  end;
+  if Assigned(Field) then
+    Field.Exited(Context);
+  if Assigned(Effect) then
+    Effect.Exited(Context);
 end;
 
 {*
@@ -1889,15 +1848,10 @@ end;
 *}
 procedure TSquare.Execute(Context: TMoveContext);
 begin
-  AddRef;
-  try
-    if Assigned(Tool) then
-      Tool.Find(Context);
-    if Assigned(Effect) then
-      Effect.Execute(Context);
-  finally
-    Release;
-  end;
+  if Assigned(Tool) then
+    Tool.Find(Context);
+  if Assigned(Effect) then
+    Effect.Execute(Context);
 end;
 
 {*
@@ -1910,38 +1864,8 @@ end;
 *}
 procedure TSquare.Pushing(Context: TMoveContext);
 begin
-  AddRef;
-  try
-    if Assigned(Obstacle) then
-      Obstacle.Pushing(Context);
-  finally
-    Release;
-  end;
-end;
-
-{*
-  Incrémente le compteur de références de la case
-  @return Nouvelle valeur du compteur de références
-*}
-function TSquare.AddRef: Integer;
-begin
-  if FRefCount <> NoRefCount then
-    Inc(FRefCount);
-  Result := FRefCount;
-end;
-
-{*
-  Décrémente le compteur de références de la case
-  @return Nouvelle valeur du compteur de références
-*}
-function TSquare.Release: Integer;
-begin
-  if FRefCount <> NoRefCount then
-    Dec(FRefCount);
-  Result := FRefCount;
-
-  if FRefCount = 0 then
-    Free;
+  if Assigned(Obstacle) then
+    Obstacle.Pushing(Context);
 end;
 
 {-------------}
@@ -2075,16 +1999,7 @@ end;
 *}
 procedure TMap.SetLinearMap(Index: Integer; Value: TSquare);
 begin
-  if FMap[Index] = Value then
-    Exit;
-
-  if Assigned(FMap[Index]) then
-    FMap[Index].Release;
-
   FMap[Index] := Value;
-
-  if Assigned(Value) then
-    Value.AddRef;
 end;
 
 {*

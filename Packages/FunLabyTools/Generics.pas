@@ -206,7 +206,6 @@ begin
   AOriginalSquare := AMap[APosition];
   inherited Create(AMaster, AID, AOriginalSquare.Name,
     AField, AEffect, ATool, AObstacle);
-  FRefCount := NoRefCount;
 
   if not AOriginalSquare.StaticDraw then
     FStaticDraw := False;
@@ -214,7 +213,6 @@ begin
   FPosition := APosition;
   FOriginalSquare := AOriginalSquare;
 
-  OriginalSquare.AddRef;
   Map[Position] := Self;
 end;
 
@@ -224,7 +222,6 @@ end;
 destructor TOverriddenSquare.Destroy;
 begin
   Map[Position] := OriginalSquare;
-  OriginalSquare.Release;
 
   inherited;
 end;

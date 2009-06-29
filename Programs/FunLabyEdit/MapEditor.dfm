@@ -108,21 +108,30 @@ object FrameMapEditor: TFrameMapEditor
       Constraints.MinWidth = 360
       TabOrder = 0
       TabStop = True
+      ExplicitWidth = 360
+      ExplicitHeight = 417
       inherited MapTabSet: TTabSet
         Width = 360
+        ExplicitWidth = 360
       end
       inherited ScrollBoxMap: TScrollBox
         Width = 360
         Height = 290
+        ExplicitWidth = 360
+        ExplicitHeight = 290
       end
       inherited PanelMapInfos: TPanel
         Top = 311
         Width = 360
+        ExplicitTop = 311
+        ExplicitWidth = 360
         inherited LabelFloor: TLabel
           Left = 256
+          ExplicitLeft = 256
         end
         inherited EditFloor: TSpinEdit
           Left = 296
+          ExplicitLeft = 296
         end
       end
     end

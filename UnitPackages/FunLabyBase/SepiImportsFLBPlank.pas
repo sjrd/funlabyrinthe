@@ -18,6 +18,8 @@ implementation
 
 {$R *.res}
 
+{$WARN SYMBOL_DEPRECATED OFF}
+
 const // don't localize
   UnitName = 'FLBPlank';
   ResourceName = 'SepiImportsFLBPlank';
@@ -122,8 +124,6 @@ begin
     Stream.Free;
   end;
 end;
-
-{$WARN SYMBOL_DEPRECATED OFF}
 
 procedure InitTypeInfoArray;
 begin
