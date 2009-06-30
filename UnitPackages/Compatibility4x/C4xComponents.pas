@@ -93,8 +93,7 @@ type
   *}
   TOldStairs = class(TEffect)
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
@@ -131,8 +130,7 @@ type
     FActions: TActions;          /// Actions propriétaires
     FAlternatePainter: TPainter; /// Peintre alternatif
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
 
     property AlternatePainter: TPainter read FAlternatePainter;
   public
@@ -318,21 +316,20 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TOldStairs.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TOldStairs.DoDraw(Context: TDrawSquareContext);
 var
   StairsID: TComponentID;
   Pos, Other: T3DPoint;
 begin
   inherited;
 
-  if IsNoQPos(QPos) then
+  if Context.IsNowhere then
     StairsID := idUpStairs
   else
   begin
-    Pos := QPos.Position;
+    Pos := Context.Pos;
     Other := Pos;
-    FindNextSquare(QPos.Map, Other, Self);
+    FindNextSquare(Context.Map, Other, Self);
 
     if (Other.Z < Pos.Z) or ((Other.Z = Pos.Z) and
       (Other.Y < Pos.Y) or ((Other.Y = Pos.Y) and (Other.X < Pos.X))) then
@@ -341,7 +338,7 @@ begin
       StairsID := idUpStairs;
   end;
 
-  Master.Effect[StairsID].Draw(QPos, Canvas, X, Y);
+  Master.Effect[StairsID].Draw(Context);
 end;
 
 {*
@@ -454,23 +451,30 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TActionsEffect.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TActionsEffect.DoDraw(Context: TDrawSquareContext);
 begin
-  if Actions.Kind = akPushButton then
+  with Context do
   begin
-    if QPos.Map.PlayersOn(QPos.Position) = 0 then
-      Painter.Draw(Canvas, X, Y)
+    case Actions.Kind of
+      akPushButton:
+      begin
+        if QPos.Map.PlayersOn(QPos.Position) = 0 then
+          Painter.Draw(Context)
+        else
+          AlternatePainter.Draw(Context);
+      end;
+
+      akSwitch:
+      begin
+        if Odd(Actions.Counter) then
+          AlternatePainter.Draw(Context)
+        else
+          Painter.Draw(Context);
+      end;
     else
-      AlternatePainter.Draw(Canvas, X, Y);
-  end else if Actions.Kind = akSwitch then
-  begin
-    if Odd(Actions.Counter) then
-      AlternatePainter.Draw(Canvas, X, Y)
-    else
-      Painter.Draw(Canvas, X, Y);
-  end else
-    inherited;
+      inherited;
+    end;
+  end;
 end;
 
 {*

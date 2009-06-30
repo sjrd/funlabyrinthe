@@ -422,8 +422,15 @@ end;
   @param Y        Ordonnée
 *}
 procedure TSimpleSquare.Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+var
+  Context: TDrawSquareContext;
 begin
-  FPainter.Draw(Canvas, X, Y);
+  Context := TDrawSquareContext.Create(Canvas, X, Y);
+  try
+    FPainter.Draw(Context);
+  finally
+    Context.Free;
+  end;
 end;
 
 {*

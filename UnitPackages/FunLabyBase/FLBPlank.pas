@@ -46,8 +46,7 @@ type
   *}
   TPlankPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
+    procedure DrawBefore(Context: TDrawSquareContext); override;
 
     procedure Moving(Context: TMoveContext); override;
   end;
@@ -102,10 +101,16 @@ implementation
 {*
   [@inheritDoc]
 *}
-procedure TPlankPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TPlankPlugin.DrawBefore(Context: TDrawSquareContext);
+var
+  X, Y: Integer;
+  Player: TPlayer;
 begin
   inherited;
+
+  X := Context.X;
+  Y := Context.Y;
+  Player := Context.Player;
 
   if Player.Attribute[attrUsePlank] = 0 then
     Exit;
@@ -122,7 +127,7 @@ begin
   end;
 
   // Dessin de la planche
-  with Canvas do
+  with Context.Canvas do
   begin
     Brush.Color := clPlank;
     Brush.Style := bsSolid;

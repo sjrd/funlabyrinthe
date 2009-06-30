@@ -68,8 +68,7 @@ type
   *}
   TSecretWay = class(TObstacle)
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
@@ -174,14 +173,13 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TSecretWay.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TSecretWay.DoDraw(Context: TDrawSquareContext);
 begin
   inherited;
 
   if Master.Editing then
   begin
-    with Canvas do
+    with Context, Canvas do
     begin
       Brush.Color := clWhite;
       Font.Color := clBlack;

@@ -126,6 +126,43 @@ type
     const DialogTitle, DialogPrompt: string) of object;
 
   {*
+    Contexte de dessin d'une case
+    @author sjrd
+    @version 5.0
+  *}
+  TDrawSquareContext = class(TObject)
+  private
+    FCanvas: TCanvas;   /// Canevas cible
+    FX: Integer;        /// Absisce où dessiner
+    FY: Integer;        /// Ordonnée où dessiner
+    FSquareRect: TRect; /// Rectangle de la case à dessiner
+
+    FIsNowhere: Boolean;  /// Indique si le dessin est fait "nulle part"
+    FQPos: TQualifiedPos; /// Position dessinée
+
+    FPlayer: TPlayer; /// Joueur à dessiner (si applicable)
+
+    procedure SetPlayer(APlayer: TPlayer);
+  public
+    constructor Create(ACanvas: TCanvas); overload;
+    constructor Create(ACanvas: TCanvas; X, Y: Integer); overload;
+    constructor Create(ACanvas: TCanvas; X, Y: Integer;
+      const AQPos: TQualifiedPos); overload;
+
+    property Canvas: TCanvas read FCanvas;
+    property X: Integer read FX;
+    property Y: Integer read FY;
+    property SquareRect: TRect read FSquareRect;
+
+    property IsNowhere: Boolean read FIsNowhere;
+    property QPos: TQualifiedPos read FQPos;
+    property Map: TMap read FQPos.Map;
+    property Pos: T3DPoint read FQPos.Position;
+
+    property Player: TPlayer read FPlayer;
+  end;
+
+  {*
     Gère le chargement des images d'après leur nom
     TImagesMaster s'occupe de charger automatiquement les images qu'on lui
     demande d'afficher. Il les conserve dans une liste d'image.
@@ -143,6 +180,11 @@ type
     function Add(const ImgName: string; Bitmap: TBitmap): Integer;
 
     function IndexOf(const ImgName: string): Integer;
+
+    procedure Draw(Index: Integer; Context: TDrawSquareContext); overload;
+    procedure Draw(const ImgName: string;
+      Context: TDrawSquareContext); overload;
+
     procedure Draw(Index: Integer; Canvas: TCanvas;
       X: Integer = 0; Y: Integer = 0); overload;
     procedure Draw(const ImgName: string; Canvas: TCanvas;
@@ -159,11 +201,11 @@ type
     constructor Create; override;
 
     procedure EmptySquare;
-    procedure DrawSquare(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+    procedure DrawSquare(Context: TDrawSquareContext);
   end;
 
   {*
-    Enregistre est affiche par superposition une liste d'images
+    Enregistre et affiche par superposition une liste d'images
     TPainter enregistre une liste d'images par leur noms et propose une méthode
     pour les dessiner les unes sur les autres, par transparence.
     @author sjrd
@@ -180,7 +222,7 @@ type
     constructor Create(AMaster: TImagesMaster);
     destructor Destroy; override;
 
-    procedure Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+    procedure Draw(Context: TDrawSquareContext);
 
     property ImgNames: TStrings read FImgNames;
   end;
@@ -289,13 +331,11 @@ type
     FPainter: TPainter;        /// Peintre par défaut
     FCachedImg: TSquareBitmap; /// Image en cache (pour les dessins invariants)
 
-    procedure PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); virtual;
+    procedure PrivDraw(Context: TDrawSquareContext); virtual;
   protected
     FStaticDraw: Boolean; /// Indique si le dessin du composant est invariant
 
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); virtual;
+    procedure DoDraw(Context: TDrawSquareContext); virtual;
 
     property Painter: TPainter read FPainter;
   public
@@ -304,8 +344,9 @@ type
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
+    procedure Draw(Context: TDrawSquareContext); overload;
     procedure Draw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0);
+      X: Integer = 0; Y: Integer = 0); overload;
 
     property Name: string read FName;
     property StaticDraw: Boolean read FStaticDraw;
@@ -333,10 +374,8 @@ type
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
-    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); virtual;
-    procedure DrawAfter(Player: TPlayer; const QPos: TQualifiedPos;
-      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); virtual;
+    procedure DrawBefore(Context: TDrawSquareContext); virtual;
+    procedure DrawAfter(Context: TDrawSquareContext); virtual;
 
     procedure Moving(Context: TMoveContext); virtual;
     procedure Moved(Context: TMoveContext); virtual;
@@ -387,8 +426,7 @@ type
   private
     FDelegateDrawTo: TField; /// Terrain délégué pour l'affichage
 
-    procedure PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure PrivDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ADelegateDrawTo: TField = nil);
@@ -454,8 +492,7 @@ type
     FTool: TTool;         /// Outil
     FObstacle: TObstacle; /// Obstacle
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; AField: TField; AEffect: TEffect; ATool: TTool;
@@ -552,8 +589,7 @@ type
     FOnSendCommand: TSendCommandEvent; /// Événement d'exécution de commande
     FPlayState: TPlayState;            /// État de victoire/défaite
 
-    procedure PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure PrivDraw(Context: TDrawSquareContext); override;
 
     function IsMoveAllowed(Context: TMoveContext): Boolean;
     procedure MoveTo(Context: TMoveContext; Execute: Boolean = True); overload;
@@ -566,8 +602,7 @@ type
     property PluginCount: Integer read GetPluginCount;
     property Plugins[Index: Integer]: TPlugin read GetPlugins;
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
 
     function GetAttribute(const AttrName: string): Integer; virtual;
     procedure SetAttribute(const AttrName: string; Value: Integer); virtual;
@@ -650,7 +685,7 @@ type
     FEffects: TObjectList;        /// Liste des effets
     FTools: TObjectList;          /// Liste des outils
     FObstacles: TObjectList;      /// Liste des obstacles
-    FSquares: TObjectList;         /// Liste des cases
+    FSquares: TObjectList;        /// Liste des cases
     FMaps: TObjectList;           /// Liste des cartes
     FPlayers: TObjectList;        /// Liste des joueurs
 
@@ -756,6 +791,11 @@ const {don't localize}
   /// Position qualifiée nulle
   NoQPos: TQualifiedPos = (Map: nil; Position: (X: 0; Y: 0; Z: 0));
 
+  /// Rectangle d'une case à l'origine
+  BaseSquareRect: TRect = (
+    Left: 0; Top: 0; Right: SquareSize; Bottom: SquareSize
+  );
+
   /// Temporisation par défaut
   DefaultTemporization = 500;
 
@@ -794,7 +834,7 @@ procedure ShowFunLabyAbout;
 function PointBehind(const Src: T3DPoint; Dir: TDirection): T3DPoint;
 function PointBefore(const Src: T3DPoint; Dir: TDirection): T3DPoint;
 
-function SquareRect(X: Integer = 0; Y: Integer = 0): TRect;
+function SquareRect(X, Y: Integer): TRect;
 procedure EmptyRect(Canvas: TCanvas; Rect: TRect);
 procedure EmptySquareRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 
@@ -878,7 +918,7 @@ end;
   @param Y   Bord supérieur du rectangle
   @return Le rectangle de type TRect
 *}
-function SquareRect(X: Integer = 0; Y: Integer = 0): TRect;
+function SquareRect(X, Y: Integer): TRect;
 begin
   Result.Left := X;
   Result.Top := Y;
@@ -1015,6 +1055,30 @@ end;
 {*
   Dessine une image à partir de son index
   Draw dessine l'image indiquée sur un canevas.
+  @param Index     Index de l'image à dessiner
+  @param Context   Contexte de dessin de la case
+*}
+procedure TImagesMaster.Draw(Index: Integer; Context: TDrawSquareContext);
+begin
+  with Context do
+    FImgList.Draw(Canvas, X, Y, Index);
+end;
+
+{*
+  Dessine une image à partir de son nom
+  Draw dessine l'image indiquée sur un canevas.
+  @param ImgName   Nom de l'image à dessiner
+  @param Context   Contexte de dessin de la case
+*}
+procedure TImagesMaster.Draw(const ImgName: string;
+  Context: TDrawSquareContext);
+begin
+  Draw(IndexOf(ImgName), Context);
+end;
+
+{*
+  Dessine une image à partir de son index
+  Draw dessine l'image indiquée sur un canevas.
   @param Index    Index de l'image à dessiner
   @param Canvas   Canevas sur lequel dessiner l'image
   @param X        Coordonnée X du point à partir duquel dessiner l'image
@@ -1040,9 +1104,9 @@ begin
   Draw(IndexOf(ImgName), Canvas, X, Y);
 end;
 
-{---------------------}
+{----------------------}
 { Classe TSquareBitmap }
-{---------------------}
+{----------------------}
 
 {*
   Crée une instance de TSquareBitmap
@@ -1070,15 +1134,70 @@ end;
   @param X        Coordonnée X du point à partir duquel dessiner l'image
   @param Y        Coordonnée Y du point à partir duquel dessiner l'image
 *}
-procedure TSquareBitmap.DrawSquare(Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TSquareBitmap.DrawSquare(Context: TDrawSquareContext);
 var
   OldBrushStyle: TBrushStyle;
 begin
-  OldBrushStyle := Canvas.Brush.Style;
-  Canvas.Brush.Style := bsClear;
-  Canvas.BrushCopy(SquareRect(X, Y), Self, SquareRect, clTransparent);
-  Canvas.Brush.Style := OldBrushStyle;
+  with Context do
+  begin
+    OldBrushStyle := Canvas.Brush.Style;
+    Canvas.Brush.Style := bsClear;
+    Canvas.BrushCopy(SquareRect, Self, BaseSquareRect, clTransparent);
+    Canvas.Brush.Style := OldBrushStyle;
+  end;
+end;
+
+{--------------------------}
+{ TDrawSquareContext class }
+{--------------------------}
+
+{*
+  Crée un contexte de dessin de case
+*}
+constructor TDrawSquareContext.Create(ACanvas: TCanvas);
+begin
+  Create(ACanvas, 0, 0, NoQPos);
+end;
+
+{*
+  Crée un contexte de dessin de case
+  @param ACanvas   Canevas cible
+  @param X         Abscisce où dessiner
+  @param Y         Abscisce où dessiner
+*}
+constructor TDrawSquareContext.Create(ACanvas: TCanvas; X, Y: Integer);
+begin
+  Create(ACanvas, X, Y, NoQPos);
+end;
+
+{*
+  Crée un contexte de dessin de case
+  @param ACanvas   Canevas cible
+  @param X         Abscisce où dessiner
+  @param Y         Abscisce où dessiner
+  @param AQPos     Position qualifiée à dessiner
+*}
+constructor TDrawSquareContext.Create(ACanvas: TCanvas; X, Y: Integer;
+  const AQPos: TQualifiedPos);
+begin
+  inherited Create;
+
+  FCanvas := ACanvas;
+  FX := X;
+  FY := Y;
+  FSquareRect := FunLabyUtils.SquareRect(X, Y);
+
+  FIsNowhere := IsNoQPos(AQPos);
+  FQPos := AQPos;
+end;
+
+{*
+  Spécifie le joueur à dessiner
+  @param APlayer   Joueur à dessiner
+*}
+procedure TDrawSquareContext.SetPlayer(APlayer: TPlayer);
+begin
+  FPlayer := APlayer;
 end;
 
 {-----------------}
@@ -1130,13 +1249,11 @@ end;
   La méthode Draw dessine les images de ImgNames sur le canevas, à la
   position indiquée. Les différentes images sont superposée, celle d'index
   0 tout au-dessous.
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+  @param Context   Contexte de dessin de la case
 *}
-procedure TPainter.Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TPainter.Draw(Context: TDrawSquareContext);
 begin
-  FCachedImg.DrawSquare(Canvas, X, Y);
+  FCachedImg.DrawSquare(Context);
 end;
 
 {--------------------}
@@ -1348,6 +1465,8 @@ end;
   N'appelez pas directement AfterConstruction.
 *}
 procedure TVisualComponent.AfterConstruction;
+var
+  Context: TDrawSquareContext;
 begin
   inherited;
   FPainter.ImgNames.EndUpdate;
@@ -1355,36 +1474,46 @@ begin
   if StaticDraw then
   begin
     FCachedImg := TSquareBitmap.Create;
-    PrivDraw(NoQPos, FCachedImg.Canvas);
+    Context := TDrawSquareContext.Create(FCachedImg.Canvas);
+    try
+      PrivDraw(Context);
+    finally
+      Context.Free;
+    end;
   end;
 end;
 
 {*
   Dessine le composant sur un canevas
   PrivDraw dessine le composant sur un canevas à la position indiquée.
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le composant
-  @param X        Coordonnée X du point à partir duquel dessiner le composant
-  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+  @param Context   Contexte de dessin de la case
 *}
-procedure TVisualComponent.PrivDraw(const QPos: TQualifiedPos;
-  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TVisualComponent.PrivDraw(Context: TDrawSquareContext);
 begin
-  DoDraw(QPos, Canvas, X, Y);
+  DoDraw(Context);
 end;
 
 {*
   Dessine le composant sur un canevas
   DoDraw dessine le composant sur un canevas à la position indiquée.
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le composant
-  @param X        Coordonnée X du point à partir duquel dessiner le composant
-  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+  @param Context   Contexte de dessin de la case
 *}
-procedure TVisualComponent.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TVisualComponent.DoDraw(Context: TDrawSquareContext);
 begin
-  FPainter.Draw(Canvas, X, Y);
+  FPainter.Draw(Context);
+end;
+
+{*
+  Dessine de façon optimisée le composant sur un canevas
+  Draw dessine le composant sur un canevas à la position indiquée.
+  @param Context   Contexte de dessin de la case
+*}
+procedure TVisualComponent.Draw(Context: TDrawSquareContext);
+begin
+  if StaticDraw then
+    FCachedImg.DrawSquare(Context)
+  else
+    PrivDraw(Context);
 end;
 
 {*
@@ -1397,11 +1526,15 @@ end;
 *}
 procedure TVisualComponent.Draw(const QPos: TQualifiedPos; Canvas: TCanvas;
   X: Integer = 0; Y: Integer = 0);
+var
+  Context: TDrawSquareContext;
 begin
-  if StaticDraw then
-    FCachedImg.DrawSquare(Canvas, X, Y)
-  else
-    PrivDraw(QPos, Canvas, X, Y);
+  Context := TDrawSquareContext.Create(Canvas, X, Y, QPos);
+  try
+    Draw(Context);
+  finally
+    Context.Free;
+  end;
 end;
 
 {----------------}
@@ -1448,32 +1581,22 @@ end;
   Dessine sous le joueur
   DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
   effectué dans DrawBefore se retrouve donc sous le joueur.
-  @param Player   Joueur qui est dessiné
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+  @param Context   Contexte de dessin de la case
 *}
-procedure TPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TPlugin.DrawBefore(Context: TDrawSquareContext);
 begin
-  FPainterBefore.Draw(Canvas, X, Y);
+  FPainterBefore.Draw(Context);
 end;
 
 {*
   Dessine sur le joueur
   DrawAfter est exécuté lors du dessin du joueur, après celui-ci. Le dessin
   effectué dans DrawAfter se retrouve donc sur le joueur.
-  @param Player   Joueur qui est dessiné
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+  @param Context   Contexte de dessin de la case
 *}
-procedure TPlugin.DrawAfter(Player: TPlayer; const QPos: TQualifiedPos;
-  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TPlugin.DrawAfter(Context: TDrawSquareContext);
 begin
-  FPainterAfter.Draw(Canvas, X, Y);
+  FPainterAfter.Draw(Context);
 end;
 
 {*
@@ -1590,20 +1713,14 @@ begin
 end;
 
 {*
-  Dessine le composant sur un canevas
-  PrivDraw dessine le composant sur un canevas à la position indiquée.
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le composant
-  @param X        Coordonnée X du point à partir duquel dessiner le composant
-  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+  [@inheritDoc]
 *}
-procedure TField.PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TField.PrivDraw(Context: TDrawSquareContext);
 begin
   if FDelegateDrawTo = nil then
     inherited
   else
-    FDelegateDrawTo.Draw(QPos, Canvas, X, Y);
+    FDelegateDrawTo.Draw(Context);
 end;
 
 {*
@@ -1734,23 +1851,18 @@ begin
 end;
 
 {*
-  Dessine la case sur un canevas
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+  [@inheritDoc]
 *}
-procedure TSquare.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TSquare.DoDraw(Context: TDrawSquareContext);
 begin
   if Assigned(Field) then
-    Field.Draw(QPos, Canvas, X, Y);
+    Field.Draw(Context);
   if Assigned(Effect) then
-    Effect.Draw(QPos, Canvas, X, Y);
+    Effect.Draw(Context);
   if Assigned(Tool) then
-    Tool.Draw(QPos, Canvas, X, Y);
+    Tool.Draw(Context);
   if Assigned(Obstacle) then
-    Obstacle.Draw(QPos, Canvas, X, Y);
+    Obstacle.Draw(Context);
 
   inherited;
 end;
@@ -2076,29 +2188,30 @@ begin
 end;
 
 {*
-  Dessine le composant sur un canevas
-  PrivDraw dessine le composant sur un canevas à la position indiquée.
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le composant
-  @param X        Coordonnée X du point à partir duquel dessiner le composant
-  @param Y        Coordonnée Y du point à partir duquel dessiner le composant
+  [@inheritDoc]
 *}
-procedure TPlayer.PrivDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TPlayer.PrivDraw(Context: TDrawSquareContext);
 var
   I: Integer;
 begin
-  // Dessine les plug-in en-dessous du joueur
-  for I := 0 to PluginCount-1 do
-    Plugins[I].DrawBefore(Self, QPos, Canvas, X, Y);
+  if not Visible then
+    Exit;
 
-  // Dessin du joueur lui-même, à moins d'être invisible
-  if Visible then
+  Context.SetPlayer(Self);
+  try
+    // Dessine les plug-in en-dessous du joueur
+    for I := 0 to PluginCount-1 do
+      Plugins[I].DrawBefore(Context);
+
+    // Dessin du joueur lui-même
     inherited;
 
-  // Dessine les plug-in au-dessus du joueur
-  for I := 0 to PluginCount-1 do
-    Plugins[I].DrawAfter(Self, QPos, Canvas, X, Y);
+    // Dessine les plug-in au-dessus du joueur
+    for I := 0 to PluginCount-1 do
+      Plugins[I].DrawAfter(Context);
+  finally
+    Context.SetPlayer(nil);
+  end;
 end;
 
 {*
@@ -2206,19 +2319,13 @@ begin
 end;
 
 {*
-  Dessine le joueur sur un canevas
-  Draw dessine le joueur sur un canevas à la position indiquée.
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le joueur
-  @param X        Coordonnée X du point à partir duquel dessiner le joueur
-  @param Y        Coordonnée Y du point à partir duquel dessiner le joueur
+  [@inheritDoc]
 *}
-procedure TPlayer.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TPlayer.DoDraw(Context: TDrawSquareContext);
 begin
   if FColor <> clTransparent then
   begin
-    with Canvas do
+    with Context, Canvas do
     begin
       Brush.Style := bsSolid;
       Brush.Color := FColor;

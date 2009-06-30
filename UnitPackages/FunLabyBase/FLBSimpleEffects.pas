@@ -124,8 +124,7 @@ type
     FNumber: Integer;        /// Numéro du téléporteur
     FKind: TTransporterKind; /// Type de téléporteur
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ANumber: Integer;
@@ -284,17 +283,16 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TTransporter.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TTransporter.DoDraw(Context: TDrawSquareContext);
 begin
   inherited;
 
   if Master.Editing then
   begin
     case FKind of
-      tkNext:     DrawSquareNumber(Canvas, X, Y, Number, clRed);
-      tkPrevious: DrawSquareNumber(Canvas, X, Y, Number, clGreen);
-      tkRandom:   DrawSquareNumber(Canvas, X, Y, Number, clBlue);
+      tkNext:     DrawSquareNumber(Context, Number, clRed);
+      tkPrevious: DrawSquareNumber(Context, Number, clGreen);
+      tkRandom:   DrawSquareNumber(Context, Number, clBlue);
     end;
   end;
 end;

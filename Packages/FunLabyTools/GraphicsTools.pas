@@ -11,9 +11,9 @@ unit GraphicsTools;
 interface
 
 uses
-  Graphics;
+  Graphics, FunLabyUtils;
 
-procedure DrawSquareNumber(Canvas: TCanvas; X, Y, Number: Integer;
+procedure DrawSquareNumber(Context: TDrawSquareContext; Number: Integer;
   FontColor: TColor = clBlack);
 
 implementation
@@ -23,16 +23,14 @@ uses
 
 {*
   Dessine un numéro sur un canevas de case
-  @param Canvas      Canevas sur lequel dessiner le numéro
-  @param X           Bord gauche de la case
-  @param Y           Bord supérieur de la case
+  @param Context     Contexte de dessin de la case
   @param Number      Numéro à écrire
   @param FontColor   Couleur du texte
 *}
-procedure DrawSquareNumber(Canvas: TCanvas; X, Y, Number: Integer;
+procedure DrawSquareNumber(Context: TDrawSquareContext; Number: Integer;
   FontColor: TColor = clBlack);
 begin
-  with Canvas do
+  with Context, Canvas do
   begin
     Brush.Color := clWhite;
     Font.Name := 'Arial'; {don't localize}

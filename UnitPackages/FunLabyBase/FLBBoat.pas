@@ -44,8 +44,7 @@ type
   *}
   TBoatPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
+    procedure DrawBefore(Context: TDrawSquareContext); override;
 
     procedure Moving(Context: TMoveContext); override;
     procedure Moved(Context: TMoveContext); override;
@@ -64,8 +63,7 @@ type
   private
     FNumber: Integer; /// Numéro de la barque
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ANumber: Integer);
@@ -88,11 +86,11 @@ implementation
 {*
   [@inheritDoc]
 *}
-procedure TBoatPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TBoatPlugin.DrawBefore(Context: TDrawSquareContext);
 begin
   inherited;
-  with Canvas do
+
+  with Context, Canvas do
   begin
     Brush.Color := clInBoat;
     Brush.Style := bsSolid;
@@ -225,13 +223,12 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TBoat.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TBoat.DoDraw(Context: TDrawSquareContext);
 begin
   inherited;
 
   if Master.Editing and (Number <> 0) then
-    DrawSquareNumber(Canvas, X, Y, Number);
+    DrawSquareNumber(Context, Number);
 end;
 
 {*

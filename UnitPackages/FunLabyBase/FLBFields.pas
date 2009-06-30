@@ -86,8 +86,7 @@ type
 
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
 
     property AlternatePainter: TPainter read FAlternatePainter;
   public
@@ -246,13 +245,12 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TWater.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TWater.DoDraw(Context: TDrawSquareContext);
 begin
   if (Master.TickCount mod 2000) < 1000 then
-    Painter.Draw(Canvas, X, Y)
+    Painter.Draw(Context)
   else
-    AlternatePainter.Draw(Canvas, X, Y);
+    AlternatePainter.Draw(Context);
 end;
 
 {*

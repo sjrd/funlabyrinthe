@@ -64,10 +64,8 @@ type
       AMask: TBitmap);
     destructor Destroy; override;
 
-    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
-    procedure DrawAfter(Player: TPlayer; const QPos: TQualifiedPos;
-      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
+    procedure DrawBefore(Context: TDrawSquareContext); override;
+    procedure DrawAfter(Context: TDrawSquareContext); override;
 
     property Mask: TBitmap read FMask;
     property Before: TBitmap read FBefore;
@@ -121,7 +119,7 @@ begin
 end;
 
 {*
-  Détruit l'instance
+  [@inheritDoc]
 *}
 destructor TMaskPlugin.Destroy;
 begin
@@ -131,36 +129,21 @@ begin
 end;
 
 {*
-  Dessine sous le joueur
-  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
-  effectué dans DrawBefore se retrouve donc sous le joueur.
-  @param Player   Joueur qui est dessiné
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+  [@inheritDoc]
 *}
-procedure TMaskPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TMaskPlugin.DrawBefore(Context: TDrawSquareContext);
 begin
-  Before.Canvas.CopyRect(SquareRect, Canvas, SquareRect(X, Y));
+  Before.Canvas.CopyRect(BaseSquareRect, Context.Canvas, Context.SquareRect);
   Before.Canvas.Draw(0, 0, Mask);
 end;
 
 {*
-  Dessine sur le joueur
-  DrawAfter est exécuté lors du dessin du joueur, après celui-ci. Le dessin
-  effectué dans DrawAfter se retrouve donc sur le joueur.
-  @param Player   Joueur qui est dessiné
-  @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner les images
-  @param X        Coordonnée X du point à partir duquel dessiner les images
-  @param Y        Coordonnée Y du point à partir duquel dessiner les images
+  [@inheritDoc]
 *}
-procedure TMaskPlugin.DrawAfter(Player: TPlayer; const QPos: TQualifiedPos;
-  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TMaskPlugin.DrawAfter(Context: TDrawSquareContext);
 begin
-  Canvas.Draw(X, Y, Before);
+  with Context do
+    Canvas.Draw(X, Y, Before);
 end;
 
 end.

@@ -63,8 +63,7 @@ type
   *}
   TBuoyPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-      Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); override;
+    procedure DrawBefore(Context: TDrawSquareContext); override;
 
     procedure Moved(Context: TMoveContext); override;
 
@@ -135,17 +134,17 @@ implementation
 {*
   [@inheritDoc]
 *}
-procedure TBuoyPlugin.DrawBefore(Player: TPlayer; const QPos: TQualifiedPos;
-  Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TBuoyPlugin.DrawBefore(Context: TDrawSquareContext);
 begin
   inherited;
-  with Canvas do
+
+  with Context.Canvas, Context.SquareRect do
   begin
     Brush.Color := clYellow;
     Brush.Style := bsSolid;
     Pen.Color := clYellow;
     Pen.Style := psSolid;
-    Ellipse(X+1, Y+1, X+SquareSize-1, Y+SquareSize-1);
+    Ellipse(Left+1, Top+1, Right-1, Bottom-1);
   end;
 end;
 

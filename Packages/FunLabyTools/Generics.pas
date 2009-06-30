@@ -45,8 +45,7 @@ type
     FObjectDef: TObjectDef; /// Définition d'objet liée
     FFindMessage: string;   /// Message apparaissant lorsqu'on trouve l'outil
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       AObjectDef: TObjectDef; const AFindMessage: string;
@@ -68,12 +67,11 @@ type
   *}
   TOverriddenSquare = class(TSquare)
   private
-    FMap: TMap;             /// Carte
-    FPosition: T3DPoint;    /// Position
+    FMap: TMap;               /// Carte
+    FPosition: T3DPoint;      /// Position
     FOriginalSquare: TSquare; /// Case originale
   protected
-    procedure DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-      X: Integer = 0; Y: Integer = 0); override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       AMap: TMap; const APosition: T3DPoint; AField: TField = nil;
@@ -159,13 +157,12 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TObjectTool.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TObjectTool.DoDraw(Context: TDrawSquareContext);
 begin
   inherited;
 
   if Painter.ImgNames.Count = 0 then
-    FObjectDef.Draw(QPos, Canvas, X, Y);
+    FObjectDef.Draw(Context);
 end;
 
 {*
@@ -182,9 +179,9 @@ begin
   end;
 end;
 
-{-------------------------}
+{--------------------------}
 { Classe TOverriddenSquare }
-{-------------------------}
+{--------------------------}
 
 {*
   Crée une instance de TOverriddenSquare
@@ -217,11 +214,12 @@ begin
 end;
 
 {*
-  Détruit l'instance
+  [@inheritDoc]
 *}
 destructor TOverriddenSquare.Destroy;
 begin
-  Map[Position] := OriginalSquare;
+  if Assigned(OriginalSquare) then
+    Map[Position] := OriginalSquare;
 
   inherited;
 end;
@@ -229,10 +227,9 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TOverriddenSquare.DoDraw(const QPos: TQualifiedPos; Canvas: TCanvas;
-  X: Integer = 0; Y: Integer = 0);
+procedure TOverriddenSquare.DoDraw(Context: TDrawSquareContext);
 begin
-  OriginalSquare.Draw(QPos, Canvas, X, Y);
+  OriginalSquare.Draw(Context);
   inherited;
 end;
 
