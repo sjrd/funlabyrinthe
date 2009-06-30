@@ -77,7 +77,6 @@ type
 
     MasterFile: TMasterFile;
     Master: TMaster;
-    View: TPlayerView;
     Controller: TPlayerController;
     GameEnded: Boolean;
     LastFileName: TFileName;
@@ -114,7 +113,6 @@ begin
 
   MasterFile := TMasterFile.Create(SepiRoot, FileName, fmPlay);
   Master := MasterFile.Master;
-  View := TPlayerView.Create(Master.Players[0]);
   Controller := TPlayerController.Create(Master.Players[0]);
   GameEnded := False;
   LastFileName := FileName;
@@ -197,11 +195,9 @@ begin
   MenuViewSize.Enabled := False;
 
   Controller.Free;
-  View.Free;
   MasterFile.Free;
 
   Controller := nil;
-  View := nil;
   Master := nil;
   MasterFile := nil;
 
@@ -215,18 +211,18 @@ procedure TFormMain.AdaptSizeToView;
 var
   ImgWidth, ImgHeight: Integer;
 begin
-  if View = nil then
+  if Controller = nil then
   begin
     ImgWidth := 270;
     ImgHeight := 270;
   end else
   begin
-    ImgWidth := View.Width * SquareSize;
-    ImgHeight := View.Height * SquareSize;
+    ImgWidth := Controller.ViewWidth;
+    ImgHeight := Controller.ViewHeight;
   end;
 
   ClientWidth := ImgWidth;
-  ClientHeight := ImgHeight+19;
+  ClientHeight := ImgHeight+StatusBar.Height;
 
   Position := poScreenCenter;
 end;
@@ -245,7 +241,7 @@ begin
     if I >= Master.ObjectDefCount then
       Break;
     StatusBar.Panels[I].Text :=
-      Master.ObjectDefs[I].ShownInfos[View.Player];
+      Master.ObjectDefs[I].ShownInfos[Controller.Player];
   end;
 end;
 
@@ -266,7 +262,6 @@ begin
 
   MasterFile := nil;
   Master := nil;
-  View := nil;
   Controller := nil;
   LastFileName := '';
 
@@ -374,7 +369,7 @@ end;
 *}
 procedure TFormMain.MenuPlayerPropertiesClick(Sender: TObject);
 begin
-  TFormObjects.ShowObjects(View.Player);
+  TFormObjects.ShowObjects(Controller.Player);
 end;
 
 {*
@@ -407,7 +402,7 @@ end;
 procedure TFormMain.MovePlayer(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  Controller.PressKey(Key);
+  Controller.PressKey(Key, Shift);
 end;
 
 {*
@@ -443,8 +438,10 @@ end;
 *}
 procedure TFormMain.MenuViewSizeClick(Sender: TObject);
 begin
-  View.Size := QueryNumber(sViewSize, sViewSizePrompt,
-    View.Size, View.MinSize, View.MaxSize);
+  with Controller.Player do
+    ViewBorderSize := QueryNumber(sViewSize, sViewSizePrompt,
+      ViewBorderSize, MinViewSize, Map.MaxViewSize);
+
   AdaptSizeToView;
 end;
 
@@ -454,8 +451,8 @@ end;
 *}
 procedure TFormMain.PaintBoxPaint(Sender: TObject);
 begin
-  if Assigned(View) then
-    View.Draw(PaintBox.Canvas)
+  if Assigned(Controller) then
+    Controller.DrawView(PaintBox.Canvas)
   else
   begin
     with PaintBox.Canvas do

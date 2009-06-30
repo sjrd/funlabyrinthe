@@ -247,7 +247,7 @@ end;
 *}
 procedure TWater.DoDraw(Context: TDrawSquareContext);
 begin
-  if (Master.TickCount mod 2000) < 1000 then
+  if (Context.TickCount mod 2000) < 1000 then
     Painter.Draw(Context)
   else
     AlternatePainter.Draw(Context);

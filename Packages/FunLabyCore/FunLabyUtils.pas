@@ -48,6 +48,9 @@ const {don't localize}
   attrColor = 'Color';             /// Attribut de joueur pour Color
   attrShowCounter = 'ShowCounter'; /// Attribut de joueur pour ShowCounter
 
+  /// Attribut de joueur pour ViewBorderSize
+  attrViewBorderSize = 'ViewBorderSize';
+
   CommandShowDialog = 'ShowDialog';           /// Commande ShowDialog
   CommandShowDialogRadio = 'ShowDialogRadio'; /// Commande ShowDialogRadio
   CommandChooseNumber = 'ChooseNumber';       /// Commande ChooseNumber
@@ -82,8 +85,10 @@ type
 
   TSquareComponent = class;
   TSquare = class;
-  TPlayer = class;
   TMap = class;
+  IPlayerMode = interface;
+  TPlayerMode = class;
+  TPlayer = class;
   TMaster = class;
 
   {*
@@ -140,6 +145,8 @@ type
     FIsNowhere: Boolean;  /// Indique si le dessin est fait "nulle part"
     FQPos: TQualifiedPos; /// Position dessinée
 
+    FTickCount: Cardinal; /// Tick count pour ce contexte
+
     FPlayer: TPlayer; /// Joueur à dessiner (si applicable)
 
     procedure SetPlayer(APlayer: TPlayer);
@@ -148,6 +155,8 @@ type
     constructor Create(ACanvas: TCanvas; X, Y: Integer); overload;
     constructor Create(ACanvas: TCanvas; X, Y: Integer;
       const AQPos: TQualifiedPos); overload;
+
+    procedure SetTickCount(ATickCount: Cardinal);
 
     property Canvas: TCanvas read FCanvas;
     property X: Integer read FX;
@@ -159,7 +168,72 @@ type
     property Map: TMap read FQPos.Map;
     property Pos: T3DPoint read FQPos.Position;
 
+    property TickCount: Cardinal read FTickCount;
+
     property Player: TPlayer read FPlayer;
+  end;
+
+  {*
+    Contexte de dessin d'une vue d'un joueur
+    @author sjrd
+    @version 5.0
+  *}
+  TDrawViewContext = class(TObject)
+  private
+    FPlayerMode: IPlayerMode; /// Mode principal du joueur
+    FPlayer: TPlayer;         /// Joueur dont la vue est affichée
+
+    FCanvas: TCanvas;   /// Canevas cible
+    FViewSquare: TRect; /// Rectangle de la vue à dessiner
+
+    FUseZone: Boolean; /// Indique si ce contexte utilise une zone de carte
+    FMap: TMap;        /// Carte dont dessiner une zone
+    FFloor: Integer;   /// Étage de la zone à dessiner
+    FZone: TRect;      /// Zone (étendue aux bordures) à dessiner
+    FZoneSize: TPoint; /// Taille de la zone
+
+    FTickCount: Cardinal; /// Tick count pour l'affichage
+
+    procedure ComputeZone;
+  public
+    constructor Create(const APlayerMode: IPlayerMode; ACanvas: TCanvas);
+
+    function IsSquareVisible(const QPos: TQualifiedPos): Boolean; overload;
+    function IsSquareVisible(Map: TMap;
+      const Position: T3DPoint): Boolean; overload;
+    function IsSquareVisible(const Position: T3DPoint): Boolean; overload;
+
+    property PlayerMode: IPlayerMode read FPlayerMode;
+    property Player: TPlayer read FPlayer;
+
+    property Canvas: TCanvas read FCanvas;
+    property ViewSquare: TRect read FViewSquare;
+
+    property UseZone: Boolean read FUseZone;
+    property Map: TMap read FMap;
+    property Floor: Integer read FFloor;
+    property Zone: TRect read FZone;
+    property ZoneSize: TPoint read FZoneSize;
+    property ZoneWidth: Integer read FZoneSize.X;
+    property ZoneHeight: Integer read FZoneSize.Y;
+
+    property TickCount: Cardinal read FTickCount;
+  end;
+
+  {*
+    Contexte d'événement de touche
+    @author sjrd
+    @version 5.0
+  *}
+  TKeyEventContext = class(TObject)
+  private
+    FKey: Word;          /// Touche pressée
+    FShift: TShiftState; /// État des touches spéciales
+  public
+    constructor Create(AKey: Word; AShift: TShiftState);
+
+    property Key: Word read FKey;
+    property Shift: TShiftState read FShift;
   end;
 
   {*
@@ -569,6 +643,134 @@ type
       read GetLinearMap write SetLinearMap;
   end;
 
+  /// Classe de TPlayerMode
+  TPlayerModeClass = class of TPlayerMode;
+
+  {*
+    Mode principal d'un joueur
+    À tout moment, chaque joueur est dans un mode donné qui détermine comment
+    est affichée sa vue, et comment il est contrôlé. Un joueur a un et un seul
+    mode principal, mais ses plug-in peuvent modifier les comportements de son
+    mode principal.
+    Vous devez utiliser la class TPlayerMode comme classe de base pour toute
+    implémentation de IPlayerMode.
+    @author sjrd
+    @version 5.0
+  *}
+  IPlayerMode = interface(IInterface)
+    ['{7EDA1965-B154-4E2C-A9E4-CC48B503B85B}']
+
+    {*
+      Classe de ce mode
+      @return Classe de ce mode
+    *}
+    function GetModeClass: TPlayerModeClass;
+
+    {*
+      Joueur lié à ce mode
+      @return Joueur lié à ce mode
+    *}
+    function GetPlayer: TPlayer;
+
+    {*
+      Largeur de la vue
+      @return Largeur de la vue, en pixels
+    *}
+    function GetWidth: Integer;
+
+    {*
+      Hauteur de la vue
+      @return Hauteur de la vue, en pixels
+    *}
+    function GetHeight: Integer;
+
+    {*
+      Indique si ce mode utilise un fonctionnement par zone
+      @return True si utilise un fonctionnement par zone, False sinon
+    *}
+    function GetUseZone: Boolean;
+
+    {*
+      Dessine la vue du joueur
+      @param Context   Contexte de dessin de la vue
+    *}
+    procedure DrawView(Context: TDrawViewContext);
+
+    {*
+      Presse une touche pour le joueur
+      @param Context   Contexte de l'appui de touche
+    *}
+    procedure PressKey(Context: TKeyEventContext);
+
+    property ModeClass: TPlayerModeClass read GetModeClass;
+    property Player: TPlayer read GetPlayer;
+    property Width: Integer read GetWidth;
+    property Height: Integer read GetHeight;
+    property UseZone: Boolean read GetUseZone;
+  end;
+
+  {*
+    Mode principal d'un joueur
+    Squelette d'implémentation de IPlayerMode.
+    @author sjrd
+    @version 5.0
+  *}
+  TPlayerMode = class(TInterfacedObject, IPlayerMode)
+  private
+    FMaster: TMaster; /// Maître FunLabyrinthe
+    FPlayer: TPlayer; /// Joueur lié à ce mode
+  protected
+    function GetModeClass: TPlayerModeClass;
+    function GetPlayer: TPlayer;
+    function GetWidth: Integer; virtual; abstract;
+    function GetHeight: Integer; virtual; abstract;
+    function GetUseZone: Boolean; virtual;
+  public
+    constructor Create(APlayer: TPlayer); virtual;
+
+    procedure DrawView(Context: TDrawViewContext); virtual; abstract;
+    procedure PressKey(Context: TKeyEventContext); virtual; abstract;
+
+    property Master: TMaster read FMaster;
+    property Player: TPlayer read FPlayer;
+
+    property Width: Integer read GetWidth;
+    property Height: Integer read GetHeight;
+    property UseZone: Boolean read GetUseZone;
+  end;
+
+  {*
+    Mode labyrinthe (mode standard de FunLabyrinthe)
+    @author sjrd
+    @version 5.0
+  *}
+  TLabyrinthPlayerMode = class(TPlayerMode)
+  private
+    FCacheBitmap: TBitmap; /// Bitmap cache
+
+    FOldMap: TMap;              /// Ancienne carte
+    FOldFloor: Integer;         /// Ancien étage
+    FOldZone: TRect;            /// Ancienne zone
+    FOldView: array of TSquare; /// Ancienne vue
+  protected
+    procedure InvalidateCache(Context: TDrawViewContext);
+    procedure InvalidateCacheIfNeeded(Context: TDrawViewContext);
+    procedure UpdateCache(Context: TDrawViewContext);
+    procedure DrawPlayers(Context: TDrawViewContext);
+
+    function GetWidth: Integer; override;
+    function GetHeight: Integer; override;
+    function GetUseZone: Boolean; override;
+
+    property CacheBitmap: TBitmap read FCacheBitmap;
+  public
+    constructor Create(APlayer: TPlayer); override;
+    destructor Destroy; override;
+
+    procedure DrawView(Context: TDrawViewContext); override;
+    procedure PressKey(Context: TKeyEventContext); override;
+  end;
+
   {*
     Classe représentant un joueur
     TPlayer représente un joueur. Elle possède de nombreuses propriétés et
@@ -582,8 +784,11 @@ type
     FMap: TMap;                        /// Carte
     FPosition: T3DPoint;               /// Position
     FDirection: TDirection;            /// Direction
+    FMode: IPlayerMode;                /// Mode principal
+    FModeStack: IInterfaceList;        /// Pile des modes sauvegardés
     FShowCounter: Integer;             /// Compteur de visibilité
     FColor: TColor;                    /// Couleur
+    FViewBorderSize: Integer;          /// Taille de la bordure de la vue
     FPlugins: TObjectList;             /// Liste des plug-in
     FAttributes: TStrings;             /// Liste des attributs
     FOnSendCommand: TSendCommandEvent; /// Événement d'exécution de commande
@@ -604,6 +809,8 @@ type
   protected
     procedure DoDraw(Context: TDrawSquareContext); override;
 
+    procedure PositionChanged; virtual;
+
     function GetAttribute(const AttrName: string): Integer; virtual;
     procedure SetAttribute(const AttrName: string; Value: Integer); virtual;
   public
@@ -616,6 +823,10 @@ type
 
     procedure DrawInPlace(Canvas: TCanvas; X: Integer = 0;
       Y: Integer = 0);
+
+    procedure ChangeMode(ModeClass: TPlayerModeClass);
+    procedure BeginTempMode(ModeClass: TPlayerModeClass);
+    procedure EndTempMode;
 
     procedure AddPlugin(Plugin: TPlugin);
     procedure RemovePlugin(Plugin: TPlugin);
@@ -657,11 +868,16 @@ type
     procedure Win;
     procedure Lose;
 
+    procedure DrawView(Canvas: TCanvas); virtual;
+    procedure PressKey(Key: Word; Shift: TShiftState); virtual;
+
     property Map: TMap read FMap;
     property Position: T3DPoint read FPosition;
     property Direction: TDirection read FDirection write FDirection;
+    property Mode: IPlayerMode read FMode;
     property Visible: Boolean read GetVisible;
     property Color: TColor read FColor write FColor;
+    property ViewBorderSize: Integer read FViewBorderSize write FViewBorderSize;
     property Attribute[const AttrName: string]: Integer
       read GetAttribute write SetAttribute;
     property OnSendCommand: TSendCommandEvent
@@ -692,7 +908,6 @@ type
     FEditing: Boolean;            /// Indique si on est en mode édition
     FTemporization: Integer;      /// Temporisation en millisecondes
     FBeginTickCount: Cardinal;    /// Tick count système au lancement
-    FTickCount: Cardinal;         /// Tick count de la partie
     FTerminated: Boolean;         /// Indique si la partie est terminée
 
     function GetComponent(const ID: TComponentID): TFunLabyComponent;
@@ -729,6 +944,8 @@ type
 
     procedure SetTemporization(Value: Integer);
 
+    function GetTickCount: Cardinal;
+
     procedure AddComponent(Component: TFunLabyComponent);
     procedure RemoveComponent(Component: TFunLabyComponent);
 
@@ -738,7 +955,6 @@ type
     destructor Destroy; override;
 
     procedure Temporize;
-    procedure UpdateTickCount;
 
     function SquareByComps(
       const Field, Effect, Tool, Obstacle: TComponentID): TSquare;
@@ -780,7 +996,7 @@ type
 
     property Editing: Boolean read FEditing;
     property Temporization: Integer read FTemporization write SetTemporization;
-    property TickCount: Cardinal read FTickCount;
+    property TickCount: Cardinal read GetTickCount;
     property Terminated: Boolean read FTerminated;
   end;
 
@@ -801,6 +1017,9 @@ const {don't localize}
 
   /// Couleur par défaut d'un joueur
   DefaultPlayerColor = clBlue;
+
+  /// Taille de bordure de vue par défaut
+  DefaultViewBorderSize = 1;
 
   /// Application d'une direction vers la direction opposée
   NegDir: array[TDirection] of TDirection = (
@@ -837,6 +1056,8 @@ function PointBefore(const Src: T3DPoint; Dir: TDirection): T3DPoint;
 function SquareRect(X, Y: Integer): TRect;
 procedure EmptyRect(Canvas: TCanvas; Rect: TRect);
 procedure EmptySquareRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+
+function SameRect(const Left, Right: TRect): Boolean;
 
 function IsNoQPos(const QPos: TQualifiedPos): Boolean;
 
@@ -952,6 +1173,18 @@ end;
 procedure EmptySquareRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
 begin
   EmptyRect(Canvas, SquareRect(X, Y));
+end;
+
+{*
+  Teste si deux rectangles sont égaux
+  @param Left    Rectangle de gauche
+  @param Right   Rectangle de droite
+  @return True si les rectangles sont égaux, False sinon
+*}
+function SameRect(const Left, Right: TRect): Boolean;
+begin
+  Result := (Left.Left = Right.Left) and (Left.Top = Right.Top) and
+    (Left.Right = Right.Right) and (Left.Bottom = Right.Bottom);
 end;
 
 {*
@@ -1198,6 +1431,136 @@ end;
 procedure TDrawSquareContext.SetPlayer(APlayer: TPlayer);
 begin
   FPlayer := APlayer;
+end;
+
+{*
+  Spécifie le tick count pour ce contexte de dessin
+  @param ATickCount   Tick count pour ce contexte de dessin
+*}
+procedure TDrawSquareContext.SetTickCount(ATickCount: Cardinal);
+begin
+  FTickCount := ATickCount;
+end;
+
+{------------------------}
+{ TDrawViewContext class }
+{------------------------}
+
+{*
+  Crée un contexte de dessin d'une vue
+  @param APlayerMode   Mode principal du joueur dont dessiner la vue
+  @param ACanvas       Canevas cible
+*}
+constructor TDrawViewContext.Create(const APlayerMode: IPlayerMode;
+  ACanvas: TCanvas);
+begin
+  inherited Create;
+
+  FPlayerMode := APlayerMode;
+  FPlayer := APlayerMode.Player;
+  FCanvas := ACanvas;
+
+  FViewSquare := Rect(0, 0, PlayerMode.Width, PlayerMode.Height);
+  FUseZone := PlayerMode.UseZone;
+
+  if UseZone then
+    ComputeZone;
+
+  FTickCount := Player.Master.TickCount;
+end;
+
+{*
+  Calcule la zone à afficher
+*}
+procedure TDrawViewContext.ComputeZone;
+var
+  OrigX, OrigY, BorderSize: Integer;
+begin
+  FMap := Player.Map;
+  FFloor := Player.Position.Z;
+
+  BorderSize := Player.ViewBorderSize;
+
+  // Start at player's position
+  OrigX := Player.Position.X;
+  OrigY := Player.Position.Y;
+
+  { If the player has stopped playing, and he's at the map border, let's show
+    the closest in-map zone instead. }
+  if Player.PlayState <> psPlaying then
+  begin
+    if OrigX = -1 then
+      OrigX := 0
+    else if OrigX = Map.Dimensions.X then
+      Dec(OrigX);
+    if OrigY = -1 then
+      OrigY := 0
+    else if OrigY = Map.Dimensions.Y then
+      Dec(OrigY);
+  end;
+
+  // Find the zone upper left corner
+  Dec(OrigX, IntMod(OrigX, Map.ZoneWidth));
+  Dec(OrigY, IntMod(OrigY, Map.ZoneHeight));
+
+  // Find the view upper left corner
+  Dec(OrigX, BorderSize);
+  Dec(OrigY, BorderSize);
+
+  // Make FZone
+  FZoneSize.X := Map.ZoneWidth + 2*BorderSize;
+  FZoneSize.Y := Map.ZoneHeight + 2*BorderSize;
+  FZone := Rect(OrigX, OrigY, OrigX + FZoneSize.X, OrigY + FZoneSize.Y);
+end;
+
+{*
+  Teste si une case est visible dans cette zone
+  @param QPos   Position qualifiée de la case à tester
+  @return True si la case visible, False sinon
+*}
+function TDrawViewContext.IsSquareVisible(const QPos: TQualifiedPos): Boolean;
+begin
+  Result := IsSquareVisible(QPos.Map, QPos.Position);
+end;
+
+{*
+  Teste si une case est visible dans cette zone
+  @param Map        Carte de la case à tester
+  @param Position   Position de la case à tester
+  @return True si la case visible, False sinon
+*}
+function TDrawViewContext.IsSquareVisible(Map: TMap;
+  const Position: T3DPoint): Boolean;
+begin
+  Result := (Map = Self.Map) and (Position.Z = Floor) and
+    PtInRect(Zone, Point(Position.X, Position.Y));
+end;
+
+{*
+  Teste si une case est visible dans cette zone
+  @param Position   Position de la case à tester
+  @return True si la case visible, False sinon
+*}
+function TDrawViewContext.IsSquareVisible(const Position: T3DPoint): Boolean;
+begin
+  Result := IsSquareVisible(Map, Position);
+end;
+
+{------------------------}
+{ TKeyEventContext class }
+{------------------------}
+
+{*
+  Crée un contexte d'événement de touche
+  @param AKey     Touche pressée
+  @param AShift   État des touches spéciales
+*}
+constructor TKeyEventContext.Create(AKey: Word; AShift: TShiftState);
+begin
+  inherited Create;
+
+  FKey := AKey;
+  FShift := AShift;
 end;
 
 {-----------------}
@@ -2147,6 +2510,234 @@ begin
   end;
 end;
 
+{-------------------}
+{ TPlayerMode class }
+{-------------------}
+
+{*
+  Crée le mode
+  @param APlayer   Joueur
+*}
+constructor TPlayerMode.Create(APlayer: TPlayer);
+begin
+  inherited Create;
+
+  FMaster := APlayer.Master;
+  FPlayer := APlayer;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TPlayerMode.GetModeClass: TPlayerModeClass;
+begin
+  Result := TPlayerModeClass(ClassType);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TPlayerMode.GetPlayer: TPlayer;
+begin
+  Result := FPlayer;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TPlayerMode.GetUseZone: Boolean;
+begin
+  Result := False;
+end;
+
+{----------------------------}
+{ TLabyrinthPlayerMode class }
+{----------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TLabyrinthPlayerMode.Create(APlayer: TPlayer);
+begin
+  inherited;
+
+  FCacheBitmap := TBitmap.Create;
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TLabyrinthPlayerMode.Destroy;
+begin
+  FCacheBitmap.Free;
+
+  inherited;
+end;
+
+{*
+  Invalide entièrement la cache
+*}
+procedure TLabyrinthPlayerMode.InvalidateCache(Context: TDrawViewContext);
+begin
+  with Context do
+  begin
+    FOldMap := Map;
+    FOldFloor := Floor;
+    FOldZone := Zone;
+
+    SetLength(FOldView, ZoneWidth * ZoneHeight);
+    FillChar(FOldView[0], SizeOf(TSquare) * Length(FOldView), 0);
+
+    FCacheBitmap.Width := ZoneWidth * SquareSize;
+    FCacheBitmap.Height := ZoneHeight * SquareSize;
+  end;
+end;
+
+{*
+  Invalide entièrement la cache si nécessaire
+  @param Context   Contexte de dessin de la vue
+*}
+procedure TLabyrinthPlayerMode.InvalidateCacheIfNeeded(
+  Context: TDrawViewContext);
+begin
+  if (FOldMap <> Context.Map) or (FOldFloor <> Context.Floor) or
+    (not SameRect(FOldZone, Context.Zone)) then
+  begin
+    InvalidateCache(Context);
+  end;
+end;
+
+{*
+  Met à jour la cache
+  @param Context   Contexte de dessin de la vue
+*}
+procedure TLabyrinthPlayerMode.UpdateCache(Context: TDrawViewContext);
+var
+  QPos: TQualifiedPos;
+  X, Y: Integer;
+  Square: TSquare;
+  DrawSquareContext: TDrawSquareContext;
+begin
+  InvalidateCacheIfNeeded(Context);
+
+  with Context do
+  begin
+    QPos.Map := Map;
+    QPos.Position.Z := Floor;
+
+    for X := 0 to ZoneWidth-1 do
+    begin
+      for Y := 0 to ZoneHeight-1 do
+      begin
+        QPos.Position.X := Zone.Left + X;
+        QPos.Position.Y := Zone.Top + Y;
+        Square := Map[QPos.Position];
+
+        if Square <> FOldView[Y*ZoneWidth + X] then
+        begin
+          DrawSquareContext := TDrawSquareContext.Create(FCacheBitmap.Canvas,
+            X*SquareSize, Y*SquareSize, QPos);
+          try
+            DrawSquareContext.SetTickCount(Context.TickCount);
+            Square.Draw(DrawSquareContext);
+          finally
+            DrawSquareContext.Free;
+          end;
+
+          if Square.StaticDraw then
+            FOldView[Y*Width + X] := Square
+          else
+            FOldView[Y*Width + X] := nil;
+        end;
+      end;
+    end;
+  end;
+end;
+
+{*
+  Dessine les joueurs
+  @param Context   Contexte de dessin de la vue
+*}
+procedure TLabyrinthPlayerMode.DrawPlayers(Context: TDrawViewContext);
+var
+  I: Integer;
+begin
+  for I := 0 to Master.PlayerCount-1 do
+  begin
+    with Master.Players[I] do
+    begin
+      if Context.IsSquareVisible(Map, Position) then
+      begin
+        DrawInPlace(Context.Canvas,
+          (Position.X-Context.Zone.Left) * SquareSize,
+          (Position.Y-Context.Zone.Top) * SquareSize);
+      end;
+    end;
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TLabyrinthPlayerMode.GetWidth: Integer;
+begin
+  Result := Player.Map.ZoneWidth + 2*Player.ViewBorderSize;
+  Result := Result * SquareSize;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TLabyrinthPlayerMode.GetHeight: Integer;
+begin
+  Result := Player.Map.ZoneHeight + 2*Player.ViewBorderSize;
+  Result := Result * SquareSize;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TLabyrinthPlayerMode.GetUseZone: Boolean;
+begin
+  Result := True;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TLabyrinthPlayerMode.DrawView(Context: TDrawViewContext);
+begin
+  UpdateCache(Context);
+  Context.Canvas.Draw(0, 0, FCacheBitmap);
+
+  DrawPlayers(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TLabyrinthPlayerMode.PressKey(Context: TKeyEventContext);
+var
+  Dir: TDirection;
+  Redo: Boolean;
+begin
+  if Context.Shift <> [] then
+    Exit;
+
+  case Context.Key of
+    VK_UP: Dir := diNorth;
+    VK_RIGHT: Dir := diEast;
+    VK_DOWN: Dir := diSouth;
+    VK_LEFT: Dir := diWest;
+  else
+    Exit;
+  end;
+
+  Player.Move(Dir, True, Redo);
+  if Redo then
+    Player.NaturalMoving;
+end;
+
 {----------------}
 { Classe TPlayer }
 {----------------}
@@ -2168,8 +2759,11 @@ begin
   FMap := AMap;
   FPosition := APosition;
   FDirection := diNone;
+  FMode := TLabyrinthPlayerMode.Create(Self);
+  FModeStack := TInterfaceList.Create;
   FShowCounter := 0;
   FColor := DefaultPlayerColor;
+  FViewBorderSize := DefaultViewBorderSize;
   FPlugins := TObjectList.Create(False);
   FAttributes := THashedStringList.Create;
   TStringList(FAttributes).CaseSensitive := True;
@@ -2336,6 +2930,15 @@ begin
 end;
 
 {*
+  Notification que la position a changé
+*}
+procedure TPlayer.PositionChanged;
+begin
+  if (Map <> nil) and (ViewBorderSize > Map.MaxViewSize) then
+    ViewBorderSize := Map.MaxViewSize;
+end;
+
+{*
   Tableau indexé par chaîne des attributs du joueur
   @param AttrName   Nom de l'attribut à récupérer
   @return Attribut dont le nom a été spécifié
@@ -2344,9 +2947,11 @@ function TPlayer.GetAttribute(const AttrName: string): Integer;
 var
   Index: Integer;
 begin
-  case AnsiIndexStr(AttrName, [attrColor, attrShowCounter]) of
+  case AnsiIndexStr(AttrName,
+    [attrColor, attrShowCounter, attrViewBorderSize]) of
     0: Result := FColor;
     1: Result := FShowCounter;
+    2: Result := FViewBorderSize;
   else
     Index := FAttributes.IndexOf(AttrName);
     if Index < 0 then
@@ -2365,9 +2970,11 @@ procedure TPlayer.SetAttribute(const AttrName: string; Value: Integer);
 var
   Index: Integer;
 begin
-  case AnsiIndexStr(AttrName, [attrColor, attrShowCounter]) of
+  case AnsiIndexStr(AttrName,
+    [attrColor, attrShowCounter, attrViewBorderSize]) of
     0: FColor := Value;
     1: FShowCounter := Value;
+    2: FViewBorderSize := MinMax(Value, MinViewSize, Map.MaxViewSize);
   else
     Index := FAttributes.IndexOf(AttrName);
     if Index < 0 then
@@ -2397,6 +3004,8 @@ begin
       AddObject(attrColor, TObject(FColor));
     if FShowCounter <> 0 then
       AddObject(attrShowCounter, TObject(FShowCounter));
+    if FViewBorderSize <> DefaultViewBorderSize then
+      AddObject(attrViewBorderSize, TObject(FViewBorderSize));
   end;
 end;
 
@@ -2429,6 +3038,56 @@ begin
   QPos.Map := Map;
   QPos.Position := Position;
   Draw(QPos, Canvas, X, Y);
+end;
+
+{*
+  Modifie le mode principal du joueur (l'ancien est perdu)
+  @param ModeClass   Classe du nouveau mode principal du joueur
+*}
+procedure TPlayer.ChangeMode(ModeClass: TPlayerModeClass);
+begin
+  FModeStack.Lock;
+  try
+    Assert(ModeClass <> nil);
+
+    FMode := ModeClass.Create(Self);
+  finally
+    FModeStack.Unlock;
+  end;
+end;
+
+{*
+  Commence l'utilisation d'un mode temporaire
+  L'ancien mode sera remis en place à l'appel de EndTempMode.
+  @param ModeClass   Classe du nouveau mode principal du joueur
+*}
+procedure TPlayer.BeginTempMode(ModeClass: TPlayerModeClass);
+begin
+  FModeStack.Lock;
+  try
+    Assert(ModeClass <> nil);
+
+    FModeStack.Add(FMode);
+    FMode := ModeClass.Create(Self);
+  finally
+    FModeStack.Unlock;
+  end;
+end;
+
+{*
+  Termine l'utilisation du mode temporaire courant
+*}
+procedure TPlayer.EndTempMode;
+begin
+  FModeStack.Lock;
+  try
+    Assert(FModeStack.Count > 0);
+
+    FMode := FModeStack.Last as IPlayerMode;
+    FModeStack.Delete(FModeStack.Count-1);
+  finally
+    FModeStack.Unlock;
+  end;
 end;
 
 {*
@@ -2829,6 +3488,39 @@ begin
     if Master.Players[I].PlayState = psPlaying then
       Exit;
   Master.Terminate;
+end;
+
+{*
+  Dessine la vue du joueur
+  @param Canvas   Canevas cible (doit correspondre à Width/Height)
+*}
+procedure TPlayer.DrawView(Canvas: TCanvas);
+var
+  Context: TDrawViewContext;
+begin
+  Context := TDrawViewContext.Create(Mode, Canvas);
+  try
+    Mode.DrawView(Context);
+  finally
+    Context.Free;
+  end;
+end;
+
+{*
+  Presse une touche pour le joueur
+  @param Key     Touche pressée
+  @param Shift   État des touches spéciales
+*}
+procedure TPlayer.PressKey(Key: Word; Shift: TShiftState);
+var
+  Context: TKeyEventContext;
+begin
+  Context := TKeyEventContext.Create(Key, Shift);
+  try
+    Mode.PressKey(Context);
+  finally
+    Context.Free;
+  end;
 end;
 
 {----------------}
@@ -3270,6 +3962,15 @@ begin
 end;
 
 {*
+  Tick count de la partie
+  @return Tick count de la partie
+*}
+function TMaster.GetTickCount: Cardinal;
+begin
+  Result := Windows.GetTickCount - FBeginTickCount;
+end;
+
+{*
   Ajoute un composant
   @param Component   Le composant à ajouter
 *}
@@ -3339,14 +4040,6 @@ end;
 procedure TMaster.Temporize;
 begin
   Sleep(Temporization);
-end;
-
-{*
-  Met à jour le tick count de la partie
-*}
-procedure TMaster.UpdateTickCount;
-begin
-  FTickCount := GetTickCount - FBeginTickCount;
 end;
 
 {*
