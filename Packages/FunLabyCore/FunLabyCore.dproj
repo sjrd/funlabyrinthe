@@ -42,6 +42,62 @@
       
       
       
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Composants Microsoft Office XP Sample Automation Server Wrapper</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcboffice2k100.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcbofficexp100.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
@@ -53,26 +109,29 @@
     <DelphiCompile Include="FunLabyCore.dpk">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\rtl.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SCL110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SDL110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiInterpreter110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiReflection110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiRTLCommonImport110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiRTLSysImport110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiSCLImport110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiSDLImport110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiSVCLImport110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiVCLStdImport110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiWinTypesImport110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SVCL110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\vcl.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\VclSmp.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\vclx.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\rtl.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SCL110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SDL110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiInterpreter110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiReflection110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiRTLCommonImport110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiRTLSysImport110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiSCLImport110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiSDLImport110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiSVCLImport110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiVCLStdImport110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiWinTypesImport110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SVCL110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\vcl.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\VclSmp.dcp" />
+    <DCCReference Include="..\..\UnitPackages\FunLabyBase\vclx.dcp" />
     <DCCReference Include="FilesUtils.pas" />
     <DCCReference Include="FunLabyUtils.pas" />
     <DCCReference Include="SepiImportsFunLaby.pas" />
     <DCCReference Include="SepiImportsFunLabyUtils.pas" />
     <DCCReference Include="UnitFiles.pas" />
   </ItemGroup>
+  <PropertyGroup>
+    <PreBuildEvent>$(PROJECTDIR)\SepiImportFunLabyCore.bat</PreBuildEvent>
+  </PropertyGroup>
 </Project>
