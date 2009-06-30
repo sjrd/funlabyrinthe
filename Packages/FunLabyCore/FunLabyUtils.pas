@@ -10,7 +10,7 @@ interface
 
 uses
   Windows, Types, SysUtils, Classes, Graphics, Contnrs, Controls, Dialogs,
-  TypInfo, ScUtils, SdDialogs;
+  TypInfo, ScUtils, ScCoroutines, SdDialogs;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
@@ -801,10 +801,16 @@ type
     FOnSendCommand: TSendCommandEvent; /// Événement d'exécution de commande
     FPlayState: TPlayState;            /// État de victoire/défaite
 
+    FKeyPressCoroutine: TCoroutine; /// Coroutine d'appui sur touche
+    FKeyPressKey: Word;             /// Touche appuyée
+    FKeyPressShift: TShiftState;    /// État des touches spéciales
+
     procedure PrivDraw(Context: TDrawSquareContext); override;
 
     function IsMoveAllowed(Context: TMoveContext): Boolean;
     procedure MoveTo(Context: TMoveContext; Execute: Boolean = True); overload;
+
+    procedure KeyPressCoroutineProc(Coroutine: TCoroutine);
 
     function GetVisible: Boolean;
 
@@ -876,7 +882,10 @@ type
     procedure Lose;
 
     procedure DrawView(Canvas: TCanvas); virtual;
-    procedure PressKey(Key: Word; Shift: TShiftState); virtual;
+    procedure PressKey(Key: Word; Shift: TShiftState);
+
+    procedure WaitForKey(out Key: Word; out Shift: TShiftState);
+    procedure WaitForSpecificKey(Key: Word; Shift: TShiftState = []);
 
     property Map: TMap read FMap;
     property Position: T3DPoint read FPosition;
@@ -2794,6 +2803,8 @@ begin
   TStringList(FAttributes).CaseSensitive := True;
   FOnSendCommand := nil;
   FPlayState := psPlaying;
+
+  FKeyPressCoroutine := TCoroutine.Create(KeyPressCoroutineProc, clNextInvoke);
 end;
 
 {*
@@ -2801,8 +2812,11 @@ end;
 *}
 destructor TPlayer.Destroy;
 begin
+  FKeyPressCoroutine.Free;
+
   FAttributes.Free;
   FPlugins.Free;
+  
   inherited;
 end;
 
@@ -2907,6 +2921,32 @@ begin
   // Case destination : execute (seulement si Execute vaut True)
   if Execute then
     Map[Position].Execute(Context);
+end;
+
+{*
+  Procédure de la coroutine d'appui sur touche
+  @param Coroutine   Objet coroutine gérant cette procédure
+*}
+procedure TPlayer.KeyPressCoroutineProc(Coroutine: TCoroutine);
+var
+  Context: TKeyEventContext;
+  I: Integer;
+begin
+  // FKeyPressKey and FKeyPressShift have been set before this method is called.
+
+  Context := TKeyEventContext.Create(FKeyPressKey, FKeyPressShift);
+  try
+    for I := 0 to PluginCount-1 do
+    begin
+      Plugins[I].PressKey(Context);
+      if Context.Handled then
+        Exit;
+    end;
+
+    Mode.PressKey(Context);
+  finally
+    Context.Free;
+  end;
 end;
 
 {*
@@ -3537,27 +3577,50 @@ end;
 
 {*
   Presse une touche pour le joueur
+  Cette méthode ne peut *pas* être appelée depuis le code d'action du joueur !
   @param Key     Touche pressée
   @param Shift   État des touches spéciales
 *}
 procedure TPlayer.PressKey(Key: Word; Shift: TShiftState);
-var
-  Context: TKeyEventContext;
-  I: Integer;
 begin
-  Context := TKeyEventContext.Create(Key, Shift);
-  try
-    for I := 0 to PluginCount-1 do
-    begin
-      Plugins[I].PressKey(Context);
-      if Context.Handled then
-        Exit;
-    end;
+  Assert(not FKeyPressCoroutine.CoroutineRunning);
 
-    Mode.PressKey(Context);
-  finally
-    Context.Free;
-  end;
+  FKeyPressKey := Key;
+  FKeyPressShift := Shift;
+
+  FKeyPressCoroutine.Invoke;
+end;
+
+{*
+  Attend qu'une touche soit pressée par le joueur
+  Cette méthode ne peut être appelée que depuis le code d'action du joueur !
+  @param Key     En sortie : Touche appuyée
+  @param Shift   En sortie : État des touches spéciales lors de l'appui
+*}
+procedure TPlayer.WaitForKey(out Key: Word; out Shift: TShiftState);
+begin
+  Assert(FKeyPressCoroutine.CoroutineRunning);
+
+  FKeyPressCoroutine.Yield;
+
+  Key := FKeyPressKey;
+  Shift := FKeyPressShift;
+end;
+
+{*
+  Attend qu'une touche spécifique soit pressée par le joueur
+  Cette méthode ne peut être appelée que depuis le code d'action du joueur !
+  @param Key     Touche que doit appuyer le joueur
+  @param Shift   État des touches spéciales requis
+*}
+procedure TPlayer.WaitForSpecificKey(Key: Word; Shift: TShiftState = []);
+var
+  AKey: Word;
+  AShift: TShiftState;
+begin
+  repeat
+    WaitForKey(AKey, AShift);
+  until (AKey = Key) and (AShift = Shift);
 end;
 
 {----------------}
