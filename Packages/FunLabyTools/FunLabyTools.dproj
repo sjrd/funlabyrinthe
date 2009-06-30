@@ -33,7 +33,8 @@
     <Borland.Personality>Delphi.Personality</Borland.Personality>
     <Borland.ProjectType>Package</Borland.ProjectType>
     <BorlandProject>
-<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><Package_Options><Package_Options Name="ImplicitBuild">False</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">True</Package_Options><Package_Options Name="PackageDescription">FunLabyrinthe tools</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">5</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">2060</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="FileDescription">FunLabyrinthe tools</VersionInfoKeys><VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName">FunLabyTools</VersionInfoKeys><VersionInfoKeys Name="LegalCopyright">Copyright (c) 2000-2009 SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename">FunLabyTools.bpl</VersionInfoKeys><VersionInfoKeys Name="ProductName">Funlabyrinthe</VersionInfoKeys><VersionInfoKeys Name="ProductVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Excluded_Packages>
+<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters>  <Parameters Name="HostApplication">C:\Projets\FunLabyrinthe\FunLaby.exe</Parameters>
+    </Parameters><Package_Options><Package_Options Name="ImplicitBuild">False</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">True</Package_Options><Package_Options Name="PackageDescription">FunLabyrinthe tools</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">5</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">2060</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="FileDescription">FunLabyrinthe tools</VersionInfoKeys><VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName">FunLabyTools</VersionInfoKeys><VersionInfoKeys Name="LegalCopyright">Copyright (c) 2000-2009 SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename">FunLabyTools.bpl</VersionInfoKeys><VersionInfoKeys Name="ProductName">Funlabyrinthe</VersionInfoKeys><VersionInfoKeys Name="ProductVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Excluded_Packages>
       
       
       
@@ -49,28 +50,28 @@
     </Excluded_Packages><Source><Source Name="MainSource">FunLabyTools.dpk</Source></Source></Delphi.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
   <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>$(PROJECTDIR)\SepiImportFunLabyTools.bat</PreBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <DelphiCompile Include="FunLabyTools.dpk">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\FunLabyCore.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\rtl.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SCL110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiReflection110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\vcl.dcp" />
+    <DCCReference Include="FunLabyCore.dcp" />
     <DCCReference Include="FunLabyToolsConsts.pas" />
     <DCCReference Include="Generics.pas" />
     <DCCReference Include="GraphicsTools.pas" />
     <DCCReference Include="MapTools.pas" />
     <DCCReference Include="PlayerObjects.pas" />
+    <DCCReference Include="rtl.dcp" />
+    <DCCReference Include="SCL110.dcp" />
     <DCCReference Include="SepiImportsFunLabyTools.pas" />
     <DCCReference Include="SepiImportsFunLabyToolsConsts.pas" />
     <DCCReference Include="SepiImportsGenerics.pas" />
     <DCCReference Include="SepiImportsGraphicsTools.pas" />
     <DCCReference Include="SepiImportsMapTools.pas" />
     <DCCReference Include="SepiImportsPlayerObjects.pas" />
+    <DCCReference Include="SepiReflection110.dcp" />
+    <DCCReference Include="vcl.dcp" />
   </ItemGroup>
-  <PropertyGroup>
-    <PreBuildEvent>$(PROJECTDIR)\SepiImportFunLabyTools.bat</PreBuildEvent>
-  </PropertyGroup>
 </Project>
