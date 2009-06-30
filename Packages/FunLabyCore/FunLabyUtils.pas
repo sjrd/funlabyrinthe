@@ -183,8 +183,8 @@ type
     FPlayerMode: IPlayerMode; /// Mode principal du joueur
     FPlayer: TPlayer;         /// Joueur dont la vue est affichée
 
-    FCanvas: TCanvas;   /// Canevas cible
-    FViewSquare: TRect; /// Rectangle de la vue à dessiner
+    FCanvas: TCanvas; /// Canevas cible
+    FViewRect: TRect; /// Rectangle de la vue à dessiner
 
     FUseZone: Boolean; /// Indique si ce contexte utilise une zone de carte
     FMap: TMap;        /// Carte dont dessiner une zone
@@ -207,7 +207,7 @@ type
     property Player: TPlayer read FPlayer;
 
     property Canvas: TCanvas read FCanvas;
-    property ViewSquare: TRect read FViewSquare;
+    property ViewRect: TRect read FViewRect;
 
     property UseZone: Boolean read FUseZone;
     property Map: TMap read FMap;
@@ -229,11 +229,15 @@ type
   private
     FKey: Word;          /// Touche pressée
     FShift: TShiftState; /// État des touches spéciales
+
+    FHandled: Boolean; /// Indique si l'événement a été géré
   public
     constructor Create(AKey: Word; AShift: TShiftState);
 
     property Key: Word read FKey;
     property Shift: TShiftState read FShift;
+
+    property Handled: Boolean read FHandled write FHandled;
   end;
 
   {*
@@ -287,8 +291,8 @@ type
   *}
   TPainter = class
   private
-    FMaster: TImagesMaster;   /// Maître d'images
-    FImgNames: TStrings;      /// Liste des noms des images
+    FMaster: TImagesMaster;    /// Maître d'images
+    FImgNames: TStrings;       /// Liste des noms des images
     FCachedImg: TSquareBitmap; /// Copie cache de l'image résultante
 
     procedure ImgNamesChange(Sender: TObject);
@@ -453,6 +457,9 @@ type
 
     procedure Moving(Context: TMoveContext); virtual;
     procedure Moved(Context: TMoveContext); virtual;
+
+    procedure DrawView(Context: TDrawViewContext); virtual;
+    procedure PressKey(Context: TKeyEventContext); virtual;
 
     function AbleTo(Player: TPlayer;
       const Action: TPlayerAction): Boolean; virtual;
@@ -1460,7 +1467,7 @@ begin
   FPlayer := APlayerMode.Player;
   FCanvas := ACanvas;
 
-  FViewSquare := Rect(0, 0, PlayerMode.Width, PlayerMode.Height);
+  FViewRect := Rect(0, 0, PlayerMode.Width, PlayerMode.Height);
   FUseZone := PlayerMode.UseZone;
 
   if UseZone then
@@ -1978,6 +1985,22 @@ end;
   @param Context   Contexte du déplacement
 *}
 procedure TPlugin.Moved(Context: TMoveContext);
+begin
+end;
+
+{*
+  Dessine la vue d'un joueur
+  @param Context   Contexte de dessin de la vue
+*}
+procedure TPlugin.DrawView(Context: TDrawViewContext);
+begin
+end;
+
+{*
+  Presse une touche pour un joueur
+  @param Context   Contexte de l'appui sur touche
+*}
+procedure TPlugin.PressKey(Context: TKeyEventContext);
 begin
 end;
 
@@ -2733,6 +2756,8 @@ begin
     Exit;
   end;
 
+  Context.Handled := True;
+
   Player.Move(Dir, True, Redo);
   if Redo then
     Player.NaturalMoving;
@@ -2772,7 +2797,7 @@ begin
 end;
 
 {*
-  Détruit l'instance
+  [@inheritDoc]
 *}
 destructor TPlayer.Destroy;
 begin
@@ -3497,10 +3522,14 @@ end;
 procedure TPlayer.DrawView(Canvas: TCanvas);
 var
   Context: TDrawViewContext;
+  I: Integer;
 begin
   Context := TDrawViewContext.Create(Mode, Canvas);
   try
     Mode.DrawView(Context);
+
+    for I := 0 to PluginCount-1 do
+      Plugins[I].DrawView(Context);
   finally
     Context.Free;
   end;
@@ -3514,9 +3543,17 @@ end;
 procedure TPlayer.PressKey(Key: Word; Shift: TShiftState);
 var
   Context: TKeyEventContext;
+  I: Integer;
 begin
   Context := TKeyEventContext.Create(Key, Shift);
   try
+    for I := 0 to PluginCount-1 do
+    begin
+      Plugins[I].PressKey(Context);
+      if Context.Handled then
+        Exit;
+    end;
+
     Mode.PressKey(Context);
   finally
     Context.Free;
