@@ -371,22 +371,47 @@ type
   end;
 
   {*
-    Noeud image d'un composant visuel
+    Classe de base pour les noeuds qui compilent du code dans le constructeur
     @author sjrd
     @version 5.0
   *}
-  TFunDelphiImageNode = class(TSepiNonTerminal)
+  TFunDelphiConstructorCodeNode = class(TSepiNonTerminal)
   private
     FCompiler: TSepiMethodCompiler;      /// Compilateur du constructeur
     FInstructions: TSepiInstructionList; /// Instructions d'ajout d'images
 
     function MakeEmptyConstructor: TSepiMethod;
+  protected
+    property Compiler: TSepiMethodCompiler read FCompiler;
+    property Instructions: TSepiInstructionList read FInstructions;
+  public
+    procedure BeginParsing; override;
+  end;
+
+  {*
+    Noeud z-index d'un plug-in
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiZIndexNode = class(TFunDelphiConstructorCodeNode)
+  private
+    procedure SetZIndex(const ZIndexValue: ISepiReadableValue);
+  protected
+    procedure ChildBeginParsing(Child: TSepiParseTreeNode); override;
+    procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
+  end;
+
+  {*
+    Noeud image d'un composant visuel
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiImageNode = class(TFunDelphiConstructorCodeNode)
+  private
     procedure AddImage(const ImageValue: ISepiReadableValue);
   protected
     procedure ChildBeginParsing(Child: TSepiParseTreeNode); override;
     procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
-  public
-    procedure BeginParsing; override;
   end;
 
   {*
@@ -605,6 +630,7 @@ begin
   NonTerminalClasses[ntDestructor]        := TFunDelphiMethodDeclAndImplNode;
   NonTerminalClasses[ntDestructorHeader]  := TFunDelphiDestructorHeaderNode;
   NonTerminalClasses[ntAutoOverride]      := TFunDelphiAutoOverrideNode;
+  NonTerminalClasses[ntZIndex]            := TFunDelphiZIndexNode;
   NonTerminalClasses[ntImage]             := TFunDelphiImageNode;
   NonTerminalClasses[ntEvent]             := TFunDelphiMethodDeclAndImplNode;
   NonTerminalClasses[ntEventHeader]       := TFunDelphiEventHeaderNode;
@@ -1790,15 +1816,15 @@ begin
   Result := mlkOverride;
 end;
 
-{---------------------------}
-{ TFunDelphiImageNode class }
-{---------------------------}
+{-------------------------------------}
+{ TFunDelphiConstructorCodeNode class }
+{-------------------------------------}
 
 {*
   Construit un constructeur vide
   @return Constructeur créé
 *}
-function TFunDelphiImageNode.MakeEmptyConstructor: TSepiMethod;
+function TFunDelphiConstructorCodeNode.MakeEmptyConstructor: TSepiMethod;
 var
   Previous: TSepiMethod;
   Compiler: TSepiMethodCompiler;
@@ -1814,33 +1840,9 @@ begin
 end;
 
 {*
-  Ajoute une image
-  @param ImageValue   Valeur chaîne de l'image à ajouter
-*}
-procedure TFunDelphiImageNode.AddImage(const ImageValue: ISepiReadableValue);
-var
-  Expression: ISepiExpression;
-  WantingParams: ISepiWantingParams;
-  Executable: ISepiExecutable;
-begin
-  Expression := LanguageRules.ResolveIdentInMethod(FCompiler, 'Painter');
-  Expression := LanguageRules.FieldSelection(SepiContext, Expression,
-    'ImgNames');
-  Expression := LanguageRules.FieldSelection(SepiContext, Expression, 'Add');
-
-  WantingParams := Expression as ISepiWantingParams;
-  WantingParams.AddParam(ImageValue as ISepiExpression);
-  WantingParams.CompleteParams;
-  WantingParams.AttachToExpression(Expression);
-
-  Executable := Expression as ISepiExecutable;
-  Executable.CompileExecute(FCompiler, FInstructions);
-end;
-
-{*
   [@inheritDoc]
 *}
-procedure TFunDelphiImageNode.BeginParsing;
+procedure TFunDelphiConstructorCodeNode.BeginParsing;
 var
   SepiConstructor: TSepiMethod;
 begin
@@ -1853,6 +1855,77 @@ begin
 
   FCompiler := UnitCompiler.FindMethodCompiler(SepiConstructor);
   FInstructions := FCompiler.Instructions;
+end;
+
+{----------------------------}
+{ TFunDelphiZIndexNode class }
+{----------------------------}
+
+{*
+  Spécifie le z-index
+  @param ZIndexValue   Valeur du z-index
+*}
+procedure TFunDelphiZIndexNode.SetZIndex(const ZIndexValue: ISepiReadableValue);
+var
+  ZIndexField: ISepiWritableValue;
+  Executable: ISepiExecutable;
+begin
+  ZIndexField := LanguageRules.ResolveIdentInMethod(Compiler,
+    'FZIndex') as ISepiWritableValue;
+  (ZIndexField as ISepiExpression).SourcePos :=
+    (ZIndexValue as ISepiExpression).SourcePos;
+
+  Executable := TSepiAssignmentOperation.MakeOperation(ZIndexField,
+    ZIndexValue);
+  Executable.CompileExecute(Compiler, Instructions);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiZIndexNode.ChildBeginParsing(Child: TSepiParseTreeNode);
+begin
+  inherited;
+
+  (Child as TSepiConstExpressionNode).ValueType := SystemUnit.Integer;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiZIndexNode.ChildEndParsing(Child: TSepiParseTreeNode);
+begin
+  SetZIndex((Child as TSepiConstExpressionNode).AsReadableValue);
+
+  inherited;
+end;
+
+{---------------------------}
+{ TFunDelphiImageNode class }
+{---------------------------}
+
+{*
+  Ajoute une image
+  @param ImageValue   Valeur chaîne de l'image à ajouter
+*}
+procedure TFunDelphiImageNode.AddImage(const ImageValue: ISepiReadableValue);
+var
+  Expression: ISepiExpression;
+  WantingParams: ISepiWantingParams;
+  Executable: ISepiExecutable;
+begin
+  Expression := LanguageRules.ResolveIdentInMethod(Compiler, 'Painter');
+  Expression := LanguageRules.FieldSelection(SepiContext, Expression,
+    'ImgNames');
+  Expression := LanguageRules.FieldSelection(SepiContext, Expression, 'Add');
+
+  WantingParams := Expression as ISepiWantingParams;
+  WantingParams.AddParam(ImageValue as ISepiExpression);
+  WantingParams.CompleteParams;
+  WantingParams.AttachToExpression(Expression);
+
+  Executable := Expression as ISepiExecutable;
+  Executable.CompileExecute(Compiler, Instructions);
 end;
 
 {*

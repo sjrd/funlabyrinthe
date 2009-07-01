@@ -23,7 +23,7 @@ const {don't localize}
 
 const
   /// Message lié à la planche
-  msgPlank = 1;
+  msgPlank = $10;
 
 type
   {*

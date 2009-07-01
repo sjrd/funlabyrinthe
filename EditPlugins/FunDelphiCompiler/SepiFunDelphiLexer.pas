@@ -15,7 +15,7 @@ uses
 
 const
   FirstTerminal = 0;
-  LastTerminal = 93;
+  LastTerminal = 94;
 
   tkEof = SepiLexerUtils.tkEof; /// Fin de fichier
 
@@ -63,65 +63,66 @@ const
 
   tkConstructor = 38; // constructor
   tkDestructor = 39;  // destructor
-  tkImage = 40;       // image
-  tkAction = 41;      // action
+  tkZIndex = 40;      // zindex
+  tkImage = 41;       // image
+  tkAction = 42;      // action
 
-  tkPlus = 42;        // +
-  tkMinus = 43;       // -
-  tkTimes = 44;       // *
-  tkDivide = 45;      // /
-  tkDiv = 46;         // div
-  tkMod = 47;         // mod
-  tkShl = 48;         // shl
-  tkShr = 49;         // shr
-  tkOr = 50;          // or
-  tkAnd = 51;         // and
-  tkXor = 52;         // xor
-  tkNot = 53;         // not
-  tkLowerThan = 54;   // <
-  tkLowerEq = 55;     // <=
-  tkGreaterThan = 56; // >
-  tkGreaterEq = 57;   // >=
-  tkNotEqual = 58;    // <>
-  tkIs = 59;          // is
-  tkAs = 60;          // as
+  tkPlus = 43;        // +
+  tkMinus = 44;       // -
+  tkTimes = 45;       // *
+  tkDivide = 46;      // /
+  tkDiv = 47;         // div
+  tkMod = 48;         // mod
+  tkShl = 49;         // shl
+  tkShr = 50;         // shr
+  tkOr = 51;          // or
+  tkAnd = 52;         // and
+  tkXor = 53;         // xor
+  tkNot = 54;         // not
+  tkLowerThan = 55;   // <
+  tkLowerEq = 56;     // <=
+  tkGreaterThan = 57; // >
+  tkGreaterEq = 58;   // >=
+  tkNotEqual = 59;    // <>
+  tkIs = 60;          // is
+  tkAs = 61;          // as
 
-  tkBegin = 61; // begin
-  tkEnd = 62;   // end
+  tkBegin = 62; // begin
+  tkEnd = 63;   // end
 
-  tkString = 63; // string
-  tkNil = 64;    // nil
+  tkString = 64; // string
+  tkNil = 65;    // nil
 
-  tkIf = 65;        // if
-  tkThen = 66;      // then
-  tkElse = 67;      // else
-  tkWhile = 68;     // while
-  tkDo = 69;        // do
-  tkRepeat = 70;    // repeat
-  tkUntil = 71;     // until
-  tkFor = 72;       // for
-  tkTo = 73;        // to
-  tkDownTo = 74;    // downto
-  tkCase = 75;      // case
-  tkOf = 76;        // of
-  tkTry = 77;       // try
-  tkExcept = 78;    // except
-  tkOn = 79;        // on
-  tkFinally = 80;   // finally
-  tkRaise = 81;     // raise
-  tkInherited = 82; // inherited
+  tkIf = 66;        // if
+  tkThen = 67;      // then
+  tkElse = 68;      // else
+  tkWhile = 69;     // while
+  tkDo = 70;        // do
+  tkRepeat = 71;    // repeat
+  tkUntil = 72;     // until
+  tkFor = 73;       // for
+  tkTo = 74;        // to
+  tkDownTo = 75;    // downto
+  tkCase = 76;      // case
+  tkOf = 77;        // of
+  tkTry = 78;       // try
+  tkExcept = 79;    // except
+  tkOn = 80;        // on
+  tkFinally = 81;   // finally
+  tkRaise = 82;     // raise
+  tkInherited = 83; // inherited
 
-  tkCan = 83;      // can
-  tkHas = 84;      // has
-  tkAtKw = 85;     // at
-  tkLeast = 86;    // least
-  tkMost = 87;     // most
-  tkMore = 88;     // more
-  tkLess = 89;     // less
-  tkThan = 90;     // than
-  tkExactly = 91;  // exactly
-  tkReceives = 92; // receives
-  tkDiscards = 93; // discards
+  tkCan = 84;      // can
+  tkHas = 85;      // has
+  tkAtKw = 86;     // at
+  tkLeast = 87;    // least
+  tkMost = 88;     // most
+  tkMore = 89;     // more
+  tkLess = 90;     // less
+  tkThan = 91;     // than
+  tkExactly = 92;  // exactly
+  tkReceives = 93; // receives
+  tkDiscards = 94; // discards
 
 type
   {*
@@ -238,6 +239,7 @@ begin
     'v' : if Key = 'var'            then SymbolClass := tkVar;
     'w' : if Key = 'while'          then SymbolClass := tkWhile;
     'x' : if Key = 'xor'            then SymbolClass := tkXor;
+    'z' : if Key = 'zindex'         then SymbolClass := tkZIndex;
   end;
 end;
 
@@ -650,6 +652,7 @@ initialization
 
   SymbolClassNames[tkConstructor] := 'tkConstructor';
   SymbolClassNames[tkDestructor] := 'tkDestructor';
+  SymbolClassNames[tkZIndex] := 'tkZIndex';
   SymbolClassNames[tkImage] := 'tkImage';
   SymbolClassNames[tkAction] := 'tkAction';
 

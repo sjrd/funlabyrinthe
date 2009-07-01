@@ -12,11 +12,13 @@ interface
 uses
   SysUtils, Classes, FunLabyUtils, FilesUtils, UnitFiles, Generics, FLBCommon,
   FLBFields, FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBBoat, FLBLift,
-  FLBObstacles;
+  FLBObstacles, FLBShowMessage;
 
 type
   TFunLabyBaseUnit = class(TInterfacedUnitFile)
   protected
+    procedure GameStarted; override;
+
     procedure RegisterComponents(
       RegisterSingleComponentProc: TRegisterSingleComponentProc;
       RegisterComponentSetProc: TRegisterComponentSetProc); override;
@@ -64,6 +66,7 @@ begin
   TBuoyPlugin.Create(Master, idBuoyPlugin);
   TPlankPlugin.Create(Master, idPlankPlugin);
   TBoatPlugin.Create(Master, idBoatPlugin);
+  TDefaultShowMessagePlugin.Create(Master, idDefaultShowMessagePlugin);
 
   // Définitions d'objet
   Buoys := TBuoys.Create(Master, idBuoys, sBuoys);
@@ -132,11 +135,33 @@ begin
 end;
 
 {*
-  Enregistre les différents composants à placer dans la palette d'édition
-  @param UnitFile                      Fichier unité appelant
-  @param Master                        Maître FunLabyrinthe
-  @param RegisterSingleComponentProc   Call-back pour un unique composant
-  @param RegisterComponentSetProc      Call-back pour un ensemble de composants
+  [@inheritDoc]
+*}
+procedure TFunLabyBaseUnit.GameStarted;
+var
+  TestMsg: TPlayerShowMsgMessage;
+  DefaultShowMessagePlugin: TPlugin;
+  I: Integer;
+  Player: TPlayer;
+begin
+  { For each player, if no plug-in handles the ShowMessage player message, give
+    him a default plug-in for his messages. }
+
+  TestMsg.MsgID := msgShowMessage;
+  DefaultShowMessagePlugin := Master.Plugin[idDefaultShowMessagePlugin];
+
+  for I := 0 to Master.PlayerCount-1 do
+  begin
+    Player := Master.Players[I];
+    Player.Dispatch(TestMsg);
+
+    if not TestMsg.Handled then
+      Player.AddPlugin(DefaultShowMessagePlugin);
+  end;
+end;
+
+{*
+  [@inheritDoc]
 *}
 procedure TFunLabyBaseUnit.RegisterComponents(
   RegisterSingleComponentProc: TRegisterSingleComponentProc;

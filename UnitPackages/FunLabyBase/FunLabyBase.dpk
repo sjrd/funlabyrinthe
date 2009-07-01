@@ -55,7 +55,9 @@ contains
   SepiImportsFLBLift in 'SepiImportsFLBLift.pas',
   SepiImportsFLBObstacles in 'SepiImportsFLBObstacles.pas',
   SepiImportsFLBPlank in 'SepiImportsFLBPlank.pas',
-  SepiImportsFLBSimpleEffects in 'SepiImportsFLBSimpleEffects.pas';
+  SepiImportsFLBSimpleEffects in 'SepiImportsFLBSimpleEffects.pas',
+  FLBShowMessage in 'FLBShowMessage.pas',
+  SepiImportsFLBShowMessage in 'SepiImportsFLBShowMessage.pas';
 
 end.
 

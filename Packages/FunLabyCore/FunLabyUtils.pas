@@ -51,6 +51,8 @@ const {don't localize}
   /// Attribut de joueur pour ViewBorderSize
   attrViewBorderSize = 'ViewBorderSize';
 
+  msgShowMessage = $01; /// Message pour afficher un message au joueur
+
   CommandShowDialog = 'ShowDialog';           /// Commande ShowDialog
   CommandShowDialogRadio = 'ShowDialogRadio'; /// Commande ShowDialogRadio
   CommandChooseNumber = 'ChooseNumber';       /// Commande ChooseNumber
@@ -99,6 +101,33 @@ type
   TQualifiedPos = record
     Map: TMap;          /// Carte, ou nil pour une position nulle
     Position: T3DPoint; /// Position sur la carte, si Map <> nil
+  end;
+
+  {*
+    Base pour les messages envoyés à des joueurs
+    @author sjrd
+    @version 5.0
+  *}
+  TPlayerMessage = record
+    MsgID: Word;       /// ID du message
+    Handled: Boolean;  /// Indique si le message a été géré
+    Reserved: Byte;    /// Réservé
+    Player: TPlayer;   /// Joueur concerné
+  end;
+
+  {*
+    Structure du message pour afficher un message au joueur
+    @author sjrd
+    @version 5.0
+  *}
+  TPlayerShowMsgMessage = record
+    MsgID: Word;              /// ID du message
+    Handled: Boolean;         /// Indique si le message a été géré
+    Reserved: Byte;           /// Réservé
+    Player: TPlayer;          /// Joueur concerné
+    Text: string;             /// Texte à afficher
+    Answers: TStringDynArray; /// Réponses possibles (peut être vide)
+    Selected: Integer;        /// Index de la réponse choisie par le joueur
   end;
 
   {*
@@ -445,6 +474,8 @@ type
     FPainterBefore: TPainter; /// Peintre par défaut sous le joueur
     FPainterAfter: TPainter;  /// Peintre par défaut sur le joueur
   protected
+    FZIndex: Integer; /// Z-index parmi les plug-in
+
     property PainterBefore: TPainter read FPainterBefore;
     property PainterAfter: TPainter read FPainterAfter;
   public
@@ -463,6 +494,8 @@ type
 
     function AbleTo(Player: TPlayer;
       const Action: TPlayerAction): Boolean; virtual;
+
+    property ZIndex: Integer read FZIndex;
   end;
 
   {*
@@ -831,6 +864,9 @@ type
       const AName: string; AMap: TMap; const APosition: T3DPoint);
     destructor Destroy; override;
 
+    procedure Dispatch(var Msg); override;
+    procedure DefaultHandler(var Msg); override;
+
     procedure GetAttributes(Attributes: TStrings); virtual;
     procedure GetPluginIDs(PluginIDs: TStrings);
 
@@ -877,6 +913,8 @@ type
       OverButtons: Boolean = False): Word;
     function ChooseNumber(const Title, Prompt: string;
       Default, Min, Max: Integer): Integer;
+
+    procedure ShowMessage(const Text: string);
 
     procedure Win;
     procedure Lose;
@@ -3057,6 +3095,32 @@ begin
 end;
 
 {*
+  [@inheritDoc]
+*}
+procedure TPlayer.Dispatch(var Msg);
+begin
+  TPlayerMessage(Msg).Handled := False;
+  TPlayerMessage(Msg).Player := Self;
+  inherited;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPlayer.DefaultHandler(var Msg);
+var
+  I: Integer;
+begin
+  for I := 0 to PluginCount-1 do
+  begin
+    if TPlayerMessage(Msg).Handled then
+      Exit;
+      
+    Plugins[I].Dispatch(Msg);
+  end;
+end;
+
+{*
   Dresse la liste des attributs du joueur
   @param Attributes   Liste de chaînes dans laquelle enregistrer les attributs
 *}
@@ -3160,8 +3224,18 @@ end;
   @param Plugin   Le plug-in à greffer
 *}
 procedure TPlayer.AddPlugin(Plugin: TPlugin);
+var
+  Index: Integer;
 begin
-  FPlugins.Add(Plugin);
+  if FPlugins.IndexOf(Plugin) >= 0 then
+    Exit;
+
+  { Keep plug-in list ordered by z-index. }
+  Index := 0;
+  while (Index < FPlugins.Count) and
+    (Plugin.ZIndex > TPlugin(FPlugins[Index]).ZIndex) do
+    Inc(Index);
+  FPlugins.Insert(Index, Plugin);
 end;
 
 {*
@@ -3514,6 +3588,19 @@ begin
 end;
 
 {*
+  Affiche un message au joueur
+  @param Text   Texte à afficher au joueur
+*}
+procedure TPlayer.ShowMessage(const Text: string);
+var
+  Msg: TPlayerShowMsgMessage;
+begin
+  Msg.MsgID := msgShowMessage;
+  Msg.Text := Text;
+  Dispatch(Msg);
+end;
+
+{*
   Fait gagner le joueur
 *}
 procedure TPlayer.Win;
@@ -3648,7 +3735,7 @@ begin
   FEffects    := TObjectList.Create(False);
   FTools      := TObjectList.Create(False);
   FObstacles  := TObjectList.Create(False);
-  FSquares     := TObjectList.Create(False);
+  FSquares    := TObjectList.Create(False);
   FMaps       := TObjectList.Create(False);
   FPlayers    := TObjectList.Create(False);
 

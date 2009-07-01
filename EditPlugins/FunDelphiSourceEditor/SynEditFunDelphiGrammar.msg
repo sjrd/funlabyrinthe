@@ -38,6 +38,7 @@ actions
 
 constructor
 destructor
+zindex
 image
 action
 

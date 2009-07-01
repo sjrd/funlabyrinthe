@@ -47,6 +47,7 @@ tkActions	actions
 
 tkConstructor	constructor
 tkDestructor	destructor
+tkZIndex	zindex
 tkImage	image
 tkAction	action
 
@@ -397,6 +398,7 @@ ntPluginMember	PluginMember	Simplify
 	Fields
 	Constructor
 	Destructor
+	ZIndex
 	Event
 	PluginAction
 
@@ -460,6 +462,9 @@ ntDestructorHeader	DestructorHeader
 
 ntAutoOverride	AutoOverride
 	@
+
+ntZIndex	ZIndex
+	'zindex'* ConstExpression ';'*
 
 ntImage	Image
 	'image'* ConstExpression (','* ConstExpression)* ';'*

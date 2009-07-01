@@ -1,7 +1,7 @@
 {+-----------------------------------------------------------------------------+
  | Class:       TSynFunDelphiSyn
- | Created:     2009-06-20
- | Last change: 2009-06-20
+ | Created:     2009-07-01
+ | Last change: 2009-07-01
  | Author:      sjrd
  | Description: Syntax Highlighter for FunDelphi
  | Version:     5.0
@@ -312,14 +312,14 @@ end;
 
 function TSynFunDelphiSyn.Func21: TtkTokenKind;
 begin
-  if KeyComp('can') then Result := tkKey else
-    if KeyComp('do') then Result := tkKey else Result := tkIdentifier;
+  if KeyComp('do') then Result := tkKey else
+    if KeyComp('can') then Result := tkKey else Result := tkIdentifier;
 end;
 
 function TSynFunDelphiSyn.Func22: TtkTokenKind;
 begin
-  if KeyComp('and') then Result := tkKey else
-    if KeyComp('as') then Result := tkKey else Result := tkIdentifier;
+  if KeyComp('as') then Result := tkKey else
+    if KeyComp('and') then Result := tkKey else Result := tkIdentifier;
 end;
 
 function TSynFunDelphiSyn.Func23: TtkTokenKind;
@@ -379,8 +379,8 @@ end;
 function TSynFunDelphiSyn.Func42: TtkTokenKind;
 begin
   if KeyComp('for') then Result := tkKey else
-    if KeyComp('begin') then Result := tkKey else
-      if KeyComp('shl') then Result := tkKey else Result := tkIdentifier;
+    if KeyComp('shl') then Result := tkKey else
+      if KeyComp('begin') then Result := tkKey else Result := tkIdentifier;
 end;
 
 function TSynFunDelphiSyn.Func44: TtkTokenKind;
@@ -442,8 +442,8 @@ end;
 
 function TSynFunDelphiSyn.Func62: TtkTokenKind;
 begin
-  if KeyComp('least') then Result := tkKey else
-    if KeyComp('while') then Result := tkKey else Result := tkIdentifier;
+  if KeyComp('while') then Result := tkKey else
+    if KeyComp('least') then Result := tkKey else Result := tkIdentifier;
 end;
 
 function TSynFunDelphiSyn.Func66: TtkTokenKind;
@@ -454,9 +454,9 @@ end;
 
 function TSynFunDelphiSyn.Func68: TtkTokenKind;
 begin
-  if KeyComp('uses') then Result := tkKey else
+  if KeyComp('unit') then Result := tkKey else
     if KeyComp('action') then Result := tkKey else
-      if KeyComp('unit') then Result := tkKey else Result := tkIdentifier;
+      if KeyComp('uses') then Result := tkKey else Result := tkIdentifier;
 end;
 
 function TSynFunDelphiSyn.Func69: TtkTokenKind;
@@ -466,8 +466,8 @@ end;
 
 function TSynFunDelphiSyn.Func71: TtkTokenKind;
 begin
-  if KeyComp('most') then Result := tkKey else
-    if KeyComp('repeat') then Result := tkKey else Result := tkIdentifier;
+  if KeyComp('repeat') then Result := tkKey else
+    if KeyComp('most') then Result := tkKey else Result := tkIdentifier;
 end;
 
 function TSynFunDelphiSyn.Func76: TtkTokenKind;
@@ -487,9 +487,9 @@ end;
 
 function TSynFunDelphiSyn.Func85: TtkTokenKind;
 begin
-  if KeyComp('plugin') then Result := tkKey else
+  if KeyComp('discards') then Result := tkKey else
     if KeyComp('obstacle') then Result := tkKey else
-      if KeyComp('discards') then Result := tkKey else Result := tkIdentifier;
+      if KeyComp('plugin') then Result := tkKey else Result := tkIdentifier;
 end;
 
 function TSynFunDelphiSyn.Func86: TtkTokenKind;
@@ -499,7 +499,8 @@ end;
 
 function TSynFunDelphiSyn.Func88: TtkTokenKind;
 begin
-  if KeyComp('actions') then Result := tkKey else Result := tkIdentifier;
+  if KeyComp('actions') then Result := tkKey else
+    if KeyComp('zindex') then Result := tkKey else Result := tkIdentifier;
 end;
 
 function TSynFunDelphiSyn.Func92: TtkTokenKind;
@@ -805,7 +806,7 @@ begin
     'xcept,field,finally,for,forward,function,has,if,image,inherited,is,lea' +
     'st,less,mod,more,most,nil,not,object,obstacle,of,on,or,out,plugin,priv' +
     'ate,procedure,public,raise,receives,repeat,resourcestring,shl,shr,stri' +
-    'ng,than,then,to,tool,try,unit,until,uses,var,while,xor';
+    'ng,than,then,to,tool,try,unit,until,uses,var,while,xor,zindex';
 end;
 
 function TSynFunDelphiSyn.GetToken: String;
