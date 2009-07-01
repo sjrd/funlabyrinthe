@@ -498,6 +498,9 @@ type
     property ZIndex: Integer read FZIndex;
   end;
 
+  /// Tableau dynamique de TPlugin
+  TPluginDynArray = array of TPlugin;
+
   {*
     Classe de base pour les définitions d'objets
     TObjectDef est la classe de base pour les définitions d'objets que possède
@@ -834,9 +837,14 @@ type
     FOnSendCommand: TSendCommandEvent; /// Événement d'exécution de commande
     FPlayState: TPlayState;            /// État de victoire/défaite
 
+    /// Verrou global pour le joueur
+    FLock: TMultiReadExclusiveWriteSynchronizer;
+
     FKeyPressCoroutine: TCoroutine; /// Coroutine d'appui sur touche
     FKeyPressKey: Word;             /// Touche appuyée
     FKeyPressShift: TShiftState;    /// État des touches spéciales
+
+    procedure GetPluginList(out PluginList: TPluginDynArray);
 
     procedure PrivDraw(Context: TDrawSquareContext); override;
 
@@ -846,12 +854,6 @@ type
     procedure KeyPressCoroutineProc(Coroutine: TCoroutine);
 
     function GetVisible: Boolean;
-
-    function GetPluginCount: Integer;
-    function GetPlugins(Index: Integer): TPlugin;
-
-    property PluginCount: Integer read GetPluginCount;
-    property Plugins[Index: Integer]: TPlugin read GetPlugins;
   protected
     procedure DoDraw(Context: TDrawSquareContext); override;
 
@@ -2842,6 +2844,8 @@ begin
   FOnSendCommand := nil;
   FPlayState := psPlaying;
 
+  FLock := TMultiReadExclusiveWriteSynchronizer.Create;
+
   FKeyPressCoroutine := TCoroutine.Create(KeyPressCoroutineProc, clNextInvoke);
 end;
 
@@ -2852,10 +2856,30 @@ destructor TPlayer.Destroy;
 begin
   FKeyPressCoroutine.Free;
 
+  FLock.Free;
+
   FAttributes.Free;
   FPlugins.Free;
   
   inherited;
+end;
+
+{*
+  Obtient une une liste des plug-in du joueur
+  @param PluginList   Liste où enregistrer la liste des plug-in
+*}
+procedure TPlayer.GetPluginList(out PluginList: TPluginDynArray);
+var
+  I: Integer;
+begin
+  FLock.BeginRead;
+  try
+    SetLength(PluginList, FPlugins.Count);
+    for I := 0 to FPlugins.Count-1 do
+      PluginList[I] := TPlugin(FPlugins[I]);
+  finally
+    FLock.EndRead;
+  end;
 end;
 
 {*
@@ -2864,21 +2888,24 @@ end;
 procedure TPlayer.PrivDraw(Context: TDrawSquareContext);
 var
   I: Integer;
+  Plugins: TPluginDynArray;
 begin
   if not Visible then
     Exit;
 
+  GetPluginList(Plugins);
+
   Context.SetPlayer(Self);
   try
     // Dessine les plug-in en-dessous du joueur
-    for I := 0 to PluginCount-1 do
+    for I := 0 to Length(Plugins)-1 do
       Plugins[I].DrawBefore(Context);
 
     // Dessin du joueur lui-même
     inherited;
 
     // Dessine les plug-in au-dessus du joueur
-    for I := 0 to PluginCount-1 do
+    for I := 0 to Length(Plugins)-1 do
       Plugins[I].DrawAfter(Context);
   finally
     Context.SetPlayer(nil);
@@ -2892,6 +2919,7 @@ end;
 *}
 function TPlayer.IsMoveAllowed(Context: TMoveContext): Boolean;
 var
+  Plugins: TPluginDynArray;
   I: Integer;
 begin
   Result := False;
@@ -2906,7 +2934,8 @@ begin
       Exit;
 
     // Plug-in : moving
-    for I := 0 to PluginCount-1 do
+    GetPluginList(Plugins);
+    for I := 0 to Length(Plugins)-1 do
       Plugins[I].Moving(Context);
     if Cancelled then
       Exit;
@@ -2934,10 +2963,17 @@ end;
 *}
 procedure TPlayer.MoveTo(Context: TMoveContext; Execute: Boolean = True);
 var
+  Plugins: TPluginDynArray;
   I: Integer;
 begin
-  FMap := Context.DestMap;
-  FPosition := Context.Dest;
+  FLock.BeginWrite;
+  try
+    FMap := Context.DestMap;
+    FPosition := Context.Dest;
+    PositionChanged;
+  finally
+    FLock.EndWrite;
+  end;
 
   with Context do
   begin
@@ -2949,7 +2985,8 @@ begin
     SwitchToDest;
 
     // Plug-in : moved
-    for I := 0 to PluginCount-1 do
+    GetPluginList(Plugins);
+    for I := 0 to Length(Plugins)-1 do
       Plugins[I].Moved(Context);
 
     // Case destination : entered
@@ -2968,13 +3005,15 @@ end;
 procedure TPlayer.KeyPressCoroutineProc(Coroutine: TCoroutine);
 var
   Context: TKeyEventContext;
+  Plugins: TPluginDynArray;
   I: Integer;
 begin
   // FKeyPressKey and FKeyPressShift have been set before this method is called.
 
   Context := TKeyEventContext.Create(FKeyPressKey, FKeyPressShift);
   try
-    for I := 0 to PluginCount-1 do
+    GetPluginList(Plugins);
+    for I := 0 to Length(Plugins)-1 do
     begin
       Plugins[I].PressKey(Context);
       if Context.Handled then
@@ -2997,35 +3036,20 @@ begin
 end;
 
 {*
-  Nombre de plug-in greffés au joueur
-  @return Nombre de plug-in
-*}
-function TPlayer.GetPluginCount: Integer;
-begin
-  Result := FPlugins.Count;
-end;
-
-{*
-  Tableau zero-based des plug-in greffés au joueur
-  @param Index   Index du plug-in dans le tableau
-  @return Le plug-in à la position indiquée
-*}
-function TPlayer.GetPlugins(Index: Integer): TPlugin;
-begin
-  Result := TPlugin(FPlugins[Index]);
-end;
-
-{*
   [@inheritDoc]
 *}
 procedure TPlayer.DoDraw(Context: TDrawSquareContext);
+var
+  Color: TColor;
 begin
-  if FColor <> clTransparent then
+  Color := FColor;
+
+  if Color <> clTransparent then
   begin
     with Context, Canvas do
     begin
       Brush.Style := bsSolid;
-      Brush.Color := FColor;
+      Brush.Color := Color;
       Pen.Style := psClear;
       Ellipse(X+6, Y+6, X+SquareSize-6, Y+SquareSize-6);
     end;
@@ -3050,17 +3074,22 @@ function TPlayer.GetAttribute(const AttrName: string): Integer;
 var
   Index: Integer;
 begin
-  case AnsiIndexStr(AttrName,
-    [attrColor, attrShowCounter, attrViewBorderSize]) of
-    0: Result := FColor;
-    1: Result := FShowCounter;
-    2: Result := FViewBorderSize;
-  else
-    Index := FAttributes.IndexOf(AttrName);
-    if Index < 0 then
-      Result := 0
+  FLock.BeginRead;
+  try
+    case AnsiIndexStr(AttrName,
+      [attrColor, attrShowCounter, attrViewBorderSize]) of
+      0: Result := FColor;
+      1: Result := FShowCounter;
+      2: Result := FViewBorderSize;
     else
-      Result := Integer(FAttributes.Objects[Index]);
+      Index := FAttributes.IndexOf(AttrName);
+      if Index < 0 then
+        Result := 0
+      else
+        Result := Integer(FAttributes.Objects[Index]);
+    end;
+  finally
+    FLock.EndRead;
   end;
 end;
 
@@ -3073,24 +3102,29 @@ procedure TPlayer.SetAttribute(const AttrName: string; Value: Integer);
 var
   Index: Integer;
 begin
-  case AnsiIndexStr(AttrName,
-    [attrColor, attrShowCounter, attrViewBorderSize]) of
-    0: FColor := Value;
-    1: FShowCounter := Value;
-    2: FViewBorderSize := MinMax(Value, MinViewSize, Map.MaxViewSize);
-  else
-    Index := FAttributes.IndexOf(AttrName);
-    if Index < 0 then
-    begin
-      if Value <> 0 then
-        FAttributes.AddObject(AttrName, TObject(Value));
-    end else
-    begin
-      if Value = 0 then
-        FAttributes.Delete(Index)
-      else
-        FAttributes.Objects[Index] := TObject(Value);
+  FLock.BeginWrite;
+  try
+    case AnsiIndexStr(AttrName,
+      [attrColor, attrShowCounter, attrViewBorderSize]) of
+      0: FColor := Value;
+      1: FShowCounter := Value;
+      2: FViewBorderSize := MinMax(Value, MinViewSize, Map.MaxViewSize);
+    else
+      Index := FAttributes.IndexOf(AttrName);
+      if Index < 0 then
+      begin
+        if Value <> 0 then
+          FAttributes.AddObject(AttrName, TObject(Value));
+      end else
+      begin
+        if Value = 0 then
+          FAttributes.Delete(Index)
+        else
+          FAttributes.Objects[Index] := TObject(Value);
+      end;
     end;
+  finally
+    FLock.EndWrite;
   end;
 end;
 
@@ -3109,9 +3143,11 @@ end;
 *}
 procedure TPlayer.DefaultHandler(var Msg);
 var
+  Plugins: TPluginDynArray;
   I: Integer;
 begin
-  for I := 0 to PluginCount-1 do
+  GetPluginList(Plugins);
+  for I := 0 to Length(Plugins)-1 do
   begin
     if TPlayerMessage(Msg).Handled then
       Exit;
@@ -3126,15 +3162,20 @@ end;
 *}
 procedure TPlayer.GetAttributes(Attributes: TStrings);
 begin
-  with Attributes do
-  begin
-    Assign(FAttributes);
-    if FColor <> DefaultPlayerColor then
-      AddObject(attrColor, TObject(FColor));
-    if FShowCounter <> 0 then
-      AddObject(attrShowCounter, TObject(FShowCounter));
-    if FViewBorderSize <> DefaultViewBorderSize then
-      AddObject(attrViewBorderSize, TObject(FViewBorderSize));
+  FLock.BeginRead;
+  try
+    with Attributes do
+    begin
+      Assign(FAttributes);
+      if FColor <> DefaultPlayerColor then
+        AddObject(attrColor, TObject(FColor));
+      if FShowCounter <> 0 then
+        AddObject(attrShowCounter, TObject(FShowCounter));
+      if FViewBorderSize <> DefaultViewBorderSize then
+        AddObject(attrViewBorderSize, TObject(FViewBorderSize));
+    end;
+  finally
+    FLock.EndRead;
   end;
 end;
 
@@ -3144,10 +3185,12 @@ end;
 *}
 procedure TPlayer.GetPluginIDs(PluginIDs: TStrings);
 var
+  Plugins: TPluginDynArray;
   I: Integer;
 begin
+  GetPluginList(Plugins);
   PluginIDs.Clear;
-  for I := 0 to PluginCount-1 do
+  for I := 0 to Length(Plugins)-1 do
     PluginIDs.AddObject(Plugins[I].ID, Plugins[I]);
 end;
 
@@ -3164,8 +3207,14 @@ procedure TPlayer.DrawInPlace(Canvas: TCanvas; X: Integer = 0;
 var
   QPos: TQualifiedPos;
 begin
-  QPos.Map := Map;
-  QPos.Position := Position;
+  FLock.BeginRead;
+  try
+    QPos.Map := Map;
+    QPos.Position := Position;
+  finally
+    FLock.EndRead;
+  end;
+
   Draw(QPos, Canvas, X, Y);
 end;
 
@@ -3227,15 +3276,20 @@ procedure TPlayer.AddPlugin(Plugin: TPlugin);
 var
   Index: Integer;
 begin
-  if FPlugins.IndexOf(Plugin) >= 0 then
-    Exit;
+  FLock.BeginWrite;
+  try
+    if FPlugins.IndexOf(Plugin) >= 0 then
+      Exit;
 
-  { Keep plug-in list ordered by z-index. }
-  Index := 0;
-  while (Index < FPlugins.Count) and
-    (Plugin.ZIndex > TPlugin(FPlugins[Index]).ZIndex) do
-    Inc(Index);
-  FPlugins.Insert(Index, Plugin);
+    { Keep plug-in list ordered by z-index. }
+    Index := 0;
+    while (Index < FPlugins.Count) and
+      (Plugin.ZIndex > TPlugin(FPlugins[Index]).ZIndex) do
+      Inc(Index);
+    FPlugins.Insert(Index, Plugin);
+  finally
+    FLock.EndWrite;
+  end;
 end;
 
 {*
@@ -3244,7 +3298,12 @@ end;
 *}
 procedure TPlayer.RemovePlugin(Plugin: TPlugin);
 begin
-  FPlugins.Remove(Plugin);
+  FLock.BeginWrite;
+  try
+    FPlugins.Remove(Plugin);
+  finally
+    FLock.EndWrite;
+  end;
 end;
 
 {*
@@ -3256,13 +3315,16 @@ end;
 *}
 function TPlayer.AbleTo(const Action: TPlayerAction): Boolean;
 var
+  Plugins: TPluginDynArray;
   I: Integer;
 begin
   Result := True;
 
-  for I := 0 to PluginCount-1 do
+  GetPluginList(Plugins);
+  for I := 0 to Length(Plugins)-1 do
     if Plugins[I].AbleTo(Self, Action) then
       Exit;
+
   for I := 0 to Master.ObjectDefCount-1 do
     if Master.ObjectDefs[I].AbleTo(Self, Action) then
       Exit;
@@ -3280,6 +3342,7 @@ end;
 *}
 function TPlayer.DoAction(const Action: TPlayerAction): Boolean;
 var
+  Plugins: TPluginDynArray;
   I, GoodObjectCount: Integer;
   GoodObjects: array of TObjectDef;
   RadioTitles: array of string;
@@ -3288,45 +3351,51 @@ begin
   Result := True;
 
   // Les plug-in ont la priorité, puisqu'ils n'ont pas d'effet de bord
-  for I := 0 to PluginCount-1 do
+  GetPluginList(Plugins);
+  for I := 0 to Length(Plugins)-1 do
     if Plugins[I].AbleTo(Self, Action) then
       Exit;
 
-  // Listage des objets susceptibles d'aider le joueur
-  SetLength(GoodObjects, Master.ObjectDefCount);
-  GoodObjectCount := 0;
-  for I := 0 to Master.ObjectDefCount-1 do
-  begin
-    if Master.ObjectDefs[I].AbleTo(Self, Action) then
+  FLock.BeginWrite;
+  try
+    // Listage des objets susceptibles d'aider le joueur
+    SetLength(GoodObjects, Master.ObjectDefCount);
+    GoodObjectCount := 0;
+    for I := 0 to Master.ObjectDefCount-1 do
     begin
-      GoodObjects[GoodObjectCount] := Master.ObjectDefs[I];
-      Inc(GoodObjectCount);
+      if Master.ObjectDefs[I].AbleTo(Self, Action) then
+      begin
+        GoodObjects[GoodObjectCount] := Master.ObjectDefs[I];
+        Inc(GoodObjectCount);
+      end;
     end;
-  end;
 
-  // Aucun objet trouvé : échec
-  if GoodObjectCount = 0 then
-  begin
-    Result := False;
-    Exit;
-  end;
+    // Aucun objet trouvé : échec
+    if GoodObjectCount = 0 then
+    begin
+      Result := False;
+      Exit;
+    end;
 
-  // Si plusieurs objets, demande au joueur lequel utiliser
-  if GoodObjectCount = 1 then
-    GoodObject := GoodObjects[0]
-  else
-  begin
-    SetLength(RadioTitles, GoodObjectCount);
-    for I := 0 to GoodObjectCount-1 do
-      RadioTitles[I] := GoodObjects[I].Name;
-    I := 0;
-    ShowDialogRadio(sWhichObject, sWhichObject, mtConfirmation,
-      [mbOK], mrOk, RadioTitles, I, True);
-    GoodObject := GoodObjects[I];
-  end;
+    // Si plusieurs objets, demande au joueur lequel utiliser
+    if GoodObjectCount = 1 then
+      GoodObject := GoodObjects[0]
+    else
+    begin
+      SetLength(RadioTitles, GoodObjectCount);
+      for I := 0 to GoodObjectCount-1 do
+        RadioTitles[I] := GoodObjects[I].Name;
+      I := 0;
+      ShowDialogRadio(sWhichObject, sWhichObject, mtConfirmation,
+        [mbOK], mrOk, RadioTitles, I, True);
+      GoodObject := GoodObjects[I];
+    end;
 
-  // Utilisation de l'objet
-  GoodObject.UseFor(Self, Action);
+    // Utilisation de l'objet
+    GoodObject.UseFor(Self, Action);
+  finally
+    FLock.EndWrite;
+  end;
 end;
 
 {*
@@ -3449,7 +3518,7 @@ var
   Redo: Boolean;
 begin
   repeat
-    Master.Temporize;
+    Temporize;
     Move(Direction, False, Redo);
   until not Redo;
 end;
@@ -3461,8 +3530,13 @@ end;
 *}
 procedure TPlayer.ChangePosition(AMap: TMap; const APosition: T3DPoint);
 begin
-  FMap := AMap;
-  FPosition := APosition;
+  FLock.BeginWrite;
+  try
+    FMap := AMap;
+    FPosition := APosition;
+  finally
+    FLock.EndWrite;
+  end;
 end;
 
 {*
@@ -3470,7 +3544,7 @@ end;
 *}
 procedure TPlayer.Show;
 begin
-  Inc(FShowCounter);
+  InterlockedIncrement(FShowCounter);
 end;
 
 {*
@@ -3478,7 +3552,7 @@ end;
 *}
 procedure TPlayer.Hide;
 begin
-  Dec(FShowCounter);
+  InterlockedDecrement(FShowCounter);
 end;
 
 {*
@@ -3607,19 +3681,24 @@ procedure TPlayer.Win;
 var
   I: Integer;
 begin
-  if FPlayState <> psPlaying then
-    Exit;
+  FLock.BeginWrite;
+  try
+    if FPlayState <> psPlaying then
+      Exit;
 
-  // Ce joueur a gagné
-  FPlayState := psWon;
+    // Ce joueur a gagné
+    FPlayState := psWon;
 
-  // Les autres joueurs ont perdu
-  for I := 0 to Master.PlayerCount-1 do
-    if Master.Players[I] <> Self then
-      Master.Players[I].FPlayState := psLost;
+    // Les autres joueurs ont perdu
+    for I := 0 to Master.PlayerCount-1 do
+      if Master.Players[I] <> Self then
+        Master.Players[I].FPlayState := psLost;
 
-  // La partie est terminée
-  Master.Terminate;
+    // La partie est terminée
+    Master.Terminate;
+  finally
+    FLock.EndWrite;
+  end;
 end;
 
 {*
@@ -3629,17 +3708,22 @@ procedure TPlayer.Lose;
 var
   I: Integer;
 begin
-  if FPlayState <> psPlaying then
-    Exit;
-
-  // Ce joueur a perdu
-  FPlayState := psLost;
-
-  // Si plus aucun joueur ne joue, la partie est terminée
-  for I := 0 to Master.PlayerCount-1 do
-    if Master.Players[I].PlayState = psPlaying then
+  FLock.BeginWrite;
+  try
+    if FPlayState <> psPlaying then
       Exit;
-  Master.Terminate;
+
+    // Ce joueur a perdu
+    FPlayState := psLost;
+
+    // Si plus aucun joueur ne joue, la partie est terminée
+    for I := 0 to Master.PlayerCount-1 do
+      if Master.Players[I].PlayState = psPlaying then
+        Exit;
+    Master.Terminate;
+  finally
+    FLock.EndWrite;
+  end;
 end;
 
 {*
@@ -3649,13 +3733,15 @@ end;
 procedure TPlayer.DrawView(Canvas: TCanvas);
 var
   Context: TDrawViewContext;
+  Plugins: TPluginDynArray;
   I: Integer;
 begin
   Context := TDrawViewContext.Create(Mode, Canvas);
   try
     Mode.DrawView(Context);
 
-    for I := 0 to PluginCount-1 do
+    GetPluginList(Plugins);
+    for I := 0 to Length(Plugins)-1 do
       Plugins[I].DrawView(Context);
   finally
     Context.Free;
@@ -3675,7 +3761,12 @@ begin
   FKeyPressKey := Key;
   FKeyPressShift := Shift;
 
-  FKeyPressCoroutine.Invoke;
+  try
+    FKeyPressCoroutine.Invoke;
+  except
+    FKeyPressCoroutine.Reset;
+    raise;
+  end;
 end;
 
 {*

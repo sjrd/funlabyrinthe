@@ -23,7 +23,7 @@ implementation
 const // don't localize
   UnitName = 'FunLabyUtils';
   ResourceName = 'SepiImportsFunLabyUtils';
-  TypeCount = 32;
+  TypeCount = 33;
   MethodCount = 129;
   VariableCount = 12;
 
@@ -849,19 +849,20 @@ begin
   TypeInfoArray[16] := TypeInfo(TFunLabyComponent);
   TypeInfoArray[17] := TypeInfo(TVisualComponent);
   TypeInfoArray[18] := TypeInfo(TPlugin);
-  TypeInfoArray[19] := TypeInfo(TObjectDef);
-  TypeInfoArray[20] := TypeInfo(TSquareComponent);
-  TypeInfoArray[21] := TypeInfo(TField);
-  TypeInfoArray[22] := TypeInfo(TEffect);
-  TypeInfoArray[23] := TypeInfo(TTool);
-  TypeInfoArray[24] := TypeInfo(TObstacle);
-  TypeInfoArray[25] := TypeInfo(TSquare);
-  TypeInfoArray[26] := TypeInfo(TMap);
-  TypeInfoArray[27] := TypeInfo(IPlayerMode);
-  TypeInfoArray[28] := TypeInfo(TPlayerMode);
-  TypeInfoArray[29] := TypeInfo(TLabyrinthPlayerMode);
-  TypeInfoArray[30] := TypeInfo(TPlayer);
-  TypeInfoArray[31] := TypeInfo(TMaster);
+  TypeInfoArray[19] := TypeInfo(TPluginDynArray);
+  TypeInfoArray[20] := TypeInfo(TObjectDef);
+  TypeInfoArray[21] := TypeInfo(TSquareComponent);
+  TypeInfoArray[22] := TypeInfo(TField);
+  TypeInfoArray[23] := TypeInfo(TEffect);
+  TypeInfoArray[24] := TypeInfo(TTool);
+  TypeInfoArray[25] := TypeInfo(TObstacle);
+  TypeInfoArray[26] := TypeInfo(TSquare);
+  TypeInfoArray[27] := TypeInfo(TMap);
+  TypeInfoArray[28] := TypeInfo(IPlayerMode);
+  TypeInfoArray[29] := TypeInfo(TPlayerMode);
+  TypeInfoArray[30] := TypeInfo(TLabyrinthPlayerMode);
+  TypeInfoArray[31] := TypeInfo(TPlayer);
+  TypeInfoArray[32] := TypeInfo(TMaster);
 end;
 
 procedure InitMethodAddresses;
