@@ -25,20 +25,52 @@ type
   *}
   TCustomShowMessagePlugin = class(TPlugin)
   private
-    FPlayerTexts: TStrings;     /// Textes courants pour chaque joueur
-    FTextsCS: TCriticalSection; /// Section critique pour l'accès à FPlayerTexts
-
     procedure MsgShowMessageHandler(
       var Msg: TPlayerShowMsgMessage); message msgShowMessage;
   protected
-    function GetCurrentText(Player: TPlayer): string;
-    procedure SetCurrentText(Player: TPlayer; const Value: string);
-
     procedure ShowMessage(Player: TPlayer;
       const Text: string); virtual; abstract;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID);
+  end;
+
+  {*
+    Données liées au joueur pour un TDefaultShowMessagePlugin
+    @author sjrd
+    @version 1.0
+  *}
+  TDefaultShowMessagePluginPlayerData = class(TPlayerData)
+  private
+    FActivated: Boolean; /// Indique si la boîte de message est activée
+
+    FPadding: TPoint;       /// Marges de la boîte de message (bordure comprise)
+    FMaxLineCount: Integer; /// Nombre de lignes à afficher maximum
+
+    FWorkBitmap: TBitmap; /// Bitmap de travail
+    FWorkCanvas: TCanvas; /// Canevas de travail
+
+    FMessageRect: TRect;    /// Rectangle où afficher le message
+    FLines: TStrings;       /// Lignes à afficher
+    FCurrentIndex: Integer; /// Index courant dans les lignes à afficher
+  public
+    constructor Create(AComponent: TFunLabyComponent;
+      APlayer: TPlayer); override;
     destructor Destroy; override;
+
+    procedure Activate;
+    procedure NextLines;
+    procedure Deactivate;
+
+    property Activated: Boolean read FActivated;
+
+    property Padding: TPoint read FPadding write FPadding;
+    property MaxLineCount: Integer read FMaxLineCount write FMaxLineCount;
+
+    property WorkCanvas: TCanvas read FWorkCanvas;
+
+    property MessageRect: TRect read FMessageRect write FMessageRect;
+    property Lines: TStrings read FLines;
+    property CurrentIndex: Integer read FCurrentIndex;
   end;
 
   {*
@@ -48,13 +80,26 @@ type
   *}
   TDefaultShowMessagePlugin = class(TCustomShowMessagePlugin)
   protected
-    procedure SetupFont(Player: TPlayer; Font: TFont); virtual;
-    procedure Measure(Player: TPlayer; out Padding: TPoint;
-      out CharWidth, LineCount: Integer); virtual;
-    procedure DrawBorder(Context: TDrawViewContext); virtual;
-    procedure DrawText(Context: TDrawViewContext; const Text: string); virtual;
-    procedure DrawContinueSymbol(Context: TDrawViewContext); virtual;
-    procedure WaitForContinueKey(Player: TPlayer); virtual;
+    class function GetPlayerDataClass: TPlayerDataClass; override;
+
+    procedure UpdateMeasures(
+      PlayerData: TDefaultShowMessagePluginPlayerData); virtual;
+    procedure SetupFont(PlayerData: TDefaultShowMessagePluginPlayerData;
+      Font: TFont); virtual;
+
+    procedure PrepareLines(
+      PlayerData: TDefaultShowMessagePluginPlayerData;
+      const Text: string); virtual;
+
+    procedure DrawBorder(Context: TDrawViewContext;
+      PlayerData: TDefaultShowMessagePluginPlayerData); virtual;
+    procedure DrawText(Context: TDrawViewContext;
+      PlayerData: TDefaultShowMessagePluginPlayerData); virtual;
+    procedure DrawContinueSymbol(Context: TDrawViewContext;
+      PlayerData: TDefaultShowMessagePluginPlayerData); virtual;
+
+    procedure WaitForContinueKey(Player: TPlayer;
+      PlayerData: TDefaultShowMessagePluginPlayerData); virtual;
 
     procedure ShowMessage(Player: TPlayer; const Text: string); override;
   public
@@ -78,20 +123,6 @@ begin
   inherited Create(AMaster, AID);
 
   FZIndex := 1024;
-
-  FPlayerTexts := TStringList.Create;
-  FTextsCS := TCriticalSection.Create;
-end;
-
-{*
-  [@inheritDoc]
-*}
-destructor TCustomShowMessagePlugin.Destroy;
-begin
-  FTextsCS.Free;
-  FPlayerTexts.Free;
-
-  inherited;
 end;
 
 {*
@@ -107,55 +138,63 @@ begin
     ShowMessage(Msg.Player, Msg.Text);
 end;
 
+{-------------------------------------------}
+{ TDefaultShowMessagePluginPlayerData class }
+{-------------------------------------------}
+
 {*
-  Obtient le texte actuellement affiché pour un joueur donné
-  @param Player   Joueur concerné
-  @return Texte à afficher pour ce joueur
+  Crée les données du joueur
+  @param AComponent   Composant propriétaire
+  @param APlayer      Joueur
 *}
-function TCustomShowMessagePlugin.GetCurrentText(Player: TPlayer): string;
-var
-  Index: Integer;
+constructor TDefaultShowMessagePluginPlayerData.Create(
+  AComponent: TFunLabyComponent; APlayer: TPlayer);
 begin
-  FTextsCS.Acquire;
-  try
-    Index := FPlayerTexts.IndexOfObject(Player);
-    if Index >= 0 then
-      Result := FPlayerTexts[Index]
-    else
-      Result := '';
-  finally
-    FTextsCS.Release;
-  end;
+  inherited;
+
+  FWorkBitmap := TBitmap.Create;
+  FWorkCanvas := FWorkBitmap.Canvas;
+
+  FLines := TStringList.Create;
 end;
 
 {*
-  Modifie le texte à afficher pour un joueur donné
-  @param Player   Joueur concerné
-  @param Value    Texte à afficher pour ce joueur
+  [@inheritDoc]
 *}
-procedure TCustomShowMessagePlugin.SetCurrentText(Player: TPlayer;
-  const Value: string);
-var
-  Index: Integer;
+destructor TDefaultShowMessagePluginPlayerData.Destroy;
 begin
-  FTextsCS.Acquire;
-  try
-    Index := FPlayerTexts.IndexOfObject(Player);
+  FLines.Free;
 
-    if Index >= 0 then
-    begin
-      if Value = '' then
-        FPlayerTexts.Delete(Index)
-      else
-        FPlayerTexts[Index] := Value;
-    end else
-    begin
-      if Value <> '' then
-        FPlayerTexts.AddObject(Value, Player);
-    end;
-  finally
-    FTextsCS.Release;
-  end;
+  FWorkBitmap.Free;
+
+  inherited;
+end;
+
+{*
+  Active l'affichage du message préparé
+*}
+procedure TDefaultShowMessagePluginPlayerData.Activate;
+begin
+  FCurrentIndex := 0;
+  FActivated := True;
+end;
+
+{*
+  Passe aux lignes suivantes
+*}
+procedure TDefaultShowMessagePluginPlayerData.NextLines;
+begin
+  Inc(FCurrentIndex, MaxLineCount);
+  if FCurrentIndex >= Lines.Count then
+    Deactivate;
+end;
+
+{*
+  Désactive l'affichage du message
+*}
+procedure TDefaultShowMessagePluginPlayerData.Deactivate;
+begin
+  FActivated := False;
 end;
 
 {---------------------------------}
@@ -163,11 +202,31 @@ end;
 {---------------------------------}
 
 {*
-  Configure la police du texte
-  @param Player    Joueur pour qui afficher un message
-  @param Font      Police à configurer
+  [@inheritDoc]
 *}
-procedure TDefaultShowMessagePlugin.SetupFont(Player: TPlayer; Font: TFont);
+class function TDefaultShowMessagePlugin.GetPlayerDataClass: TPlayerDataClass;
+begin
+  Result := TDefaultShowMessagePluginPlayerData;
+end;
+
+{*
+  Met à jour les mesures d'affichage du texte
+  @param PlayerData   Données du joueur
+*}
+procedure TDefaultShowMessagePlugin.UpdateMeasures(
+  PlayerData: TDefaultShowMessagePluginPlayerData);
+begin
+  PlayerData.Padding := Point(10, 4);
+  PlayerData.MaxLineCount := 2;
+end;
+
+{*
+  Configure la police du texte
+  @param PlayerData   Données du joueur
+  @param Font         Police à configurer
+*}
+procedure TDefaultShowMessagePlugin.SetupFont(
+  PlayerData: TDefaultShowMessagePluginPlayerData; Font: TFont);
 begin
   Font.Name := 'Courier New';
   Font.Size := 10;
@@ -175,26 +234,57 @@ begin
 end;
 
 {*
-  Mesure les paramètres d'affichage du texte
-  @param Player      Joueur pour qui afficher un message
-  @param Padding     En sortie : padding requis par la bordure
-  @param CharWidth   En sortie : largeur d'un caractère
-  @param LineCount   En sortie : nombre de lignes affichées
+  Prépare les lignes de textes à afficher
+  @param PlayerData   Données du joueur
+  @param Text         Texte linéaire
 *}
-procedure TDefaultShowMessagePlugin.Measure(Player: TPlayer;
-  out Padding: TPoint; out CharWidth, LineCount: Integer);
+procedure TDefaultShowMessagePlugin.PrepareLines(
+  PlayerData: TDefaultShowMessagePluginPlayerData; const Text: string);
+const
+  BreakChars: TSysCharSet = [#9, #10, #13, ' '];
+var
+  MaxLineWidth, LineBeginIndex, LastGoodIndex, Index, CurWidth: Integer;
 begin
-  Padding.X := 10;
-  Padding.Y := 4;
-  CharWidth := 8;
-  LineCount := 2;
+  with PlayerData do
+  begin
+    MaxLineWidth := MessageRect.Right - MessageRect.Left - 2*Padding.X;
+
+    LineBeginIndex := 1;
+    LastGoodIndex := 0;
+    Index := 1;
+    while Index <= Length(Text) do
+    begin
+      while (Index <= Length(Text)) and (not (Text[Index] in BreakChars)) do
+        Inc(Index);
+
+      CurWidth := WorkCanvas.TextWidth(Copy(
+        Text, LineBeginIndex, Index-LineBeginIndex));
+
+      if (CurWidth <= MaxLineWidth) or (LastGoodIndex = 0) then
+        LastGoodIndex := Index;
+
+      if (Index >= Length(Text)) or (Text[Index] in [#10, #13]) or
+        (CurWidth > MaxLineWidth) then
+      begin
+        Index := LastGoodIndex;
+        Lines.Add(Copy(Text, LineBeginIndex, Index-LineBeginIndex));
+
+        LineBeginIndex := Index+1;
+        LastGoodIndex := 0;
+      end;
+
+      Inc(Index);
+    end;
+  end;
 end;
 
 {*
   Dessine la bordure (et le fond du texte)
-  @param Context   Contexte d'affiche de la vue
+  @param Context      Contexte d'affiche de la vue
+  @param PlayerData   Données du joueur
 *}
-procedure TDefaultShowMessagePlugin.DrawBorder(Context: TDrawViewContext);
+procedure TDefaultShowMessagePlugin.DrawBorder(Context: TDrawViewContext;
+  PlayerData: TDefaultShowMessagePluginPlayerData);
 var
   BorderRect: TRect;
 begin
@@ -216,34 +306,31 @@ end;
 
 {*
   Dessine le texte
-  @param Context   Contexte d'affiche de la vue
-  @param Text      Texte à afficher
+  @param Context      Contexte d'affiche de la vue
+  @param PlayerData   Données du joueur
 *}
 procedure TDefaultShowMessagePlugin.DrawText(Context: TDrawViewContext;
-  const Text: string);
+  PlayerData: TDefaultShowMessagePluginPlayerData);
 var
   TextPos: TPoint;
-  Dummy1, Dummy2: Integer;
-  Line, RemainingText, Temp: string;
+  I: Integer;
 begin
-  with Context do
+  with Context, PlayerData do
   begin
     // First text pos
-    Measure(Player, TextPos, Dummy1, Dummy2);
-    TextPos.Y := ViewRect.Bottom - 40 + TextPos.Y;
+    TextPos.X := MessageRect.Left + Padding.X;
+    TextPos.Y := MessageRect.Top + Padding.Y;
 
     // Setup font
     Canvas.Brush.Style := bsClear;
-    SetupFont(Player, Canvas.Font);
+    SetupFont(PlayerData, Canvas.Font);
 
     // Draw lines
-    RemainingText := Text;
-    while RemainingText <> '' do
+    for I := CurrentIndex to CurrentIndex+MaxLineCount-1 do
     begin
-      SplitToken(RemainingText, #10, Line, Temp);
-      RemainingText := Temp;
-
-      Canvas.TextOut(TextPos.X, TextPos.Y, Line);
+      if I >= Lines.Count then
+        Break;
+      Canvas.TextOut(TextPos.X, TextPos.Y, Lines[I]);
       Inc(TextPos.Y, Canvas.TextHeight('A'));
     end;
   end;
@@ -251,10 +338,11 @@ end;
 
 {*
   Dessine le symbole de continuation
-  @param Context   Contexte du dessin de la vue
+  @param Context      Contexte du dessin de la vue
+  @param PlayerData   Données du joueur
 *}
 procedure TDefaultShowMessagePlugin.DrawContinueSymbol(
-  Context: TDrawViewContext);
+  Context: TDrawViewContext; PlayerData: TDefaultShowMessagePluginPlayerData);
 var
   SymbolPos: TPoint;
 begin
@@ -280,9 +368,11 @@ end;
 
 {*
   Bloque jusqu'à l'appui d'une touche de continuation
-  @param Player   Joueur qui doit appuyer sur une touche de continuation
+  @param Player       Joueur qui doit appuyer sur une touche de continuation
+  @param PlayerData   Données du joueur
 *}
-procedure TDefaultShowMessagePlugin.WaitForContinueKey(Player: TPlayer);
+procedure TDefaultShowMessagePlugin.WaitForContinueKey(Player: TPlayer;
+  PlayerData: TDefaultShowMessagePluginPlayerData);
 var
   Key: Word;
   Shift: TShiftState;
@@ -298,42 +388,39 @@ end;
 procedure TDefaultShowMessagePlugin.ShowMessage(Player: TPlayer;
   const Text: string);
 var
-  Padding: TPoint;
-  CharWidth, LineCount: Integer;
-  LineWidth, MaxCol, Index, I: Integer;
-  WrappedText: string;
+  PlayerData: TDefaultShowMessagePluginPlayerData;
+  ViewSize: TPoint;
 begin
-  Measure(Player, Padding, CharWidth, LineCount);
+  PlayerData := TDefaultShowMessagePluginPlayerData(GetPlayerData(Player));
 
-  LineWidth := Player.Mode.Width - 2*Padding.X;
-  MaxCol := LineWidth div CharWidth;
-
-  WrappedText := WrapText(Text, #10, [' ', '-', #9], MaxCol);
-
-  while WrappedText <> '' do
+  with PlayerData do
   begin
-    Index := 0;
-    for I := 1 to LineCount do
-    begin
-      Index := PosEx(#10, WrappedText, Index+1);
-      if Index = 0 then
-        Break;
-    end;
+    // Setup
+    UpdateMeasures(PlayerData);
+    SetupFont(PlayerData, WorkCanvas.Font);
 
-    if Index = 0 then
-    begin
-      SetCurrentText(Player, WrappedText);
-      WrappedText := '';
-    end else
-    begin
-      SetCurrentText(Player, Copy(WrappedText, 1, Index-1));
-      Delete(WrappedText, 1, Index);
-    end;
+    // Fetch view size
+    with Player.Mode do
+      ViewSize := Point(Width, Height);
 
-    WaitForContinueKey(Player);
+    // Build message rect
+    MessageRect := Rect(
+      0, ViewSize.Y - 2*Padding.Y - MaxLineCount*WorkCanvas.TextHeight('A'),
+      ViewSize.X, ViewSize.Y);
+
+    // Prepare lines
+    Lines.Clear;
+    PrepareLines(PlayerData, AnsiReplaceStr(Text, #13#10, #10));
+    if Lines.Count = 0 then
+      Exit;
+
+    // Show message box
+    Activate;
+    repeat
+      WaitForContinueKey(Player, PlayerData);
+      NextLines;
+    until not Activated;
   end;
-
-  SetCurrentText(Player, '');
 end;
 
 {*
@@ -341,15 +428,16 @@ end;
 *}
 procedure TDefaultShowMessagePlugin.DrawView(Context: TDrawViewContext);
 var
-  Text: string;
+  PlayerData: TDefaultShowMessagePluginPlayerData;
 begin
-  Text := GetCurrentText(Context.Player);
-  if Text = '' then
+  PlayerData := TDefaultShowMessagePluginPlayerData(
+    GetPlayerData(Context.Player));
+  if not PlayerData.Activated then
     Exit;
 
-  DrawBorder(Context);
-  DrawText(Context, Text);
-  DrawContinueSymbol(Context);
+  DrawBorder(Context, PlayerData);
+  DrawText(Context, PlayerData);
+  DrawContinueSymbol(Context, PlayerData);
 end;
 
 end.

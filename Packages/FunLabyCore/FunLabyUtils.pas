@@ -85,6 +85,7 @@ type
   /// Générée en cas de mauvaise définition d'une case
   EBadSquareDefException = class(EFunLabyException);
 
+  TFunLabyComponent = class;
   TSquareComponent = class;
   TSquare = class;
   TMap = class;
@@ -395,6 +396,29 @@ type
   end;
 
   {*
+    Données d'un composant liées à un joueur
+    @author sjrd
+    @version 5.0
+  *}
+  TPlayerData = class(TObject)
+  private
+    FComponent: TFunLabyComponent; /// Composant propriétaire
+    FPlayer: TPlayer;              /// Joueur lié
+  public
+    constructor Create(AComponent: TFunLabyComponent;
+      APlayer: TPlayer); virtual;
+
+    property Component: TFunLabyComponent read FComponent;
+    property Player: TPlayer read FPlayer;
+  end;
+
+  /// Classe de TPlayerData
+  TPlayerDataClass = class of TPlayerData;
+
+  /// Alias de type utilisé par le codegen FunDelphi
+  TFunLabyComponentPlayerData = TPlayerData;
+
+  {*
     Classe de base pour les composants de FunLabyrinthe
     TFunLabyComponent est la classe de base pour tous les composants de
     FunLabyrinthe. Elle fournit des propriétés et des méthodes pour repérer le
@@ -414,7 +438,13 @@ type
     *}
     FTag: Integer;
 
+    FPlayerData: TBucketItemArray; /// Données par joueur
+
     function GetSafeID: TComponentID;
+  protected
+    class function GetPlayerDataClass: TPlayerDataClass; virtual;
+
+    function GetPlayerData(Player: TPlayer): TPlayerData;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID);
     destructor Destroy; override;
@@ -424,6 +454,9 @@ type
     property SafeID: TComponentID read GetSafeID;
     property Tag: Integer read FTag write FTag;
   end;
+
+  /// Classe de TFunLabyComponentClass
+  TFunLabyComponentClass = class of TFunLabyComponent;
 
   {*
     Classe de base pour les composants devant être affichés
@@ -502,6 +535,16 @@ type
   TPluginDynArray = array of TPlugin;
 
   {*
+    Données liées à un joueur pour une définition d'objet
+    @author sjrd
+    @version 5.0
+  *}
+  TObjectDefPlayerData = class(TPlayerData)
+  private
+    FCount: Integer; /// Nombre d'objets possédés par le joueur
+  end;
+
+  {*
     Classe de base pour les définitions d'objets
     TObjectDef est la classe de base pour les définitions d'objets que possède
     le joueur.
@@ -511,6 +554,8 @@ type
   *}
   TObjectDef = class(TVisualComponent)
   protected
+    class function GetPlayerDataClass: TPlayerDataClass; override;
+
     function GetCount(Player: TPlayer): Integer; virtual;
     procedure SetCount(Player: TPlayer; Value: Integer); virtual;
 
@@ -1803,6 +1848,23 @@ begin
   FCancelled := True;
 end;
 
+{-------------------}
+{ TPlayerData class }
+{-------------------}
+
+{*
+  Crée les données liées à un joueur
+  @param AComponent   Composant propriétaire
+  @param APlayer      Joueur
+*}
+constructor TPlayerData.Create(AComponent: TFunLabyComponent; APlayer: TPlayer);
+begin
+  inherited Create;
+
+  FComponent := AComponent;
+  FPlayer := APlayer;
+end;
+
 {--------------------------}
 { Classe TFunLabyComponent }
 {--------------------------}
@@ -1815,7 +1877,12 @@ end;
 constructor TFunLabyComponent.Create(AMaster: TMaster;
   const AID: TComponentID);
 begin
+  if ClassType <> TFunLabyComponent then
+    Assert(GetPlayerDataClass.InheritsFrom(
+      TFunLabyComponentClass(ClassParent).GetPlayerDataClass));
+
   inherited Create;
+
   FMaster := AMaster;
   FID := AID;
   if FID <> '' then
@@ -1823,12 +1890,18 @@ begin
 end;
 
 {*
-  Détruit l'instance
+  [@inheritDoc]
 *}
 destructor TFunLabyComponent.Destroy;
+var
+  I: Integer;
 begin
+  for I := 0 to Length(FPlayerData)-1 do
+    TPlayerData(FPlayerData[I].Data).Free;
+
   if (FID <> '') and Assigned(Master) then
     Master.RemoveComponent(Self);
+
   inherited;
 end;
 
@@ -1844,6 +1917,42 @@ begin
     Result := FID
   else
     Result := '';
+end;
+
+{*
+  Classe de données liées au joueur
+  Toute classe A héritant d'une classe B et qui réimplémente GetPlayerClass doit
+  renvoyer une sous-classe de B.GetPlayerDataClass.
+  @return Classe de données liées au joueur
+*}
+class function TFunLabyComponent.GetPlayerDataClass: TPlayerDataClass;
+begin
+  Result := TPlayerData;
+end;
+
+{*
+  Obtient les données liées à un joueur donné
+  @param Player   Joueur dont obtenir les données
+  @return Données liées au joueur Player
+*}
+function TFunLabyComponent.GetPlayerData(Player: TPlayer): TPlayerData;
+var
+  I: Integer;
+begin
+  for I := 0 to Length(FPlayerData)-1 do
+  begin
+    if FPlayerData[I].Item = Player then
+    begin
+      Result := TPlayerData(FPlayerData[I].Data);
+      Exit;
+    end;
+  end;
+
+  I := Length(FPlayerData);
+  SetLength(FPlayerData, I+1);
+  FPlayerData[I].Item := Player;
+  FPlayerData[I].Data := GetPlayerDataClass.Create(Self, Player);
+  Result := TPlayerData(FPlayerData[I].Data);
 end;
 
 {-------------------------}
@@ -2072,13 +2181,21 @@ end;
 {-------------------}
 
 {*
+  [@inheritDoc]
+*}
+class function TObjectDef.GetPlayerDataClass: TPlayerDataClass;
+begin
+  Result := TObjectDefPlayerData;
+end;
+
+{*
   Nombre d'objets de ce type possédés par un joueur
   @param Player   Joueur concerné
   @return Nombre d'objets que ce joueur possède
 *}
 function TObjectDef.GetCount(Player: TPlayer): Integer;
 begin
-  Result := Player.Attribute[ID];
+  Result := TObjectDefPlayerData(GetPlayerData(Player)).FCount;
 end;
 
 {*
@@ -2088,7 +2205,7 @@ end;
 *}
 procedure TObjectDef.SetCount(Player: TPlayer; Value: Integer);
 begin
-  Player.Attribute[ID] := Value;
+  TObjectDefPlayerData(GetPlayerData(Player)).FCount := Value;
 end;
 
 {*

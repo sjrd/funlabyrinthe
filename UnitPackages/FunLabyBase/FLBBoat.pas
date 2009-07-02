@@ -25,7 +25,8 @@ const {don't localize}
   idBoatTemplate = 'BoatTemplate'; /// ID de la barque modèle
 
   idBoatSquare = idGroundWater+'--'+idBoat+'-'; /// ID de la case barque
-  idBoatSquareTemplate = idGroundWater+'--'+idBoatTemplate+'-'; /// Barque modèle
+  /// Barque modèle
+  idBoatSquareTemplate = idGroundWater+'--'+idBoatTemplate+'-';
 
 const {don't localize}
   fBoat = 'Boat'; /// Fichier de la barque
@@ -35,6 +36,18 @@ resourcestring
   sBoatPrompt = 'Numéro de la barque (1 à 10) :';
 
 type
+  TBoat = class;
+
+  {*
+    Données du joueur pour le plug-in TBoatPlugin
+    @author sjrd
+    @version 5.0
+  *}
+  TBoatPluginPlayerData = class(TPlayerData)
+  private
+    FUsedBoat: TBoat;
+  end;
+
   {*
     Plug-in barque
     Affiche une barque sous le joueur, et permet d'aller dans l'eau. De plus,
@@ -43,6 +56,10 @@ type
     @version 5.0
   *}
   TBoatPlugin = class(TPlugin)
+  private
+    procedure SetUsedBoat(Player: TPlayer; UsedBoat: TBoat);
+  protected
+    class function GetPlayerDataClass: TPlayerDataClass; override;
   public
     procedure DrawBefore(Context: TDrawSquareContext); override;
 
@@ -82,6 +99,24 @@ implementation
 {--------------------}
 { Classe TBoatPlugin }
 {--------------------}
+
+{*
+  Mémorise la barque qu'utilise un joueur
+  @param Player     Joueur
+  @param UsedBoat   Barque utilisée par ce joueur
+*}
+procedure TBoatPlugin.SetUsedBoat(Player: TPlayer; UsedBoat: TBoat);
+begin
+  TBoatPluginPlayerData(GetPlayerData(Player)).FUsedBoat := UsedBoat;
+end;
+
+{*
+  [@inheritDoc]
+*}
+class function TBoatPlugin.GetPlayerDataClass: TPlayerDataClass;
+begin
+  Result := TBoatPluginPlayerData;
+end;
 
 {*
   [@inheritDoc]
@@ -173,21 +208,25 @@ end;
   [@inheritDoc]
 *}
 procedure TBoatPlugin.Moved(Context: TMoveContext);
+var
+  PlayerData: TBoatPluginPlayerData;
 begin
   with Context do
   begin
     if not (DestSquare.Field is TWater) then
     begin
+      PlayerData := TBoatPluginPlayerData(GetPlayerData(Player));
+
       // Retirer le plug-in barque
       Player.RemovePlugin(Self);
 
       // Placer un outil barque sur la case source
       with SrcSquare do
         SrcSquare := Master.SquareByComps(idGroundWater, Effect.SafeID,
-          Format(idBoat, [Player.Attribute[idBoatPlugin]]), Obstacle.SafeID);
+          PlayerData.FUsedBoat.SafeID, Obstacle.SafeID);
 
       // Remettre à 0 l'attribut du joueur concernant la barque
-      Player.Attribute[idBoatPlugin] := 0;
+      PlayerData.FUsedBoat := nil;
     end;
   end;
 end;
@@ -235,7 +274,11 @@ end;
   [@inheritDoc]
 *}
 procedure TBoat.Find(Context: TMoveContext);
+var
+  BoatPlugin: TBoatPlugin;
 begin
+  BoatPlugin := Master.Plugin[idBoatPlugin] as TBoatPlugin;
+
   with Context do
   begin
     // Remplacement de la case par de l'eau simple
@@ -243,11 +286,11 @@ begin
       Square := Master.SquareByComps(idWater, Effect.SafeID,
         '', Obstacle.SafeID);
 
-    // Indication du numéro de la barque dans l'attribut correspondant
-    Player.Attribute[idBoatPlugin] := Number;
+    // Mémoriser la barque utilisée
+    BoatPlugin.SetUsedBoat(Player, Self);
 
     // Ajout du plug-in barque
-    Player.AddPlugin(Master.Plugin[idBoatPlugin]);
+    Player.AddPlugin(BoatPlugin);
   end;
 end;
 

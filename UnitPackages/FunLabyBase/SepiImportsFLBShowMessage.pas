@@ -23,8 +23,8 @@ implementation
 const // don't localize
   UnitName = 'FLBShowMessage';
   ResourceName = 'SepiImportsFLBShowMessage';
-  TypeCount = 2;
-  MethodCount = 3;
+  TypeCount = 3;
+  MethodCount = 4;
   VariableCount = 1;
 
 var
@@ -38,15 +38,29 @@ type
     class procedure InitMethodAddresses;
   end;
 
+  TSepiImportsTDefaultShowMessagePluginPlayerData = class(TDefaultShowMessagePluginPlayerData)
+  private
+    class procedure InitMethodAddresses;
+  end;
+
 {---------------------------------}
 { TCustomShowMessagePlugin import }
 {---------------------------------}
 
 class procedure TSepiImportsTCustomShowMessagePlugin.InitMethodAddresses;
 begin
-  MethodAddresses[0] := @TSepiImportsTCustomShowMessagePlugin.GetCurrentText;
-  MethodAddresses[1] := @TSepiImportsTCustomShowMessagePlugin.SetCurrentText;
-  MethodAddresses[2] := @TSepiImportsTCustomShowMessagePlugin.Create;
+  MethodAddresses[0] := @TSepiImportsTCustomShowMessagePlugin.Create;
+end;
+
+{--------------------------------------------}
+{ TDefaultShowMessagePluginPlayerData import }
+{--------------------------------------------}
+
+class procedure TSepiImportsTDefaultShowMessagePluginPlayerData.InitMethodAddresses;
+begin
+  MethodAddresses[1] := @TSepiImportsTDefaultShowMessagePluginPlayerData.Activate;
+  MethodAddresses[2] := @TSepiImportsTDefaultShowMessagePluginPlayerData.NextLines;
+  MethodAddresses[3] := @TSepiImportsTDefaultShowMessagePluginPlayerData.Deactivate;
 end;
 
 {---------------------}
@@ -116,12 +130,14 @@ end;
 procedure InitTypeInfoArray;
 begin
   TypeInfoArray[0] := TypeInfo(TCustomShowMessagePlugin);
-  TypeInfoArray[1] := TypeInfo(TDefaultShowMessagePlugin);
+  TypeInfoArray[1] := TypeInfo(TDefaultShowMessagePluginPlayerData);
+  TypeInfoArray[2] := TypeInfo(TDefaultShowMessagePlugin);
 end;
 
 procedure InitMethodAddresses;
 begin
   TSepiImportsTCustomShowMessagePlugin.InitMethodAddresses;
+  TSepiImportsTDefaultShowMessagePluginPlayerData.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;

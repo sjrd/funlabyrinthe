@@ -22,7 +22,7 @@ implementation
 const // don't localize
   UnitName = 'FLBBoat';
   ResourceName = 'SepiImportsFLBBoat';
-  TypeCount = 2;
+  TypeCount = 3;
   MethodCount = 1;
   VariableCount = 1;
 
@@ -112,8 +112,9 @@ end;
 
 procedure InitTypeInfoArray;
 begin
-  TypeInfoArray[0] := TypeInfo(TBoatPlugin);
-  TypeInfoArray[1] := TypeInfo(TBoat);
+  TypeInfoArray[0] := TypeInfo(TBoatPluginPlayerData);
+  TypeInfoArray[1] := TypeInfo(TBoatPlugin);
+  TypeInfoArray[2] := TypeInfo(TBoat);
 end;
 
 procedure InitMethodAddresses;
