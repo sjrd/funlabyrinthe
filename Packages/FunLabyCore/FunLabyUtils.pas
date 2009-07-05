@@ -60,6 +60,15 @@ const {don't localize}
   SquareIDDelim = '-';            /// Délimiteur des parties d'un ID de case
   SquareIDFormat = '%s-%s-%s-%s'; /// Format d'un ID de case
 
+  /// Temporisation par défaut
+  DefaultTemporization = 500;
+
+  /// Couleur par défaut d'un joueur
+  DefaultPlayerColor = clBlue;
+
+  /// Taille de bordure de vue par défaut
+  DefaultViewBorderSize = 1;
+
 type
   /// Identificateur de composant FunLabyrinthe
   TComponentID = type string;
@@ -85,6 +94,8 @@ type
   /// Générée en cas de mauvaise définition d'une case
   EBadSquareDefException = class(EFunLabyException);
 
+  TFunLabyFiler = class;
+  TPlayerData = class;
   TFunLabyComponent = class;
   TSquareComponent = class;
   TSquare = class;
@@ -277,7 +288,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TImagesMaster = class
+  TImagesMaster = class(TObject)
   private
     FImgList: TImageList; /// Liste d'images interne
     FImgNames: TStrings;  /// Liste des noms des images
@@ -319,7 +330,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TPainter = class
+  TPainter = class(TObject)
   private
     FMaster: TImagesMaster;    /// Maître d'images
     FImgNames: TStrings;       /// Liste des noms des images
@@ -395,12 +406,72 @@ type
     property GoOnMoving: Boolean read FGoOnMoving write FGoOnMoving;
   end;
 
+  {$M+}
+
+  {*
+    Objet persistent FunLabyrinthe
+    @author sjrd
+    @version 5.0
+  *}
+  TFunLabyPersistent = class(TObject)
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); virtual;
+  end;
+
+  {$M-}
+
+  {*
+    Classe de base pour les objets lecteurs et écrivains FunLabyrinthe
+    @author sjrd
+    @version 5.0
+  *}
+  TFunLabyFiler = class(TObject)
+  private
+    FMaster: TMaster;              /// Maître FunLabyrinthe
+    FInstance: TFunLabyPersistent; /// Instance traitée par ce filer
+  protected
+    procedure HandleProperty(PropInfo: PPropInfo;
+      HasData: Boolean); virtual; abstract;
+
+    procedure HandlePersistent(const Name: string;
+      SubInstance: TFunLabyPersistent); virtual; abstract;
+
+    procedure HandleComponent(const Name: string;
+      Component: TFunLabyComponent); virtual; abstract;
+
+    procedure EnumProperties;
+
+    function HasPlayerData(Component: TFunLabyComponent;
+      Player: TPlayer): Boolean;
+    function GetPlayerData(Component: TFunLabyComponent;
+      Player: TPlayer): TPlayerData;
+  public
+    constructor Create(AMaster: TMaster; AInstance: TFunLabyPersistent);
+
+    procedure DefinePublishedProperty(PropInfo: PPropInfo);
+
+    procedure DefineProcProperty(const Name: string; PropType: PTypeInfo;
+      GetProc, SetProc: Pointer; HasData: Boolean);
+
+    procedure DefineFieldProcProperty(const Name: string; PropType: PTypeInfo;
+      GetField, SetProc: Pointer; HasData: Boolean);
+
+    procedure DefineFieldProperty(const Name: string; PropType: PTypeInfo;
+      GetSetField: Pointer; HasData: Boolean);
+
+    procedure DefinePersistent(const Name: string;
+      SubInstance: TFunLabyPersistent);
+
+    property Master: TMaster read FMaster;
+    property Instance: TFunLabyPersistent read FInstance;
+  end;
+
   {*
     Données d'un composant liées à un joueur
     @author sjrd
     @version 5.0
   *}
-  TPlayerData = class(TObject)
+  TPlayerData = class(TFunLabyPersistent)
   private
     FComponent: TFunLabyComponent; /// Composant propriétaire
     FPlayer: TPlayer;              /// Joueur lié
@@ -426,7 +497,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFunLabyComponent = class
+  TFunLabyComponent = class(TFunLabyPersistent)
   private
     FMaster: TMaster;  /// Maître FunLabyrinthe
     FID: TComponentID; /// ID du composant
@@ -442,17 +513,22 @@ type
 
     function GetSafeID: TComponentID;
   protected
+    FTransient: Boolean; /// Indique si ce composant est transitoire
+
     class function GetPlayerDataClass: TPlayerDataClass; virtual;
 
+    function HasPlayerData(Player: TPlayer): Boolean;
     function GetPlayerData(Player: TPlayer): TPlayerData;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID);
     destructor Destroy; override;
 
     property Master: TMaster read FMaster;
-    property ID: TComponentID read FID;
     property SafeID: TComponentID read GetSafeID;
-    property Tag: Integer read FTag write FTag;
+    property Transient: Boolean read FTransient;
+  published
+    property ID: TComponentID read FID;
+    property Tag: Integer read FTag write FTag default 0;
   end;
 
   /// Classe de TFunLabyComponentClass
@@ -461,7 +537,7 @@ type
   {*
     Classe de base pour les composants devant être affichés
     TVisualComponent étend la classe TFunLabyComponent pour lui ajouter un
-    traitement standart et simple de nommage et de dessin.
+    traitement standard et simple de nommage et de dessin.
     @author sjrd
     @version 5.0
   *}
@@ -488,8 +564,9 @@ type
     procedure Draw(const QPos: TQualifiedPos; Canvas: TCanvas;
       X: Integer = 0; Y: Integer = 0); overload;
 
-    property Name: string read FName;
     property StaticDraw: Boolean read FStaticDraw;
+  published
+    property Name: string read FName;
   end;
 
   {*
@@ -542,6 +619,8 @@ type
   TObjectDefPlayerData = class(TPlayerData)
   private
     FCount: Integer; /// Nombre d'objets possédés par le joueur
+  published
+    property Count: Integer read FCount write FCount default 0;
   end;
 
   {*
@@ -900,6 +979,8 @@ type
 
     function GetVisible: Boolean;
   protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
     procedure DoDraw(Context: TDrawSquareContext); override;
 
     procedure PositionChanged; virtual;
@@ -974,16 +1055,19 @@ type
 
     property Map: TMap read FMap;
     property Position: T3DPoint read FPosition;
-    property Direction: TDirection read FDirection write FDirection;
     property Mode: IPlayerMode read FMode;
     property Visible: Boolean read GetVisible;
-    property Color: TColor read FColor write FColor;
-    property ViewBorderSize: Integer read FViewBorderSize write FViewBorderSize;
     property Attribute[const AttrName: string]: Integer
       read GetAttribute write SetAttribute;
     property OnSendCommand: TSendCommandEvent
       read FOnSendCommand write FOnSendCommand;
     property PlayState: TPlayState read FPlayState;
+  published
+    property Direction: TDirection read FDirection write FDirection
+      default diNone;
+    property Color: TColor read FColor write FColor default DefaultPlayerColor;
+    property ViewBorderSize: Integer read FViewBorderSize write FViewBorderSize
+      default DefaultViewBorderSize;
   end;
 
   {*
@@ -992,7 +1076,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TMaster = class
+  TMaster = class(TFunLabyPersistent)
   private
     FImagesMaster: TImagesMaster; /// Maître d'images
     FComponents: TStrings;        /// Table de hashage ID -> composant
@@ -1024,6 +1108,8 @@ type
     function GetMap(const ID: TComponentID): TMap;
     function GetPlayer(const ID: TComponentID): TPlayer;
 
+    function GetComponentCount: Integer;
+    function GetComponents(Index: Integer): TFunLabyComponent;
     function GetPluginCount: Integer;
     function GetPlugins(Index: Integer): TPlugin;
     function GetObjectDefCount: Integer;
@@ -1046,11 +1132,14 @@ type
     procedure SetTemporization(Value: Integer);
 
     function GetTickCount: Cardinal;
+    procedure SetTickCount(Value: Cardinal);
 
     procedure AddComponent(Component: TFunLabyComponent);
     procedure RemoveComponent(Component: TFunLabyComponent);
 
     procedure Terminate;
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
   public
     constructor Create(AEditing: Boolean);
     destructor Destroy; override;
@@ -1076,6 +1165,8 @@ type
     property Map[const ID: TComponentID]: TMap read GetMap;
     property Player[const ID: TComponentID]: TPlayer read GetPlayer;
 
+    property ComponentCount: Integer read GetComponentCount;
+    property Components[Index: Integer]: TFunLabyComponent read GetComponents;
     property PluginCount: Integer read GetPluginCount;
     property Plugins[Index: Integer]: TPlugin read GetPlugins;
     property ObjectDefCount: Integer read GetObjectDefCount;
@@ -1096,9 +1187,11 @@ type
     property Players[Index: Integer]: TPlayer read GetPlayers;
 
     property Editing: Boolean read FEditing;
-    property Temporization: Integer read FTemporization write SetTemporization;
     property TickCount: Cardinal read GetTickCount;
     property Terminated: Boolean read FTerminated;
+  published
+    property Temporization: Integer read FTemporization write SetTemporization
+      default DefaultTemporization;
   end;
 
 const {don't localize}
@@ -1112,15 +1205,6 @@ const {don't localize}
   BaseSquareRect: TRect = (
     Left: 0; Top: 0; Right: SquareSize; Bottom: SquareSize
   );
-
-  /// Temporisation par défaut
-  DefaultTemporization = 500;
-
-  /// Couleur par défaut d'un joueur
-  DefaultPlayerColor = clBlue;
-
-  /// Taille de bordure de vue par défaut
-  DefaultViewBorderSize = 1;
 
   /// Application d'une direction vers la direction opposée
   NegDir: array[TDirection] of TDirection = (
@@ -1296,6 +1380,31 @@ end;
 function IsNoQPos(const QPos: TQualifiedPos): Boolean;
 begin
   Result := QPos.Map = nil;
+end;
+
+{*
+  Teste si une propriété a sa valeur par défaut
+  @param Instance   Instance
+  @param PropInfo   PropInfo de la propriété à tester
+*}
+function IsPropDefaultValue(Instance: TFunLabyPersistent;
+  PropInfo: PPropInfo): Boolean;
+begin
+  case PropInfo.PropType^.Kind of
+    tkInteger, tkChar, tkWChar, tkEnumeration, tkSet:
+      Result := (PropInfo.Default <> Integer($80000000)) and
+        (GetOrdProp(Instance, PropInfo) = PropInfo.Default);
+    tkFloat:
+      Result := GetFloatProp(Instance, PropInfo) = 0.0;
+    tkString, tkLString, tkWString:
+      Result := GetStrProp(Instance, PropInfo) = '';
+    tkClass:
+      Result := GetOrdProp(Instance, PropInfo) = 0;
+    tkInt64:
+      Result := GetInt64Prop(Instance, PropInfo) = 0;
+  else
+    Result := False;
+  end;
 end;
 
 {----------------------}
@@ -1848,6 +1957,189 @@ begin
   FCancelled := True;
 end;
 
+{--------------------------}
+{ TFunLabyPersistent class }
+{--------------------------}
+
+{*
+  Définit les propriétés à charger depuis ou enregistrer dans un filer
+  @param Filer   Filer utilisé
+*}
+procedure TFunLabyPersistent.DefineProperties(Filer: TFunLabyFiler);
+var
+  PropList: PPropList;
+  Count, I: Integer;
+begin
+  Count := GetPropList(Self, PropList);
+  if Count = 0 then
+    Exit;
+    
+  try
+    for I := 0 to Count-1 do
+      Filer.DefinePublishedProperty(PropList[I]);
+  finally
+    FreeMem(PropList);
+  end;
+end;
+
+{---------------------}
+{ TFunLabyFiler class }
+{---------------------}
+
+{*
+  Crée un filer
+  @param AInstance   Instance à traiter
+*}
+constructor TFunLabyFiler.Create(AMaster: TMaster;
+  AInstance: TFunLabyPersistent);
+begin
+  inherited Create;
+
+  FMaster := AMaster;
+  FInstance := AInstance;
+end;
+
+{*
+  Énumère les propriétés
+*}
+procedure TFunLabyFiler.EnumProperties;
+begin
+  Instance.DefineProperties(Self);
+end;
+
+{*
+  Teste si un composant a des données liées à un joueur
+  @param Component   Composant
+  @param Player      Joueur
+  @return True si le composant a des données liées au joueur spécifié
+*}
+function TFunLabyFiler.HasPlayerData(Component: TFunLabyComponent;
+  Player: TPlayer): Boolean;
+begin
+  Result := Component.HasPlayerData(Player);
+end;
+
+{*
+  Obtient les données liées à un joueur pour un composant
+  @param Component   Composant
+  @param Player      Joueur
+  @return Données liées au joueur spécifié pour le composant spécifié
+*}
+function TFunLabyFiler.GetPlayerData(Component: TFunLabyComponent;
+  Player: TPlayer): TPlayerData;
+begin
+  Result := Component.GetPlayerData(Player);
+end;
+
+{*
+  Définit une propriété publiée
+  @param PropInfo   PropInfo de la propriété
+*}
+procedure TFunLabyFiler.DefinePublishedProperty(PropInfo: PPropInfo);
+var
+  HasData: Boolean;
+  SubInstance: TObject;
+begin
+  if not Assigned(PropInfo.GetProc) then
+    Exit;
+
+  if PropInfo.PropType^.Kind = tkClass then
+  begin
+    SubInstance := TObject(GetOrdProp(Instance, PropInfo));
+
+    if (SubInstance is TFunLabyPersistent) and
+      (not (SubInstance is TFunLabyComponent)) then
+    begin
+      DefinePersistent(PropInfo.Name, TFunLabyPersistent(SubInstance));
+      Exit;
+    end;
+  end;
+
+  if not Assigned(PropInfo.SetProc) then
+    Exit;
+
+  HasData := IsStoredProp(Instance, PropInfo) and
+    (not IsPropDefaultValue(Instance, PropInfo));
+
+  HandleProperty(PropInfo, HasData);
+end;
+
+{*
+  Définit une propriété lue et écrite avec des méthodes
+  @param Name       Nom de la propriété
+  @param PropType   Type de la propriété
+  @param GetProc    Méthode de lecture
+  @param SetProc    Méthode d'écriture
+  @param HasData    Indique s'il y a des données à écrire
+*}
+procedure TFunLabyFiler.DefineProcProperty(const Name: string;
+  PropType: PTypeInfo; GetProc, SetProc: Pointer; HasData: Boolean);
+var
+  PropInfo: TPropInfo;
+begin
+  PropInfo.PropType := @PropType;
+  PropInfo.GetProc := GetProc;
+  PropInfo.SetProc := SetProc;
+  PropInfo.StoredProc := Pointer($FFFFFF01);
+  PropInfo.Index := Integer($80000000);
+  PropInfo.Default := Integer($80000000);
+  PropInfo.NameIndex := 0;
+  PropInfo.Name := Name;
+
+  HandleProperty(@PropInfo, HasData);
+end;
+
+{*
+  Définit une propriété lue avec un champ et écrite avec une méthode
+  @param Name       Nom de la propriété
+  @param PropType   Type de la propriété
+  @param GetField   Champ de lecture
+  @param SetProc    Méthode d'écriture
+  @param HasData    Indique s'il y a des données à écrire
+*}
+procedure TFunLabyFiler.DefineFieldProcProperty(const Name: string;
+  PropType: PTypeInfo; GetField, SetProc: Pointer; HasData: Boolean);
+var
+  FieldOffset: Integer;
+  FieldProc: Pointer;
+begin
+  FieldOffset := Integer(GetField) - Integer(Instance);
+  FieldProc := Pointer($FF000000 or FieldOffset);
+  DefineProcProperty(Name, PropType, FieldProc, SetProc, HasData);
+end;
+
+{*
+  Définit une propriété lue et écrite avec un champ
+  @param Name          Nom de la propriété
+  @param PropType      Type de la propriété
+  @param GetSetField   Champ de lecture et écriture
+  @param HasData       Indique s'il y a des données à écrire
+*}
+procedure TFunLabyFiler.DefineFieldProperty(const Name: string;
+  PropType: PTypeInfo; GetSetField: Pointer; HasData: Boolean);
+var
+  FieldOffset: Integer;
+  FieldProc: Pointer;
+begin
+  FieldOffset := Integer(GetSetField) - Integer(Instance);
+  FieldProc := Pointer($FF000000 or FieldOffset);
+  DefineProcProperty(Name, PropType, FieldProc, FieldProc, HasData);
+end;
+
+{*
+  Définit un sous-objet persistent
+  @param Name          Nom de l'objet
+  @param SubInstance   Sous-objet à lire/écrire
+*}
+procedure TFunLabyFiler.DefinePersistent(const Name: string;
+  SubInstance: TFunLabyPersistent);
+begin
+  if SubInstance is TFunLabyComponent then
+    HandleComponent(Name, TFunLabyComponent(SubInstance))
+  else
+    HandlePersistent(Name, SubInstance);
+end;
+
 {-------------------}
 { TPlayerData class }
 {-------------------}
@@ -1928,6 +2220,27 @@ end;
 class function TFunLabyComponent.GetPlayerDataClass: TPlayerDataClass;
 begin
   Result := TPlayerData;
+end;
+
+{*
+  Teste si ce composant a des données pour un joueur donné
+  @param Player   Joueur à tester
+  @return True si ce composant à des données pour le joueur Player
+*}
+function TFunLabyComponent.HasPlayerData(Player: TPlayer): Boolean;
+var
+  I: Integer;
+begin
+  for I := 0 to Length(FPlayerData)-1 do
+  begin
+    if FPlayerData[I].Item = Player then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  Result := False;
 end;
 
 {*
@@ -2195,7 +2508,7 @@ end;
 *}
 function TObjectDef.GetCount(Player: TPlayer): Integer;
 begin
-  Result := TObjectDefPlayerData(GetPlayerData(Player)).FCount;
+  Result := TObjectDefPlayerData(GetPlayerData(Player)).Count;
 end;
 
 {*
@@ -2205,7 +2518,7 @@ end;
 *}
 procedure TObjectDef.SetCount(Player: TPlayer; Value: Integer);
 begin
-  TObjectDefPlayerData(GetPlayerData(Player)).FCount := Value;
+  TObjectDefPlayerData(GetPlayerData(Player)).Count := Value;
 end;
 
 {*
@@ -2389,6 +2702,9 @@ constructor TSquare.Create(AMaster: TMaster; const AID: TComponentID;
   AObstacle: TObstacle);
 begin
   inherited Create(AMaster, AID, AName);
+
+  FTransient := True;
+
   FStaticDraw := False;
   FField := AField;
   FEffect := AEffect;
@@ -2547,6 +2863,9 @@ constructor TMap.Create(AMaster: TMaster; const AID: TComponentID;
   ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer);
 begin
   inherited Create(AMaster, AID);
+
+  FTransient := True;
+
   FDimensions := ADimensions;
   FZoneWidth := AZoneWidth;
   FZoneHeight := AZoneHeight;
@@ -3150,6 +3469,20 @@ end;
 function TPlayer.GetVisible: Boolean;
 begin
   Result := FShowCounter >= 0;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPlayer.DefineProperties(Filer: TFunLabyFiler);
+begin
+  inherited;
+
+  Filer.DefineFieldProperty('ShowCounter', TypeInfo(Integer),
+    @FShowCounter, FShowCounter <> 0);
+
+  Filer.DefineFieldProperty('PlayState', TypeInfo(TPlayState),
+    @FPlayState, PlayState <> psPlaying);
 end;
 
 {*
@@ -4176,6 +4509,25 @@ begin
 end;
 
 {*
+  Nombre de composants
+  @return Nombre de composants
+*}
+function TMaster.GetComponentCount: Integer;
+begin
+  Result := FComponents.Count;
+end;
+
+{*
+  Tableau zero-based des composants
+  @param Index   Index du composant
+  @return Le composant à la position spécifiée
+*}
+function TMaster.GetComponents(Index: Integer): TFunLabyComponent;
+begin
+  Result := TFunLabyComponent(FComponents.Objects[Index]);
+end;
+
+{*
   Nombre de plug-in
   @return Nombre de plug-in
 *}
@@ -4366,6 +4718,15 @@ begin
 end;
 
 {*
+  Modifie le tick count de la partie
+  @param Value   Nouveau tick count
+*}
+procedure TMaster.SetTickCount(Value: Cardinal);
+begin
+  FBeginTickCount := Windows.GetTickCount - Value;
+end;
+
+{*
   Ajoute un composant
   @param Component   Le composant à ajouter
 *}
@@ -4427,6 +4788,31 @@ end;
 procedure TMaster.Terminate;
 begin
   FTerminated := True;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMaster.DefineProperties(Filer: TFunLabyFiler);
+var
+  I: Integer;
+  Component: TFunLabyComponent;
+begin
+  inherited;
+
+  Filer.DefineProcProperty('TickCount', TypeInfo(Cardinal),
+    @TMaster.GetTickCount, @TMaster.SetTickCount, not Editing);
+
+  Filer.DefineFieldProperty('Terminated', TypeInfo(Boolean),
+    @FTerminated, Terminated);
+
+  for I := 0 to ComponentCount-1 do
+  begin
+    Component := Components[I];
+
+    if not Component.Transient then
+      Filer.DefinePersistent(Component.ID, Component);
+  end;
 end;
 
 {*

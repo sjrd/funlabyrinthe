@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Classes, Contnrs, ScUtils, ScLists, SepiReflectionCore,
-  FunLabyUtils;
+  FunLabyUtils, FunLabyFilers;
 
 resourcestring
   sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
@@ -886,7 +886,6 @@ var
   FileType: TGUID;
   Position: T3DPoint;
   Player: TPlayer;
-  Node: IXMLDOMNode;
 begin
   { Don't localize strings in this method }
 
@@ -916,14 +915,6 @@ begin
     begin
       FAuthorID := StrToIntDef(NullToEmptyStr(getAttribute('id')), 0);
       FAuthor := NullToEmptyStr(text);
-    end;
-
-    // Attributs du maître
-    with selectSingleNode('./master') do
-    begin
-      Node := selectSingleNode('./temporization');
-      if Node <> nil then
-        Master.Temporization := StrToIntDef(NullToEmptyStr(Node.text), 0);
     end;
 
     // Unités utilisées
@@ -1036,6 +1027,10 @@ begin
         end;
       end;
     end;
+
+    // Chargement des objets persistents
+    TFunLabyXMLReader.ReadMaster(Master,
+      selectSingleNode('./master') as IXMLDOMElement);
   end;
 end;
 
@@ -1367,19 +1362,6 @@ begin
         Element.setAttribute('id', AuthorID);
       appendChild(Element);
 
-      // Attributs du maître
-      MasterNode := Document.createElement('master');
-      with MasterNode do
-      begin
-        if Master.Temporization <> DefaultTemporization then
-        begin
-          Element := Document.createElement('temporization');
-          Element.text := IntToStr(Master.Temporization);
-          appendChild(Element);
-        end;
-      end;
-      appendChild(MasterNode);
-
       // Unités
       Units := Document.createElement('units');
       with Units do
@@ -1508,6 +1490,11 @@ begin
         end;
       end;
       appendChild(Players);
+
+      // Enregistrement des objets persistents
+      MasterNode := Document.createElement('master');
+      TFunLabyXMLWriter.WriteMaster(Master, MasterNode);
+      appendChild(MasterNode);
     end;
 
     appendChild(FunLabyrinthe);

@@ -49,7 +49,8 @@ contains
   FunLabyUtils in 'FunLabyUtils.pas',
   SepiImportsFunLaby in 'SepiImportsFunLaby.pas',
   SepiImportsFunLabyUtils in 'SepiImportsFunLabyUtils.pas',
-  UnitFiles in 'UnitFiles.pas';
+  UnitFiles in 'UnitFiles.pas',
+  FunLabyFilers in 'FunLabyFilers.pas';
 
 end.
 

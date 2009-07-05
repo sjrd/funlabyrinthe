@@ -33,8 +33,79 @@
     <Borland.Personality>Delphi.Personality</Borland.Personality>
     <Borland.ProjectType>Package</Borland.ProjectType>
     <BorlandProject>
-<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters>  <Parameters Name="HostApplication">C:\Projets\FunLabyrinthe\FunLaby.exe</Parameters>
-    </Parameters><Package_Options><Package_Options Name="ImplicitBuild">False</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">True</Package_Options><Package_Options Name="PackageDescription">FunLabyrinthe core features</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">5</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">2060</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="FileDescription">FunLabyrinthe core features</VersionInfoKeys><VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName">FunLabyCore</VersionInfoKeys><VersionInfoKeys Name="LegalCopyright">Copyright (c) 2000-2009 SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename">FunLabyCore.bpl</VersionInfoKeys><VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys><VersionInfoKeys Name="ProductVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Excluded_Packages>
+<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters><Parameters Name="HostApplication">C:\Projets\FunLabyrinthe\FunLaby.exe</Parameters></Parameters><Package_Options><Package_Options Name="ImplicitBuild">False</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">True</Package_Options><Package_Options Name="PackageDescription">FunLabyrinthe core features</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">5</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">2060</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="FileDescription">FunLabyrinthe core features</VersionInfoKeys><VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName">FunLabyCore</VersionInfoKeys><VersionInfoKeys Name="LegalCopyright">Copyright (c) 2000-2009 SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename">FunLabyCore.bpl</VersionInfoKeys><VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys><VersionInfoKeys Name="ProductVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Excluded_Packages>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       
       
       
@@ -57,26 +128,27 @@
     <DelphiCompile Include="FunLabyCore.dpk">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\rtl.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SCL110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SDL110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiInterpreter110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiReflection110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiRTLCommonImport110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiRTLSysImport110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiSCLImport110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiSDLImport110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiSVCLImport110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiVCLStdImport110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SepiWinTypesImport110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\SVCL110.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\vcl.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\VclSmp.dcp" />
-    <DCCReference Include="..\..\UnitPackages\FunLabyBase\vclx.dcp" />
     <DCCReference Include="FilesUtils.pas" />
+    <DCCReference Include="FunLabyFilers.pas" />
     <DCCReference Include="FunLabyUtils.pas" />
+    <DCCReference Include="rtl.dcp" />
+    <DCCReference Include="SCL110.dcp" />
+    <DCCReference Include="SDL110.dcp" />
     <DCCReference Include="SepiImportsFunLaby.pas" />
     <DCCReference Include="SepiImportsFunLabyUtils.pas" />
+    <DCCReference Include="SepiInterpreter110.dcp" />
+    <DCCReference Include="SepiReflection110.dcp" />
+    <DCCReference Include="SepiRTLCommonImport110.dcp" />
+    <DCCReference Include="SepiRTLSysImport110.dcp" />
+    <DCCReference Include="SepiSCLImport110.dcp" />
+    <DCCReference Include="SepiSDLImport110.dcp" />
+    <DCCReference Include="SepiSVCLImport110.dcp" />
+    <DCCReference Include="SepiVCLStdImport110.dcp" />
+    <DCCReference Include="SepiWinTypesImport110.dcp" />
+    <DCCReference Include="SVCL110.dcp" />
     <DCCReference Include="UnitFiles.pas" />
+    <DCCReference Include="vcl.dcp" />
+    <DCCReference Include="VclSmp.dcp" />
+    <DCCReference Include="vclx.dcp" />
   </ItemGroup>
 </Project>
