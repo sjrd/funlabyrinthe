@@ -175,7 +175,7 @@ begin
     Square := RemoveTool(Square);
     ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
     if FindMessage <> '' then
-      Player.ShowDialog(sMessage, FindMessage);
+      Player.ShowMessage(FindMessage);
   end;
 end;
 

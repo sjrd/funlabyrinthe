@@ -110,7 +110,7 @@ begin
       if Player.DoAction(actOpenSilverLock) then
         Square := RemoveObstacle(Square)
       else
-        ShowDialog(sBlindAlley, sCantOpenSilverBlock, dtError);
+        Player.ShowMessage(sCantOpenSilverBlock);
     end;
   end;
 end;
@@ -147,7 +147,7 @@ begin
       if Player.DoAction(actOpenGoldenLock) then
         Square := RemoveObstacle(Square)
       else
-        ShowDialog(sBlindAlley, sCantOpenGoldenBlock, dtError);
+        Player.ShowMessage(sCantOpenGoldenBlock);
     end;
   end;
 end;

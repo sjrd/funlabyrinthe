@@ -273,7 +273,7 @@ begin
       Exit;
 
     if KeyPressed then
-      Player.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
+      Player.ShowMessage(sCantGoOnWater);
     Cancel;
   end;
 end;
@@ -315,7 +315,7 @@ begin
   with Context do
   begin
     if KeyPressed then
-      Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
+      Player.ShowMessage(sCantGoOnHole);
     Cancel;
   end;
 end;
@@ -346,7 +346,7 @@ begin
   with Context do
   begin
     if KeyPressed then
-      Player.ShowDialog(sBlindAlley, sCantGoOnSky, dtError);
+      Player.ShowMessage(sCantGoOnSky);
     Cancel;
   end;
 end;

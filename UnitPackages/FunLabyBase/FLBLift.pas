@@ -145,7 +145,7 @@ begin
       Exit;
 
     if KeyPressed then
-      Player.ShowDialog(sBlindAlley, sLiftIsEngaged, dtError);
+      Player.ShowMessage(sLiftIsEngaged);
     Cancel;
   end;
 end;

@@ -503,7 +503,7 @@ begin
   with Context.Player do
   begin
     Win;
-    ShowDialog(sWon, sGotOutsideMaze);
+    ShowMessage(sGotOutsideMaze);
   end;
 end;
 
@@ -533,7 +533,7 @@ begin
   with Context.Player do
   begin
     Win;
-    ShowDialog(sWon, sFoundTreasure);
+    ShowMessage(sFoundTreasure);
   end;
 end;
 

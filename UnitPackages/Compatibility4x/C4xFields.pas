@@ -97,7 +97,7 @@ begin
     end;
 
     if KeyPressed then
-      Player.ShowDialog(sBlindAlley, sCantGoOnWater, dtError);
+      Player.ShowMessage(sCantGoOnWater);
     Cancel;
   end;
 end;
@@ -149,7 +149,7 @@ begin
     end;
 
     if KeyPressed then
-      Player.ShowDialog(sBlindAlley, sCantGoOnHole, dtError);
+      Player.ShowMessage(sCantGoOnHole);
     Cancel;
   end;
 end;
