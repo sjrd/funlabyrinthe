@@ -30,8 +30,6 @@ type
     procedure RegisterComponents(
       RegisterSingleComponentProc: TRegisterSingleComponentProc;
       RegisterComponentSetProc: TRegisterComponentSetProc); override;
-
-    procedure GetParams(Params: TStrings); override;
   public
     constructor Create(AMasterFile: TMasterFile; Params: TStrings);
 
@@ -81,12 +79,11 @@ const {don't localize}
   );
 var
   FileName: TFileName;
-  FileContents, SubContents, Counters: TStrings;
+  FileContents, SubContents: TStrings;
   ActionsList: TObjectList;
   Number, FirstLine, LastLine: Integer;
   StrNumber, InfoLine, Graphics: string;
   Kind: TActionsKind;
-  Infos: TC4xInfos;
   I: Integer;
   Zone: T3DPoint;
   ActionsID: TComponentID;
@@ -125,116 +122,96 @@ begin
 
   // Actions : elles sont stockées dans le fichier donné par FileName
 
-  Counters := TStringList.Create;
+  FileContents := nil;
+  SubContents := nil;
+  ActionsList := nil;
   try
-    Counters.Delimiter := ' ';
-
     FileContents := TStringList.Create;
-    try
-      if FileName <> '' then
-        FileContents.LoadFromFile(FileName);
-      FileContents.Add('[]');
-      Number := 0;
-      SubContents := TStringList.Create;
-      try
-        ActionsList := TObjectList.Create(False);
-        try
-          Counters.DelimitedText := Params.Values[attrCounters];
-          while True do
-          begin
-            // Ici on lit une série d'actions, dans l'ordre de Number
+    SubContents := TStringList.Create;
+    ActionsList := TObjectList.Create(False);
 
-            StrNumber := Format('[%d;', [Number]);
-            FirstLine := StringsOps.FindAtPos(FileContents, StrNumber);
-            if FirstLine < 0 then
-              Break;
+    if FileName <> '' then
+      FileContents.LoadFromFile(FileName);
+    FileContents.Add('[]');
+    Number := 0;
 
-            InfoLine := FileContents[FirstLine];
-            Inc(FirstLine);
-            LastLine := StringsOps.FindAtPos(FileContents, '[', 1, FirstLine);
+    while True do
+    begin
+      // Ici on lit une série d'actions, dans l'ordre de Number
 
-            // Les actions sont dans les lignes [FirstLine ; LastLine[
+      StrNumber := Format('[%d;', [Number]);
+      FirstLine := StringsOps.FindAtPos(FileContents, StrNumber);
+      if FirstLine < 0 then
+        Break;
 
-            Delete(InfoLine, 1, Length(StrNumber));
-            if InfoLine[Length(InfoLine)] <> ']' then
-              Break;
-            Delete(InfoLine, Length(InfoLine), 1);
+      InfoLine := FileContents[FirstLine];
+      Inc(FirstLine);
+      LastLine := StringsOps.FindAtPos(FileContents, '[', 1, FirstLine);
 
-            // Maintenant InfoLine est du gabarit 'Kind' ou 'Kind;Graphics'
+      // Les actions sont dans les lignes [FirstLine ; LastLine[
 
-            Kind := TActionsKind(AnsiIndexStr(
-              GetFirstToken(InfoLine, ';'), KindStrings));
-            if Ord(Kind) < 0 then
-              Break;
-            if Kind in CustomActionsKind then
-              Graphics := GetLastToken(InfoLine, ';')
-            else
-              Graphics := '';
+      Delete(InfoLine, 1, Length(StrNumber));
+      if InfoLine[Length(InfoLine)] <> ']' then
+        Break;
+      Delete(InfoLine, Length(InfoLine), 1);
 
-            // Déterminer l'ID des actions à créer
+      // Maintenant InfoLine est du gabarit 'Kind' ou 'Kind;Graphics'
 
-            if Kind <> akZone then
-              ActionsID := ''
-            else
-            begin
-              Zone.X := StrToIntDef(GetXToken(InfoLine, ';', 2), -1);
-              Zone.Y := StrToIntDef(GetXToken(InfoLine, ';', 3), -1);
-              Zone.Z := StrToIntDef(GetXToken(InfoLine, ';', 4), -1);
-              if (Zone.X < 0) or (Zone.Y < 0) or (Zone.Z < 0) then
-                Break;
-              ActionsID := Format(idZoneActions, [Zone.X, Zone.Y, Zone.Z]);
-            end;
+      Kind := TActionsKind(AnsiIndexStr(
+        GetFirstToken(InfoLine, ';'), KindStrings));
+      if Ord(Kind) < 0 then
+        Break;
+      if Kind in CustomActionsKind then
+        Graphics := GetLastToken(InfoLine, ';')
+      else
+        Graphics := '';
 
-            // Récupération des actions proprement dites
+      // Déterminer l'ID des actions à créer
 
-            StringsOps.CopyFrom(SubContents, FileContents,
-              FirstLine, LastLine-FirstLine);
-
-            // Création des actions en question
-
-            Actions := TActions.Create(Master, Number, Kind,
-              Graphics, SubContents, ActionsID);
-            ActionsList.Add(Actions);
-            if Counters.Count > Number then
-              Actions.Counter := StrToIntDef(Counters[Number], 0);
-
-            // Passage à l'itération suivante
-
-            Inc(Number);
-          end;
-
-          // On s'assure qu'il y a suffisamment d'actions
-          SubContents.Clear;
-          while Number < MinActionsCount do
-          begin
-            Actions := TActions.Create(Master, Number, akPushButton,
-              '', SubContents, '');
-            ActionsList.Add(Actions);
-            if Counters.Count > Number then
-              Actions.Counter := StrToIntDef(Counters[Number], 0);
-            Inc(Number);
-          end;
-
-          Infos := TC4xInfos.Create(MasterFile, ActionsList);
-        finally
-          ActionsList.Free;
-        end;
-      finally
-        SubContents.Free;
+      if Kind <> akZone then
+        ActionsID := ''
+      else
+      begin
+        Zone.X := StrToIntDef(GetXToken(InfoLine, ';', 2), -1);
+        Zone.Y := StrToIntDef(GetXToken(InfoLine, ';', 3), -1);
+        Zone.Z := StrToIntDef(GetXToken(InfoLine, ';', 4), -1);
+        if (Zone.X < 0) or (Zone.Y < 0) or (Zone.Z < 0) then
+          Break;
+        ActionsID := Format(idZoneActions, [Zone.X, Zone.Y, Zone.Z]);
       end;
-    finally
-      FileContents.Free;
+
+      // Récupération des actions proprement dites
+
+      StringsOps.CopyFrom(SubContents, FileContents,
+        FirstLine, LastLine-FirstLine);
+
+      // Création des actions en question
+
+      Actions := TActions.Create(Master, Number, Kind,
+        Graphics, SubContents, ActionsID);
+      ActionsList.Add(Actions);
+
+      // Passage à l'itération suivante
+
+      Inc(Number);
     end;
 
-    Counters.DelimitedText := Params.Values[attrVariables];
-    for I := 1 to Min(Counters.Count, MaxVar) do
-      Infos.Variables[I] := StrToIntDef(Counters[I-1], 0);
-  finally
-    Counters.Free;
-  end;
+    // On s'assure qu'il y a suffisamment d'actions
+    SubContents.Clear;
+    while Number < MinActionsCount do
+    begin
+      Actions := TActions.Create(Master, Number, akPushButton,
+        '', SubContents, '');
+      ActionsList.Add(Actions);
+      Inc(Number);
+    end;
 
-  if Params.Values[attrShowTips] <> '' then
-    Infos.ShowTips := Params.Values[attrShowTips] = 'yes';
+    TC4xInfos.Create(MasterFile, ActionsList);
+  finally
+    ActionsList.Free;
+    SubContents.Free;
+    FileContents.Free;
+  end;
 end;
 
 {*
@@ -338,49 +315,6 @@ begin
     RegSet(idActionsSquareTemplate, Components, 0,
       sButtonTitle, Format(sButtonPrompt, [Infos.ActionsCount-1]));
   end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TCompatibility4xUnit.GetParams(Params: TStrings);
-var
-  Infos: TC4xInfos;
-  I: Integer;
-  Counters: string;
-begin
-  Params.Values[attrFileName] := SourceHRef;
-
-  Infos := Master.Component[idC4xInfos] as TC4xInfos;
-  if Infos.ActionsCount > 0 then
-  begin
-    Counters := '';
-    I := Infos.ActionsCount-1;
-    while (I >= 0) and (Infos.Actions[I].Counter = 0) do
-      Dec(I);
-    while I >= 0 do
-    begin
-      Counters := IntToStr(Infos.Actions[I].Counter) + ' ' + Counters;
-      Dec(I);
-    end;
-    if Counters <> '' then
-      Params.Values[attrCounters] := Copy(Counters, 1, Length(Counters)-1);
-
-    Counters := '';
-    I := MaxVar;
-    while (I > 0) and (Infos.Variables[I] = 0) do
-      Dec(I);
-    while I > 0 do
-    begin
-      Counters := IntToStr(Infos.Variables[I]) + ' ' + Counters;
-      Dec(I);
-    end;
-    if Counters <> '' then
-      Params.Values[attrVariables] := Copy(Counters, 1, Length(Counters)-1);
-  end;
-
-  if Infos.KnowShowTips then
-    Params.Values[attrShowTips] := IIF(Infos.ShowTips, 'yes', 'no');
 end;
 
 {$IFNDEF DCTD}

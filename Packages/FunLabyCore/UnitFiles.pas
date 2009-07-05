@@ -284,6 +284,7 @@ end;
 *}
 procedure TBPLUnitFile.GetParams(Params: TStrings);
 begin
+  inherited;
   UnitFileIntf.GetParams(Params);
 end;
 
@@ -489,6 +490,8 @@ var
   GetParamsProc: TGetParamsProc;
 begin
   // Don't localize strings in this method
+
+  inherited;
 
   // Get method
   if not (SepiUnit.GetComponent('GetParams') is TSepiMethod) then

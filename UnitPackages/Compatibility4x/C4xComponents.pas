@@ -189,11 +189,12 @@ type
     property Kind: TActionsKind read FKind;
     property FileName: string read FFileName;
     property Actions: TStrings read FActions;
-    property Counter: Integer read FCounter write FCounter;
     property Inactive: TComponentID read FInactive;
     property ObjectDef: TActionsObject read FObjectDef;
     property Effect: TActionsEffect read FEffect;
     property Obstacle: TActionsObstacle read FObstacle;
+  published
+    property Counter: Integer read FCounter write FCounter default 0;
   end;
 
   {*
@@ -216,19 +217,22 @@ type
 
     function GetVariables(Index: Integer): Integer;
     procedure SetVariables(Index, Value: Integer);
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
   public
     constructor Create(AMasterFile: TMasterFile; AActions: TObjectList);
 
     property MasterFile: TMasterFile read FMasterFile;
 
     property KnowShowTips: Boolean read FKnowShowTips;
-    property ShowTips: Boolean read FShowTips write SetShowTips;
 
     property ActionsCount: Integer read FActionsCount;
     property Actions[Index: Integer]: TActions read GetActions;
 
     property Variables[Index: Integer]: Integer
       read GetVariables write SetVariables;
+  published
+    property ShowTips: Boolean read FShowTips write SetShowTips default False;
   end;
 
 const {don't localize}
@@ -708,6 +712,20 @@ end;
 procedure TC4xInfos.SetVariables(Index, Value: Integer);
 begin
   FVariables[Index] := Value;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TC4xInfos.DefineProperties(Filer: TFunLabyFiler);
+var
+  I: Integer;
+begin
+  inherited;
+
+  for I := 1 to MaxVar do
+    Filer.DefineFieldProperty(Format('Variable%d', [I]), TypeInfo(Integer),
+      @FVariables[I], FVariables[I] <> 0);
 end;
 
 end.

@@ -71,11 +71,14 @@ type
   *}
   TUnitFile = class(TDependantFile)
   private
-    FHandlerGUID: TGUID; /// GUID du gestionnaire du fichier unité
+    FHandlerGUID: TGUID;       /// GUID du gestionnaire du fichier unité
+    FCreationParams: TStrings; /// Paramètres de création
   public
     constructor Create(AMasterFile: TMasterFile; const AHRef: string;
       const AFileName: TFileName; const AHandlerGUID: TGUID;
       Params: TStrings); virtual;
+    destructor Destroy; override;
+
     procedure AfterConstruction; override;
 
     procedure Loaded; virtual;
@@ -422,7 +425,20 @@ constructor TUnitFile.Create(AMasterFile: TMasterFile; const AHRef: string;
   const AFileName: TFileName; const AHandlerGUID: TGUID; Params: TStrings);
 begin
   inherited Create(AMasterFile, AHRef, AFileName);
+
   FHandlerGUID := AHandlerGUID;
+  FCreationParams := TStringList.Create;
+  FCreationParams.Assign(Params);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TUnitFile.Destroy;
+begin
+  FCreationParams.Free;
+
+  inherited;
 end;
 
 {*
@@ -497,6 +513,7 @@ end;
 *}
 procedure TUnitFile.GetParams(Params: TStrings);
 begin
+  Params.Assign(FCreationParams);
 end;
 
 {--------------------}
