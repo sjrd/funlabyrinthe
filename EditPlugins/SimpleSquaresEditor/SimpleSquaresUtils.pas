@@ -915,9 +915,8 @@ begin
     ockNever:
     begin
       Assert(FailMessage <> '');
-      Code.Add('    Player.ShowDialog(sBlindAlley,');
-      Code.Add(Format('      %s,', [StrToStrRepres(FailMessage)]));
-      Code.Add('      dtError, dbOK, 1, 0);');
+      Code.Add(Format('    Player.ShowMessage(%s);',
+        [StrToStrRepres(FailMessage)]));
     end;
 
     ockPlayerAction:
@@ -928,11 +927,8 @@ begin
       if FailMessage <> '' then
       begin
         Code.Add('    else');
-        Code.Add('    begin');
-        Code.Add('      Player.ShowDialog(sBlindAlley,');
-        Code.Add(Format('        %s,', [StrToStrRepres(FailMessage)]));
-        Code.Add('        dtError, dbOK, 1, 0);');
-        Code.Add('    end;');
+        Code.Add(Format('      Player.ShowMessage(%s);',
+          [StrToStrRepres(FailMessage)]));
       end;
     end;
   end;

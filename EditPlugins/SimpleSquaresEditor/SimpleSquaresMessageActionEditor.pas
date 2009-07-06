@@ -14,16 +14,11 @@ type
     @version 5.0
   *}
   TFrameMessageActionEditor = class(TFrameActionEditor)
-    RadioGroupKind: TRadioGroup;
-    EditDialogTitle: TEdit;
     EditText: TMemo;
     CheckBoxOnlyFirstTime: TCheckBox;
     LabelText: TStaticText;
-    LabelDialogTitle: TStaticText;
-    procedure CheckBoxOnlyFirstTimeClick(Sender: TObject);
-    procedure RadioGroupKindClick(Sender: TObject);
-    procedure EditDialogTitleChange(Sender: TObject);
     procedure EditTextChange(Sender: TObject);
+    procedure CheckBoxOnlyFirstTimeClick(Sender: TObject);
   private
     FCurrentAction: TMessageAction; /// Action courante
   protected
@@ -47,13 +42,9 @@ implementation
 *}
 procedure TFrameMessageActionEditor.ActivateAction;
 begin
-  RadioGroupKind.ItemIndex := Ord(CurrentAction.Kind);
-  EditDialogTitle.Text := CurrentAction.DialogTitle;
   EditText.Text := CurrentAction.Text;
   CheckBoxOnlyFirstTime.Checked := CurrentAction.OnlyFirstTime;
 
-  RadioGroupKind.OnClick := RadioGroupKindClick;
-  EditDialogTitle.OnChange := EditDialogTitleChange;
   EditText.OnChange := EditTextChange;
   CheckBoxOnlyFirstTime.OnClick := CheckBoxOnlyFirstTimeClick;
 end;
@@ -63,40 +54,8 @@ end;
 *}
 procedure TFrameMessageActionEditor.DeactivateAction;
 begin
-  RadioGroupKind.OnClick := nil;
-  EditDialogTitle.OnChange := nil;
   EditText.OnChange := nil;
   CheckBoxOnlyFirstTime.OnClick := nil;
-end;
-
-{*
-  Gestionnaire d'événement OnClick du radio-group type de message
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFrameMessageActionEditor.RadioGroupKindClick(Sender: TObject);
-begin
-  CurrentAction.Kind := TSimpleMessageKind(RadioGroupKind.ItemIndex);
-
-  if CurrentAction.Kind <> mkCustom then
-  begin
-    EditDialogTitle.OnChange := nil;
-    EditDialogTitle.Text := CurrentAction.DialogTitle;
-    EditDialogTitle.OnChange := EditDialogTitleChange;
-  end;
-
-  MarkModified;
-end;
-
-{*
-  Gestionnaire d'événement OnChange du titre du message
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFrameMessageActionEditor.EditDialogTitleChange(Sender: TObject);
-begin
-  CurrentAction.DialogTitle := EditDialogTitle.Text;
-  RadioGroupKind.ItemIndex := Ord(CurrentAction.Kind);
-
-  MarkModified;
 end;
 
 {*

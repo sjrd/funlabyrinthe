@@ -1,69 +1,38 @@
 inherited FrameMessageActionEditor: TFrameMessageActionEditor
   Width = 249
-  Height = 369
+  Height = 321
   Constraints.MinHeight = 321
   Constraints.MinWidth = 249
+  ExplicitWidth = 249
+  ExplicitHeight = 321
   DesignSize = (
     249
-    369)
+    321)
   object LabelText: TStaticText
     Left = 16
-    Top = 216
+    Top = 40
     Width = 99
     Height = 17
     Caption = 'Texte du message :'
-    TabOrder = 4
-  end
-  object LabelDialogTitle: TStaticText
-    Left = 16
-    Top = 168
-    Width = 144
-    Height = 17
-    Caption = 'Titre de la bo'#238'te de dialogue :'
-    TabOrder = 5
-  end
-  object RadioGroupKind: TRadioGroup
-    Left = 16
-    Top = 16
-    Width = 217
-    Height = 137
-    Anchors = [akLeft, akTop, akRight]
-    Caption = 'Type de message'
-    Items.Strings = (
-      'Message'
-      'Indice'
-      'Impasse'
-      'Gagn'#233' !'
-      'Perdu !'
-      'Personnalis'#233)
-    TabOrder = 0
-  end
-  object EditDialogTitle: TEdit
-    Left = 16
-    Top = 184
-    Width = 217
-    Height = 21
-    Anchors = [akLeft, akTop, akRight]
-    TabOrder = 1
-    Text = 'EditDialogTitle'
+    TabOrder = 2
   end
   object EditText: TMemo
     Left = 16
-    Top = 232
+    Top = 56
     Width = 217
-    Height = 97
+    Height = 249
     Anchors = [akLeft, akTop, akRight, akBottom]
     Lines.Strings = (
       'EditText')
-    TabOrder = 2
+    TabOrder = 0
   end
   object CheckBoxOnlyFirstTime: TCheckBox
     Left = 16
-    Top = 335
+    Top = 16
     Width = 217
     Height = 17
-    Anchors = [akLeft, akRight, akBottom]
+    Anchors = [akLeft, akTop, akRight]
     Caption = 'Afficher seulement au premier passage'
-    TabOrder = 3
+    TabOrder = 1
   end
 end

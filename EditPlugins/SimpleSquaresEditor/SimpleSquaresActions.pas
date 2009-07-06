@@ -136,49 +136,25 @@ type
   end;
 
   {*
-    Type de message simple
-    mkMessage : Message
-    mkTip : Indice
-    mkBlindAlley : Impasse
-    mkWin : Gagné !
-    mkLoose : Perdu !
-    mkCustom : personnalisé
-  *}
-  TSimpleMessageKind = (
-    mkMessage, mkTip, mkBlindAlley, mkWon, mkLost, mkCustom
-  );
-
-  {*
     Action qui affiche un message
     @author sjrd
     @version 5.0
   *}
   TMessageAction = class(TSimpleAction)
   private
-    FKind: TSimpleMessageKind; /// Type de message
-    FDialogTitle: string;      /// Titre du message
-    FText: string;             /// Texte du message
-    FDialogType: TDialogType;  /// Type de boîte de dialogue
-    FOnlyFirstTime: Boolean;   /// True affiche seulement au premier passage
-
-    procedure SetKind(Value: TSimpleMessageKind);
-    procedure SetDialogTitle(const Value: string);
-    procedure SetDialogType(Value: TDialogType);
+    FText: string;           /// Texte du message
+    FOnlyFirstTime: Boolean; /// True affiche seulement au premier passage
   protected
     procedure Save(Stream: TStream); override;
 
     function GetTitle: string; override;
   public
     constructor Load(Stream: TStream); override;
-    constructor Create; override;
 
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); override;
 
-    property Kind: TSimpleMessageKind read FKind write SetKind;
-    property DialogTitle: string read FDialogTitle write SetDialogTitle;
     property Text: string read FText write FText;
-    property DialogType: TDialogType read FDialogType write SetDialogType;
     property OnlyFirstTime: Boolean read FOnlyFirstTime write FOnlyFirstTime;
   end;
 
@@ -554,15 +530,6 @@ constructor TMessageAction.Load(Stream: TStream);
 begin
   inherited;
 
-  Stream.ReadBuffer(FKind, SizeOf(TSimpleMessageKind));
-
-  if Kind = mkCustom then
-  begin
-    FDialogTitle := ReadStrFromStream(Stream);
-    Stream.ReadBuffer(FDialogType, SizeOf(TDialogType));
-  end else
-    SetKind(FKind);
-
   FText := ReadStrFromStream(Stream);
 
   Stream.ReadBuffer(FOnlyFirstTime, SizeOf(Boolean));
@@ -571,73 +538,9 @@ end;
 {*
   [@inheritDoc]
 *}
-constructor TMessageAction.Create;
-begin
-  inherited;
-
-  SetKind(mkMessage);
-end;
-
-{*
-  Modifie le type de message
-  @param Value   Nouveau type de message
-*}
-procedure TMessageAction.SetKind(Value: TSimpleMessageKind);
-const
-  DefaultType: array[TSimpleMessageKind] of TDialogType = (
-    dtInformation, dtWarning, dtError, dtInformation, dtError, dtInformation
-  );
-begin
-  FKind := Value;
-
-  if Kind <> mkCustom then
-  begin
-    case Kind of
-      mkMessage:    FDialogTitle := sMessage;
-      mkTip:        FDialogTitle := sTip;
-      mkBlindAlley: FDialogTitle := sBlindAlley;
-      mkWon:        FDialogTitle := sWon;
-      mkLost:       FDialogTitle := sLost;
-    end;
-
-    FDialogType := DefaultType[Kind];
-  end;
-end;
-
-{*
-  Modifie le titre du message
-  @param Value   Nouveau titre du message
-*}
-procedure TMessageAction.SetDialogTitle(const Value: string);
-begin
-  FKind := mkCustom;
-  FDialogTitle := Value;
-end;
-
-{*
-  Modifie le type de boîte de dialogue
-  @param Value   Nouveau type de boîte de dialogue
-*}
-procedure TMessageAction.SetDialogType(Value: TDialogType);
-begin
-  FKind := mkCustom;
-  FDialogType := Value;
-end;
-
-{*
-  [@inheritDoc]
-*}
 procedure TMessageAction.Save(Stream: TStream);
 begin
   inherited;
-
-  Stream.WriteBuffer(FKind, SizeOf(TSimpleMessageKind));
-
-  if Kind = mkCustom then
-  begin
-    WriteStrToStream(Stream, FDialogTitle);
-    Stream.WriteBuffer(FDialogType, SizeOf(TDialogType));
-  end;
 
   WriteStrToStream(Stream, FText);
 
@@ -649,7 +552,7 @@ end;
 *}
 function TMessageAction.GetTitle: string;
 begin
-  Result := Format(SMessageActionTitle, [DialogTitle]);
+  Result := sMessage;
 end;
 
 {*
@@ -667,11 +570,8 @@ begin
   end else
     NewIndent := Indent;
 
-  Code.Add(NewIndent + Format('Player.ShowDialog(%s,',
-    [StrToStrRepres(DialogTitle)]));
-  Code.Add(NewIndent + Format('  %s,', [StrToStrRepres(Text)]));
-  Code.Add(NewIndent + Format('  %s, dbOK, 1, 0);',
-    [GetEnumName(TypeInfo(TDialogType), Ord(DialogType))]));
+  Code.Add(NewIndent + Format('Player.ShowMessage(%s);',
+    [StrToStrRepres(Text)]));
 end;
 
 {--------------------------}
@@ -787,7 +687,7 @@ procedure TSimpleMethodAction.ProduceFunDelphiCode(Code: TStrings;
 const {don't localize}
   Statements: array[TSimpleMethodKind] of string = (
     'Player.Show;', 'Player.Hide;', 'Player.Win;', 'Player.Lose;',
-    'Master.Temporize;', 'GoOnMoving := True;'
+    'Player.Temporize;', 'GoOnMoving := True;'
   );
 begin
   Code.Add(Indent + Statements[Kind]);
