@@ -12,13 +12,8 @@ interface
 
 uses
   Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
-  SdDialogs, FunLabyUtils, FilesUtils, UnitFiles, Generics, FLBFields,
-  C4xCommon, C4xComponents, C4xFields, C4xSquaresTable;
-
-resourcestring
-  sAskForTipsTitle = 'Activation des indices';
-  sAskForTips = 'Ce labyrinthe propose certains indices : '+
-    'voulez-vous les activer ?';
+  SdDialogs, FunLabyUtils, FilesUtils, UnitFiles, Generics,
+  FLBFields, C4xCommon, C4xComponents, C4xFields, C4xSquaresTable;
 
 type
   TCompatibility4xUnit = class(TInterfacedUnitFile)
@@ -103,6 +98,7 @@ begin
 
   // Plug-in
 
+  TGameStartedPlugin.Create(Master, idGameStartedPlugin);
   TZonesPlugin.Create(Master, idZonesPlugin);
 
   // Terrains
@@ -220,52 +216,22 @@ end;
 procedure TCompatibility4xUnit.GameStarted;
 var
   Infos: TC4xInfos;
+  Player: TPlayer;
   I: Integer;
-  DoNextPhase, HasMoved, HasShownMsg, Successful: Boolean;
-  WereZones, WereTips: Boolean;
 begin
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
-  DoNextPhase := False;
-  WereZones := False;
-  WereTips := False;
+  Player := Master.Players[0];
 
   for I := 0 to Infos.ActionsCount-1 do
   begin
-    with Infos.Actions[I] do
+    if Infos.Actions[I].Kind = akZone then
     begin
-      if Kind = akZone then
-        WereZones := True;
-
-      if StringsOps.FindText(Actions, 'Indice') >= 0 then
-        WereTips := True;
+      Player.AddPlugin(Master.Plugin[idZonesPlugin]);
+      Break;
     end;
   end;
 
-  if WereZones then
-    Master.Players[0].AddPlugin(Master.Plugin[idZonesPlugin]);
-
-  if not Infos.KnowShowTips then
-  begin
-    if not WereTips then
-      Infos.ShowTips := False
-    else
-    begin
-      Infos.ShowTips := Master.Players[0].ShowDialog(
-        sAskForTipsTitle, sAskForTips, dtConfirmation, dbYesNo) = drYes;
-    end;
-  end;
-
-  for I := 0 to Infos.ActionsCount-1 do
-  begin
-    with Infos.Actions[I] do
-    begin
-      if Kind = akGameStarted then
-      begin
-        Execute(phExecute, Master.Players[0], False, Master.Players[0].Position,
-          DoNextPhase, HasMoved, HasShownMsg, Successful);
-      end;
-    end;
-  end;
+  Player.AddPlugin(Master.Plugin[idGameStartedPlugin]);
 end;
 
 {*

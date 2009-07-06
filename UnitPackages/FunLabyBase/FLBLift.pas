@@ -24,8 +24,7 @@ const {don't localize}
 
 resourcestring
   sLiftIsEngaged = 'Cet ascenseur est occupé.';
-  sChooseFloorTitle = 'Choisissez un étage';
-  sChooseFloor = 'À quel étage voulez-vous aller ?';
+  sChooseFloor = 'À quel étage veux-tu aller ?';
 
 type
   {*
@@ -210,7 +209,7 @@ begin
     Player.Hide;
 
     // Demande au joueur de l'étage auquel il souhaite aller
-    Other.Z := Player.ChooseNumber(sChooseFloorTitle, sChooseFloor,
+    Other.Z := Player.ShowSelectNumberMsg(sChooseFloor,
       Pos.Z, MinFloor, MaxFloor);
 
     // Déplacement du joueur

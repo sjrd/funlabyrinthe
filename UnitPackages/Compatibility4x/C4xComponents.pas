@@ -10,8 +10,8 @@ unit C4xComponents;
 interface
 
 uses
-  SysUtils, Classes, Graphics, Contnrs, ScUtils, FunLabyUtils, FilesUtils,
-  MapTools, FLBFields, FLBSimpleEffects, C4xCommon;
+  SysUtils, Classes, Graphics, Contnrs, StrUtils, Consts, ScUtils, ScLists,
+  FunLabyUtils, FilesUtils, MapTools, FLBFields, FLBSimpleEffects, C4xCommon;
 
 resourcestring
   sStairs = 'Escalier';             /// Nom de l'escalier
@@ -21,18 +21,19 @@ resourcestring
   sButtonTemplate = 'Bouton';       /// Nom du bouton modèle
 
 const {don't localize}
-  idZonesPlugin = 'ZonesPlugin';           /// ID du plug-in des zones
+  idGameStartedPlugin = 'GameStartedPlugin'; /// ID du plug-in game-started
+  idZonesPlugin = 'ZonesPlugin';             /// ID du plug-in des zones
 
-  idUpStairs = 'UpStairs';                 /// ID de l'escalier montant
-  idDownStairs = 'DownStairs';             /// ID de l'escalier descendant
-  idOldStairs = 'OldStairs%d';             /// ID des escaliers de la v1.0
+  idUpStairs = 'UpStairs';                   /// ID de l'escalier montant
+  idDownStairs = 'DownStairs';               /// ID de l'escalier descendant
+  idOldStairs = 'OldStairs%d';               /// ID des escaliers de la v1.0
 
-  idActionsObject = 'ActionsObject%d';     /// ID de l'objet lié à des actions
-  idActionsEffect = 'ActionsEffect%d';     /// ID de l'effet à actions
-  idActionsObstacle = 'ActionsObstacle%d'; /// ID de l'obstacle à actions
+  idActionsObject = 'ActionsObject%d';       /// ID de l'objet lié à des actions
+  idActionsEffect = 'ActionsEffect%d';       /// ID de l'effet à actions
+  idActionsObstacle = 'ActionsObstacle%d';   /// ID de l'obstacle à actions
 
-  idSunkenButton = 'SunkenButton';         /// ID du bouton enfoncé
-  idButtonTemplate = 'ButtonTemplate';     /// ID du bouton modèle
+  idSunkenButton = 'SunkenButton';           /// ID du bouton enfoncé
+  idButtonTemplate = 'ButtonTemplate';       /// ID du bouton modèle
 
   /// ID de la case à actions
   idActionsSquare = idGrass+'-ActionsEffect%0:d--ActionsObstacle%0:d';
@@ -55,6 +56,9 @@ const {don't localize}
   fTreasure = 'Treasure';         /// Fichier du trésor
 
 resourcestring
+  sAskForTips = 'Ce labyrinthe propose certains indices : '+
+    'voulez-vous les activer ?';
+
   sGotOutsideMaze = 'BRAVO ! Tu as réussi à sortir du labyrinthe !';
   sFoundTreasure = 'BRAVO ! Tu as trouvé le trésor !';
 
@@ -72,6 +76,16 @@ type
     akTreasure, akCustom, akObject, akObstacle, akDirection, akZone);
 
   TActions = class;
+
+  {*
+    Plug-in qui exécute les actions au commencement du jeu
+    @author sjrd
+    @version 5.0
+  *}
+  TGameStartedPlugin = class(TPlugin)
+  private
+    procedure GameStartedMsg(var Msg: TPlayerMessage); message msgGameStarted;
+  end;
 
   {*
     Plug-in de joueur de gestion des zones
@@ -251,6 +265,60 @@ implementation
 
 uses
   C4xInterpreter;
+
+{--------------------------}
+{ TGameStartedPlugin class }
+{--------------------------}
+
+{*
+  Gestionnaire du message msgGameStarted
+  @param Msg   Message
+*}
+procedure TGameStartedPlugin.GameStartedMsg(var Msg: TPlayerMessage);
+var
+  Infos: TC4xInfos;
+  Player: TPlayer;
+  DoNextPhase, HasMoved, HasShownMsg, Successful: Boolean;
+  WereTips: Boolean;
+  I: Integer;
+begin
+  Infos := Master.Component[idC4xInfos] as TC4xInfos;
+  Player := Msg.Player;
+
+  DoNextPhase := False;
+  WereTips := False;
+
+  if not Infos.KnowShowTips then
+  begin
+    for I := 0 to Infos.ActionsCount-1 do
+    begin
+      if StringsOps.FindText(Infos.Actions[I].Actions, 'Indice') >= 0 then
+      begin
+        WereTips := True;
+        Break;
+      end;
+    end;
+
+    Infos.ShowTips := WereTips and
+      (Player.ShowSelectionMsg(sAskForTips,
+        [AnsiReplaceStr(SMsgDlgYes, '&', ''),
+        AnsiReplaceStr(SMsgDlgNo, '&', '')]) = 0);
+  end;
+
+  for I := 0 to Infos.ActionsCount-1 do
+  begin
+    with Infos.Actions[I] do
+    begin
+      if Kind = akGameStarted then
+      begin
+        Execute(phExecute, Player, False, Player.Position,
+          DoNextPhase, HasMoved, HasShownMsg, Successful);
+      end;
+    end;
+  end;
+
+  Player.RemovePlugin(Self);
+end;
 
 {---------------------}
 { Classe TZonesPlugin }

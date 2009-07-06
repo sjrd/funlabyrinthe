@@ -52,6 +52,7 @@ const {don't localize}
   attrViewBorderSize = 'ViewBorderSize';
 
   msgShowMessage = $01; /// Message pour afficher un message au joueur
+  msgGameStarted = $02; /// Message envoyé lorsque le jeu commence
 
   CommandShowDialog = 'ShowDialog';           /// Commande ShowDialog
   CommandShowDialogRadio = 'ShowDialogRadio'; /// Commande ShowDialogRadio
@@ -133,13 +134,14 @@ type
     @version 5.0
   *}
   TPlayerShowMsgMessage = record
-    MsgID: Word;              /// ID du message
-    Handled: Boolean;         /// Indique si le message a été géré
-    Reserved: Byte;           /// Réservé
-    Player: TPlayer;          /// Joueur concerné
-    Text: string;             /// Texte à afficher
-    Answers: TStringDynArray; /// Réponses possibles (peut être vide)
-    Selected: Integer;        /// Index de la réponse choisie par le joueur
+    MsgID: Word;               /// ID du message
+    Handled: Boolean;          /// Indique si le message a été géré
+    Reserved: Byte;            /// Réservé
+    Player: TPlayer;           /// Joueur concerné
+    Text: string;              /// Texte à afficher
+    Answers: TStringDynArray;  /// Réponses possibles (peut être vide)
+    Selected: Integer;         /// Index de la réponse choisie par le joueur
+    ShowOnlySelected: Boolean; /// Si True n'affiche que l'élément sélectionné
   end;
 
   {*
@@ -964,9 +966,11 @@ type
     /// Verrou global pour le joueur
     FLock: TMultiReadExclusiveWriteSynchronizer;
 
-    FKeyPressCoroutine: TCoroutine; /// Coroutine d'appui sur touche
-    FKeyPressKey: Word;             /// Touche appuyée
-    FKeyPressShift: TShiftState;    /// État des touches spéciales
+    FActionCoroutine: TCoroutine;  /// Coroutine d'appui sur touche
+    FActionIsMessage: Boolean;     /// L'action est un message
+    FActionKey: Word;              /// Touche appuyée
+    FActionKeyShift: TShiftState;  /// État des touches spéciales
+    FActionMessagePtr: Pointer;    /// Pointeur sur le message pour l'action
 
     procedure GetPluginList(out PluginList: TPluginDynArray);
 
@@ -975,7 +979,7 @@ type
     function IsMoveAllowed(Context: TMoveContext): Boolean;
     procedure MoveTo(Context: TMoveContext; Execute: Boolean = True); overload;
 
-    procedure KeyPressCoroutineProc(Coroutine: TCoroutine);
+    procedure ActionProc(Coroutine: TCoroutine);
 
     function GetVisible: Boolean;
   protected
@@ -1044,11 +1048,22 @@ type
 
     procedure ShowMessage(const Text: string);
 
+    function ShowSelectionMsg(const Prompt: string;
+      const Answers: array of string; Default: Integer = 0;
+      ShowOnlySelected: Boolean = False): Integer; overload;
+    function ShowSelectionMsg(const Prompt: string; Answers: TStrings;
+      Default: Integer = 0;
+      ShowOnlySelected: Boolean = False): Integer; overload;
+
+    function ShowSelectNumberMsg(const Prompt: string;
+      Default, Min, Max: Integer): Integer;
+
     procedure Win;
     procedure Lose;
 
     procedure DrawView(Canvas: TCanvas); virtual;
     procedure PressKey(Key: Word; Shift: TShiftState);
+    procedure SendMessage(var Msg);
 
     procedure WaitForKey(out Key: Word; out Shift: TShiftState);
     procedure WaitForSpecificKey(Key: Word; Shift: TShiftState = []);
@@ -3282,7 +3297,7 @@ begin
 
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
 
-  FKeyPressCoroutine := TCoroutine.Create(KeyPressCoroutineProc, clNextInvoke);
+  FActionCoroutine := TCoroutine.Create(ActionProc, clNextInvoke);
 end;
 
 {*
@@ -3290,7 +3305,7 @@ end;
 *}
 destructor TPlayer.Destroy;
 begin
-  FKeyPressCoroutine.Free;
+  FActionCoroutine.Free;
 
   FLock.Free;
 
@@ -3438,27 +3453,35 @@ end;
   Procédure de la coroutine d'appui sur touche
   @param Coroutine   Objet coroutine gérant cette procédure
 *}
-procedure TPlayer.KeyPressCoroutineProc(Coroutine: TCoroutine);
+procedure TPlayer.ActionProc(Coroutine: TCoroutine);
 var
   Context: TKeyEventContext;
   Plugins: TPluginDynArray;
   I: Integer;
 begin
-  // FKeyPressKey and FKeyPressShift have been set before this method is called.
+  if FActionIsMessage then
+  begin
+    // FActionMessagePtr has been set before this method is called.
+    Dispatch(FActionMessagePtr^);
+  end else
+  begin
+    { FKeyPressKey and FKeyPressShift have been set before this method is
+      called. }
 
-  Context := TKeyEventContext.Create(FKeyPressKey, FKeyPressShift);
-  try
-    GetPluginList(Plugins);
-    for I := 0 to Length(Plugins)-1 do
-    begin
-      Plugins[I].PressKey(Context);
-      if Context.Handled then
-        Exit;
+    Context := TKeyEventContext.Create(FActionKey, FActionKeyShift);
+    try
+      GetPluginList(Plugins);
+      for I := 0 to Length(Plugins)-1 do
+      begin
+        Plugins[I].PressKey(Context);
+        if Context.Handled then
+          Exit;
+      end;
+
+      Mode.PressKey(Context);
+    finally
+      Context.Free;
     end;
-
-    Mode.PressKey(Context);
-  finally
-    Context.Free;
   end;
 end;
 
@@ -3795,7 +3818,7 @@ var
   Plugins: TPluginDynArray;
   I, GoodObjectCount: Integer;
   GoodObjects: array of TObjectDef;
-  RadioTitles: array of string;
+  ObjectNames: TStringDynArray;
   GoodObject: TObjectDef;
 begin
   Result := True;
@@ -3832,12 +3855,10 @@ begin
       GoodObject := GoodObjects[0]
     else
     begin
-      SetLength(RadioTitles, GoodObjectCount);
+      SetLength(ObjectNames, GoodObjectCount);
       for I := 0 to GoodObjectCount-1 do
-        RadioTitles[I] := GoodObjects[I].Name;
-      I := 0;
-      ShowDialogRadio(sWhichObject, sWhichObject, mtConfirmation,
-        [mbOK], mrOk, RadioTitles, I, True);
+        ObjectNames[I] := GoodObjects[I].Name;
+      I := ShowSelectionMsg(sWhichObject, ObjectNames);
       GoodObject := GoodObjects[I];
     end;
 
@@ -4125,6 +4146,78 @@ begin
 end;
 
 {*
+  Affiche un message demandant une sélection au joueur
+  @param Prompt             Message d'invite
+  @param Answers            Réponses possibles
+  @param Default            Index de la réponse sélectionnée par défaut
+  @param ShowOnlySelected   Si True, affiche uniquement l'élément sélectionné
+  @return Index de la réponse sélectionnée
+*}
+function TPlayer.ShowSelectionMsg(const Prompt: string;
+  const Answers: array of string; Default: Integer = 0;
+  ShowOnlySelected: Boolean = False): Integer;
+var
+  Msg: TPlayerShowMsgMessage;
+  I: Integer;
+begin
+  Msg.MsgID := msgShowMessage;
+  Msg.Text := Prompt;
+  Msg.Selected := MinMax(Default, 0, Length(Answers)-1);
+  Msg.ShowOnlySelected := ShowOnlySelected;
+
+  SetLength(Msg.Answers, Length(Answers));
+  for I := 0 to Length(Answers)-1 do
+    Msg.Answers[I] := Answers[I];
+
+  Dispatch(Msg);
+  Result := Msg.Selected;
+end;
+
+{*
+  Affiche un message demandant une sélection au joueur
+  @param Prompt             Message d'invite
+  @param Answers            Réponses possibles
+  @param Default            Index de la réponse sélectionnée par défaut
+  @param ShowOnlySelected   Si True, affiche uniquement l'élément sélectionné
+  @return Index de la réponse sélectionnée
+*}
+function TPlayer.ShowSelectionMsg(const Prompt: string; Answers: TStrings;
+  Default: Integer = 0; ShowOnlySelected: Boolean = False): Integer;
+var
+  AnswersArray: TStringDynArray;
+  I: Integer;
+begin
+  SetLength(AnswersArray, Answers.Count);
+
+  for I := 0 to Answers.Count-1 do
+    AnswersArray[I] := Answers[I];
+
+  Result := ShowSelectionMsg(Prompt, AnswersArray, Default, ShowOnlySelected);
+end;
+
+{*
+  Affiche un message demandant au joueur de sélectionner un nombre
+  @param Prompt    Message d'invite
+  @param Default   Nombre sélectionné par défaut
+  @param Min       Valeur minimum
+  @param Max       Valeur maximum
+  @return Index de la réponse sélectionnée
+*}
+function TPlayer.ShowSelectNumberMsg(const Prompt: string; Default, Min,
+  Max: Integer): Integer;
+var
+  Answers: TStringDynArray;
+  I: Integer;
+begin
+  SetLength(Answers, Max-Min+1);
+
+  for I := Min to Max do
+    Answers[Max-I] := IntToStr(I);
+
+  Result := Max - ShowSelectionMsg(Prompt, Answers, Max-Default, True);
+end;
+
+{*
   Fait gagner le joueur
 *}
 procedure TPlayer.Win;
@@ -4206,15 +4299,35 @@ end;
 *}
 procedure TPlayer.PressKey(Key: Word; Shift: TShiftState);
 begin
-  Assert(not FKeyPressCoroutine.CoroutineRunning);
+  Assert(not FActionCoroutine.CoroutineRunning);
 
-  FKeyPressKey := Key;
-  FKeyPressShift := Shift;
+  FActionIsMessage := False;
+  FActionKey := Key;
+  FActionKeyShift := Shift;
 
   try
-    FKeyPressCoroutine.Invoke;
+    FActionCoroutine.Invoke;
   except
-    FKeyPressCoroutine.Reset;
+    FActionCoroutine.Reset;
+    raise;
+  end;
+end;
+
+{*
+  Envoie un message au joueur dans le contexte de ses actions
+  @param Msg   Message à envoyer
+*}
+procedure TPlayer.SendMessage(var Msg);
+begin
+  Assert(not FActionCoroutine.CoroutineRunning);
+
+  FActionIsMessage := True;
+  FActionMessagePtr := @Msg;
+
+  try
+    FActionCoroutine.Invoke;
+  except
+    FActionCoroutine.Reset;
     raise;
   end;
 end;
@@ -4227,12 +4340,12 @@ end;
 *}
 procedure TPlayer.WaitForKey(out Key: Word; out Shift: TShiftState);
 begin
-  Assert(FKeyPressCoroutine.CoroutineRunning);
+  Assert(FActionCoroutine.CoroutineRunning);
 
-  FKeyPressCoroutine.Yield;
+  FActionCoroutine.Yield;
 
-  Key := FKeyPressKey;
-  Shift := FKeyPressShift;
+  Key := FActionKey;
+  Shift := FActionKeyShift;
 end;
 
 {*

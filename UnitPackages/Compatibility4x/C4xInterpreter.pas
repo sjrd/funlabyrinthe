@@ -102,9 +102,7 @@ type
       ModificationKind: TModificationKind);
     procedure ConvertSquares(FromSquare, ToSquare: TSquare);
 
-    function Information(var Params: string; const Title: string;
-      DlgType: TDialogType;
-      DlgButtons: TDialogButtons = dbOK): TDialogResult;
+    procedure Information(var Params: string);
 
     procedure ReplaceCmd    (var Params: string);
     procedure ConvertCmd    (var Params: string);
@@ -1079,24 +1077,16 @@ begin
 end;
 
 {*
-  Affiche une boîte de dialogue dont le texte est récupéré en paramètre
-  @param Params       Paramètres de la commande
-  @param Title        Titre de la boîte de dialogue
-  @param DlgType      Type de boîte de dialogue
-  @param DlgButtons   Boutons
-  @return Code de résultat du bouton cliqué
+  Affiche un message dont le texte est récupéré en paramètre
+  @param Params   Paramètres de la commande
 *}
-function TActionsInterpreter.Information(var Params: string;
-  const Title: string; DlgType: TDialogType;
-  DlgButtons: TDialogButtons = dbOK): TDialogResult;
+procedure TActionsInterpreter.Information(var Params: string);
 var
   Text: string;
 begin
   Text := GetStringParam(Params);
-  if Text = '' then
-    Result := drOK
-  else
-    Result := Player.ShowDialog(Title, Text, DlgType, DlgButtons);
+  if Text <> '' then
+    Player.ShowMessage(Text);
   HasShownMsg := True;
 end;
 
@@ -1259,7 +1249,7 @@ end;
 *}
 procedure TActionsInterpreter.MessageCmd(var Params: string);
 begin
-  Information(Params, sMessage, dtInformation);
+  Information(Params);
 end;
 
 {*
@@ -1269,7 +1259,7 @@ end;
 procedure TActionsInterpreter.TipCmd(var Params: string);
 begin
   if Infos.ShowTips then
-    Information(Params, sTip, dtWarning);
+    Information(Params);
 end;
 
 {*
@@ -1278,7 +1268,7 @@ end;
 *}
 procedure TActionsInterpreter.FailureCmd(var Params: string);
 begin
-  Information(Params, sFailure, dtError);
+  Information(Params);
 end;
 
 {*
@@ -1288,7 +1278,7 @@ end;
 procedure TActionsInterpreter.BlindAlleyCmd(var Params: string);
 begin
   if KeyPressed then
-    Information(Params, sBlindAlley, dtError);
+    Information(Params);
 end;
 
 {*
@@ -1296,21 +1286,31 @@ end;
   @param Params   Paramètres de la commande
 *}
 procedure TActionsInterpreter.ChoiceCmd(var Params: string);
+const
+  YesNoAnswers: array[0..1] of string = ('Oui', 'Non');
+  YesNoCancelAnswers: array[0..2] of string = ('Oui', 'Non', 'Annuler');
+  OKCancelAnswers: array[0..1] of string = ('OK', 'Annuler');
 var
-  DlgButtons: TDialogButtons;
+  Kind: Integer;
+  Text: string;
+  Selected: Integer;
 begin
-  case GetCommandIndex(Params,
-      ['Oui-Non', 'Oui-Non-Annuler', 'OK-Annuler']) of
-    0: DlgButtons := dbYesNo;
-    1: DlgButtons := dbYesNoCancel;
+  Kind := GetCommandIndex(Params,
+      ['Oui-Non', 'Oui-Non-Annuler', 'OK-Annuler']);
+  Text := GetStringParam(Params);
+
+  case Kind of
+    0: Selected := Player.ShowSelectionMsg(Text, YesNoAnswers);
+    1: Selected := Player.ShowSelectionMsg(Text, YesNoCancelAnswers);
+    2: Selected := Player.ShowSelectionMsg(Text, OKCancelAnswers);
   else
-    DlgButtons := dbOKCancel;
+    Exit;
   end;
 
-  case Information(Params, sChoice, dtConfirmation, DlgButtons) of
-    drNo: Answer := 0;
-    drOK, drYes: Answer := 1;
-    drCancel: Answer := 2;
+  case Selected of
+    0: Answer := 1;
+    1: Answer := IIF(Kind = 2, 2, 0);
+    2: Answer := 2;
   end;
 end;
 
@@ -1324,13 +1324,13 @@ var
 begin
   with Infos.MasterFile do
   begin
-    Text := Description;
+    Text := Description+#11;
     if Difficulty <> '' then
-      Text := Text + #10#10'Difficulté : ' + Difficulty;
+      Text := Text + 'Difficulté : ' + Difficulty;
     if Author <> '' then
-      Text := Text + #10#10'Auteur : ' + Author;
+      Text := Text + 'Auteur : ' + Author;
 
-    Player.ShowDialog(Title, Text);
+    Player.ShowMessage(Text);
   end;
 end;
 
@@ -1342,7 +1342,7 @@ procedure TActionsInterpreter.WinCmd(var Params: string);
 begin
   Player.Win;
   if Params <> '' then
-    Information(Params, sWon, dtInformation);
+    Information(Params);
 end;
 
 {*
@@ -1350,7 +1350,6 @@ end;
   @param Params   Paramètres de la commande
   @throws EBadParam : Le son en paramètre n'a pas pu être joué
 *}
-{$WARNINGS OFF}
 procedure TActionsInterpreter.SoundCmd(var Params: string);
 var
   Sound: string;
@@ -1373,7 +1372,6 @@ begin
       raise EBadParam.Create(Error.Message);
   end;
 end;
-{$WARNINGS ON}
 
 {*
   Commande 'AllerA'
@@ -1481,8 +1479,7 @@ begin
   except
     on Error: Exception do
     begin
-      ShowDialog(Error.ClassName,
-        Actions[Current-1]+#10+Error.Message, dtError);
+      Player.ShowMessage(Actions[Current-1]+#10+Error.Message);
       if not (Error is EInvalidAction) then
         Exit;
     end;

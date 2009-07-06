@@ -131,7 +131,10 @@ begin
   TimerUpdateImage.Enabled := True;
 
   if not MasterFile.IsSaveguard then
+  begin
     MasterFile.GameStarted;
+    Controller.PostNotificationMessage(msgGameStarted);
+  end;
 end;
 
 {*

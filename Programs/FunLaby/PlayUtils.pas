@@ -56,10 +56,15 @@ type
   *}
   TPlayerController = class(TThread)
   private
-    FPlayer: TPlayer;              /// Joueur contrôlé
-    FNextKey: Word;                /// Prochaine touche à presser
-    FNextShift: TShiftState;       /// Prochain état des touches spéciales
+    FPlayer: TPlayer; /// Joueur contrôlé
+
+    FNextKey: Word;               /// Prochaine touche à presser
+    FNextShift: TShiftState;      /// Prochain état des touches spéciales
+    FNextNotificationMsgID: Word; /// Prochain ID de message de notification
+
     FDialogInfos: TStdDialogInfos; /// Infos de la boîte de dialogue à afficher
+  
+    FExceptionToShow: Exception; /// Exception à afficher
 
     procedure ExecuteDialog;
     function ShowDialogCommand(const Params: string): string;
@@ -68,6 +73,8 @@ type
 
     function PlayerCommand(Sender: TPlayer;
       const Command, Params: string): string;
+
+    procedure ShowException;
 
     function GetViewWidth: Integer;
     function GetViewHeight: Integer;
@@ -79,6 +86,7 @@ type
 
     procedure DrawView(Canvas: TCanvas);
     procedure PressKey(Key: Word; Shift: TShiftState);
+    procedure PostNotificationMessage(MsgID: Word);
 
     property Player: TPlayer read FPlayer;
 
@@ -248,6 +256,14 @@ begin
 end;
 
 {*
+  Affiche une boîte de dialogue montrant l'exception FExceptionToShow
+*}
+procedure TPlayerController.ShowException;
+begin
+  ShowDialog(FExceptionToShow.ClassName, FExceptionToShow.Message, dtError);
+end;
+
+{*
   Largeur de la vue
   @return Largeur de la vue, en pixels
 *}
@@ -270,25 +286,37 @@ end;
 *}
 procedure TPlayerController.Execute;
 var
+  Msg: TPlayerMessage;
   Key: Word;
   Shift: TShiftState;
 begin
   while not Terminated do
   begin
-    if FNextKey = 0 then
-      Sleep(50)
-    else
-    begin
-      try
+    try
+      if FNextNotificationMsgID <> 0 then
+      begin
+        // Send message
+        Msg.MsgID := FNextNotificationMsgID;
+        FNextNotificationMsgID := 0;
+        Player.SendMessage(Msg);
+      end else if FNextKey <> 0 then
+      begin
+        // Press key
         Key := FNextKey;
         Shift := FNextShift;
-
         FNextKey := 0;
-
         Player.PressKey(Key, Shift);
-      except
-        on Error: Exception do
-          Player.ShowDialog(Error.ClassName, Error.Message, dtError);
+      end else
+      begin
+        // Nothing to do
+        Sleep(50);
+      end;
+    except
+      on Error: Exception do
+      begin
+        FExceptionToShow := Error;
+        Synchronize(ShowException);
+        FExceptionToShow := nil;
       end;
     end;
   end;
@@ -314,6 +342,18 @@ begin
 
   FNextShift := Shift;
   FNextKey := Key;
+end;
+
+{*
+  Poste un message de notification au joueur
+  @param MsgID   ID du message de notification à poster
+*}
+procedure TPlayerController.PostNotificationMessage(MsgID: Word);
+begin
+  while FNextNotificationMsgID <> 0 do
+    Sleep(50);
+
+  FNextNotificationMsgID := MsgID;
 end;
 
 end.
