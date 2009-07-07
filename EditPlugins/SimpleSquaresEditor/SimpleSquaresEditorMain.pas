@@ -8,7 +8,7 @@ uses
   FilesUtils, UnitFiles, SourceEditors, SdDialogs, Buttons, StdCtrls, ExtCtrls,
   ImgList, CategoryButtons, ExtDlgs, Contnrs, FunLabyUtils, SimpleSquareEdit,
   SimpleSquaresUtils, SimpleSquareNew, FunLabyEditOTA, SepiFunDelphiCompiler,
-  FunLabySourceEditorFrame, ScUtils;
+  FunLabySourceEditorFrame, ScUtils, FunLabyFilers, msxml, RTLConsts, ActiveX;
 
 resourcestring
   SimpleSquaresFilter = 'Définitions de cases simples (*.ssq)|*.ssq';
@@ -31,22 +31,43 @@ type
     @author sjrd
     @version 1.0
   *}
-  TSimpleSquareList = class(TObjectList)
+  TSimpleSquareList = class(TFunLabyCollection)
   private
     FOwner: TFrameSimpleSquaresEditor; /// Cadre propriétaire
-  protected
-    procedure Notify(Ptr: Pointer; Action: TListNotification); override;
 
     function GetItems(Index: Integer): TSimpleSquare;
+  protected
+    function CreateItem(ItemClass: TFunLabyPersistentClass):
+      TFunLabyPersistent; override;
+
+    procedure Notify(Item: TFunLabyPersistent;
+      Action: TListNotification); override;
 
     property Owner: TFrameSimpleSquaresEditor read FOwner;
   public
     constructor Create(AOwner: TFrameSimpleSquaresEditor);
 
+    function Add(Item: TSimpleSquare): Integer;
+
     function FindByID(const ID: TComponentID): TSimpleSquare;
     function IDExists(const ID: TComponentID): Boolean;
 
     property Items[Index: Integer]: TSimpleSquare read GetItems; default;
+  end;
+
+  {*
+    Contenu d'un fichier SimpleSquares (.ssq)
+    @author sjrd
+    @version 1.0
+  *}
+  TSimpleSquaresFileContents = class(TFunLabyPersistent)
+  private
+    FSimpleSquares: TSimpleSquareList; /// Liste des cases simples
+  public
+    constructor Create(AOwner: TFrameSimpleSquaresEditor);
+    destructor Destroy; override;
+  published
+    property SimpleSquares: TSimpleSquareList read FSimpleSquares;
   end;
 
   {*
@@ -71,8 +92,9 @@ type
     /// Fiche principale de FunLabyEdit
     FFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
 
-    ImagesMaster: TImagesMaster;      /// Maître d'images
-    SimpleSquares: TSimpleSquareList; /// Liste des composants
+    ImagesMaster: TImagesMaster;              /// Maître d'images
+    FileContents: TSimpleSquaresFileContents; /// Contenu du fichier
+    SimpleSquares: TSimpleSquareList;         /// Liste des composants
   protected
     procedure LoadFile(ASourceFile: TSourceFile); override;
     function SaveFile: Boolean; override;
@@ -86,6 +108,8 @@ type
 
     function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
     procedure SetFunLabyEditMainForm(const Value: IOTAFunLabyEditMainForm50);
+
+    procedure UpdateButton(Square: TSimpleSquare);
 
     procedure ProduceFunDelphiCode(Code: TStrings);
   protected
@@ -141,17 +165,13 @@ end;
   @return True si le fichier a été créé, False sinon
 *}
 function CreateSimpleSquaresFile(var FileName: TFileName): Boolean;
-var
-  MagicNumber, Version, Count: Integer;
 begin
-  with TFileStream.Create(FileName, fmCreate or fmShareExclusive) do
+  with TStringList.Create do
   try
-    MagicNumber := SimpleSquaresMagicNumber;
-    WriteBuffer(MagicNumber, 4);
-    Version := SimpleSquaresVersion;
-    WriteBuffer(Version, 4);
-    Count := 0;
-    WriteBuffer(Count, 4);
+    Add('<?xml version="1.0" encoding="UTF-8"?>');
+    Add(Format('<simplesquares version="%s">', [CurrentVersion]));
+    Add('</simplesquares>');
+    SaveToFile(FileName);
   finally
     Free;
   end;
@@ -175,26 +195,46 @@ begin
 end;
 
 {*
-  [@inheritDoc]
-*}
-procedure TSimpleSquareList.Notify(Ptr: Pointer; Action: TListNotification);
-begin
-  case Action of
-    lnAdded: Owner.SimpleSquareAdded(TSimpleSquare(Ptr));
-    lnExtracted, lnDeleted: Owner.SimpleSquareDeleting(TSimpleSquare(Ptr));
-  end;
-
-  inherited;
-end;
-
-{*
   Tableau zero-based des éléments
   @param Index   Index d'un élément
   @return Élément à l'index spécifié
 *}
 function TSimpleSquareList.GetItems(Index: Integer): TSimpleSquare;
 begin
-  Result := (inherited GetItem(Index)) as TSimpleSquare;
+  Result := (inherited Items[Index]) as TSimpleSquare;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSimpleSquareList.CreateItem(
+  ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
+begin
+  Result := TSimpleSquareClass(ItemClass).Create(Owner.ImagesMaster);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleSquareList.Notify(Item: TFunLabyPersistent;
+  Action: TListNotification);
+begin
+  case Action of
+    lnAdded: Owner.SimpleSquareAdded(TSimpleSquare(Item));
+    lnExtracted, lnDeleted: Owner.SimpleSquareDeleting(TSimpleSquare(Item));
+  end;
+
+  inherited;
+end;
+
+{*
+  Ajoute une nouvelle case simple
+  @param ItemClass   Classe de la case simple
+  @return Case simple ajoutée
+*}
+function TSimpleSquareList.Add(Item: TSimpleSquare): Integer;
+begin
+  Result := inherited AddItem(Item);
 end;
 
 {*
@@ -226,6 +266,32 @@ begin
   Result := FindByID(ID) <> nil;
 end;
 
+{----------------------------------}
+{ TSimpleSquaresFileContents class }
+{----------------------------------}
+
+{*
+  Crée un contenu de fichier SimpleSquares
+  @param AOwner   Éditeur propriétaire
+*}
+constructor TSimpleSquaresFileContents.Create(
+  AOwner: TFrameSimpleSquaresEditor);
+begin
+  inherited Create;
+
+  FSimpleSquares := TSimpleSquareList.Create(AOwner);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TSimpleSquaresFileContents.Destroy;
+begin
+  FSimpleSquares.Free;
+
+  inherited;
+end;
+
 {-------------------------------}
 { Classe TFrameDelphiUnitEditor }
 {-------------------------------}
@@ -238,7 +304,8 @@ begin
   inherited;
 
   ImagesMaster := TImagesMaster.Create;
-  SimpleSquares := TSimpleSquareList.Create(Self);
+  FileContents := TSimpleSquaresFileContents.Create(Self);
+  SimpleSquares := FileContents.SimpleSquares;
 end;
 
 {*
@@ -246,7 +313,7 @@ end;
 *}
 destructor TFrameSimpleSquaresEditor.Destroy;
 begin
-  SimpleSquares.Free;
+  FileContents.Free;
   ImagesMaster.Free;
 
   inherited;
@@ -258,26 +325,26 @@ end;
 *}
 procedure TFrameSimpleSquaresEditor.LoadFile(ASourceFile: TSourceFile);
 var
-  Stream: TStream;
-  MagicNumber, Version, Count, I: Integer;
+  Document: IXMLDOMDocument;
+  I: Integer;
 begin
   inherited;
 
-  Stream := TFileStream.Create(SourceFile.FileName,
-    fmOpenRead or fmShareDenyWrite);
+  Document := CoDOMDocument.Create;
+  Document.async := False;
+  if not Document.load(SourceFile.FileName) then
+    raise EInOutError.CreateFmt(SFOpenError, [SourceFile.FileName]);
+
+  SimpleSquares.Clear;
+  with TFunLabyXMLReader.Create(nil, FileContents) do
   try
-    Stream.ReadBuffer(MagicNumber, 4);
-    Assert(MagicNumber = SimpleSquaresMagicNumber);
-
-    Stream.ReadBuffer(Version, 4);
-    Assert(Version = SimpleSquaresVersion);
-
-    Stream.ReadBuffer(Count, 4);
-    for I := 0 to Count-1 do
-      SimpleSquares.Add(TSimpleSquare.LoadFromStream(ImagesMaster, Stream));
+    ReadNode(Document.documentElement);
   finally
-    Stream.Free;
+    Free;
   end;
+
+  for I := 0 to SimpleSquares.Count-1 do
+    UpdateButton(SimpleSquares[I]);
 
   Modified := False;
 end;
@@ -286,24 +353,38 @@ end;
   Enregistre le fichier source
 *}
 function TFrameSimpleSquaresEditor.SaveFile: Boolean;
+const
+  XMLHeader: string = '<?xml version="1.0" encoding="UTF-8"?>'#13#10;
 var
   Stream: TStream;
-  MagicNumber, Version, Count, I: Integer;
+  StreamAdapter: IStream;
+  Document: IXMLDOMDocument;
+  FileContentsNode: IXMLDOMElement;
 begin
+  Document := CoDOMDocument.Create;
+  Document.async := False;
+
+  FileContentsNode := Document.createElement('simplesquares');
+  FileContentsNode.setAttribute('version', CurrentVersion);
+
+  with TFunLabyXMLWriter.Create(nil, FileContents) do
+  try
+    WriteNode(FileContentsNode);
+  finally
+    Free;
+  end;
+
+  Document.documentElement := FileContentsNode;
+
   Stream := TFileStream.Create(SourceFile.FileName,
     fmCreate or fmShareExclusive);
   try
-    MagicNumber := SimpleSquaresMagicNumber;
-    Stream.WriteBuffer(MagicNumber, 4);
+    StreamAdapter := TStreamAdapter.Create(Stream);
 
-    Version := SimpleSquaresVersion;
-    Stream.WriteBuffer(Version, 4);
-
-    Count := SimpleSquares.Count;
-    Stream.WriteBuffer(Count, 4);
-    for I := 0 to Count-1 do
-      SimpleSquares[I].SaveToStream(Stream);
+    Stream.WriteBuffer(XMLHeader[1], Length(XMLHeader));
+    Document.save(StreamAdapter);
   finally
+    StreamAdapter := nil;
     Stream.Free;
   end;
 
@@ -358,6 +439,33 @@ procedure TFrameSimpleSquaresEditor.SetFunLabyEditMainForm(
   const Value: IOTAFunLabyEditMainForm50);
 begin
   FFunLabyEditMainForm := Value;
+end;
+
+{*
+  Met à jour le bouton correspondant à une case simple donnée
+  @param Square   Case simple dont mettre à jour le bouton
+*}
+procedure TFrameSimpleSquaresEditor.UpdateButton(Square: TSimpleSquare);
+var
+  Button: TButtonItem;
+  SquareBmp: TSquareBitmap;
+begin
+  Button := FindButton(Square);
+  if Button = nil then
+    Exit;
+
+  // Modification des texte et hint
+  Button.Caption := Square.Name;
+  Button.Hint := Square.Name;
+
+  // Modification de l'image du composant dans la liste d'images
+  SquareBmp := TSquareBitmap.Create;
+  try
+    Square.Draw(SquareBmp.Canvas);
+    SquaresImages.ReplaceMasked(Button.ImageIndex, SquareBmp, clTransparent);
+  finally
+    SquareBmp.Free;
+  end;
 end;
 
 {*
@@ -635,28 +743,8 @@ end;
 *}
 procedure TFrameSimpleSquaresEditor.SquareEditorNameImageChange(
   Sender: TObject);
-var
-  Square: TSimpleSquare;
-  Button: TButtonItem;
-  SquareBmp: TSquareBitmap;
 begin
-  Square := SquareEditor.CurrentSquare;
-  Button := FindButton(Square);
-  if Button = nil then
-    Exit;
-
-  // Modification des texte et hint
-  Button.Caption := Square.Name;
-  Button.Hint := Square.Name;
-
-  // Modification de l'image du composant dans la liste d'images
-  SquareBmp := TSquareBitmap.Create;
-  try
-    Square.Draw(SquareBmp.Canvas);
-    SquaresImages.ReplaceMasked(Button.ImageIndex, SquareBmp, clTransparent);
-  finally
-    SquareBmp.Free;
-  end;
+  UpdateButton(SquareEditor.CurrentSquare);
 end;
 
 initialization

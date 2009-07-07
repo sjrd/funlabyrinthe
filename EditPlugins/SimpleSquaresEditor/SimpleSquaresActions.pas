@@ -15,7 +15,7 @@ resourcestring
   SPlayerHideTitle = 'Cacher le joueur';
   SPlayerWinTitle = 'Le joueur gagne';
   SPlayerLoseTitle = 'Le joueur perd';
-  SMasterTemporizeTitle = 'Temporisation standard';
+  SPlayerTemporizeTitle = 'Temporisation standard';
   SGoOnMovingTitle = 'Continuer le déplacement';
 
 type
@@ -24,16 +24,13 @@ type
     @author sjrd
     @version 5.0
   *}
-  TSquarePos = class
+  TSquarePos = class(TFunLabyPersistent)
   private
     FMapID: TComponentID; /// ID de la carte (chaîne vide = carte courante)
     FPosition: T3DPoint;  /// Position sur la carte
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
   public
-    constructor Load(Stream: TStream);
-    constructor Create;
-
-    procedure Save(Stream: TStream);
-
     procedure SetToPosition(const APosition: T3DPoint);
     procedure SetToQPos(const QPos: TQualifiedPos);
 
@@ -41,8 +38,9 @@ type
 
     function GetFunDelphiCode: string;
 
-    property MapID: TComponentID read FMapID write FMapID;
     property Position: T3DPoint read FPosition write FPosition;
+  published
+    property MapID: TComponentID read FMapID write FMapID;
   end;
 
   {*
@@ -50,22 +48,17 @@ type
     @author sjrd
     @version 5.0
   *}
-  TSquareDef = class
+  TSquareDef = class(TFunLabyPersistent)
   private
     FFieldID: TComponentID;    /// ID du terrain
     FEffectID: TComponentID;   /// ID de l'effet
     FToolID: TComponentID;     /// ID de l'outil
     FObstacleID: TComponentID; /// ID de l'obstacle
   public
-    constructor Load(Stream: TStream);
-    constructor Create;
-
-    procedure Save(Stream: TStream);
-
     procedure SetToSquare(Square: TSquare);
 
     function GetFunDelphiCode: string;
-
+  published
     property FieldID: TComponentID read FFieldID write FFieldID;
     property EffectID: TComponentID read FEffectID write FEffectID;
     property ToolID: TComponentID read FToolID write FToolID;
@@ -80,13 +73,10 @@ type
   TSimpleActionWithSquare = class(TSimpleAction)
   private
     FSquarePos: TSquarePos; /// Position concernée
-  protected
-    procedure Save(Stream: TStream); override;
   public
-    constructor Load(Stream: TStream); override;
     constructor Create; override;
     destructor Destroy; override;
-
+  published
     property SquarePos: TSquarePos read FSquarePos;
   end;
 
@@ -99,17 +89,14 @@ type
   private
     FReplaceBy: TSquareDef; /// Case à mettre à la place
   protected
-    procedure Save(Stream: TStream); override;
-
     function GetTitle: string; override;
   public
-    constructor Load(Stream: TStream); override;
     constructor Create; override;
     destructor Destroy; override;
 
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); override;
-
+  published
     property ReplaceBy: TSquareDef read FReplaceBy;
   end;
 
@@ -122,16 +109,11 @@ type
   private
     FEffectID: TComponentID; /// ID de l'effet à mettre à la place
   protected
-    procedure Save(Stream: TStream); override;
-
     function GetTitle: string; override;
   public
-    constructor Load(Stream: TStream); override;
-    constructor Create; override;
-
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); override;
-
+  published
     property EffectID: TComponentID read FEffectID write FEffectID;
   end;
 
@@ -145,17 +127,14 @@ type
     FText: string;           /// Texte du message
     FOnlyFirstTime: Boolean; /// True affiche seulement au premier passage
   protected
-    procedure Save(Stream: TStream); override;
-
     function GetTitle: string; override;
   public
-    constructor Load(Stream: TStream); override;
-
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); override;
-
+  published
     property Text: string read FText write FText;
-    property OnlyFirstTime: Boolean read FOnlyFirstTime write FOnlyFirstTime;
+    property OnlyFirstTime: Boolean read FOnlyFirstTime write FOnlyFirstTime
+      default False;
   end;
 
   {*
@@ -167,17 +146,14 @@ type
   private
     FColor: TColor; /// Couleur de remplacement
   protected
-    procedure Save(Stream: TStream); override;
-
     function GetTitle: string; override;
   public
-    constructor Load(Stream: TStream); override;
     constructor Create; override;
 
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); override;
-
-    property Color: TColor read FColor write FColor;
+  published
+    property Color: TColor read FColor write FColor default clBlue;
   end;
 
   {*
@@ -186,12 +162,12 @@ type
     - smPlayerHide : Player.Hide;
     - smPlayerWin : Player.Win;
     - smPlayerLose : Player.Lose;
-    - smMasterTemporize : Master.Temporize;
+    - smPlayerTemporize : Player.Temporize;
     - smGoOnMoving : GoOnMoving := True;
   *}
   TSimpleMethodKind = (
     smPlayerShow, smPlayerHide, smPlayerWin, smPlayerLose,
-    smMasterTemporize, smGoOnMoving
+    smPlayerTemporize, smGoOnMoving
   );
 
   {*
@@ -203,16 +179,13 @@ type
   private
     FKind: TSimpleMethodKind; /// Type de l'action
   protected
-    procedure Save(Stream: TStream); override;
-
     function GetTitle: string; override;
   public
-    constructor Load(Stream: TStream); override;
     constructor Create; override;
 
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); override;
-
+  published
     property Kind: TSimpleMethodKind read FKind write FKind;
   end;
 
@@ -223,33 +196,18 @@ implementation
 {------------------}
 
 {*
-  Charge depuis un flux
-  @param Stream   Flux source
+  [@inheritDoc]
 *}
-constructor TSquarePos.Load(Stream: TStream);
+procedure TSquarePos.DefineProperties(Filer: TFunLabyFiler);
 begin
-  inherited Create;
+  inherited;
 
-  FMapID := ReadStrFromStream(Stream);
-  Stream.ReadBuffer(FPosition, SizeOf(T3DPoint));
-end;
-
-{*
-  Crée une position
-*}
-constructor TSquarePos.Create;
-begin
-  inherited Create;
-end;
-
-{*
-  Enregistre dans un flux
-  @param Stream   Flux destination
-*}
-procedure TSquarePos.Save(Stream: TStream);
-begin
-  WriteStrToStream(Stream, FMapID);
-  Stream.WriteBuffer(FPosition, SizeOf(T3DPoint));
+  Filer.DefineFieldProperty('Position.X', TypeInfo(Integer),
+    @FPosition.X, True);
+  Filer.DefineFieldProperty('Position.Y', TypeInfo(Integer),
+    @FPosition.Y, True);
+  Filer.DefineFieldProperty('Position.Z', TypeInfo(Integer),
+    @FPosition.Z, True);
 end;
 
 {*
@@ -304,40 +262,6 @@ end;
 {------------------}
 
 {*
-  Charge depuis un flux
-  @param Stream   Flux source
-*}
-constructor TSquareDef.Load(Stream: TStream);
-begin
-  inherited Create;
-
-  FFieldID := ReadStrFromStream(Stream);
-  FEffectID := ReadStrFromStream(Stream);
-  FToolID := ReadStrFromStream(Stream);
-  FObstacleID := ReadStrFromStream(Stream);
-end;
-
-{*
-  Crée une définition de case
-*}
-constructor TSquareDef.Create;
-begin
-  inherited Create;
-end;
-
-{*
-  Enregistre dans un flux
-  @param Stream   Flux destination
-*}
-procedure TSquareDef.Save(Stream: TStream);
-begin
-  WriteStrToStream(Stream, FFieldID);
-  WriteStrToStream(Stream, FEffectID);
-  WriteStrToStream(Stream, FToolID);
-  WriteStrToStream(Stream, FObstacleID);
-end;
-
-{*
   Positionne à une case
   @param Square   Case
 *}
@@ -367,15 +291,6 @@ end;
 {*
   [@inheritDoc]
 *}
-constructor TSimpleActionWithSquare.Load(Stream: TStream);
-begin
-  inherited;
-  FSquarePos := TSquarePos.Load(Stream);
-end;
-
-{*
-  [@inheritDoc]
-*}
 constructor TSimpleActionWithSquare.Create;
 begin
   inherited;
@@ -391,28 +306,9 @@ begin
   inherited;
 end;
 
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleActionWithSquare.Save(Stream: TStream);
-begin
-  inherited;
-
-  FSquarePos.Save(Stream);
-end;
-
 {----------------------------}
 { TReplaceSquareAction class }
 {----------------------------}
-
-{*
-  [@inheritDoc]
-*}
-constructor TReplaceSquareAction.Load(Stream: TStream);
-begin
-  inherited;
-  FReplaceBy := TSquareDef.Load(Stream);
-end;
 
 {*
   [@inheritDoc]
@@ -430,16 +326,6 @@ destructor TReplaceSquareAction.Destroy;
 begin
   FReplaceBy.Free;
   inherited;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TReplaceSquareAction.Save(Stream: TStream);
-begin
-  inherited;
-
-  FReplaceBy.Save(Stream);
 end;
 
 {*
@@ -464,34 +350,6 @@ end;
 {-------------------------------}
 { TDeactivateEffectAction class }
 {-------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-constructor TDeactivateEffectAction.Load(Stream: TStream);
-begin
-  inherited;
-
-  FEffectID := ReadStrFromStream(Stream);
-end;
-
-{*
-  [@inheritDoc]
-*}
-constructor TDeactivateEffectAction.Create;
-begin
-  inherited;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TDeactivateEffectAction.Save(Stream: TStream);
-begin
-  inherited;
-
-  WriteStrToStream(Stream, FEffectID);
-end;
 
 {*
   [@inheritDoc]
@@ -522,30 +380,6 @@ end;
 {----------------------}
 { TMessageAction class }
 {----------------------}
-
-{*
-  [@inheritDoc]
-*}
-constructor TMessageAction.Load(Stream: TStream);
-begin
-  inherited;
-
-  FText := ReadStrFromStream(Stream);
-
-  Stream.ReadBuffer(FOnlyFirstTime, SizeOf(Boolean));
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TMessageAction.Save(Stream: TStream);
-begin
-  inherited;
-
-  WriteStrToStream(Stream, FText);
-
-  Stream.WriteBuffer(FOnlyFirstTime, SizeOf(Boolean));
-end;
 
 {*
   [@inheritDoc]
@@ -581,31 +415,11 @@ end;
 {*
   [@inheritDoc]
 *}
-constructor TPlayerColorAction.Load(Stream: TStream);
-begin
-  inherited;
-
-  Stream.ReadBuffer(FColor, SizeOf(TColor));
-end;
-
-{*
-  [@inheritDoc]
-*}
 constructor TPlayerColorAction.Create;
 begin
   inherited;
 
   FColor := clBlue;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TPlayerColorAction.Save(Stream: TStream);
-begin
-  inherited;
-
-  Stream.WriteBuffer(FColor, SizeOf(TColor));
 end;
 
 {*
@@ -632,31 +446,11 @@ end;
 {*
   [@inheritDoc]
 *}
-constructor TSimpleMethodAction.Load(Stream: TStream);
-begin
-  inherited;
-
-  Stream.ReadBuffer(FKind, SizeOf(TSimpleMethodKind));
-end;
-
-{*
-  [@inheritDoc]
-*}
 constructor TSimpleMethodAction.Create;
 begin
   inherited;
 
-  FKind := smMasterTemporize;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleMethodAction.Save(Stream: TStream);
-begin
-  inherited;
-
-  Stream.WriteBuffer(FKind, SizeOf(TSimpleMethodKind));
+  FKind := smPlayerTemporize;
 end;
 
 {*
@@ -669,7 +463,7 @@ begin
     smPlayerHide: Result := SPlayerHideTitle;
     smPlayerWin:  Result := SPlayerWinTitle;
     smPlayerLose: Result := SPlayerLoseTitle;
-    smMasterTemporize: Result := SMasterTemporizeTitle;
+    smPlayerTemporize: Result := SPlayerTemporizeTitle;
     smGoOnMoving: Result := SGoOnMovingTitle;
   end;
 
@@ -694,12 +488,12 @@ begin
 end;
 
 initialization
-  RegisterClasses([
+  FunLabyRegisterClasses([
     TReplaceSquareAction, TDeactivateEffectAction, TMessageAction,
     TPlayerColorAction, TSimpleMethodAction
   ]);
 finalization
-  UnRegisterClasses([
+  FunLabyUnRegisterClasses([
     TReplaceSquareAction, TDeactivateEffectAction, TMessageAction,
     TPlayerColorAction, TSimpleMethodAction
   ]);

@@ -42,14 +42,14 @@ type
     @author sjrd
     @version 5.0
   *}
-  TSimpleSquare = class(TPersistent)
+  TSimpleSquare = class(TFunLabyPersistent)
   private
     FID: TComponentID;   /// ID du composant
     FName: string;       /// Nom
     FPainter: TPainter;  /// Peintre
     FImgNames: TStrings; /// Noms des images
   protected
-    procedure Save(Stream: TStream); virtual;
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
 
     function GetComponentType: string; virtual; abstract;
     function GetParentClassName: string; virtual;
@@ -59,17 +59,12 @@ type
 
     function GetCanEditImgNames: Boolean; virtual;
   public
-    constructor Load(AImagesMaster: TImagesMaster;
-      Stream: TStream); virtual;
+    constructor Create(AImagesMaster: TImagesMaster); overload; virtual;
     constructor Create(AImagesMaster: TImagesMaster; const AID: TComponentID;
-      const AName: string); virtual;
+      const AName: string); overload;
     destructor Destroy; override;
 
     class function ClassTitle: string; virtual;
-
-    class function LoadFromStream(ImagesMaster: TImagesMaster;
-      Stream: TStream): TSimpleSquare;
-    procedure SaveToStream(Stream: TStream);
 
     procedure Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); virtual;
 
@@ -79,11 +74,11 @@ type
     procedure ProduceClass(Code: TStrings);
 
     property ID: TComponentID read FID;
-    property Name: string read FName write FName;
     property ParentClassName: string read GetParentClassName;
-
     property CanEditImgNames: Boolean read GetCanEditImgNames;
-    property ImgNames: TStrings read FImgNames;
+  published
+    property Name: string read FName write FName;
+    property ImgNames: TStrings read FImgNames stored GetCanEditImgNames;
   end;
 
   /// Classe de TSimpleSquare
@@ -94,17 +89,11 @@ type
     @author sjrd
     @version 5.0
   *}
-  TSimpleAction = class(TPersistent)
+  TSimpleAction = class(TFunLabyPersistent)
   protected
-    procedure Save(Stream: TStream); virtual;
-
     function GetTitle: string; virtual; abstract;
   public
-    constructor Load(Stream: TStream); virtual;
     constructor Create; virtual;
-
-    class function LoadFromStream(Stream: TStream): TSimpleAction;
-    procedure SaveToStream(Stream: TStream);
 
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); virtual;
@@ -120,15 +109,13 @@ type
     @author sjrd
     @version 5.0
   *}
-  TSimpleActionList = class(TObjectList)
-  protected
+  TSimpleActionList = class(TFunLabyCollection)
+  private
     function GetItems(Index: Integer): TSimpleAction;
+  protected
+    function CreateItem(ItemClass: TFunLabyPersistentClass):
+      TFunLabyPersistent; override;
   public
-    constructor Load(Stream: TStream);
-    constructor Create;
-
-    procedure SaveToStream(Stream: TStream);
-
     function AddNew(ActionClass: TSimpleActionClass): TSimpleAction;
 
     procedure ProduceFunDelphiCode(Code: TStrings);
@@ -155,21 +142,16 @@ type
   private
     FActions: TSimpleActionList; /// Actions de l'effet
   protected
-    procedure Save(Stream: TStream); override;
-
     function GetComponentType: string; override;
     function GetParentClassName: string; override;
 
     procedure ProduceInnerClass(Code: TStrings); override;
   public
-    constructor Load(AImagesMaster: TImagesMaster;
-      Stream: TStream); override;
-    constructor Create(AImagesMaster: TImagesMaster; const AID: TComponentID;
-      const AName: string); override;
+    constructor Create(AImagesMaster: TImagesMaster); override;
     destructor Destroy; override;
 
     class function ClassTitle: string; override;
-
+  published
     property Actions: TSimpleActionList read FActions;
   end;
 
@@ -185,29 +167,28 @@ type
     FHandledAction: TPlayerAction; /// Action prise en charge par l'objet
     FMinimumCount: Integer;        /// Minimum d'objets requis
     FDecrementOnUse: Boolean;      /// True décrémente l'objet quand utilisé
-  protected
-    procedure Save(Stream: TStream); override;
 
+    function IsActionDataStored: Boolean;
+  protected
     function GetComponentType: string; override;
 
     procedure ProduceInnerClass(Code: TStrings); override;
   public
-    constructor Load(AImagesMaster: TImagesMaster;
-      Stream: TStream); override;
-    constructor Create(AImagesMaster: TImagesMaster; const AID: TComponentID;
-      const AName: string); override;
+    constructor Create(AImagesMaster: TImagesMaster); override;
 
     class function ClassTitle: string; override;
 
     procedure RegisterActions(Actions: TStrings); override;
     procedure ProduceComponents(Code: TStrings); override;
-
+  published
     property FindMessage: string read FFindMessage write FFindMessage;
 
     property HandledAction: TPlayerAction
       read FHandledAction write FHandledAction;
-    property MinimumCount: Integer read FMinimumCount write FMinimumCount;
-    property DecrementOnUse: Boolean read FDecrementOnUse write FDecrementOnUse;
+    property MinimumCount: Integer read FMinimumCount write FMinimumCount
+      stored IsActionDataStored default 1;
+    property DecrementOnUse: Boolean read FDecrementOnUse write FDecrementOnUse
+      stored IsActionDataStored default False;
   end;
 
   {*
@@ -229,25 +210,21 @@ type
     FPlayerAction: TPlayerAction;           /// Action que doit faire le joueur
 
     FFailMessage: string; /// Message à afficher si raté
-  protected
-    procedure Save(Stream: TStream); override;
 
+    function IsPlayerActionStored: Boolean;
+  protected
     function GetComponentType: string; override;
 
     procedure ProduceInnerClass(Code: TStrings); override;
   public
-    constructor Load(AImagesMaster: TImagesMaster;
-      Stream: TStream); override;
-    constructor Create(AImagesMaster: TImagesMaster; const AID: TComponentID;
-      const AName: string); override;
-
     class function ClassTitle: string; override;
 
     procedure RegisterActions(Actions: TStrings); override;
-
+ published
     property ConditionKind: TObstacleConditionKind
-      read FConditionKind write FConditionKind;
-    property PlayerAction: TPlayerAction read FPlayerAction write FPlayerAction;
+      read FConditionKind write FConditionKind default ockAlways;
+    property PlayerAction: TPlayerAction read FPlayerAction write FPlayerAction
+      stored IsPlayerActionStored;
 
     property FailMessage: string read FFailMessage write FFailMessage;
   end;
@@ -263,30 +240,15 @@ implementation
 {---------------------}
 
 {*
-  Crée un composant de case simple en chargeant depuis un flux
+  Crée un nouveau composant de case simple
   @param AImagesMaster   Maître d'images
-  @param Stream          Flux source
 *}
-constructor TSimpleSquare.Load(AImagesMaster: TImagesMaster;
-  Stream: TStream);
-var
-  Count, I: Integer;
+constructor TSimpleSquare.Create(AImagesMaster: TImagesMaster);
 begin
   inherited Create;
 
-  FID := ReadStrFromStream(Stream);
-  FName := ReadStrFromStream(Stream);
   FPainter := TPainter.Create(AImagesMaster);
   FImgNames := FPainter.ImgNames;
-
-  FImgNames.BeginUpdate;
-  try
-    Stream.ReadBuffer(Count, 4);
-    for I := 0 to Count-1 do
-      FImgNames.Add(ReadStrFromStream(Stream));
-  finally
-    FImgNames.EndUpdate;
-  end;
 end;
 
 {*
@@ -298,12 +260,10 @@ end;
 constructor TSimpleSquare.Create(AImagesMaster: TImagesMaster;
   const AID: TComponentID; const AName: string);
 begin
-  inherited Create;
+  Create(AImagesMaster);
 
   FID := AID;
   FName := AName;
-  FPainter := TPainter.Create(AImagesMaster);
-  FImgNames := FPainter.ImgNames;
 end;
 
 {*
@@ -317,20 +277,13 @@ begin
 end;
 
 {*
-  Enregistre le composant dans un flux
-  @param Stream   Flux destination
+  [@inheritDoc]
 *}
-procedure TSimpleSquare.Save(Stream: TStream);
-var
-  Count, I: Integer;
+procedure TSimpleSquare.DefineProperties(Filer: TFunLabyFiler);
 begin
-  WriteStrToStream(Stream, ID);
-  WriteStrToStream(Stream, Name);
+  Filer.DefineFieldProperty('ID', TypeInfo(TComponentID), @FID, True);
 
-  Count := ImgNames.Count;
-  Stream.WriteBuffer(Count, 4);
-  for I := 0 to Count-1 do
-    WriteStrToStream(Stream, ImgNames[I]);
+  inherited;
 end;
 
 {*
@@ -388,31 +341,6 @@ end;
 class function TSimpleSquare.ClassTitle: string;
 begin
   Result := '';
-end;
-
-{*
-  Charge un composant depuis un flux
-  @param ImagesMaster   Maître d'images
-  @param Stream         Flux source
-*}
-class function TSimpleSquare.LoadFromStream(ImagesMaster: TImagesMaster;
-  Stream: TStream): TSimpleSquare;
-var
-  SquareClass: TPersistentClass;
-begin
-  SquareClass := FindClass(ReadStrFromStream(Stream));
-  Assert(SquareClass.InheritsFrom(TSimpleSquare));
-  Result := TSimpleSquareClass(SquareClass).Load(ImagesMaster, Stream);
-end;
-
-{*
-  Enregistre le composant dans un flux
-  @param Stream   Flux destination
-*}
-procedure TSimpleSquare.SaveToStream(Stream: TStream);
-begin
-  WriteStrToStream(Stream, ClassName);
-  Save(Stream);
 end;
 
 {*
@@ -487,52 +415,11 @@ end;
 {---------------------}
 
 {*
-  Crée une action et la charge depuis un flux
-  @param Stream   Flux source
-*}
-constructor TSimpleAction.Load(Stream: TStream);
-begin
-  inherited Create;
-end;
-
-{*
   Crée une nouvelle action
 *}
 constructor TSimpleAction.Create;
 begin
   inherited Create;
-end;
-
-{*
-  Enregistre l'action dans un flux
-  @param Stream   Flux destination
-*}
-procedure TSimpleAction.Save(Stream: TStream);
-begin
-end;
-
-{*
-  Charge une action depuis un flux
-  @param Stream   Flux source
-  @return Action lue
-*}
-class function TSimpleAction.LoadFromStream(Stream: TStream): TSimpleAction;
-var
-  ActionClass: TPersistentClass;
-begin
-  ActionClass := FindClass(ReadStrFromStream(Stream));
-  Assert(ActionClass.InheritsFrom(TSimpleAction));
-  Result := TSimpleActionClass(ActionClass).Load(Stream);
-end;
-
-{*
-  Enregistre l'action dans un flux
-  @param Stream   Flux destination
-*}
-procedure TSimpleAction.SaveToStream(Stream: TStream);
-begin
-  WriteStrToStream(Stream, ClassName);
-  Save(Stream);
 end;
 
 {*
@@ -550,53 +437,22 @@ end;
 {-------------------------}
 
 {*
-  Charge une liste d'action depuis un flux
-  @param Stream   Flux source
-*}
-constructor TSimpleActionList.Load(Stream: TStream);
-var
-  Count, I: Integer;
-begin
-  inherited Create;
-
-  Stream.ReadBuffer(Count, 4);
-  Capacity := Count;
-
-  for I := 0 to Count-1 do
-    Add(TSimpleAction.LoadFromStream(Stream));
-end;
-
-{*
-  Crée une nouvelle liste d'actions
-*}
-constructor TSimpleActionList.Create;
-begin
-  inherited Create;
-end;
-
-{*
   Tableau zero-based des actions
   @param Index   Index d'une action
   @return Action à l'index spécifié
 *}
 function TSimpleActionList.GetItems(Index: Integer): TSimpleAction;
 begin
-  Result := GetItem(Index) as TSimpleAction;
+  Result := (inherited Items[Index]) as TSimpleAction;
 end;
 
 {*
-  Enregistre la liste d'actions dans un flux
-  @param Stream   Flux destination
+  [@inheritDoc]
 *}
-procedure TSimpleActionList.SaveToStream(Stream: TStream);
-var
-  Count, I: Integer;
+function TSimpleActionList.CreateItem(
+  ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
 begin
-  Count := Self.Count;
-  Stream.WriteBuffer(Count, 4);
-
-  for I := 0 to Count-1 do
-    Items[I].SaveToStream(Stream);
+  Result := TSimpleActionClass(ItemClass).Create;
 end;
 
 {*
@@ -607,8 +463,7 @@ end;
 function TSimpleActionList.AddNew(
   ActionClass: TSimpleActionClass): TSimpleAction;
 begin
-  Result := ActionClass.Create;
-  Add(Result);
+  Result := TSimpleAction(inherited Add(ActionClass));
 end;
 
 {*
@@ -642,18 +497,7 @@ end;
 {*
   [@inheritDoc]
 *}
-constructor TSimpleEffect.Load(AImagesMaster: TImagesMaster; Stream: TStream);
-begin
-  inherited;
-
-  FActions := TSimpleActionList.Load(Stream);
-end;
-
-{*
-  [@inheritDoc]
-*}
-constructor TSimpleEffect.Create(AImagesMaster: TImagesMaster;
-  const AID: TComponentID; const AName: string);
+constructor TSimpleEffect.Create(AImagesMaster: TImagesMaster);
 begin
   inherited;
 
@@ -668,16 +512,6 @@ begin
   FActions.Free;
   
   inherited;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleEffect.Save(Stream: TStream);
-begin
-  inherited;
-
-  FActions.SaveToStream(Stream);
 end;
 
 {*
@@ -730,27 +564,7 @@ end;
 {*
   [@inheritDoc]
 *}
-constructor TSimpleObject.Load(AImagesMaster: TImagesMaster; Stream: TStream);
-begin
-  inherited;
-
-  FFindMessage := ReadStrFromStream(Stream);
-
-  FHandledAction := ReadStrFromStream(Stream);
-
-  if FHandledAction <> '' then
-  begin
-    Stream.ReadBuffer(FMinimumCount, 4);
-    Stream.ReadBuffer(FDecrementOnUse, SizeOf(Boolean));
-  end else
-    FMinimumCount := 1;
-end;
-
-{*
-  [@inheritDoc]
-*}
-constructor TSimpleObject.Create(AImagesMaster: TImagesMaster;
-  const AID: TComponentID; const AName: string);
+constructor TSimpleObject.Create(AImagesMaster: TImagesMaster);
 begin
   inherited;
 
@@ -758,21 +572,11 @@ begin
 end;
 
 {*
-  [@inheritDoc]
+  Teste si les données liées à l'action doivent être enregistrées
 *}
-procedure TSimpleObject.Save(Stream: TStream);
+function TSimpleObject.IsActionDataStored: Boolean;
 begin
-  inherited;
-
-  WriteStrToStream(Stream, FFindMessage);
-
-  WriteStrToStream(Stream, FHandledAction);
-
-  if FHandledAction <> '' then
-  begin
-    Stream.WriteBuffer(FMinimumCount, 4);
-    Stream.WriteBuffer(FDecrementOnUse, SizeOf(Boolean));
-  end;
+  Result := FHandledAction <> '';
 end;
 
 {*
@@ -844,40 +648,12 @@ end;
 {-----------------------}
 
 {*
-  [@inheritDoc]
+  Teste si la propriété PlayerAction doit être stockée
+  @return True si la propriété PlayerAction doit être stockée, False sinon
 *}
-constructor TSimpleObstacle.Load(AImagesMaster: TImagesMaster; Stream: TStream);
+function TSimpleObstacle.IsPlayerActionStored: Boolean;
 begin
-  inherited;
-
-  Stream.ReadBuffer(FConditionKind, SizeOf(TObstacleConditionKind));
-  if FConditionKind = ockPlayerAction then
-    FPlayerAction := ReadStrFromStream(Stream);
-
-  FFailMessage := ReadStrFromStream(Stream);
-end;
-
-{*
-  [@inheritDoc]
-*}
-constructor TSimpleObstacle.Create(AImagesMaster: TImagesMaster;
-  const AID: TComponentID; const AName: string);
-begin
-  inherited;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSimpleObstacle.Save(Stream: TStream);
-begin
-  inherited;
-
-  Stream.WriteBuffer(FConditionKind, SizeOf(TObstacleConditionKind));
-  if FConditionKind = ockPlayerAction then
-    WriteStrToStream(Stream, FPlayerAction);
-
-  WriteStrToStream(Stream, FFailMessage);
+  Result := ConditionKind = ockPlayerAction;
 end;
 
 {*
@@ -955,11 +731,11 @@ begin
 end;
 
 initialization
-  RegisterClasses([
+  FunLabyRegisterClasses([
     TSimpleField, TSimpleEffect, TSimpleObject, TSimpleObstacle
   ]);
 finalization
-  UnRegisterClasses([
+  FunLabyUnRegisterClasses([
     TSimpleField, TSimpleEffect, TSimpleObject, TSimpleObstacle
   ]);
 end.

@@ -21,8 +21,7 @@ type
 
     function GetCanEditImgNames: Boolean; override;
   public
-    constructor Create(AImagesMaster: TImagesMaster; const AID: TComponentID;
-      const AName: string); override;
+    constructor Create(AImagesMaster: TImagesMaster); override;
 
     class function ClassTitle: string; override;
   end;
@@ -38,8 +37,7 @@ type
 
     function GetCanEditImgNames: Boolean; override;
   public
-    constructor Create(AImagesMaster: TImagesMaster; const AID: TComponentID;
-      const AName: string); override;
+    constructor Create(AImagesMaster: TImagesMaster); override;
 
     class function ClassTitle: string; override;
   end;
@@ -53,8 +51,7 @@ implementation
 {*
   [@inheritDoc]
 *}
-constructor TSimpleButton.Create(AImagesMaster: TImagesMaster;
-  const AID: TComponentID; const AName: string);
+constructor TSimpleButton.Create(AImagesMaster: TImagesMaster);
 begin
   inherited;
 
@@ -92,8 +89,7 @@ end;
 {*
   [@inheritDoc]
 *}
-constructor TSimpleSwitch.Create(AImagesMaster: TImagesMaster;
-  const AID: TComponentID; const AName: string);
+constructor TSimpleSwitch.Create(AImagesMaster: TImagesMaster);
 begin
   inherited;
 
@@ -125,11 +121,11 @@ begin
 end;
 
 initialization
-  RegisterClasses([
+  FunLabyRegisterClasses([
     TSimpleButton, TSimpleSwitch
   ]);
 finalization
-  UnRegisterClasses([
+  FunLabyUnRegisterClasses([
     TSimpleButton, TSimpleSwitch
   ]);
 end.
