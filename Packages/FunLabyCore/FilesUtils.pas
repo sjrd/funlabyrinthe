@@ -1025,16 +1025,6 @@ begin
           Player := TPlayer.Create(Master, ID, Name,
             Master.Map[MapID], Position);
 
-          if NullToEmptyStr(getAttribute('lost')) = 'yes' then
-            Player.Lose;
-
-          with selectNodes('./attributes/attribute') do
-          begin
-            for J := 0 to length-1 do
-              with item[J] as IXMLDOMElement do
-                Player.Attribute[getAttribute('name')] := getAttribute('value');
-          end;
-
           with selectNodes('./plugins/plugin') do
           begin
             for J := 0 to length-1 do
@@ -1459,8 +1449,6 @@ begin
               Player := Document.createElement('player');
               Player.setAttribute('id', ID);
               Player.setAttribute('name', Name);
-              if PlayState = psLost then
-                Player.setAttribute('lost', 'yes');
 
               with Player do
               begin
@@ -1470,20 +1458,6 @@ begin
                 Element.setAttribute('posy', Position.Y);
                 Element.setAttribute('posz', Position.Z);
                 appendChild(Element);
-
-                Element := Document.createElement('attributes');
-                with Element do
-                begin
-                  GetAttributes(Params);
-                  for J := 0 to Params.Count-1 do
-                  begin
-                    Param := Document.createElement('attribute');
-                    Param.setAttribute('name', Params[J]);
-                    Param.setAttribute('value', Integer(Params.Objects[J]));
-                    appendChild(Param);
-                  end;
-                end;
-                appendChild(Element); // attributes
 
                 Element := Document.createElement('plugins');
                 with Element do

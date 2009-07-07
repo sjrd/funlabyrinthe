@@ -9,8 +9,8 @@ unit FunLabyUtils;
 interface
 
 uses
-  Windows, Types, SysUtils, Classes, Graphics, Contnrs, Controls, Dialogs,
-  TypInfo, ScUtils, ScCoroutines, SdDialogs;
+  Windows, Types, SysUtils, Classes, Graphics, Contnrs, RTLConsts, Controls,
+  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs;
 
 resourcestring
   sDefaultObjectInfos = '%s : %d';
@@ -422,6 +422,55 @@ type
 
   {$M-}
 
+  /// Classe de TFunLabyPersistent
+  TFunLabyPersistentClass = class of TFunLabyPersistent;
+
+  {*
+    Classe de base pour les collections persistentes de FunLabyrinthe
+    @author sjrd
+    @version 5.0
+  *}
+  TFunLabyCollection = class(TFunLabyPersistent)
+  private
+    FItems: TObjectList; /// Éléments de la collection
+
+    function GetCount: Integer;
+    function GetItems(Index: Integer): TFunLabyPersistent;
+  protected
+    function CreateItem(ItemClass: TFunLabyPersistentClass):
+      TFunLabyPersistent; virtual; abstract;
+
+    procedure Notify(Item: TFunLabyPersistent;
+      Action: TListNotification); virtual;
+
+    function AddItem(Item: TFunLabyPersistent): Integer;
+    function InsertItem(Index: Integer; Item: TFunLabyPersistent): Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Clear;
+    function Add(ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
+    function Insert(Index: Integer;
+      ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
+    procedure Delete(Index: Integer);
+    function Remove(Item: TFunLabyPersistent): Integer;
+    procedure Exchange(Index1, Index2: Integer);
+    procedure Move(CurIndex, NewIndex: Integer);
+    function IndexOf(Item: TFunLabyPersistent): Integer;
+
+    property Count: Integer read GetCount;
+    property Items[Index: Integer]: TFunLabyPersistent read GetItems;
+  end;
+
+  {*
+    Type d'objet stocké dans une TStrings qui doit être chargée/sauvegardée
+    - sokNone : les objets ne sont pas stockés ;
+    - sokInteger : les objets sont stockés sous forme d'entiers ;
+    - sokComponent : les objets sont stockés comme composants.
+  *}
+  TStringsObjectKind = (sokNone, sokInteger, sokComponent);
+
   {*
     Classe de base pour les objets lecteurs et écrivains FunLabyrinthe
     @author sjrd
@@ -438,8 +487,14 @@ type
     procedure HandlePersistent(const Name: string;
       SubInstance: TFunLabyPersistent); virtual; abstract;
 
+    procedure HandleCollection(const Name: string;
+      Collection: TFunLabyCollection); virtual; abstract;
+
     procedure HandleComponent(const Name: string;
       Component: TFunLabyComponent); virtual; abstract;
+
+    procedure HandleStrings(const Name: string; Strings: TStrings;
+      ObjectKind: TStringsObjectKind); virtual; abstract;
 
     procedure EnumProperties;
 
@@ -463,6 +518,9 @@ type
 
     procedure DefinePersistent(const Name: string;
       SubInstance: TFunLabyPersistent);
+
+    procedure DefineStrings(const Name: string; Strings: TStrings;
+      ObjectKind: TStringsObjectKind = sokNone);
 
     property Master: TMaster read FMaster;
     property Instance: TFunLabyPersistent read FInstance;
@@ -1261,10 +1319,22 @@ function SameRect(const Left, Right: TRect): Boolean;
 
 function IsNoQPos(const QPos: TQualifiedPos): Boolean;
 
+procedure FunLabyRegisterClass(PersistentClass: TFunLabyPersistentClass);
+procedure FunLabyUnregisterClass(PersistentClass: TFunLabyPersistentClass);
+
+procedure FunLabyRegisterClasses(Classes: array of TFunLabyPersistentClass);
+procedure FunLabyUnregisterClasses(Classes: array of TFunLabyPersistentClass);
+
+function FunLabyGetClass(const ClassName: string): TFunLabyPersistentClass;
+function FunLabyFindClass(const ClassName: string): TFunLabyPersistentClass;
+
 implementation
 
 uses
   IniFiles, StrUtils, Forms, ScStrUtils, ScDelphiLanguage;
+
+var
+  FunLabyRegisteredClasses: TStrings = nil;
 
 {*
   Vérifie que FunLabyrinthe a été lancé de façon valide
@@ -1420,6 +1490,96 @@ begin
   else
     Result := False;
   end;
+end;
+
+{*
+  Recense une classe persistente FunLabyrinthe
+  @param PersistentClass   Classe à recenser
+*}
+procedure FunLabyRegisterClass(PersistentClass: TFunLabyPersistentClass);
+begin
+  if FunLabyRegisteredClasses = nil then
+    FunLabyRegisteredClasses := THashedStringList.Create;
+
+  if FunLabyRegisteredClasses.IndexOfObject(TObject(PersistentClass)) < 0 then
+    FunLabyRegisteredClasses.AddObject(PersistentClass.ClassName,
+      TObject(PersistentClass));
+end;
+
+{*
+  Dérecense une classe persistente FunLabyrinthe
+  @param PersistentClass   Classe à dérecenser
+*}
+procedure FunLabyUnregisterClass(PersistentClass: TFunLabyPersistentClass);
+var
+  Index: Integer;
+begin
+  if FunLabyRegisteredClasses = nil then
+    Exit;
+
+  Index := FunLabyRegisteredClasses.IndexOf(PersistentClass.ClassName);
+  if (Index >= 0) and
+    (FunLabyRegisteredClasses.Objects[Index] = TObject(PersistentClass)) then
+    FunLabyRegisteredClasses.Delete(Index);
+end;
+
+{*
+  Recense une liste de classes persistentes FunLabyrinthe
+  @param Classes   Classes à recenser
+*}
+procedure FunLabyRegisterClasses(Classes: array of TFunLabyPersistentClass);
+var
+  I: Integer;
+begin
+  for I := Low(Classes) to High(Classes) do
+    FunLabyRegisterClass(Classes[I]);
+end;
+
+{*
+  Dérecense une liste de classes persistentes FunLabyrinthe
+  @param Classes   Classes à dérecenser
+*}
+procedure FunLabyUnregisterClasses(Classes: array of TFunLabyPersistentClass);
+var
+  I: Integer;
+begin
+  for I := Low(Classes) to High(Classes) do
+    FunLabyUnregisterClass(Classes[I]);
+end;
+
+{*
+  Obtient une classe persistente par son nom
+  @param ClassName   Nom de la classe recherchée
+  @return Classe persistente dont le nom a été spécifié, ou nil si non trouvé
+*}
+function FunLabyGetClass(const ClassName: string): TFunLabyPersistentClass;
+var
+  Index: Integer;
+begin
+  if FunLabyRegisteredClasses = nil then
+    Result := nil
+  else
+  begin
+    Index := FunLabyRegisteredClasses.IndexOf(ClassName);
+    if Index < 0 then
+      Result := nil
+    else
+      Result := TFunLabyPersistentClass(
+        FunLabyRegisteredClasses.Objects[Index]);
+  end;
+end;
+
+{*
+  Obtient une classe persistente par son nom
+  @param ClassName   Nom de la classe recherchée
+  @return Classe persistente dont le nom a été spécifié
+  @throws
+*}
+function FunLabyFindClass(const ClassName: string): TFunLabyPersistentClass;
+begin
+  Result := FunLabyGetClass(ClassName);
+  if Result = nil then
+    raise EClassNotFound.CreateFmt(SClassNotFound, [ClassName]);
 end;
 
 {----------------------}
@@ -1988,13 +2148,186 @@ begin
   Count := GetPropList(Self, PropList);
   if Count = 0 then
     Exit;
-    
+
   try
     for I := 0 to Count-1 do
       Filer.DefinePublishedProperty(PropList[I]);
   finally
     FreeMem(PropList);
   end;
+end;
+
+{--------------------------}
+{ TFunLabyCollection class }
+{--------------------------}
+
+{*
+  Crée une collection
+*}
+constructor TFunLabyCollection.Create;
+begin
+  inherited Create;
+
+  FItems := TObjectList.Create;
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TFunLabyCollection.Destroy;
+begin
+  FItems.Free;
+
+  inherited;
+end;
+
+{*
+  Nombre d'éléments de la collection
+  @return Nombre d'éléments de la collection
+*}
+function TFunLabyCollection.GetCount: Integer;
+begin
+  Result := FItems.Count;
+end;
+
+{*
+  Tableau zero-based des éléments de la collection
+  @param Index   Index d'un élément
+  @return Élément à l'index indiqué
+*}
+function TFunLabyCollection.GetItems(Index: Integer): TFunLabyPersistent;
+begin
+  Result := TFunLabyPersistent(FItems[Index]);
+end;
+
+{*
+  Ajoute un élément déjà créé à la collection
+  @param Item   Élément à ajouter
+  @return Index du nouvel élément
+*}
+function TFunLabyCollection.AddItem(Item: TFunLabyPersistent): Integer;
+begin
+  Result := InsertItem(FItems.Count, Item);
+end;
+
+{*
+  Insère un élément déjà créé à la collection
+  @param Index   Index où insérer l'élémnet
+  @param Item    Élément à insérer
+  @return Index du nouvel élément
+*}
+function TFunLabyCollection.InsertItem(Index: Integer;
+  Item: TFunLabyPersistent): Integer;
+begin
+  FItems.Insert(Index, Item);
+  Notify(Item, lnAdded);
+  Result := Index;
+end;
+
+{*
+  Efface tous les éléments de la collection
+*}
+procedure TFunLabyCollection.Clear;
+begin
+  while Count > 0 do
+    Delete(0);
+end;
+
+{*
+  Ajoute un élément à la collection
+  @param ItemClass   Classe d'élément à ajouter
+  @return Élément ajouté
+*}
+function TFunLabyCollection.Add(
+  ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
+begin
+  Result := Insert(Count, ItemClass);
+end;
+
+{*
+  Insert un élément dans la collection
+  @param Index       Index où insérer l'élément
+  @param ItemClass   Classe d'élément à ajouter
+  @return Élément ajouté
+*}
+function TFunLabyCollection.Insert(Index: Integer;
+  ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
+begin
+  Result := CreateItem(ItemClass);
+  try
+    InsertItem(Index, Result);
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+{*
+  Supprime un élément de la collection
+  @param Index   Index de l'élément à supprimer
+*}
+procedure TFunLabyCollection.Delete(Index: Integer);
+begin
+  Notify(Items[Index], lnDeleted);
+
+  FItems.Delete(Index);
+end;
+
+{*
+  Supprime un élément de la collection
+  @param Item   Élément à supprimer
+  @return Index de l'élément supprimé
+*}
+function TFunLabyCollection.Remove(Item: TFunLabyPersistent): Integer;
+begin
+  if IndexOf(Item) < 0 then
+    Result := -1
+  else
+  begin
+    Notify(Item, lnDeleted);
+
+    Result := FItems.Remove(Item);
+  end;
+end;
+
+{*
+  Échange deux éléments de la collection
+  @param Index1   Premier index
+  @param Index2   Second index
+*}
+procedure TFunLabyCollection.Exchange(Index1, Index2: Integer);
+begin
+  FItems.Exchange(Index1, Index2);
+end;
+
+{*
+  Déplace un élément de la collection
+  @param CurIndex   Index d'un élément
+  @param NewIndex   Nouvel index de cet élément
+*}
+procedure TFunLabyCollection.Move(CurIndex, NewIndex: Integer);
+begin
+  FItems.Move(CurIndex, NewIndex);
+end;
+
+{*
+  Notification qu'un élément a été ajouté ou supprimé
+  @param Item     Élément concerné
+  @param Action   Action faite sur l'élément
+*}
+procedure TFunLabyCollection.Notify(Item: TFunLabyPersistent;
+  Action: TListNotification);
+begin
+end;
+
+{*
+  Cherche un élément dans la collection
+  @param Item   Élément recherché
+  @return Index de cet élément dans la collection, ou -1 si non trouvé
+*}
+function TFunLabyCollection.IndexOf(Item: TFunLabyPersistent): Integer;
+begin
+  Result := FItems.IndexOf(Item);
 end;
 
 {---------------------}
@@ -2062,10 +2395,15 @@ begin
   begin
     SubInstance := TObject(GetOrdProp(Instance, PropInfo));
 
-    if (SubInstance is TFunLabyPersistent) and
-      (not (SubInstance is TFunLabyComponent)) then
+    if not (SubInstance is TFunLabyComponent) then
     begin
-      DefinePersistent(PropInfo.Name, TFunLabyPersistent(SubInstance));
+      if IsStoredProp(Instance, PropInfo) then
+      begin
+        if SubInstance is TFunLabyPersistent then
+          DefinePersistent(PropInfo.Name, TFunLabyPersistent(SubInstance))
+        else if SubInstance is TStrings then
+          DefineStrings(PropInfo.Name, TStrings(SubInstance));
+      end;
       Exit;
     end;
   end;
@@ -2149,10 +2487,24 @@ end;
 procedure TFunLabyFiler.DefinePersistent(const Name: string;
   SubInstance: TFunLabyPersistent);
 begin
-  if SubInstance is TFunLabyComponent then
+  if SubInstance is TFunLabyCollection then
+    HandleCollection(Name, TFunLabyCollection(SubInstance))
+  else if SubInstance is TFunLabyComponent then
     HandleComponent(Name, TFunLabyComponent(SubInstance))
   else
     HandlePersistent(Name, SubInstance);
+end;
+
+{*
+  Définit une propriété de type TStrings
+  @param Name         Nom de la propriété
+  @param Strings      Liste de chaînes
+  @param ObjectKind   Type d'objet stocké
+*}
+procedure TFunLabyFiler.DefineStrings(const Name: string; Strings: TStrings;
+  ObjectKind: TStringsObjectKind);
+begin
+  HandleStrings(Name, Strings, ObjectKind);
 end;
 
 {-------------------}
@@ -3506,6 +3858,8 @@ begin
 
   Filer.DefineFieldProperty('PlayState', TypeInfo(TPlayState),
     @FPlayState, PlayState <> psPlaying);
+
+  Filer.DefineStrings('Attributes', FAttributes, sokInteger);
 end;
 
 {*
@@ -4969,5 +5323,7 @@ initialization
   finally
     Free;
   end;
+finalization
+  FreeAndNil(FunLabyRegisteredClasses);
 end.
 

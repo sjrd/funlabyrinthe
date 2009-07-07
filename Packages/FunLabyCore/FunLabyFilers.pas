@@ -10,7 +10,7 @@ unit FunLabyFilers;
 interface
 
 uses
-  SysUtils, Classes, TypInfo, FunLabyUtils, msxml;
+  SysUtils, Classes, TypInfo, Variants, FunLabyUtils, msxml;
 
 type
   {*
@@ -31,8 +31,14 @@ type
     procedure HandlePersistent(const Name: string;
       SubInstance: TFunLabyPersistent); override;
 
+    procedure HandleCollection(const Name: string;
+      Collection: TFunLabyCollection); override;
+
     procedure HandleComponent(const Name: string;
       Component: TFunLabyComponent); override;
+
+    procedure HandleStrings(const Name: string; Strings: TStrings;
+      ObjectKind: TStringsObjectKind); override;
   public
     procedure ReadNode(const ANode: IXMLDOMElement);
 
@@ -60,8 +66,14 @@ type
     procedure HandlePersistent(const Name: string;
       SubInstance: TFunLabyPersistent); override;
 
+    procedure HandleCollection(const Name: string;
+      Collection: TFunLabyCollection); override;
+
     procedure HandleComponent(const Name: string;
       Component: TFunLabyComponent); override;
+
+    procedure HandleStrings(const Name: string; Strings: TStrings;
+      ObjectKind: TStringsObjectKind); override;
   public
     procedure WriteNode(const ANode: IXMLDOMElement);
 
@@ -173,6 +185,40 @@ end;
 {*
   [@inheritDoc]
 *}
+procedure TFunLabyXMLReader.HandleCollection(const Name: string;
+  Collection: TFunLabyCollection);
+var
+  CollectionNode, ItemNode: IXMLDOMElement;
+  ItemNodeList: IXMLDOMNodeList;
+  I: Integer;
+  ItemClass: TFunLabyPersistentClass;
+  Item: TFunLabyPersistent;
+begin
+  CollectionNode := Node.selectSingleNode(
+    Format('collection[@name="%s"]', [Name])) as IXMLDOMElement;
+
+  if CollectionNode = nil then
+    Exit;
+
+  Collection.Clear;
+
+  ReadProperties(Collection, CollectionNode);
+
+  ItemNodeList := CollectionNode.selectNodes('items/item');
+  for I := 0 to ItemNodeList.length-1 do
+  begin
+    ItemNode := ItemNodeList.item[I] as IXMLDOMElement;
+
+    ItemClass := FunLabyFindClass(ItemNode.getAttribute('class'));
+    Item := Collection.Add(ItemClass);
+
+    ReadProperties(Item, ItemNode);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TFunLabyXMLReader.HandleComponent(const Name: string;
   Component: TFunLabyComponent);
 var
@@ -200,6 +246,71 @@ begin
       PlayerData := GetPlayerData(Component, Player);
       ReadProperties(PlayerData, PlayerDataNode);
     end;
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyXMLReader.HandleStrings(const Name: string; Strings: TStrings;
+  ObjectKind: TStringsObjectKind);
+
+  function VarAsInteger(const Value: Variant): Integer;
+  begin
+    if VarIsNull(Value) then
+      Result := 0
+    else
+      Result := Value;
+  end;
+
+var
+  StringsNode, ItemNode: IXMLDOMElement;
+  ItemNodeList: IXMLDOMNodeList;
+  I: Integer;
+  ObjAttrValue: Variant;
+  Obj: TObject;
+begin
+  StringsNode := Node.selectSingleNode(
+    Format('collection[@name="%s"]', [Name])) as IXMLDOMElement;
+
+  if StringsNode = nil then
+    Exit;
+
+  Strings.BeginUpdate;
+  try
+    Strings.Clear;
+    ObjAttrValue := Null;
+
+    ItemNodeList := StringsNode.selectNodes('items/item[@class="string"]');
+    for I := 0 to ItemNodeList.length-1 do
+    begin
+      ItemNode := ItemNodeList.item[I] as IXMLDOMElement;
+
+      case ObjectKind of
+        sokInteger:
+          ObjAttrValue := ItemNode.getAttribute('value');
+        sokComponent:
+          ObjAttrValue := ItemNode.getAttribute('component');
+      end;
+
+      if VarIsNull(ObjAttrValue) then
+        Obj := nil
+      else
+      begin
+        case ObjectKind of
+          sokInteger:
+            Obj := TObject(StrToInt(ObjAttrValue));
+          sokComponent:
+            Obj := Master.Component[ObjAttrValue];
+        else
+          Obj := nil;
+        end;
+      end;
+
+      Strings.AddObject(ItemNode.text, Obj);
+    end;
+  finally
+    Strings.EndUpdate;
   end;
 end;
 
@@ -338,6 +449,41 @@ end;
 {*
   [@inheritDoc]
 *}
+procedure TFunLabyXMLWriter.HandleCollection(const Name: string;
+  Collection: TFunLabyCollection);
+var
+  CollectionNode, ItemsNode, ItemNode: IXMLDOMElement;
+  I: Integer;
+begin
+  CollectionNode := Node.ownerDocument.createElement('collection');
+  CollectionNode.setAttribute('name', Name);
+
+  WriteProperties(Collection, CollectionNode);
+
+  if Collection.Count > 0 then
+  begin
+    ItemsNode := Node.ownerDocument.createElement('items');
+
+    for I := 0 to Collection.Count-1 do
+    begin
+      ItemNode := Node.ownerDocument.createElement('item');
+      ItemNode.setAttribute('class', Collection.Items[I].ClassName);
+
+      WriteProperties(Collection.Items[I], ItemNode);
+
+      ItemsNode.appendChild(ItemNode);
+    end;
+
+    CollectionNode.appendChild(ItemsNode);
+  end;
+
+  if CollectionNode.hasChildNodes then
+    Node.appendChild(CollectionNode);
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TFunLabyXMLWriter.HandleComponent(const Name: string;
   Component: TFunLabyComponent);
 var
@@ -367,6 +513,47 @@ begin
 
   if ComponentNode.hasChildNodes then
     Node.appendChild(ComponentNode);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyXMLWriter.HandleStrings(const Name: string; Strings: TStrings;
+  ObjectKind: TStringsObjectKind);
+var
+  StringsNode, ItemsNode, ItemNode: IXMLDOMElement;
+  I: Integer;
+begin
+  StringsNode := Node.ownerDocument.createElement('collection');
+  StringsNode.setAttribute('name', Name);
+
+  if Strings.Count > 0 then
+  begin
+    ItemsNode := Node.ownerDocument.createElement('items');
+
+    for I := 0 to Strings.Count-1 do
+    begin
+      ItemNode := Node.ownerDocument.createElement('item');
+      ItemNode.setAttribute('class', 'string'); // for symetry
+
+      case ObjectKind of
+        sokInteger:
+          ItemNode.setAttribute('value', IntToStr(Integer(Strings.Objects[I])));
+        sokComponent:
+          ItemNode.setAttribute('component',
+            TFunLabyComponent(Strings.Objects[I]).ID);
+      end;
+
+      ItemNode.text := Strings[I];
+
+      ItemsNode.appendChild(ItemNode);
+    end;
+
+    StringsNode.appendChild(ItemsNode);
+  end;
+
+  if StringsNode.hasChildNodes then
+    Node.appendChild(StringsNode);
 end;
 
 {*
