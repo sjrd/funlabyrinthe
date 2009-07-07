@@ -10,7 +10,7 @@ unit FunLabyFilers;
 interface
 
 uses
-  SysUtils, Classes, TypInfo, Variants, FunLabyUtils, msxml;
+  SysUtils, Classes, TypInfo, Variants, msxml, ScTypInfo, FunLabyUtils;
 
 type
   {*
@@ -38,7 +38,7 @@ type
       Component: TFunLabyComponent); override;
 
     procedure HandleStrings(const Name: string; Strings: TStrings;
-      ObjectKind: TStringsObjectKind); override;
+      ObjectType: PTypeInfo; HasData: Boolean); override;
   public
     procedure ReadNode(const ANode: IXMLDOMElement);
 
@@ -73,7 +73,7 @@ type
       Component: TFunLabyComponent); override;
 
     procedure HandleStrings(const Name: string; Strings: TStrings;
-      ObjectKind: TStringsObjectKind); override;
+      ObjectType: PTypeInfo; HasData: Boolean); override;
   public
     procedure WriteNode(const ANode: IXMLDOMElement);
 
@@ -83,6 +83,41 @@ type
   end;
 
 implementation
+
+{--------------------}
+{ TStringsItem class }
+{--------------------}
+
+type
+  TStringsItem = class(TFunLabyPersistent)
+  private
+    FStr: string;
+    FObj: TObject;
+
+    FObjectType: PTypeInfo;
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+  public
+    constructor Create(AObjectType: PTypeInfo);
+
+    property Str: string read FStr write FStr;
+    property Obj: TObject read FObj write FObj;
+  end;
+
+constructor TStringsItem.Create(AObjectType: PTypeInfo);
+begin
+  inherited Create;
+
+  FObjectType := AObjectType;
+end;
+
+procedure TStringsItem.DefineProperties(Filer: TFunLabyFiler);
+begin
+  inherited;
+
+  Filer.DefineFieldProperty('String', TypeInfo(string), @FStr);
+  Filer.DefineFieldProperty('Object', FObjectType, @FObj);
+end;
 
 {-------------------------}
 { TFunLabyXMLReader class }
@@ -253,22 +288,13 @@ end;
   [@inheritDoc]
 *}
 procedure TFunLabyXMLReader.HandleStrings(const Name: string; Strings: TStrings;
-  ObjectKind: TStringsObjectKind);
-
-  function VarAsInteger(const Value: Variant): Integer;
-  begin
-    if VarIsNull(Value) then
-      Result := 0
-    else
-      Result := Value;
-  end;
-
+  ObjectType: PTypeInfo; HasData: Boolean);
 var
+  Item: TStringsItem;
+  ItemClassName: string;
   StringsNode, ItemNode: IXMLDOMElement;
   ItemNodeList: IXMLDOMNodeList;
   I: Integer;
-  ObjAttrValue: Variant;
-  Obj: TObject;
 begin
   StringsNode := Node.selectSingleNode(
     Format('collection[@name="%s"]', [Name])) as IXMLDOMElement;
@@ -276,40 +302,36 @@ begin
   if StringsNode = nil then
     Exit;
 
+  if ObjectType = nil then
+    ItemClassName := 'string'
+  else
+    ItemClassName := 'string+'+
+      GetEnumName(TypeInfo(TTypeKind), Byte(ObjectType.Kind));
+
+  Item := nil;
   Strings.BeginUpdate;
   try
-    Strings.Clear;
-    ObjAttrValue := Null;
+    if ObjectType <> nil then
+      Item := TStringsItem.Create(ObjectType);
 
-    ItemNodeList := StringsNode.selectNodes('items/item[@class="string"]');
+    Strings.Clear;
+
+    ItemNodeList := StringsNode.selectNodes(
+      Format('items/item[@class="%s"]', [ItemClassName]));
     for I := 0 to ItemNodeList.length-1 do
     begin
       ItemNode := ItemNodeList.item[I] as IXMLDOMElement;
 
-      case ObjectKind of
-        sokInteger:
-          ObjAttrValue := ItemNode.getAttribute('value');
-        sokComponent:
-          ObjAttrValue := ItemNode.getAttribute('component');
-      end;
-
-      if VarIsNull(ObjAttrValue) then
-        Obj := nil
+      if ObjectType = nil then
+        Strings.Add(ItemNode.text)
       else
       begin
-        case ObjectKind of
-          sokInteger:
-            Obj := TObject(StrToInt(ObjAttrValue));
-          sokComponent:
-            Obj := Master.Component[ObjAttrValue];
-        else
-          Obj := nil;
-        end;
+        ReadProperties(Item, ItemNode);
+        Strings.AddObject(Item.Str, Item.Obj);
       end;
-
-      Strings.AddObject(ItemNode.text, Obj);
     end;
   finally
+    Item.Free;
     Strings.EndUpdate;
   end;
 end;
@@ -519,37 +541,52 @@ end;
   [@inheritDoc]
 *}
 procedure TFunLabyXMLWriter.HandleStrings(const Name: string; Strings: TStrings;
-  ObjectKind: TStringsObjectKind);
+  ObjectType: PTypeInfo; HasData: Boolean);
 var
+  Item: TStringsItem;
+  ItemClassName: string;
   StringsNode, ItemsNode, ItemNode: IXMLDOMElement;
   I: Integer;
 begin
+  if (not HasData) or (Strings.Count = 0) then
+    Exit;
+
   StringsNode := Node.ownerDocument.createElement('collection');
   StringsNode.setAttribute('name', Name);
 
-  if Strings.Count > 0 then
-  begin
+  if ObjectType = nil then
+    ItemClassName := 'string'
+  else
+    ItemClassName := 'string+'+
+      GetEnumName(TypeInfo(TTypeKind), Byte(ObjectType.Kind));
+
+  Item := nil;
+  try
+    if ObjectType <> nil then
+      Item := TStringsItem.Create(ObjectType);
+
     ItemsNode := Node.ownerDocument.createElement('items');
 
     for I := 0 to Strings.Count-1 do
     begin
       ItemNode := Node.ownerDocument.createElement('item');
-      ItemNode.setAttribute('class', 'string'); // for symetry
+      ItemNode.setAttribute('class', ItemClassName);
 
-      case ObjectKind of
-        sokInteger:
-          ItemNode.setAttribute('value', IntToStr(Integer(Strings.Objects[I])));
-        sokComponent:
-          ItemNode.setAttribute('component',
-            TFunLabyComponent(Strings.Objects[I]).ID);
+      if ObjectType = nil then
+        ItemNode.text := Strings[I]
+      else
+      begin
+        Item.Str := Strings[I];
+        Item.Obj := Strings.Objects[I];
+        WriteProperties(Item, ItemNode);
       end;
-
-      ItemNode.text := Strings[I];
 
       ItemsNode.appendChild(ItemNode);
     end;
 
     StringsNode.appendChild(ItemsNode);
+  finally
+    Item.Free;
   end;
 
   if StringsNode.hasChildNodes then

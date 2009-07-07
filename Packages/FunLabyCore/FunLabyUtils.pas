@@ -426,6 +426,26 @@ type
   TFunLabyPersistentClass = class of TFunLabyPersistent;
 
   {*
+    Classe de base pour les objets persistents devant implémenter un interface
+    @author sjrd
+    @version 5.0
+  *}
+  TInterfacedFunLabyPersistent = class(TFunLabyPersistent, IInterface)
+  protected
+    FRefCount: Integer; /// Compteur de références
+
+    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
+  public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+    class function NewInstance: TObject; override;
+
+    property RefCount: Integer read FRefCount;
+  end;
+
+  {*
     Classe de base pour les collections persistentes de FunLabyrinthe
     @author sjrd
     @version 5.0
@@ -464,14 +484,6 @@ type
   end;
 
   {*
-    Type d'objet stocké dans une TStrings qui doit être chargée/sauvegardée
-    - sokNone : les objets ne sont pas stockés ;
-    - sokInteger : les objets sont stockés sous forme d'entiers ;
-    - sokComponent : les objets sont stockés comme composants.
-  *}
-  TStringsObjectKind = (sokNone, sokInteger, sokComponent);
-
-  {*
     Classe de base pour les objets lecteurs et écrivains FunLabyrinthe
     @author sjrd
     @version 5.0
@@ -494,7 +506,7 @@ type
       Component: TFunLabyComponent); virtual; abstract;
 
     procedure HandleStrings(const Name: string; Strings: TStrings;
-      ObjectKind: TStringsObjectKind); virtual; abstract;
+      ObjectType: PTypeInfo; HasData: Boolean); virtual; abstract;
 
     procedure EnumProperties;
 
@@ -508,19 +520,19 @@ type
     procedure DefinePublishedProperty(PropInfo: PPropInfo);
 
     procedure DefineProcProperty(const Name: string; PropType: PTypeInfo;
-      GetProc, SetProc: Pointer; HasData: Boolean);
+      GetProc, SetProc: Pointer; HasData: Boolean = True);
 
     procedure DefineFieldProcProperty(const Name: string; PropType: PTypeInfo;
-      GetField, SetProc: Pointer; HasData: Boolean);
+      GetField, SetProc: Pointer; HasData: Boolean = True);
 
     procedure DefineFieldProperty(const Name: string; PropType: PTypeInfo;
-      GetSetField: Pointer; HasData: Boolean);
+      GetSetField: Pointer; HasData: Boolean = True);
 
     procedure DefinePersistent(const Name: string;
       SubInstance: TFunLabyPersistent);
 
     procedure DefineStrings(const Name: string; Strings: TStrings;
-      ObjectKind: TStringsObjectKind = sokNone);
+      ObjectType: PTypeInfo = nil; HasData: Boolean = True);
 
     property Master: TMaster read FMaster;
     property Instance: TFunLabyPersistent read FInstance;
@@ -942,7 +954,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TPlayerMode = class(TInterfacedObject, IPlayerMode)
+  TPlayerMode = class(TInterfacedFunLabyPersistent, IPlayerMode)
   private
     FMaster: TMaster; /// Maître FunLabyrinthe
     FPlayer: TPlayer; /// Joueur lié à ce mode
@@ -1030,6 +1042,11 @@ type
     FActionKeyShift: TShiftState;  /// État des touches spéciales
     FActionMessagePtr: Pointer;    /// Pointeur sur le message pour l'action
 
+    function GetPluginListStr: string;
+    procedure SetPluginListStr(const Value: string);
+    function GetModeListStr: string;
+    procedure SetModeListStr(const Value: string);
+
     procedure GetPluginList(out PluginList: TPluginDynArray);
 
     procedure PrivDraw(Context: TDrawSquareContext); override;
@@ -1051,7 +1068,7 @@ type
     procedure SetAttribute(const AttrName: string; Value: Integer); virtual;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; AMap: TMap; const APosition: T3DPoint);
+      const AName: string);
     destructor Destroy; override;
 
     procedure Dispatch(var Msg); override;
@@ -2157,6 +2174,69 @@ begin
   end;
 end;
 
+{------------------------------------}
+{ TInterfacedFunLabyPersistent class }
+{------------------------------------}
+
+{ This implementation comes from System.TInterfacedObject. }
+
+{*
+  [@inheritDoc]
+*}
+function TInterfacedFunLabyPersistent.QueryInterface(const IID: TGUID;
+  out Obj): HResult;
+begin
+  if GetInterface(IID, Obj) then
+    Result := 0
+  else
+    Result := E_NOINTERFACE;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TInterfacedFunLabyPersistent._AddRef: Integer;
+begin
+  Result := InterlockedIncrement(FRefCount);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TInterfacedFunLabyPersistent._Release: Integer;
+begin
+  Result := InterlockedDecrement(FRefCount);
+  if Result = 0 then
+    Destroy;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TInterfacedFunLabyPersistent.AfterConstruction;
+begin
+  // Release the constructor's implicit refcount
+  InterlockedDecrement(FRefCount);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TInterfacedFunLabyPersistent.BeforeDestruction;
+begin
+  if RefCount <> 0 then
+    System.Error(reInvalidPtr);
+end;
+
+{*
+  [@inheritDoc]
+*}
+class function TInterfacedFunLabyPersistent.NewInstance: TObject;
+begin
+  Result := inherited NewInstance;
+  TInterfacedFunLabyPersistent(Result).FRefCount := 1;
+end;
+
 {--------------------------}
 { TFunLabyCollection class }
 {--------------------------}
@@ -2397,13 +2477,12 @@ begin
 
     if not (SubInstance is TFunLabyComponent) then
     begin
-      if IsStoredProp(Instance, PropInfo) then
-      begin
-        if SubInstance is TFunLabyPersistent then
-          DefinePersistent(PropInfo.Name, TFunLabyPersistent(SubInstance))
-        else if SubInstance is TStrings then
-          DefineStrings(PropInfo.Name, TStrings(SubInstance));
-      end;
+      if SubInstance is TFunLabyPersistent then
+        DefinePersistent(PropInfo.Name, TFunLabyPersistent(SubInstance))
+      else if SubInstance is TStrings then
+        DefineStrings(PropInfo.Name, TStrings(SubInstance), nil,
+          IsStoredProp(Instance, PropInfo));
+
       Exit;
     end;
   end;
@@ -2426,7 +2505,7 @@ end;
   @param HasData    Indique s'il y a des données à écrire
 *}
 procedure TFunLabyFiler.DefineProcProperty(const Name: string;
-  PropType: PTypeInfo; GetProc, SetProc: Pointer; HasData: Boolean);
+  PropType: PTypeInfo; GetProc, SetProc: Pointer; HasData: Boolean = True);
 var
   PropInfo: TPropInfo;
 begin
@@ -2451,7 +2530,7 @@ end;
   @param HasData    Indique s'il y a des données à écrire
 *}
 procedure TFunLabyFiler.DefineFieldProcProperty(const Name: string;
-  PropType: PTypeInfo; GetField, SetProc: Pointer; HasData: Boolean);
+  PropType: PTypeInfo; GetField, SetProc: Pointer; HasData: Boolean = True);
 var
   FieldOffset: Integer;
   FieldProc: Pointer;
@@ -2469,7 +2548,7 @@ end;
   @param HasData       Indique s'il y a des données à écrire
 *}
 procedure TFunLabyFiler.DefineFieldProperty(const Name: string;
-  PropType: PTypeInfo; GetSetField: Pointer; HasData: Boolean);
+  PropType: PTypeInfo; GetSetField: Pointer; HasData: Boolean = True);
 var
   FieldOffset: Integer;
   FieldProc: Pointer;
@@ -2499,12 +2578,16 @@ end;
   Définit une propriété de type TStrings
   @param Name         Nom de la propriété
   @param Strings      Liste de chaînes
-  @param ObjectKind   Type d'objet stocké
+  @param ObjectType   Type d'objet stocké (peut être nil)
+  @param HasData      Indique si la liste de chaîne contient des données
 *}
 procedure TFunLabyFiler.DefineStrings(const Name: string; Strings: TStrings;
-  ObjectKind: TStringsObjectKind);
+  ObjectType: PTypeInfo = nil; HasData: Boolean = True);
 begin
-  HandleStrings(Name, Strings, ObjectKind);
+  Assert((ObjectType = nil) or
+    (ObjectType.Kind in [tkInteger, tkChar, tkEnumeration, tkSet, tkClass]));
+
+  HandleStrings(Name, Strings, ObjectType, HasData);
 end;
 
 {-------------------}
@@ -3621,31 +3704,23 @@ end;
 
 {*
   Crée une instance de TPlayer
-  @param AMaster     Maître FunLabyrinthe
-  @param AID         ID du joueur
-  @param AName       Nom du joueur
-  @param AMap        Carte de départ
-  @param APosition   Position de départ
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du joueur
+  @param AName     Nom du joueur
 *}
 constructor TPlayer.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; AMap: TMap; const APosition: T3DPoint);
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
 
   FStaticDraw := False;
-  FMap := AMap;
-  FPosition := APosition;
-  FDirection := diNone;
   FMode := TLabyrinthPlayerMode.Create(Self);
   FModeStack := TInterfaceList.Create;
-  FShowCounter := 0;
   FColor := DefaultPlayerColor;
   FViewBorderSize := DefaultViewBorderSize;
   FPlugins := TObjectList.Create(False);
   FAttributes := THashedStringList.Create;
   TStringList(FAttributes).CaseSensitive := True;
-  FOnSendCommand := nil;
-  FPlayState := psPlaying;
 
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
 
@@ -3665,6 +3740,103 @@ begin
   FPlugins.Free;
   
   inherited;
+end;
+
+{*
+  Liste des plug-in attachés au joueur sous forme de chaîne
+  @return Liste des plug-in attachés au joueur sous forme de chaîne
+*}
+function TPlayer.GetPluginListStr: string;
+var
+  Plugins: TPluginDynArray;
+  I: Integer;
+begin
+  GetPluginList(Plugins);
+
+  if Length(Plugins) > 0 then
+  begin
+    for I := 0 to Length(Plugins)-1 do
+      Result := Result + Plugins[I].ID + ' ';
+    SetLength(Result, Length(Result)-1);
+  end;
+end;
+
+{*
+  Modifie la liste des plug-in attachés au joueur à partir d'une chaîne
+  @param Value   Liste des plug-in à attacher au joueur sous forme de chaîne
+*}
+procedure TPlayer.SetPluginListStr(const Value: string);
+var
+  PluginID, Remaining, Temp: string;
+begin
+  FLock.BeginWrite;
+  try
+    FPlugins.Clear;
+
+    Remaining := Value;
+    while Remaining <> '' do
+    begin
+      SplitToken(Remaining, ' ', PluginID, Temp);
+      Remaining := Temp;
+      FPlugins.Add(Master.Plugin[PluginID]);
+    end;
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+{*
+  Liste des modes attachés au joueur sous forme de chaîne
+  @return Liste des modes attachés au joueur sous forme de chaîne
+*}
+function TPlayer.GetModeListStr: string;
+var
+  I: Integer;
+begin
+  FModeStack.Lock;
+  try
+    for I := 0 to FModeStack.Count-1 do
+      Result := Result +
+        (FModeStack[I] as IPlayerMode).ModeClass.ClassName + ' ';
+
+    Result := Result + FMode.ModeClass.ClassName;
+  finally
+    FModeStack.Unlock;
+  end;
+end;
+
+{*
+  Modifie la liste des modes attachés au joueur à partir d'une chaîne
+  @param Value   Liste des modes à attacher au joueur sous forme de chaîne
+*}
+procedure TPlayer.SetModeListStr(const Value: string);
+var
+  ModeClassName, Remaining, Temp: string;
+  ModeClass: TPlayerModeClass;
+begin
+  FModeStack.Lock;
+  try
+    FModeStack.Clear;
+
+    Remaining := Value;
+    while Remaining <> '' do
+    begin
+      SplitToken(Remaining, ' ', ModeClassName, Temp);
+      Remaining := Temp;
+
+      ModeClass := TPlayerModeClass(FunLabyFindClass(ModeClassName));
+
+      FModeStack.Add(ModeClass.Create(Self));
+    end;
+
+    if FModeStack.Count > 0 then
+    begin
+      FMode := FModeStack.Last as IPlayerMode;
+      FModeStack.Delete(FModeStack.Count-1);
+    end;
+  finally
+    FModeStack.Unlock;
+  end;
 end;
 
 {*
@@ -3853,13 +4025,28 @@ procedure TPlayer.DefineProperties(Filer: TFunLabyFiler);
 begin
   inherited;
 
+  Filer.DefineFieldProperty('Map', TypeInfo(TMap), @FMap, FMap <> nil);
+
+  Filer.DefineFieldProperty('Position.X', TypeInfo(Integer),
+    @FPosition.X, FMap <> nil);
+  Filer.DefineFieldProperty('Position.Y', TypeInfo(Integer),
+    @FPosition.Y, FMap <> nil);
+  Filer.DefineFieldProperty('Position.Z', TypeInfo(Integer),
+    @FPosition.Z, FMap <> nil);
+
   Filer.DefineFieldProperty('ShowCounter', TypeInfo(Integer),
     @FShowCounter, FShowCounter <> 0);
 
   Filer.DefineFieldProperty('PlayState', TypeInfo(TPlayState),
     @FPlayState, PlayState <> psPlaying);
 
-  Filer.DefineStrings('Attributes', FAttributes, sokInteger);
+  Filer.DefineStrings('Attributes', FAttributes, TypeInfo(Integer));
+
+  Filer.DefineProcProperty('Plugins', TypeInfo(string),
+    @TPlayer.GetPluginListStr, @TPlayer.SetPluginListStr);
+
+  Filer.DefineProcProperty('Modes', TypeInfo(string),
+    @TPlayer.GetModeListStr, @TPlayer.SetModeListStr);
 end;
 
 {*
@@ -5306,6 +5493,9 @@ end;
 
 initialization
   Randomize;
+
+  FunLabyRegisterClass(TLabyrinthPlayerMode);
+
   with TMemIniFile.Create(Dir+fIniFileName) do
   try
     fFunLabyAppData :=

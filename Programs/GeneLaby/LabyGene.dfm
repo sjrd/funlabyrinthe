@@ -111,6 +111,10 @@ object FormPrincipale: TFormPrincipale
     end
     object TabSheet2: TTabSheet
       Caption = 'Avanc'#233
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label4: TLabel
         Left = 13
         Top = 72

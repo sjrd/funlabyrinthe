@@ -202,7 +202,7 @@ type
 
     procedure InvalidFormat;
 
-    procedure Load(ADocument: IInterface);
+    procedure Load(const ADocument: IInterface);
     procedure TestOpeningValidity;
 
     function GetUnitFileCount: Integer;
@@ -885,7 +885,7 @@ end;
   @param Document   Document XML DOM contenu du fichier
   @throws EFileError : Un fichier à charger n'existe pas ou n'est pas valide
 *}
-procedure TMasterFile.Load(ADocument: IInterface);
+procedure TMasterFile.Load(const ADocument: IInterface);
 
   function NullToEmptyStr(Value: Variant): Variant;
   begin
@@ -901,8 +901,8 @@ var
   I, J, MaxViewSize: Integer;
   ID, HRef, Name, MapID: string;
   FileType: TGUID;
-  Position: T3DPoint;
   Player: TPlayer;
+  Position: T3DPoint;
 begin
   { Don't localize strings in this method }
 
@@ -1014,22 +1014,20 @@ begin
           else
             Name := getAttribute('name');
 
-          with selectSingleNode('./position') as IXMLDOMElement do
-          begin
-            MapID := getAttribute('map');
-            Position.X := getAttribute('posx');
-            Position.Y := getAttribute('posy');
-            Position.Z := getAttribute('posz');
-          end;
+          Player := TPlayer.Create(Master, ID, Name);
 
-          Player := TPlayer.Create(Master, ID, Name,
-            Master.Map[MapID], Position);
-
-          with selectNodes('./plugins/plugin') do
+          // TODO Compatibility only: remove when no longer used
+          if selectSingleNode('./position') <> nil then
           begin
-            for J := 0 to length-1 do
-              with item[J] as IXMLDOMElement do
-                Player.AddPlugin(Master.Plugin[getAttribute('id')]);
+            with selectSingleNode('./position') as IXMLDOMElement do
+            begin
+              MapID := getAttribute('map');
+              Position.X := getAttribute('posx');
+              Position.Y := getAttribute('posy');
+              Position.Z := getAttribute('posz');
+            end;
+
+            Player.ChangePosition(Master.Map[MapID], Position);
           end;
         end;
       end;
@@ -1449,30 +1447,6 @@ begin
               Player := Document.createElement('player');
               Player.setAttribute('id', ID);
               Player.setAttribute('name', Name);
-
-              with Player do
-              begin
-                Element := Document.createElement('position');
-                Element.setAttribute('map', Map.ID);
-                Element.setAttribute('posx', Position.X);
-                Element.setAttribute('posy', Position.Y);
-                Element.setAttribute('posz', Position.Z);
-                appendChild(Element);
-
-                Element := Document.createElement('plugins');
-                with Element do
-                begin
-                  GetPluginIDs(Params);
-                  for J := 0 to Params.Count-1 do
-                  begin
-                    Param := Document.createElement('plugin');
-                    Param.setAttribute('id', Params[J]);
-                    appendChild(Param);
-                  end;
-                end;
-                appendChild(Element); // plugins
-              end;
-
               appendChild(Player);
             end;
           end;

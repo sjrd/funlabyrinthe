@@ -110,15 +110,18 @@ const {don't localize}
     '  <title>Labyrinthe généré</title>'#10+
     '  <description>Labyrinthe généré</description>'#10+
     '  <difficulty>Moyen</difficulty>'#10+
-    '  <author id="2">Jean-Paul Doeraene</author>'#10+
-    '  <master/>'#10+
+    '  <author>Générateur écrit par Jean-Paul Doeraene</author>'#10+
     '  <units><unit type="{B28D4F92-6C46-4F22-87F9-432165EDA4C6}" href="FunLabyBase.bpl"/></units>'#10+
     '  <maps><map id="MainMap" href="%s" maxviewsize="%d"/></maps>'#10+
-    '  <players>'#10+
-    '    <player id="Player">'#10+
-    '      <position map="MainMap" posx="%d" posy="%d" posz="%d"/>'#10+
-    '    </player>'#10+
-    '  </players>'#10+
+    '  <players><player id="Player" name="Joueur"/></players>'#10+
+    '  <master>'#10+
+    '    <component name="Player">'#10+
+    '      <property name="Map" type="tkClass">MainMap</property>'#10+
+    '      <property name="Position.X" type="tkInteger">%d</property>'#10+
+    '      <property name="Position.Y" type="tkInteger">%d</property>'#10+
+    '      <property name="Position.Z" type="tkInteger">%d</property>'#10+
+    '    </component>'#10+
+    '  </master>'#10+
     '</funlabyrinthe>'#10;
 
   /// Représentation textuelle de la version actuelle

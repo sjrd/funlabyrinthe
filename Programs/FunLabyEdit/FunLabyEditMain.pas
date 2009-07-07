@@ -479,8 +479,7 @@ begin
     MasterFile := TMasterFile.CreateNew(SepiRoot, UnitFileDescs);
     if TFormFileProperties.ManageProperties(MasterFile) then
     begin
-      TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName,
-        nil, Point3D(0, 0, 0));
+      TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName);
       LoadFile;
     end else
     begin
