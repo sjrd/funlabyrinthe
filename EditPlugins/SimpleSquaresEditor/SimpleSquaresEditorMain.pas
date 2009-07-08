@@ -336,12 +336,7 @@ begin
     raise EInOutError.CreateFmt(SFOpenError, [SourceFile.FileName]);
 
   SimpleSquares.Clear;
-  with TFunLabyXMLReader.Create(nil, FileContents) do
-  try
-    ReadNode(Document.documentElement);
-  finally
-    Free;
-  end;
+  TFunLabyXMLReader.ReadPersistent(FileContents, Document.documentElement);
 
   for I := 0 to SimpleSquares.Count-1 do
     UpdateButton(SimpleSquares[I]);
@@ -367,12 +362,7 @@ begin
   FileContentsNode := Document.createElement('simplesquares');
   FileContentsNode.setAttribute('version', CurrentVersion);
 
-  with TFunLabyXMLWriter.Create(nil, FileContents) do
-  try
-    WriteNode(FileContentsNode);
-  finally
-    Free;
-  end;
+  TFunLabyXMLWriter.WritePersistent(FileContents, FileContentsNode);
 
   Document.documentElement := FileContentsNode;
 

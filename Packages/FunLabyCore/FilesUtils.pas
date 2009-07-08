@@ -179,7 +179,7 @@ type
   *}
   TMasterFile = class
   private
-    FSepiRoot: TSepiRoot; /// Meta-racine Sepi
+    FSepiRoot: TSepiRoot; /// Racine Sepi
 
     FFileName: TFileName; /// Nom du fichier
     FMode: TFileMode;     /// Mode d'ouverture du fichier
@@ -1034,7 +1034,7 @@ begin
     end;
 
     // Chargement des objets persistents
-    TFunLabyXMLReader.ReadMaster(Master,
+    TFunLabyXMLReader.ReadPersistent(Master,
       selectSingleNode('./master') as IXMLDOMElement);
   end;
 end;
@@ -1380,6 +1380,7 @@ begin
             Element.setAttribute('href', HRef);
 
             with Element do
+            begin
               for J := 0 to Length(Params)-1 do
               begin
                 Param := Document.createElement('param');
@@ -1387,6 +1388,7 @@ begin
                 Param.setAttribute('value', Params[J].Value);
                 appendChild(Param);
               end;
+            end;
 
             appendChild(Element); // unit
           end;
@@ -1458,7 +1460,7 @@ begin
 
       // Enregistrement des objets persistents
       MasterNode := Document.createElement('master');
-      TFunLabyXMLWriter.WriteMaster(Master, MasterNode);
+      TFunLabyXMLWriter.WritePersistent(Master, MasterNode);
       appendChild(MasterNode);
     end;
 

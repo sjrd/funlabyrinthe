@@ -18,7 +18,7 @@ type
     @author sjrd
     @version 1.0
   *}
-  TFunLabyXMLReader = class(TFunLabyFiler)
+  TFunLabyXMLReader = class(TFunLabyReader)
   private
     FNode: IXMLDOMElement; /// Noeud correspondant à cette instance
   protected
@@ -42,7 +42,8 @@ type
   public
     procedure ReadNode(const ANode: IXMLDOMElement);
 
-    class procedure ReadMaster(Master: TMaster; const Node: IXMLDOMElement);
+    class procedure ReadPersistent(AInstance: TFunLabyPersistent;
+      const ANode: IXMLDOMElement);
 
     property Node: IXMLDOMElement read FNode;
   end;
@@ -52,7 +53,7 @@ type
     @author sjrd
     @version 1.0
   *}
-  TFunLabyXMLWriter = class(TFunLabyFiler)
+  TFunLabyXMLWriter = class(TFunLabyWriter)
   private
     FNode: IXMLDOMElement; /// Noeud correspondant à cette instance
   protected
@@ -77,7 +78,8 @@ type
   public
     procedure WriteNode(const ANode: IXMLDOMElement);
 
-    class procedure WriteMaster(Master: TMaster; const Node: IXMLDOMElement);
+    class procedure WritePersistent(AInstance: TFunLabyPersistent;
+      const ANode: IXMLDOMElement);
 
     property Node: IXMLDOMElement read FNode;
   end;
@@ -174,7 +176,7 @@ procedure TFunLabyXMLReader.ReadProperties(SubInstance: TFunLabyPersistent;
 var
   SubReader: TFunLabyXMLReader;
 begin
-  SubReader := TFunLabyXMLReader.Create(Master, SubInstance);
+  SubReader := TFunLabyXMLReader.Create(SubInstance, Self);
   try
     SubReader.ReadNode(InstanceNode);
   finally
@@ -347,16 +349,14 @@ begin
 end;
 
 {*
-  Lit les données persistentes d'un maître FunLabyrinthe depuis un noeud XML
-  @param Master   Maître FunLabyrinthe
-  @param Node     Noeud à lire
+  Lit un objet persistant depuis un noeud XML
+  @param AInstance   Instance à lire
+  @param Node        Noeud à lire
 *}
-class procedure TFunLabyXMLReader.ReadMaster(Master: TMaster;
-  const Node: IXMLDOMElement);
-var
-  ANode: IXMLDOMElement absolute Node;
+class procedure TFunLabyXMLReader.ReadPersistent(AInstance: TFunLabyPersistent;
+  const ANode: IXMLDOMElement);
 begin
-  with Create(Master, Master) do
+  with Create(AInstance) do
   try
     ReadNode(ANode);
   finally
@@ -419,7 +419,7 @@ procedure TFunLabyXMLWriter.WriteProperties(SubInstance: TFunLabyPersistent;
 var
   SubWriter: TFunLabyXMLWriter;
 begin
-  SubWriter := TFunLabyXMLWriter.Create(Master, SubInstance);
+  SubWriter := TFunLabyXMLWriter.Create(SubInstance, Self);
   try
     SubWriter.WriteNode(InstanceNode);
   finally
@@ -604,16 +604,14 @@ begin
 end;
 
 {*
-  Écrit les données persistentes d'un maître FunLabyrinthe depuis un noeud XML
-  @param Master   Maître FunLabyrinthe
-  @param Node     Noeud à lire
+  Écrit un objet persistant dans un noeud XML
+  @param AInstance   Instance à écrire
+  @param Node        Noeud à écrire
 *}
-class procedure TFunLabyXMLWriter.WriteMaster(Master: TMaster;
-  const Node: IXMLDOMElement);
-var
-  ANode: IXMLDOMElement absolute Node;
+class procedure TFunLabyXMLWriter.WritePersistent(AInstance: TFunLabyPersistent;
+  const ANode: IXMLDOMElement);
 begin
-  with Create(Master, Master) do
+  with Create(AInstance) do
   try
     WriteNode(ANode);
   finally

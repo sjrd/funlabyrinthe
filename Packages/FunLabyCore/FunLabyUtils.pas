@@ -408,6 +408,18 @@ type
     property GoOnMoving: Boolean read FGoOnMoving write FGoOnMoving;
   end;
 
+  {*
+    Élément de l'état d'un objet persistant
+    - psCreating : l'objet est en train d'être construit
+    - psDestroying : l'objet est en train d'être détruit
+    - psReading : l'objet est en train d'être lu depuis un filer
+    - psWriting : l'objet est en train d'être écrit dans un filer
+  *}
+  TPersistentStateItem = (psCreating, psDestroying, psReading, psWriting);
+
+  /// État d'un objet persistant
+  TPersistentState = set of TPersistentStateItem;
+
   {$M+}
 
   {*
@@ -416,8 +428,20 @@ type
     @version 5.0
   *}
   TFunLabyPersistent = class(TObject)
+  private
+    FPersistentState: TPersistentState; /// État
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); virtual;
+
+    procedure BeginState(State: TPersistentState); virtual;
+    procedure EndState(State: TPersistentState); virtual;
+
+    property PersistentState: TPersistentState
+      read FPersistentState write FPersistentState;
+  public
+    class function NewInstance: TObject; override;
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
   end;
 
   {$M-}
@@ -490,6 +514,7 @@ type
   *}
   TFunLabyFiler = class(TObject)
   private
+    FOwner: TFunLabyFiler;         /// Filer propriétaire (peut être nil)
     FMaster: TMaster;              /// Maître FunLabyrinthe
     FInstance: TFunLabyPersistent; /// Instance traitée par ce filer
   protected
@@ -509,13 +534,16 @@ type
       ObjectType: PTypeInfo; HasData: Boolean); virtual; abstract;
 
     procedure EnumProperties;
+    procedure InstanceBeginState(State: TPersistentState);
+    procedure InstanceEndState(State: TPersistentState);
 
     function HasPlayerData(Component: TFunLabyComponent;
       Player: TPlayer): Boolean;
     function GetPlayerData(Component: TFunLabyComponent;
       Player: TPlayer): TPlayerData;
   public
-    constructor Create(AMaster: TMaster; AInstance: TFunLabyPersistent);
+    constructor Create(AInstance: TFunLabyPersistent;
+      AOwner: TFunLabyFiler = nil);
 
     procedure DefinePublishedProperty(PropInfo: PPropInfo);
 
@@ -534,8 +562,33 @@ type
     procedure DefineStrings(const Name: string; Strings: TStrings;
       ObjectType: PTypeInfo = nil; HasData: Boolean = True);
 
+    property Owner: TFunLabyFiler read FOwner;
     property Master: TMaster read FMaster;
     property Instance: TFunLabyPersistent read FInstance;
+  end;
+
+  {*
+    Classe de base pour les lecteurs FunLabyrinthe
+    @author sjrd
+    @version 5.0
+  *}
+  TFunLabyReader = class(TFunLabyFiler)
+  public
+    constructor Create(AInstance: TFunLabyPersistent;
+      AOwner: TFunLabyReader = nil);
+    destructor Destroy; override;
+  end;
+
+  {*
+    Classe de base pour les écrivains FunLabyrinthe
+    @author sjrd
+    @version 5.0
+  *}
+  TFunLabyWriter = class(TFunLabyFiler)
+  public
+    constructor Create(AInstance: TFunLabyPersistent;
+      AOwner: TFunLabyWriter = nil);
+    destructor Destroy; override;
   end;
 
   {*
@@ -2174,6 +2227,51 @@ begin
   end;
 end;
 
+{*
+  Début d'un état
+  @param State   État qui commence
+*}
+procedure TFunLabyPersistent.BeginState(State: TPersistentState);
+begin
+  FPersistentState := FPersistentState + State;
+end;
+
+{*
+  Fin d'un état
+  @param State   État qui se termine
+*}
+procedure TFunLabyPersistent.EndState(State: TPersistentState);
+begin
+  FPersistentState := FPersistentState - State;
+end;
+
+{*
+  [@inheritDoc]
+*}
+class function TFunLabyPersistent.NewInstance: TObject;
+begin
+  Result := inherited NewInstance;
+  TFunLabyPersistent(Result).FPersistentState := [psCreating];
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyPersistent.AfterConstruction;
+begin
+  inherited;
+  EndState([psCreating]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyPersistent.BeforeDestruction;
+begin
+  inherited;
+  BeginState([psDestroying]);
+end;
+
 {------------------------------------}
 { TInterfacedFunLabyPersistent class }
 {------------------------------------}
@@ -2417,14 +2515,20 @@ end;
 {*
   Crée un filer
   @param AInstance   Instance à traiter
+  @param AOwner      Filer propriétaire
 *}
-constructor TFunLabyFiler.Create(AMaster: TMaster;
-  AInstance: TFunLabyPersistent);
+constructor TFunLabyFiler.Create(AInstance: TFunLabyPersistent;
+  AOwner: TFunLabyFiler = nil);
 begin
   inherited Create;
 
-  FMaster := AMaster;
+  FOwner := AOwner;
   FInstance := AInstance;
+
+  if Instance is TMaster then
+    FMaster := TMaster(Instance)
+  else if Owner <> nil then
+    FMaster := Owner.Master;
 end;
 
 {*
@@ -2433,6 +2537,24 @@ end;
 procedure TFunLabyFiler.EnumProperties;
 begin
   Instance.DefineProperties(Self);
+end;
+
+{*
+  Débute un état de l'instance
+  @param State   État à commencer
+*}
+procedure TFunLabyFiler.InstanceBeginState(State: TPersistentState);
+begin
+  Instance.BeginState(State);
+end;
+
+{*
+  Termine un état de l'instance
+  @param State   État à terminer
+*}
+procedure TFunLabyFiler.InstanceEndState(State: TPersistentState);
+begin
+  Instance.EndState(State);
 end;
 
 {*
@@ -2588,6 +2710,60 @@ begin
     (ObjectType.Kind in [tkInteger, tkChar, tkEnumeration, tkSet, tkClass]));
 
   HandleStrings(Name, Strings, ObjectType, HasData);
+end;
+
+{----------------------}
+{ TFunLabyReader class }
+{----------------------}
+
+{*
+  Crée un objet lecteur FunLabyrinthe
+  @param Instance   Instance à lire
+  @param AOwner     Lecteur propriétaire (peut être nil)
+*}
+constructor TFunLabyReader.Create(AInstance: TFunLabyPersistent;
+  AOwner: TFunLabyReader);
+begin
+  inherited Create(AInstance, AOwner);
+
+  Instance.BeginState([psReading]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TFunLabyReader.Destroy;
+begin
+  Instance.EndState([psReading]);
+
+  inherited;
+end;
+
+{----------------------}
+{ TFunLabyWriter class }
+{----------------------}
+
+{*
+  Crée un objet écrivain FunLabyrinthe
+  @param Instance   Instance à écrire
+  @param AOwner     Écrivain propriétaire (peut être nil)
+*}
+constructor TFunLabyWriter.Create(AInstance: TFunLabyPersistent;
+  AOwner: TFunLabyWriter);
+begin
+  inherited Create(AInstance, AOwner);
+
+  Instance.BeginState([psWriting]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TFunLabyWriter.Destroy;
+begin
+  Instance.EndState([psWriting]);
+
+  inherited;
 end;
 
 {-------------------}
