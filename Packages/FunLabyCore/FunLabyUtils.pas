@@ -533,6 +533,9 @@ type
     procedure HandleStrings(const Name: string; Strings: TStrings;
       ObjectType: PTypeInfo; HasData: Boolean); virtual; abstract;
 
+    procedure HandleBinaryProperty(const Name: string;
+      ReadProc, WriteProc: TStreamProc; HasData: Boolean); virtual; abstract;
+
     procedure EnumProperties;
     procedure InstanceBeginState(State: TPersistentState);
     procedure InstanceEndState(State: TPersistentState);
@@ -561,6 +564,9 @@ type
 
     procedure DefineStrings(const Name: string; Strings: TStrings;
       ObjectType: PTypeInfo = nil; HasData: Boolean = True);
+
+    procedure DefineBinaryProperty(const Name: string;
+      ReadProc, WriteProc: TStreamProc; HasData: Boolean = True);
 
     property Owner: TFunLabyFiler read FOwner;
     property Master: TMaster read FMaster;
@@ -2710,6 +2716,19 @@ begin
     (ObjectType.Kind in [tkInteger, tkChar, tkEnumeration, tkSet, tkClass]));
 
   HandleStrings(Name, Strings, ObjectType, HasData);
+end;
+
+{*
+  Définit une propriété binaire
+  @param Name        Nom de la propriété
+  @param ReadProc    Méthode de call-back à utiliser pour lire les données
+  @param WriteProc   Méthode de call-back à utiliser pour écrire les données
+  @param HasData     Indique s'il y a des données à écrire
+*}
+procedure TFunLabyFiler.DefineBinaryProperty(const Name: string;
+  ReadProc, WriteProc: TStreamProc; HasData: Boolean = True);
+begin
+  HandleBinaryProperty(Name, ReadProc, WriteProc, HasData);
 end;
 
 {----------------------}

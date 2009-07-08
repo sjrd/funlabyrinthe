@@ -8,7 +8,7 @@ uses
   FilesUtils, UnitFiles, SourceEditors, SdDialogs, Buttons, StdCtrls, ExtCtrls,
   ImgList, CategoryButtons, ExtDlgs, Contnrs, FunLabyUtils, SimpleSquareEdit,
   SimpleSquaresUtils, SimpleSquareNew, FunLabyEditOTA, SepiFunDelphiCompiler,
-  FunLabySourceEditorFrame, ScUtils, FunLabyFilers, msxml, RTLConsts, ActiveX;
+  FunLabySourceEditorFrame, ScUtils, FunLabyFilers, msxml, RTLConsts, ScXML;
 
 resourcestring
   SimpleSquaresFilter = 'Définitions de cases simples (*.ssq)|*.ssq';
@@ -330,10 +330,7 @@ var
 begin
   inherited;
 
-  Document := CoDOMDocument.Create;
-  Document.async := False;
-  if not Document.load(SourceFile.FileName) then
-    raise EInOutError.CreateFmt(SFOpenError, [SourceFile.FileName]);
+  Document := LoadXMLDocumentFromFile(SourceFile.FileName);
 
   SimpleSquares.Clear;
   TFunLabyXMLReader.ReadPersistent(FileContents, Document.documentElement);
@@ -348,11 +345,7 @@ end;
   Enregistre le fichier source
 *}
 function TFrameSimpleSquaresEditor.SaveFile: Boolean;
-const
-  XMLHeader: string = '<?xml version="1.0" encoding="UTF-8"?>'#13#10;
 var
-  Stream: TStream;
-  StreamAdapter: IStream;
   Document: IXMLDOMDocument;
   FileContentsNode: IXMLDOMElement;
 begin
@@ -366,17 +359,7 @@ begin
 
   Document.documentElement := FileContentsNode;
 
-  Stream := TFileStream.Create(SourceFile.FileName,
-    fmCreate or fmShareExclusive);
-  try
-    StreamAdapter := TStreamAdapter.Create(Stream);
-
-    Stream.WriteBuffer(XMLHeader[1], Length(XMLHeader));
-    Document.save(StreamAdapter);
-  finally
-    StreamAdapter := nil;
-    Stream.Free;
-  end;
+  SaveXMLDocumentToFile(Document, SourceFile.FileName);
 
   Result := inherited SaveFile;
 end;

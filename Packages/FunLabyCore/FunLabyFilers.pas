@@ -10,7 +10,7 @@ unit FunLabyFilers;
 interface
 
 uses
-  SysUtils, Classes, TypInfo, Variants, msxml, ScTypInfo, FunLabyUtils;
+  SysUtils, Classes, TypInfo, Variants, msxml, ScTypInfo, ScXML, FunLabyUtils;
 
 type
   {*
@@ -39,6 +39,9 @@ type
 
     procedure HandleStrings(const Name: string; Strings: TStrings;
       ObjectType: PTypeInfo; HasData: Boolean); override;
+
+    procedure HandleBinaryProperty(const Name: string;
+      ReadProc, WriteProc: TStreamProc; HasData: Boolean); override;
   public
     procedure ReadNode(const ANode: IXMLDOMElement);
 
@@ -75,6 +78,9 @@ type
 
     procedure HandleStrings(const Name: string; Strings: TStrings;
       ObjectType: PTypeInfo; HasData: Boolean); override;
+
+    procedure HandleBinaryProperty(const Name: string;
+      ReadProc, WriteProc: TStreamProc; HasData: Boolean); override;
   public
     procedure WriteNode(const ANode: IXMLDOMElement);
 
@@ -339,6 +345,38 @@ begin
 end;
 
 {*
+  [@inheritDoc]
+*}
+procedure TFunLabyXMLReader.HandleBinaryProperty(const Name: string;
+  ReadProc, WriteProc: TStreamProc; HasData: Boolean);
+var
+  PropNode: IXMLDOMElement;
+  EncodedStream: TStringStream;
+  Stream: TMemoryStream;
+begin
+  PropNode := Node.selectSingleNode(
+    Format('property[@name="%s"][@type="tkBinary"]', [Name])) as IXMLDOMElement;
+
+  if PropNode = nil then
+    Exit;
+
+  EncodedStream := nil;
+  Stream := nil;
+  try
+    EncodedStream := TStringStream.Create(PropNode.text);
+    Stream := TMemoryStream.Create;
+
+    Base64Decode(EncodedStream, Stream);
+
+    Stream.Seek(0, soFromBeginning);
+    ReadProc(Stream);
+  finally
+    Stream.Free;
+    EncodedStream.Free;
+  end;
+end;
+
+{*
   Lit un noeud
   @param ANode   Noeud à lire
 *}
@@ -591,6 +629,43 @@ begin
 
   if StringsNode.hasChildNodes then
     Node.appendChild(StringsNode);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyXMLWriter.HandleBinaryProperty(const Name: string;
+  ReadProc, WriteProc: TStreamProc; HasData: Boolean);
+var
+  PropNode: IXMLDOMElement;
+  EncodedStream: TStringStream;
+  Stream: TMemoryStream;
+begin
+  if not HasData then
+    Exit;
+
+  PropNode := Node.ownerDocument.createElement('property');
+  PropNode.setAttribute('name', Name);
+  PropNode.setAttribute('type', 'tkBinary');
+
+  EncodedStream := nil;
+  Stream := nil;
+  try
+    EncodedStream := TStringStream.Create('');
+    Stream := TMemoryStream.Create;
+
+    WriteProc(Stream);
+
+    Stream.Seek(0, soFromBeginning);
+    Base64Encode(Stream, EncodedStream);
+
+    PropNode.text := EncodedStream.DataString;
+  finally
+    Stream.Free;
+    EncodedStream.Free;
+  end;
+
+  Node.appendChild(PropNode);
 end;
 
 {*

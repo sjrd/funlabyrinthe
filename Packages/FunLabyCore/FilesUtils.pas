@@ -11,7 +11,7 @@ unit FilesUtils;
 interface
 
 uses
-  SysUtils, Classes, Contnrs, ScUtils, ScLists, SepiReflectionCore,
+  SysUtils, Classes, Contnrs, ScUtils, ScLists, ScXML, SepiReflectionCore,
   FunLabyUtils, FunLabyFilers;
 
 resourcestring
@@ -710,8 +710,6 @@ end;
 *}
 constructor TMasterFile.Create(ASepiRoot: TSepiRoot;
   const AFileName: TFileName; AMode: TFileMode);
-var
-  Document: IXMLDOMDocument;
 begin
   inherited Create;
 
@@ -736,12 +734,7 @@ begin
   FSourceFiles := TObjectList.Create;
   FMapFiles := TObjectList.Create;
 
-  Document := CoDOMDocument.Create;
-  Document.async := False;
-  if not Document.load(FFileName) then
-    InvalidFormat;
-
-  Load(Document);
+  Load(LoadXMLDocumentFromFile(FFileName));
   TestOpeningValidity;
 end;
 
@@ -1290,8 +1283,6 @@ end;
 *}
 procedure TMasterFile.Save(const UnitFileDescs: TUnitFileDescs;
   const AFileName: TFileName = '');
-const
-  XMLHeader: string = '<?xml version="1.0" encoding="UTF-8"?>'#13#10;
 var
   Document: IXMLDOMDocument;
   FunLabyrinthe, MasterNode, Units, Sources, Maps, Players: IXMLDOMElement;
@@ -1301,8 +1292,6 @@ var
   MapHRef: string;
   FileName, MapFileName: TFileName;
   I, J: Integer;
-  DestStream: TStream;
-  DestStreamAdapter: IStream;
 begin
   { Don't localize strings in this method }
 
@@ -1467,16 +1456,7 @@ begin
     appendChild(FunLabyrinthe);
   end;
 
-  DestStream := TFileStream.Create(FileName, fmCreate or fmShareExclusive);
-  try
-    DestStreamAdapter := TStreamAdapter.Create(DestStream);
-
-    DestStream.WriteBuffer(XMLHeader[1], Length(XMLHeader));
-    Document.save(DestStreamAdapter);
-  finally
-    DestStreamAdapter := nil;
-    DestStream.Free;
-  end;
+  SaveXMLDocumentToFile(Document, FileName);
 
   FFileName := FileName;
   if Mode = fmPlay then
