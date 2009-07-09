@@ -160,6 +160,8 @@ Source: "..\FunLaby.exe";           DestDir: "{app}"; Components: programs\funla
 Source: "..\GeneLaby.exe";          DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
 Source: "..\FunLabyEdit.exe";       DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
 
+Source: "..\EditPlugins\*.bpl"; DestDir: "{app}\EditPlugins"; Components: programs\runtime; Flags: ignoreversion
+
 Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile
 
 Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
@@ -208,6 +210,8 @@ const
     'Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\';
 
   InfoBitmapFileName = 'Info.bmp';
+
+  DoNotImportLabsFile = 'DoNotImportLabs.txt';
 
 var
   InfoBitmap: TBitmap;
@@ -588,9 +592,6 @@ begin
       
   Result := True;
 end;
-
-const
-  DoNotImportLabsFile = 'DoNotImportLabs.txt';
 
 procedure PageSelectImportsShow;
 var
