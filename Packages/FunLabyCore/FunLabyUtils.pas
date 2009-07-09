@@ -5802,7 +5802,8 @@ initialization
     fUnitsDir := fFunLabyAppData + fUnitsDir;
     fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
     fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
-    fEditPluginDir := fFunLabyAppData + fEditPluginDir;
+
+    fEditPluginDir := Dir + fEditPluginDir;
 
     fSquareFileName := fSquaresDir+fSquareFileName;
   finally

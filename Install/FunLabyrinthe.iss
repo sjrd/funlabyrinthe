@@ -171,6 +171,7 @@ Source: "{code:OldVersionInfo|installdir}\Cases\*"; DestDir: "{code:AppData}\Squ
 
 Source: "Images\*"; Flags: dontcopy
 Source: "Import4x.dll"; Flags: dontcopy
+Source: "DoNotImportLabs.txt"; Flags: dontcopy
 
 [INI]
 Filename: "{app}\FunLabyrinthe.ini"; Section: "Directories"; Key: "AppData"; String: "{code:AppData}"
@@ -451,7 +452,7 @@ begin
 
   EditFunLabyAppData := AddDirEdit(SelectDirPage, Bottom,
     GetPreviousData('AppData',
-    ExpandConstant('{commonappdata}\SJRDoeraene\FunLabyrinthe\')),
+    ExpandConstant('{commondocs}\FunLabyrinthe\')),
     ExpandConstants('{cm:AppDataSelectDirPrompt}'));
 end;
 
@@ -567,15 +568,44 @@ begin
   end;
 end;
 
+function CanImportLab(const AFileName: string;
+  DoNotImportLabs: TStrings): Boolean;
+var
+  FileName, Exclude: string;
+  I: Integer;
+begin
+  FileName := AnsiLowercase(Trim(ChangeFileExt(AFileName, '')));
+  
+  I := Pos('(', FileName);
+  if I > 0 then
+    FileName := Trim(Copy(FileName, 1, I-1));
+    
+  Result := False;
+
+  for I := 0 to DoNotImportLabs.Count-1 do
+    if FileName = AnsiLowercase(DoNotImportLabs[I]) then
+      Exit;
+      
+  Result := True;
+end;
+
+const
+  DoNotImportLabsFile = 'DoNotImportLabs.txt';
+
 procedure PageSelectImportsShow;
 var
-  OldUnchecked: TStrings;
+  DoNotImportLabs, OldUnchecked: TStrings;
   I: Integer;
   FindRec: TFindRec;
   FileName: string;
 begin
+  DoNotImportLabs := nil;
   OldUnchecked := TStringList.Create;
   try
+    DoNotImportLabs := TStringList.Create;
+    ExtractTemporaryFile(DoNotImportLabsFile);
+    DoNotImportLabs.LoadFromFile(ExpandConstant('{tmp}\'+DoNotImportLabsFile));
+  
     with CheckListBoxImports do
       for I := 0 to Items.Count-1 do
         if not Checked[I] then
@@ -583,15 +613,18 @@ begin
 
     CheckListBoxImports.Items.Clear;
     if FindFirst(ImportDir + 'Labyrinthes\*.lab', FindRec) then
+    begin
       try
         repeat
           FileName := FindRec.Name;
-          CheckListBoxImports.AddCheckBox(FileName, '', 0,
-            OldUnchecked.IndexOf(FileName) < 0, True, False, False, nil);
+          if CanImportLab(FileName, DoNotImportLabs) then
+            CheckListBoxImports.AddCheckBox(FileName, '', 0,
+              OldUnchecked.IndexOf(FileName) < 0, True, False, False, nil);
         until not FindNext(FindRec);
       finally
         FindClose(FindRec);
       end;
+    end;
   finally
     OldUnchecked.Free;
   end;

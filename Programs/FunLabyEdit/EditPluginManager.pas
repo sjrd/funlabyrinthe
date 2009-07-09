@@ -8,7 +8,7 @@ unit EditPluginManager;
 interface
 
 uses
-  SysUtils, FunLabyUtils;
+  Windows, SysUtils, FunLabyUtils;
 
 var
   /// Handles de modules des plug-in de l'éditeur chargés
@@ -23,24 +23,33 @@ procedure LoadPlugins;
 const
   AllocBy = 16;
 var
+  OldCurrentDir: string;
   SearchRec: TSearchRec;
   Index: Integer;
 begin
   Index := 0;
 
-  if FindFirst(fEditPluginDir+'*.bpl', faAnyFile, SearchRec) = 0 then
-  try
-    repeat
-      if Index >= Length(EditPluginModules) then
-        SetLength(EditPluginModules, Index+AllocBy);
+  SetLength(OldCurrentDir, GetCurrentDirectory(0, nil)-1);
+  GetCurrentDirectory(Length(OldCurrentDir)+1, PChar(OldCurrentDir));
 
-      EditPluginModules[Index] := LoadPackage(fEditPluginDir+SearchRec.Name);
-      if EditPluginModules[Index] <> 0 then
-        Inc(Index);
-    until FindNext(SearchRec) <> 0;
+  SetCurrentDirectory(PChar(fEditPluginDir));
+  try
+    if FindFirst(fEditPluginDir+'*.bpl', faAnyFile, SearchRec) = 0 then
+    try
+      repeat
+        if Index >= Length(EditPluginModules) then
+          SetLength(EditPluginModules, Index+AllocBy);
+
+        EditPluginModules[Index] := LoadPackage(fEditPluginDir+SearchRec.Name);
+        if EditPluginModules[Index] <> 0 then
+          Inc(Index);
+      until FindNext(SearchRec) <> 0;
+    finally
+      FindClose(SearchRec);
+      SetLength(EditPluginModules, Index);
+    end;
   finally
-    FindClose(SearchRec);
-    SetLength(EditPluginModules, Index);
+    SetCurrentDirectory(PChar(OldCurrentDir));
   end;
 end;
 

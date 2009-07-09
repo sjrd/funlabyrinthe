@@ -6,7 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-    <DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Application Data\SJRDoeraene\FunLabyrinthe\EditPlugins\FunLabyEditPluginUtils.bpl</DCC_DependencyCheckOutputName>
+    <DCC_DependencyCheckOutputName>..\FunLabyEditPluginUtils.bpl</DCC_DependencyCheckOutputName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Version>7.0</Version>
@@ -19,7 +19,7 @@
     <DCC_COMPARING_SIGNED_UNSIGNED>False</DCC_COMPARING_SIGNED_UNSIGNED>
     <DCC_COMBINING_SIGNED_UNSIGNED>False</DCC_COMBINING_SIGNED_UNSIGNED>
     <DCC_DUPLICATE_CTOR_DTOR>False</DCC_DUPLICATE_CTOR_DTOR>
-    <DCC_BplOutput>C:\Documents and Settings\All Users\Application Data\SJRDoeraene\FunLabyrinthe\EditPlugins</DCC_BplOutput>
+    <DCC_BplOutput>.\..</DCC_BplOutput>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Version>7.0</Version>
@@ -28,29 +28,13 @@
     <DCC_COMPARING_SIGNED_UNSIGNED>False</DCC_COMPARING_SIGNED_UNSIGNED>
     <DCC_COMBINING_SIGNED_UNSIGNED>False</DCC_COMBINING_SIGNED_UNSIGNED>
     <DCC_DUPLICATE_CTOR_DTOR>False</DCC_DUPLICATE_CTOR_DTOR>
-    <DCC_BplOutput>C:\Documents and Settings\All Users\Application Data\SJRDoeraene\FunLabyrinthe\EditPlugins</DCC_BplOutput>
+    <DCC_BplOutput>.\..</DCC_BplOutput>
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>
     <Borland.ProjectType>Package</Borland.ProjectType>
     <BorlandProject>
 <BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><Package_Options><Package_Options Name="ImplicitBuild">False</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">True</Package_Options><Package_Options Name="PackageDescription">FunLabyEdit plugin utilities</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">5</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">2060</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="FileDescription">FunLabyEdit plugin utilities</VersionInfoKeys><VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName">FunLabyEditPluginUtils</VersionInfoKeys><VersionInfoKeys Name="LegalCopyright">Copyright (c) 2000-2009 SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename">FunLabyEditPluginUtils.bpl</VersionInfoKeys><VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys><VersionInfoKeys Name="ProductVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Excluded_Packages>
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       
       
       
@@ -82,19 +66,19 @@
     <DelphiCompile Include="FunLabyEditPluginUtils.dpk">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\FunLabyCore.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\FunLabyEditPlugin.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\rtl.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SCL110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SDL110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiCore110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiInterpreter110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiReflection110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SVCL110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SynEdit_R2007.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\vcl.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\VclSmp.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\vclx.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\FunLabyCore.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\FunLabyEditPlugin.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\rtl.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\SCL110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\SDL110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\SepiCore110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\SepiInterpreter110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\SepiReflection110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\SVCL110.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\SynEdit_R2007.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\vcl.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\VclSmp.dcp" />
+    <DCCReference Include="..\..\UnitPackages\Compatibility4x\vclx.dcp" />
     <DCCReference Include="FunLabyEdit.pas" />
     <DCCReference Include="FunLabySourceEditorFrame.pas" />
     <DCCReference Include="FunLabySourceSynEditEditorFrame.pas" />

@@ -34,6 +34,7 @@ type
     FHRef: string;            /// HRef
     FFileName: TFileName;     /// Nom du fichier
 
+    function GetHRef: string;
     procedure SetHRef(const Value: string);
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
@@ -261,7 +262,7 @@ type
     property Title: string read FTitle write FTitle;
     property Description: string read FDescription write FDescription;
     property Difficulty: string read FDifficulty write FDifficulty;
-    property AuthorID: Integer read FAuthorID write FAuthorID;
+    property AuthorID: Integer read FAuthorID write FAuthorID default 0;
     property Author: string read FAuthor write FAuthor;
   end;
 
@@ -396,6 +397,15 @@ begin
 end;
 
 {*
+  HRef pour l'enregistrement
+  @return HRef pour l'enregistrement
+*}
+function TDependantFile.GetHRef: string;
+begin
+  Result := MasterFile.MakeHRef(FileName, fUnitsDir);
+end;
+
+{*
   Renseigne le href du fichier
   @param Value   Valeur de href
 *}
@@ -410,8 +420,8 @@ end;
 *}
 procedure TDependantFile.DefineProperties(Filer: TFunLabyFiler);
 begin
-  Filer.DefineFieldProcProperty('HRef', TypeInfo(string),
-    @FHRef, @TDependantFile.SetHRef, FHRef <> '');
+  Filer.DefineProcProperty('HRef', TypeInfo(string),
+    @TDependantFile.GetHRef, @TDependantFile.SetHRef);
 
   inherited;
 end;
@@ -914,14 +924,8 @@ end;
   @throws EInOutError Le fichier n'existe pas
 *}
 function TMasterFile.ResolveHRef(const HRef, DefaultDir: string): TFileName;
-var
-  FilePath, SubDir: string;
 begin
-  FilePath := ExtractFilePath(FileName);
-  SubDir := ChangeFileExt(ExtractFileName(FileName), '') + PathDelim;
-
-  Result := HRefToFileName(HRef,
-    [FilePath+SubDir, DefaultDir+SubDir, FilePath, DefaultDir]);
+  Result := HRefToFileName(HRef, [DefaultDir]);
 end;
 
 {*
@@ -933,14 +937,8 @@ end;
 *}
 function TMasterFile.MakeHRef(const FileName: TFileName;
   const DefaultDir: string): string;
-var
-  FilePath, SubDir: string;
 begin
-  FilePath := ExtractFilePath(FileName);
-  SubDir := ChangeFileExt(ExtractFileName(FileName), '') + PathDelim;
-
-  Result := FileNameToHRef(FileName,
-    [FilePath+SubDir, DefaultDir+SubDir, FilePath, DefaultDir]);
+  Result := FileNameToHRef(FileName, [DefaultDir]);
 end;
 
 {*
