@@ -11,10 +11,7 @@ interface
 
 uses
   SysUtils, Classes, FunLabyUtils, FilesUtils, SepiReflectionCore, SepiMembers,
-  SepiRuntime;
-
-resourcestring
-  sCantLoadPackage = 'Impossible de charger le paquet "%s"';
+  SepiRuntime, FunLabyCoreConsts;
 
 type
   {*
@@ -90,10 +87,9 @@ type
   private
     FHandle: HMODULE;           /// Module du package chargé
     FUnitFileIntf: IUnitFile50; /// Interface vers le fichier unité
+  protected
+    procedure Load; override;
   public
-    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
-      const AFileName: TFileName; const AGUID: TGUID;
-      Params: TStrings); override;
     destructor Destroy; override;
 
     procedure Loaded; override;
@@ -125,10 +121,9 @@ type
 
     procedure CallSimpleProc(const Name: string);
     procedure InitializeUnit(Params: TStrings);
+  protected
+    procedure Load; override;
   public
-    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
-      const AFileName: TFileName; const AGUID: TGUID;
-      Params: TStrings); override;
     destructor Destroy; override;
 
     procedure Loaded; override;
@@ -176,11 +171,11 @@ type
   end;
 
 const
-  /// GUID du gestionnaire d'unités de type package Borland
-  BPLUnitHandlerGUID: TGUID = '{B28D4F92-6C46-4F22-87F9-432165EDA4C6}';
+  /// Extension des unités de type package Borland
+  BPLUnitExtension: string = '.bpl';
 
-  /// GUID du gestionnaire d'unités Sepi compilées
-  SepiUnitHandlerGUID: TGUID = '{AA09143C-74BF-48E5-984A-010EE900EE06}';
+  /// Extension des unités Sepi compilées
+  SepiUnitExtension: string = '.scu';
 
 implementation
 
@@ -196,34 +191,6 @@ const {don't localize}
   CreateUnitFileProc = 'CreateUnitFile';
 
 {*
-  Crée une instance de TBPLUnitFile
-  @param AMasterFile   Fichier maître
-  @param AFileName     Nom du fichier
-  @param AMIMEType     Type MIME du fichier
-  @param Params        Paramètres envoyés à l'unité
-*}
-constructor TBPLUnitFile.Create(AMasterFile: TMasterFile; const AHRef: string;
-  const AFileName: TFileName; const AGUID: TGUID; Params: TStrings);
-type
-  TCreateUnitFileProc = function(BPLHandler: TBPLUnitFile; Master: TMaster;
-    Params: TStrings): IUnitFile50;
-var
-  CreateUnitFile: TCreateUnitFileProc;
-begin
-  inherited;
-
-  FHandle := LoadPackage(FileName);
-  if FHandle = 0 then
-    raise EFileError.CreateFmt(sCantLoadPackage, [FileName]);
-
-  CreateUnitFile := TCreateUnitFileProc(
-    GetProcAddress(FHandle, CreateUnitFileProc));
-
-  if Assigned(CreateUnitFile) then
-    FUnitFileIntf := CreateUnitFile(Self, Master, Params);
-end;
-
-{*
   [@inheritDoc]
 *}
 destructor TBPLUnitFile.Destroy;
@@ -232,6 +199,29 @@ begin
 
   if FHandle <> 0 then
     UnloadPackage(FHandle);
+
+  inherited;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TBPLUnitFile.Load;
+type
+  TCreateUnitFileProc = function(BPLHandler: TBPLUnitFile; Master: TMaster;
+    Params: TStrings): IUnitFile50;
+var
+  CreateUnitFile: TCreateUnitFileProc;
+begin
+  FHandle := LoadPackage(FileName);
+  if FHandle = 0 then
+    raise EInOutError.CreateFmt(SCantLoadPackage, [FileName]);
+
+  CreateUnitFile := TCreateUnitFileProc(
+    GetProcAddress(FHandle, CreateUnitFileProc));
+
+  if Assigned(CreateUnitFile) then
+    FUnitFileIntf := CreateUnitFile(Self, Master, CreationParams);
 
   inherited;
 end;
@@ -293,37 +283,39 @@ end;
 {----------------------}
 
 {*
-  Crée une instance de TSepiUnitFile
-  @param AMasterFile   Fichier maître
-  @param AFileName     Nom du fichier
-  @param AMIMEType     Type MIME du fichier
-  @param Params        Paramètres envoyés à l'unité
+  [@inheritDoc]
 *}
-constructor TSepiUnitFile.Create(AMasterFile: TMasterFile; const AHRef: string;
-  const AFileName: TFileName; const AGUID: TGUID; Params: TStrings);
+destructor TSepiUnitFile.Destroy;
 begin
-  inherited;
+  if Assigned(SepiUnit) then
+  begin
+    CallSimpleProc('FinalizeUnit');
+    SepiUnit.Root.UnloadUnit(SepiUnit.Name);
+  end;
 
+  inherited;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSepiUnitFile.Load;
+begin
   FRuntimeUnit := TSepiRuntimeUnit.Create(MasterFile.SepiRoot, FileName);
   FSepiUnit := FRuntimeUnit.SepiUnit;
 
   // Set the unit ref-count to 1
   SepiUnit.Root.LoadUnit(SepiUnit.Name);
 
-  InitializeUnit(Params);
-end;
-
-{*
-  [@inheritDoc]
-*}
-destructor TSepiUnitFile.Destroy;
-begin
-  CallSimpleProc('FinalizeUnit');
-  SepiUnit.Root.UnloadUnit(SepiUnit.Name);
+  InitializeUnit(CreationParams);
 
   inherited;
 end;
 
+{*
+  Appelle une procédure simple
+  @param Name   Nom de la procédure à appeler
+*}
 procedure TSepiUnitFile.CallSimpleProc(const Name: string);
 type
   TSimpleProc = procedure(Master: TMaster);
@@ -579,10 +571,12 @@ begin
 end;
 
 initialization
-  UnitFileClasses.Add(BPLUnitHandlerGUID, TBPLUnitFile);
-  UnitFileClasses.Add(SepiUnitHandlerGUID, TSepiUnitFile);
+  FunLabyRegisterClasses([TBPLUnitFile, TSepiUnitFile]);
+
+  UnitFileClasses.Add(BPLUnitExtension, TBPLUnitFile);
+  UnitFileClasses.Add(SepiUnitExtension, TSepiUnitFile);
 finalization
-  UnitFileClasses.Remove(BPLUnitHandlerGUID);
-  UnitFileClasses.Remove(SepiUnitHandlerGUID);
+  UnitFileClasses.Remove(BPLUnitExtension);
+  UnitFileClasses.Remove(SepiUnitExtension);
 end.
 

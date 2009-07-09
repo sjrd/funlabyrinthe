@@ -9,7 +9,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, ScUtils, ScLists, ScStrUtils, FilesUtils,
-  UnitFiles, SepiReflectionCore, SepiCompilerErrors;
+  UnitFiles, SepiReflectionCore, SepiCompilerErrors, FunLabyCoreConsts;
 
 type
   ISourceEditor50 = interface;
@@ -243,14 +243,14 @@ type
   *}
   TUnitFilterList = class(TCustomStringKeyValueBucketList)
   private
-    function GetGUID(const Filter: string): TGUID;
+    function GetExtension(const Filter: string): string;
   public
     constructor Create;
 
-    procedure Add(const Filter: string; const GUID: TGUID);
+    procedure Add(const Filter: string; const Extension: string);
     procedure Remove(const Filter: string);
 
-    property GUID[const Filter: string]: TGUID read GetGUID;
+    property Extension[const Filter: string]: string read GetExtension;
   end;
 
 var
@@ -395,7 +395,7 @@ function TSourceEditorList.Find(
   const Extension: string): TCreateSourceEditorProc;
 begin
   if not (inherited Find(Extension, Result)) then
-    raise EFileError.CreateFmt(sUnknownUnitType, [Extension]);
+    raise EInOutError.CreateFmt(SUnknownUnitType, [Extension]);
 end;
 
 {*
@@ -510,27 +510,27 @@ end;
 *}
 constructor TUnitFilterList.Create;
 begin
-  inherited Create(TypeInfo(string), SizeOf(TGUID));
+  inherited Create(TypeInfo(string), TypeInfo(string));
 end;
 
 {*
   Table de correspondance Filtre -> GUID
   @param Filter   Filtre de fichiers
-  @result GUID de ce type de fichiers
+  @result Extension de ce type de fichiers
 *}
-function TUnitFilterList.GetGUID(const Filter: string): TGUID;
+function TUnitFilterList.GetExtension(const Filter: string): string;
 begin
   GetData(Filter, Result);
 end;
 
 {*
   Ajoute un filtre d'unité
-  @param Filter   Filtre d'unité (tel qu'utilisé par TOpenDialog/TSaveDialog)
-  @param GUID     GUID de type des fichiers correspondant à Filter
+  @param Filter      Filtre d'unité (tel qu'utilisé par TOpenDialog/TSaveDialog)
+  @param Extension   Extension de type des fichiers correspondant à Filter
 *}
-procedure TUnitFilterList.Add(const Filter: string; const GUID: TGUID);
+procedure TUnitFilterList.Add(const Filter: string; const Extension: string);
 begin
-  AddData(Filter, GUID);
+  AddData(Filter, Extension);
 end;
 
 {*
@@ -547,8 +547,8 @@ initialization
   SourceFileCreators := TSourceFileCreatorList.Create;
   UnitFilters := TUnitFilterList.Create;
 
-  UnitFilters.Add(BPLFilter, BPLUnitHandlerGUID);
-  UnitFilters.Add(SepiFilter, SepiUnitHandlerGUID);
+  UnitFilters.Add(BPLFilter, BPLUnitExtension);
+  UnitFilters.Add(SepiFilter, SepiUnitExtension);
 finalization
   SourceFileEditors.Free;
   SourceFileEditors := nil;

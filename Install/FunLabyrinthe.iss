@@ -65,12 +65,10 @@ fr.IconFunLabyEdit=Éditeur de labyrinthes
 fr.AdditionalTasks=Tâches supplémentaires
 fr.RegExtensions=Enregistrer les extensions de fichier liées à FunLabyrinthe
 fr.RegFLP=Fichiers projet (.flp)
-fr.RegFLM=Fichiers carte (.flm)
 
 ; Enregistrement des extensions
 
 fr.FunLabyProject=Projet FunLabyrinthe
-fr.FunLabyMap=Carte FunLabyrinthe
 
 fr.Open=&Ouvrir
 fr.Edit=&Éditer
@@ -153,7 +151,6 @@ Name: "desktopicon\funlabyedit"; Description: "{cm:IconFunLabyEdit}"; Components
 
 Name: "regext"    ; Description: "{cm:RegExtensions}"; GroupDescription: {cm:AdditionalTasks}
 Name: "regext\flp"; Description: "{cm:RegFLP}"       ; GroupDescription: {cm:AdditionalTasks}
-Name: "regext\flm"; Description: "{cm:RegFLM}"       ; GroupDescription: {cm:AdditionalTasks}
 
 [Files]
 Source: "..\FunLabyCore.bpl";       DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
@@ -166,6 +163,9 @@ Source: "..\FunLabyEdit.exe";       DestDir: "{app}"; Components: programs\funla
 Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile
 
 Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
+
+Source: "{code:OldVersionInfo|installdir}\Sons\*";  DestDir: "{code:AppData}\Sounds";                  Check: MustCopyOldSoundsAndImages; Flags: external onlyifdoesntexist recursesubdirs createallsubdirs uninsneveruninstall
+Source: "{code:OldVersionInfo|installdir}\Cases\*"; DestDir: "{code:AppData}\Squares\Compatibility4x"; Check: MustCopyOldSoundsAndImages; Flags: external onlyifdoesntexist recursesubdirs createallsubdirs uninsneveruninstall
 
 ; Fichiers temporaires pour l'installation
 
@@ -185,10 +185,6 @@ Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\open"        ; ValueType: strin
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FunLaby.exe"" ""%1"""    ; Tasks: regext\flp;                                       Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit"        ; ValueType: string; ValueName: ""; ValueData: "{cm:Edit}"                       ; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
 Root: HKCR; SubKey: "FunLabyrinthe.Project\shell\edit\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FunLabyEdit.exe"" ""%1"""; Tasks: regext\flp; Components: programs\funlabyedit    ; Flags: uninsdeletevalue uninsdeletekeyifempty
-
-Root: HKCR; SubKey: ".flm"                         ; ValueType: string; ValueName: ""; ValueData: "FunLabyrinthe.Map"  ; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Map"            ; ValueType: string; ValueName: ""; ValueData: "{cm:FunLabyMap}"    ; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
-Root: HKCR; SubKey: "FunLabyrinthe.Map\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\FunLaby.exe,0"; Tasks: regext\flm; Flags: uninsdeletevalue uninsdeletekeyifempty
 
 [Icons]
 Name: "{group}\{cm:IconFunLaby}"    ; Filename: "{app}\FunLaby.exe"    ; Components: programs\funlaby
@@ -260,6 +256,11 @@ begin
     Result := OldVersionUninstallString
   else
     Result := '';
+end;
+
+function MustCopyOldSoundsAndImages: Boolean;
+begin
+  Result := ImportDir <> '';
 end;
 
 function CheckValidAppData: Boolean;

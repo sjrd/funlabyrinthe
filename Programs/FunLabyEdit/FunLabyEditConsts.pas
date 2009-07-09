@@ -36,6 +36,9 @@ resourcestring
   sRemoveMapTitle = 'Retirer une carte';
   sRemoveMap = 'Êtes-vous certain de vouloir retirer cette carte du projet ?';
 
+  SDuplicateSourceTitle = 'Fichier source déjà présent';
+  SDuplicateSource = 'Ce fichier source est déjà présent dans le projet';
+
   sRemoveSourceTitle = 'Retirer un fichier source';
   sRemoveSource =
     'Êtes-vous certain de vouloir retirer ce fichier source du projet ?';

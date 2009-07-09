@@ -27,11 +27,11 @@ type
     MasterFile: TMasterFile;
     Filters: TStrings;
 
-    procedure AddUnitFilter(const Filter, GUID; var Continue: Boolean);
+    procedure AddUnitFilter(const Filter, Extension; var Continue: Boolean);
 
     procedure AddUnitFileDesc(const UnitFileDesc: TUnitFileDesc);
     procedure DeleteUnitFileDesc(Index: Integer);
-    procedure AddUnitFile(const FileName: TFileName; const GUID: TGUID);
+    procedure AddUnitFile(const FileName: TFileName);
   public
     { Déclarations publiques }
     class function EditUnits(AMasterFile: TMasterFile): Boolean;
@@ -43,11 +43,11 @@ implementation
 
 {*
   Ajoute un filtre d'unité à la liste des filtres
-  @param Filter     Filtre de fichier
-  @param GUID       GUID du type de fichier
-  @param Continue   Position à False pour interrompre l'énumération
+  @param Filter      Filtre de fichier
+  @param Extension   Extension du type de fichier
+  @param Continue    Position à False pour interrompre l'énumération
 *}
-procedure TFormEditUnits.AddUnitFilter(const Filter, GUID;
+procedure TFormEditUnits.AddUnitFilter(const Filter, Extension;
   var Continue: Boolean);
 begin
   Filters.Add(string(Filter));
@@ -63,8 +63,8 @@ var
 begin
   if ListBoxUnits.Items.IndexOf(UnitFileDesc.HRef) >= 0 then
   begin
-    ShowDialog(sDuplicateUnitTitle,
-      Format(sDuplicateUnit, [UnitFileDesc.HRef]), dtError);
+    ShowDialog(SDuplicateUnitTitle,
+      Format(SDuplicateUnit, [UnitFileDesc.HRef]), dtError);
     Exit;
   end;
 
@@ -91,14 +91,11 @@ end;
 {*
   Ajoute un fichier unité
   @param FileName   Nom du fichier
-  @param GUID       GUID du type de fichier
 *}
-procedure TFormEditUnits.AddUnitFile(const FileName: TFileName;
-  const GUID: TGUID);
+procedure TFormEditUnits.AddUnitFile(const FileName: TFileName);
 var
   UnitFileDesc: TUnitFileDesc;
 begin
-  UnitFileDesc.GUID := GUID;
   UnitFileDesc.HRef := MasterFile.MakeHRef(FileName, fUnitsDir);
 
   AddUnitFileDesc(UnitFileDesc);
@@ -201,7 +198,7 @@ procedure TFormEditUnits.ButtonAddClick(Sender: TObject);
 begin
   with OpenUnitDialog do
     if Execute then
-      AddUnitFile(FileName, UnitFilters.GUID[Filters[FilterIndex-1]]);
+      AddUnitFile(FileName);
 end;
 
 {*
@@ -217,11 +214,11 @@ begin
 
     // Garder toujours au moins une unité
     if Items.Count = 1 then
-      ShowDialog(sRemoveUnitTitle, sCantRemoveLastUnit, dtError)
+      ShowDialog(SRemoveUnitTitle, SCantRemoveLastUnit, dtError)
     else
     // Demander confirmation à l'utilisateur
-    if ShowDialog(sRemoveUnitTitle,
-      Format(sConfirmRemoveUnit, [Items[ItemIndex]]),
+    if ShowDialog(SRemoveUnitTitle,
+      Format(SConfirmRemoveUnit, [Items[ItemIndex]]),
       dtConfirmation, dbOKCancel) = drOK then
       DeleteUnitFileDesc(ItemIndex);
   end;

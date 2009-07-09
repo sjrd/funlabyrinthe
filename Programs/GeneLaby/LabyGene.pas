@@ -10,7 +10,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Spin, Math, ExtCtrls, ComCtrls, IniFiles, ScUtils;
+  StdCtrls, Spin, Math, ExtCtrls, ComCtrls, IniFiles, ScUtils, FunLabyUtils,
+  FilesUtils, UnitFiles, SepiReflectionCore;
 
 type
   {*
@@ -102,122 +103,80 @@ implementation
 
 {$R *.DFM}
 
-const {don't localize}
-  /// Contenu générique du fichier projet d'un labyrinthe généré
-  sMasterFileContents =
-    '<?xml version="1.0" encoding="UTF-8"?>'#10+
-    '<funlabyrinthe version="%s">'#10+
-    '  <title>Labyrinthe généré</title>'#10+
-    '  <description>Labyrinthe généré</description>'#10+
-    '  <difficulty>Moyen</difficulty>'#10+
-    '  <author>Générateur écrit par Jean-Paul Doeraene</author>'#10+
-    '  <units><unit type="{B28D4F92-6C46-4F22-87F9-432165EDA4C6}" href="FunLabyBase.bpl"/></units>'#10+
-    '  <maps><map id="MainMap" href="%s" maxviewsize="%d"/></maps>'#10+
-    '  <players><player id="Player" name="Joueur"/></players>'#10+
-    '  <master>'#10+
-    '    <component name="Player">'#10+
-    '      <property name="Map" type="tkClass">MainMap</property>'#10+
-    '      <property name="Position.X" type="tkInteger">%d</property>'#10+
-    '      <property name="Position.Y" type="tkInteger">%d</property>'#10+
-    '      <property name="Position.Z" type="tkInteger">%d</property>'#10+
-    '    </component>'#10+
-    '  </master>'#10+
-    '</funlabyrinthe>'#10;
-
-  /// Représentation textuelle de la version actuelle
-  sCurrentVersion = '5.0';
-
-  /// Code de format d'un fichier FLM (correspond à '.flm')
-  FLMFormatCode: Longint = $6D6C662E;
-
-  FLMVersion = 1; /// Version courante du format FLM
-
-function WDir: string;
-begin
-  with TMemIniFile.Create(Dir+'FunLabyrinthe.ini') do
-  try
-    Result := ReadString('Directories', 'AppData', '');
-  finally
-    Free;
-  end;
-end;
-
-procedure CreeSortie(Labyrinthe: TStrings;
-  const MasterFileName, MapHRef, MapFileName: TFileName;
+procedure CreeSortie(Labyrinthe: TStrings; const MasterFileName: TFileName;
   DimX, DimY, DimZ: Integer; MaxViewSize: Integer = 1);
 var
-  PosX, PosY, PosZ, X, Y, Z, Value: Integer;
-  Stream: TStream;
+  SepiRoot: TSepiRoot;
+  UnitFileDescs: TUnitFileDescs;
+  MasterFile: TMasterFile;
+  Master: TMaster;
+  Player: TPlayer;
+  Map: TMap;
+  Grass, Wall, Crossroads, UpStairs, DownStairs, Treasure, Outside: TSquare;
+  X, Y, Z: Integer;
+  Pos: T3DPoint;
 begin
-  ForceDirectories(ExtractFilePath(MapFileName));
+  SetLength(UnitFileDescs, 1);
+  UnitFileDescs[0].HRef := 'FunLabyBase.bpl';
 
-  PosX := 0;
-  PosY := 0;
-  PosZ := 0;
-
-  Stream := TFileStream.Create(MapFileName, fmCreate or fmShareExclusive);
-  with Stream do
+  SepiRoot := nil;
+  MasterFile := nil;
   try
-    Value := FLMFormatCode;
-    WriteBuffer(Value, 4);
+    SepiRoot := TSepiRoot.Create;
+    MasterFile := TMasterFile.CreateNew(SepiRoot, UnitFileDescs);
+    Master := MasterFile.Master;
+    Player := TPlayer.Create(Master, 'Player', 'Joueur');
+    Map := TMap.Create(Master, 'MainMap', Point3D(DimX, DimY, DimZ), 7, 7);
+    Map.MaxViewSize := MaxViewSize;
 
-    Value := FLMVersion;
-    WriteBuffer(Value, 4);
+    with MasterFile do
+    begin
+      Title := 'Labyrinthe généré';
+      Description := Title;
+      Difficulty := Format('%dx%dx%d', [DimX, DimY, DimZ]);
+      Author := 'Générateur écrit par Jean-Paul Doeraene';
+    end;
 
-    // Taille de zone
-    Value := 7;
-    WriteBuffer(DimX, 4);
-    WriteBuffer(DimY, 4);
-    WriteBuffer(DimZ, 4);
-    WriteBuffer(Value, 4);
-    WriteBuffer(Value, 4);
+    Grass := Master.Square['Grass---'];
+    Wall := Master.Square['Wall---'];
+    Crossroads := Master.Square['Grass-Crossroads--'];
+    UpStairs := Master.Square['Grass-UpStairs--'];
+    DownStairs := Master.Square['Grass-DownStairs--'];
+    Treasure := Master.Square['Grass-Treasure--'];
+    Outside := Master.Square['Grass-Outside--'];
 
-    Value := 7; // taille de palette
-    WriteBuffer(Value, 4);
-    WriteStrToStream(Stream, 'Grass---');
-    WriteStrToStream(Stream, 'Wall---');
-    WriteStrToStream(Stream, 'Grass-Crossroads--');
-    WriteStrToStream(Stream, 'Grass-UpStairs--');
-    WriteStrToStream(Stream, 'Grass-DownStairs--');
-    WriteStrToStream(Stream, 'Grass-Treasure--');
-    WriteStrToStream(Stream, 'Grass-Outside--');
-
-    for Z := 0 to DimZ-1 do
+    for X := 0 to DimX-1 do
+    begin
       for Y := 0 to DimY-1 do
-        for X := 0 to DimX-1 do
+      begin
+        for Z := 0 to DimZ-1 do
         begin
+          Pos := Point3D(X, Y, Z);
+
           case Labyrinthe[Z*(DimY+7) + Y][X+1] of
-            '0': Value := 0;
-            '2': Value := 1;
-            ':': Value := 2;
-            '>': Value := 3;
-            '<': Value := 4;
-            ';': Value := 5;
+            '0': Map[Pos] := Grass;
+            '2': Map[Pos] := Wall;
+            ':': Map[Pos] := Crossroads;
+            '>': Map[Pos] := UpStairs;
+            '<': Map[Pos] := DownStairs;
+            ';': Map[Pos] := Treasure;
             'A':
             begin
-              Value := 0;
-              PosX := X;
-              PosY := Y;
-              PosZ := Z;
+              Map[Pos] := Grass;
+              Player.ChangePosition(Map, Pos);
             end;
           end;
-          WriteBuffer(Value, 1);
         end;
+      end;
+    end;
 
-    Value := 6;
     for Z := 0 to DimZ-1 do
-      WriteBuffer(Value, 1);
-  finally
-    Free;
-  end;
+      Map.Outside[Z] := Outside;
 
-  with TStringList.Create do
-  try
-    Text := UTF8Encode(Format(sMasterFileContents,
-      [sCurrentVersion, MapHRef, MaxViewSize, PosX, PosY, PosZ]));
-    SaveToFile(MasterFileName);
+    MasterFile.Save(MasterFileName);
   finally
-    Free;
+    MasterFile.Free;
+    SepiRoot.Free;
   end;
 end;
 
@@ -500,18 +459,11 @@ begin
           Labyrinthe[CoordY+1] := Temp;
         end;
       end;
-(*  Labyrinthe.Insert(0, 'Etages: '+IntToStr(NEtaZ));
-  Labyrinthe.Insert(0, 'Lignes: '+IntToStr(NLigZ));
-  Labyrinthe.Insert(0, 'Colonnes: '+IntToStr(NColZ));
-  Labyrinthe.Insert(0, '[Dimensions]');
-  {$I-} MkDir(WDir+'Labyrinthes'); {$I+}*)
+
   Labyrinthe.Delete(0);
   NomLabyrinthe := FormPrincipale.EditNomFichier.Text;
-  CreeSortie(Labyrinthe, WDir+'Labyrinths\'+NomLabyrinthe+'.flp',
-    'MainMap.flm',
-    WDir+'Maps\'+NomLabyrinthe+'\MainMap.flm',
+  CreeSortie(Labyrinthe, fLabyrinthsDir+NomLabyrinthe+'.flp',
     NColZ*7, NLigZ*7, NEtaZ);
-  //Labyrinthe.SaveToFile(NomComplet);
   Labyrinthe.Free;
 end;
 
@@ -553,7 +505,7 @@ procedure TFormPrincipale.BQuitterClick(Sender: TObject);
 begin
   if FileExists(Dir+'FunLaby.exe') then
     WinExec(PChar('"'+Dir+'FunLaby.exe" "'+
-      WDir+'Labyrinths\'+NomLabyrinthe+'.flp"'),
+      fLabyrinthsDir+NomLabyrinthe+'.flp"'),
       SW_ShowNormal);
   Close;
 end;

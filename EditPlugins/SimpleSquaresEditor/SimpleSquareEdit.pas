@@ -6,10 +6,10 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ExtCtrls, ExtDlgs, StrUtils, SdDialogs,
   FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresEffectEditor,
-  SimpleSquaresObjectEditor, SimpleSquaresObstacleEditor;
+  SimpleSquaresObjectEditor, SimpleSquaresObstacleEditor, FunLabyCoreConsts;
 
 resourcestring
-  sInvalidImageFileName =
+  SInvalidImageFileName =
     'Les images doivent être sélectionnée dans le dossier d''images de '+
     'FunLabyrinthe';
 
@@ -263,7 +263,7 @@ begin
 
         if not AnsiStartsText(fSquaresDir, FileName) then
         begin
-          ShowDialog(sError, sInvalidImageFileName, dtError);
+          ShowDialog(SError, SInvalidImageFileName, dtError);
           Exit;
         end;
 

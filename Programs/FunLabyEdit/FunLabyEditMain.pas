@@ -214,14 +214,14 @@ begin
   except
     on Error: Exception do
     begin
-      ShowDialog(sFatalErrorTitle,
-        Format(sBaseSepiRootLoadError, [Error.Message]), dtError);
+      ShowDialog(SFatalErrorTitle,
+        Format(SBaseSepiRootLoadError, [Error.Message]), dtError);
       System.Halt(1);
     end;
     on Error: TObject do
     begin
-      ShowDialog(sFatalErrorTitle,
-        Format(sBaseSepiRootLoadError, [Error.ClassName]), dtError);
+      ShowDialog(SFatalErrorTitle,
+        Format(SBaseSepiRootLoadError, [Error.ClassName]), dtError);
       System.Halt(1);
     end;
   end;
@@ -469,7 +469,6 @@ var
   UnitFileDescs: TUnitFileDescs;
 begin
   SetLength(UnitFileDescs, 1);
-  UnitFileDescs[0].GUID := BPLUnitHandlerGUID;
   UnitFileDescs[0].HRef := FunLabyBaseHRef;
 
   NeedBaseSepiRoot;
@@ -479,7 +478,7 @@ begin
     MasterFile := TMasterFile.CreateNew(SepiRoot, UnitFileDescs);
     if TFormFileProperties.ManageProperties(MasterFile) then
     begin
-      TPlayer.Create(MasterFile.Master, idPlayer, sDefaultPlayerName);
+      TPlayer.Create(MasterFile.Master, idPlayer, SDefaultPlayerName);
       LoadFile;
     end else
     begin
@@ -521,9 +520,6 @@ function TFormMain.SaveFile(FileName: TFileName = ''): Boolean;
 var
   DirName: TFileName;
   I: Integer;
-  MapFile: TMapFile;
-  MapFileName: TFileName;
-  MapHRef: string;
 begin
   Result := False;
 
@@ -534,8 +530,8 @@ begin
     begin
       if Map = nil then
       begin
-        SdDialogs.ShowDialog(sCantSave,
-          Format(sCantSaveUnplacedPlayer, [ID]), dtError);
+        SdDialogs.ShowDialog(SCantSave,
+          Format(SCantSaveUnplacedPlayer, [ID]), dtError);
         Exit;
       end;
     end;
@@ -550,25 +546,6 @@ begin
     FileName := SaveDialog.FileName;
   end;
   DirName := ExtractFilePath(FileName);
-
-  // Enregistrer les cartes
-  for I := 0 to MasterFile.MapFileCount-1 do
-  begin
-    MapFile := MasterFile.MapFiles[I];
-    MapFileName := MapFile.FileName;
-
-    if MapFileName = '' then
-    begin
-      SaveMapDialog.FileName := MapFile.MapID;
-      if not SaveMapDialog.Execute then
-        Exit;
-      MapFileName := SaveMapDialog.FileName;
-    end;
-
-    MapHRef := FileNameToHRef(MapFileName, [DirName, fMapsDir]);
-
-    MapFile.Save(MapHRef, MapFileName);
-  end;
 
   // Enregistrer le projet
   MasterFile.Save(FileName);
@@ -620,7 +597,7 @@ begin
   // Demander de sauvegarder le projet, s'il est modifié
   if Modified then
   begin
-    case ShowDialog(sConfirmExitTitle, sConfirmExit,
+    case ShowDialog(SConfirmExitTitle, SConfirmExit,
         dtConfirmation, dbYesNoCancel) of
       drYes: Result := SaveFile(MasterFile.FileName);
       drCancel: Result := False;
@@ -752,9 +729,9 @@ var
   SourceFile: TSourceFile;
 begin
   PreviousItem := BigMenuSources.Items[BigMenuSources.Items.Count-1];
-  SetLength(SourceActions, MasterFile.SourceFileCount);
+  SetLength(SourceActions, MasterFile.SourceFiles.Count);
 
-  for I := 0 to MasterFile.SourceFileCount-1 do
+  for I := 0 to MasterFile.SourceFiles.Count-1 do
   begin
     SourceFile := MasterFile.SourceFiles[I];
     SourceActions[I] := MakeSourceAction(SourceFile);
@@ -784,15 +761,26 @@ end;
 procedure TFormMain.AddSourceFile(const FileName: TFileName);
 var
   SourceFile: TSourceFile;
+  I: Integer;
   Action: TAction;
 begin
+  // Vérifier que ce fichier source n'est pas déjà attaché au projet
+  for I := 0 to MasterFile.SourceFiles.Count-1 do
+  begin
+    if SameFileName(MasterFile.SourceFiles[I].FileName, FileName) then
+    begin
+      ShowDialog(SDuplicateSourceTitle, SDuplicateSource, dtError);
+      Exit;
+    end;
+  end;
+
   // Créer le fichier source
   SourceFile := MasterFile.AddSourceFile(FileName);
 
   // Ajouter l'action Voir le source
   Action := MakeSourceAction(SourceFile);
-  SetLength(SourceActions, MasterFile.SourceFileCount);
-  SourceActions[MasterFile.SourceFileCount-1] := Action;
+  SetLength(SourceActions, MasterFile.SourceFiles.Count);
+  SourceActions[MasterFile.SourceFiles.Count-1] := Action;
   ActionManager.AddAction(Action,
     BigMenuSources.Items[BigMenuSources.Items.Count-1]);
 
@@ -811,8 +799,6 @@ var
   Action: TAction;
   Index: Integer;
 begin
-  MasterFile.RemoveSourceFile(SourceFile);
-
   // Find the action and remove it from the list
   Action := nil;
   for Index := 0 to Length(SourceActions)-1 do
@@ -833,6 +819,9 @@ begin
     ActionManager.DeleteActionItems([Action]);
     Action.Free;
   end;
+
+  // Delete the source file
+  MasterFile.RemoveSourceFile(SourceFile);
 
   MarkModified;
 end;
@@ -1174,7 +1163,7 @@ begin
 
   SourceFile := GetTabEditor(Tab).SourceFile;
 
-  if ShowDialog(sRemoveSourceTitle, sRemoveSource, dtConfirmation,
+  if ShowDialog(SRemoveSourceTitle, SRemoveSource, dtConfirmation,
     dbYesNo, 2) <> drYes then
     Exit;
 

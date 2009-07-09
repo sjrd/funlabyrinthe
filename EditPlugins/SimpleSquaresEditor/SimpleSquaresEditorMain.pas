@@ -8,7 +8,8 @@ uses
   FilesUtils, UnitFiles, SourceEditors, SdDialogs, Buttons, StdCtrls, ExtCtrls,
   ImgList, CategoryButtons, ExtDlgs, Contnrs, FunLabyUtils, SimpleSquareEdit,
   SimpleSquaresUtils, SimpleSquareNew, FunLabyEditOTA, SepiFunDelphiCompiler,
-  FunLabySourceEditorFrame, ScUtils, FunLabyFilers, msxml, RTLConsts, ScXML;
+  FunLabySourceEditorFrame, ScUtils, FunLabyFilers, msxml, RTLConsts, ScXML,
+  FunLabyCoreConsts;
 
 resourcestring
   SimpleSquaresFilter = 'Définitions de cases simples (*.ssq)|*.ssq';

@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, TypInfo, ScUtils, ScDelphiLanguage, SdDialogs,
-  FunLabyUtils, SimpleSquaresUtils;
+  FunLabyUtils, SimpleSquaresUtils, FunLabyCoreConsts;
 
 resourcestring
   SReplaceSquareActionTitle = 'Remplacer la case (%d, %d, %d)';
@@ -386,7 +386,7 @@ end;
 *}
 function TMessageAction.GetTitle: string;
 begin
-  Result := sMessage;
+  Result := SMessage;
 end;
 
 {*

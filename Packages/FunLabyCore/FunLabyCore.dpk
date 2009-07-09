@@ -50,7 +50,9 @@ contains
   SepiImportsFunLaby in 'SepiImportsFunLaby.pas',
   SepiImportsFunLabyUtils in 'SepiImportsFunLabyUtils.pas',
   UnitFiles in 'UnitFiles.pas',
-  FunLabyFilers in 'FunLabyFilers.pas';
+  FunLabyFilers in 'FunLabyFilers.pas',
+  FunLabyCoreConsts in 'FunLabyCoreConsts.pas',
+  SepiImportsFunLabyCoreConsts in 'SepiImportsFunLabyCoreConsts.pas';
 
 end.
 

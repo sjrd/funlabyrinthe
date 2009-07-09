@@ -22,8 +22,6 @@ uses
 {$R *.res}
 
 begin
-  if not CheckValidLaunch then
-    Exit;
   Application.Initialize;
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.CreateForm(TFormMain, FormMain);

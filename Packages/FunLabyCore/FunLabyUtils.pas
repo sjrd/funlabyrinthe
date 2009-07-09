@@ -10,36 +10,9 @@ interface
 
 uses
   Windows, Types, SysUtils, Classes, Graphics, Contnrs, RTLConsts, Controls,
-  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs;
-
-resourcestring
-  sDefaultObjectInfos = '%s : %d';
-  sNothing = 'Rien';
-  sEffectName = '%1:s sur %0:s';
-  sToolName = '%s avec %s';
-  sObstacleName = '%s obstrué par %s';
-  sWhichObject = 'Quel objet voulez-vous utiliser ?';
-  sComponentNotFound = 'Le composant d''ID %s n''existe pas';
-  sUnsupportedCommand = 'La commande %s n''est pas supportée';
-  sCantLaunchThroughNetwork = 'FunLabyrinthe doit être installé sur '+
-    'l''ordinateur local pour fonctionner';
-
-  sDescription = 'Description';
-  sMessage = 'Message';
-  sTip = 'Indice';
-  sChoice = 'Choix';
-  sError = 'Erreur';
-  sFailure = 'Échec';
-  sBlindAlley = 'Impasse';
-  sWon = 'Gagné !';
-  sLost = 'Perdu !';
+  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs, FunLabyCoreConsts;
 
 const {don't localize}
-  CurrentVersion = '5.0'; /// Version courante de FunLabyrinthe
-  FunLabyAuthorName = 'Sébastien Jean Robert Doeraene'; /// Auteur
-  FunLabyAuthorEMail = 'sjrd@redaction-developpez.com'; /// E-mail de l'auteur
-  FunLabyWebSite = 'http://sjrd.developpez.com/programmes/funlaby/'; /// Site
-
   SquareSize = 30;        /// Taille (en largeur et hauteur) d'une case
   MinViewSize = 1;        /// Taille minimale d'une vue
   clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
@@ -906,6 +879,11 @@ type
     FMap: array of TSquare;  /// Carte stockée de façon linéaire
     FOutsideOffset: Integer; /// Offset de départ de l'extérieur
 
+    procedure CreateMap;
+
+    procedure LoadMapFromStream(Stream: TStream);
+    procedure SaveMapToStream(Stream: TStream);
+
     procedure SetMaxViewSize(Value: Integer);
 
     function GetMap(const Position: T3DPoint): TSquare;
@@ -917,9 +895,12 @@ type
     function GetLinearMapCount: Integer;
     function GetLinearMap(Index: Integer): TSquare;
     procedure SetLinearMap(Index: Integer; Value: TSquare);
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
   public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); overload;
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer);
+      ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer); overload;
 
     function InMap(const Position: T3DPoint): Boolean;
 
@@ -928,7 +909,6 @@ type
     property Dimensions: T3DPoint read FDimensions;
     property ZoneWidth: Integer read FZoneWidth;
     property ZoneHeight: Integer read FZoneHeight;
-    property MaxViewSize: Integer read FMaxViewSize write SetMaxViewSize;
 
     property Map[const Position: T3DPoint]: TSquare
       read GetMap write SetMap; default;
@@ -939,6 +919,9 @@ type
     property LinearMapCount: Integer read GetLinearMapCount;
     property LinearMap[Index: Integer]: TSquare
       read GetLinearMap write SetLinearMap;
+  published
+    property MaxViewSize: Integer read FMaxViewSize write SetMaxViewSize
+      default MinViewSize;
   end;
 
   /// Classe de TPlayerMode
@@ -1369,8 +1352,6 @@ var {don't localize}
   fSoundsDir: string = 'Sounds\';
   /// Dossier des unités
   fUnitsDir: string = 'Units\';
-  /// Dossier des cartes
-  fMapsDir: string = 'Maps\';
   /// Dossier des fichiers labyrinthe
   fLabyrinthsDir: string = 'Labyrinths\';
   /// Dossier des fichiers sauvegarde
@@ -1381,7 +1362,6 @@ var {don't localize}
   /// Chaîne de format pour les fichiers image
   fSquareFileName: string = '%s.bmp';
 
-function CheckValidLaunch: Boolean;
 procedure ShowFunLabyAbout;
 
 function PointBehind(const Src: T3DPoint; Dir: TDirection): T3DPoint;
@@ -1409,25 +1389,15 @@ implementation
 uses
   IniFiles, StrUtils, Forms, ScStrUtils, ScDelphiLanguage;
 
+const
+  /// Code de format d'un flux carte (TMap) (correspond à '.flm')
+  MapStreamFormatCode: Longint = $6D6C662E;
+
+  /// Version courante du format d'un flux carte (TMap)
+  MapStreamVersion = 1;
+
 var
   FunLabyRegisteredClasses: TStrings = nil;
-
-{*
-  Vérifie que FunLabyrinthe a été lancé de façon valide
-  FunLabyrinthe est lancé de façon valide lorsque l'exécutable se situe sur
-  l'ordinateur local. Il est en effet impossible, sinon, d'accéder aux
-  packages Delphi et autres ressources non partageables.
-  @return True si FunLabyrinthe a été lancé de façon valide, False sinon
-*}
-function CheckValidLaunch: Boolean;
-begin
-  if (Dir[1] = PathDelim) and (Dir[2] = PathDelim) then
-  begin
-    ShowDialog(sError, sCantLaunchThroughNetwork, dtError);
-    Result := False;
-  end else
-    Result := True;
-end;
 
 {*
   Affiche une boîte de dialogue À propos de FunLabyrinthe
@@ -3498,6 +3468,18 @@ end;
 {-------------}
 
 {*
+  Crée une instance de TMap vide
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de la carte
+*}
+constructor TMap.Create(AMaster: TMaster; const AID: TComponentID);
+begin
+  inherited Create(AMaster, AID);
+
+  FMaxViewSize := MinViewSize;
+end;
+
+{*
   Crée une instance de TMap
   @param AMaster       Maître FunLabyrinthe
   @param AID           ID de la carte
@@ -3507,18 +3489,127 @@ end;
 constructor TMap.Create(AMaster: TMaster; const AID: TComponentID;
   ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer);
 begin
-  inherited Create(AMaster, AID);
-
-  FTransient := True;
+  Create(AMaster, AID);
 
   FDimensions := ADimensions;
   FZoneWidth := AZoneWidth;
   FZoneHeight := AZoneHeight;
-  FMaxViewSize := MinViewSize;
 
+  CreateMap;
+end;
+
+{*
+  Crée la carte
+*}
+procedure TMap.CreateMap;
+begin
   FOutsideOffset := FDimensions.X * FDimensions.Y * FDimensions.Z;
   SetLength(FMap, FOutsideOffset + FDimensions.Z);
-  FillChar(FMap[0], Length(FMap)*4, 0);
+  FillChar(FMap[0], Length(FMap)*SizeOf(TSquare), 0);
+end;
+
+{*
+  Charge la carte depuis un flux
+  @param Stream   Flux source
+*}
+procedure TMap.LoadMapFromStream(Stream: TStream);
+var
+  I, Count, Value, SquareSize: Integer;
+  Palette: array of TSquare;
+begin
+  // Contrôle de format
+  Stream.ReadBuffer(Value, 4);
+  if Value <> MapStreamFormatCode then
+    EInOutError.Create(SInvalidFileFormat);
+
+  // Contrôle de version de format
+  Stream.ReadBuffer(Value, 4);
+  if Value > MapStreamVersion then
+    EInOutError.CreateFmt(SVersionTooHigh, [IntToStr(Value)]);
+
+  // Lecture des dimensions et de la taille d'une zone
+  Stream.ReadBuffer(FDimensions, SizeOf(T3DPoint));
+  Stream.ReadBuffer(FZoneWidth, 4);
+  Stream.ReadBuffer(FZoneHeight, 4);
+
+  // Création de la carte elle-même
+  CreateMap;
+
+  // Lecture de la palette de cases
+  Stream.ReadBuffer(Count, 4);
+  SetLength(Palette, Count);
+  for I := 0 to Count-1 do
+    Palette[I] := Master.Square[ReadStrFromStream(Stream)];
+
+  // Lecture de la carte
+  if Count <= 256 then
+    SquareSize := 1
+  else
+    SquareSize := 2;
+  Value := 0;
+  for I := 0 to LinearMapCount-1 do
+  begin
+    Stream.ReadBuffer(Value, SquareSize);
+    LinearMap[I] := Palette[Value];
+  end;
+end;
+
+{*
+  Enregistre la carte dans un flux
+  @param Stream   Flux destination
+*}
+procedure TMap.SaveMapToStream(Stream: TStream);
+var
+  I, Value, Count, PaletteCountPos, SquareSize: Integer;
+begin
+  // Indication de format
+  Stream.WriteBuffer(MapStreamFormatCode, 4);
+
+  // Indication de version de format
+  Value := MapStreamVersion;
+  Stream.WriteBuffer(Value, 4);
+
+  // Écriture des dimensions et de la taille d'une zone
+  Stream.WriteBuffer(FDimensions, SizeOf(T3DPoint));
+  Stream.WriteBuffer(FZoneWidth, 4);
+  Stream.WriteBuffer(FZoneHeight, 4);
+
+  // Préparation de la palette (Squares.Tag) et écriture de celle-ci
+  for I := 0 to Master.SquareCount-1 do
+    Master.Squares[I].Tag := -1;
+  Count := 0;
+  PaletteCountPos := Stream.Position;
+  Stream.WriteBuffer(Count, 4); // On repassera changer çà plus tard
+  for I := 0 to LinearMapCount-1 do
+  begin
+    with LinearMap[I] do
+    begin
+      if ClassType <> TSquare then
+        raise EInOutError.CreateFmt(STemporaryStatedMap, [ID]);
+      if Tag < 0 then
+      begin
+        Tag := Count;
+        WriteStrToStream(Stream, ID);
+        Inc(Count);
+      end;
+    end;
+  end;
+
+  // Écriture de la carte
+  if Count <= 256 then
+    SquareSize := 1
+  else
+    SquareSize := 2;
+  for I := 0 to LinearMapCount-1 do
+  begin
+    Value := LinearMap[I].Tag;
+    Stream.WriteBuffer(Value, SquareSize);
+  end;
+
+  // On retourne écrire la taille de la palette
+  Stream.Seek(PaletteCountPos, soFromBeginning);
+  Stream.WriteBuffer(Count, 4);
+  Stream.Seek(0, soFromEnd);
 end;
 
 {*
@@ -3628,6 +3719,16 @@ end;
 procedure TMap.SetLinearMap(Index: Integer; Value: TSquare);
 begin
   FMap[Index] := Value;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMap.DefineProperties(Filer: TFunLabyFiler);
+begin
+  inherited;
+
+  Filer.DefineBinaryProperty('Map', LoadMapFromStream, SaveMapToStream);
 end;
 
 {*
@@ -5698,8 +5799,7 @@ initialization
 
     fSquaresDir := fFunLabyAppData + fSquaresDir;
     fSoundsDir := fFunLabyAppData + fSoundsDir;
-    FUnitsDir := fFunLabyAppData + fUnitsDir;
-    FMapsDir := fFunLabyAppData + fMapsDir;
+    fUnitsDir := fFunLabyAppData + fUnitsDir;
     fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
     fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
     fEditPluginDir := fFunLabyAppData + fEditPluginDir;

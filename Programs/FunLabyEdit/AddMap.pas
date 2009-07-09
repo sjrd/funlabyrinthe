@@ -14,16 +14,14 @@ uses
   SdDialogs, FunLabyUtils, FilesUtils, Mask, MapBase;
 
 resourcestring
-  sWrongIDFormatTitle = 'Format d''ID non valide';
-  sWrongIDFormat = 'L''ID ne doit être constitué que de lettres non '+
+  SWrongIDFormatTitle = 'Format d''ID non valide';
+  SWrongIDFormat = 'L''ID ne doit être constitué que de lettres non '+
     'accentuées et de chiffres';
-  sUnfilledFileNameTitle = 'Nom de fichier non rempli';
-  sUnfilledFileName = 'Vous devez spécifier un nom de fichier';
-  sWrongDimensionsTitle = 'Dimensions incorrectes';
-  sWrongDimensions = 'Les dimensions doivent être strictement positives';
-  sWrongZoneSizeTitle = 'Taille de zone incorrecte';
-  sWrongZoneSize = 'La taille de zone doit être strictement positive';
-  sZoneSizeMustDivideDimensions =
+  SWrongDimensionsTitle = 'Dimensions incorrectes';
+  SWrongDimensions = 'Les dimensions doivent être strictement positives';
+  SWrongZoneSizeTitle = 'Taille de zone incorrecte';
+  SWrongZoneSize = 'La taille de zone doit être strictement positive';
+  SZoneSizeMustDivideDimensions =
     'La taille de zone doit être un diviseur des dimensions en X et en Y';
 
 type
@@ -35,21 +33,13 @@ type
   TFormAddMap = class(TForm)
     LabelID: TLabel;
     EditID: TEdit;
-    RadioExistingMap: TRadioButton;
-    EditFileName: TEdit;
-    ButtonBrowse: TSpeedButton;
-    RadioNewMap: TRadioButton;
     ButtonOK: TButton;
     ButtonCancel: TButton;
-    OpenDialog: TOpenDialog;
     LabelDimensions: TLabel;
     EditDimensions: TMaskEdit;
     LabelZoneSize: TLabel;
     EditZoneSize: TMaskEdit;
     procedure ButtonOKClick(Sender: TObject);
-    procedure RadioNewMapClick(Sender: TObject);
-    procedure ButtonBrowseClick(Sender: TObject);
-    procedure RadioExistingMapClick(Sender: TObject);
   private
     { Déclarations privées }
     Dimensions: T3DPoint; /// Dimensions de la care
@@ -72,61 +62,17 @@ class function TFormAddMap.AddMap(MasterFile: TMasterFile): TComponentID;
 begin
   with Create(Application) do
   try
-    OpenDialog.InitialDir := fMapsDir;
     if ShowModal <> mrOk then
       Result := ''
     else
     begin
       Result := EditID.Text;
-      if RadioExistingMap.Checked then
-      begin
-        MasterFile.AddMapFile(Result, EditFileName.Text);
-      end else
-      begin
-        TFormMapBase.GenerateBase(
-          MasterFile.AddNewMapFile(
-          Result, Dimensions, ZoneSize.X, ZoneSize.Y).Map);
-      end;
+      TFormMapBase.GenerateBase(TMap.Create(MasterFile.Master, Result,
+        Dimensions, ZoneSize.X, ZoneSize.Y));
     end;
   finally
     Release;
   end;
-end;
-
-{*
-  Gestionnaire d'événement OnClick du bouton radio d'une carte existante
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormAddMap.RadioExistingMapClick(Sender: TObject);
-begin
-  EditFileName.Enabled := True;
-  ButtonBrowse.Enabled := True;
-
-  EditDimensions.Enabled := False;
-  EditZoneSize.Enabled := False;
-end;
-
-{*
-  Gestionnaire d'événement OnClick du bouton Parcourir
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormAddMap.ButtonBrowseClick(Sender: TObject);
-begin
-  if OpenDialog.Execute then
-    EditFileName.Text := OpenDialog.FileName;
-end;
-
-{*
-  Gestionnaire d'événement OnClick du bouton radio d'une nouvelle carte
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormAddMap.RadioNewMapClick(Sender: TObject);
-begin
-  EditFileName.Enabled := False;
-  ButtonBrowse.Enabled := False;
-
-  EditDimensions.Enabled := True;
-  EditZoneSize.Enabled := True;
 end;
 
 {*
@@ -150,28 +96,19 @@ begin
 
   if not CorrectIdentifier(EditID.Text) then
   begin
-    ShowDialog(sWrongIDFormatTitle, sWrongIDFormatTitle, dtError);
+    ShowDialog(SWrongIDFormatTitle, SWrongIDFormat, dtError);
     Exit;
   end;
 
-  if RadioExistingMap.Checked then
-  begin
-    if EditFileName.Text = '' then
-      ShowDialog(sUnfilledFileNameTitle, sUnfilledFileName, dtError)
-    else
-      ModalResult := mrOk;
-  end else
-  begin
-    if (Dimensions.X <= 0) or (Dimensions.Y <= 0) or (Dimensions.Z <= 0) then
-      ShowDialog(sWrongDimensionsTitle, sWrongDimensions, dtError)
-    else if (ZoneSize.X <= 0) or (ZoneSize.Y <= 0) then
-      ShowDialog(sWrongZoneSizeTitle, sWrongZoneSize, dtError)
-    else if (Dimensions.X mod ZoneSize.X <> 0) or
-      (Dimensions.Y mod ZoneSize.Y <> 0) then
-      ShowDialog(sWrongZoneSizeTitle, sZoneSizeMustDivideDimensions, dtError)
-    else
-      ModalResult := mrOk;
-  end;
+  if (Dimensions.X <= 0) or (Dimensions.Y <= 0) or (Dimensions.Z <= 0) then
+    ShowDialog(SWrongDimensionsTitle, SWrongDimensions, dtError)
+  else if (ZoneSize.X <= 0) or (ZoneSize.Y <= 0) then
+    ShowDialog(SWrongZoneSizeTitle, SWrongZoneSize, dtError)
+  else if (Dimensions.X mod ZoneSize.X <> 0) or
+    (Dimensions.Y mod ZoneSize.Y <> 0) then
+    ShowDialog(SWrongZoneSizeTitle, SZoneSizeMustDivideDimensions, dtError)
+  else
+    ModalResult := mrOk;
 end;
 
 end.

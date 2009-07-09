@@ -12,31 +12,11 @@ interface
 
 uses
   SysUtils, Classes, Contnrs, ScUtils, ScLists, ScXML, SepiReflectionCore,
-  FunLabyUtils, FunLabyFilers;
-
-resourcestring
-  sInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
-  sVersionTooHigh = 'Le fichier a été enregistré avec une version ultérieure '+
-    'de FunLabyrinthe (v%s). Il ne peut être ouvert.';
-  sFileNotFound = 'Le fichier spécifié "%s" n''existe pas';
-  sUnknownUnitType = 'Type d''unité ''%s'' inconnu';
-  sThereMustBeOnePlayer = 'Il doit y avoir un et un seul joueur par fichier';
-  sEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
-  sCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
-  sSourcesNotHandledWhilePlaying =
-    'Les fichiers source ne sont pas gérés en mode jeu';
-
-  sNoFileName = 'Aucun nom de fichier spécifié';
-
-  sTemporaryStatedMap =
-    'La carte d''ID %s est dans un état temporaire qui ne peut être enregistré';
+  FunLabyUtils, FunLabyFilers, FunLabyCoreConsts;
 
 type
   /// Mode d'ouverture d'un fichier FunLabyrinthe
   TFileMode = (fmEdit, fmPlay);
-
-  /// Générée si un fichier ne respecte pas le format attendu
-  EFileError = class(Exception);
 
   TMasterFile = class;
 
@@ -47,20 +27,45 @@ type
     @author sjrd
     @version 5.0
   *}
-  TDependantFile = class
+  TDependantFile = class(TFunLabyPersistent)
   private
     FMasterFile: TMasterFile; /// Fichier maître
+    FMaster: TMaster;         /// Maître FunLabyrinthe
     FHRef: string;            /// HRef
     FFileName: TFileName;     /// Nom du fichier
-    FMaster: TMaster;         /// Maître FunLabyrinthe
+
+    procedure SetHRef(const Value: string);
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
+    function ResolveHRef: TFileName; virtual;
   public
-    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
-      const AFileName: TFileName);
+    constructor Create(AMasterFile: TMasterFile); virtual;
 
     property MasterFile: TMasterFile read FMasterFile;
+    property Master: TMaster read FMaster;
     property HRef: string read FHRef;
     property FileName: TFileName read FFileName;
-    property Master: TMaster read FMaster;
+  end;
+
+  /// Classe de TDependantFile
+  TDependantFileClass = class of TDependantFile;
+
+  {*
+    Liste de fichiers dépendants
+    @author sjrd
+    @version 5.0
+  *}
+  TDependantFileList = class(TFunLabyCollection)
+  private
+    FMasterFile: TMasterFile;
+  protected
+    function CreateItem(ItemClass: TFunLabyPersistentClass):
+      TFunLabyPersistent; override;
+  public
+    constructor Create(AMasterFile: TMasterFile);
+
+    property MasterFile: TMasterFile read FMasterFile;
   end;
 
   {*
@@ -71,15 +76,20 @@ type
   *}
   TUnitFile = class(TDependantFile)
   private
-    FHandlerGUID: TGUID;       /// GUID du gestionnaire du fichier unité
     FCreationParams: TStrings; /// Paramètres de création
-  public
-    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
-      const AFileName: TFileName; const AHandlerGUID: TGUID;
-      Params: TStrings); virtual;
-    destructor Destroy; override;
+    FLoaded: Boolean;          /// Indique si l'unité a déjà été chargée
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
 
-    procedure AfterConstruction; override;
+    procedure EndState(State: TPersistentState); override;
+
+    procedure Load; virtual;
+
+    property CreationParams: TStrings read FCreationParams;
+    property IsLoaded: Boolean read FLoaded;
+  public
+    constructor Create(AMasterFile: TMasterFile); override;
+    destructor Destroy; override;
 
     procedure Loaded; virtual;
     procedure Unloading; virtual;
@@ -92,11 +102,24 @@ type
       RegisterComponentSetProc: TRegisterComponentSetProc); virtual;
 
     procedure GetParams(Params: TStrings); virtual;
-
-    property HandlerGUID: TGUID read FHandlerGUID;
   end;
 
+  /// Classe de TUnitFile
   TUnitFileClass = class of TUnitFile;
+
+  {*
+    Liste de fichiers unité
+    @author sjrd
+    @version 5.0
+  *}
+  TUnitFileList = class(TDependantFileList)
+  private
+    function AddUnitFile(const HRef: string): TUnitFile;
+
+    function GetItems(Index: Integer): TUnitFile;
+  public
+    property Items[Index: Integer]: TUnitFile read GetItems; default;
+  end;
 
   {*
     Représente un fichier source
@@ -104,39 +127,24 @@ type
     @version 5.0
   *}
   TSourceFile = class(TDependantFile)
-  public
-    procedure AfterConstruction; override;
   end;
 
+  /// Classe de TSourceFile
   TSourceFileClass = class of TSourceFile;
 
   {*
-    Représente un fichier carte
-    TMapFile représente un fichier carte FunLabyrinthe (extension .flm). Elle
-    fournit des méthodes pour créer, charger et enregistrer des cartes.
+    Liste de fichiers source
     @author sjrd
     @version 5.0
   *}
-  TMapFile = class(TDependantFile)
+  TSourceFileList = class(TDependantFileList)
   private
-    FMapID: TComponentID; /// ID de la carte liée
-    FMap: TMap;           /// Carte liée
+    function AddSourceFile(const HRef: string): TSourceFile;
+
+    function GetItems(Index: Integer): TSourceFile;
   public
-    constructor Create(AMasterFile: TMasterFile; const AHRef: string;
-      const AFileName: TFileName; const AMapID: TComponentID);
-    constructor CreateNew(AMasterFile: TMasterFile;
-      const AMapID: TComponentID; const ADimensions: T3DPoint;
-      AZoneWidth, AZoneHeight: Integer);
-    procedure AfterConstruction; override;
-
-    procedure Save(const AHRef: string = '';
-      const AFileName: TFileName = '');
-
-    property MapID: TComponentID read FMapID;
-    property Map: TMap read FMap;
+    property Items[Index: Integer]: TSourceFile read GetItems; default;
   end;
-
-  TMapFileClass = class of TMapFile;
 
   {*
     Paramètre d'un fichier unité
@@ -160,7 +168,6 @@ type
     @version 5.0
   *}
   TUnitFileDesc = record
-    GUID: TGUID;             /// GUID du gestionnaire
     HRef: string;            /// Adresse HRef
     Params: TUnitFileParams; /// Paramètres
   end;
@@ -177,7 +184,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TMasterFile = class
+  TMasterFile = class(TFunLabyPersistent)
   private
     FSepiRoot: TSepiRoot; /// Racine Sepi
 
@@ -196,21 +203,17 @@ type
 
     FMaster: TMaster; /// Maître FunLabyrinthe
 
-    FUnitFiles: TObjectList;   /// Liste des fichiers unité
-    FSourceFiles: TObjectList; /// Liste des fichiers source
-    FMapFiles: TObjectList;    /// Liste des fichiers carte
+    FUnitFiles: TUnitFileList;     /// Liste des fichiers unité
+    FSourceFiles: TSourceFileList; /// Liste des fichiers source
+
+    FWritingUnitFiles: TUnitFileList; /// Liste des fichiers unité à écrire
 
     procedure InvalidFormat;
 
     procedure Load(const ADocument: IInterface);
     procedure TestOpeningValidity;
-
-    function GetUnitFileCount: Integer;
-    function GetUnitFiles(Index: Integer): TUnitFile;
-    function GetSourceFileCount: Integer;
-    function GetSourceFiles(Index: Integer): TSourceFile;
-    function GetMapFileCount: Integer;
-    function GetMapFiles(Index: Integer): TMapFile;
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
   public
     constructor Create(ASepiRoot: TSepiRoot; const AFileName: TFileName;
       AMode: TFileMode);
@@ -227,13 +230,6 @@ type
 
     function AddSourceFile(const HRef: string): TSourceFile;
     procedure RemoveSourceFile(SourceFile: TSourceFile);
-
-    function AddMapFile(const ID: TComponentID; const HRef: string;
-      MaxViewSize: Integer = 1): TMapFile;
-    function AddNewMapFile(const ID: TComponentID;
-      const Dimensions: T3DPoint;
-      ZoneWidth, ZoneHeight: Integer;
-      MaxViewSize: Integer = 1): TMapFile;
 
     procedure GameStarted;
     procedure GameEnded;
@@ -254,23 +250,19 @@ type
     property Mode: TFileMode read FMode;
     property Version: string read FVersion;
 
+    property Master: TMaster read FMaster;
+
+    property UnitFiles: TUnitFileList read FUnitFiles;
+    property SourceFiles: TSourceFileList read FSourceFiles;
+
+    property AllowEdit: Boolean read FAllowEdit;
+    property IsSaveguard: Boolean read FIsSaveguard;
+  published
     property Title: string read FTitle write FTitle;
     property Description: string read FDescription write FDescription;
     property Difficulty: string read FDifficulty write FDifficulty;
     property AuthorID: Integer read FAuthorID write FAuthorID;
     property Author: string read FAuthor write FAuthor;
-
-    property AllowEdit: Boolean read FAllowEdit;
-    property IsSaveguard: Boolean read FIsSaveguard;
-
-    property Master: TMaster read FMaster;
-
-    property UnitFileCount: Integer read GetUnitFileCount;
-    property UnitFiles[Index: Integer]: TUnitFile read GetUnitFiles;
-    property SourceFileCount: Integer read GetSourceFileCount;
-    property SourceFiles[Index: Integer]: TSourceFile read GetSourceFiles;
-    property MapFileCount: Integer read GetMapFileCount;
-    property MapFiles[Index: Integer]: TMapFile read GetMapFiles;
   end;
 
   {*
@@ -279,12 +271,15 @@ type
     @version 5.0
   *}
   TUnitFileClassList = class(TCustomValueBucketList)
+  protected
+    function BucketFor(const Key): Cardinal; override;
+    function KeyEquals(const Key1, Key2): Boolean; override;
   public
     constructor Create;
 
-    procedure Add(const GUID: TGUID; UnitFileClass: TUnitFileClass);
-    procedure Remove(const GUID: TGUID);
-    function Find(const GUID: TGUID): TUnitFileClass;
+    procedure Add(const Extension: string; UnitFileClass: TUnitFileClass);
+    procedure Remove(const Extension: string);
+    function Find(const Extension: string): TUnitFileClass;
   end;
 
 function HRefToFileName(const HRef: string;
@@ -296,19 +291,13 @@ const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
 
 var
-  /// Gestionnaires d'unité : association GUID <-> classe d'unité
+  /// Gestionnaires d'unité : association extension <-> classe d'unité
   UnitFileClasses: TUnitFileClassList = nil;
 
 implementation
 
 uses
   StrUtils, ScStrUtils, IniFiles, Variants, MSXML, ActiveX;
-
-const {don't localize}
-  /// Code de format d'un fichier FLM (correspond à '.flm')
-  FLMFormatCode: Longint = $6D6C662E;
-
-  FLMVersion = 1; /// Version courante du format FLM
 
 {*
   Compare deux numéros de versions représentés textuellement
@@ -362,7 +351,7 @@ begin
   if FileExists(SubFile) then
     Result := SubFile
   else
-    raise EFileError.CreateFmt(sFileNotFound, [HRef]);
+    raise EInOutError.CreateFmt(SFileNotFound, [HRef]);
 end;
 
 {*
@@ -397,17 +386,68 @@ end;
 {*
   Crée une instance de TDependantFile
   @param AMasterFile   Fichier maître
-  @param AFileName     Nom du fichier
-  @param AMIMEType     Type MIME du fichier
 *}
-constructor TDependantFile.Create(AMasterFile: TMasterFile;
-  const AHRef: string; const AFileName: TFileName);
+constructor TDependantFile.Create(AMasterFile: TMasterFile);
 begin
   inherited Create;
+
   FMasterFile := AMasterFile;
-  FHRef := AHRef;
-  FFileName := AFileName;
   FMaster := FMasterFile.Master;
+end;
+
+{*
+  Renseigne le href du fichier
+  @param Value   Valeur de href
+*}
+procedure TDependantFile.SetHRef(const Value: string);
+begin
+  FHRef := Value;
+  FFileName := ResolveHRef;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TDependantFile.DefineProperties(Filer: TFunLabyFiler);
+begin
+  Filer.DefineFieldProcProperty('HRef', TypeInfo(string),
+    @FHRef, @TDependantFile.SetHRef, FHRef <> '');
+
+  inherited;
+end;
+
+{*
+  Résoud le href en nom de fichier
+  @return Nom de fichier correspondant à HRef
+  @throws EInOutError Aucun fichier correspondant n'a été trouvé
+*}
+function TDependantFile.ResolveHRef: TFileName;
+begin
+  Result := MasterFile.ResolveHRef(HRef, fUnitsDir);
+end;
+
+{--------------------------}
+{ TDependantFileList class }
+{--------------------------}
+
+{*
+  Crée une liste de fichiers dépendants
+  @param AMasterFile   Fichier maître
+*}
+constructor TDependantFileList.Create(AMasterFile: TMasterFile);
+begin
+  inherited Create;
+
+  FMasterFile := AMasterFile;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TDependantFileList.CreateItem(
+  ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
+begin
+  Result := TDependantFileClass(ItemClass).Create(MasterFile);
 end;
 
 {------------------}
@@ -415,20 +455,13 @@ end;
 {------------------}
 
 {*
-  Crée une instance de TUnitFile
-  @param AMasterFile   Fichier maître
-  @param AFileName     Nom du fichier
-  @param AMIMEType     Type MIME du fichier
-  @param Params        Paramètres envoyés à l'unité
+  [@inheritDoc]
 *}
-constructor TUnitFile.Create(AMasterFile: TMasterFile; const AHRef: string;
-  const AFileName: TFileName; const AHandlerGUID: TGUID; Params: TStrings);
+constructor TUnitFile.Create(AMasterFile: TMasterFile);
 begin
-  inherited Create(AMasterFile, AHRef, AFileName);
+  inherited Create(AMasterFile);
 
-  FHandlerGUID := AHandlerGUID;
   FCreationParams := TStringList.Create;
-  FCreationParams.Assign(Params);
 end;
 
 {*
@@ -442,14 +475,46 @@ begin
 end;
 
 {*
-  Exécuté après la construction de l'objet
-  AfterConstruction est appelé après l'exécution du dernier constructeur.
-  N'appelez pas directement AfterConstruction.
+  [@inheritDoc]
 *}
-procedure TUnitFile.AfterConstruction;
+procedure TUnitFile.DefineProperties(Filer: TFunLabyFiler);
+var
+  Params: TStrings;
 begin
   inherited;
-  MasterFile.FUnitFiles.Add(Self);
+
+  if (psWriting in PersistentState) and IsLoaded then
+  begin
+    Params := TStringList.Create;
+    try
+      GetParams(Params);
+      Filer.DefineStrings('Params', Params);
+    finally
+      Params.Free;
+    end;
+  end else
+  begin
+    Filer.DefineStrings('Params', FCreationParams);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TUnitFile.EndState(State: TPersistentState);
+begin
+  inherited;
+
+  if (psReading in State) and (not IsLoaded) and (HRef <> '') then
+    Load;
+end;
+
+{*
+  Charge le fichier
+*}
+procedure TUnitFile.Load;
+begin
+  FLoaded := True;
 end;
 
 {*
@@ -516,186 +581,56 @@ begin
   Params.Assign(FCreationParams);
 end;
 
-{--------------------}
-{ Classe TSourceFile }
-{--------------------}
+{---------------------}
+{ TUnitFileList class }
+{---------------------}
+
+{*
+  Ajoute un fichier unité
+  @param HRef   HRef du fichier unité (uniquement pour déterminer la classe)
+  @return Fichier unité créé
+*}
+function TUnitFileList.AddUnitFile(const HRef: string): TUnitFile;
+begin
+  Result := TUnitFile(Add(UnitFileClasses.Find(ExtractFileExt(HRef))));
+end;
 
 {*
   [@inheritDoc]
 *}
-procedure TSourceFile.AfterConstruction;
+function TUnitFileList.GetItems(Index: Integer): TUnitFile;
 begin
-  inherited;
-  MasterFile.FSourceFiles.Add(Self);
+  Result := TUnitFile(inherited Items[Index]);
 end;
 
-{-----------------}
-{ Classe TMapFile }
-{-----------------}
+{-----------------------}
+{ TSourceFileList class }
+{-----------------------}
 
 {*
-  Crée une instance de TMapFile en chargeant la carte depuis un fichier
-  @param AMasterFile   Fichier maître
-  @param AHRef         HRef du fichier
-  @param AFileName     Nom du fichier
-  @param AMapID        ID de la carte
+  Ajoute un nouveau fichier source
+  @param HRef   HRef du fichier source
+  @return Fichier source ajouté
 *}
-constructor TMapFile.Create(AMasterFile: TMasterFile; const AHRef: string;
-  const AFileName: TFileName; const AMapID: TComponentID);
-var
-  Stream: TStream;
-  ZoneWidth, ZoneHeight, I, Count, Value, SquareSize: Integer;
-  Dimensions: T3DPoint;
-  Palette: array of TSquare;
+function TSourceFileList.AddSourceFile(const HRef: string): TSourceFile;
 begin
-  inherited Create(AMasterFile, AHRef, AFileName);
-  FMapID := AMapID;
+  Result := TSourceFile.Create(MasterFile);
 
-  Stream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
   try
-    // Contrôle de format
-    Stream.ReadBuffer(Value, 4);
-    if Value <> FLMFormatCode then
-      EFileError.Create(sInvalidFileFormat);
-
-    // Contrôle de version de format
-    Stream.ReadBuffer(Value, 4);
-    if Value > FLMVersion then
-      EFileError.CreateFmt(sVersionTooHigh, [IntToStr(Value)]);
-
-    // Lecture des dimensions et de la taille d'une zone
-    Stream.ReadBuffer(Dimensions, SizeOf(T3DPoint));
-    Stream.ReadBuffer(ZoneWidth, 4);
-    Stream.ReadBuffer(ZoneHeight, 4);
-
-    // Création de la carte elle-même
-    FMap := TMap.Create(Master, MapID, Dimensions, ZoneWidth, ZoneHeight);
-
-    // Lecture de la palette de cases
-    Stream.ReadBuffer(Count, 4);
-    SetLength(Palette, Count);
-    for I := 0 to Count-1 do
-      Palette[I] := Master.Square[ReadStrFromStream(Stream)];
-
-    // Lecture de la carte
-    if Count <= 256 then
-      SquareSize := 1
-    else
-      SquareSize := 2;
-    Value := 0;
-    for I := 0 to Map.LinearMapCount-1 do
-    begin
-      Stream.ReadBuffer(Value, SquareSize);
-      Map.LinearMap[I] := Palette[Value];
-    end;
-  finally
-    Stream.Free;
+    Result.SetHRef(HRef);
+    AddItem(Result);
+  except
+    Result.Free;
+    raise;
   end;
 end;
 
 {*
-  Crée une instance de TMapFile, en créant une nouvelle carte
-  La nouvelle carte ainsi créée est vide : il est impératif de la remplir avant
-  toute utilisation, sous peine de violations d'accès.
-  @param AMasterFile   Fichier maître
-  @param AMapID        ID de la carte
-  @param ADimensions   Dimensions de la carte
-  @param AZoneWidth    Largeur d'une zone
-  @param AZoneHeight   Hauteur d'une zone
+  [@inheritDoc]
 *}
-constructor TMapFile.CreateNew(AMasterFile: TMasterFile;
-  const AMapID: TComponentID; const ADimensions: T3DPoint;
-  AZoneWidth, AZoneHeight: Integer);
+function TSourceFileList.GetItems(Index: Integer): TSourceFile;
 begin
-  inherited Create(AMasterFile, '', '');
-  FMapID := AMapID;
-  FMap := TMap.Create(Master, AMapID, ADimensions, AZoneWidth, AZoneHeight);
-end;
-
-{*
-  Exécuté après la construction de l'objet
-  AfterConstruction est appelé après l'exécution du dernier constructeur.
-  N'appelez pas directement AfterConstruction.
-*}
-procedure TMapFile.AfterConstruction;
-begin
-  inherited;
-  MasterFile.FMapFiles.Add(Self);
-end;
-
-{*
-  Enregistre le fichier
-  @param AFileName   Nom du fichier dans lequel enregistrer
-*}
-procedure TMapFile.Save(const AHRef: string = '';
-  const AFileName: TFileName = '');
-var
-  I, Value, Count, PaletteCountPos, SquareSize: Integer;
-  Stream: TStream;
-  Dimensions: T3DPoint;
-begin
-  if AHRef <> '' then
-  begin
-    FHRef := AHRef;
-    FFileName := AFileName;
-  end;
-
-  Stream := TFileStream.Create(FileName, fmCreate or fmShareExclusive);
-  try
-    // Indication de format
-    Value := FLMFormatCode;
-    Stream.WriteBuffer(Value, 4);
-
-    // Indication de version de format
-    Value := FLMVersion;
-    Stream.WriteBuffer(Value, 4);
-
-    // Écriture des dimensions et de la taille d'une zone
-    Dimensions := Map.Dimensions;
-    Stream.WriteBuffer(Dimensions, SizeOf(T3DPoint));
-    Value := Map.ZoneWidth;
-    Stream.WriteBuffer(Value, 4);
-    Value := Map.ZoneHeight;
-    Stream.WriteBuffer(Value, 4);
-
-    // Préparation de la palette (Squares.Tag) et écriture de celle-ci
-    for I := 0 to Master.SquareCount-1 do
-      Master.Squares[I].Tag := -1;
-    Count := 0;
-    PaletteCountPos := Stream.Position;
-    Stream.WriteBuffer(Count, 4); // On repassera changer çà plus tard
-    for I := 0 to Map.LinearMapCount-1 do
-    begin
-      with Map.LinearMap[I] do
-      begin
-        if ClassType <> TSquare then
-          raise EFileError.CreateFmt(sTemporaryStatedMap, [Map.ID]);
-        if Tag < 0 then
-        begin
-          Tag := Count;
-          WriteStrToStream(Stream, ID);
-          Inc(Count);
-        end;
-      end;
-    end;
-
-    // Écriture de la carte
-    if Count <= 256 then
-      SquareSize := 1
-    else
-      SquareSize := 2;
-    for I := 0 to Map.LinearMapCount-1 do
-    begin
-      Value := Map.LinearMap[I].Tag;
-      Stream.WriteBuffer(Value, SquareSize);
-    end;
-
-    // On retourne écrire la taille de la palette
-    Stream.Seek(PaletteCountPos, soFromBeginning);
-    Stream.WriteBuffer(Count, 4);
-  finally
-    Stream.Free;
-  end;
+  Result := TSourceFile(inherited Items[Index]);
 end;
 
 {--------------------}
@@ -719,20 +654,13 @@ begin
   FMode := AMode;
   FVersion := CurrentVersion;
 
-  FTitle := '';
-  FDescription := '';
-  FDifficulty := '';
-  FAuthorID := 0;
-  FAuthor := '';
-
   FAllowEdit := True;
   FIsSaveguard := False;
 
   FMaster := TMaster.Create(Mode = fmEdit);
 
-  FUnitFiles := TObjectList.Create;
-  FSourceFiles := TObjectList.Create;
-  FMapFiles := TObjectList.Create;
+  FUnitFiles := TUnitFileList.Create(Self);
+  FSourceFiles := TSourceFileList.Create(Self);
 
   Load(LoadXMLDocumentFromFile(FFileName));
   TestOpeningValidity;
@@ -748,51 +676,43 @@ constructor TMasterFile.CreateNew(ASepiRoot: TSepiRoot;
   const UnitFileDescs: TUnitFileDescs; FileContents: TStrings = nil);
 var
   I, J: Integer;
-  Parameters: TStrings;
+  UnitFile: TUnitFile;
   Document: IXMLDOMDocument;
 begin
   inherited Create;
 
   FSepiRoot := ASepiRoot;
 
-  FFileName := '';
   FMode := fmEdit;
   FVersion := CurrentVersion;
-
-  FTitle := '';
-  FDescription := '';
-  FDifficulty := '';
-  FAuthorID := 0;
-  FAuthor := '';
 
   FAllowEdit := True;
   FIsSaveguard := False;
 
   FMaster := TMaster.Create(True);
 
-  FUnitFiles := TObjectList.Create;
-  FSourceFiles := TObjectList.Create;
-  FMapFiles := TObjectList.Create;
+  FUnitFiles := TUnitFileList.Create(Self);
+  FSourceFiles := TSourceFileList.Create(Self);
 
   // Ajouter les unités décrites par UnitFileDescs
-  if Length(UnitFileDescs) > 0 then
+  for I := 0 to Length(UnitFileDescs)-1 do
   begin
-    Parameters := TStringList.Create;
-    try
-      for I := 0 to Length(UnitFileDescs)-1 do
-      begin
-        with UnitFileDescs[I] do
-        begin
-          Parameters.Clear;
-          for J := 0 to Length(Params)-1 do
-            with Params[I] do
-              Parameters.Values[Name] := Value;
-          UnitFileClasses.Find(GUID).Create(Self, HRef,
-            ResolveHRef(HRef, fUnitsDir), GUID, Parameters);
-        end;
+    with UnitFileDescs[I] do
+    begin
+      UnitFile := UnitFiles.AddUnitFile(HRef);
+
+      // Simulation of reading with a filer
+      UnitFile.BeginState([psReading]);
+      try
+        UnitFile.SetHRef(HRef);
+
+        UnitFile.FCreationParams.Clear;
+        for J := 0 to Length(Params)-1 do
+          with Params[J] do
+            UnitFile.FCreationParams.Values[Name] := Value;
+      finally
+        UnitFile.EndState([psReading]);
       end;
-    finally
-      Parameters.Free;
     end;
   end;
 
@@ -819,7 +739,6 @@ begin
     les gestionnaires d'unités et de cartes n'accèdent encore au maître dans
     le destructeur. }
   FMaster.Free;
-  FMapFiles.Free;
   FSourceFiles.Free;
 
   { Dans la mesure où des unités pourraient être dépendantes d'autres, il faut
@@ -845,7 +764,7 @@ var
 begin
   inherited;
 
-  for I := 0 to UnitFileCount-1 do
+  for I := 0 to UnitFiles.Count-1 do
     UnitFiles[I].Loaded;
 end;
 
@@ -860,7 +779,7 @@ var
 begin
   inherited;
 
-  for I := UnitFileCount-1 downto 0 do
+  for I := UnitFiles.Count-1 downto 0 do
     UnitFiles[I].Unloading;
 end;
 
@@ -870,13 +789,13 @@ end;
 *}
 procedure TMasterFile.InvalidFormat;
 begin
-  raise EFileError.Create(sInvalidFileFormat);
+  raise EInOutError.Create(SInvalidFileFormat);
 end;
 
 {*
   Charge le contenu du document
   @param Document   Document XML DOM contenu du fichier
-  @throws EFileError : Un fichier à charger n'existe pas ou n'est pas valide
+  @throws EInOutError : Un fichier à charger n'existe pas ou n'est pas valide
 *}
 procedure TMasterFile.Load(const ADocument: IInterface);
 
@@ -890,12 +809,6 @@ procedure TMasterFile.Load(const ADocument: IInterface);
 
 var
   Document: IXMLDOMDocument;
-  Params: TStrings;
-  I, J, MaxViewSize: Integer;
-  ID, HRef, Name, MapID: string;
-  FileType: TGUID;
-  Player: TPlayer;
-  Position: T3DPoint;
 begin
   { Don't localize strings in this method }
 
@@ -911,124 +824,15 @@ begin
     if FVersion = '' then
       InvalidFormat;
     if CompareVersions(FVersion, CurrentVersion) > 0 then
-      raise EFileError.CreateFmt(sVersionTooHigh, [FVersion]);
+      raise EInOutError.CreateFmt(SVersionTooHigh, [FVersion]);
 
     // Attributs du fichier
     FAllowEdit := NullToEmptyStr(getAttribute('allowedit')) <> 'no';
     FIsSaveguard := NullToEmptyStr(getAttribute('issaveguard')) = 'yes';
 
-    // Infos standart sur le labyrinthe
-    FTitle := selectSingleNode('./title').text;
-    FDescription := NullToEmptyStr(selectSingleNode('./description').text);
-    FDifficulty := NullToEmptyStr(selectSingleNode('./difficulty').text);
-    with selectSingleNode('./author') as IXMLDOMElement do
-    begin
-      FAuthorID := StrToIntDef(NullToEmptyStr(getAttribute('id')), 0);
-      FAuthor := NullToEmptyStr(text);
-    end;
-
-    // Unités utilisées
-    Params := THashedStringList.Create;
-    try
-      with selectNodes('./units/unit') do
-      begin
-        for I := 0 to length-1 do
-        begin
-          with item[I] as IXMLDOMElement do
-          begin
-            FileType := StringToGUID(getAttribute('type'));
-            HRef := getAttribute('href');
-
-            Params.Clear;
-            with selectNodes('./param') do
-            begin
-              for J := 0 to length-1 do
-                with item[J] as IXMLDOMElement do
-                  Params.Values[getAttribute('name')] := getAttribute('value');
-            end;
-
-            UnitFileClasses.Find(FileType).Create(Self, HRef,
-              ResolveHRef(HRef, fUnitsDir), FileType, Params);
-          end;
-        end;
-      end;
-    finally
-      Params.Free;
-    end;
-
-    // Fichiers source liés - pas en mode jeu
-    if Mode <> fmPlay then
-    begin
-      with selectNodes('./sources/source') do
-      begin
-        for I := 0 to length-1 do
-        begin
-          with item[I] as IXMLDOMElement do
-          begin
-            HRef := getAttribute('href');
-            TSourceFile.Create(Self, HRef, ResolveHRef(HRef, fUnitsDir));
-          end;
-        end;
-      end;
-    end;
-
-    // Cartes
-    with selectNodes('./maps/map') do
-    begin
-      for I := 0 to length-1 do
-      begin
-        with item[I] as IXMLDOMElement do
-        begin
-          ID := getAttribute('id');
-          HRef := getAttribute('href');
-
-          if VarIsNull(getAttribute('maxviewsize')) then
-            MaxViewSize := MinViewSize
-          else
-            MaxViewSize := getAttribute('maxviewsize');
-
-          AddMapFile(ID, HRef, MaxViewSize);
-        end;
-      end;
-    end;
-
-    // Joueurs
-    with selectNodes('./players/player') do
-    begin
-      if length <> 1 then
-        raise EFileError.Create(sThereMustBeOnePlayer);
-      for I := 0 to length-1 do
-      begin
-        with item[I] as IXMLDOMElement do
-        begin
-          ID := getAttribute('id');
-          if VarIsNull(getAttribute('name')) then
-            Name := ID
-          else
-            Name := getAttribute('name');
-
-          Player := TPlayer.Create(Master, ID, Name);
-
-          // TODO Compatibility only: remove when no longer used
-          if selectSingleNode('./position') <> nil then
-          begin
-            with selectSingleNode('./position') as IXMLDOMElement do
-            begin
-              MapID := getAttribute('map');
-              Position.X := getAttribute('posx');
-              Position.Y := getAttribute('posy');
-              Position.Z := getAttribute('posz');
-            end;
-
-            Player.ChangePosition(Master.Map[MapID], Position);
-          end;
-        end;
-      end;
-    end;
-
-    // Chargement des objets persistents
-    TFunLabyXMLReader.ReadPersistent(Master,
-      selectSingleNode('./master') as IXMLDOMElement);
+    // Chargement général
+    TFunLabyXMLReader.ReadPersistent(Self,
+      Document.documentElement as IXMLDOMElement);
   end;
 end;
 
@@ -1038,71 +842,68 @@ end;
   « illégalement ». Deux cas d'illégalité sont à tester :
   - Le fichier est une sauvegarde et est ouvert autrement que pour y jouer ;
   - Le fichier a été interdit d'édition, et ouvert dans ce mode.
-  @throws EFileError : Le fichier a été ouvert illégalement
+  @throws EInOutError : Le fichier a été ouvert illégalement
 *}
 procedure TMasterFile.TestOpeningValidity;
 begin
   if IsSaveguard and (Mode <> fmPlay) then
-    raise EFileError.Create(sCantEditSaveguard);
+    raise EInOutError.Create(SCantEditSaveguard);
   if (not AllowEdit) and (Mode = fmEdit) then
-    raise EFileError.Create(sEditingNotAllowed);
+    raise EInOutError.Create(SEditingNotAllowed);
 end;
 
 {*
-  Nombre de fichiers unité
-  @return Nombre de fichiers unité
+  [@inheritDoc]
 *}
-function TMasterFile.GetUnitFileCount: Integer;
+procedure TMasterFile.DefineProperties(Filer: TFunLabyFiler);
+var
+  Maps, Players: TStrings;
+  I: Integer;
 begin
-  Result := FUnitFiles.Count;
-end;
+  inherited;
 
-{*
-  Tableau zero-based des fichiers unité
-  @param Index   Index du fichier unité
-  @return Le fichier unité dont l'index a été spécifié
-*}
-function TMasterFile.GetUnitFiles(Index: Integer): TUnitFile;
-begin
-  Result := TUnitFile(FUnitFiles[Index]);
-end;
+  if (psWriting in PersistentState) and (FWritingUnitFiles <> nil) then
+    Filer.DefinePersistent('UnitFiles', FWritingUnitFiles)
+  else
+    Filer.DefinePersistent('UnitFiles', UnitFiles);
 
-{*
-  Nombre de fichiers source
-  @return Nombre de fichiers source
-*}
-function TMasterFile.GetSourceFileCount: Integer;
-begin
-  Result := FSourceFiles.Count;
-end;
+  if Mode <> fmPlay then
+    Filer.DefinePersistent('SourceFiles', SourceFiles);
 
-{*
-  Tableau zero-based des fichiers source
-  @param Index   Index du fichier source
-  @return Le fichier source dont l'index a été spécifié
-*}
-function TMasterFile.GetSourceFiles(Index: Integer): TSourceFile;
-begin
-  Result := TSourceFile(FSourceFiles[Index]);
-end;
+  // Read/write map and player list
+  Maps := nil;
+  Players := nil;
+  try
+    Maps := TStringList.Create;
+    Players := TStringList.Create;
 
-{*
-  Nombre de fichiers carte
-  @return Nombre de fichiers carte
-*}
-function TMasterFile.GetMapFileCount: Integer;
-begin
-  Result := FMapFiles.Count;
-end;
+    if psWriting in PersistentState then
+    begin
+      for I := 0 to Master.MapCount-1 do
+        Maps.Add(Master.Maps[I].ID);
 
-{*
-  Tableau zero-based des fichiers carte
-  @param Index   Index du fichier carte
-  @return Le fichier carte dont l'index a été spécifié
-*}
-function TMasterFile.GetMapFiles(Index: Integer): TMapFile;
-begin
-  Result := TMapFile(FMapFiles[Index]);
+      for I := 0 to Master.PlayerCount-1 do
+        with Master.Players[I] do
+          Players.Values[ID] := Name;
+    end;
+
+    Filer.DefineStrings('Maps', Maps);
+    Filer.DefineStrings('Players', Players);
+
+    if psReading in PersistentState then
+    begin
+      for I := 0 to Maps.Count-1 do
+        TMap.Create(Master, Maps[I]);
+
+      for I := 0 to Players.Count-1 do
+        TPlayer.Create(Master, Players.Names[I], Players.ValueFromIndex[I]);
+    end;
+  finally
+    Maps.Free;
+    Players.Free;
+  end;
+
+  Filer.DefinePersistent('Master', Master);
 end;
 
 {*
@@ -1110,7 +911,7 @@ end;
   @param HRef         Adresse HRef du fichier
   @param DefaultDir   Dossier par défaut du type de fichier attendu
   @return Nom du fichier qualifié de son chemin d'accès
-  @throws EFileError Le fichier n'existe pas
+  @throws EInOutError Le fichier n'existe pas
 *}
 function TMasterFile.ResolveHRef(const HRef, DefaultDir: string): TFileName;
 var
@@ -1128,7 +929,7 @@ end;
   @param FileName     Nom du fichier
   @param DefaultDir   Dossier par défaut du type du fichier
   @return Adresse HRef du fichier, relativement au contexte du fichier maître
-  @throws EFileError Le fichier n'existe pas
+  @throws EInOutError Le fichier n'existe pas
 *}
 function TMasterFile.MakeHRef(const FileName: TFileName;
   const DefaultDir: string): string;
@@ -1150,8 +951,9 @@ end;
 function TMasterFile.AddSourceFile(const HRef: string): TSourceFile;
 begin
   if Mode = fmPlay then
-    raise EFileError.Create(sSourcesNotHandledWhilePlaying);
-  Result := TSourceFile.Create(Self, HRef, ResolveHRef(HRef, fUnitsDir));
+    raise EInOutError.Create(SSourcesNotHandledWhilePlaying);
+
+  Result := SourceFiles.AddSourceFile(HRef);
 end;
 
 {*
@@ -1164,44 +966,13 @@ begin
 end;
 
 {*
-  Ajoute un fichier carte
-  @param ID            ID de la carte
-  @param HRef          Adresse du fichier
-  @param MaxViewSize   Taille maximale d'une vue pour cette carte
-  @return Le fichier carte créé et chargé
-*}
-function TMasterFile.AddMapFile(const ID: TComponentID; const HRef: string;
-  MaxViewSize: Integer = 1): TMapFile;
-begin
-  Result := TMapFile.Create(Self, HRef, ResolveHRef(HRef, fMapsDir), ID);
-  Result.Map.MaxViewSize := MaxViewSize;
-end;
-
-{*
-  Ajoute un nouveau fichier carte
-  @param ID            ID de la carte
-  @param Dimensions    Dimensions
-  @param ZoneWidth     Largeur d'une zone
-  @param ZoneHeight    Hauteur d'une zone
-  @param MaxViewSize   Taille maximale d'une vue pour cette carte
-  @return Le fichier carte créé
-*}
-function TMasterFile.AddNewMapFile(const ID: TComponentID;
-  const Dimensions: T3DPoint; ZoneWidth, ZoneHeight: Integer;
-  MaxViewSize: Integer = 1): TMapFile;
-begin
-  Result := TMapFile.CreateNew(Self, ID, Dimensions, ZoneWidth, ZoneHeight);
-  Result.Map.MaxViewSize := MaxViewSize;
-end;
-
-{*
   Commence la partie
 *}
 procedure TMasterFile.GameStarted;
 var
   I: Integer;
 begin
-  for I := 0 to UnitFileCount-1 do
+  for I := 0 to UnitFiles.Count-1 do
     UnitFiles[I].GameStarted;
 end;
 
@@ -1212,7 +983,7 @@ procedure TMasterFile.GameEnded;
 var
   I: Integer;
 begin
-  for I := 0 to UnitFileCount-1 do
+  for I := 0 to UnitFiles.Count-1 do
     UnitFiles[I].GameEnded;
 end;
 
@@ -1227,7 +998,7 @@ procedure TMasterFile.RegisterComponents(
 var
   I: Integer;
 begin
-  for I := 0 to UnitFileCount-1 do
+  for I := 0 to UnitFiles.Count-1 do
   begin
     UnitFiles[I].RegisterComponents(
       RegisterSingleComponentProc, RegisterComponentSetProc);
@@ -1246,13 +1017,12 @@ var
 begin
   ParamList := TStringList.Create;
   try
-    SetLength(UnitFileDescs, UnitFileCount);
-    for FileIdx := 0 to UnitFileCount-1 do
+    SetLength(UnitFileDescs, UnitFiles.Count);
+    for FileIdx := 0 to UnitFiles.Count-1 do
     begin
       with UnitFileDescs[FileIdx] do
       begin
         UnitFile := UnitFiles[FileIdx];
-        GUID := UnitFile.HandlerGUID;
         HRef := UnitFile.HRef;
 
         ParamList.Clear;
@@ -1284,44 +1054,50 @@ end;
 procedure TMasterFile.Save(const UnitFileDescs: TUnitFileDescs;
   const AFileName: TFileName = '');
 var
-  Document: IXMLDOMDocument;
-  FunLabyrinthe, MasterNode, Units, Sources, Maps, Players: IXMLDOMElement;
-  Player: IXMLDOMElement;
-  Element, Param: IXMLDOMElement;
-  Params: TStrings;
-  MapHRef: string;
-  FileName, MapFileName: TFileName;
   I, J: Integer;
+  UnitFile: TUnitFile;
+begin
+  FWritingUnitFiles := TUnitFileList.Create(Self);
+  try
+    // Build writing unit file list - they will never be loaded
+    for I := 0 to Length(UnitFileDescs)-1 do
+    begin
+      with UnitFileDescs[I] do
+      begin
+        UnitFile := FWritingUnitFiles.AddUnitFile(HRef);
+        UnitFile.SetHRef(HRef);
+
+        for J := 0 to Length(Params)-1 do
+          with Params[J] do
+            UnitFile.CreationParams.Values[Name] := Value;
+      end;
+    end;
+
+    // Save with this overridden unit file list
+    Save(AFileName);
+  finally
+    FreeAndNil(FWritingUnitFiles);
+  end;
+end;
+
+{*
+  Enregistre le fichier
+  @param AFileName   Nom du fichier à enregistrer (si vide, conserve l'existant)
+*}
+procedure TMasterFile.Save(const AFileName: TFileName = '');
+var
+  Document: IXMLDOMDocument;
+  FunLabyrinthe: IXMLDOMElement;
+  FileName: TFileName;
 begin
   { Don't localize strings in this method }
 
   if (AFileName = '') and (Mode = fmPlay) and (not IsSaveguard) then
-    raise EFileError.Create(sNoFileName);
+    raise EInOutError.Create(SNoFileName);
   if AFileName = '' then
     FileName := FFileName
   else
     FileName := AFileName;
-
-  if Mode = fmPlay then
-  begin
-    MapHRef := ExtractFileName(FileName);
-    I := LastDelimiter('.', MapHRef);
-    if I > 0 then
-    begin
-      SetLength(MapHRef, I);
-      MapHRef[I] := PathDelim;
-    end else
-      MapHRef := MapHRef + '-files' + PathDelim;
-
-    MapFileName := ExtractFilePath(FileName) + MapHRef;
-    MapHRef := StringReplace(MapHRef, PathDelim, HRefDelim, [rfReplaceAll]);
-
-    ForceDirectories(MapFileName);
-  end else
-  begin
-    MapHRef := '';
-    MapFileName := '';
-  end;
 
   Document := CoDOMDocument.Create;
   Document.async := False;
@@ -1336,122 +1112,7 @@ begin
     if Mode = fmPlay then
       FunLabyrinthe.setAttribute('issaveguard', 'yes');
 
-    with FunLabyrinthe do
-    begin
-      Element := Document.createElement('title');
-      Element.text := Title;
-      appendChild(Element);
-
-      Element := Document.createElement('description');
-      Element.text := Description;
-      appendChild(Element);
-
-      Element := Document.createElement('difficulty');
-      Element.text := Difficulty;
-      appendChild(Element);
-
-      Element := Document.createElement('author');
-      Element.text := Author;
-      if AuthorID > 0 then
-        Element.setAttribute('id', AuthorID);
-      appendChild(Element);
-
-      // Unités
-      Units := Document.createElement('units');
-      with Units do
-      begin
-        for I := 0 to Length(UnitFileDescs)-1 do
-        begin
-          with UnitFileDescs[I] do
-          begin
-            Element := Document.createElement('unit');
-            Element.setAttribute('type', GUIDToString(GUID));
-            Element.setAttribute('href', HRef);
-
-            with Element do
-            begin
-              for J := 0 to Length(Params)-1 do
-              begin
-                Param := Document.createElement('param');
-                Param.setAttribute('name', Params[J].Name);
-                Param.setAttribute('value', Params[J].Value);
-                appendChild(Param);
-              end;
-            end;
-
-            appendChild(Element); // unit
-          end;
-        end;
-      end;
-      appendChild(Units);
-
-      // Fichiers source - pas en mode jeu
-      if Mode <> fmPlay then
-      begin
-        Sources := Document.createElement('sources');
-        with Sources do
-        begin
-          for I := 0 to SourceFileCount-1 do
-          begin
-            Element := Document.createElement('source');
-            Element.setAttribute('href', SourceFiles[I].HRef);
-            appendChild(Element);
-          end;
-        end;
-        appendChild(Sources);
-      end;
-
-      // Cartes
-      Maps := Document.createElement('maps');
-      with Maps do
-      begin
-        for I := 0 to MapFileCount-1 do
-        begin
-          with MapFiles[I] do
-          begin
-            if Mode <> fmPlay then
-              Save
-            else
-              Save(MapHRef+MapID+'.flm', MapFileName+MapID+'.flm');
-
-            Element := Document.createElement('map');
-            Element.setAttribute('id', Map.ID);
-            Element.setAttribute('href', HRef);
-            if Map.MaxViewSize > 1 then
-              Element.setAttribute('maxviewsize', Map.MaxViewSize);
-            appendChild(Element);
-          end;
-        end;
-      end;
-      appendChild(Maps);
-
-      // Joueurs
-      Players := Document.createElement('players');
-      with Players do
-      begin
-        Params := TStringList.Create;
-        try
-          for I := 0 to Master.PlayerCount-1 do
-          begin
-            with Master.Players[I] do
-            begin
-              Player := Document.createElement('player');
-              Player.setAttribute('id', ID);
-              Player.setAttribute('name', Name);
-              appendChild(Player);
-            end;
-          end;
-        finally
-          Params.Free;
-        end;
-      end;
-      appendChild(Players);
-
-      // Enregistrement des objets persistents
-      MasterNode := Document.createElement('master');
-      TFunLabyXMLWriter.WritePersistent(Master, MasterNode);
-      appendChild(MasterNode);
-    end;
+    TFunLabyXMLWriter.WritePersistent(Self, FunLabyrinthe);
 
     appendChild(FunLabyrinthe);
   end;
@@ -1463,18 +1124,6 @@ begin
     FIsSaveguard := True;
 end;
 
-{*
-  Enregistre le fichier
-  @param AFileName   Nom du fichier à enregistrer (si vide, conserve l'existant)
-*}
-procedure TMasterFile.Save(const AFileName: TFileName = '');
-var
-  UnitFileDescs: TUnitFileDescs;
-begin
-  GetUnitFileDescs(UnitFileDescs);
-  Save(UnitFileDescs, AFileName);
-end;
-
 {---------------------------}
 { Classe TUnitFileClassList }
 {---------------------------}
@@ -1484,42 +1133,60 @@ end;
 *}
 constructor TUnitFileClassList.Create;
 begin
-  inherited Create(SizeOf(TGUID), SizeOf(TUnitFileClass));
+  inherited Create(TypeInfo(string), SizeOf(TUnitFileClass));
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TUnitFileClassList.BucketFor(const Key): Cardinal;
+begin
+  Result := HashOfStr(string(Key)) mod Cardinal(BucketCount);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TUnitFileClassList.KeyEquals(const Key1, Key2): Boolean;
+begin
+  Result := string(Key1) = string(Key2);
 end;
 
 {*
   Référence un gestionnaire d'unité
-  @param GUID            GUID du gestionnaire
+  @param Extension       Extension de fichier unité à recenser
   @param UnitFileClass   Classe du gestionnaire
 *}
-procedure TUnitFileClassList.Add(const GUID: TGUID;
+procedure TUnitFileClassList.Add(const Extension: string;
   UnitFileClass: TUnitFileClass);
 begin
-  AddData(GUID, UnitFileClass);
+  AddData(Extension, UnitFileClass);
 end;
 
 {*
   Supprime un gestionnaire d'unité
-  @param GUID   GUID du gestionnaire à supprimer
+  @param Extension   Extension de fichier unité à supprimer
 *}
-procedure TUnitFileClassList.Remove(const GUID: TGUID);
+procedure TUnitFileClassList.Remove(const Extension: string);
 begin
-  RemoveData(GUID);
+  RemoveData(Extension);
 end;
 
 {*
-  Trouve la classe d'un gestionnaire à partir de son GUID
-  @param GUID   GUID du gestionnaire
-  @return Classe du gestionnaire gérant les fichiers de type GUID
-  @throws EFileError Type de fichier inconnu
+  Trouve la classe d'un gestionnaire à partir de son extension
+  @param Extension   Extension du fichier unité
+  @return Classe du gestionnaire gérant les fichiers du type spécifié
+  @throws EInOutError Type de fichier inconnu
 *}
-function TUnitFileClassList.Find(const GUID: TGUID): TUnitFileClass;
+function TUnitFileClassList.Find(const Extension: string): TUnitFileClass;
 begin
-  if not (inherited Find(GUID, Result)) then
-    raise EFileError.CreateFmt(sUnknownUnitType, [GUIDToString(GUID)]);
+  if not (inherited Find(Extension, Result)) then
+    raise EInOutError.CreateFmt(SUnknownUnitType, [Extension]);
 end;
 
 initialization
+  FunLabyRegisterClass(TSourceFile);
+
   UnitFileClasses := TUnitFileClassList.Create;
 finalization
   UnitFileClasses.Free;

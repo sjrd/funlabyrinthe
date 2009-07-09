@@ -90,30 +90,6 @@
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Composants Microsoft Office XP Sample Automation Server Wrapper</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcboffice2k100.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcbofficexp100.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
@@ -129,12 +105,14 @@
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
     <DCCReference Include="FilesUtils.pas" />
+    <DCCReference Include="FunLabyCoreConsts.pas" />
     <DCCReference Include="FunLabyFilers.pas" />
     <DCCReference Include="FunLabyUtils.pas" />
     <DCCReference Include="rtl.dcp" />
     <DCCReference Include="SCL110.dcp" />
     <DCCReference Include="SDL110.dcp" />
     <DCCReference Include="SepiImportsFunLaby.pas" />
+    <DCCReference Include="SepiImportsFunLabyCoreConsts.pas" />
     <DCCReference Include="SepiImportsFunLabyUtils.pas" />
     <DCCReference Include="SepiInterpreter110.dcp" />
     <DCCReference Include="SepiReflection110.dcp" />

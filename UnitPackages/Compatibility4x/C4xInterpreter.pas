@@ -1368,7 +1368,7 @@ begin
     if not ExecuteSound(Sound, stSysSound) then
       ExecuteSound(Infos.MasterFile.ResolveHRef(Sound, fSoundsDir));
   except
-    on Error: EFileError do
+    on Error: EInOutError do
       raise EBadParam.Create(Error.Message);
   end;
 end;

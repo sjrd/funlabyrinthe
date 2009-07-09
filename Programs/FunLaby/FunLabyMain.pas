@@ -12,7 +12,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, SdDialogs, ShellAPI,
   FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
-  UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools;
+  UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts;
 
 resourcestring
   sViewSize = 'Taille de la vue';
@@ -354,7 +354,7 @@ end;
 *}
 procedure TFormMain.MenuDescriptionClick(Sender: TObject);
 begin
-  ShowDialog(sDescription, MasterFile.Description);
+  ShowDialog(SDescription, MasterFile.Description);
 end;
 
 {*

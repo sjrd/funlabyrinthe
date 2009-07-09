@@ -10,7 +10,7 @@ interface
 uses
   Windows, SysUtils, Forms, Classes, Controls, Graphics, Dialogs, StdCtrls,
   StrUtils, Math, TypInfo, ScUtils, ScLists, ScDelphiLanguage, SdDialogs,
-  FunLabyUtils;
+  FunLabyUtils, FunLabyCoreConsts;
 
 type
   /// Type de boîte de dialogue
@@ -251,7 +251,7 @@ begin
     1: Result := ShowDialogRadioCommand(Params);
     2: Result := ChooseNumberCommand(Params);
   else
-    raise EUnsupportedCommand.CreateFmt(sUnsupportedCommand, [Command]);
+    raise EUnsupportedCommand.CreateFmt(SUnsupportedCommand, [Command]);
   end;
 end;
 
