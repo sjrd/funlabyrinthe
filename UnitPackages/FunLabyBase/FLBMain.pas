@@ -192,6 +192,7 @@ begin
   RegSingle(idWater);
   RegSingle(idHole);
   RegSingle(idSky);
+  RegSingle(idOutside);
 
   // Effets
 
@@ -236,8 +237,6 @@ begin
   for I := 1 to 10 do
     Boats[I] := Master.SquareComponent[Format(idBoatSquare, [I])];
   RegSet(idBoatSquareTemplate, Boats, Low(Boats), sBoatTitle, sBoatPrompt);
-
-  RegSingle(idOutsideSquare);
 end;
 
 {$IFNDEF DCTD}

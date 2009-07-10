@@ -30,6 +30,10 @@ resourcestring
   sCantCenterToUnplacedPlayer =
     'Impossible de centrer sur ce joueur car il n''a pas été placé';
 
+  sOnlyFieldOutsideTitle = 'Remplacer l''extérieur de la carte';
+  sOnlyFieldOutside =
+    'Seuls les terrains sont acceptés en dehors de la carte';
+
   sReplaceOutsideTitle = 'Remplacer l''extérieur de la carte';
   sReplaceOutside = 'Voulez-vous vraiment modifier l''extérieur de la carte ?';
 

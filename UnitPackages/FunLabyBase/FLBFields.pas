@@ -13,18 +13,20 @@ uses
   Graphics, ScUtils, SdDialogs, FunLabyUtils, FLBCommon;
 
 resourcestring
-  sGrass = 'Herbe'; /// Nom de l'herbe
-  sWall = 'Mur';    /// Nom du mur
-  sWater = 'Eau';   /// Nom de l'eau
-  sHole = 'Trou';   /// Nom du trou
-  sSky = 'Ciel';    /// Nom du ciel
+  sGrass = 'Herbe';    /// Nom de l'herbe
+  sWall = 'Mur';       /// Nom du mur
+  sWater = 'Eau';      /// Nom de l'eau
+  sHole = 'Trou';      /// Nom du trou
+  sSky = 'Ciel';       /// Nom du ciel
+  sOutside = 'Dehors'; /// Nom du dehors
 
 const {don't localize}
-  idGrass = 'Grass';             /// ID de l'herbe
-  idWall = 'Wall';               /// ID du mur
-  idWater = 'Water';             /// ID de l'eau
-  idHole = 'Hole';               /// ID du trou
-  idSky = 'Sky';                 /// ID du ciel
+  idGrass = 'Grass';     /// ID de l'herbe
+  idWall = 'Wall';       /// ID du mur
+  idWater = 'Water';     /// ID de l'eau
+  idHole = 'Hole';       /// ID du trou
+  idSky = 'Sky';         /// ID du ciel
+  idOutside = 'Outside'; /// ID du dehors
 
   idGroundWater = 'GroundWater'; /// ID de l'eau effet herbe
 
@@ -35,11 +37,14 @@ const {don't localize}
   fAlternateWater = 'AlternateWater'; /// Fichier alternatif de l'eau
   fHole = 'Hole';                     /// Fichier du trou
   fSky = 'Sky';                       /// Fichier du ciel
+  fOutside = 'Outside';               /// Fichier du dehors
 
 resourcestring
   sCantGoOnWater = 'Sans bouée, on coule dans l''eau.';
   sCantGoOnHole = 'T''es pas bien de vouloir sauter dans ce trou !?';
   sCantGoOnSky = 'Tu ne peux pas voler !';
+
+  sGotOutsideMaze = 'BRAVO ! Tu as réussi à sortir du labyrinthe !';
 
 type
   {*
@@ -127,6 +132,21 @@ type
       const AName: string; ADelegateDrawTo: TField = nil);
 
     procedure Entering(Context: TMoveContext); override;
+  end;
+
+  {*
+    Dehors
+    Le dehors représente l'extérieur du labyrinthe et fait remporter la victoire
+    au joueur qui y parvient.
+    @author sjrd
+    @version 5.0
+  *}
+  TOutside = class(TGround)
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; ADelegateDrawTo: TField = nil);
+
+    procedure Entered(Context: TMoveContext); override;
   end;
 
 implementation
@@ -348,6 +368,35 @@ begin
     if KeyPressed then
       Player.ShowMessage(sCantGoOnSky);
     Cancel;
+  end;
+end;
+
+{-----------------}
+{ Classe TOutside }
+{-----------------}
+
+{*
+  Crée une instance de TOutside
+  @param AMaster           Maître FunLabyrinthe
+  @param AID               ID de l'effet de case
+  @param AName             Nom de la case
+  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
+*}
+constructor TOutside.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; ADelegateDrawTo: TField = nil);
+begin
+  inherited Create(AMaster, AID, AName, fOutside, ADelegateDrawTo);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TOutside.Entered(Context: TMoveContext);
+begin
+  with Context.Player do
+  begin
+    Win;
+    ShowMessage(sGotOutsideMaze);
   end;
 end;
 

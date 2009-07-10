@@ -550,6 +550,13 @@ begin
       else
       begin
         BaseFlags := [esfOutside];
+
+        if not (Component is TField) then
+        begin
+          ShowDialog(sOnlyFieldOutsideTitle, sOnlyFieldOutside, dtError);
+          Exit;
+        end;
+
         if ShowDialog(sReplaceOutsideTitle, sReplaceOutside,
           dtConfirmation, dbOKCancel) <> drOK then
           Exit;

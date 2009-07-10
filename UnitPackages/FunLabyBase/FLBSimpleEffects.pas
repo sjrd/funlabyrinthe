@@ -33,7 +33,6 @@ resourcestring
   sDirectTurnstile = 'Tourniquet direct';     /// Nom du tourniquet direct
   sIndirectTurnstile = 'Tourniquet indirect'; /// Nom du tourniquet indirect
 
-  sOutside = 'Dehors';                        /// Nom du dehors
   sTreasure = 'Trésor';                       /// Nom du trésor
 
 const {don't localize}
@@ -55,10 +54,7 @@ const {don't localize}
   idDirectTurnstile = 'DirectTurnstile';         /// ID du tourniquet direct
   idIndirectTurnstile = 'IndirectTurnstile';     /// ID du tourniquet indirect
 
-  idOutside = 'Outside';                         /// ID du dehors
   idTreasure = 'Treasure';                       /// ID du trésor
-
-  idOutsideSquare = idGrass+'-'+idOutside+'--';   /// ID de la case dehors
 
 const {don't localize}
   fNorthArrow = 'NorthArrow';               /// Fichier de la flèche nord
@@ -75,11 +71,9 @@ const {don't localize}
   fDirectTurnstile = 'DirectTurnstile';     /// Fichier du tourniquet direct
   fIndirectTurnstile = 'IndirectTurnstile'; /// Fichier du tourniquet indirect
 
-  fOutside = 'Outside';                     /// Fichier du dehors
   fTreasure = 'Treasure';                   /// Fichier du trésor
 
 resourcestring
-  sGotOutsideMaze = 'BRAVO ! Tu as réussi à sortir du labyrinthe !';
   sFoundTreasure = 'BRAVO ! Tu as trouvé le trésor !';
 
   sTransporterTitle = 'Numéro du téléporteur';
@@ -87,8 +81,6 @@ resourcestring
 
 resourcestring
   sPlaceStairsTitle = 'Placement d''un escalier';
-  sCantPlaceStairsOutside =
-    'Impossible de placer un escalier en dehors de la carte';
   sCantPlaceUpStairsAtLastFloor =
     'Impossible de placer un escalier montant au dernier étage';
   sCantPlaceDownStairsAtFirstFloor =
@@ -199,21 +191,6 @@ type
       const AName: string);
 
     procedure Exited(Context: TMoveContext); override;
-
-    procedure Execute(Context: TMoveContext); override;
-  end;
-
-  {*
-    Dehors
-    Le dehors représente l'extérieur du labyrinthe et fait remporter la victoire
-    au joueur qui y parvient.
-    @author sjrd
-    @version 5.0
-  *}
-  TOutside = class(TEffect)
-  public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
 
     procedure Execute(Context: TMoveContext); override;
   end;
@@ -373,16 +350,6 @@ var
 begin
   with Msg, QPos do
   begin
-    if Flags * [esfAdding, esfOutside] = [esfAdding, esfOutside] then
-    begin
-      ShowDialog(sPlaceStairsTitle, sCantPlaceStairsOutside, dtError);
-      Include(Flags, esfCancel);
-      Exit;
-    end;
-
-    if esfOutside in Flags then
-      Exit;
-
     Other := Position;
     if Up then
       Inc(Other.Z)
@@ -560,36 +527,6 @@ begin
       else
         Dir := Succ(Player.Direction);
     until not Same3DPoint(Player.Position, Pos);
-  end;
-end;
-
-{-----------------}
-{ Classe TOutside }
-{-----------------}
-
-{*
-  Crée une instance de TOutside
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
-*}
-constructor TOutside.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
-begin
-  inherited Create(AMaster, AID, AName);
-
-  Painter.ImgNames.Add(fOutside);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TOutside.Execute(Context: TMoveContext);
-begin
-  with Context.Player do
-  begin
-    Win;
-    ShowMessage(sGotOutsideMaze);
   end;
 end;
 

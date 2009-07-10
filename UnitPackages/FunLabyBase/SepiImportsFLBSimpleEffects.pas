@@ -23,8 +23,8 @@ implementation
 const // don't localize
   UnitName = 'FLBSimpleEffects';
   ResourceName = 'SepiImportsFLBSimpleEffects';
-  TypeCount = 8;
-  MethodCount = 7;
+  TypeCount = 7;
+  MethodCount = 6;
   VariableCount = 1;
 
 var
@@ -54,11 +54,6 @@ type
   end;
 
   TSepiImportsTIndirectTurnstile = class(TIndirectTurnstile)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTOutside = class(TOutside)
   private
     class procedure InitMethodAddresses;
   end;
@@ -113,22 +108,13 @@ begin
   MethodAddresses[4] := @TSepiImportsTIndirectTurnstile.Create;
 end;
 
-{-----------------}
-{ TOutside import }
-{-----------------}
-
-class procedure TSepiImportsTOutside.InitMethodAddresses;
-begin
-  MethodAddresses[5] := @TSepiImportsTOutside.Create;
-end;
-
 {------------------}
 { TTreasure import }
 {------------------}
 
 class procedure TSepiImportsTTreasure.InitMethodAddresses;
 begin
-  MethodAddresses[6] := @TSepiImportsTTreasure.Create;
+  MethodAddresses[5] := @TSepiImportsTTreasure.Create;
 end;
 
 {---------------------}
@@ -203,8 +189,7 @@ begin
   TypeInfoArray[3] := TypeInfo(TStairs);
   TypeInfoArray[4] := TypeInfo(TDirectTurnstile);
   TypeInfoArray[5] := TypeInfo(TIndirectTurnstile);
-  TypeInfoArray[6] := TypeInfo(TOutside);
-  TypeInfoArray[7] := TypeInfo(TTreasure);
+  TypeInfoArray[6] := TypeInfo(TTreasure);
 end;
 
 procedure InitMethodAddresses;
@@ -214,7 +199,6 @@ begin
   TSepiImportsTStairs.InitMethodAddresses;
   TSepiImportsTDirectTurnstile.InitMethodAddresses;
   TSepiImportsTIndirectTurnstile.InitMethodAddresses;
-  TSepiImportsTOutside.InitMethodAddresses;
   TSepiImportsTTreasure.InitMethodAddresses;
 end;
 

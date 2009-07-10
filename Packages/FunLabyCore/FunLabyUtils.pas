@@ -128,7 +128,7 @@ type
       défaut et ne considère pas que la carte a été modifiée
     - esfAdding : Le composant va être ajouté
     - esfRemoving : Le composant va être retiré
-    - esfOutside : La position est en dehors de la carte
+    - esfOutside : La position est en dehors de la carte (terrain seulement)
   *}
   TEditMapSquareFlag = (
     esfHandled, esfCancel, esfAdding, esfRemoving, esfOutside

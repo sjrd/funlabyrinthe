@@ -218,22 +218,47 @@ procedure TCompatibility4xUnit.GameStarted;
 var
   Infos: TC4xInfos;
   Player: TPlayer;
-  I: Integer;
+  I, J: Integer;
+  idOldOutside: TComponentID;
+  OldWater, OldHole, OldOutside: TSquare;
+  Map: TMap;
 begin
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   Player := Master.Players[0];
 
+  idOldOutside := idOutside+'---';
+
   for I := 0 to Infos.ActionsCount-1 do
   begin
-    if Infos.Actions[I].Kind = akZone then
-    begin
-      Player.AddPlugin(Master.Plugin[idZonesPlugin]);
-      Break;
+    case Infos.Actions[I].Kind of
+      akOutside:
+        idOldOutside := Format(idActionsSquare, [I]);
+      akZone:
+        Player.AddPlugin(Master.Plugin[idZonesPlugin]);
     end;
   end;
 
   Player.AddPlugin(Master.Plugin[idCompatibilityHacksPlugin]);
   Player.AddPlugin(Master.Plugin[idGameStartedPlugin]);
+
+  OldWater := Master.Square[idOldWater+'---'];
+  OldHole  := Master.Square[idOldHole+'---'];
+  OldOutside := Master.Square[idOldOutside];
+
+  for I := 0 to Master.MapCount-1 do
+  begin
+    Map := Master.Maps[I];
+
+    for J := 0 to Map.LinearMapCount-1 do
+    begin
+      case AnsiIndexStr(Map.LinearMap[J].Field.ID,
+        ['Water', 'Hole', 'Outside']) of
+        0: Map.LinearMap[J] := OldWater;
+        1: Map.LinearMap[J] := OldHole;
+        2: Map.LinearMap[J] := OldOutside;
+      end;
+    end;
+  end;
 end;
 
 {*
@@ -261,11 +286,6 @@ var
   I: Integer;
   Components: array of TSquareComponent;
 begin
-  // Terrains
-
-  RegSingle(idOldWater);
-  RegSingle(idOldHole);
-
   // Effets
 
   RegSingle(idSunkenButton);

@@ -23,8 +23,8 @@ implementation
 const // don't localize
   UnitName = 'FLBFields';
   ResourceName = 'SepiImportsFLBFields';
-  TypeCount = 5;
-  MethodCount = 5;
+  TypeCount = 6;
+  MethodCount = 6;
   VariableCount = 1;
 
 var
@@ -54,6 +54,11 @@ type
   end;
 
   TSepiImportsTSky = class(TSky)
+  private
+    class procedure InitMethodAddresses;
+  end;
+
+  TSepiImportsTOutside = class(TOutside)
   private
     class procedure InitMethodAddresses;
   end;
@@ -101,6 +106,15 @@ end;
 class procedure TSepiImportsTSky.InitMethodAddresses;
 begin
   MethodAddresses[4] := @TSepiImportsTSky.Create;
+end;
+
+{-----------------}
+{ TOutside import }
+{-----------------}
+
+class procedure TSepiImportsTOutside.InitMethodAddresses;
+begin
+  MethodAddresses[5] := @TSepiImportsTOutside.Create;
 end;
 
 {---------------------}
@@ -174,6 +188,7 @@ begin
   TypeInfoArray[2] := TypeInfo(TWater);
   TypeInfoArray[3] := TypeInfo(THole);
   TypeInfoArray[4] := TypeInfo(TSky);
+  TypeInfoArray[5] := TypeInfo(TOutside);
 end;
 
 procedure InitMethodAddresses;
@@ -183,6 +198,7 @@ begin
   TSepiImportsTWater.InitMethodAddresses;
   TSepiImportsTHole.InitMethodAddresses;
   TSepiImportsTSky.InitMethodAddresses;
+  TSepiImportsTOutside.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;
