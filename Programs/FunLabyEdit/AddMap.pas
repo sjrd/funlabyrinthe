@@ -47,6 +47,7 @@ type
   public
     { Déclarations publiques }
     class function AddMap(MasterFile: TMasterFile): TComponentID;
+    class function EditMapZoneSize(Map: TMap): Boolean;
   end;
 
 implementation
@@ -69,6 +70,36 @@ begin
       Result := EditID.Text;
       TFormMapBase.GenerateBase(TMap.Create(MasterFile.Master, Result,
         Dimensions, ZoneSize.X, ZoneSize.Y));
+    end;
+  finally
+    Release;
+  end;
+end;
+
+{*
+  Affiche la boîte de dialogue pour modifier la taille de zone
+  @param Map   Carte dont modifier la taille de zone
+  @return True si la taille de zone a été modifiée, False sinon
+*}
+class function TFormAddMap.EditMapZoneSize(Map: TMap): Boolean;
+begin
+  with Create(Application) do
+  try
+    EditID.Text := Map.ID;
+    with Map.Dimensions do
+      EditDimensions.Text := Format('%03dx%03dx%02d', [X, Y, Z]);
+    with Map do
+      EditZoneSize.Text := Format('%02dx%02d', [ZoneWidth, ZoneHeight]);
+
+    EditID.Enabled := False;
+    EditDimensions.Enabled := False;
+
+    Result := ShowModal = mrOk;
+
+    if Result then
+    begin
+      Map.ZoneWidth := ZoneSize.X;
+      Map.ZoneHeight := ZoneSize.Y;
     end;
   finally
     Release;

@@ -9,12 +9,15 @@ unit C4xFields;
 interface
 
 uses
-  ScUtils, SdDialogs, FunLabyUtils, FLBFields, FLBPlank, FLBCommon,
+  ScUtils, SdDialogs, FunLabyUtils, MapTools, FLBFields, FLBPlank, FLBCommon,
   C4xComponents;
 
 const
   idOldWater = 'OldWater'; /// ID de l'eau ancienne version
   idOldHole = 'OldHole';   /// ID du trou ancienne version
+
+  /// ID du plug-in de hacks de compatibilité
+  idCompatibilityHacksPlugin = 'CompatibilityHacksPlugin';
 
 type
   {*
@@ -45,6 +48,17 @@ type
     procedure Entering(Context: TMoveContext); override;
   end;
 
+  {*
+    Plug-in effectuant quelques "hacks" pour rester compatible avec la 4.x
+    @author sjrd
+    @version 5.0
+  *}
+  TCompatibilityHacksPlugin = class(TPlugin)
+  public
+    procedure Moving(Context: TMoveContext); override;
+    procedure Moved(Context: TMoveContext); override;
+  end;
+
 implementation
 
 {------------------}
@@ -73,26 +87,28 @@ begin
     if Player.DoAction(actGoOnWater) then
       Exit;
 
-    Behind := PointBehind(Pos, Player.Direction);
-
-    if Map[Behind].Field is TGround then
+    if Master.ObjectDef[idPlanks].Count[Player] > 0 then
     begin
-      SrcObstacle := SrcSquare.Obstacle;
-      if (SrcObstacle is TActionsObstacle) and
-        (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
-        SrcObstacle := nil;
+      Behind := PointBehind(Pos, Player.Direction);
 
-      DestObstacle := Map[Behind].Obstacle;
-      if (DestObstacle is TActionsObstacle) and
-        (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
-        DestObstacle := nil;
-
-      if (DestObstacle = SrcObstacle) and
-        (Master.ObjectDef[idPlanks].Count[Player] > 0) then
+      if Map[Behind].Field is TGround then
       begin
-        TPlankSquare.Create(Master, Map, Pos, Player);
-        Master.Temporize;
-        Exit;
+        SrcObstacle := SrcSquare.Obstacle;
+        if (SrcObstacle is TActionsObstacle) and
+          (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
+          SrcObstacle := nil;
+
+        DestObstacle := Map[Behind].Obstacle;
+        if (DestObstacle is TActionsObstacle) and
+          (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
+          DestObstacle := nil;
+
+        if DestObstacle = SrcObstacle then
+        begin
+          TPlankSquare.Create(Master, Map, Pos, Player);
+          Master.Temporize;
+          Exit;
+        end;
       end;
     end;
 
@@ -127,20 +143,29 @@ begin
   begin
     Behind := PointBehind(Pos, Player.Direction);
 
-    if Map[Behind].Field is TGround then
+    if Master.ObjectDef[idPlanks].Count[Player] > 0 then
     begin
-      SrcObstacle := SrcSquare.Obstacle;
-      if (SrcObstacle is TActionsObstacle) and
-        (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
-        SrcObstacle := nil;
+      if Map[Behind].Field is TGround then
+      begin
+        SrcObstacle := SrcSquare.Obstacle;
+        if (SrcObstacle is TActionsObstacle) and
+          (TActionsObstacle(SrcObstacle).Actions.Kind <> akObstacle) then
+          SrcObstacle := nil;
 
-      DestObstacle := Map[Behind].Obstacle;
-      if (DestObstacle is TActionsObstacle) and
-        (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
-        DestObstacle := nil;
+        DestObstacle := Map[Behind].Obstacle;
+        if (DestObstacle is TActionsObstacle) and
+          (TActionsObstacle(DestObstacle).Actions.Kind <> akObstacle) then
+          DestObstacle := nil;
 
-      if (DestObstacle = SrcObstacle) and
-        (Master.ObjectDef[idPlanks].Count[Player] > 0) then
+        if DestObstacle = SrcObstacle then
+        begin
+          TPlankSquare.Create(Master, Map, Pos, Player);
+          Master.Temporize;
+          Exit;
+        end;
+      end;
+
+      if (Map[Behind].Field is TOldWater) and (SrcSquare.Field is TOldWater) then
       begin
         TPlankSquare.Create(Master, Map, Pos, Player);
         Master.Temporize;
@@ -151,6 +176,34 @@ begin
     if KeyPressed then
       Player.ShowMessage(sCantGoOnHole);
     Cancel;
+  end;
+end;
+
+{---------------------------------}
+{ TCompatibilityHacksPlugin class }
+{---------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TCompatibilityHacksPlugin.Moved(Context: TMoveContext);
+begin
+  with Context do
+  begin
+    if Square.Field is TOldWater then
+      Player.DoAction(actGoOnWater);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TCompatibilityHacksPlugin.Moving(Context: TMoveContext);
+begin
+  with Context do
+  begin
+    if (Square.Field is TWater) and (not (Square.Field is TOldWater)) then
+      Square := ChangeField(Square, idOldWater);
   end;
 end;
 

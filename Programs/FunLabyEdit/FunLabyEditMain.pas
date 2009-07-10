@@ -14,7 +14,7 @@ uses
   ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
   FilesUtils, UnitFiles, EditPluginManager, SourceEditors, FileProperties,
   FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile, ExtCtrls, ScSyncObjs,
-  CompilerMessages, MapViewer, SepiCompilerErrors,
+  CompilerMessages, MapViewer, SepiCompilerErrors, AddMap,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA;
 
 type
@@ -58,6 +58,7 @@ type
     TabBarEditors: TJvTabBar;
     ActionViewCompilerMessages: TAction;
     ActionViewMapViewer: TAction;
+    ActionEditZoneSize: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -74,6 +75,7 @@ type
     procedure ActionExitExecute(Sender: TObject);
     procedure ActionAddMapExecute(Sender: TObject);
     procedure ActionRemoveMapExecute(Sender: TObject);
+    procedure ActionEditZoneSizeExecute(Sender: TObject);
     procedure ActionAddExistingSourceExecute(Sender: TObject);
     procedure ActionAddNewSourceExecute(Sender: TObject);
     procedure ActionRemoveSourceExecute(Sender: TObject);
@@ -267,6 +269,8 @@ begin
   // Menu des cartes
   BigMenuMaps.Visible := True;
   ActionAddMap.Enabled := True;
+  ActionRemoveMap.Enabled := True;
+  ActionEditZoneSize.Enabled := True;
 
   // Menu des sources
   BigMenuSources.Visible := True;
@@ -304,6 +308,8 @@ begin
   // Menu des cartes
   BigMenuMaps.Visible := False;
   ActionAddMap.Enabled := False;
+  ActionRemoveMap.Enabled := False;
+  ActionEditZoneSize.Enabled := False;
 
   // Menu des sources
   BigMenuSources.Visible := False;
@@ -1117,12 +1123,31 @@ end;
 *}
 procedure TFormMain.ActionRemoveMapExecute(Sender: TObject);
 begin
+  if FrameMapEditor.CurrentMap = nil then
+    Exit;
+
   FormMapViewer.Hide;
   FormMapViewer.Master := nil;
   try
     FrameMapEditor.RemoveCurrentMap;
   finally
     FormMapViewer.Master := Master;
+  end;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Modifier la taille de zone
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionEditZoneSizeExecute(Sender: TObject);
+begin
+  if FrameMapEditor.CurrentMap = nil then
+    Exit;
+
+  if TFormAddMap.EditMapZoneSize(FrameMapEditor.CurrentMap) then
+  begin
+    FrameMapEditor.InvalidateMap;
+    MarkModified;
   end;
 end;
 

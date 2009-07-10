@@ -11,8 +11,8 @@ unit FLBSimpleEffects;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, MapTools, GraphicsTools, FLBCommon,
-  FLBFields;
+  SysUtils, Graphics, ScUtils, SdDialogs, FunLabyUtils, MapTools, GraphicsTools,
+  FLBCommon, FLBFields;
 
 resourcestring
   sNorthArrow = 'Flèche nord';                /// Nom de la flèche nord
@@ -85,6 +85,18 @@ resourcestring
   sTransporterTitle = 'Numéro du téléporteur';
   sTransporterPrompt = 'Numéro du téléporteur (0 à 45) :';
 
+resourcestring
+  sPlaceStairsTitle = 'Placement d''un escalier';
+  sCantPlaceStairsOutside =
+    'Impossible de placer un escalier en dehors de la carte';
+  sCantPlaceUpStairsAtLastFloor =
+    'Impossible de placer un escalier montant au dernier étage';
+  sCantPlaceDownStairsAtFirstFloor =
+    'Impossible de placer un escalier descendant au rez-de-chaussée';
+  sDifferentStairsDestSquare =
+    'La case à l''autre bout de l''escalier n''est pas la même que celle-ci. '+
+    'Êtes-vous sûr de vouloir placer un escalier ici ?';
+
 type
   {*
     Type de téléporteur
@@ -145,6 +157,9 @@ type
   TStairs = class(TEffect)
   private
     FUp: Boolean; /// Indique si l'escalier est montant
+
+    procedure EditSquareMap(var Msg: TEditMapSquareMessage);
+      message msgEditMapSquare;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; AUp: Boolean);
@@ -346,6 +361,77 @@ begin
     Painter.ImgNames.Add(fUpStairs)
   else
     Painter.ImgNames.Add(fDownStairs);
+end;
+
+{*
+  Déclenché en édition lorsqu'une case est modifiée avec un escalier
+  @param Msg   Message
+*}
+procedure TStairs.EditSquareMap(var Msg: TEditMapSquareMessage);
+var
+  Other: T3DPoint;
+begin
+  with Msg, QPos do
+  begin
+    if Flags * [esfAdding, esfOutside] = [esfAdding, esfOutside] then
+    begin
+      ShowDialog(sPlaceStairsTitle, sCantPlaceStairsOutside, dtError);
+      Include(Flags, esfCancel);
+      Exit;
+    end;
+
+    if esfOutside in Flags then
+      Exit;
+
+    Other := Position;
+    if Up then
+      Inc(Other.Z)
+    else
+      Dec(Other.Z);
+
+    if (esfAdding in Flags) and (not Map.InMap(Other)) then
+    begin
+      if Up then
+        ShowDialog(sPlaceStairsTitle, sCantPlaceUpStairsAtLastFloor, dtError)
+      else
+        ShowDialog(sPlaceStairsTitle, sCantPlaceDownStairsAtFirstFloor,
+          dtError);
+
+      Include(Flags, esfCancel);
+      Exit;
+    end;
+
+    if not Map.InMap(Other) then
+      Exit;
+
+    if esfRemoving in Flags then
+    begin
+      Map[Position] := RemoveEffect(Map[Position]);
+      Map[Other] := RemoveEffect(Map[Other]);
+      Include(Flags, esfHandled);
+    end;
+
+    if esfAdding in Flags then
+    begin
+      if Map[Other] <> Map[Position] then
+      begin
+        if ShowDialog(sPlaceStairsTitle, sDifferentStairsDestSquare,
+          dtConfirmation, dbOKCancel) <> drOK then
+        begin
+          Include(Flags, esfCancel);
+          Exit;
+        end;
+      end;
+
+      Map[Position] := ChangeEffect(Map[Position], Self);
+      if Up then
+        Map[Other] := ChangeEffect(Map[Other], idDownStairs)
+      else
+        Map[Other] := ChangeEffect(Map[Other], idUpStairs);
+
+      Include(Flags, esfHandled);
+    end;
+  end;
 end;
 
 {*

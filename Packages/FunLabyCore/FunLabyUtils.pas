@@ -27,6 +27,9 @@ const {don't localize}
   msgShowMessage = $01; /// Message pour afficher un message au joueur
   msgGameStarted = $02; /// Message envoyé lorsque le jeu commence
 
+  /// Message envoyé aux composants d'une case lorsque celle-ci est éditée
+  msgEditMapSquare = $03;
+
   CommandShowDialog = 'ShowDialog';           /// Commande ShowDialog
   CommandShowDialogRadio = 'ShowDialogRadio'; /// Commande ShowDialogRadio
   CommandChooseNumber = 'ChooseNumber';       /// Commande ChooseNumber
@@ -115,6 +118,34 @@ type
     Answers: TStringDynArray;  /// Réponses possibles (peut être vide)
     Selected: Integer;         /// Index de la réponse choisie par le joueur
     ShowOnlySelected: Boolean; /// Si True n'affiche que l'élément sélectionné
+  end;
+
+  {*
+    Flag de traitement d'un message TEditMapSquareMessage
+    - esfHandled : Si présent en sortie, l'éditeur ne fait plus son action
+      par défaut (pris en compte uniquement avec esfAdding)
+    - esfCancel : Si présent en sortie, l'éditeur ne fait plus son action par
+      défaut et ne considère pas que la carte a été modifiée
+    - esfAdding : Le composant va être ajouté
+    - esfRemoving : Le composant va être retiré
+    - esfOutside : La position est en dehors de la carte
+  *}
+  TEditMapSquareFlag = (
+    esfHandled, esfCancel, esfAdding, esfRemoving, esfOutside
+  );
+
+  /// Flags de traitement d'un message TEditMapSquareMessage
+  TEditMapSquareFlags = set of TEditMapSquareFlag;
+
+  {*
+    Structure du message d'édition d'une case dans une carte
+    @author sjrd
+    @version 5.0
+  *}
+  TEditMapSquareMessage = record
+    MsgID: Word;                /// ID du message
+    Flags: TEditMapSquareFlags; /// Flags du message
+    QPos: TQualifiedPos;        /// Position qualifiée de la case éditée
   end;
 
   {*
@@ -907,8 +938,8 @@ type
     function PlayersOn(const Position: T3DPoint): Integer;
 
     property Dimensions: T3DPoint read FDimensions;
-    property ZoneWidth: Integer read FZoneWidth;
-    property ZoneHeight: Integer read FZoneHeight;
+    property ZoneWidth: Integer read FZoneWidth write FZoneWidth;
+    property ZoneHeight: Integer read FZoneHeight write FZoneHeight;
 
     property Map[const Position: T3DPoint]: TSquare
       read GetMap write SetMap; default;

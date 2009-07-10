@@ -7,7 +7,7 @@ uses
   Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
   ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils, FilesUtils,
   FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters, AddMap,
-  BaseMapViewer;
+  BaseMapViewer, MapTools;
 
 type
   {*
@@ -69,6 +69,9 @@ type
       const DialogTitle, DialogPrompt: string);
 
     procedure LoadPlayers;
+
+    function GetCurrentMap: TMap;
+    procedure SetCurrentMap(Value: TMap);
   public
     constructor Create(AOwner: TComponent); override;
 
@@ -77,8 +80,12 @@ type
     procedure LoadFile(AMasterFile: TMasterFile);
     procedure UnloadFile;
 
+    procedure InvalidateMap;
+
     procedure AddMap;
     procedure RemoveCurrentMap;
+
+    property CurrentMap: TMap read GetCurrentMap write SetCurrentMap;
 
     property MarkModified: TMarkModifiedProc
       read FMarkModified write FMarkModified;
@@ -277,6 +284,24 @@ begin
 end;
 
 {*
+  Carte courante
+  @return Carte actuellement visible
+*}
+function TFrameMapEditor.GetCurrentMap: TMap;
+begin
+  Result := MapViewer.CurrentMap;
+end;
+
+{*
+  Change de carte
+  @param Value   Nouvelle carte à afficher
+*}
+procedure TFrameMapEditor.SetCurrentMap(Value: TMap);
+begin
+  MapViewer.CurrentMap := Value;
+end;
+
+{*
   Centre l'affichage sur le joueur
   @param Player   Joueur  visionner
 *}
@@ -346,6 +371,14 @@ begin
   Component := nil;
   Master := nil;
   MasterFile := nil;
+end;
+
+{*
+  Invalide la carte affichée
+*}
+procedure TFrameMapEditor.InvalidateMap;
+begin
+  MapViewer.InvalidateMap;
 end;
 
 {*
@@ -449,51 +482,116 @@ end;
 *}
 procedure TFrameMapEditor.MapViewerClickSquare(Sender: TObject;
   const QPos: TQualifiedPos);
+type
+  TRemoveProc = function(Square: TSquare): TSquare;
 var
+  Modified: Boolean;
   Map: TMap;
   Position: T3DPoint;
-  FieldID, EffectID, ToolID, NewID: TComponentID;
-begin
-  Map := QPos.Map;
-  Position := QPos.Position;
+  BaseFlags: TEditMapSquareFlags;
+  EditMapSquareMsg: TEditMapSquareMessage;
 
-  if Component is TPlayer then
+  function GetSquare: TSquare;
   begin
-    TPlayer(Component).ChangePosition(Map, Position);
-  end else
+    Result := Map[Position];
+  end;
+
+  procedure SetSquare(Value: TSquare);
   begin
-    NewID := Component.ID;
+    if esfOutside in BaseFlags then
+      Map.Outside[Position.Z] := Value
+    else
+      Map[Position] := Value;
+  end;
 
-    with Map[Position] do
-    begin
-      FieldID := Field.ID;
-      EffectID := Effect.SafeID;
-      ToolID := Tool.SafeID;
+  procedure BuildMessage(AdditionalFlags: TEditMapSquareFlags);
+  begin
+    EditMapSquareMsg.MsgID := msgEditMapSquare;
+    EditMapSquareMsg.Flags := BaseFlags + AdditionalFlags;
+    EditMapSquareMsg.QPos := QPos;
+  end;
 
-      if Component is TField then
-        NewID := NewID+'---'
-      else if Component is TEffect then
-        NewID := FieldID+'-'+NewID+'--'
-      else if Component is TTool then
-        NewID := FieldID+'-'+EffectID+'-'+NewID+'-'
-      else if Component is TObstacle then
-        NewID := FieldID+'-'+EffectID+'-'+ToolID+'-'+NewID;
-    end;
+  function ClearComponent(Component: TSquareComponent;
+    RemoveProc: TRemoveProc): Boolean;
+  begin
+    if Component = nil then
+      Result := True
+    else
+    begin
+      BuildMessage([esfRemoving]);
+      Component.Dispatch(EditMapSquareMsg);
 
-    if Map.InMap(Position) then
-    begin
-      Map[Position] := Master.Square[NewID];
-    end else
-    begin
-      if ShowDialog(sReplaceOutsideTitle, sReplaceOutside,
-        dtConfirmation, dbOKCancel) <> drOK then
-        Exit;
-      Map.Outside[Position.Z] := Master.Square[NewID];
+      Result := not (esfCancel in EditMapSquareMsg.Flags);
+
+      if Result then
+      begin
+        if (not (esfHandled in EditMapSquareMsg.Flags)) and
+          Assigned(RemoveProc) then
+          SetSquare(RemoveProc(GetSquare));
+        Modified := True;
+      end;
     end;
   end;
 
-  MarkModified;
-  MapViewer.InvalidateMap;
+begin
+  Modified := False;
+  try
+    Map := QPos.Map;
+    Position := QPos.Position;
+
+    if Component is TPlayer then
+    begin
+      TPlayer(Component).ChangePosition(Map, Position);
+      Modified := True;
+    end else
+    begin
+      if Map.InMap(Position) then
+        BaseFlags := []
+      else
+      begin
+        BaseFlags := [esfOutside];
+        if ShowDialog(sReplaceOutsideTitle, sReplaceOutside,
+          dtConfirmation, dbOKCancel) <> drOK then
+          Exit;
+      end;
+
+      // Clear in-the-way components
+      if not ClearComponent(GetSquare.Obstacle, RemoveObstacle) then
+        Exit;
+      if not (Component is TObstacle) then
+      begin
+        if not ClearComponent(GetSquare.Tool, RemoveTool) then
+          Exit;
+        if not (Component is TTool) then
+        begin
+          if not ClearComponent(GetSquare.Effect, RemoveEffect) then
+            Exit;
+          if not (Component is TEffect) then
+          begin
+            if not ClearComponent(GetSquare.Field, nil) then
+              Exit;
+          end;
+        end;
+      end;
+
+      // Add the new component
+      BuildMessage([esfAdding]);
+      Component.Dispatch(EditMapSquareMsg);
+
+      if esfCancel in EditMapSquareMsg.Flags then
+        Exit;
+
+      if not (esfHandled in EditMapSquareMsg.Flags) then
+        SetSquare(ChangeComp(GetSquare, Component as TSquareComponent));
+      Modified := True;
+    end;
+  finally
+    if Modified then
+    begin
+      MarkModified;
+      MapViewer.InvalidateMap;
+    end;
+  end;
 end;
 
 end.

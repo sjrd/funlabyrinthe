@@ -44,7 +44,7 @@ type
       Y: Integer);
     procedure EditFloorChange(Sender: TObject);
   private
-    FMaster: TMaster;         /// Maître FunLabyrinthe
+    FMaster: TMaster; /// Maître FunLabyrinthe
 
     FCurrentMap: TMap;      /// Carte courante
     FCurrentFloor: Integer; /// Étage courant
@@ -83,6 +83,12 @@ implementation
 
 {$R *.dfm}
 
+type
+  TControlStyleAccess = class(TControl)
+  public
+    property ControlStyle;
+  end;
+
 {*
   Modifie le maître FunLabyrinthe affiché
   @param Value   Nouveau maître
@@ -93,6 +99,10 @@ var
 begin
   if Value = FMaster then
     Exit;
+
+  // Make the paint box opaque
+  TControlStyleAccess(PaintBoxMap).ControlStyle :=
+    TControlStyleAccess(PaintBoxMap).ControlStyle + [csOpaque];
 
   // Clear any active tabs
   if FMaster <> nil then

@@ -100,6 +100,7 @@ begin
 
   TGameStartedPlugin.Create(Master, idGameStartedPlugin);
   TZonesPlugin.Create(Master, idZonesPlugin);
+  TCompatibilityHacksPlugin.Create(Master, idCompatibilityHacksPlugin);
 
   // Terrains
 
@@ -231,6 +232,7 @@ begin
     end;
   end;
 
+  Player.AddPlugin(Master.Plugin[idCompatibilityHacksPlugin]);
   Player.AddPlugin(Master.Plugin[idGameStartedPlugin]);
 end;
 
@@ -259,6 +261,11 @@ var
   I: Integer;
   Components: array of TSquareComponent;
 begin
+  // Terrains
+
+  RegSingle(idOldWater);
+  RegSingle(idOldHole);
+
   // Effets
 
   RegSingle(idSunkenButton);
