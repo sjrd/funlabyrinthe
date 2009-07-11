@@ -57,7 +57,8 @@ contains
   SepiImportsFLBPlank in 'SepiImportsFLBPlank.pas',
   SepiImportsFLBSimpleEffects in 'SepiImportsFLBSimpleEffects.pas',
   FLBShowMessage in 'FLBShowMessage.pas',
-  SepiImportsFLBShowMessage in 'SepiImportsFLBShowMessage.pas';
+  SepiImportsFLBShowMessage in 'SepiImportsFLBShowMessage.pas',
+  FLBPlaceLift in 'FLBPlaceLift.pas' {FormPlaceLift};
 
 end.
 

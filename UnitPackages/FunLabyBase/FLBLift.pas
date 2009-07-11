@@ -10,7 +10,8 @@ unit FLBLift;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, SdDialogs, FunLabyUtils, Generics, FLBCommon;
+  SysUtils, Graphics, ScUtils, SdDialogs, FunLabyUtils, Generics, MapTools,
+  FLBCommon;
 
 resourcestring
   sLift = 'Ascenseur'; /// Nom de l'ascenseur
@@ -25,6 +26,11 @@ const {don't localize}
 resourcestring
   sLiftIsEngaged = 'Cet ascenseur est occupé.';
   sChooseFloor = 'À quel étage veux-tu aller ?';
+
+  sDeleteLiftShaftTitle = 'Détruire la cage d''ascenseur';
+  sDeleteLiftShaft =
+    'Voulez-vous détruire toute la cage d''ascenseur (de l''étage %d à '+
+    'l''étage %d) ?';
 
 type
   {*
@@ -57,6 +63,9 @@ type
     @version 5.0
   *}
   TLift = class(TEffect)
+  private
+    procedure EditSquareMap(var Msg: TEditMapSquareMessage);
+      message msgEditMapSquare;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
@@ -66,9 +75,12 @@ type
 
 implementation
 
-{--------------------------}
+uses
+  FLBPlaceLift;
+
+{---------------------------}
 { Classe TEngagedLiftSquare }
-{--------------------------}
+{---------------------------}
 
 {*
   Crée une instance de TEngagedLiftSquare
@@ -164,6 +176,66 @@ constructor TLift.Create(AMaster: TMaster; const AID: TComponentID;
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fLift);
+end;
+
+{*
+  Déclenché en édition lorsqu'une case est modifiée avec un ascenseur
+  @param Msg   Message
+*}
+procedure TLift.EditSquareMap(var Msg: TEditMapSquareMessage);
+var
+  Map: TMap;
+  Other: T3DPoint;
+  MinFloor, MaxFloor: Integer;
+begin
+  with Msg do
+  begin
+    if esfAdding in Flags then
+    begin
+      if TFormPlaceLift.PlaceLift(QPos, Self) then
+        Include(Flags, esfHandled)
+      else
+        Include(Flags, esfCancel);
+    end;
+
+    if esfRemoving in Flags then
+    begin
+      Map := QPos.Map;
+
+      Other := QPos.Position;
+      repeat
+        Dec(Other.Z);
+      until (Other.Z < 0) or (Map[Other].Effect <> Self);
+      MinFloor := Other.Z+1;
+
+      Other := QPos.Position;
+      repeat
+        Inc(Other.Z);
+      until (Other.Z >= Map.Dimensions.Z) or (Map[Other].Effect <> Self);
+      MaxFloor := Other.Z-1;
+
+      if MinFloor <> MaxFloor then
+      begin
+        case ShowDialog(sDeleteLiftShaftTitle,
+          Format(sDeleteLiftShaft, [MinFloor, MaxFloor]),
+          dtConfirmation, dbYesNoCancel) of
+
+          drYes:
+          begin
+            Other.Z := MinFloor;
+            while Other.Z <= MaxFloor do
+            begin
+              Map[Other] := RemoveEffect(Map[Other]);
+              Inc(Other.Z);
+            end;
+          end;
+
+          drCancel:
+            Include(Flags, esfCancel);
+        end;
+      end;
+    end;
+  end;
 end;
 
 {*

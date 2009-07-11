@@ -42,6 +42,22 @@
       
       
       
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Composants Microsoft Office XP Sample Automation Server Wrapper</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcboffice2k100.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcbofficexp100.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
@@ -56,26 +72,24 @@
     <DelphiCompile Include="FunLabyBase.dpk">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="..\..\..\FunLabyCore.dcp" />
-    <DCCReference Include="..\..\..\FunLabyTools.dcp" />
-    <DCCReference Include="..\..\..\rtl.dcp" />
-    <DCCReference Include="..\..\..\SCL110.dcp" />
-    <DCCReference Include="..\..\..\SDL110.dcp" />
-    <DCCReference Include="..\..\..\SepiReflection110.dcp" />
-    <DCCReference Include="..\..\..\SVCL110.dcp" />
-    <DCCReference Include="..\..\..\vcl.dcp" />
-    <DCCReference Include="..\..\..\VclSmp.dcp" />
-    <DCCReference Include="..\..\..\vclx.dcp" />
     <DCCReference Include="FLBBoat.pas" />
     <DCCReference Include="FLBCommon.pas" />
     <DCCReference Include="FLBFields.pas" />
     <DCCReference Include="FLBLift.pas" />
     <DCCReference Include="FLBMain.pas" />
     <DCCReference Include="FLBObstacles.pas" />
+    <DCCReference Include="FLBPlaceLift.pas">
+      <Form>FormPlaceLift</Form>
+    </DCCReference>
     <DCCReference Include="FLBPlank.pas" />
     <DCCReference Include="FLBShowMessage.pas" />
     <DCCReference Include="FLBSimpleEffects.pas" />
     <DCCReference Include="FLBSimpleObjects.pas" />
+    <DCCReference Include="FunLabyCore.dcp" />
+    <DCCReference Include="FunLabyTools.dcp" />
+    <DCCReference Include="rtl.dcp" />
+    <DCCReference Include="SCL110.dcp" />
+    <DCCReference Include="SDL110.dcp" />
     <DCCReference Include="SepiImportsFLBBoat.pas" />
     <DCCReference Include="SepiImportsFLBCommon.pas" />
     <DCCReference Include="SepiImportsFLBFields.pas" />
@@ -85,5 +99,10 @@
     <DCCReference Include="SepiImportsFLBShowMessage.pas" />
     <DCCReference Include="SepiImportsFLBSimpleEffects.pas" />
     <DCCReference Include="SepiImportsFLBSimpleObjects.pas" />
+    <DCCReference Include="SepiReflection110.dcp" />
+    <DCCReference Include="SVCL110.dcp" />
+    <DCCReference Include="vcl.dcp" />
+    <DCCReference Include="VclSmp.dcp" />
+    <DCCReference Include="vclx.dcp" />
   </ItemGroup>
 </Project>
