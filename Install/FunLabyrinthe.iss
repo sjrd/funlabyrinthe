@@ -166,8 +166,8 @@ Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\run
 
 Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 
-Source: "{code:OldVersionInfo|installdir}\Sons\*";  DestDir: "{code:AppData}\Sounds";                  Check: MustCopyOldSoundsAndImages; Flags: external onlyifdoesntexist recursesubdirs createallsubdirs uninsneveruninstall
-Source: "{code:OldVersionInfo|installdir}\Cases\*"; DestDir: "{code:AppData}\Squares\Compatibility4x"; Check: MustCopyOldSoundsAndImages; Flags: external onlyifdoesntexist recursesubdirs createallsubdirs uninsneveruninstall
+Source: "{code:OldVersionInfo|installdir}\Sons\*";  DestDir: "{code:AppData}\Sounds";                  Check: MustCopyOldSoundsAndImages; Flags: external skipifsourcedoesntexist onlyifdoesntexist recursesubdirs createallsubdirs uninsneveruninstall
+Source: "{code:OldVersionInfo|installdir}\Cases\*"; DestDir: "{code:AppData}\Squares\Compatibility4x"; Check: MustCopyOldSoundsAndImages; Flags: external skipifsourcedoesntexist onlyifdoesntexist recursesubdirs createallsubdirs uninsneveruninstall
 
 ; Fichiers temporaires pour l'installation
 

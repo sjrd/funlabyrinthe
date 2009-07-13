@@ -339,14 +339,23 @@ end;
   @param Sender   Object qui a déclenché l'événement
 *}
 procedure TFormMain.FormDestroy(Sender: TObject);
+var
+  TriesLeft: Integer;
 begin
   CloseGame(True);
 
   BackgroundDiscard(BaseSepiRoot);
   BackgroundDiscard(BaseSepiRootLoadTask);
 
+  TriesLeft := 20;
   while not BackgroundTasks.Ready do
+  begin
     Sleep(100);
+    Dec(TriesLeft);
+    if TriesLeft <= 0 then
+      System.Halt(2);
+  end;
+
   BackgroundTasks.Free;
 end;
 
