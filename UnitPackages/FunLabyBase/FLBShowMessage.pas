@@ -11,7 +11,7 @@ interface
 
 uses
   Types, Windows, SysUtils, Classes, Graphics, StrUtils, SyncObjs, ScUtils,
-  ScStrUtils, FunLabyUtils;
+  ScStrUtils, FunLabyUtils, GR32, GR32_Polygons, G32_Interface;
 
 const {don't localize}
   /// ID du plug-in d'affichage de message par défaut
@@ -391,7 +391,7 @@ procedure TDefaultShowMessagePlugin.DrawBorder(Context: TDrawViewContext;
 var
   BorderRect: TRect;
 begin
-  with Context.Canvas do
+  with Context, Bitmap.Canvas do
   begin
     BorderRect := Context.ViewRect;
     BorderRect.Top := BorderRect.Bottom - 40;
@@ -425,16 +425,15 @@ begin
     TextPos.Y := MessageRect.Top + Padding.Y;
 
     // Setup font
-    Canvas.Brush.Style := bsClear;
-    SetupFont(PlayerData, Canvas.Font);
+    SetupFont(PlayerData, Bitmap.Font);
 
     // Draw lines
     for I := CurrentIndex to CurrentIndex+MaxLineCount-1 do
     begin
       if I >= Lines.Count then
         Break;
-      Canvas.TextOut(TextPos.X, TextPos.Y, Lines[I]);
-      Inc(TextPos.Y, Canvas.TextHeight('A'));
+      Bitmap.Textout(TextPos.X, TextPos.Y, Lines[I]);
+      Inc(TextPos.Y, Bitmap.TextHeight('A'));
     end;
   end;
 end;
@@ -457,13 +456,12 @@ begin
     TextPos.Y := MessageRect.Top + Padding.Y;
 
     // Setup font
-    Canvas.Brush.Style := bsClear;
-    SetupFont(PlayerData, Canvas.Font);
+    SetupFont(PlayerData, Bitmap.Font);
 
     // Some measures
     MaxLineWidth := MessageRect.Right - MessageRect.Left - 2*Padding.X;
     ColWidth := (MaxLineWidth + ColSepWidth) div AnswerColCount;
-    LineHeight := Canvas.TextHeight('A');
+    LineHeight := Bitmap.TextHeight('A');
 
     // Skip text lines
     if CurrentIndex < Lines.Count then
@@ -498,12 +496,9 @@ begin
           Break;
 
         if Index = Selected then
-        begin
           DrawSelectionBullet(Context, PlayerData, TextPos);
-          Canvas.Brush.Style := bsClear;
-        end;
 
-        Canvas.TextOut(TextPos.X + SelBulletWidth, TextPos.Y, Answers[Index]);
+        Bitmap.Textout(TextPos.X + SelBulletWidth, TextPos.Y, Answers[Index]);
 
         Inc(TextPos.X, ColWidth);
         Inc(Index);
@@ -523,6 +518,7 @@ procedure TDefaultShowMessagePlugin.DrawContinueSymbol(
   Context: TDrawViewContext; PlayerData: TDefaultShowMessagePluginPlayerData);
 var
   SymbolPos: TPoint;
+  Points: TArrayOfFixedPoint;
 begin
   with Context do
   begin
@@ -533,13 +529,14 @@ begin
     Dec(SymbolPos.X, 9);
     Dec(SymbolPos.Y, 9);
 
-    with Canvas, SymbolPos do
+    with SymbolPos do
     begin
-      Brush.Style := bsSolid;
-      Brush.Color := clBlack;
-      Pen.Style := psClear;
+      SetLength(Points, 3);
+      Points[0] := FixedPoint(X-3, Y-3);
+      Points[1] := FixedPoint(X+3, Y-3);
+      Points[2] := FixedPoint(X, Y+4);
 
-      Polygon([Point(X-3, Y-3), Point(X+3, Y-3), Point(X, Y+4)]);
+      PolygonTS(Bitmap, Points, clBlack32);
     end;
   end;
 end;
@@ -554,7 +551,7 @@ procedure TDefaultShowMessagePlugin.DrawSelectionBullet(
   Context: TDrawViewContext; PlayerData: TDefaultShowMessagePluginPlayerData;
   BulletPos: TPoint);
 begin
-  with Context.Canvas, BulletPos do
+  with Context.Bitmap.Canvas, BulletPos do
   begin
     Brush.Style := bsSolid;
     Brush.Color := clBlack;

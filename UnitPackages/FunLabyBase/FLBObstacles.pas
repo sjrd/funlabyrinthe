@@ -11,7 +11,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, ScUtils, SdDialogs, FunLabyUtils, MapTools,
-  FLBCommon, FLBFields;
+  FLBCommon, FLBFields, GraphicsTools;
 
 resourcestring
   sSilverBlock = 'Bloc en argent'; /// Nom du bloc en argent
@@ -178,17 +178,7 @@ begin
   inherited;
 
   if Master.Editing then
-  begin
-    with Context, Canvas do
-    begin
-      Brush.Color := clWhite;
-      Font.Color := clBlack;
-      Font.Size := 12;
-      Font.Style := [fsBold];
-      Font.Name := 'Courier';  {don't localize}
-      TextOut(X+10, Y+8, '!'); {don't localize}
-    end;
-  end;
+    DrawSquareText(Context, '!');
 end;
 
 {*

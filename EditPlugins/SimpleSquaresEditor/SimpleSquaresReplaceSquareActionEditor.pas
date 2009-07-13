@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ImgList, StdCtrls, ComCtrls, ScUtils, FunLabyUtils, FilesUtils,
   FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresActions,
-  SimpleSquaresConsts, SimpleSquaresActionEditor;
+  SimpleSquaresConsts, SimpleSquaresActionEditor, GR32;
 
 type
   {*
@@ -65,7 +65,8 @@ implementation
 procedure TFrameReplaceSquareActionEditor.RegisterSingleComponent(
   Component: TSquareComponent);
 var
-  SquareBmp: TSquareBitmap;
+  SquareBmp: TBitmap;
+  SquareBmp32: TBitmap32;
   ImageIndex: Integer;
   Category: TComboExItems;
   Item: TComboExItem;
@@ -83,12 +84,18 @@ begin
     Exit; // ignore
 
   // Ajout de l'image du composant dans la liste d'images
-  SquareBmp := TSquareBitmap.Create;
+  SquareBmp32 := nil;
+  SquareBmp := TBitmap.Create;
   try
-    Component.Draw(NoQPos, SquareBmp.Canvas);
-    ImageIndex := SquaresImages.AddMasked(SquareBmp, clTransparent);
+    SquareBmp32 := CreateEmptySquareBitmap;
+    SquareBmp32.Clear(clBmpTransparent32);
+    Component.Draw(NoQPos, SquareBmp32);
+    SquareBmp.Assign(SquareBmp32);
+    ImageIndex := SquaresImages.AddMasked(SquareBmp,
+      WinColor(clBmpTransparent32));
   finally
     SquareBmp.Free;
+    SquareBmp32.Free;
   end;
 
   // Ajout du bouton

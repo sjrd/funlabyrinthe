@@ -23,7 +23,7 @@ implementation
 const // don't localize
   UnitName = 'FLBCommon';
   ResourceName = 'SepiImportsFLBCommon';
-  TypeCount = 2;
+  TypeCount = 1;
   MethodCount = 1;
   VariableCount = 1;
 
@@ -31,21 +31,6 @@ var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
   MethodAddresses: array[0..MethodCount-1] of Pointer;
   VarAddresses: array[0..VariableCount-1] of Pointer;
-
-type
-  TSepiImportsTMaskPlugin = class(TMaskPlugin)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-{--------------------}
-{ TMaskPlugin import }
-{--------------------}
-
-class procedure TSepiImportsTMaskPlugin.InitMethodAddresses;
-begin
-  MethodAddresses[0] := @TSepiImportsTMaskPlugin.Create;
-end;
 
 {---------------------}
 { Overloaded routines }
@@ -114,12 +99,10 @@ end;
 procedure InitTypeInfoArray;
 begin
   TypeInfoArray[0] := TypeInfo(TPlankMessageKind);
-  TypeInfoArray[1] := TypeInfo(TMaskPlugin);
 end;
 
 procedure InitMethodAddresses;
 begin
-  TSepiImportsTMaskPlugin.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;

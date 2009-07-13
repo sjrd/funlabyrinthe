@@ -38,9 +38,9 @@ implementation
 {$R *.dfm}
 
 const
-  idOutsideSquare = 'Grass-Outside--'; /// ID de la case d'extérieur
-  idWallSquare = 'Wall---';            /// ID de la case de mur
-  idGrassSquare = 'Grass---';          /// ID de la case d'herbe
+  idOutsideSquare = 'Outside---'; /// ID de la case d'extérieur
+  idWallSquare = 'Wall---';       /// ID de la case de mur
+  idGrassSquare = 'Grass---';     /// ID de la case d'herbe
 
 {*
   Génère la carte basique faite d'herbe et d'une ceinture de murs

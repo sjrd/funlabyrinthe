@@ -42,7 +42,9 @@ requires
   SepiSCLImport110,
   SepiSDLImport110,
   SepiSVCLImport110,
-  SepiVCLStdImport110;
+  SepiVCLStdImport110,
+  SepiGraphics32Import110,
+  GR32_BDS2007;
 
 contains
   FilesUtils in 'FilesUtils.pas',

@@ -1,6 +1,8 @@
 inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
   Width = 649
   Height = 457
+  ExplicitWidth = 649
+  ExplicitHeight = 457
   object SplitterSquares: TSplitter
     Left = 150
     Top = 0
@@ -15,7 +17,6 @@ inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
     Align = alLeft
     ButtonFlow = cbfVertical
     ButtonHeight = 36
-    ButtonWidth = 0
     ButtonOptions = [boFullSize, boGradientFill, boShowCaptions, boBoldCaptions, boCaptionOnlyBorder]
     Images = SquaresImages
     Categories = <
@@ -79,6 +80,7 @@ inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
     ShowHint = True
     TabOrder = 0
     OnButtonClicked = SquaresContainerButtonClicked
+    OnDrawIcon = SquaresContainerDrawIcon
   end
   inline SquareEditor: TFrameEditSimpleSquare
     Left = 153
@@ -89,22 +91,31 @@ inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
     Enabled = False
     TabOrder = 1
     TabStop = True
+    ExplicitLeft = 153
+    ExplicitWidth = 496
+    ExplicitHeight = 457
     inherited PanelCommon: TPanel
       Width = 496
+      ExplicitWidth = 496
       inherited ButtonNewImage: TSpeedButton
         Left = 464
+        ExplicitLeft = 464
       end
       inherited ButtonRemoveImage: TSpeedButton
         Left = 464
+        ExplicitLeft = 464
       end
       inherited ButtonUpImage: TSpeedButton
         Left = 464
+        ExplicitLeft = 464
       end
       inherited ButtonDownImage: TSpeedButton
         Left = 464
+        ExplicitLeft = 464
       end
       inherited ListBoxImages: TListBox
         Width = 201
+        ExplicitWidth = 201
       end
     end
   end

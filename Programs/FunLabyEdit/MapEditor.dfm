@@ -72,6 +72,7 @@ object FrameMapEditor: TFrameMapEditor
     ShowHint = True
     TabOrder = 0
     OnButtonClicked = SquaresContainerButtonClicked
+    OnDrawIcon = SquaresContainerDrawIcon
   end
   object PlayersContainer: TCategoryButtons
     Left = 520

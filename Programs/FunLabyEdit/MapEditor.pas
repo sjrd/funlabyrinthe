@@ -3,11 +3,11 @@ unit MapEditor;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
+  Types, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
+  Forms, Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
   ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils, FilesUtils,
   FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters, AddMap,
-  BaseMapViewer, MapTools;
+  BaseMapViewer, MapTools, GR32;
 
 type
   {*
@@ -22,16 +22,20 @@ type
   *}
   TComponentSet = class
   private
-    FMinIndex: Integer;                    /// Index minimal
-    FMaxIndex: Integer;                    /// Index maximal
+    FTemplate: TVisualComponent;            /// Template
+    FMinIndex: Integer;                     /// Index minimal
+    FMaxIndex: Integer;                     /// Index maximal
     FComponents: array of TSquareComponent; /// Ensemble des composants
-    FDialogTitle: string;                  /// Titre de la boîte de dialogue
-    FDialogPrompt: string;                 /// Invite de la boîte de dialogue
+    FDialogTitle: string;                   /// Titre de la boîte de dialogue
+    FDialogPrompt: string;                  /// Invite de la boîte de dialogue
   public
-    constructor Create(const AComponents: array of TSquareComponent;
-      BaseIndex: Integer; const ADialogTitle, ADialogPrompt: string);
+    constructor Create(ATemplate: TVisualComponent;
+      const AComponents: array of TSquareComponent; BaseIndex: Integer;
+      const ADialogTitle, ADialogPrompt: string);
 
     function ChooseComponent(var LastIndex: Integer): TSquareComponent;
+
+    property Template: TVisualComponent read FTemplate;
   end;
 
   {*
@@ -47,6 +51,9 @@ type
     PanelCenter: TPanel;
     SquaresImages: TImageList;
     MapViewer: TFrameBaseMapViewer;
+    procedure SquaresContainerDrawIcon(Sender: TObject;
+      const Button: TButtonItem; Canvas: TCanvas; Rect: TRect;
+      State: TButtonDrawState; var TextOffset: Integer);
     procedure SquaresContainerButtonClicked(Sender: TObject;
       const Button: TButtonItem);
     procedure PlayersContainerButtonClicked(Sender: TObject;
@@ -109,16 +116,20 @@ const
 
 {*
   Crée une instance de TComponentSet
+  @param ATemplate       Template
   @param AComponents     Ensemble de composants
   @param ADialogTitle    Titre de la boîte de dialogue
   @param ADialogPrompt   Invite de la boîte de dialogue
 *}
-constructor TComponentSet.Create(const AComponents: array of TSquareComponent;
-  BaseIndex: Integer; const ADialogTitle, ADialogPrompt: string);
+constructor TComponentSet.Create(ATemplate: TVisualComponent;
+  const AComponents: array of TSquareComponent; BaseIndex: Integer;
+  const ADialogTitle, ADialogPrompt: string);
 var
   Len, I: Integer;
 begin
   inherited Create;
+
+  FTemplate := ATemplate;
 
   Len := Length(AComponents);
   FMinIndex := BaseIndex;
@@ -170,19 +181,8 @@ end;
 function TFrameMapEditor.AddSquareButton(
   Template: TVisualComponent): TButtonItem;
 var
-  SquareBmp: TSquareBitmap;
-  ImageIndex: Integer;
   Category: TButtonCategory;
 begin
-  // Ajout de l'image du composant dans la liste d'images
-  SquareBmp := TSquareBitmap.Create;
-  try
-    Template.Draw(NoQPos, SquareBmp.Canvas);
-    ImageIndex := SquaresImages.AddMasked(SquareBmp, clTransparent);
-  finally
-    SquareBmp.Free;
-  end;
-
   // Choix de la catégorie
   if Template is TField then
     Category := SquaresContainer.Categories[0]
@@ -199,7 +199,7 @@ begin
 
   // Ajout du bouton
   Result := Category.Items.Add;
-  Result.ImageIndex := ImageIndex;
+  Result.ImageIndex := 0;
   Result.Hint := Template.Name;
 end;
 
@@ -229,7 +229,7 @@ var
   Button: TButtonItem;
 begin
   Button := AddSquareButton(Template);
-  Button.Data := TComponentSet.Create(Components,
+  Button.Data := TComponentSet.Create(Template, Components,
     BaseIndex, DialogTitle, DialogPrompt);
 end;
 
@@ -432,6 +432,53 @@ begin
 end;
 
 {*
+  Gestionnaire d'événement OnDrawIcon des boutons de case
+  @param Sender       Objet qui a déclenché l'événement
+  @param Button       Référence au bouton dont dessiner l'icône
+  @param Canvas       Canevas cible
+  @param Rect         Rectangle dans lequel dessiner l'icône
+  @param State        État du bouton
+  @param TextOffset   Offset du texte
+*}
+procedure TFrameMapEditor.SquaresContainerDrawIcon(Sender: TObject;
+  const Button: TButtonItem; Canvas: TCanvas; Rect: TRect;
+  State: TButtonDrawState; var TextOffset: Integer);
+var
+  BackgroundColor: TColor;
+  Component: TVisualComponent;
+  RectCenter: TPoint;
+begin
+  if bdsSelected in State then
+    BackgroundColor := SquaresContainer.SelectedButtonColor
+  else if bdsHot in State then
+    BackgroundColor := SquaresContainer.HotButtonColor
+  else
+    BackgroundColor := SquaresContainer.RegularButtonColor;
+
+  if TObject(Button.Data) is TComponentSet then
+    Component := TComponentSet(Button.Data).Template
+  else
+    Component := TVisualComponent(Button.Data);
+
+  with Rect do
+    RectCenter := Point((Left+Right) div 2, (Top+Bottom) div 2);
+
+  with RectCenter do
+  begin
+    if bdsDown in State then
+    begin
+      Inc(X);
+      Inc(Y);
+    end;
+
+    Rect := Types.Rect(X - HalfSquareSize, Y - HalfSquareSize,
+      X + HalfSquareSize, Y + HalfSquareSize);
+  end;
+
+  Component.DrawToCanvas(Canvas, Rect, BackgroundColor);
+end;
+
+{*
   Gestionnaire d'événement OnButtonClicked des boutons de case
   @param Sender   Objet qui a déclenché l'événement
   @param Button   Référence au bouton cliqué
@@ -534,6 +581,9 @@ var
   end;
 
 begin
+  if Component = nil then
+    Exit;
+
   Modified := False;
   try
     Map := QPos.Map;

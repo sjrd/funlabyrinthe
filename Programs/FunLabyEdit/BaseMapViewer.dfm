@@ -34,14 +34,15 @@ object FrameBaseMapViewer: TFrameBaseMapViewer
     Constraints.MinHeight = 280
     Constraints.MinWidth = 360
     TabOrder = 1
-    object PaintBoxMap: TPaintBox
+    object PaintBoxMap: TPaintBox32
       Left = 0
       Top = 0
       Width = 100
       Height = 100
+      TabOrder = 0
       OnMouseDown = PaintBoxMapMouseDown
       OnMouseMove = PaintBoxMapMouseMove
-      OnPaint = PaintBoxMapPaint
+      OnPaintBuffer = PaintBoxMapPaintBuffer
     end
   end
   object PanelMapInfos: TPanel

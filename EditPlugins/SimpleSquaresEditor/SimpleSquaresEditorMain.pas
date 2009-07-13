@@ -3,13 +3,15 @@ unit SimpleSquaresEditorMain;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, SepiReflectionCore, SepiCompiler, SepiCompilerErrors, SepiParseTrees,
-  FilesUtils, UnitFiles, SourceEditors, SdDialogs, Buttons, StdCtrls, ExtCtrls,
-  ImgList, CategoryButtons, ExtDlgs, Contnrs, FunLabyUtils, SimpleSquareEdit,
-  SimpleSquaresUtils, SimpleSquareNew, FunLabyEditOTA, SepiFunDelphiCompiler,
-  FunLabySourceEditorFrame, ScUtils, FunLabyFilers, msxml, RTLConsts, ScXML,
-  FunLabyCoreConsts;
+  Types, Windows, Messages, SysUtils, Variants, Classes, Contnrs, Graphics,
+  Controls, Forms, Dialogs, Buttons, StdCtrls, ExtCtrls, ImgList,
+  CategoryButtons, ExtDlgs, RTLConsts, msxml,
+  ScUtils, ScXML, SdDialogs,
+  SepiReflectionCore, SepiCompiler, SepiCompilerErrors, SepiParseTrees,
+  SepiFunDelphiCompiler,
+  FunLabyUtils, FilesUtils, UnitFiles, FunLabyFilers, FunLabyCoreConsts, GR32,
+  SourceEditors, SimpleSquareEdit, SimpleSquaresUtils, SimpleSquareNew,
+  FunLabyEditOTA, FunLabySourceEditorFrame;
 
 resourcestring
   SimpleSquaresFilter = 'Définitions de cases simples (*.ssq)|*.ssq';
@@ -86,6 +88,9 @@ type
     procedure ButtonNewComponentClick(Sender: TObject);
     procedure ButtonDeleteComponentClick(Sender: TObject);
     procedure ButtonSaveSourceClick(Sender: TObject);
+    procedure SquaresContainerDrawIcon(Sender: TObject;
+      const Button: TButtonItem; Canvas: TCanvas; Rect: TRect;
+      State: TButtonDrawState; var TextOffset: Integer);
     procedure SquaresContainerButtonClicked(Sender: TObject;
       const Button: TButtonItem);
     procedure SquareEditorNameImageChange(Sender: TObject);
@@ -422,7 +427,6 @@ end;
 procedure TFrameSimpleSquaresEditor.UpdateButton(Square: TSimpleSquare);
 var
   Button: TButtonItem;
-  SquareBmp: TSquareBitmap;
 begin
   Button := FindButton(Square);
   if Button = nil then
@@ -431,15 +435,6 @@ begin
   // Modification des texte et hint
   Button.Caption := Square.Name;
   Button.Hint := Square.Name;
-
-  // Modification de l'image du composant dans la liste d'images
-  SquareBmp := TSquareBitmap.Create;
-  try
-    Square.Draw(SquareBmp.Canvas);
-    SquaresImages.ReplaceMasked(Button.ImageIndex, SquareBmp, clTransparent);
-  finally
-    SquareBmp.Free;
-  end;
 end;
 
 {*
@@ -544,22 +539,11 @@ end;
 procedure TFrameSimpleSquaresEditor.SimpleSquareAdded(
   SimpleSquare: TSimpleSquare);
 var
-  SquareBmp: TSquareBitmap;
-  ImageIndex: Integer;
   Category: TButtonCategory;
   ButtonItem: TButtonItem;
 begin
   if csDestroying in ComponentState then
     Exit;
-
-  // Ajout de l'image du composant dans la liste d'images
-  SquareBmp := TSquareBitmap.Create;
-  try
-    SimpleSquare.Draw(SquareBmp.Canvas);
-    ImageIndex := SquaresImages.AddMasked(SquareBmp, clTransparent);
-  finally
-    SquareBmp.Free;
-  end;
 
   // Choix de la catégorie
   if SimpleSquare is TSimpleField then
@@ -577,7 +561,7 @@ begin
 
   // Ajout du bouton
   ButtonItem := Category.Items.Add;
-  ButtonItem.ImageIndex := ImageIndex;
+  ButtonItem.ImageIndex := 0;
   ButtonItem.Caption := SimpleSquare.Name;
   ButtonItem.Hint := SimpleSquare.Name;
   ButtonItem.Data := SimpleSquare;
@@ -698,6 +682,46 @@ begin
       Output.Free;
     end;
   end;
+end;
+
+{*
+  Gestionnaire d'événement OnDrawIcon des boutons de case
+  @param Sender       Objet qui a déclenché l'événement
+  @param Button       Référence au bouton dont dessiner l'icône
+  @param Canvas       Canevas cible
+  @param Rect         Rectangle dans lequel dessiner l'icône
+  @param State        État du bouton
+  @param TextOffset   Offset du texte
+*}
+procedure TFrameSimpleSquaresEditor.SquaresContainerDrawIcon(Sender: TObject;
+  const Button: TButtonItem; Canvas: TCanvas; Rect: TRect;
+  State: TButtonDrawState; var TextOffset: Integer);
+var
+  BackgroundColor: TColor;
+  ImgLeft, ImgTop: Integer;
+begin
+  if bdsSelected in State then
+    BackgroundColor := SquaresContainer.SelectedButtonColor
+  else if bdsHot in State then
+    BackgroundColor := SquaresContainer.HotButtonColor
+  else
+    BackgroundColor := SquaresContainer.RegularButtonColor;
+
+  ImgLeft := Rect.Left + 4;
+  ImgTop := (Rect.Top + Rect.Bottom - SquareSize) div 2;
+
+  if bdsDown in State then
+  begin
+    Inc(ImgLeft);
+    Inc(ImgTop);
+  end;
+
+  if Button.Data <> nil then
+    TSimpleSquare(Button.Data).Draw(Canvas, BackgroundColor, ImgLeft, ImgTop)
+  else
+    SquaresImages.Draw(Canvas, ImgLeft, ImgTop, Button.ImageIndex);
+
+  TextOffset := SquareSize + 1;
 end;
 
 {*

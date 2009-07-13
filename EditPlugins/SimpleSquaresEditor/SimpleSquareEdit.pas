@@ -359,7 +359,7 @@ end;
 procedure TFrameEditSimpleSquare.PaintBoxImagePaint(Sender: TObject);
 begin
   if CurrentSquare <> nil then
-    CurrentSquare.Draw(PaintBoxImage.Canvas);
+    CurrentSquare.Draw(PaintBoxImage.Canvas, PanelCommon.Color);
 end;
 
 end.

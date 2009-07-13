@@ -13,7 +13,7 @@ uses
   SysUtils, Classes, Graphics, StrUtils, Contnrs, ScUtils, ScStrUtils,
   ScWindows, SdDialogs, FunLabyUtils, FilesUtils, MapTools, FLBFields,
   FLBSimpleObjects, FLBPlank, FLBBoat, FLBCommon, C4xComponents, C4xSquaresTable,
-  C4xCommon;
+  C4xCommon, GR32;
 
 resourcestring
   sIfStatCannotMixAndOr = 'Ne peut mélanger les Et et les Ou';
@@ -230,8 +230,9 @@ const
     'Bleu', 'Rouge', 'Vert', 'Jaune', 'Noir', 'Blanc', 'Invisible'
   );
   /// Valeur des couleurs
-  ColorValues: array[0..6] of Integer = (
-    clBlue, clRed, clLime, clYellow, clBlack, clWhite, clTransparent
+  ColorValues: array[0..6] of TColor32 = (
+    clBlue32, clRed32, clLime32, clYellow32, clBlack32, clWhite32,
+    clTransparent32
   );
 
 type
@@ -1326,9 +1327,9 @@ begin
   begin
     Text := Description+#11;
     if Difficulty <> '' then
-      Text := Text + 'Difficulté : ' + Difficulty;
+      Text := Text + 'Difficulté : ' + Difficulty + #10;
     if Author <> '' then
-      Text := Text + 'Auteur : ' + Author;
+      Text := Text + 'Auteur : ' + Author + #10;
 
     Player.ShowMessage(Text);
   end;

@@ -32,14 +32,6 @@ object FormMain: TFormMain
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
-  object PaintBox: TPaintBox
-    Left = 0
-    Top = 0
-    Width = 270
-    Height = 270
-    Align = alClient
-    OnPaint = PaintBoxPaint
-  end
   object StatusBar: TStatusBar
     Left = 0
     Top = 270
@@ -59,6 +51,19 @@ object FormMain: TFormMain
         Width = 91
       end>
     SizeGrip = False
+  end
+  object PaintBox: TPaintBox32
+    Left = 0
+    Top = 0
+    Width = 270
+    Height = 270
+    Align = alClient
+    TabOrder = 1
+    OnPaintBuffer = PaintBoxPaintBuffer
+    ExplicitLeft = 32
+    ExplicitTop = 96
+    ExplicitWidth = 177
+    ExplicitHeight = 89
   end
   object BigMenu: TMainMenu
     Left = 40

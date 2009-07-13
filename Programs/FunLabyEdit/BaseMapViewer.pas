@@ -4,10 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, StdCtrls, Spin, ExtCtrls, Tabs, ScUtils, FunLabyUtils, FilesUtils;
+  Dialogs, StdCtrls, Spin, ExtCtrls, Tabs, ScUtils, FunLabyUtils, FilesUtils,
+  GR32, GR32_Image;
 
 type
-  TPaintMapEvent = procedure(Sender: TObject; Canvas: TCanvas;
+  TPaintMapEvent = procedure(Sender: TObject; Bitmap: TBitmap32;
     const SquareClipRect: TRect) of object;
 
   TSquarePosEvent = procedure(Sender: TObject;
@@ -21,7 +22,6 @@ type
   TFrameBaseMapViewer = class(TFrame)
     MapTabSet: TTabSet;
     ScrollBoxMap: TScrollBox;
-    PaintBoxMap: TPaintBox;
     PanelMapInfos: TPanel;
     LabelPosition: TLabel;
     LabelField: TLabel;
@@ -35,9 +35,10 @@ type
     StaticTool: TStaticText;
     StaticObstacle: TStaticText;
     EditFloor: TSpinEdit;
+    PaintBoxMap: TPaintBox32;
     procedure MapTabSetChange(Sender: TObject; NewTab: Integer;
       var AllowChange: Boolean);
-    procedure PaintBoxMapPaint(Sender: TObject);
+    procedure PaintBoxMapPaintBuffer(Sender: TObject);
     procedure PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure PaintBoxMapMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -235,10 +236,10 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnPaint de la paint-box de la carte
+  Gestionnaire d'événement OnPaintBuffer de la paint-box de la carte
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFrameBaseMapViewer.PaintBoxMapPaint(Sender: TObject);
+procedure TFrameBaseMapViewer.PaintBoxMapPaintBuffer(Sender: TObject);
 var
   Left, Top, Right, Bottom: Integer;
   SquareClipRect: TRect;
@@ -247,13 +248,16 @@ var
   QPos: TQualifiedPos;
 begin
   if CurrentMap = nil then
+  begin
+    PaintBoxMap.Buffer.Clear(Color32(ScrollBoxMap.Color));
     Exit;
+  end;
 
   // Calcul des coordonnées à afficher
-  Left := ScrollBoxMap.HorzScrollBar.Position div SquareSize - MinViewSize;
-  Top  := ScrollBoxMap.VertScrollBar.Position div SquareSize - MinViewSize;
-  Right  := Left + ScrollBoxMap.ClientWidth  div SquareSize + 1;
-  Bottom := Top  + ScrollBoxMap.ClientHeight div SquareSize + 1;
+  Left := 0 - MinViewSize;
+  Top := 0 - MinViewSize;
+  Right := CurrentMap.Dimensions.X + MinViewSize;
+  Bottom := CurrentMap.Dimensions.Y + MinViewSize;
   SquareClipRect := Rect(Left, Top, Right, Bottom);
 
   LeftZone   := Left   div CurrentMap.ZoneWidth;
@@ -268,7 +272,7 @@ begin
     for Y := Top to Bottom do
     begin
       QPos.Position := Point3D(X, Y, CurrentFloor);
-      CurrentMap[QPos.Position].Draw(QPos, PaintBoxMap.Canvas,
+      CurrentMap[QPos.Position].Draw(QPos, PaintBoxMap.Buffer,
         (MinViewSize+X) * SquareSize, (MinViewSize+Y) * SquareSize);
     end;
   end;
@@ -280,39 +284,39 @@ begin
     begin
       if (Map = CurrentMap) and (Position.Z = CurrentFloor) then
       begin
-        DrawInPlace(PaintBoxMap.Canvas, (MinViewSize+Position.X) * SquareSize,
+        DrawInPlace(PaintBoxMap.Buffer, (MinViewSize+Position.X) * SquareSize,
           (MinViewSize+Position.Y) * SquareSize);
       end;
     end;
   end;
 
   // Dessin des lignes de séparation des zones
-  with PaintBoxMap.Canvas do
+  with PaintBoxMap.Buffer do
   begin
-    Pen.Color := clBlack;
-    Pen.Style := psDash;
-    Pen.Width := 3;
-
     for X := LeftZone to RightZone do
     begin
-      MoveTo((CurrentMap.ZoneWidth * X + 1) * SquareSize, Top * SquareSize);
-      LineTo((CurrentMap.ZoneWidth * X + 1) * SquareSize,
-        (Bottom+2) * SquareSize);
+      FillRectS(
+        (CurrentMap.ZoneWidth * X + 1) * SquareSize - 1,
+        Top * SquareSize,
+        (CurrentMap.ZoneWidth * X + 1) * SquareSize + 1,
+        (Bottom+2) * SquareSize,
+        clBlack32);
     end;
 
     for Y := TopZone to BottomZone do
     begin
-      MoveTo(Left * SquareSize, (CurrentMap.ZoneHeight * Y + 1) * SquareSize);
-      LineTo((Right+2) * SquareSize,
-        (CurrentMap.ZoneHeight * Y + 1) * SquareSize);
+      FillRectS(
+        Left * SquareSize,
+        (CurrentMap.ZoneHeight * Y + 1) * SquareSize - 1,
+        (Right+2) * SquareSize,
+        (CurrentMap.ZoneHeight * Y + 1) * SquareSize + 1,
+        clBlack32);
     end;
-
-    Pen.Width := 1;
   end;
 
   // Dessins supplémentaires
   if Assigned(FOnAfterPaint) then
-    FOnAfterPaint(Self, PaintBoxMap.Canvas, SquareClipRect);
+    FOnAfterPaint(Self, PaintBoxMap.Buffer, SquareClipRect);
 end;
 
 {*

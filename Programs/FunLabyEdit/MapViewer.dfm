@@ -1,10 +1,10 @@
 object FormMapViewer: TFormMapViewer
   Left = 0
   Top = 0
-  Width = 372
-  Height = 447
   BorderStyle = bsSizeToolWin
   Caption = 'Cartes'
+  ClientHeight = 421
+  ClientWidth = 364
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

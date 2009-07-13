@@ -24,7 +24,7 @@ const // don't localize
   UnitName = 'PlayerObjects';
   ResourceName = 'SepiImportsPlayerObjects';
   TypeCount = 1;
-  MethodCount = 1;
+  MethodCount = 2;
   VariableCount = 1;
 
 var
@@ -44,7 +44,8 @@ type
 
 class procedure TSepiImportsTFormObjects.InitMethodAddresses;
 begin
-  MethodAddresses[0] := @TSepiImportsTFormObjects.ShowObjects;
+  MethodAddresses[0] := @TSepiImportsTFormObjects.ListViewObjectsCustomDrawItem;
+  MethodAddresses[1] := @TSepiImportsTFormObjects.ShowObjects;
 end;
 
 {---------------------}

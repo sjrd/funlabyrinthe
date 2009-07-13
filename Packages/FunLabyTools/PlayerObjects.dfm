@@ -33,6 +33,7 @@ object FormObjects: TFormObjects
     SmallImages = ObjectsImages
     TabOrder = 0
     ViewStyle = vsList
+    OnCustomDrawItem = ListViewObjectsCustomDrawItem
   end
   object ButtonOK: TButton
     Left = 328

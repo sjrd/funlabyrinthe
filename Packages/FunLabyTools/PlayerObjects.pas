@@ -11,7 +11,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ImgList, StdCtrls, ComCtrls, FunLabyUtils;
+  Dialogs, ImgList, StdCtrls, ComCtrls, FunLabyUtils, GR32;
 
 type
   {*
@@ -24,6 +24,8 @@ type
     ListViewObjects: TListView;
     ButtonOK: TButton;
     ObjectsImages: TImageList;
+    procedure ListViewObjectsCustomDrawItem(Sender: TCustomListView;
+      Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
   private
     { Déclarations prives }
   public
@@ -36,45 +38,47 @@ implementation
 {$R *.dfm}
 
 {*
+  Gestionnaire d'événement OnCustomDrawItem de la liste
+*}
+procedure TFormObjects.ListViewObjectsCustomDrawItem(Sender: TCustomListView;
+  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+begin
+  TObjectDef(Item.Data).DrawToCanvas(Sender.Canvas,
+    Item.DisplayRect(drIcon), TListView(Sender).Color);
+
+  // Seems to be needed for correct drawing of the text
+  Sender.Canvas.Brush.Style := bsClear;
+end;
+
+{*
   Affiche les objets d'un joueur
   @param Player   Joueur concerné
 *}
 class procedure TFormObjects.ShowObjects(Player: TPlayer);
 var
-  Bitmap: TBitmap;
   Master: TMaster;
   I: Integer;
+  ObjectDef: TObjectDef;
   Infos: string;
 begin
   with Create(Application) do
   try
-    Bitmap := TBitmap.Create;
-    try
-      Bitmap.Width := SquareSize;
-      Bitmap.Height := SquareSize;
+    Master := Player.Master;
 
-      Master := Player.Master;
+    for I := 0 to Master.ObjectDefCount-1 do
+    begin
+      ObjectDef := Master.ObjectDefs[I];
+      Infos := ObjectDef.ShownInfos[Player];
 
-      for I := 0 to Master.ObjectDefCount-1 do
+      if Infos <> '' then
       begin
-        with Master.ObjectDefs[I] do
+        with ListViewObjects.Items.Add do
         begin
-          Infos := ShownInfos[Player];
-          if Infos <> '' then
-          begin
-            EmptySquareRect(Bitmap.Canvas);
-            Draw(NoQPos, Bitmap.Canvas);
-
-            with ListViewObjects.Items.Add do
-            begin
-              Caption := Infos;
-              ImageIndex := ObjectsImages.AddMasked(Bitmap, clTransparent);
-            end;
-          end;
+          Caption := Infos;
+          ImageIndex := 0;
+          Data := Pointer(ObjectDef);
         end;
       end;
-    finally
-      Bitmap.Free;
     end;
 
     ShowModal;

@@ -24,7 +24,7 @@ const // don't localize
   UnitName = 'GraphicsTools';
   ResourceName = 'SepiImportsGraphicsTools';
   TypeCount = 1;
-  MethodCount = 1;
+  MethodCount = 2;
   VariableCount = 1;
 
 var
@@ -102,7 +102,8 @@ end;
 
 procedure InitMethodAddresses;
 begin
-  MethodAddresses[0] := @DrawSquareNumber;
+  MethodAddresses[0] := @DrawSquareText;
+  MethodAddresses[1] := @DrawSquareNumber;
 end;
 
 procedure InitVarAddresses;

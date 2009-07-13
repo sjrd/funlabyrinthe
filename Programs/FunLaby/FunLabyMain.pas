@@ -12,7 +12,8 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, SdDialogs, ShellAPI,
   FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
-  UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts;
+  UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts,
+  GR32_Image;
 
 resourcestring
   sViewSize = 'Taille de la vue';
@@ -52,8 +53,7 @@ type
     LoadGameDialog: TOpenDialog;
     TimerUpdateImage: TTimer;
     MenuViewSize: TMenuItem;
-    PaintBox: TPaintBox;
-    procedure PaintBoxPaint(Sender: TObject);
+    PaintBox: TPaintBox32;
     procedure MenuViewSizeClick(Sender: TObject);
     procedure UpdateImage(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -70,6 +70,7 @@ type
     procedure MenuMapPropertiesClick(Sender: TObject);
     procedure MenuPlayerPropertiesClick(Sender: TObject);
     procedure MenuReloadGameClick(Sender: TObject);
+    procedure PaintBoxPaintBuffer(Sender: TObject);
   private
     { Déclarations privées }
     SepiRootManager: TSepiAsynchronousRootManager;
@@ -449,22 +450,15 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnPaint de la paint box
+  Gestionnaire d'événement OnPaintBuffer de la paint box
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormMain.PaintBoxPaint(Sender: TObject);
+procedure TFormMain.PaintBoxPaintBuffer(Sender: TObject);
 begin
   if Assigned(Controller) then
-    Controller.DrawView(PaintBox.Canvas)
+    Controller.DrawView(PaintBox.Buffer)
   else
-  begin
-    with PaintBox.Canvas do
-    begin
-      Brush.Color := clBlack;
-      Pen.Color := clBlack;
-      Rectangle(0, 0, PaintBox.Width, PaintBox.Height);
-    end;
-  end;
+    PaintBox.Buffer.Clear;
 end;
 
 end.

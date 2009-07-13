@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, Contnrs, ScUtils, ScDelphiLanguage, FunLabyUtils,
-  FunLabyEditOTA;
+  FunLabyEditOTA, GR32;
 
 resourcestring
   SSimpleEffectTitle = 'Effet simple';
@@ -66,7 +66,8 @@ type
 
     class function ClassTitle: string; virtual;
 
-    procedure Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0); virtual;
+    procedure Draw(Canvas: TCanvas; BackgroundColor: TColor; X: Integer = 0;
+      Y: Integer = 0); virtual;
 
     procedure RegisterActions(Actions: TStrings); virtual;
     procedure RegisterAttributes(Attributes: TStrings); virtual;
@@ -349,14 +350,24 @@ end;
   @param X        Abscisse
   @param Y        Ordonnée
 *}
-procedure TSimpleSquare.Draw(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure TSimpleSquare.Draw(Canvas: TCanvas; BackgroundColor: TColor;
+  X: Integer = 0; Y: Integer = 0);
 var
+  Bitmap32: TBitmap32;
   Context: TDrawSquareContext;
 begin
-  Context := TDrawSquareContext.Create(Canvas, X, Y);
+  Context := nil;
+  Bitmap32 := TBitmap32.Create;
   try
+    Bitmap32.SetSize(SquareSize, SquareSize);
+    Bitmap32.Clear(Color32(BackgroundColor));
+
+    Context := TDrawSquareContext.Create(Bitmap32);
     FPainter.Draw(Context);
+
+    Canvas.CopyRect(SquareRect(X, Y), Bitmap32.Canvas, BaseSquareRect);
   finally
+    Bitmap32.Free;
     Context.Free;
   end;
 end;

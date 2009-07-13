@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ScUtils, FunLabyUtils, FunLabyEditOTA, BaseMapViewer;
+  Dialogs, ScUtils, FunLabyUtils, FunLabyEditOTA, BaseMapViewer, GR32;
 
 type
   {*
@@ -14,7 +14,7 @@ type
   *}
   TFormMapViewer = class(TForm, IOTAMapViewer50)
     MapViewer: TFrameBaseMapViewer;
-    procedure MapViewerAfterPaint(Sender: TObject; Canvas: TCanvas;
+    procedure MapViewerAfterPaint(Sender: TObject; Bitmap: TBitmap32;
       const SquareClipRect: TRect);
     procedure MapViewerClickSquare(Sender: TObject; const QPos: TQualifiedPos);
   private
@@ -167,13 +167,14 @@ end;
 {*
   Gestionnaire d'événement OnAfterPaint du visualisateur de cartes
   @param Sender           Objet qui a déclenché l'événement
-  @param Canvas           Canevas
+  @param Bitmap           Bitmap
   @param SquareClipRect   Clip-rect des cases
 *}
-procedure TFormMapViewer.MapViewerAfterPaint(Sender: TObject; Canvas: TCanvas;
+procedure TFormMapViewer.MapViewerAfterPaint(Sender: TObject; Bitmap: TBitmap32;
   const SquareClipRect: TRect);
 var
   SelPoint: TPoint;
+  I: Integer;
 begin
   SelPoint := Point(SelectedPos.X, SelectedPos.Y);
 
@@ -182,19 +183,10 @@ begin
     PtInRect(SquareClipRect, SelPoint) then
   begin
     // Draw the selection rectangle
-    with Canvas do
-    begin
-      Brush.Style := bsClear;
-      Pen.Style := psSolid;
-      Pen.Color := clYellow;
-      Pen.Width := 3;
-      try
-        Rectangle((SelPoint.X+1) * SquareSize, (SelPoint.Y+1) * SquareSize,
-          (SelPoint.X+2) * SquareSize, (SelPoint.Y+2) * SquareSize);
-      finally
-        Pen.Width := 1;
-      end;
-    end;
+    for I := -1 to 1 do
+      with SelPoint do
+        Bitmap.FrameRectS((X+1) * SquareSize - I, (Y+1) * SquareSize - I,
+          (X+2) * SquareSize + I, (Y+2) * SquareSize + I, clYellow32);
   end;
 end;
 

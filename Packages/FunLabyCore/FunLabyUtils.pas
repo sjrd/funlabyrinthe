@@ -10,13 +10,19 @@ interface
 
 uses
   Windows, Types, SysUtils, Classes, Graphics, Contnrs, RTLConsts, Controls,
-  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs, FunLabyCoreConsts;
+  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs, GR32, G32_Interface,
+  FunLabyCoreConsts;
 
 const {don't localize}
-  SquareSize = 30;        /// Taille (en largeur et hauteur) d'une case
-  MinViewSize = 1;        /// Taille minimale d'une vue
-  clTransparent = clTeal; /// Couleur de transparence pour les fichiers .bmp
-  NoRefCount = MaxInt;    /// Valeur sentinelle : pas de comptage des références
+  SquareSize = 30;     /// Taille (en largeur et hauteur) d'une case
+  HalfSquareSize = 15; /// Moitié de la taille d'une case
+  MinViewSize = 1;     /// Taille minimale d'une vue
+
+  /// Couleur de transparence pour les fichiers .bmp
+  clBmpTransparent32 = TColor32($FF008080);
+
+  /// Couleur transparente
+  clTransparent32 = TColor32($00000000);
 
   attrColor = 'Color';             /// Attribut de joueur pour Color
   attrShowCounter = 'ShowCounter'; /// Attribut de joueur pour ShowCounter
@@ -41,7 +47,7 @@ const {don't localize}
   DefaultTemporization = 500;
 
   /// Couleur par défaut d'un joueur
-  DefaultPlayerColor = clBlue;
+  DefaultPlayerColor = clBlue32;
 
   /// Taille de bordure de vue par défaut
   DefaultViewBorderSize = 1;
@@ -184,7 +190,7 @@ type
   *}
   TDrawSquareContext = class(TObject)
   private
-    FCanvas: TCanvas;   /// Canevas cible
+    FBitmap: TBitmap32; /// Bitmap cible
     FX: Integer;        /// Absisce où dessiner
     FY: Integer;        /// Ordonnée où dessiner
     FSquareRect: TRect; /// Rectangle de la case à dessiner
@@ -198,14 +204,16 @@ type
 
     procedure SetPlayer(APlayer: TPlayer);
   public
-    constructor Create(ACanvas: TCanvas); overload;
-    constructor Create(ACanvas: TCanvas; X, Y: Integer); overload;
-    constructor Create(ACanvas: TCanvas; X, Y: Integer;
+    constructor Create(ABitmap: TBitmap32); overload;
+    constructor Create(ABitmap: TBitmap32; X, Y: Integer); overload;
+    constructor Create(ABitmap: TBitmap32; X, Y: Integer;
       const AQPos: TQualifiedPos); overload;
 
     procedure SetTickCount(ATickCount: Cardinal);
 
-    property Canvas: TCanvas read FCanvas;
+    procedure DrawSquareBitmap(SquareBitmap: TBitmap32);
+
+    property Bitmap: TBitmap32 read FBitmap;
     property X: Integer read FX;
     property Y: Integer read FY;
     property SquareRect: TRect read FSquareRect;
@@ -230,8 +238,8 @@ type
     FPlayerMode: IPlayerMode; /// Mode principal du joueur
     FPlayer: TPlayer;         /// Joueur dont la vue est affichée
 
-    FCanvas: TCanvas; /// Canevas cible
-    FViewRect: TRect; /// Rectangle de la vue à dessiner
+    FBitmap: TBitmap32; /// Bitmap cible
+    FViewRect: TRect;   /// Rectangle de la vue à dessiner
 
     FUseZone: Boolean; /// Indique si ce contexte utilise une zone de carte
     FMap: TMap;        /// Carte dont dessiner une zone
@@ -243,7 +251,7 @@ type
 
     procedure ComputeZone;
   public
-    constructor Create(const APlayerMode: IPlayerMode; ACanvas: TCanvas);
+    constructor Create(const APlayerMode: IPlayerMode; ABitmap: TBitmap32);
 
     function IsSquareVisible(const QPos: TQualifiedPos): Boolean; overload;
     function IsSquareVisible(Map: TMap;
@@ -253,7 +261,7 @@ type
     property PlayerMode: IPlayerMode read FPlayerMode;
     property Player: TPlayer read FPlayer;
 
-    property Canvas: TCanvas read FCanvas;
+    property Bitmap: TBitmap32 read FBitmap;
     property ViewRect: TRect read FViewRect;
 
     property UseZone: Boolean read FUseZone;
@@ -274,12 +282,16 @@ type
   *}
   TKeyEventContext = class(TObject)
   private
+    FPlayer: TPlayer; /// Joueur qui a pressé une touche
+
     FKey: Word;          /// Touche pressée
     FShift: TShiftState; /// État des touches spéciales
 
     FHandled: Boolean; /// Indique si l'événement a été géré
   public
-    constructor Create(AKey: Word; AShift: TShiftState);
+    constructor Create(APlayer: TPlayer; AKey: Word; AShift: TShiftState);
+
+    property Player: TPlayer read FPlayer;
 
     property Key: Word read FKey;
     property Shift: TShiftState read FShift;
@@ -296,13 +308,13 @@ type
   *}
   TImagesMaster = class(TObject)
   private
-    FImgList: TImageList; /// Liste d'images interne
-    FImgNames: TStrings;  /// Liste des noms des images
+    FImgList: TObjectList; /// Liste d'images interne
+    FImgNames: TStrings;   /// Liste des noms des images
   public
     constructor Create;
     destructor Destroy; override;
 
-    function Add(const ImgName: string; Bitmap: TBitmap): Integer;
+    function Add(const ImgName: string; Bitmap: TBitmap32): Integer;
 
     function IndexOf(const ImgName: string): Integer;
 
@@ -310,23 +322,10 @@ type
     procedure Draw(const ImgName: string;
       Context: TDrawSquareContext); overload;
 
-    procedure Draw(Index: Integer; Canvas: TCanvas;
+    procedure Draw(Index: Integer; Bitmap: TBitmap32;
       X: Integer = 0; Y: Integer = 0); overload;
-    procedure Draw(const ImgName: string; Canvas: TCanvas;
+    procedure Draw(const ImgName: string; Bitmap: TBitmap32;
       X: Integer = 0; Y: Integer = 0); overload;
-  end;
-
-  {*
-    Bitmap de la taille d'une case, gérant automatiquement la transparence
-    @author sjrd
-    @version 5.0
-  *}
-  TSquareBitmap = class(TBitmap)
-  public
-    constructor Create; override;
-
-    procedure EmptySquare;
-    procedure DrawSquare(Context: TDrawSquareContext);
   end;
 
   {*
@@ -338,9 +337,9 @@ type
   *}
   TPainter = class(TObject)
   private
-    FMaster: TImagesMaster;    /// Maître d'images
-    FImgNames: TStrings;       /// Liste des noms des images
-    FCachedImg: TSquareBitmap; /// Copie cache de l'image résultante
+    FMaster: TImagesMaster; /// Maître d'images
+    FImgNames: TStrings;    /// Liste des noms des images
+    FCachedImg: TBitmap32;  /// Copie cache de l'image résultante
 
     procedure ImgNamesChange(Sender: TObject);
   public
@@ -678,9 +677,9 @@ type
   *}
   TVisualComponent = class(TFunLabyComponent)
   private
-    FName: string;             /// Nom du composant
-    FPainter: TPainter;        /// Peintre par défaut
-    FCachedImg: TSquareBitmap; /// Image en cache (pour les dessins invariants)
+    FName: string;         /// Nom du composant
+    FPainter: TPainter;    /// Peintre par défaut
+    FCachedImg: TBitmap32; /// Image en cache (pour les dessins invariants)
 
     procedure PrivDraw(Context: TDrawSquareContext); virtual;
   protected
@@ -696,8 +695,11 @@ type
     procedure AfterConstruction; override;
 
     procedure Draw(Context: TDrawSquareContext); overload;
-    procedure Draw(const QPos: TQualifiedPos; Canvas: TCanvas;
+    procedure Draw(const QPos: TQualifiedPos; Bitmap: TBitmap32;
       X: Integer = 0; Y: Integer = 0); overload;
+
+    procedure DrawToCanvas(Canvas: TCanvas; const DestRect: TRect;
+      BackgroundColor: TColor);
 
     property StaticDraw: Boolean read FStaticDraw;
   published
@@ -1058,7 +1060,7 @@ type
   *}
   TLabyrinthPlayerMode = class(TPlayerMode)
   private
-    FCacheBitmap: TBitmap; /// Bitmap cache
+    FCacheBitmap: TBitmap32; /// Bitmap cache
 
     FOldMap: TMap;              /// Ancienne carte
     FOldFloor: Integer;         /// Ancien étage
@@ -1074,7 +1076,7 @@ type
     function GetHeight: Integer; override;
     function GetUseZone: Boolean; override;
 
-    property CacheBitmap: TBitmap read FCacheBitmap;
+    property CacheBitmap: TBitmap32 read FCacheBitmap;
   public
     constructor Create(APlayer: TPlayer); override;
     destructor Destroy; override;
@@ -1099,7 +1101,7 @@ type
     FMode: IPlayerMode;                /// Mode principal
     FModeStack: IInterfaceList;        /// Pile des modes sauvegardés
     FShowCounter: Integer;             /// Compteur de visibilité
-    FColor: TColor;                    /// Couleur
+    FColor: TColor32;                  /// Couleur
     FViewBorderSize: Integer;          /// Taille de la bordure de la vue
     FPlugins: TObjectList;             /// Liste des plug-in
     FAttributes: TStrings;             /// Liste des attributs
@@ -1150,7 +1152,7 @@ type
     procedure GetAttributes(Attributes: TStrings); virtual;
     procedure GetPluginIDs(PluginIDs: TStrings);
 
-    procedure DrawInPlace(Canvas: TCanvas; X: Integer = 0;
+    procedure DrawInPlace(Bitmap: TBitmap32; X: Integer = 0;
       Y: Integer = 0);
 
     procedure ChangeMode(ModeClass: TPlayerModeClass);
@@ -1209,7 +1211,7 @@ type
     procedure Win;
     procedure Lose;
 
-    procedure DrawView(Canvas: TCanvas); virtual;
+    procedure DrawView(Bitmap: TBitmap32); virtual;
     procedure PressKey(Key: Word; Shift: TShiftState);
     procedure SendMessage(var Msg);
 
@@ -1228,7 +1230,8 @@ type
   published
     property Direction: TDirection read FDirection write FDirection
       default diNone;
-    property Color: TColor read FColor write FColor default DefaultPlayerColor;
+    property Color: TColor32 read FColor write FColor
+      default DefaultPlayerColor;
     property ViewBorderSize: Integer read FViewBorderSize write FViewBorderSize
       default DefaultViewBorderSize;
   end;
@@ -1398,9 +1401,13 @@ procedure ShowFunLabyAbout;
 function PointBehind(const Src: T3DPoint; Dir: TDirection): T3DPoint;
 function PointBefore(const Src: T3DPoint; Dir: TDirection): T3DPoint;
 
+function CreateEmptySquareBitmap: TBitmap32;
 function SquareRect(X, Y: Integer): TRect;
-procedure EmptyRect(Canvas: TCanvas; Rect: TRect);
-procedure EmptySquareRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure EmptyRect(Bitmap: TBitmap32; Rect: TRect);
+procedure EmptySquareRect(Bitmap: TBitmap32; X: Integer = 0; Y: Integer = 0);
+procedure HandleBmpTransparent(Bitmap: TBitmap32);
+procedure DrawBitmap32ToCanvas(Canvas: TCanvas; const DestRect: TRect;
+  Bitmap: TBitmap32; BackgroundColor: TColor);
 
 function SameRect(const Left, Right: TRect): Boolean;
 
@@ -1481,6 +1488,23 @@ begin
 end;
 
 {*
+  Crée un bitmap de case vide (entièrement transparent)
+  @return Bitmap créé
+*}
+function CreateEmptySquareBitmap: TBitmap32;
+begin
+  Result := TBitmap32.Create;
+  try
+    Result.SetSize(SquareSize, SquareSize);
+    Result.Clear(clTransparent32);
+    Result.DrawMode := dmBlend;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+{*
   Crée un rectangle de la taille d'une case
   @param X   Bord gauche du rectangle
   @param Y   Bord supérieur du rectangle
@@ -1496,30 +1520,65 @@ end;
 
 {*
   Efface un rectangle sur un canevas (avec du transparent)
-  @param Canvas   Canevas à traiter
+  @param Bitmap   Bitmap à traiter
   @param Rect     Rectangle à effacer
 *}
-procedure EmptyRect(Canvas: TCanvas; Rect: TRect);
+procedure EmptyRect(Bitmap: TBitmap32; Rect: TRect);
 begin
-  with Canvas do
-  begin
-    Brush.Color := clTransparent;
-    Brush.Style := bsSolid;
-    Pen.Color := clTransparent;
-    Pen.Style := psSolid;
-    Rectangle(Rect);
-  end;
+  Bitmap.FillRectS(Rect, clTransparent32);
 end;
 
 {*
   Efface un rectangle de case sur un canevas (avec du transparent)
-  @param Canvas   Canevas à traiter
+  @param Bitmap   Bitmap à traiter
   @param X        Bord gauche du rectangle
   @param Y        Bord supérieur du rectangle
 *}
-procedure EmptySquareRect(Canvas: TCanvas; X: Integer = 0; Y: Integer = 0);
+procedure EmptySquareRect(Bitmap: TBitmap32; X: Integer = 0; Y: Integer = 0);
 begin
-  EmptyRect(Canvas, SquareRect(X, Y));
+  EmptyRect(Bitmap, SquareRect(X, Y));
+end;
+
+{*
+  Convertit la couleur de transparence des .bmp en transparent réel
+  @param Bitmap   Bitmap à traiter
+*}
+procedure HandleBmpTransparent(Bitmap: TBitmap32);
+var
+  X, Y: Integer;
+  Line: PColor32Array;
+begin
+  for Y := 0 to Bitmap.Height-1 do
+  begin
+    Line := Bitmap.ScanLine[Y];
+
+    for X := 0 to Bitmap.Width-1 do
+      if Line[X] = clBmpTransparent32 then
+        Line[X] := clTransparent32;
+  end;
+end;
+
+{*
+  Dessine un bitmap 32 sur un canevas VCL
+  @param Canvas            Canevas cible
+  @param DestRect          Rectangle dans lequel dessiner le bitmap
+  @param Bitmap            Bitmap à dessiner
+  @param BackgroundColor   Couleur de fond sur le canevas
+*}
+procedure DrawBitmap32ToCanvas(Canvas: TCanvas; const DestRect: TRect;
+  Bitmap: TBitmap32; BackgroundColor: TColor);
+var
+  TempBitmap: TBitmap32;
+begin
+  TempBitmap := TBitmap32.Create;
+  try
+    TempBitmap.SetSize(Bitmap.Width, Bitmap.Height);
+    TempBitmap.Clear(Color32(BackgroundColor));
+    TempBitmap.Draw(0, 0, Bitmap);
+    Canvas.CopyRect(DestRect, TempBitmap.Canvas, TempBitmap.BoundsRect);
+  finally
+    TempBitmap.Free;
+  end;
 end;
 
 {*
@@ -1668,13 +1727,14 @@ end;
 *}
 constructor TImagesMaster.Create;
 var
-  EmptySquare: TBitmap;
+  EmptySquare: TBitmap32;
 begin
   inherited Create;
-  FImgList := TImageList.CreateSize(SquareSize, SquareSize);
+
+  FImgList := TObjectList.Create;
   FImgNames := THashedStringList.Create;
 
-  EmptySquare := TSquareBitmap.Create;
+  EmptySquare := CreateEmptySquareBitmap;
   try
     Add('', EmptySquare);
   finally
@@ -1689,6 +1749,7 @@ destructor TImagesMaster.Destroy;
 begin
   FImgNames.Free;
   FImgList.Free;
+
   inherited;
 end;
 
@@ -1700,12 +1761,23 @@ end;
   @param Bitmap    Bitmap contenant l'image à ajouter
   @return Index de l'image nouvellement ajoutée, ou existante
 *}
-function TImagesMaster.Add(const ImgName: string; Bitmap: TBitmap): Integer;
+function TImagesMaster.Add(const ImgName: string; Bitmap: TBitmap32): Integer;
+var
+  NewBitmap: TBitmap32;
 begin
   Result := FImgNames.IndexOf(ImgName);
   if Result < 0 then
   try
-    FImgList.AddMasked(Bitmap, clTransparent);
+    NewBitmap := TBitmap32.Create;
+    try
+      NewBitmap.DrawMode := dmBlend;
+      NewBitmap.Assign(Bitmap);
+      FImgList.Add(NewBitmap);
+    except
+      NewBitmap.Free;
+      raise;
+    end;
+
     try
       Result := FImgNames.Add(ImgName);
     except
@@ -1728,15 +1800,17 @@ end;
 *}
 function TImagesMaster.IndexOf(const ImgName: string): Integer;
 var
-  NewImg: TBitmap;
+  NewImg: TBitmap32;
 begin
   Result := FImgNames.IndexOf(ImgName);
   if Result < 0 then
   begin
-    NewImg := TBitmap.Create;
+    NewImg := TBitmap32.Create;
     try
       try
+        NewImg.DrawMode := dmBlend;
         NewImg.LoadFromFile(Format(fSquareFileName, [ImgName]));
+        HandleBmpTransparent(NewImg);
         Result := Add(ImgName, NewImg);
       except
         Result := 0; // Image vide
@@ -1755,8 +1829,7 @@ end;
 *}
 procedure TImagesMaster.Draw(Index: Integer; Context: TDrawSquareContext);
 begin
-  with Context do
-    FImgList.Draw(Canvas, X, Y, Index);
+  Context.DrawSquareBitmap(TBitmap32(FImgList[Index]));
 end;
 
 {*
@@ -1775,71 +1848,28 @@ end;
   Dessine une image à partir de son index
   Draw dessine l'image indiquée sur un canevas.
   @param Index    Index de l'image à dessiner
-  @param Canvas   Canevas sur lequel dessiner l'image
+  @param Bitmap   Bitmap sur lequel dessiner l'image
   @param X        Coordonnée X du point à partir duquel dessiner l'image
   @param Y        Coordonnée Y du point à partir duquel dessiner l'image
 *}
-procedure TImagesMaster.Draw(Index: Integer; Canvas: TCanvas;
+procedure TImagesMaster.Draw(Index: Integer; Bitmap: TBitmap32;
   X: Integer = 0; Y: Integer = 0);
 begin
-  FImgList.Draw(Canvas, X, Y, Index);
+  Bitmap.Draw(X, Y, TBitmap32(FImgList[Index]));
 end;
 
 {*
   Dessine une image à partir de son nom
   Draw dessine l'image indiquée sur un canevas.
   @param ImgName   Nom de l'image à dessiner
-  @param Canvas    Canevas sur lequel dessiner l'image
+  @param Bitmap    Bitmap sur lequel dessiner l'image
   @param X         Coordonnée X du point à partir duquel dessiner l'image
   @param Y         Coordonnée Y du point à partir duquel dessiner l'image
 *}
-procedure TImagesMaster.Draw(const ImgName: string; Canvas: TCanvas;
+procedure TImagesMaster.Draw(const ImgName: string; Bitmap: TBitmap32;
   X: Integer = 0; Y: Integer = 0);
 begin
-  Draw(IndexOf(ImgName), Canvas, X, Y);
-end;
-
-{----------------------}
-{ Classe TSquareBitmap }
-{----------------------}
-
-{*
-  Crée une instance de TSquareBitmap
-*}
-constructor TSquareBitmap.Create;
-begin
-  inherited;
-
-  Width := SquareSize;
-  Height := SquareSize;
-  EmptySquare;
-end;
-
-{*
-  Efface le contenu de la case
-*}
-procedure TSquareBitmap.EmptySquare;
-begin
-  EmptySquareRect(Canvas);
-end;
-
-{*
-  Dessine l'image de case sur un canevas
-  @param Canvas   Canevas sur lequel dessiner l'image
-  @param X        Coordonnée X du point à partir duquel dessiner l'image
-  @param Y        Coordonnée Y du point à partir duquel dessiner l'image
-*}
-procedure TSquareBitmap.DrawSquare(Context: TDrawSquareContext);
-var
-  OldBrushStyle: TBrushStyle;
-begin
-  with Context do
-  begin
-    OldBrushStyle := Canvas.Brush.Style;
-    Canvas.Brush.Style := bsClear;
-    Canvas.BrushCopy(SquareRect, Self, BaseSquareRect, clTransparent);
-    Canvas.Brush.Style := OldBrushStyle;
-  end;
+  Draw(IndexOf(ImgName), Bitmap, X, Y);
 end;
 
 {--------------------------}
@@ -1848,36 +1878,37 @@ end;
 
 {*
   Crée un contexte de dessin de case
+  @param ABitmap   Bitmap cible
 *}
-constructor TDrawSquareContext.Create(ACanvas: TCanvas);
+constructor TDrawSquareContext.Create(ABitmap: TBitmap32);
 begin
-  Create(ACanvas, 0, 0, NoQPos);
+  Create(ABitmap, 0, 0, NoQPos);
 end;
 
 {*
   Crée un contexte de dessin de case
-  @param ACanvas   Canevas cible
+  @param ABitmap   Bitmap cible
   @param X         Abscisce où dessiner
   @param Y         Abscisce où dessiner
 *}
-constructor TDrawSquareContext.Create(ACanvas: TCanvas; X, Y: Integer);
+constructor TDrawSquareContext.Create(ABitmap: TBitmap32; X, Y: Integer);
 begin
-  Create(ACanvas, X, Y, NoQPos);
+  Create(ABitmap, X, Y, NoQPos);
 end;
 
 {*
   Crée un contexte de dessin de case
-  @param ACanvas   Canevas cible
+  @param ABitmap   Bitmap cible
   @param X         Abscisce où dessiner
   @param Y         Abscisce où dessiner
   @param AQPos     Position qualifiée à dessiner
 *}
-constructor TDrawSquareContext.Create(ACanvas: TCanvas; X, Y: Integer;
+constructor TDrawSquareContext.Create(ABitmap: TBitmap32; X, Y: Integer;
   const AQPos: TQualifiedPos);
 begin
   inherited Create;
 
-  FCanvas := ACanvas;
+  FBitmap := ABitmap;
   FX := X;
   FY := Y;
   FSquareRect := FunLabyUtils.SquareRect(X, Y);
@@ -1904,6 +1935,14 @@ begin
   FTickCount := ATickCount;
 end;
 
+{*
+  Dessine un bitmap de case dans ce contexte
+*}
+procedure TDrawSquareContext.DrawSquareBitmap(SquareBitmap: TBitmap32);
+begin
+  Bitmap.Draw(X, Y, SquareBitmap);
+end;
+
 {------------------------}
 { TDrawViewContext class }
 {------------------------}
@@ -1911,16 +1950,16 @@ end;
 {*
   Crée un contexte de dessin d'une vue
   @param APlayerMode   Mode principal du joueur dont dessiner la vue
-  @param ACanvas       Canevas cible
+  @param ABitmap       Bitmap cible
 *}
 constructor TDrawViewContext.Create(const APlayerMode: IPlayerMode;
-  ACanvas: TCanvas);
+  ABitmap: TBitmap32);
 begin
   inherited Create;
 
   FPlayerMode := APlayerMode;
   FPlayer := APlayerMode.Player;
-  FCanvas := ACanvas;
+  FBitmap := ABitmap;
 
   FViewRect := Rect(0, 0, PlayerMode.Width, PlayerMode.Height);
   FUseZone := PlayerMode.UseZone;
@@ -2017,9 +2056,12 @@ end;
   @param AKey     Touche pressée
   @param AShift   État des touches spéciales
 *}
-constructor TKeyEventContext.Create(AKey: Word; AShift: TShiftState);
+constructor TKeyEventContext.Create(APlayer: TPlayer; AKey: Word;
+  AShift: TShiftState);
 begin
   inherited Create;
+
+  FPlayer := APlayer;
 
   FKey := AKey;
   FShift := AShift;
@@ -2040,7 +2082,7 @@ begin
   FMaster := AMaster;
   FImgNames := TStringList.Create;
   TStringList(FImgNames).OnChange := ImgNamesChange;
-  FCachedImg := TSquareBitmap.Create;
+  FCachedImg := CreateEmptySquareBitmap;
   ImgNamesChange(nil);
 end;
 
@@ -2064,21 +2106,21 @@ procedure TPainter.ImgNamesChange(Sender: TObject);
 var
   I: Integer;
 begin
-  FCachedImg.EmptySquare;
+  FCachedImg.FillRect(0, 0, SquareSize, SquareSize, clTransparent32);
   for I := 0 to FImgNames.Count-1 do
-    FMaster.Draw(FImgNames[I], FCachedImg.Canvas);
+    FMaster.Draw(FImgNames[I], FCachedImg);
 end;
 
 {*
   Dessine les images sur un canevas
   La méthode Draw dessine les images de ImgNames sur le canevas, à la
-  position indiquée. Les différentes images sont superposée, celle d'index
+  position indiquée. Les différentes images sont superposées, celle d'index
   0 tout au-dessous.
   @param Context   Contexte de dessin de la case
 *}
 procedure TPainter.Draw(Context: TDrawSquareContext);
 begin
-  FCachedImg.DrawSquare(Context);
+  Context.DrawSquareBitmap(FCachedImg);
 end;
 
 {--------------------}
@@ -2932,7 +2974,6 @@ begin
   FName := AName;
   FPainter := TPainter.Create(FMaster.ImagesMaster);
   FPainter.ImgNames.BeginUpdate;
-  FCachedImg := nil;
   FStaticDraw := True;
 end;
 
@@ -2943,6 +2984,7 @@ destructor TVisualComponent.Destroy;
 begin
   FCachedImg.Free;
   FPainter.Free;
+
   inherited;
 end;
 
@@ -2956,12 +2998,13 @@ var
   Context: TDrawSquareContext;
 begin
   inherited;
+
   FPainter.ImgNames.EndUpdate;
 
   if StaticDraw then
   begin
-    FCachedImg := TSquareBitmap.Create;
-    Context := TDrawSquareContext.Create(FCachedImg.Canvas);
+    FCachedImg := CreateEmptySquareBitmap;
+    Context := TDrawSquareContext.Create(FCachedImg);
     try
       PrivDraw(Context);
     finally
@@ -2998,7 +3041,7 @@ end;
 procedure TVisualComponent.Draw(Context: TDrawSquareContext);
 begin
   if StaticDraw then
-    FCachedImg.DrawSquare(Context)
+    Context.DrawSquareBitmap(FCachedImg)
   else
     PrivDraw(Context);
 end;
@@ -3007,20 +3050,42 @@ end;
   Dessine de façon optimisée le composant sur un canevas
   Draw dessine le composant sur un canevas à la position indiquée.
   @param QPos     Position qualifiée de l'emplacement de dessin
-  @param Canvas   Canevas sur lequel dessiner le composant
+  @param Bitmap   Bitmap sur lequel dessiner le composant
   @param X        Coordonnée X du point à partir duquel dessiner le composant
   @param Y        Coordonnée Y du point à partir duquel dessiner le composant
 *}
-procedure TVisualComponent.Draw(const QPos: TQualifiedPos; Canvas: TCanvas;
+procedure TVisualComponent.Draw(const QPos: TQualifiedPos; Bitmap: TBitmap32;
   X: Integer = 0; Y: Integer = 0);
 var
   Context: TDrawSquareContext;
 begin
-  Context := TDrawSquareContext.Create(Canvas, X, Y, QPos);
+  Context := TDrawSquareContext.Create(Bitmap, X, Y, QPos);
   try
     Draw(Context);
   finally
     Context.Free;
+  end;
+end;
+
+{*
+  Dessine le composant sur un canevas VCL
+  @param Canvas            Canevas cible
+  @param DestRect          Rectangle dans lequel dessiner le bitmap
+  @param BackgroundColor   Couleur de fond sur le canevas
+*}
+procedure TVisualComponent.DrawToCanvas(Canvas: TCanvas; const DestRect: TRect;
+  BackgroundColor: TColor);
+var
+  TempBitmap: TBitmap32;
+begin
+  TempBitmap := TBitmap32.Create;
+  try
+    TempBitmap.SetSize(SquareSize, SquareSize);
+    TempBitmap.Clear(Color32(BackgroundColor));
+    Draw(NoQPos, TempBitmap);
+    Canvas.CopyRect(DestRect, TempBitmap.Canvas, TempBitmap.BoundsRect);
+  finally
+    TempBitmap.Free;
   end;
 end;
 
@@ -3846,7 +3911,7 @@ constructor TLabyrinthPlayerMode.Create(APlayer: TPlayer);
 begin
   inherited;
 
-  FCacheBitmap := TBitmap.Create;
+  FCacheBitmap := TBitmap32.Create;
 end;
 
 {*
@@ -3873,8 +3938,7 @@ begin
     SetLength(FOldView, ZoneWidth * ZoneHeight);
     FillChar(FOldView[0], SizeOf(TSquare) * Length(FOldView), 0);
 
-    FCacheBitmap.Width := ZoneWidth * SquareSize;
-    FCacheBitmap.Height := ZoneHeight * SquareSize;
+    FCacheBitmap.SetSize(ZoneWidth * SquareSize, ZoneHeight * SquareSize);
   end;
 end;
 
@@ -3920,7 +3984,7 @@ begin
 
         if Square <> FOldView[Y*ZoneWidth + X] then
         begin
-          DrawSquareContext := TDrawSquareContext.Create(FCacheBitmap.Canvas,
+          DrawSquareContext := TDrawSquareContext.Create(FCacheBitmap,
             X*SquareSize, Y*SquareSize, QPos);
           try
             DrawSquareContext.SetTickCount(Context.TickCount);
@@ -3953,7 +4017,7 @@ begin
     begin
       if Context.IsSquareVisible(Map, Position) then
       begin
-        DrawInPlace(Context.Canvas,
+        DrawInPlace(Context.Bitmap,
           (Position.X-Context.Zone.Left) * SquareSize,
           (Position.Y-Context.Zone.Top) * SquareSize);
       end;
@@ -3993,7 +4057,7 @@ end;
 procedure TLabyrinthPlayerMode.DrawView(Context: TDrawViewContext);
 begin
   UpdateCache(Context);
-  Context.Canvas.Draw(0, 0, FCacheBitmap);
+  Context.Bitmap.Draw(0, 0, FCacheBitmap);
 
   DrawPlayers(Context);
 end;
@@ -4319,7 +4383,7 @@ begin
     { FKeyPressKey and FKeyPressShift have been set before this method is
       called. }
 
-    Context := TKeyEventContext.Create(FActionKey, FActionKeyShift);
+    Context := TKeyEventContext.Create(Self, FActionKey, FActionKeyShift);
     try
       GetPluginList(Plugins);
       for I := 0 to Length(Plugins)-1 do
@@ -4381,16 +4445,16 @@ end;
 *}
 procedure TPlayer.DoDraw(Context: TDrawSquareContext);
 var
-  Color: TColor;
+  Color: TColor32;
 begin
   Color := FColor;
 
-  if Color <> clTransparent then
+  if Color <> clTransparent32 then
   begin
-    with Context, Canvas do
+    with Context, Bitmap.Canvas do
     begin
+      Brush.Color := WinColor(Color);
       Brush.Style := bsSolid;
-      Brush.Color := Color;
       Pen.Style := psClear;
       Ellipse(X+6, Y+6, X+SquareSize-6, Y+SquareSize-6);
     end;
@@ -4539,11 +4603,11 @@ end;
   Dessine le joueur sur un canevas
   DrawInPlace dessine le joueur sur un canevas à la position indiquée, avec pour
   position qualifiée sa position actuelle.
-  @param Canvas   Canevas sur lequel dessiner le joueur
+  @param Bitmap   Bitmap sur lequel dessiner le joueur
   @param X        Coordonnée X du point à partir duquel dessiner le joueur
   @param Y        Coordonnée Y du point à partir duquel dessiner le joueur
 *}
-procedure TPlayer.DrawInPlace(Canvas: TCanvas; X: Integer = 0;
+procedure TPlayer.DrawInPlace(Bitmap: TBitmap32; X: Integer = 0;
   Y: Integer = 0);
 var
   QPos: TQualifiedPos;
@@ -4556,7 +4620,7 @@ begin
     FLock.EndRead;
   end;
 
-  Draw(QPos, Canvas, X, Y);
+  Draw(QPos, Bitmap, X, Y);
 end;
 
 {*
@@ -5139,15 +5203,15 @@ end;
 
 {*
   Dessine la vue du joueur
-  @param Canvas   Canevas cible (doit correspondre à Width/Height)
+  @param Bitmap   Bitmap cible (doit correspondre à Width/Height)
 *}
-procedure TPlayer.DrawView(Canvas: TCanvas);
+procedure TPlayer.DrawView(Bitmap: TBitmap32);
 var
   Context: TDrawViewContext;
   Plugins: TPluginDynArray;
   I: Integer;
 begin
-  Context := TDrawViewContext.Create(Mode, Canvas);
+  Context := TDrawViewContext.Create(Mode, Bitmap);
   try
     Mode.DrawView(Context);
 

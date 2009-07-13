@@ -7,7 +7,7 @@
     <DCC_DependencyCheckOutputName>..\..\FunLabyEdit.exe</DCC_DependencyCheckOutputName>
     <MainSource>FunLabyEdit.dpr</MainSource>
     <DCC_EnabledPackages>true</DCC_EnabledPackages>
-    <DCC_UsePackage>vcl;rtl;vclx;dbrtl;vcldb;VclSmp;SCL110;SVCL110;SDL110;SepiCore110;SepiReflection110;SepiInterpreter110;SepiCompiler110;SepiDelphiCompiler110;SepiRTLCommonImport110;SepiRTLSysImport110;SepiSCLImport110;SepiSDLImport110;SepiSVCLImport110;SepiVCLStdImport110;SepiWinTypesImport110;FunLabyCore;FunLabyTools;FunLabyEditPlugin</DCC_UsePackage>
+    <DCC_UsePackage>vcl;rtl;vclx;dbrtl;vcldb;VclSmp;GR32_BDS2007;SCL110;SVCL110;SDL110;SepiCore110;SepiReflection110;SepiInterpreter110;SepiRTLCommonImport110;SepiRTLSysImport110;SepiSCLImport110;SepiSDLImport110;SepiSVCLImport110;SepiVCLStdImport110;SepiWinTypesImport110;SepiGraphics32Import110;FunLabyCore;FunLabyTools;FunLabyEditPlugin</DCC_UsePackage>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Version>7.0</Version>
@@ -37,6 +37,14 @@
     <Borland.ProjectType />
     <BorlandProject>
 <BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">5</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">2060</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="FileDescription">Editeur FunLabyrinthe</VersionInfoKeys><VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName">FunLabyEdit</VersionInfoKeys><VersionInfoKeys Name="LegalCopyright">Copyright 2000-2007 (c) SJRDoeraene</VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename">FunLabyEdit.exe</VersionInfoKeys><VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys><VersionInfoKeys Name="ProductVersion">5.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Excluded_Packages>
+      
+      
+      
+      
+      
+      
+      
+      
       
       
       

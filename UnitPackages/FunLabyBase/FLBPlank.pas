@@ -10,7 +10,7 @@ unit FLBPlank;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, Generics, FLBCommon;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, Generics, FLBCommon, GR32;
 
 const {don't localize}
   idPlankPlugin = 'PlankPlugin'; /// ID du plug-in planche
@@ -105,6 +105,7 @@ procedure TPlankPlugin.DrawBefore(Context: TDrawSquareContext);
 var
   X, Y: Integer;
   Player: TPlayer;
+  PlankColor: TColor32;
 begin
   inherited;
 
@@ -127,17 +128,14 @@ begin
   end;
 
   // Dessin de la planche
-  with Context.Canvas do
+  with Context.Bitmap do
   begin
-    Brush.Color := clPlank;
-    Brush.Style := bsSolid;
-    Pen.Color := clPlank;
-    Pen.Style := psSolid;
+    PlankColor := Color32(clPlank);
 
     if Player.Direction in [diNorth, diSouth] then
-      Rectangle(X+6, Y-5, X+SquareSize-6, Y+SquareSize+5)
+      FillRectS(X+6, Y-5, X+SquareSize-6, Y+SquareSize+5, PlankColor)
     else
-      Rectangle(X-5, Y+6, X+SquareSize+5, Y+SquareSize-6);
+      FillRectS(X-5, Y+6, X+SquareSize+5, Y+SquareSize-6, PlankColor);
   end;
 end;
 

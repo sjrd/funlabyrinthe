@@ -11,7 +11,7 @@ interface
 
 uses
   SysUtils, Graphics, ScUtils, FunLabyUtils, GraphicsTools, MapTools, FLBCommon,
-  FLBFields;
+  FLBFields, GR32, G32_Interface;
 
 const {don't localize}
   idBoatPlugin = 'BoatPlugin'; /// ID du plug-in barque
@@ -125,7 +125,7 @@ procedure TBoatPlugin.DrawBefore(Context: TDrawSquareContext);
 begin
   inherited;
 
-  with Context, Canvas do
+  with Context, Bitmap.Canvas do
   begin
     Brush.Color := clInBoat;
     Brush.Style := bsSolid;
@@ -189,6 +189,8 @@ begin
     end;
 
     Pen.Width := 1;
+
+    Bitmap.DeleteCanvas;
   end;
 end;
 

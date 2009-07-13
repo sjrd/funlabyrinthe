@@ -10,7 +10,7 @@ interface
 uses
   Windows, SysUtils, Forms, Classes, Controls, Graphics, Dialogs, StdCtrls,
   StrUtils, Math, TypInfo, ScUtils, ScLists, ScDelphiLanguage, SdDialogs,
-  FunLabyUtils, FunLabyCoreConsts;
+  FunLabyUtils, FunLabyCoreConsts, GR32;
 
 type
   /// Type de boîte de dialogue
@@ -84,7 +84,7 @@ type
     constructor Create(APlayer: TPlayer);
     destructor Destroy; override;
 
-    procedure DrawView(Canvas: TCanvas);
+    procedure DrawView(Bitmap: TBitmap32);
     procedure PressKey(Key: Word; Shift: TShiftState);
     procedure PostNotificationMessage(MsgID: Word);
 
@@ -324,11 +324,11 @@ end;
 
 {*
   Dessine la vue du joueur
-  @param Canvas   Canevas cible
+  @param Bitmap   Bitmap cible
 *}
-procedure TPlayerController.DrawView(Canvas: TCanvas);
+procedure TPlayerController.DrawView(Bitmap: TBitmap32);
 begin
-  Player.DrawView(Canvas);
+  Player.DrawView(Bitmap);
 end;
 
 {*
