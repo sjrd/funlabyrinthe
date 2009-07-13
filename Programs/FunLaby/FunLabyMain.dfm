@@ -60,10 +60,6 @@ object FormMain: TFormMain
     Align = alClient
     TabOrder = 1
     OnPaintBuffer = PaintBoxPaintBuffer
-    ExplicitLeft = 32
-    ExplicitTop = 96
-    ExplicitWidth = 177
-    ExplicitHeight = 89
   end
   object BigMenu: TMainMenu
     Left = 40
@@ -100,17 +96,10 @@ object FormMain: TFormMain
         Enabled = False
         OnClick = MenuDescriptionClick
       end
-      object MenuProperties: TMenuItem
-        Caption = 'Propri'#233't'#233's'
+      object MenuPlayerObjects: TMenuItem
+        Caption = 'Vos objets'
         Enabled = False
-        object MenuMapProperties: TMenuItem
-          Caption = 'Carte'
-          OnClick = MenuMapPropertiesClick
-        end
-        object MenuPlayerProperties: TMenuItem
-          Caption = 'Joueur'
-          OnClick = MenuPlayerPropertiesClick
-        end
+        OnClick = MenuPlayerObjectsClick
       end
       object Sep2: TMenuItem
         Caption = '-'

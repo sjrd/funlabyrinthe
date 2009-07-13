@@ -124,8 +124,6 @@ type
   protected
     procedure Load; override;
   public
-    destructor Destroy; override;
-
     procedure Loaded; override;
     procedure Unloading; override;
 
@@ -281,20 +279,6 @@ end;
 {----------------------}
 { Classe TSepiUnitFile }
 {----------------------}
-
-{*
-  [@inheritDoc]
-*}
-destructor TSepiUnitFile.Destroy;
-begin
-  if Assigned(SepiUnit) then
-  begin
-    CallSimpleProc('FinalizeUnit');
-    SepiUnit.Root.UnloadUnit(SepiUnit.Name);
-  end;
-
-  inherited;
-end;
 
 {*
   [@inheritDoc]

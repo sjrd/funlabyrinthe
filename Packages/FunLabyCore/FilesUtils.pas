@@ -209,6 +209,9 @@ type
 
     FWritingUnitFiles: TUnitFileList; /// Liste des fichiers unité à écrire
 
+    constructor BaseCreate(ABaseSepiRoot: TSepiRoot;
+      const AFileName: TFileName = ''; AMode: TFileMode = fmEdit);
+
     procedure InvalidFormat;
 
     procedure Load(const ADocument: IInterface);
@@ -216,10 +219,10 @@ type
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
   public
-    constructor Create(ASepiRoot: TSepiRoot; const AFileName: TFileName;
+    constructor Create(ABaseSepiRoot: TSepiRoot; const AFileName: TFileName;
       AMode: TFileMode);
-    constructor CreateNew(ASepiRoot: TSepiRoot;
-      const UnitFileDescs: TUnitFileDescs; FileContents: TStrings = nil);
+    constructor CreateNew(ABaseSepiRoot: TSepiRoot;
+      const UnitFileDescs: TUnitFileDescs; const FileContents: string = '');
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -648,17 +651,20 @@ end;
 {--------------------}
 
 {*
-  Ouvre un fichier FunLabyrinthe
-  @param AFileName   Nom du fichier à ouvrir
-  @param AMode       Mode sous lequel ouvrir le fichier
-  @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
+  Constructeur de base (parties communes de Create et CreateNew)
+  @param ABaseSepiRoot   Racine Sepi de base (peut être nil)
+  @param AFileName       Nom du fichier à ouvrir
+  @param AMode           Mode sous lequel ouvrir le fichier
 *}
-constructor TMasterFile.Create(ASepiRoot: TSepiRoot;
-  const AFileName: TFileName; AMode: TFileMode);
+constructor TMasterFile.BaseCreate(ABaseSepiRoot: TSepiRoot;
+  const AFileName: TFileName = ''; AMode: TFileMode = fmEdit);
 begin
   inherited Create;
 
-  FSepiRoot := ASepiRoot;
+  if ABaseSepiRoot = nil then
+    FSepiRoot := TSepiRoot.Create
+  else
+    FSepiRoot := TSepiRootFork.Create(ABaseSepiRoot);
 
   FFileName := AFileName;
   FMode := AMode;
@@ -671,6 +677,19 @@ begin
 
   FUnitFiles := TUnitFileList.Create(Self);
   FSourceFiles := TSourceFileList.Create(Self);
+end;
+
+{*
+  Ouvre un fichier FunLabyrinthe
+  @param ABaseSepiRoot   Racine Sepi de base (peut être nil)
+  @param AFileName       Nom du fichier à ouvrir
+  @param AMode           Mode sous lequel ouvrir le fichier
+  @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
+*}
+constructor TMasterFile.Create(ABaseSepiRoot: TSepiRoot;
+  const AFileName: TFileName; AMode: TFileMode);
+begin
+  BaseCreate(ABaseSepiRoot, AFileName, AMode);
 
   Load(LoadXMLDocumentFromFile(FFileName));
   TestOpeningValidity;
@@ -678,31 +697,19 @@ end;
 
 {*
   Crée un nouveau fichier FunLabyrinthe en mode édition
-  @param Dimensions     Dimensions de la carte
-  @param FileContents   Contenu pré-créé du fichier (ou nil pour créer un vide)
+  @param ABaseSepiRoot   Racine Sepi de base (peut être nil)
+  @param UnitFileDescs   Descripteurs des fichiers unité à utiliser
+  @param FileContents    Contenu pré-créé du fichier (ou '' pour créer un vide)
   @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
-constructor TMasterFile.CreateNew(ASepiRoot: TSepiRoot;
-  const UnitFileDescs: TUnitFileDescs; FileContents: TStrings = nil);
+constructor TMasterFile.CreateNew(ABaseSepiRoot: TSepiRoot;
+  const UnitFileDescs: TUnitFileDescs; const FileContents: string = '');
 var
   I, J: Integer;
   UnitFile: TUnitFile;
   Document: IXMLDOMDocument;
 begin
-  inherited Create;
-
-  FSepiRoot := ASepiRoot;
-
-  FMode := fmEdit;
-  FVersion := CurrentVersion;
-
-  FAllowEdit := True;
-  FIsSaveguard := False;
-
-  FMaster := TMaster.Create(True);
-
-  FUnitFiles := TUnitFileList.Create(Self);
-  FSourceFiles := TSourceFileList.Create(Self);
+  BaseCreate(ABaseSepiRoot);
 
   // Ajouter les unités décrites par UnitFileDescs
   for I := 0 to Length(UnitFileDescs)-1 do
@@ -727,11 +734,11 @@ begin
   end;
 
   // Prendre en compte un éventuel XML de base
-  if Assigned(FileContents) then
+  if FileContents <> '' then
   begin
     Document := CoDOMDocument.Create;
     Document.async := False;
-    if not Document.loadXML(FileContents.Text) then
+    if not Document.loadXML(FileContents) then
       InvalidFormat;
 
     Load(Document);
@@ -744,21 +751,11 @@ end;
 *}
 destructor TMasterFile.Destroy;
 begin
-  { Ici on détruit le maître d'abord, afin de permettre aux unités de
-    décharger leurs infos sans contraintes. Évidemment il ne faut donc pas que
-    les gestionnaires d'unités et de cartes n'accèdent encore au maître dans
-    le destructeur. }
   FMaster.Free;
   FSourceFiles.Free;
+  FUnitFiles.Free;
 
-  { Dans la mesure où des unités pourraient être dépendantes d'autres, il faut
-    absolument les libérer dans l'ordre inverse de chargement. }
-  if Assigned(FUnitFiles) then
-  begin
-    while FUnitFiles.Count > 0 do
-      FUnitFiles.Delete(FUnitFiles.Count-1);
-    FUnitFiles.Free;
-  end;
+  FSepiRoot.Free;
 
   inherited;
 end;

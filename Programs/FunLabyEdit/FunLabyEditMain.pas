@@ -255,6 +255,7 @@ begin
   Modified := MasterFile.FileName = '';
 
   // Autres variables
+  SepiRoot := MasterFile.SepiRoot;
   Master := MasterFile.Master;
 
   // Activation de l'interface utilisateur
@@ -320,6 +321,7 @@ begin
   DeleteSourceActions;
 
   // Autres variables
+  SepiRoot := nil;
   Master := nil;
 
   // Ne pas laisser la croix de fermeture indiquer une modification
@@ -479,9 +481,8 @@ begin
 
   NeedBaseSepiRoot;
 
-  SepiRoot := TSepiRootFork.Create(BaseSepiRoot);
+  MasterFile := TMasterFile.CreateNew(BaseSepiRoot, UnitFileDescs);
   try
-    MasterFile := TMasterFile.CreateNew(SepiRoot, UnitFileDescs);
     if TFormFileProperties.ManageProperties(MasterFile) then
     begin
       TPlayer.Create(MasterFile.Master, idPlayer, SDefaultPlayerName);
@@ -489,11 +490,9 @@ begin
     end else
     begin
       BackgroundDiscard(MasterFile);
-      BackgroundDiscard(SepiRoot);
     end;
   except
     BackgroundDiscard(MasterFile);
-    BackgroundDiscard(SepiRoot);
     raise;
   end;
 end;
@@ -506,13 +505,11 @@ procedure TFormMain.OpenFile(const FileName: TFileName);
 begin
   NeedBaseSepiRoot;
 
-  SepiRoot := TSepiRootFork.Create(BaseSepiRoot);
+  MasterFile := TMasterFile.Create(BaseSepiRoot, FileName, fmEdit);
   try
-    MasterFile := TMasterFile.Create(SepiRoot, FileName, fmEdit);
     LoadFile;
   except
     BackgroundDiscard(MasterFile);
-    BackgroundDiscard(SepiRoot);
     raise;
   end;
 end;
@@ -617,7 +614,6 @@ begin
   UnloadFile;
 
   BackgroundDiscard(MasterFile);
-  BackgroundDiscard(SepiRoot);
 end;
 
 {*

@@ -9,13 +9,20 @@ unit FunLabyMain;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, Menus, ComCtrls, ExtCtrls, ScUtils, ScStrUtils, SdDialogs, ShellAPI,
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Menus, ComCtrls, ExtCtrls, ShellAPI,
+  ScUtils, ScStrUtils, ScSyncObjs, SdDialogs,
   FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
   UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts,
   GR32_Image;
 
 resourcestring
+  sFatalErrorTitle = 'Erreur fatale';
+
+  sBaseSepiRootLoadError =
+    'Erreur au chargement des fonctionnalités coeur de FunLabyrinthe avec le '+
+    'message "%s". FunLabyrinthe ne peut continuer et doit fermer.';
+
   sViewSize = 'Taille de la vue';
   sViewSizePrompt = 'Taille de la vue :';
 
@@ -46,20 +53,18 @@ type
     Sep1: TMenuItem;
     MenuDescription: TMenuItem;
     BigMenuOptions: TMenuItem;
-    MenuProperties: TMenuItem;
-    MenuMapProperties: TMenuItem;
-    MenuPlayerProperties: TMenuItem;
+    MenuPlayerObjects: TMenuItem;
     MenuReloadGame: TMenuItem;
     LoadGameDialog: TOpenDialog;
     TimerUpdateImage: TTimer;
     MenuViewSize: TMenuItem;
     PaintBox: TPaintBox32;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure MenuViewSizeClick(Sender: TObject);
     procedure UpdateImage(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
     procedure MovePlayer(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure FormCreate(Sender: TObject);
     procedure MenuExitClick(Sender: TObject);
     procedure MenuNewGameClick(Sender: TObject);
     procedure MenuLoadGameClick(Sender: TObject);
@@ -67,20 +72,24 @@ type
     procedure MenuAboutClick(Sender: TObject);
     procedure MenuSaveGameClick(Sender: TObject);
     procedure MenuDescriptionClick(Sender: TObject);
-    procedure MenuMapPropertiesClick(Sender: TObject);
-    procedure MenuPlayerPropertiesClick(Sender: TObject);
+    procedure MenuPlayerObjectsClick(Sender: TObject);
     procedure MenuReloadGameClick(Sender: TObject);
     procedure PaintBoxPaintBuffer(Sender: TObject);
   private
-    { Déclarations privées }
-    SepiRootManager: TSepiAsynchronousRootManager;
-    SepiRoot: TSepiRoot;
+    BackgroundTasks: TScTaskQueue; /// Tâches d'arrière-plan
 
-    MasterFile: TMasterFile;
-    Master: TMaster;
-    Controller: TPlayerController;
-    GameEnded: Boolean;
-    LastFileName: TFileName;
+    BaseSepiRoot: TSepiRoot;       /// Racine Sepi de base
+    BaseSepiRootLoadTask: TScTask; /// Tâche de chargement de la racine de base
+
+    MasterFile: TMasterFile;       /// Fichier maître
+    Master: TMaster;               /// Maître FunLabyrinthe
+    Controller: TPlayerController; /// Contrôleur du joueur
+    GameEnded: Boolean;            /// Indique si la partie est finie
+    LastFileName: TFileName;       /// Dernier nom de fichier ouvert
+
+    procedure LoadBaseSepiRoot;
+    procedure NeedBaseSepiRoot;
+    procedure BackgroundDiscard(var Obj);
 
     procedure NewGame(FileName: TFileName);
     function SaveGame: Boolean;
@@ -88,8 +97,6 @@ type
 
     procedure AdaptSizeToView;
     procedure ShowStatus;
-  public
-    { Déclarations publiques }
   end;
 
 var
@@ -104,15 +111,68 @@ implementation
 {------------------}
 
 {*
+  Charge la racine Sepi de base
+  Cette méthode est appelée dans le thread des tâches en arrière-plan
+*}
+procedure TFormMain.LoadBaseSepiRoot;
+begin
+  BaseSepiRoot.LoadUnit('FunLabyUtils');
+  BaseSepiRoot.LoadUnit('Generics');
+  BaseSepiRoot.LoadUnit('GraphicsTools');
+  BaseSepiRoot.LoadUnit('MapTools');
+  BaseSepiRoot.LoadUnit('PlayerObjects');
+end;
+
+{*
+  Attend que la racine Sepi de base soit chargée, et vérifie l'état d'erreur
+  En cas d'erreur pendant le chargement de la racine de base, un message
+  avertit l'utilisateur et le programme est arrêté brutalement.
+*}
+procedure TFormMain.NeedBaseSepiRoot;
+begin
+  try
+    BaseSepiRootLoadTask.WaitFor;
+    BaseSepiRootLoadTask.RaiseException;
+  except
+    on Error: Exception do
+    begin
+      ShowDialog(SFatalErrorTitle,
+        Format(SBaseSepiRootLoadError, [Error.Message]), dtError);
+      System.Halt(1);
+    end;
+    on Error: TObject do
+    begin
+      ShowDialog(SFatalErrorTitle,
+        Format(SBaseSepiRootLoadError, [Error.ClassName]), dtError);
+      System.Halt(1);
+    end;
+  end;
+end;
+
+{*
+  Crée une nouvelle tâche d'arrière-plan de libération d'un objet
+  @param Obj   Objet à libérer en arrière-plan (mis à nil)
+*}
+procedure TFormMain.BackgroundDiscard(var Obj);
+var
+  AObj: TObject;
+begin
+  AObj := TObject(Obj);
+  if AObj = nil then
+    Exit;
+  TObject(Obj) := nil;
+  TScMethodTask.Create(BackgroundTasks, AObj.Free);
+end;
+
+{*
   Commence une nouvelle partie
   @param FileName   Nom du fichier maître à charger
 *}
 procedure TFormMain.NewGame(FileName: TFileName);
 begin
-  while not SepiRootManager.Ready do
-    Sleep(100);
+  NeedBaseSepiRoot;
 
-  MasterFile := TMasterFile.Create(SepiRoot, FileName, fmPlay);
+  MasterFile := TMasterFile.Create(BaseSepiRoot, FileName, fmPlay);
   Master := MasterFile.Master;
   Controller := TPlayerController.Create(Master.Players[0]);
   GameEnded := False;
@@ -122,7 +182,7 @@ begin
   MenuReloadGame.Enabled := True;
   MenuSaveGame.Enabled := True;
   MenuDescription.Enabled := True;
-  MenuProperties.Enabled := True;
+  MenuPlayerObjects.Enabled := True;
   MenuViewSize.Enabled := True;
   ShowStatus;
 
@@ -195,7 +255,7 @@ begin
 
   MenuSaveGame.Enabled := False;
   MenuDescription.Enabled := False;
-  MenuProperties.Enabled := False;
+  MenuPlayerObjects.Enabled := False;
   MenuViewSize.Enabled := False;
 
   Controller.Free;
@@ -260,14 +320,11 @@ begin
   LoadGameDialog.InitialDir := fSaveguardsDir;
   SaveGameDialog.InitialDir := fSaveguardsDir;
 
-  SepiRootManager := TSepiAsynchronousRootManager.Create;
-  SepiRootManager.LoadUnit('FunLabyUtils');
-  SepiRoot := SepiRootManager.Root;
+  BackgroundTasks := TScTaskQueue.Create(True, False);
 
-  MasterFile := nil;
-  Master := nil;
-  Controller := nil;
-  LastFileName := '';
+  BaseSepiRoot := TSepiRoot.Create;
+  BaseSepiRootLoadTask := TScMethodTask.Create(BackgroundTasks,
+    LoadBaseSepiRoot, False);
 
   AdaptSizeToView;
 
@@ -275,6 +332,22 @@ begin
 
   if ParamCount > 0 then
     NewGame(ParamStr(1));
+end;
+
+{*
+  Gestionnaire d'événement OnDestroy
+  @param Sender   Object qui a déclenché l'événement
+*}
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  CloseGame(True);
+
+  BackgroundDiscard(BaseSepiRoot);
+  BackgroundDiscard(BaseSepiRootLoadTask);
+
+  while not BackgroundTasks.Ready do
+    Sleep(100);
+  BackgroundTasks.Free;
 end;
 
 {*
@@ -359,19 +432,10 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnClick du menu Propriétés de la carte
+  Gestionnaire d'événement OnClick du menu Objets du joueur
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormMain.MenuMapPropertiesClick(Sender: TObject);
-begin
-// Don't delete this comment
-end;
-
-{*
-  Gestionnaire d'événement OnClick du menu Propriétés du joueur
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormMain.MenuPlayerPropertiesClick(Sender: TObject);
+procedure TFormMain.MenuPlayerObjectsClick(Sender: TObject);
 begin
   TFormObjects.ShowObjects(Controller.Player);
 end;
@@ -410,17 +474,6 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnDestroy
-  @param Sender   Object qui a déclenché l'événement
-*}
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
-  CloseGame(True);
-
-  SepiRootManager.Free;
-end;
-
-{*
   Gestionnaire d'événement OnTimer
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -430,6 +483,12 @@ begin
   begin
     GameEnded := True;
     MasterFile.GameEnded;
+  end;
+
+  if (PaintBox.Width <> Controller.ViewWidth) or
+    (PaintBox.Height <> Controller.ViewHeight) then
+  begin
+    AdaptSizeToView;
   end;
 
   PaintBox.Invalidate;
