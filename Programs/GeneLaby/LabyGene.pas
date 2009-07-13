@@ -106,7 +106,6 @@ implementation
 procedure CreeSortie(Labyrinthe: TStrings; const MasterFileName: TFileName;
   DimX, DimY, DimZ: Integer; MaxViewSize: Integer = 1);
 var
-  SepiRoot: TSepiRoot;
   UnitFileDescs: TUnitFileDescs;
   MasterFile: TMasterFile;
   Master: TMaster;
@@ -119,11 +118,9 @@ begin
   SetLength(UnitFileDescs, 1);
   UnitFileDescs[0].HRef := 'FunLabyBase.bpl';
 
-  SepiRoot := nil;
   MasterFile := nil;
   try
-    SepiRoot := TSepiRoot.Create;
-    MasterFile := TMasterFile.CreateNew(SepiRoot, UnitFileDescs);
+    MasterFile := TMasterFile.CreateNew(nil, UnitFileDescs);
     Master := MasterFile.Master;
     Player := TPlayer.Create(Master, 'Player', 'Joueur');
     Map := TMap.Create(Master, 'MainMap', Point3D(DimX, DimY, DimZ), 7, 7);
@@ -143,7 +140,7 @@ begin
     UpStairs := Master.Square['Grass-UpStairs--'];
     DownStairs := Master.Square['Grass-DownStairs--'];
     Treasure := Master.Square['Grass-Treasure--'];
-    Outside := Master.Square['Grass-Outside--'];
+    Outside := Master.Square['Outside---'];
 
     for X := 0 to DimX-1 do
     begin
@@ -176,7 +173,6 @@ begin
     MasterFile.Save(MasterFileName);
   finally
     MasterFile.Free;
-    SepiRoot.Free;
   end;
 end;
 
