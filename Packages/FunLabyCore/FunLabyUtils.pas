@@ -1771,27 +1771,60 @@ end;
 function TImagesMaster.LoadImage(const ImgName: string;
   Bitmap: TBitmap32): Boolean;
 var
+  FileBitmap: TBitmap32;
+  HasSubRect: Boolean;
+  BaseFileName, XYStr, XStr, YStr: string;
   I: Integer;
-  BaseFileName, FileName: TFileName;
+  FileName: TFileName;
+  SubRect: TRect;
 begin
-  BaseFileName := fSquaresDir+ImgName+'.';
-  Result := True;
-
-  for I := 0 to FExtensions.Count-1 do
-  begin
-    FileName := BaseFileName + FExtensions[I];
-    if FileExists(FileName) then
-    begin
-      Bitmap.LoadFromFile(FileName);
-
-      if FileFormatList.GraphicFromExtension(FExtensions[I]) = TBitmap then
-        HandleBmpTransparent(Bitmap);
-
-      Exit;
-    end;
-  end;
-
   Result := False;
+  FileBitmap := TBitmap32.Create;
+  try
+    FileBitmap.DrawMode := dmOpaque;
+
+    HasSubRect := SplitToken(ImgName, '@', BaseFileName, XYStr);
+
+    BaseFileName := fSquaresDir + AnsiReplaceStr(BaseFileName, '/', '\') + '.';
+
+    for I := 0 to FExtensions.Count-1 do
+    begin
+      FileName := BaseFileName + FExtensions[I];
+      if FileExists(FileName) then
+      begin
+        FileBitmap.LoadFromFile(FileName);
+
+        if FileFormatList.GraphicFromExtension(FExtensions[I]) = TBitmap then
+          HandleBmpTransparent(FileBitmap);
+
+        Result := True;
+        Break;
+      end;
+    end;
+
+    if not Result then
+      Exit;
+
+    if HasSubRect then
+    begin
+      if not SplitToken(XYStr, ',', XStr, YStr) then
+        Result := False
+      else
+      begin
+        SubRect := SquareRect(SquareSize*StrToInt(XStr),
+          SquareSize*StrToInt(YStr));
+      end;
+    end else
+      SubRect := BaseSquareRect;
+
+    if Result then
+    begin
+      Bitmap.SetSize(SquareSize, SquareSize);
+      Bitmap.Draw(0, 0, SubRect, FileBitmap);
+    end;
+  finally
+    FileBitmap.Free;
+  end;
 end;
 
 {*

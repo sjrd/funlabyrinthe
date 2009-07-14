@@ -28,7 +28,7 @@ const {don't localize}
   idPlank = 'Plank';   /// ID de la planche
 
 const {don't localize}
-  fPlank = 'Plank'; /// Fichier de la planche
+  fPlank = 'Objects/Plank'; /// Fichier de la planche
 
 const {don't localize}
   attrUsePlank = 'UsePlank'; /// Attribut indiquant l'usage de la planche

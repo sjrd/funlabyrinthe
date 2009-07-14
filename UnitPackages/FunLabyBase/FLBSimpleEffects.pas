@@ -57,21 +57,23 @@ const {don't localize}
   idTreasure = 'Treasure';                       /// ID du trésor
 
 const {don't localize}
-  fNorthArrow = 'NorthArrow';               /// Fichier de la flèche nord
-  fEastArrow = 'EastArrow';                 /// Fichier de la flèche est
-  fSouthArrow = 'SouthArrow';               /// Fichier de la flèche sud
-  fWestArrow = 'WestArrow';                 /// Fichier de la flèche ouest
-  fCrossroads = 'Crossroads';               /// Fichier du carrefour
+  fNorthArrow = 'Arrows/NorthArrow'; /// Fichier de la flèche nord
+  fEastArrow = 'Arrows/EastArrow';   /// Fichier de la flèche est
+  fSouthArrow = 'Arrows/SouthArrow'; /// Fichier de la flèche sud
+  fWestArrow = 'Arrows/WestArrow';   /// Fichier de la flèche ouest
+  fCrossroads = 'Arrows/Crossroads'; /// Fichier du carrefour
 
-  fTransporter = 'Transporter';             /// Fichier du téléporteur
+  fTransporter = 'Miscellaneous/Transporter'; /// Fichier du téléporteur
 
-  fUpStairs = 'UpStairs';                   /// Fichier de l'escalier montant
-  fDownStairs = 'DownStairs';               /// Fichier de l'escalier descendant
+  fUpStairs = 'Stairs/UpStairs';     /// Fichier de l'escalier montant
+  fDownStairs = 'Stairs/DownStairs'; /// Fichier de l'escalier descendant
 
-  fDirectTurnstile = 'DirectTurnstile';     /// Fichier du tourniquet direct
-  fIndirectTurnstile = 'IndirectTurnstile'; /// Fichier du tourniquet indirect
+  /// Fichier du tourniquet direct
+  fDirectTurnstile = 'Arrows/DirectTurnstile';
+  /// Fichier du tourniquet indirect
+  fIndirectTurnstile = 'Arrows/IndirectTurnstile';
 
-  fTreasure = 'Treasure';                   /// Fichier du trésor
+  fTreasure = 'Chests/Treasure'; /// Fichier du trésor
 
 resourcestring
   sFoundTreasure = 'BRAVO ! Tu as trouvé le trésor !';

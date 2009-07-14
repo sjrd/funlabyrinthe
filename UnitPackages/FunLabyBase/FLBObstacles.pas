@@ -24,8 +24,8 @@ const {don't localize}
   idSecretWay = 'SecretWay';     /// ID du passage secret
 
 const {don't localize}
-  fSilverBlock = 'SilverBlock'; /// Fichier du bloc en argent
-  fGoldenBlock = 'GoldenBlock'; /// Fichier du bloc en or
+  fSilverBlock = 'Blocks/SilverBlock'; /// Fichier du bloc en argent
+  fGoldenBlock = 'Blocks/GoldenBlock'; /// Fichier du bloc en or
 
 resourcestring
   sCantOpenSilverBlock = 'Ce bloc ne disparaîtra qu''avec une clef d''argent.';

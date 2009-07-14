@@ -46,14 +46,14 @@ const {don't localize}
   idC4xInfos = 'C4xInfos'; /// ID des infos sur C4x
 
 const {don't localize}
-  fSunkenButton = 'SunkenButton'; /// Fichier du bouton enfoncé
-  fButton = 'Button';             /// Fichier du bouton
-  fSwitchOff = 'SwitchOff';       /// Fichier de l'interrupteur éteint
-  fSwitchOn = 'SwitchOn';         /// Fichier de l'interrupteur allumé
-  fInfoStone = 'InfoStone';       /// Fichier de la borne info
-  fTransporter = 'Transporter';   /// Fichier du téléporteur
-  fOutside = 'Outside';           /// Fichier du dehors
-  fTreasure = 'Treasure';         /// Fichier du trésor
+  fSunkenButton = 'Buttons/SunkenButton'; /// Fichier du bouton enfoncé
+  fButton = 'Buttons/Button';             /// Fichier du bouton
+  fSwitchOff = 'Buttons/SwitchOff';       /// Fichier de l'interrupteur éteint
+  fSwitchOn = 'Buttons/SwitchOn';         /// Fichier de l'interrupteur allumé
+  fInfoStone = 'Icons/Information';       /// Fichier de la borne info
+  fTransporter = 'Miscellaneous/Transporter'; /// Fichier du téléporteur
+  fOutside = 'Fields/Outside';            /// Fichier du dehors
+  fTreasure = 'Chests/Treasure';          /// Fichier du trésor
 
 resourcestring
   sAskForTips = 'Ce labyrinthe propose certains indices : '+
@@ -259,7 +259,7 @@ const {don't localize}
     [akCustom, akObject, akObstacle, akDirection];
 
   /// Sous-répertoire des images gardées pour compatibilité
-  fCompatibility = 'Compatibility4x\';
+  fCompatibility = 'Compatibility4x/';
 
 implementation
 

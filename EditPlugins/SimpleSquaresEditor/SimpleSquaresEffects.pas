@@ -55,7 +55,7 @@ constructor TSimpleButton.Create(AImagesMaster: TImagesMaster);
 begin
   inherited;
 
-  ImgNames.Add('Button'); {don't localize}
+  ImgNames.Add('Buttons/Button'); {don't localize}
 end;
 
 {*
@@ -93,7 +93,7 @@ constructor TSimpleSwitch.Create(AImagesMaster: TImagesMaster);
 begin
   inherited;
 
-  ImgNames.Add('SwitchOff'); {don't localize}
+  ImgNames.Add('Buttons/SwitchOff'); {don't localize}
 end;
 
 {*

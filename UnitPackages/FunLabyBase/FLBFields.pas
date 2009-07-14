@@ -31,13 +31,13 @@ const {don't localize}
   idGroundWater = 'GroundWater'; /// ID de l'eau effet herbe
 
 const {don't localize}
-  fGrass = 'Grass';                   /// Fichier de l'herbe
-  fWall = 'Wall';                     /// Fichier du mur
-  fWater = 'Water';                   /// Fichier de l'eau
-  fAlternateWater = 'AlternateWater'; /// Fichier alternatif de l'eau
-  fHole = 'Hole';                     /// Fichier du trou
-  fSky = 'Sky';                       /// Fichier du ciel
-  fOutside = 'Outside';               /// Fichier du dehors
+  fGrass = 'Fields/Grass';                   /// Fichier de l'herbe
+  fWall = 'Fields/Wall';                     /// Fichier du mur
+  fWater = 'Fields/Water';                   /// Fichier de l'eau
+  fAlternateWater = 'Fields/AlternateWater'; /// Fichier alternatif de l'eau
+  fHole = 'Fields/Hole';                     /// Fichier du trou
+  fSky = 'Fields/Sky';                       /// Fichier du ciel
+  fOutside = 'Fields/Outside';               /// Fichier du dehors
 
 resourcestring
   sCantGoOnWater = 'Sans bouée, on coule dans l''eau.';

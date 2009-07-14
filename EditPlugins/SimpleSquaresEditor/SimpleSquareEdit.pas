@@ -273,6 +273,7 @@ begin
 
         Delete(FileName, 1, Length(fSquaresDir));
         FileName := ChangeFileExt(FileName, '');
+        FileName := AnsiReplaceStr(FileName, '\', '/');
 
         CurrentSquare.ImgNames.Add(FileName);
       end;

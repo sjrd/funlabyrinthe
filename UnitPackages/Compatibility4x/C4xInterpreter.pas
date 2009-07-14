@@ -12,8 +12,8 @@ interface
 uses
   SysUtils, Classes, Graphics, StrUtils, Contnrs, ScUtils, ScStrUtils,
   ScWindows, SdDialogs, FunLabyUtils, FilesUtils, MapTools, FLBFields,
-  FLBSimpleObjects, FLBPlank, FLBBoat, FLBCommon, C4xComponents, C4xSquaresTable,
-  C4xCommon, GR32;
+  FLBSimpleObjects, FLBPlank, FLBBoat, FLBCommon, C4xComponents,
+  C4xSquaresTable, C4xCommon, GR32;
 
 resourcestring
   sIfStatCannotMixAndOr = 'Ne peut mélanger les Et et les Ou';

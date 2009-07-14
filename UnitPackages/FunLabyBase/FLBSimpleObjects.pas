@@ -43,9 +43,9 @@ const {don't localize}
   idGoldenKey = 'GoldenKey';   /// ID de la clef d'or
 
 const {don't localize}
-  fBuoy = 'Buoy';           /// Fichier de la bouée
-  fSilverKey = 'SilverKey'; /// Fichier de la clef d'argent
-  fGoldenKey = 'GoldenKey'; /// Fichier de la clef d'or
+  fBuoy = 'Objects/Buoy';           /// Fichier de la bouée
+  fSilverKey = 'Objects/SilverKey'; /// Fichier de la clef d'argent
+  fGoldenKey = 'Objects/GoldenKey'; /// Fichier de la clef d'or
 
 resourcestring
   sFoundBuoy = 'Tu as trouvé une bouée.'+#10+

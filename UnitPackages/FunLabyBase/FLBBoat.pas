@@ -29,7 +29,7 @@ const {don't localize}
   idBoatSquareTemplate = idGroundWater+'--'+idBoatTemplate+'-';
 
 const {don't localize}
-  fBoat = 'Boat'; /// Fichier de la barque
+  fBoat = 'Objects/Boat'; /// Fichier de la barque
 
 resourcestring
   sBoatTitle = 'Numéro de la barque';

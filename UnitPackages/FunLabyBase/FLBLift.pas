@@ -20,8 +20,8 @@ const {don't localize}
   idLift = 'Lift'; /// ID de l'ascenseur
 
 const {don't localize}
-  fLift = 'Lift';             /// Fichier de l'ascenseur
-  fOpenedLift = 'OpenedLift'; /// Fichier de l'ascenseur ouvert
+  fLift = 'Stairs/Lift';             /// Fichier de l'ascenseur
+  fOpenedLift = 'Stairs/OpenedLift'; /// Fichier de l'ascenseur ouvert
 
 resourcestring
   sLiftIsEngaged = 'Cet ascenseur est occupé.';
