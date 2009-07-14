@@ -337,8 +337,6 @@ object FrameEditSimpleSquare: TFrameEditSimpleSquare
     end
   end
   object OpenImageDialog: TOpenPictureDialog
-    DefaultExt = 'bmp'
-    Filter = 'Images bitmap (*.bmp)|*.bmp'
     Options = [ofHideReadOnly, ofNoChangeDir, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Title = 'S'#233'lectionnez les fichiers image '#224' ajouter'
     Left = 272

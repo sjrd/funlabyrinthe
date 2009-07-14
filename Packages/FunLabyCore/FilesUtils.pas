@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Classes, Contnrs, ScUtils, ScLists, ScXML, SepiReflectionCore,
-  FunLabyUtils, FunLabyFilers, FunLabyCoreConsts;
+  FunLabyUtils, FunLabyFilers, FunLabyCoreConsts, GraphicEx;
 
 type
   /// Mode d'ouverture d'un fichier FunLabyrinthe

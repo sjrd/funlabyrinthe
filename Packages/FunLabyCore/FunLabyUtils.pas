@@ -52,6 +52,9 @@ const {don't localize}
   /// Taille de bordure de vue par défaut
   DefaultViewBorderSize = 1;
 
+  /// Extension d'image préférée
+  PreferredImageExtension = 'png';
+
 type
   /// Identificateur de composant FunLabyrinthe
   TComponentID = type string;
@@ -308,8 +311,11 @@ type
   *}
   TImagesMaster = class(TObject)
   private
+    FExtensions: TStrings; /// Extensions d'images reconnues
     FImgList: TObjectList; /// Liste d'images interne
     FImgNames: TStrings;   /// Liste des noms des images
+
+    function LoadImage(const ImgName: string; Bitmap: TBitmap32): Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1393,9 +1399,6 @@ var {don't localize}
   /// Dossier des plug-in de l'éditeur
   fEditPluginDir: string = 'EditPlugins\';
 
-  /// Chaîne de format pour les fichiers image
-  fSquareFileName: string = '%s.bmp';
-
 procedure ShowFunLabyAbout;
 
 function PointBehind(const Src: T3DPoint; Dir: TDirection): T3DPoint;
@@ -1425,7 +1428,7 @@ function FunLabyFindClass(const ClassName: string): TFunLabyPersistentClass;
 implementation
 
 uses
-  IniFiles, StrUtils, Forms, ScStrUtils, ScDelphiLanguage;
+  IniFiles, StrUtils, Forms, ScStrUtils, ScDelphiLanguage, GraphicEx;
 
 const
   /// Code de format d'un flux carte (TMap) (correspond à '.flm')
@@ -1731,6 +1734,10 @@ var
 begin
   inherited Create;
 
+  FExtensions := TStringList.Create;
+  FileFormatList.GetExtensionList(FExtensions);
+  FExtensions.Move(FExtensions.IndexOf(PreferredImageExtension), 0);
+
   FImgList := TObjectList.Create;
   FImgNames := THashedStringList.Create;
 
@@ -1750,7 +1757,41 @@ begin
   FImgNames.Free;
   FImgList.Free;
 
+  FExtensions.Free;
+
   inherited;
+end;
+
+{*
+  Charge une image d'après son nom dans un bitmap
+  @param ImgName   Nom de l'image
+  @param Bitmap    Bitmap destination
+  @return True si l'image a été trouvée, False sinon
+*}
+function TImagesMaster.LoadImage(const ImgName: string;
+  Bitmap: TBitmap32): Boolean;
+var
+  I: Integer;
+  BaseFileName, FileName: TFileName;
+begin
+  BaseFileName := fSquaresDir+ImgName+'.';
+  Result := True;
+
+  for I := 0 to FExtensions.Count-1 do
+  begin
+    FileName := BaseFileName + FExtensions[I];
+    if FileExists(FileName) then
+    begin
+      Bitmap.LoadFromFile(FileName);
+
+      if FileFormatList.GraphicFromExtension(FExtensions[I]) = TBitmap then
+        HandleBmpTransparent(Bitmap);
+
+      Exit;
+    end;
+  end;
+
+  Result := False;
 end;
 
 {*
@@ -1809,9 +1850,10 @@ begin
     try
       try
         NewImg.DrawMode := dmBlend;
-        NewImg.LoadFromFile(Format(fSquareFileName, [ImgName]));
-        HandleBmpTransparent(NewImg);
-        Result := Add(ImgName, NewImg);
+        if LoadImage(ImgName, NewImg) then
+          Result := Add(ImgName, NewImg)
+        else
+          Result := 0; // Image vide
       except
         Result := 0; // Image vide
       end;
@@ -5899,8 +5941,6 @@ initialization
     fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
 
     fEditPluginDir := Dir + fEditPluginDir;
-
-    fSquareFileName := fSquaresDir+fSquareFileName;
   finally
     Free;
   end;

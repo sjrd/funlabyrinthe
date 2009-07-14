@@ -44,7 +44,8 @@ requires
   SepiSVCLImport110,
   SepiVCLStdImport110,
   SepiGraphics32Import110,
-  GR32_BDS2007;
+  GR32_BDS2007,
+  GraphicEx110;
 
 contains
   FilesUtils in 'FilesUtils.pas',

@@ -25,7 +25,7 @@ const // don't localize
   ResourceName = 'SepiImportsFunLabyUtils';
   TypeCount = 44;
   MethodCount = 177;
-  VariableCount = 11;
+  VariableCount = 10;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -1070,7 +1070,6 @@ begin
   VarAddresses[7] := @fLabyrinthsDir;
   VarAddresses[8] := @fSaveguardsDir;
   VarAddresses[9] := @fEditPluginDir;
-  VarAddresses[10] := @fSquareFileName;
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}
