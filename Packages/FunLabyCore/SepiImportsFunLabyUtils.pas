@@ -302,12 +302,12 @@ end;
 class procedure TSepiImportsTImagesMaster.InitMethodAddresses;
 begin
   MethodAddresses[10] := @TSepiImportsTImagesMaster.Create;
-  MethodAddresses[11] := @TSepiImportsTImagesMaster.Add;
-  MethodAddresses[12] := @TSepiImportsTImagesMaster.IndexOf;
-  MethodAddresses[13] := @TSepiImportsTImagesMaster.Draw_0;
-  MethodAddresses[14] := @TSepiImportsTImagesMaster.Draw_1;
-  MethodAddresses[15] := @TSepiImportsTImagesMaster.Draw_2;
-  MethodAddresses[16] := @TSepiImportsTImagesMaster.Draw_3;
+  MethodAddresses[11] := @TSepiImportsTImagesMaster.IndexOf;
+  MethodAddresses[12] := @TSepiImportsTImagesMaster.Draw_0;
+  MethodAddresses[13] := @TSepiImportsTImagesMaster.Draw_1;
+  MethodAddresses[14] := @TSepiImportsTImagesMaster.Draw_2;
+  MethodAddresses[15] := @TSepiImportsTImagesMaster.Draw_3;
+  MethodAddresses[16] := @TSepiImportsTImagesMaster.GetInternalBitmap;
 end;
 
 {-----------------}

@@ -315,12 +315,12 @@ type
     FImgList: TObjectList; /// Liste d'images interne
     FImgNames: TStrings;   /// Liste des noms des images
 
-    function LoadImage(const ImgName: string; Bitmap: TBitmap32): Boolean;
+    function ResolveImgName(const BaseImgName: string): TFileName;
+    function LoadImage(const ImgName: string): TBitmap32;
+    function Add(const ImgName: string): Integer;
   public
     constructor Create;
     destructor Destroy; override;
-
-    function Add(const ImgName: string; Bitmap: TBitmap32): Integer;
 
     function IndexOf(const ImgName: string): Integer;
 
@@ -332,6 +332,8 @@ type
       X: Integer = 0; Y: Integer = 0); overload;
     procedure Draw(const ImgName: string; Bitmap: TBitmap32;
       X: Integer = 0; Y: Integer = 0); overload;
+
+    function GetInternalBitmap(Index: Integer): TBitmap32;
   end;
 
   {*
@@ -354,6 +356,7 @@ type
 
     procedure Draw(Context: TDrawSquareContext);
 
+    property Master: TImagesMaster read FMaster;
     property ImgNames: TStrings read FImgNames;
   end;
 
@@ -1701,228 +1704,6 @@ begin
     raise EClassNotFound.CreateFmt(SClassNotFound, [ClassName]);
 end;
 
-{----------------------}
-{ Classe TImagesMaster }
-{----------------------}
-
-{*
-  Crée une instance de TImagesMaster
-*}
-constructor TImagesMaster.Create;
-var
-  EmptySquare: TBitmap32;
-begin
-  inherited Create;
-
-  FExtensions := TStringList.Create;
-  FileFormatList.GetExtensionList(FExtensions);
-  FExtensions.Move(FExtensions.IndexOf(PreferredImageExtension), 0);
-
-  FImgList := TObjectList.Create;
-  FImgNames := THashedStringList.Create;
-
-  EmptySquare := CreateEmptySquareBitmap;
-  try
-    Add('', EmptySquare);
-  finally
-    EmptySquare.Free;
-  end;
-end;
-
-{*
-  Détruit l'instance
-*}
-destructor TImagesMaster.Destroy;
-begin
-  FImgNames.Free;
-  FImgList.Free;
-
-  FExtensions.Free;
-
-  inherited;
-end;
-
-{*
-  Charge une image d'après son nom dans un bitmap
-  @param ImgName   Nom de l'image
-  @param Bitmap    Bitmap destination
-  @return True si l'image a été trouvée, False sinon
-*}
-function TImagesMaster.LoadImage(const ImgName: string;
-  Bitmap: TBitmap32): Boolean;
-var
-  FileBitmap: TBitmap32;
-  HasSubRect: Boolean;
-  BaseFileName, XYStr, XStr, YStr: string;
-  I: Integer;
-  FileName: TFileName;
-  SubRect: TRect;
-begin
-  Result := False;
-  FileBitmap := nil;
-  try
-    HasSubRect := SplitToken(ImgName, '@', BaseFileName, XYStr);
-
-    BaseFileName := fSquaresDir + AnsiReplaceStr(BaseFileName, '/', '\') + '.';
-
-    for I := 0 to FExtensions.Count-1 do
-    begin
-      FileName := BaseFileName + FExtensions[I];
-      if FileExists(FileName) then
-      begin
-        FileBitmap := LoadBitmapFromFile(FileName);
-        FileBitmap.DrawMode := dmOpaque;
-
-        Result := True;
-        Break;
-      end;
-    end;
-
-    if not Result then
-      Exit;
-
-    if HasSubRect then
-    begin
-      if not SplitToken(XYStr, ',', XStr, YStr) then
-        Result := False
-      else
-      begin
-        SubRect := SquareRect(SquareSize*StrToInt(XStr),
-          SquareSize*StrToInt(YStr));
-      end;
-    end else
-      SubRect := BaseSquareRect;
-
-    if Result then
-    begin
-      Bitmap.SetSize(SquareSize, SquareSize);
-      Bitmap.Draw(0, 0, SubRect, FileBitmap);
-    end;
-  finally
-    FileBitmap.Free;
-  end;
-end;
-
-{*
-  Ajoute une image à partir d'un bitmap au maître d'images
-  Si une image de même nom existe déjà, l'ajout est ignoré.
-  En cas d'erreur, l'index 0 - de l'image vide - est renvoyé.
-  @param ImgName   Nom de l'image
-  @param Bitmap    Bitmap contenant l'image à ajouter
-  @return Index de l'image nouvellement ajoutée, ou existante
-*}
-function TImagesMaster.Add(const ImgName: string; Bitmap: TBitmap32): Integer;
-var
-  NewBitmap: TBitmap32;
-begin
-  Result := FImgNames.IndexOf(ImgName);
-  if Result < 0 then
-  try
-    NewBitmap := TBitmap32.Create;
-    try
-      NewBitmap.DrawMode := dmBlend;
-      NewBitmap.Assign(Bitmap);
-      FImgList.Add(NewBitmap);
-    except
-      NewBitmap.Free;
-      raise;
-    end;
-
-    try
-      Result := FImgNames.Add(ImgName);
-    except
-      FImgList.Delete(FImgList.Count-1);
-      raise;
-    end;
-  except
-    Result := 0; // Image vide
-  end;
-end;
-
-{*
-  Renvoie l'index de l'image dont le nom est spécifié
-  IndexOf renvoie l'index de l'image dont le nom est spécifié dans la
-  liste d'images interne. Si l'image n'a pas encore été chargée, IndexOf
-  la charge.
-  En cas d'erreur, l'index 0 - de l'image vide - est renvoyé.
-  @param ImgName   Nom de l'image
-  @return Index de l'image
-*}
-function TImagesMaster.IndexOf(const ImgName: string): Integer;
-var
-  NewImg: TBitmap32;
-begin
-  Result := FImgNames.IndexOf(ImgName);
-  if Result < 0 then
-  begin
-    NewImg := TBitmap32.Create;
-    try
-      try
-        NewImg.DrawMode := dmBlend;
-        if LoadImage(ImgName, NewImg) then
-          Result := Add(ImgName, NewImg)
-        else
-          Result := 0; // Image vide
-      except
-        Result := 0; // Image vide
-      end;
-    finally
-      NewImg.Free;
-    end;
-  end;
-end;
-
-{*
-  Dessine une image à partir de son index
-  Draw dessine l'image indiquée sur un canevas.
-  @param Index     Index de l'image à dessiner
-  @param Context   Contexte de dessin de la case
-*}
-procedure TImagesMaster.Draw(Index: Integer; Context: TDrawSquareContext);
-begin
-  Context.DrawSquareBitmap(TBitmap32(FImgList[Index]));
-end;
-
-{*
-  Dessine une image à partir de son nom
-  Draw dessine l'image indiquée sur un canevas.
-  @param ImgName   Nom de l'image à dessiner
-  @param Context   Contexte de dessin de la case
-*}
-procedure TImagesMaster.Draw(const ImgName: string;
-  Context: TDrawSquareContext);
-begin
-  Draw(IndexOf(ImgName), Context);
-end;
-
-{*
-  Dessine une image à partir de son index
-  Draw dessine l'image indiquée sur un canevas.
-  @param Index    Index de l'image à dessiner
-  @param Bitmap   Bitmap sur lequel dessiner l'image
-  @param X        Coordonnée X du point à partir duquel dessiner l'image
-  @param Y        Coordonnée Y du point à partir duquel dessiner l'image
-*}
-procedure TImagesMaster.Draw(Index: Integer; Bitmap: TBitmap32;
-  X: Integer = 0; Y: Integer = 0);
-begin
-  Bitmap.Draw(X, Y, TBitmap32(FImgList[Index]));
-end;
-
-{*
-  Dessine une image à partir de son nom
-  Draw dessine l'image indiquée sur un canevas.
-  @param ImgName   Nom de l'image à dessiner
-  @param Bitmap    Bitmap sur lequel dessiner l'image
-  @param X         Coordonnée X du point à partir duquel dessiner l'image
-  @param Y         Coordonnée Y du point à partir duquel dessiner l'image
-*}
-procedure TImagesMaster.Draw(const ImgName: string; Bitmap: TBitmap32;
-  X: Integer = 0; Y: Integer = 0);
-begin
-  Draw(IndexOf(ImgName), Bitmap, X, Y);
-end;
-
 {--------------------------}
 { TDrawSquareContext class }
 {--------------------------}
@@ -2118,6 +1899,231 @@ begin
   FShift := AShift;
 end;
 
+{----------------------}
+{ Classe TImagesMaster }
+{----------------------}
+
+{*
+  Crée une instance de TImagesMaster
+*}
+constructor TImagesMaster.Create;
+var
+  EmptySquare: TBitmap32;
+begin
+  inherited Create;
+
+  FExtensions := TStringList.Create;
+  FileFormatList.GetExtensionList(FExtensions);
+  FExtensions.Move(FExtensions.IndexOf(PreferredImageExtension), 0);
+
+  FImgList := TObjectList.Create;
+  FImgNames := THashedStringList.Create;
+
+  FImgNames.Add('');
+
+  EmptySquare := CreateEmptySquareBitmap;
+  try
+    FImgList.Add(EmptySquare);
+  except
+    EmptySquare.Free;
+    raise;
+  end;
+end;
+
+{*
+  Détruit l'instance
+*}
+destructor TImagesMaster.Destroy;
+begin
+  FImgNames.Free;
+  FImgList.Free;
+
+  FExtensions.Free;
+
+  inherited;
+end;
+
+{*
+  Résoud un nom d'image (sans indicateur de sous-image) en nom de fichier
+  @param BaseImgName   Nom d'image (sans indicateur de sous-image @x,y)
+  @return Nom de fichier pour cette image, ou '' si non trouvé
+*}
+function TImagesMaster.ResolveImgName(const BaseImgName: string): TFileName;
+var
+  I: Integer;
+begin
+  Result := fSquaresDir + AnsiReplaceStr(BaseImgName, '/', '\');
+  if FileExists(Result) then
+    Exit;
+
+  for I := 0 to FExtensions.Count-1 do
+  begin
+    if FileExists(Result+'.'+FExtensions[I]) then
+    begin
+      Result := Result+'.'+FExtensions[I];
+      Exit;
+    end;
+  end;
+
+  Result := '';
+end;
+
+{*
+  Charge une image d'après son nom dans un bitmap
+  @param ImgName   Nom de l'image
+  @param Bitmap    Bitmap destination
+  @return True si l'image a été trouvée, False sinon
+*}
+function TImagesMaster.LoadImage(const ImgName: string): TBitmap32;
+var
+  TempBitmap: TBitmap32;
+  BaseImgName, XYStr, XStr, YStr: string;
+  FileName: TFileName;
+  SubRect: TRect;
+begin
+  Result := nil;
+  try
+    SplitToken(ImgName, '@', BaseImgName, XYStr);
+
+    FileName := ResolveImgName(BaseImgName);
+    if FileName = '' then
+      Exit;
+
+    Result := LoadBitmapFromFile(FileName);
+
+    if SplitToken(XYStr, ',', XStr, YStr) then
+      SubRect := SquareRect(SquareSize*StrToInt(XStr),
+        SquareSize*StrToInt(YStr))
+    else
+      SubRect := BaseSquareRect;
+
+    if not SameRect(Result.BoundsRect, SubRect) then
+    begin
+      TempBitmap := Result;
+      Result := nil;
+      try
+        Result := TBitmap32.Create;
+        Result.SetSize(SquareSize, SquareSize);
+        Result.Draw(0, 0, TempBitmap);
+      finally
+        TempBitmap.Free;
+      end;
+    end;
+
+    Result.DrawMode := dmBlend;
+  except
+    FreeAndNil(Result);
+  end;
+end;
+
+{*
+  Ajoute une image à partir de son nom au maître d'images
+  Aucune image de même nom ne doit déjà exister dans la liste interne.
+  En cas d'erreur, l'index 0 - de l'image vide - est renvoyé.
+  @param ImgName   Nom de l'image
+  @return Index de l'image nouvellement ajoutée, ou existante
+*}
+function TImagesMaster.Add(const ImgName: string): Integer;
+var
+  NewBitmap: TBitmap32;
+begin
+  Result := 0;
+
+  NewBitmap := LoadImage(ImgName);
+  if NewBitmap = nil then
+    Exit;
+
+  try
+    FImgList.Add(NewBitmap);
+  except
+    NewBitmap.Free;
+    Exit;
+  end;
+
+  try
+    Result := FImgNames.Add(ImgName);
+  except
+    FImgList.Delete(FImgList.Count-1);
+  end;
+end;
+
+{*
+  Renvoie l'index de l'image dont le nom est spécifié
+  IndexOf renvoie l'index de l'image dont le nom est spécifié dans la
+  liste d'images interne. Si l'image n'a pas encore été chargée, IndexOf
+  la charge.
+  En cas d'erreur, l'index 0 - de l'image vide - est renvoyé.
+  @param ImgName   Nom de l'image
+  @return Index de l'image
+*}
+function TImagesMaster.IndexOf(const ImgName: string): Integer;
+begin
+  Result := FImgNames.IndexOf(ImgName);
+  if Result < 0 then
+    Result := Add(ImgName);
+end;
+
+{*
+  Dessine une image à partir de son index
+  Draw dessine l'image indiquée sur un canevas.
+  @param Index     Index de l'image à dessiner
+  @param Context   Contexte de dessin de la case
+*}
+procedure TImagesMaster.Draw(Index: Integer; Context: TDrawSquareContext);
+begin
+  Context.DrawSquareBitmap(TBitmap32(FImgList[Index]));
+end;
+
+{*
+  Dessine une image à partir de son nom
+  Draw dessine l'image indiquée sur un canevas.
+  @param ImgName   Nom de l'image à dessiner
+  @param Context   Contexte de dessin de la case
+*}
+procedure TImagesMaster.Draw(const ImgName: string;
+  Context: TDrawSquareContext);
+begin
+  Draw(IndexOf(ImgName), Context);
+end;
+
+{*
+  Dessine une image à partir de son index
+  Draw dessine l'image indiquée sur un canevas.
+  @param Index    Index de l'image à dessiner
+  @param Bitmap   Bitmap sur lequel dessiner l'image
+  @param X        Coordonnée X du point à partir duquel dessiner l'image
+  @param Y        Coordonnée Y du point à partir duquel dessiner l'image
+*}
+procedure TImagesMaster.Draw(Index: Integer; Bitmap: TBitmap32;
+  X: Integer = 0; Y: Integer = 0);
+begin
+  Bitmap.Draw(X, Y, TBitmap32(FImgList[Index]));
+end;
+
+{*
+  Dessine une image à partir de son nom
+  Draw dessine l'image indiquée sur un canevas.
+  @param ImgName   Nom de l'image à dessiner
+  @param Bitmap    Bitmap sur lequel dessiner l'image
+  @param X         Coordonnée X du point à partir duquel dessiner l'image
+  @param Y         Coordonnée Y du point à partir duquel dessiner l'image
+*}
+procedure TImagesMaster.Draw(const ImgName: string; Bitmap: TBitmap32;
+  X: Integer = 0; Y: Integer = 0);
+begin
+  Draw(IndexOf(ImgName), Bitmap, X, Y);
+end;
+
+{*
+  Obtient le bitmap interne d'après son index
+  @param Index   Index d'une image
+  @return Bitmap interne pour cette image
+*}
+function TImagesMaster.GetInternalBitmap(Index: Integer): TBitmap32;
+begin
+  Result := TBitmap32(FImgList[Index]);
+end;
+
 {-----------------}
 { Classe TPainter }
 {-----------------}
@@ -2138,12 +2144,13 @@ begin
 end;
 
 {*
-  Détruit l'instance
+  [@inheritDoc]
 *}
 destructor TPainter.Destroy;
 begin
   FCachedImg.Free;
   FImgNames.Free;
+
   inherited;
 end;
 
