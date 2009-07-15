@@ -11,7 +11,7 @@ interface
 
 uses
   SysUtils, Graphics, ScUtils, FunLabyUtils, GraphicsTools, MapTools, FLBCommon,
-  FLBFields, GR32, G32_Interface;
+  FLBFields, GR32;
 
 const {don't localize}
   idBoatPlugin = 'BoatPlugin'; /// ID du plug-in barque

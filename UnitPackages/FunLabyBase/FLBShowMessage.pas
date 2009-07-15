@@ -11,7 +11,7 @@ interface
 
 uses
   Types, Windows, SysUtils, Classes, Graphics, StrUtils, SyncObjs, ScUtils,
-  ScStrUtils, FunLabyUtils, GR32, GR32_Polygons, G32_Interface;
+  ScStrUtils, FunLabyUtils, GR32, GR32_Polygons;
 
 const {don't localize}
   /// ID du plug-in d'affichage de message par défaut

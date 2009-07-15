@@ -12,8 +12,7 @@ unit FLBSimpleObjects;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon, FLBFields, GR32,
-  G32_Interface;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon, FLBFields, GR32;
 
 const {don't localize}
   idBuoyPlugin = 'BuoyPlugin'; /// ID du plug-in bouée
@@ -139,8 +138,13 @@ procedure TBuoyPlugin.DrawBefore(Context: TDrawSquareContext);
 begin
   inherited;
 
-  with Context, SquareRect do
-    gEllipse(Bitmap, FixedRect(Left+1, Top+1, Right-1, Bottom-1), clYellow32);
+  with Context.Bitmap.Canvas, Context.SquareRect do
+  begin
+    Brush.Color := clYellow;
+    Brush.Style := bsSolid;
+    Pen.Style := psClear;
+    Ellipse(Left+1, Top+1, Right-1, Bottom-1);
+  end;
 end;
 
 {*

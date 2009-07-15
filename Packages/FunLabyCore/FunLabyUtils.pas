@@ -10,8 +10,7 @@ interface
 
 uses
   Windows, Types, SysUtils, Classes, Graphics, Contnrs, RTLConsts, Controls,
-  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs, GR32, G32_Interface,
-  FunLabyCoreConsts;
+  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs, GR32, FunLabyCoreConsts;
 
 const {don't localize}
   SquareSize = 30;     /// Taille (en largeur et hauteur) d'une case
