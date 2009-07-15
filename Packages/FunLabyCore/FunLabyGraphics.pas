@@ -38,6 +38,8 @@ type
   public
     constructor CreateFrame(AOwner: TAnimatedBitmap32);
 
+    procedure Assign(Source: TPersistent); override;
+
     procedure Changed; override;
 
     property Delay: Integer read FDelay write SetDelay;
@@ -73,8 +75,6 @@ type
 
     procedure Assign(Source: TPersistent); override;
 
-    procedure Changed; override;
-
     function GetFrameAtTime(TickCount: Cardinal): TBitmap32Frame;
 
     procedure DrawAtTimeTo(TickCount: Cardinal; Dst: TBitmap32); overload;
@@ -93,6 +93,8 @@ type
     property TotalTime: Cardinal read FTotalTime;
   end;
 
+procedure ReplaceColorInBitmap32(Bitmap: TBitmap32; FromColor: TColor32;
+  ToColor: TColor32);
 procedure HandleBmpTransparent(Bitmap: TBitmap32);
 
 function LoadBitmapFromFile(const FileName: TFileName): TBitmap32;
@@ -125,10 +127,13 @@ begin
 end;
 
 {*
-  Convertit la couleur de transparence des .bmp en transparent réel
-  @param Bitmap   Bitmap à traiter
+  Remplace toute occurrence d'une couleur par une autre dans un bitmap 32
+  @param Bitmap      Bitmap à traiter
+  @param FromColor   Couleur à remplacer
+  @param ToColor     Couleur de remplacement
 *}
-procedure HandleBmpTransparent(Bitmap: TBitmap32);
+procedure ReplaceColorInBitmap32(Bitmap: TBitmap32; FromColor: TColor32;
+  ToColor: TColor32);
 var
   X, Y: Integer;
   Line: PColor32Array;
@@ -138,9 +143,41 @@ begin
     Line := Bitmap.ScanLine[Y];
 
     for X := 0 to Bitmap.Width-1 do
-      if Line[X] = clBmpTransparent32 then
-        Line[X] := clTransparent32;
+      if Line[X] = FromColor then
+        Line[X] := ToColor;
   end;
+end;
+
+{*
+  Convertit la couleur de transparence des .bmp en transparent réel
+  @param Bitmap   Bitmap à traiter
+*}
+procedure HandleBmpTransparent(Bitmap: TBitmap32);
+begin
+  ReplaceColorInBitmap32(Bitmap, clBmpTransparent32, clTransparent32);
+end;
+
+{*
+  Assigne un frame GIF à un bitmap 32
+  @param Dest     Bitmap 32 destination
+  @param Source   Frame GIF source
+*}
+procedure AssignGIFSubImageToBitmap32(Dest: TBitmap32; Source: TGIFSubImage);
+begin
+  Dest.SetSize(Source.Width, Source.Height);
+
+  Source.Draw(Dest.Canvas, Dest.BoundsRect, False, False);
+  Dest.ResetAlpha;
+
+  if Source.Transparent then
+  begin
+    ReplaceColorInBitmap32(Dest,
+      Color32(Source.GraphicControlExtension.TransparentColor),
+      clTransparent32);
+  end;
+
+  if Dest is TBitmap32Frame then
+    TBitmap32Frame(Dest).Delay := Source.GraphicControlExtension.Delay * 10;
 end;
 
 {*
@@ -158,16 +195,26 @@ begin
     try
       Picture.LoadFromFile(FileName);
 
-      if (Picture.Graphic is TGIFImage) and
-        (TGIFImage(Picture.Graphic).Images.Count > 1) then
-        Result := TAnimatedBitmap32.Create
-      else
+      if Picture.Graphic is TGIFImage then
+      begin
+        if TGIFImage(Picture.Graphic).Images.Count = 1 then
+        begin
+          Result := TBitmap32.Create;
+          AssignGIFSubImageToBitmap32(Result,
+            TGIFImage(Picture.Graphic).Images[0]);
+        end else
+        begin
+          Result := TAnimatedBitmap32.Create;
+          Result.Assign(Picture);
+        end;
+      end else
+      begin
         Result := TBitmap32.Create;
+        Result.Assign(Picture);
 
-      Result.Assign(Picture);
-
-      if Picture.Graphic.ClassType = TBitmap then
-        HandleBmpTransparent(Result);
+        if Picture.Graphic.ClassType = TBitmap then
+          HandleBmpTransparent(Result);
+      end;
     finally
       Picture.Free;
     end;
@@ -202,6 +249,7 @@ begin
   if (Value > 0) and (Value <> FDelay) then
   begin
     FDelay := Value;
+    FOwner.UpdateTimeToFrame;
     Changed;
   end;
 end;
@@ -209,6 +257,14 @@ end;
 {*
   [@inheritDoc]
 *}
+procedure TBitmap32Frame.Assign(Source: TPersistent);
+begin
+  inherited;
+
+  if Source is TBitmap32Frame then
+    Delay := TBitmap32Frame(Source).Delay;
+end;
+
 procedure TBitmap32Frame.Changed;
 begin
   inherited;
@@ -316,6 +372,9 @@ begin
     FFrames[I] := TBitmap32Frame.CreateFrame(Self);
     TBitmap32Frame(FFrames[I]).SetSize(Width, Height);
   end;
+
+  UpdateTimeToFrame;
+  Changed;
 end;
 
 {*
@@ -364,6 +423,7 @@ begin
       Frames[I].Assign(Source.Frames[I]);
   finally
     EndUpdate;
+    Changed;
   end;
 end;
 
@@ -384,9 +444,10 @@ begin
     FrameCount := Source.Images.Count;
 
     for I := 0 to FrameCount-1 do
-      Frames[I].Assign(Source.Images[I].Bitmap);
+      AssignGIFSubImageToBitmap32(Frames[I], Source.Images[I]);
   finally
     EndUpdate;
+    Changed;
   end;
 end;
 
@@ -407,16 +468,6 @@ begin
       inherited;
   end else
     inherited;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TAnimatedBitmap32.Changed;
-begin
-  UpdateTimeToFrame;
-
-  inherited;
 end;
 
 {*
