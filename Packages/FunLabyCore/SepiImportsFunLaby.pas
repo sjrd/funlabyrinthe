@@ -5,7 +5,8 @@ interface
 uses
   SepiImportsRTLSys, SepiImportsWinTypes, SepiImportsRTLCommon, SepiImportsSCL,
   SepiImportsVCLStd, SepiImportsSVCL, SepiImportsSDL, SepiImportsGraphics32,
-  SepiImportsFunLabyUtils, SepiImportsFunLabyCoreConsts;
+  SepiImportsFunLabyCoreConsts, SepiImportsFunLabyGraphics,
+  SepiImportsFunLabyUtils;
 
 implementation
 

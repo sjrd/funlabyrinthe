@@ -45,7 +45,8 @@ requires
   SepiVCLStdImport110,
   SepiGraphics32Import110,
   GR32_BDS2007,
-  GraphicEx110;
+  GraphicEx110,
+  GIFImage110;
 
 contains
   FilesUtils in 'FilesUtils.pas',
@@ -55,7 +56,9 @@ contains
   UnitFiles in 'UnitFiles.pas',
   FunLabyFilers in 'FunLabyFilers.pas',
   FunLabyCoreConsts in 'FunLabyCoreConsts.pas',
-  SepiImportsFunLabyCoreConsts in 'SepiImportsFunLabyCoreConsts.pas';
+  SepiImportsFunLabyCoreConsts in 'SepiImportsFunLabyCoreConsts.pas',
+  FunLabyGraphics in 'FunLabyGraphics.pas',
+  SepiImportsFunLabyGraphics in 'SepiImportsFunLabyGraphics.pas';
 
 end.
 

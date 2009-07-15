@@ -10,7 +10,8 @@ interface
 
 uses
   Windows, Types, SysUtils, Classes, Graphics, Contnrs, RTLConsts, Controls,
-  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs, GR32, FunLabyCoreConsts;
+  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs, GR32, FunLabyCoreConsts,
+  FunLabyGraphics;
 
 const {don't localize}
   SquareSize = 30;     /// Taille (en largeur et hauteur) d'une case
@@ -18,10 +19,10 @@ const {don't localize}
   MinViewSize = 1;     /// Taille minimale d'une vue
 
   /// Couleur de transparence pour les fichiers .bmp
-  clBmpTransparent32 = TColor32($FF008080);
+  clBmpTransparent32 = FunLabyGraphics.clBmpTransparent32;
 
   /// Couleur transparente
-  clTransparent32 = TColor32($00000000);
+  clTransparent32 = FunLabyGraphics.clTransparent32;
 
   attrColor = 'Color';             /// Attribut de joueur pour Color
   attrShowCounter = 'ShowCounter'; /// Attribut de joueur pour ShowCounter
@@ -1407,7 +1408,6 @@ function CreateEmptySquareBitmap: TBitmap32;
 function SquareRect(X, Y: Integer): TRect;
 procedure EmptyRect(Bitmap: TBitmap32; Rect: TRect);
 procedure EmptySquareRect(Bitmap: TBitmap32; X: Integer = 0; Y: Integer = 0);
-procedure HandleBmpTransparent(Bitmap: TBitmap32);
 procedure DrawBitmap32ToCanvas(Canvas: TCanvas; const DestRect: TRect;
   Bitmap: TBitmap32; BackgroundColor: TColor);
 
@@ -1539,25 +1539,6 @@ end;
 procedure EmptySquareRect(Bitmap: TBitmap32; X: Integer = 0; Y: Integer = 0);
 begin
   EmptyRect(Bitmap, SquareRect(X, Y));
-end;
-
-{*
-  Convertit la couleur de transparence des .bmp en transparent réel
-  @param Bitmap   Bitmap à traiter
-*}
-procedure HandleBmpTransparent(Bitmap: TBitmap32);
-var
-  X, Y: Integer;
-  Line: PColor32Array;
-begin
-  for Y := 0 to Bitmap.Height-1 do
-  begin
-    Line := Bitmap.ScanLine[Y];
-
-    for X := 0 to Bitmap.Width-1 do
-      if Line[X] = clBmpTransparent32 then
-        Line[X] := clTransparent32;
-  end;
 end;
 
 {*
@@ -1778,10 +1759,8 @@ var
   SubRect: TRect;
 begin
   Result := False;
-  FileBitmap := TBitmap32.Create;
+  FileBitmap := nil;
   try
-    FileBitmap.DrawMode := dmOpaque;
-
     HasSubRect := SplitToken(ImgName, '@', BaseFileName, XYStr);
 
     BaseFileName := fSquaresDir + AnsiReplaceStr(BaseFileName, '/', '\') + '.';
@@ -1791,10 +1770,8 @@ begin
       FileName := BaseFileName + FExtensions[I];
       if FileExists(FileName) then
       begin
-        FileBitmap.LoadFromFile(FileName);
-
-        if FileFormatList.GraphicFromExtension(FExtensions[I]) = TBitmap then
-          HandleBmpTransparent(FileBitmap);
+        FileBitmap := LoadBitmapFromFile(FileName);
+        FileBitmap.DrawMode := dmOpaque;
 
         Result := True;
         Break;

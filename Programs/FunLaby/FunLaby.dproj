@@ -7,7 +7,7 @@
     <DCC_DependencyCheckOutputName>..\..\FunLaby.exe</DCC_DependencyCheckOutputName>
     <MainSource>FunLaby.dpr</MainSource>
     <DCC_EnabledPackages>true</DCC_EnabledPackages>
-    <DCC_UsePackage>vcl;rtl;vclx;dbrtl;vcldb;VclSmp;GraphicEx110;GR32_BDS2007;SCL110;SVCL110;SDL110;SepiCore110;SepiReflection110;SepiInterpreter110;SepiRTLCommonImport110;SepiRTLSysImport110;SepiSCLImport110;SepiSDLImport110;SepiSVCLImport110;SepiVCLStdImport110;SepiWinTypesImport110;FunLabyCore;FunLabyTools;SepiGraphics32Import110</DCC_UsePackage>
+    <DCC_UsePackage>vcl;rtl;vclx;dbrtl;vcldb;VclSmp;GraphicEx110;GIFImage110;GR32_BDS2007;SCL110;SVCL110;SDL110;SepiCore110;SepiReflection110;SepiInterpreter110;SepiRTLCommonImport110;SepiRTLSysImport110;SepiSCLImport110;SepiSDLImport110;SepiSVCLImport110;SepiVCLStdImport110;SepiWinTypesImport110;FunLabyCore;FunLabyTools;SepiGraphics32Import110</DCC_UsePackage>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Version>7.0</Version>
