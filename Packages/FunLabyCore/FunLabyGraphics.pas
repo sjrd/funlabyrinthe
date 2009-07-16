@@ -93,6 +93,9 @@ type
     property TotalTime: Cardinal read FTotalTime;
   end;
 
+function GCD(A, B: Cardinal): Cardinal;
+function LCM(A, B: Cardinal): Cardinal;
+
 procedure ReplaceColorInBitmap32(Bitmap: TBitmap32; FromColor: TColor32;
   ToColor: TColor32);
 procedure HandleBmpTransparent(Bitmap: TBitmap32);
@@ -124,6 +127,15 @@ begin
   end;
 
   Result := A;
+end;
+
+{*
+  Plus Petit Commun Multiple
+  @return PPCM de A et B
+*}
+function LCM(A, B: Cardinal): Cardinal;
+begin
+  Result := A * B div GCD(A, B);
 end;
 
 {*
@@ -479,6 +491,12 @@ function TAnimatedBitmap32.GetFrameAtTime(TickCount: Cardinal): TBitmap32Frame;
 var
   I: Integer;
 begin
+  if FrameCount = 1 then
+  begin
+    Result := Self;
+    Exit;
+  end;
+
   TickCount := TickCount mod TotalTime;
 
   if FTimeToFrameDivisor <> 0 then

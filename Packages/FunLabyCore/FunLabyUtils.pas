@@ -11,7 +11,7 @@ interface
 uses
   Windows, Types, SysUtils, Classes, Graphics, Contnrs, RTLConsts, Controls,
   Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs, GR32, FunLabyCoreConsts,
-  FunLabyGraphics;
+  FunLabyGraphics, ScIntegerSets;
 
 const {don't localize}
   SquareSize = 30;     /// Taille (en largeur et hauteur) d'une case
@@ -346,8 +346,15 @@ type
   TPainter = class(TObject)
   private
     FMaster: TImagesMaster; /// Maître d'images
-    FImgNames: TStrings;    /// Liste des noms des images
-    FCachedImg: TBitmap32;  /// Copie cache de l'image résultante
+
+    FImgNames: TStrings;           /// Liste des noms des images
+    FCachedImg: TAnimatedBitmap32; /// Copie cache de l'image résultante
+
+    FStaticDraw: Boolean; /// Indique si ce peintre dessine une image statique
+
+    procedure UpdateStaticDraw;
+    procedure DrawStatic;
+    procedure DrawNotStatic;
 
     procedure ImgNamesChange(Sender: TObject);
   public
@@ -358,6 +365,7 @@ type
 
     property Master: TImagesMaster read FMaster;
     property ImgNames: TStrings read FImgNames;
+    property StaticDraw: Boolean read FStaticDraw;
   end;
 
   {*
@@ -1772,7 +1780,10 @@ end;
 *}
 procedure TDrawSquareContext.DrawSquareBitmap(SquareBitmap: TBitmap32);
 begin
-  Bitmap.Draw(X, Y, SquareBitmap);
+  if SquareBitmap is TAnimatedBitmap32 then
+    TAnimatedBitmap32(SquareBitmap).DrawAtTimeTo(TickCount, Bitmap, X, Y)
+  else
+    SquareBitmap.DrawTo(Bitmap, X, Y);
 end;
 
 {------------------------}
@@ -2139,8 +2150,13 @@ begin
   FMaster := AMaster;
   FImgNames := TStringList.Create;
   TStringList(FImgNames).OnChange := ImgNamesChange;
-  FCachedImg := CreateEmptySquareBitmap;
-  ImgNamesChange(nil);
+
+  FCachedImg := TAnimatedBitmap32.Create;
+  FCachedImg.SetSize(SquareSize, SquareSize);
+  FCachedImg.Clear(clTransparent32);
+  FCachedImg.DrawMode := dmBlend;
+
+  FStaticDraw := True;
 end;
 
 {*
@@ -2155,18 +2171,143 @@ begin
 end;
 
 {*
+  Met à jour FStaticDraw
+*}
+procedure TPainter.UpdateStaticDraw;
+var
+  I: Integer;
+begin
+  for I := 0 to ImgNames.Count-1 do
+  begin
+    if Master.GetInternalBitmap(Master.IndexOf(
+      ImgNames[I])) is TAnimatedBitmap32 then
+    begin
+      FStaticDraw := False;
+      Exit;
+    end;
+  end;
+
+  FStaticDraw := True;
+end;
+
+{*
+  Dessine un bitmap cache statique
+*}
+procedure TPainter.DrawStatic;
+var
+  I: Integer;
+begin
+  FCachedImg.FrameCount := 1;
+  FCachedImg.Clear(clTransparent32);
+  for I := 0 to FImgNames.Count-1 do
+    FMaster.Draw(FImgNames[I], FCachedImg);
+end;
+
+{*
+  Dessine un bitmap cache non statique
+*}
+procedure TPainter.DrawNotStatic;
+var
+  Count: Integer;
+  Images: array of TBitmap32;
+  I, J, FrameCount, Transition, PreviousTrans: Integer;
+  TotalTime, CummulatedDelay: Cardinal;
+  Transitions: TScIntegerSet;
+  Animated: TAnimatedBitmap32;
+  Frame: TBitmap32Frame;
+begin
+  // Fetch images
+  Count := ImgNames.Count;
+  SetLength(Images, Count);
+  for I := 0 to Count-1 do
+    Images[I] := Master.GetInternalBitmap(Master.IndexOf(ImgNames[I]));
+
+  // Compute total time - least common multiple of all total times
+  TotalTime := 1;
+  for I := 0 to Count-1 do
+    if Images[I] is TAnimatedBitmap32 then
+      TotalTime := LCM(TotalTime, TAnimatedBitmap32(Images[I]).TotalTime);
+
+  // Build set of transition points - use it to create frames
+  Transitions := TScIntegerSet.Create;
+  try
+    // Build transition set
+
+    for I := 0 to Count-1 do
+    begin
+      if not (Images[I] is TAnimatedBitmap32) then
+        Continue;
+      Animated := TAnimatedBitmap32(Images[I]);
+
+      CummulatedDelay := 0;
+      J := 0;
+      while CummulatedDelay < TotalTime do
+      begin
+        Transitions.Include(CummulatedDelay);
+        Inc(CummulatedDelay, Animated.Frames[J].Delay);
+        J := (J+1) mod Animated.FrameCount;
+      end;
+    end;
+
+    Transitions.Exclude(0);
+    Transitions.Include(TotalTime);
+
+    // Create frames and set delays
+
+    FrameCount := 0;
+    for Transition in Transitions do
+    begin
+      if Transition <> 0 then // avoid warning
+        Inc(FrameCount);
+    end;
+
+    FCachedImg.FrameCount := FrameCount;
+
+    I := 0;
+    PreviousTrans := 0;
+    for Transition in Transitions do
+    begin
+      FCachedImg.Frames[I].Delay := Transition - PreviousTrans;
+      PreviousTrans := Transition;
+      Inc(I);
+    end;
+  finally
+    Transitions.Free;
+  end;
+
+  // Draw each frame
+  CummulatedDelay := 0;
+  for I := 0 to FrameCount-1 do
+  begin
+    Frame := FCachedImg.Frames[I];
+    Frame.Clear(clTransparent32);
+
+    for J := 0 to Count-1 do
+    begin
+      if Images[J] is TAnimatedBitmap32 then
+        TAnimatedBitmap32(Images[J]).DrawAtTimeTo(CummulatedDelay, Frame)
+      else
+        Images[J].DrawTo(Frame);
+    end;
+
+    Inc(CummulatedDelay, Frame.Delay);
+  end;
+end;
+
+{*
   Événement OnChange de la liste des noms des images
   ImgNamesChange est appelé lorsque la liste des noms des images change.
   Elle actualise l'image cache.
   @param Sender   Objet lançant l'événement
 *}
 procedure TPainter.ImgNamesChange(Sender: TObject);
-var
-  I: Integer;
 begin
-  FCachedImg.FillRect(0, 0, SquareSize, SquareSize, clTransparent32);
-  for I := 0 to FImgNames.Count-1 do
-    FMaster.Draw(FImgNames[I], FCachedImg);
+  UpdateStaticDraw;
+
+  if StaticDraw then
+    DrawStatic
+  else
+    DrawNotStatic;
 end;
 
 {*
@@ -2178,7 +2319,8 @@ end;
 *}
 procedure TPainter.Draw(Context: TDrawSquareContext);
 begin
-  Context.DrawSquareBitmap(FCachedImg);
+  if ImgNames.Count > 0 then
+    Context.DrawSquareBitmap(FCachedImg);
 end;
 
 {--------------------}
@@ -3058,6 +3200,8 @@ begin
   inherited;
 
   FPainter.ImgNames.EndUpdate;
+  if not FPainter.StaticDraw then
+    FStaticDraw := False;
 
   if StaticDraw then
   begin

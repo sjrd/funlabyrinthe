@@ -24,7 +24,7 @@ const // don't localize
   UnitName = 'FunLabyGraphics';
   ResourceName = 'SepiImportsFunLabyGraphics';
   TypeCount = 2;
-  MethodCount = 16;
+  MethodCount = 18;
   VariableCount = 1;
 
 var
@@ -200,9 +200,11 @@ procedure InitMethodAddresses;
 begin
   TSepiImportsTBitmap32Frame.InitMethodAddresses;
   TSepiImportsTAnimatedBitmap32.InitMethodAddresses;
-  MethodAddresses[13] := @ReplaceColorInBitmap32;
-  MethodAddresses[14] := @HandleBmpTransparent;
-  MethodAddresses[15] := @LoadBitmapFromFile;
+  MethodAddresses[13] := @GCD;
+  MethodAddresses[14] := @LCM;
+  MethodAddresses[15] := @ReplaceColorInBitmap32;
+  MethodAddresses[16] := @HandleBmpTransparent;
+  MethodAddresses[17] := @LoadBitmapFromFile;
 end;
 
 procedure InitVarAddresses;

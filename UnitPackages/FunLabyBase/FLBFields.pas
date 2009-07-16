@@ -31,13 +31,12 @@ const {don't localize}
   idGroundWater = 'GroundWater'; /// ID de l'eau effet herbe
 
 const {don't localize}
-  fGrass = 'Fields/Grass';                   /// Fichier de l'herbe
-  fWall = 'Fields/Wall';                     /// Fichier du mur
-  fWater = 'Fields/Water';                   /// Fichier de l'eau
-  fAlternateWater = 'Fields/AlternateWater'; /// Fichier alternatif de l'eau
-  fHole = 'Fields/Hole';                     /// Fichier du trou
-  fSky = 'Fields/Sky';                       /// Fichier du ciel
-  fOutside = 'Fields/Outside';               /// Fichier du dehors
+  fGrass = 'Fields/Grass';     /// Fichier de l'herbe
+  fWall = 'Fields/Wall';       /// Fichier du mur
+  fWater = 'Fields/Water';     /// Fichier de l'eau
+  fHole = 'Fields/Hole';       /// Fichier du trou
+  fSky = 'Fields/Sky';         /// Fichier du ciel
+  fOutside = 'Fields/Outside'; /// Fichier du dehors
 
 resourcestring
   sCantGoOnWater = 'Sans bouée, on coule dans l''eau.';
@@ -87,18 +86,10 @@ type
   *}
   TWater = class(TField)
   private
-    FAlternatePainter: TPainter; /// Peintre alternatif
-
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
-  protected
-    procedure DoDraw(Context: TDrawSquareContext); override;
-
-    property AlternatePainter: TPainter read FAlternatePainter;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ADelegateDrawTo: TField = nil);
-    destructor Destroy; override;
-    procedure AfterConstruction; override;
 
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -234,20 +225,7 @@ begin
 
   FStaticDraw := Master.Editing;
 
-  FAlternatePainter := TPainter.Create(Master.ImagesMaster);
-  FAlternatePainter.ImgNames.BeginUpdate;
-
   Painter.ImgNames.Add(fWater);
-  AlternatePainter.ImgNames.Add(fAlternateWater);
-end;
-
-{*
-  [@inheritDoc]
-*}
-destructor TWater.Destroy;
-begin
-  FAlternatePainter.Free;
-  inherited;
 end;
 
 {*
@@ -260,26 +238,6 @@ procedure TWater.PlankMessage(var Msg: TPlankMessage);
 begin
   if Msg.Kind = pmkPassOver then
     Msg.Result := not Msg.Player.AbleTo(actGoOnWater);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TWater.DoDraw(Context: TDrawSquareContext);
-begin
-  if (Context.TickCount mod 2000) < 1000 then
-    Painter.Draw(Context)
-  else
-    AlternatePainter.Draw(Context);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TWater.AfterConstruction;
-begin
-  inherited;
-  FAlternatePainter.ImgNames.EndUpdate;
 end;
 
 {*
