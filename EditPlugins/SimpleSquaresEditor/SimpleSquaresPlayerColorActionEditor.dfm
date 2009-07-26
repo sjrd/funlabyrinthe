@@ -1,10 +1,8 @@
 inherited FramePlayerColorActionEditor: TFramePlayerColorActionEditor
-  Left = 0
-  Top = 0
   Width = 257
   Height = 233
-  TabOrder = 0
-  TabStop = True
+  ExplicitWidth = 257
+  ExplicitHeight = 233
   object LabelColor: TStaticText
     Left = 16
     Top = 16
@@ -18,9 +16,11 @@ inherited FramePlayerColorActionEditor: TFramePlayerColorActionEditor
     Top = 32
     Width = 225
     Height = 22
+    NoneColorColor = clWindow
     Selected = clBlue
-    Style = [cbStandardColors, cbExtendedColors, cbCustomColor]
+    Style = [cbCustomColor, cbCustomColors]
     ItemHeight = 16
     TabOrder = 1
+    OnGetColors = ListBoxColorGetColors
   end
 end

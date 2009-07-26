@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, TypInfo, ScUtils, ScDelphiLanguage, SdDialogs,
-  FunLabyUtils, SimpleSquaresUtils, FunLabyCoreConsts;
+  FunLabyUtils, SimpleSquaresUtils, FunLabyCoreConsts, GR32;
 
 resourcestring
   SReplaceSquareActionTitle = 'Remplacer la case (%d, %d, %d)';
@@ -144,7 +144,7 @@ type
   *}
   TPlayerColorAction = class(TSimpleAction)
   private
-    FColor: TColor; /// Couleur de remplacement
+    FColor: TColor32; /// Couleur de remplacement
   protected
     function GetTitle: string; override;
   public
@@ -153,7 +153,7 @@ type
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); override;
   published
-    property Color: TColor read FColor write FColor default clBlue;
+    property Color: TColor32 read FColor write FColor default clBlue32;
   end;
 
   {*
@@ -189,7 +189,49 @@ type
     property Kind: TSimpleMethodKind read FKind write FKind;
   end;
 
+function Color32ToString(Color: TColor32): string;
+
 implementation
+
+{-----------------}
+{ Global routines }
+{-----------------}
+
+{*
+  Transforme une couleur en chaîne de caractère
+  @param Color   Couleur
+  @return Chaîne représentant la couleur
+*}
+function Color32ToString(Color: TColor32): string;
+begin
+  case Color of
+    clTransparent32: Result := 'clTransparent32';
+    clBlack32:       Result := 'clBlack32';
+    clDimGray32:     Result := 'clDimGray32';
+    clGray32:        Result := 'clGray32';
+    clLightGray32:   Result := 'clLightGray32';
+    clWhite32:       Result := 'clWhite32';
+    clMaroon32:      Result := 'clMaroon32';
+    clGreen32:       Result := 'clGreen32';
+    clOlive32:       Result := 'clOlive32';
+    clNavy32:        Result := 'clNavy32';
+    clPurple32:      Result := 'clPurple32';
+    clTeal32:        Result := 'clTeal32';
+    clRed32:         Result := 'clRed32';
+    clLime32:        Result := 'clLime32';
+    clYellow32:      Result := 'clYellow32';
+    clBlue32:        Result := 'clBlue32';
+    clFuchsia32:     Result := 'clFuchsia32';
+    clAqua32:        Result := 'clAqua32';
+    clTrWhite32:     Result := 'clTrWhite32';
+    clTrBlack32:     Result := 'clTrBlack32';
+    clTrRed32:       Result := 'clTrRed32';
+    clTrGreen32:     Result := 'clTrGreen32';
+    clTrBlue32:      Result := 'clTrBlue32';
+  else
+    Result := '$'+IntToHex(Color, 8);
+  end;
+end;
 
 {------------------}
 { TSquarePos class }
@@ -419,7 +461,7 @@ constructor TPlayerColorAction.Create;
 begin
   inherited;
 
-  FColor := clBlue;
+  FColor := clBlue32;
 end;
 
 {*
@@ -427,7 +469,7 @@ end;
 *}
 function TPlayerColorAction.GetTitle: string;
 begin
-  Result := Format(SPlayerColorActionTitle, [ColorToString(Color)]);
+  Result := Format(SPlayerColorActionTitle, [Color32ToString(Color)]);
 end;
 
 {*
@@ -436,7 +478,7 @@ end;
 procedure TPlayerColorAction.ProduceFunDelphiCode(Code: TStrings;
   const Indent: string);
 begin
-  Code.Add(Indent + Format('Player.Color := %s;', [ColorToString(Color)]));
+  Code.Add(Indent + Format('Player.Color := %s;', [Color32ToString(Color)]));
 end;
 
 {---------------------------}
