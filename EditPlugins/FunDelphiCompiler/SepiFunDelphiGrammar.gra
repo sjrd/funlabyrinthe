@@ -3,6 +3,8 @@ Ce fichier décrit la grammaire du langage FunDelphi.
 #####
 
 tkEof	Fin de fichier
+tkBlank Blanc
+tkComment   Commentaire
 tkIdentifier	Identificateur
 tkInteger	Nombre entier
 tkFloat	Nombre en virgule flottante

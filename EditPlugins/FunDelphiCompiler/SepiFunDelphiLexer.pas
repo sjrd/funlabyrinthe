@@ -15,114 +15,116 @@ uses
 
 const
   FirstTerminal = 0;
-  LastTerminal = 94;
+  LastTerminal = 96;
 
-  tkEof = SepiLexerUtils.tkEof; /// Fin de fichier
+  tkEof = SepiLexerUtils.tkEof;         /// Fin de fichier
+  tkBlank = SepiLexerUtils.tkBlank;     /// Lexème blanc
+  tkComment = SepiLexerUtils.tkComment; /// Lexème commentaire
 
-  tkIdentifier = 1; // Identifier
-  tkInteger = 2;    // Integer
-  tkFloat = 3;      // Floating point number
-  tkStringCst = 4;  // String
+  tkIdentifier = 3; // Identifier
+  tkInteger = 4;    // Integer
+  tkFloat = 5;      // Floating point number
+  tkStringCst = 6;  // String
 
-  tkOpenBracket = 5;    // (
-  tkCloseBracket = 6;   // )
-  tkOpenSqBracket = 7;  // [
-  tkCloseSqBracket = 8; // ]
-  tkEquals = 9;         // =
-  tkComma = 10;         // ,
-  tkColon = 11;         // :
-  tkSemiColon = 12;     // ;
-  tkDot = 13;           // .
-  tkRange = 14;         // ..
-  tkHat = 15;           // ^
-  tkAt = 16;            // @
-  tkAssign = 17;        // :=
+  tkOpenBracket = 7;    // (
+  tkCloseBracket = 8;   // )
+  tkOpenSqBracket = 9;  // [
+  tkCloseSqBracket = 10;// ]
+  tkEquals = 11;        // =
+  tkComma = 12;         // ,
+  tkColon = 13;         // :
+  tkSemiColon = 14;     // ;
+  tkDot = 15;           // .
+  tkRange = 16;         // ..
+  tkHat = 17;           // ^
+  tkAt = 18;            // @
+  tkAssign = 19;        // :=
 
-  tkUnit = 18;           // unit
-  tkUses = 19;           // uses
-  tkConst = 20;          // const
-  tkResourceString = 21; // resourcestring
-  tkVar = 22;            // var
-  tkOut = 23;            // out
+  tkUnit = 20;           // unit
+  tkUses = 21;           // uses
+  tkConst = 22;          // const
+  tkResourceString = 23; // resourcestring
+  tkVar = 24;            // var
+  tkOut = 25;            // out
 
-  tkProcedure = 24; // procedure
-  tkFunction = 25;  // function
-  tkPrivate = 26;   // private
-  tkPublic = 27;    // public
-  tkForward = 28;   // forward
+  tkProcedure = 26; // procedure
+  tkFunction = 27;  // function
+  tkPrivate = 28;   // private
+  tkPublic = 29;    // public
+  tkForward = 30;   // forward
 
-  tkPlugin = 29;     // plugin
-  tkObject = 30;     // object
-  tkField = 31;      // field
-  tkEffect = 32;     // effect
-  tkTool = 33;       // tool
-  tkObstacle = 34;   // obstacle
-  tkComponents = 35; // components
-  tkAttributes = 36; // attributes
-  tkActions = 37;    // actions
+  tkPlugin = 31;     // plugin
+  tkObject = 32;     // object
+  tkField = 33;      // field
+  tkEffect = 34;     // effect
+  tkTool = 35;       // tool
+  tkObstacle = 36;   // obstacle
+  tkComponents = 37; // components
+  tkAttributes = 38; // attributes
+  tkActions = 39;    // actions
 
-  tkConstructor = 38; // constructor
-  tkDestructor = 39;  // destructor
-  tkZIndex = 40;      // zindex
-  tkImage = 41;       // image
-  tkAction = 42;      // action
+  tkConstructor = 40; // constructor
+  tkDestructor = 41;  // destructor
+  tkZIndex = 42;      // zindex
+  tkImage = 43;       // image
+  tkAction = 44;      // action
 
-  tkPlus = 43;        // +
-  tkMinus = 44;       // -
-  tkTimes = 45;       // *
-  tkDivide = 46;      // /
-  tkDiv = 47;         // div
-  tkMod = 48;         // mod
-  tkShl = 49;         // shl
-  tkShr = 50;         // shr
-  tkOr = 51;          // or
-  tkAnd = 52;         // and
-  tkXor = 53;         // xor
-  tkNot = 54;         // not
-  tkLowerThan = 55;   // <
-  tkLowerEq = 56;     // <=
-  tkGreaterThan = 57; // >
-  tkGreaterEq = 58;   // >=
-  tkNotEqual = 59;    // <>
-  tkIs = 60;          // is
-  tkAs = 61;          // as
+  tkPlus = 45;        // +
+  tkMinus = 46;       // -
+  tkTimes = 47;       // *
+  tkDivide = 48;      // /
+  tkDiv = 49;         // div
+  tkMod = 50;         // mod
+  tkShl = 51;         // shl
+  tkShr = 52;         // shr
+  tkOr = 53;          // or
+  tkAnd = 54;         // and
+  tkXor = 55;         // xor
+  tkNot = 56;         // not
+  tkLowerThan = 57;   // <
+  tkLowerEq = 58;     // <=
+  tkGreaterThan = 59; // >
+  tkGreaterEq = 60;   // >=
+  tkNotEqual = 61;    // <>
+  tkIs = 62;          // is
+  tkAs = 63;          // as
 
-  tkBegin = 62; // begin
-  tkEnd = 63;   // end
+  tkBegin = 64; // begin
+  tkEnd = 65;   // end
 
-  tkString = 64; // string
-  tkNil = 65;    // nil
+  tkString = 66; // string
+  tkNil = 67;    // nil
 
-  tkIf = 66;        // if
-  tkThen = 67;      // then
-  tkElse = 68;      // else
-  tkWhile = 69;     // while
-  tkDo = 70;        // do
-  tkRepeat = 71;    // repeat
-  tkUntil = 72;     // until
-  tkFor = 73;       // for
-  tkTo = 74;        // to
-  tkDownTo = 75;    // downto
-  tkCase = 76;      // case
-  tkOf = 77;        // of
-  tkTry = 78;       // try
-  tkExcept = 79;    // except
-  tkOn = 80;        // on
-  tkFinally = 81;   // finally
-  tkRaise = 82;     // raise
-  tkInherited = 83; // inherited
+  tkIf = 68;        // if
+  tkThen = 69;      // then
+  tkElse = 70;      // else
+  tkWhile = 71;     // while
+  tkDo = 72;        // do
+  tkRepeat = 73;    // repeat
+  tkUntil = 74;     // until
+  tkFor = 75;       // for
+  tkTo = 76;        // to
+  tkDownTo = 77;    // downto
+  tkCase = 78;      // case
+  tkOf = 79;        // of
+  tkTry = 80;       // try
+  tkExcept = 81;    // except
+  tkOn = 82;        // on
+  tkFinally = 83;   // finally
+  tkRaise = 84;     // raise
+  tkInherited = 85; // inherited
 
-  tkCan = 84;      // can
-  tkHas = 85;      // has
-  tkAtKw = 86;     // at
-  tkLeast = 87;    // least
-  tkMost = 88;     // most
-  tkMore = 89;     // more
-  tkLess = 90;     // less
-  tkThan = 91;     // than
-  tkExactly = 92;  // exactly
-  tkReceives = 93; // receives
-  tkDiscards = 94; // discards
+  tkCan = 86;      // can
+  tkHas = 87;      // has
+  tkAtKw = 88;     // at
+  tkLeast = 89;    // least
+  tkMost = 90;     // most
+  tkMore = 91;     // more
+  tkLess = 92;     // less
+  tkThan = 93;     // than
+  tkExactly = 94;  // exactly
+  tkReceives = 95; // receives
+  tkDiscards = 96; // discards
 
 type
   {*
@@ -135,14 +137,14 @@ type
     procedure IdentifyKeyword(const OrigKey: string;
       var SymbolClass: TSepiSymbolClass); override;
 
-    procedure InitLexingFuncs; override;
+    procedure InitLexingProcs; override;
 
-    function ActionSymbol: Boolean;
-    function ActionIdentifier: Boolean;
-    function ActionNumber: Boolean;
-    function ActionString: Boolean;
-    function ActionSingleLineComment: Boolean;
-    function ActionMultiLineComment: Boolean;
+    procedure ActionSymbol;
+    procedure ActionIdentifier;
+    procedure ActionNumber;
+    procedure ActionString;
+    procedure ActionSingleLineComment;
+    procedure ActionMultiLineComment;
   end;
 
 const
@@ -246,7 +248,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TSepiFunDelphiLexer.InitLexingFuncs;
+procedure TSepiFunDelphiLexer.InitLexingProcs;
 var
   C: Char;
 begin
@@ -257,24 +259,24 @@ begin
     case C of
       '(', ')', '[', ']', '=', ',', ':', ';', '.',
         '^', '@', '+', '-', '*', '/', '<', '>':
-        LexingFuncs[C] := ActionSymbol;
+        LexingProcs[C] := ActionSymbol;
       'a'..'z', 'A'..'Z', '_', '&':
-        LexingFuncs[C] := ActionIdentifier;
+        LexingProcs[C] := ActionIdentifier;
       '0'..'9', '$':
-        LexingFuncs[C] := ActionNumber;
+        LexingProcs[C] := ActionNumber;
       '''', '#':
-        LexingFuncs[C] := ActionString;
+        LexingProcs[C] := ActionString;
       '{':
-        LexingFuncs[C] := ActionMultiLineComment;
+        LexingProcs[C] := ActionMultiLineComment;
     end;
   end;
 end;
 
 {*
-  Analyzes a symbol or a comment
-  @return True for a symbol, False for a comment
+  Analyse un symbole ou un commentaire
+  @return True pour un symbole, False pour un commentaire
 *}
-function TSepiFunDelphiLexer.ActionSymbol: Boolean;
+procedure TSepiFunDelphiLexer.ActionSymbol;
 var
   Repr: string;
   SymbolClass: TSepiSymbolClass;
@@ -285,7 +287,7 @@ begin
       case Code[Cursor+1] of
         '*':
         begin
-          Result := ActionMultiLineComment;
+          ActionMultiLineComment;
           Exit;
         end;
       else
@@ -394,7 +396,7 @@ begin
       case Code[Cursor+1] of
         '/':
         begin
-          Result := ActionSingleLineComment;
+          ActionSingleLineComment;
           Exit;
         end;
       else
@@ -441,19 +443,17 @@ begin
     end;
   else
     Assert(False);
-    Result := False;
     Exit;
   end;
 
   TerminalParsed(SymbolClass, Repr);
-  Result := True;
 end;
 
 {*
-  Analyzes an identifier
+  Analyse un identificateur
   @return True
 *}
-function TSepiFunDelphiLexer.ActionIdentifier: Boolean;
+procedure TSepiFunDelphiLexer.ActionIdentifier;
 var
   ForceIdent: Boolean;
   BeginPos: Integer;
@@ -476,14 +476,13 @@ begin
     IdentifyKeyword(Repr, SymbolClass);
 
   TerminalParsed(SymbolClass, Repr);
-  Result := True;
 end;
 
 {*
-  Analyzes a number
+  Analyse un nombre
   @return True
 *}
-function TSepiFunDelphiLexer.ActionNumber: Boolean;
+procedure TSepiFunDelphiLexer.ActionNumber;
 var
   BeginPos: Integer;
   SymbolClass: TSepiSymbolClass;
@@ -522,14 +521,13 @@ begin
   end;
 
   TerminalParsed(SymbolClass, Copy(Code, BeginPos, Cursor-BeginPos));
-  Result := True;
 end;
 
 {*
-  Analyzes a string
+  Analyse une chaîne de caractères
   @return True
 *}
-function TSepiFunDelphiLexer.ActionString: Boolean;
+procedure TSepiFunDelphiLexer.ActionString;
 var
   BeginPos: Integer;
 begin
@@ -564,33 +562,39 @@ begin
   end;
 
   TerminalParsed(tkStringCst, Copy(Code, BeginPos, Cursor-BeginPos));
-  Result := True;
 end;
 
 {*
-  Analyzes a single-line comment
+  Analyse un commentaire sur une ligne
   @return False
 *}
-function TSepiFunDelphiLexer.ActionSingleLineComment: Boolean;
+procedure TSepiFunDelphiLexer.ActionSingleLineComment;
+var
+  BeginPos: Integer;
 begin
+  BeginPos := Cursor;
   while not (Code[Cursor] in [#0, #13, #10]) do
     CursorForward;
 
-  NoTerminalParsed;
-  Result := False;
+  TerminalParsed(tkComment, Copy(Code, BeginPos, Cursor-BeginPos));
 end;
 
 {*
-  Analyzes a multi-line comment
-  @return True for a pre-processor instruction, False otherwise
+  Analyse un commentaire sur plusieurs lignes
+  @return True pour une instruction du pré-processuer, False sinon
 *}
-function TSepiFunDelphiLexer.ActionMultiLineComment: Boolean;
+procedure TSepiFunDelphiLexer.ActionMultiLineComment;
+var
+  BeginPos: Integer;
 begin
+  BeginPos := Cursor;
+
+  // Find end of comment
   if Code[Cursor] = '{' then
   begin
     while not (Code[Cursor] in [#0, '}']) do
       CursorForward;
-    CursorForward
+    CursorForward;
   end else
   begin
     while ((Code[Cursor] <> '*') or (Code[Cursor+1] <> ')')) and
@@ -599,8 +603,7 @@ begin
     CursorForward(2);
   end;
 
-  NoTerminalParsed;
-  Result := False;
+  TerminalParsed(tkComment, Copy(Code, BeginPos, Cursor-BeginPos));
 end;
 
 initialization
