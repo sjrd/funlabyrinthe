@@ -16,7 +16,6 @@ uses
 resourcestring
   sStairs = 'Escalier';             /// Nom de l'escalier
 
-  sSunkenButton = 'Bouton enfoncé'; /// Nom du bouton enfoncé
   sButton = 'Bouton n°%d';          /// Nom du bouton
   sButtonTemplate = 'Bouton';       /// Nom du bouton modèle
 
@@ -32,7 +31,6 @@ const {don't localize}
   idActionsEffect = 'ActionsEffect%d';       /// ID de l'effet à actions
   idActionsObstacle = 'ActionsObstacle%d';   /// ID de l'obstacle à actions
 
-  idSunkenButton = 'SunkenButton';           /// ID du bouton enfoncé
   idButtonTemplate = 'ButtonTemplate';       /// ID du bouton modèle
 
   /// ID de la case à actions

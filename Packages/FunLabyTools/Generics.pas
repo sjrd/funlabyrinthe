@@ -5,6 +5,12 @@ interface
 uses
   Graphics, ScUtils, FunLabyUtils;
 
+const
+  fButton = 'Buttons/Button';             /// Image du bouton
+  fSunkenButton = 'Buttons/SunkenButton'; /// Image du bouton enfoncé
+  fSwitchOff = 'Buttons/SwitchOff';       /// Image de l'interrupteur off
+  fSwitchOn = 'Buttons/SwitchOn';         /// Image de l'interrupteur on
+
 type
   {*
     Effet décoratif
@@ -17,6 +23,91 @@ type
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName, AImgName: string);
+  end;
+
+  {*
+    Données d'un joueur pour TCounterEffect
+    @author sjrd
+    @version 5.0
+  *}
+  TCounterEffectPlayerData = class(TPlayerData)
+  private
+    FCounter: Integer; /// Compteur
+  published
+    property Counter: Integer read FCounter write FCounter default 0;
+  end;
+
+  {*
+    Effet qui maintient un compteur par joueur
+    @author sjrd
+    @version 5.0
+  *}
+  TCounterEffect = class(TEffect)
+  private
+    FGlobalCounter: Integer; /// Compteur global (cumul de tous les joueurs)
+
+    function GetCounter(Player: TPlayer): Integer;
+    procedure SetCounter(Player: TPlayer; Value: Integer);
+  protected
+    class function GetPlayerDataClass: TPlayerDataClass; override;
+
+    procedure IncCounter(Player: TPlayer);
+
+    function IsFirstTime(Player: TPlayer): Boolean;
+
+    property Counter[Player: TPlayer]: Integer read GetCounter write SetCounter;
+  public
+    procedure Execute(Context: TMoveContext); override;
+  published
+    property GlobalCounter: Integer read FGlobalCounter write FGlobalCounter;
+  end;
+
+  {*
+    Bouton poussoir
+    @author sjrd
+    @version 5.0
+  *}
+  TPushButton = class(TCounterEffect)
+  private
+    FDownPainter: TPainter; /// Peintre pour le bouton enfoncé
+  protected
+    procedure DoDraw(Context: TDrawSquareContext); override;
+
+    property DownPainter: TPainter read FDownPainter;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
+    destructor Destroy; override;
+    
+    procedure AfterConstruction; override;
+  end;
+
+  {*
+    Interrupteur
+    @author sjrd
+    @version 5.0
+  *}
+  TSwitch = class(TCounterEffect)
+  private
+    FIsOn: Boolean; /// Indique si la position est On
+
+    FOffPainter: TPainter; /// Peintre pour la position Off
+    FOnPainter: TPainter;  /// Peintre pour la position On
+  protected
+    procedure DoDraw(Context: TDrawSquareContext); override;
+
+    property OffPainter: TPainter read FOffPainter;
+    property OnPainter: TPainter read FOnPainter;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
+    destructor Destroy; override;
+
+    procedure AfterConstruction; override;
+
+    procedure Execute(Context: TMoveContext); override;
+  published
+    property IsOn: Boolean read FIsOn write FIsOn default False;
   end;
 
   {*
@@ -105,6 +196,190 @@ constructor TDecorativeEffect.Create(AMaster: TMaster;
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(AImgName);
+end;
+
+{-----------------------}
+{ Classe TCounterEffect }
+{-----------------------}
+
+{*
+  Valeur du compteur pour un joueur donné
+  @param Player   Joueur concerné
+  @return Valeur du compteur pour le joueur spécifié
+*}
+function TCounterEffect.GetCounter(Player: TPlayer): Integer;
+begin
+  Result := TCounterEffectPlayerData(GetPlayerData(Player)).Counter;
+end;
+
+{*
+  Modifie la valeur du compteur pour un joueur donné
+  @param Player   Joueur concerné
+  @param Value    Nouvelle valeur du compteur
+*}
+procedure TCounterEffect.SetCounter(Player: TPlayer; Value: Integer);
+begin
+  TCounterEffectPlayerData(GetPlayerData(Player)).Counter := Value;
+end;
+
+{*
+  [@inheritDoc]
+*}
+class function TCounterEffect.GetPlayerDataClass: TPlayerDataClass;
+begin
+  Result := TCounterEffectPlayerData;
+end;
+
+{*
+  Incrémente le compteur pour un joueur donné
+  @param Player   Joueur concerné
+*}
+procedure TCounterEffect.IncCounter(Player: TPlayer);
+begin
+  with TCounterEffectPlayerData(GetPlayerData(Player)) do
+    Counter := Counter + 1;
+end;
+
+{*
+  Teste si c'est la première fois pour un joueur qu'active cet effet
+  @param Player   Joueur concerné
+  @return True si c'est la première fois, False sinon
+*}
+function TCounterEffect.IsFirstTime(Player: TPlayer): Boolean;
+begin
+  Result := Counter[Player] = 1;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TCounterEffect.Execute(Context: TMoveContext);
+begin
+  inherited;
+
+  Inc(FGlobalCounter);
+  IncCounter(Context.Player);
+end;
+
+{--------------------}
+{ Classe TPushButton }
+{--------------------}
+
+{*
+  Crée une instance de TButton
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du terrain
+  @param AName     Nom du terrain
+*}
+constructor TPushButton.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
+begin
+  inherited Create(AMaster, AID, AName);
+
+  FStaticDraw := Master.Editing;
+
+  FDownPainter := TPainter.Create(Master.ImagesMaster);
+  FDownPainter.ImgNames.BeginUpdate;
+
+  Painter.ImgNames.Add(fButton);
+  DownPainter.ImgNames.Add(fSunkenButton);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TPushButton.Destroy;
+begin
+  FDownPainter.Free;
+  
+  inherited Destroy;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPushButton.DoDraw(Context: TDrawSquareContext);
+begin
+  if Context.IsNowhere or (Context.Map.PlayersOn(Context.Pos) = 0) then
+    Painter.Draw(Context)
+  else
+    DownPainter.Draw(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPushButton.AfterConstruction;
+begin
+  inherited;
+  
+  FDownPainter.ImgNames.EndUpdate;
+end;
+
+{----------------}
+{ Classe TSwitch }
+{----------------}
+
+{*
+  Crée une instance de TSwitch
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du terrain
+  @param AName     Nom du terrain
+*}
+constructor TSwitch.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
+begin
+  inherited Create(AMaster, AID, AName);
+
+  FStaticDraw := Master.Editing;
+  FOffPainter := Painter;
+
+  FOnPainter := TPainter.Create(Master.ImagesMaster);
+  FOnPainter.ImgNames.BeginUpdate;
+
+  OffPainter.ImgNames.Add(fSwitchOff);
+  OnPainter.ImgNames.Add(fSwitchOn);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TSwitch.Destroy;
+begin
+  FOnPainter.Free;
+  
+  inherited Destroy;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSwitch.DoDraw(Context: TDrawSquareContext);
+begin
+  if IsOn then
+    OnPainter.Draw(Context)
+  else
+    OffPainter.Draw(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSwitch.AfterConstruction;
+begin
+  inherited;
+  
+  FOnPainter.ImgNames.EndUpdate;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSwitch.Execute(Context: TMoveContext);
+begin
+  inherited;
+
+  IsOn := not IsOn;
 end;
 
 {----------------------------}

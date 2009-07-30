@@ -114,9 +114,6 @@ begin
 
   TDecorativeEffect.Create(Master, idButtonTemplate, sButtonTemplate, fButton);
 
-  TDecorativeEffect.Create(Master, idSunkenButton,
-    sSunkenButton, fSunkenButton);
-
   // Actions : elles sont stockées dans le fichier donné par FileName
 
   FileContents := nil;
@@ -267,31 +264,11 @@ end;
 procedure TCompatibility4xUnit.RegisterComponents(
   RegisterSingleComponentProc: TRegisterSingleComponentProc;
   RegisterComponentSetProc: TRegisterComponentSetProc);
-
-  procedure RegSingle(Component: TComponentID);
-  begin
-    RegisterSingleComponentProc(Master.SquareComponent[Component]);
-  end;
-
-  procedure RegSet(Template: TComponentID;
-    const Components: array of TSquareComponent; BaseIndex: Integer;
-    const DialogTitle, DialogPrompt: string);
-  begin
-    RegisterComponentSetProc(Master.SquareComponent[Template],
-      Components, BaseIndex, DialogTitle, DialogPrompt);
-  end;
-
 var
   Infos: TC4xInfos;
   I: Integer;
   Components: array of TSquareComponent;
 begin
-  // Effets
-
-  RegSingle(idSunkenButton);
-
-  // Cases
-
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   if Infos.ActionsCount > 0 then
   begin
@@ -305,8 +282,9 @@ begin
         Components[I] := Master.Square[Format(idActionsSquare, [I])];
     end;
 
-    RegSet(idActionsSquareTemplate, Components, 0,
-      sButtonTitle, Format(sButtonPrompt, [Infos.ActionsCount-1]));
+    RegisterComponentSetProc(Master.SquareComponent[idActionsSquareTemplate],
+      Components, 0, sButtonTitle,
+      Format(sButtonPrompt, [Infos.ActionsCount-1]));
   end;
 end;
 

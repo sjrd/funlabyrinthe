@@ -785,9 +785,9 @@ end;
 *}
 procedure TFunDelphiRootNode.ChildEndParsing(Child: TSepiParseTreeNode);
 const
-  ImpliedUses: array[0..14] of string = (
+  ImpliedUses: array[0..15] of string = (
     'Types', 'SysUtils', 'Classes', 'Graphics', 'Contnrs', 'Controls',
-    'Dialogs', 'TypInfo', 'ScUtils', 'SdDialogs', 'FunLabyUtils',
+    'Dialogs', 'TypInfo', 'ScUtils', 'SdDialogs', 'GR32', 'FunLabyUtils',
     'FunLabyToolsConsts', 'Generics', 'GraphicsTools', 'MapTools'
   );
 begin

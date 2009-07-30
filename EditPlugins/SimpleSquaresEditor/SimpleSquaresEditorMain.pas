@@ -448,9 +448,6 @@ var
 begin
   Code.Add(Format('unit %s;', [GetUnitName]));
   Code.Add('');
-  Code.Add('uses');
-  Code.Add('  ScUtils, SdDialogs, Generics, MapTools, GenericButtons, GR32;');
-  Code.Add('');
 
   if SimpleSquares.Count = 0 then
   begin

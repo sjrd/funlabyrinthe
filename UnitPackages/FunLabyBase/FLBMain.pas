@@ -81,6 +81,7 @@ begin
   TWater.Create(Master, idWater, sWater);
   THole.Create(Master, idHole, sHole);
   TSky.Create(Master, idSky, sSky);
+  TOutside.Create(Master, idOutside, sOutside);
 
   TGround.Create(Master, idGroundWater, sWater, '', Master.Field[idWater]);
 
@@ -111,8 +112,10 @@ begin
   TDirectTurnstile.Create(Master, idDirectTurnstile, sDirectTurnstile);
   TIndirectTurnstile.Create(Master, idIndirectTurnstile, sIndirectTurnstile);
 
-  TOutside.Create(Master, idOutside, sOutside);
   TTreasure.Create(Master, idTreasure, sTreasure);
+
+  TDecorativeEffect.Create(Master, idSunkenButton,
+    sSunkenButton, fSunkenButton);
 
   for I := 1 to 10 do
     TBoat.Create(Master, idBoat, sBoat, I);
@@ -220,6 +223,10 @@ begin
   RegSingle(idIndirectTurnstile);
 
   RegSingle(idTreasure);
+
+  RegSingle(idSunkenButton);
+
+  // Outils
 
   RegSingle(idBuoy);
   RegSingle(idPlank);

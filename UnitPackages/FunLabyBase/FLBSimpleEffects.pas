@@ -35,6 +35,8 @@ resourcestring
 
   sTreasure = 'Trésor';                       /// Nom du trésor
 
+  sSunkenButton = 'Bouton enfoncé';           /// Nom du bouton enfoncé
+
 const {don't localize}
   idNorthArrow = 'NorthArrow';                   /// ID de la flèche nord
   idEastArrow = 'EastArrow';                     /// ID de la flèche est
@@ -55,6 +57,8 @@ const {don't localize}
   idIndirectTurnstile = 'IndirectTurnstile';     /// ID du tourniquet indirect
 
   idTreasure = 'Treasure';                       /// ID du trésor
+
+  idSunkenButton = 'SunkenButton';               /// ID du bouton enfoncé
 
 const {don't localize}
   fNorthArrow = 'Arrows/NorthArrow'; /// Fichier de la flèche nord
