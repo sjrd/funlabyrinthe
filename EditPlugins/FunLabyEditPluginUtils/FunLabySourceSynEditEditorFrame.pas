@@ -22,6 +22,8 @@ type
   TFrameFunLabySynEditSourceEditor = class(TFrameFunLabySourceEditor)
   private
     FEditSource: TFunLabySynEdit; /// Éditeur du source
+
+    procedure CMVisibleChanged(var Msg: TMessage); message CM_VISIBLECHANGED;
   protected
     procedure EditSourceChange(Sender: TObject); dynamic;
 
@@ -57,6 +59,23 @@ begin
   inherited;
 
   FEditSource := TFunLabySynEdit.Create(Self);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFrameFunLabySynEditSourceEditor.CMVisibleChanged(var Msg: TMessage);
+var
+  ParentForm: TCustomForm;
+begin
+  inherited;
+
+  if Visible then
+  begin
+    ParentForm := GetParentForm(Self);
+    if ParentForm <> nil then
+      ParentForm.ActiveControl := EditSource;
+  end;
 end;
 
 {*

@@ -14,6 +14,8 @@ uses
 var
   SepiImportsFLBSimpleObjectsLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -156,6 +158,72 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTBuoyPlugin = record
+    Dummy: Byte;
+    Field: TBuoyPlugin;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTBuoyPlugin) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TBuoyPlugin n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTBuoys = record
+    Dummy: Byte;
+    Field: TBuoys;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTBuoys) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TBuoys n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTSilverKeys = record
+    Dummy: Byte;
+    Field: TSilverKeys;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTSilverKeys) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TSilverKeys n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTGoldenKeys = record
+    Dummy: Byte;
+    Field: TGoldenKeys;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTGoldenKeys) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TGoldenKeys n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBSimpleObjects;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TBuoyPlugin, 40, 40);
+  CheckInstanceSize(TBuoys, 44, 44);
+  CheckInstanceSize(TSilverKeys, 44, 44);
+  CheckInstanceSize(TGoldenKeys, 44, 44);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

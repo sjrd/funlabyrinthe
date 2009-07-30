@@ -14,6 +14,8 @@ uses
 var
   SepiImportsFunLabyGraphicsLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -209,6 +211,50 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTBitmap32Frame = record
+    Dummy: Byte;
+    Field: TBitmap32Frame;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTBitmap32Frame) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TBitmap32Frame n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTAnimatedBitmap32 = record
+    Dummy: Byte;
+    Field: TAnimatedBitmap32;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTAnimatedBitmap32) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TAnimatedBitmap32 n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FunLabyGraphics;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TBitmap32Frame, 276, 268);
+  CheckInstanceSize(TAnimatedBitmap32, 292, 276);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

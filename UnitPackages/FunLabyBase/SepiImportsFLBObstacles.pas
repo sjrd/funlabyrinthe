@@ -14,6 +14,8 @@ uses
 var
   SepiImportsFLBObstaclesLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -155,6 +157,61 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTSilverBlock = record
+    Dummy: Byte;
+    Field: TSilverBlock;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTSilverBlock) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TSilverBlock n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTGoldenBlock = record
+    Dummy: Byte;
+    Field: TGoldenBlock;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTGoldenBlock) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TGoldenBlock n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTSecretWay = record
+    Dummy: Byte;
+    Field: TSecretWay;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTSecretWay) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TSecretWay n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBObstacles;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TSilverBlock, 44, 44);
+  CheckInstanceSize(TGoldenBlock, 44, 44);
+  CheckInstanceSize(TSecretWay, 44, 44);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

@@ -14,6 +14,8 @@ uses
 var
   SepiImportsFunLabyUtilsLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -1069,6 +1071,637 @@ begin
   VarAddresses[7] := @fLabyrinthsDir;
   VarAddresses[8] := @fSaveguardsDir;
   VarAddresses[9] := @fEditPluginDir;
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTComponentID = record
+    Dummy: Byte;
+    Field: TComponentID;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTComponentID) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TComponentID n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTDirection = record
+    Dummy: Byte;
+    Field: TDirection;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTDirection) <> (1 + 1)}
+  {$MESSAGE WARN 'Le type TDirection n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlayerAction = record
+    Dummy: Byte;
+    Field: TPlayerAction;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlayerAction) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlayerAction n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlayState = record
+    Dummy: Byte;
+    Field: TPlayState;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlayState) <> (1 + 1)}
+  {$MESSAGE WARN 'Le type TPlayState n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForEFunLabyException = record
+    Dummy: Byte;
+    Field: EFunLabyException;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForEFunLabyException) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type EFunLabyException n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForEComponentNotFound = record
+    Dummy: Byte;
+    Field: EComponentNotFound;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForEComponentNotFound) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type EComponentNotFound n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForEUnsupportedCommand = record
+    Dummy: Byte;
+    Field: EUnsupportedCommand;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForEUnsupportedCommand) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type EUnsupportedCommand n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForEBadSquareDefException = record
+    Dummy: Byte;
+    Field: EBadSquareDefException;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForEBadSquareDefException) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type EBadSquareDefException n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IF SizeOf(TQualifiedPos) <> 16}
+  {$MESSAGE WARN 'Le type TQualifiedPos n''a pas la taille calculée par Sepi'}
+{$ELSE}
+
+type
+  TCheckAlignmentForTQualifiedPos = record
+    Dummy: Byte;
+    Field: TQualifiedPos;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTQualifiedPos) <> (4 + 16)}
+  {$MESSAGE WARN 'Le type TQualifiedPos n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IFEND}
+
+{$IF SizeOf(TPlayerMessage) <> 8}
+  {$MESSAGE WARN 'Le type TPlayerMessage n''a pas la taille calculée par Sepi'}
+{$ELSE}
+
+type
+  TCheckAlignmentForTPlayerMessage = record
+    Dummy: Byte;
+    Field: TPlayerMessage;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlayerMessage) <> (4 + 8)}
+  {$MESSAGE WARN 'Le type TPlayerMessage n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IFEND}
+
+{$IF SizeOf(TPlayerShowMsgMessage) <> 24}
+  {$MESSAGE WARN 'Le type TPlayerShowMsgMessage n''a pas la taille calculée par Sepi'}
+{$ELSE}
+
+type
+  TCheckAlignmentForTPlayerShowMsgMessage = record
+    Dummy: Byte;
+    Field: TPlayerShowMsgMessage;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlayerShowMsgMessage) <> (4 + 24)}
+  {$MESSAGE WARN 'Le type TPlayerShowMsgMessage n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IFEND}
+
+type
+  TCheckAlignmentForTEditMapSquareFlag = record
+    Dummy: Byte;
+    Field: TEditMapSquareFlag;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTEditMapSquareFlag) <> (1 + 1)}
+  {$MESSAGE WARN 'Le type TEditMapSquareFlag n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IF SizeOf(TEditMapSquareFlags) <> 1}
+  {$MESSAGE WARN 'Le type TEditMapSquareFlags n''a pas la taille calculée par Sepi'}
+{$ELSE}
+
+type
+  TCheckAlignmentForTEditMapSquareFlags = record
+    Dummy: Byte;
+    Field: TEditMapSquareFlags;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTEditMapSquareFlags) <> (1 + 1)}
+  {$MESSAGE WARN 'Le type TEditMapSquareFlags n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IFEND}
+
+{$IF SizeOf(TEditMapSquareMessage) <> 20}
+  {$MESSAGE WARN 'Le type TEditMapSquareMessage n''a pas la taille calculée par Sepi'}
+{$ELSE}
+
+type
+  TCheckAlignmentForTEditMapSquareMessage = record
+    Dummy: Byte;
+    Field: TEditMapSquareMessage;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTEditMapSquareMessage) <> (4 + 20)}
+  {$MESSAGE WARN 'Le type TEditMapSquareMessage n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IFEND}
+
+type
+  TCheckAlignmentForTSendCommandEvent = record
+    Dummy: Byte;
+    Field: TSendCommandEvent;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTSendCommandEvent) <> (8 + 8)}
+  {$MESSAGE WARN 'Le type TSendCommandEvent n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTRegisterSingleComponentProc = record
+    Dummy: Byte;
+    Field: TRegisterSingleComponentProc;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTRegisterSingleComponentProc) <> (8 + 8)}
+  {$MESSAGE WARN 'Le type TRegisterSingleComponentProc n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTRegisterComponentSetProc = record
+    Dummy: Byte;
+    Field: TRegisterComponentSetProc;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTRegisterComponentSetProc) <> (8 + 8)}
+  {$MESSAGE WARN 'Le type TRegisterComponentSetProc n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTDrawSquareContext = record
+    Dummy: Byte;
+    Field: TDrawSquareContext;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTDrawSquareContext) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TDrawSquareContext n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTDrawViewContext = record
+    Dummy: Byte;
+    Field: TDrawViewContext;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTDrawViewContext) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TDrawViewContext n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTKeyEventContext = record
+    Dummy: Byte;
+    Field: TKeyEventContext;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTKeyEventContext) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TKeyEventContext n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTImagesMaster = record
+    Dummy: Byte;
+    Field: TImagesMaster;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTImagesMaster) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TImagesMaster n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPainter = record
+    Dummy: Byte;
+    Field: TPainter;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPainter) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPainter n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTMoveContext = record
+    Dummy: Byte;
+    Field: TMoveContext;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTMoveContext) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TMoveContext n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPersistentStateItem = record
+    Dummy: Byte;
+    Field: TPersistentStateItem;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPersistentStateItem) <> (1 + 1)}
+  {$MESSAGE WARN 'Le type TPersistentStateItem n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IF SizeOf(TPersistentState) <> 1}
+  {$MESSAGE WARN 'Le type TPersistentState n''a pas la taille calculée par Sepi'}
+{$ELSE}
+
+type
+  TCheckAlignmentForTPersistentState = record
+    Dummy: Byte;
+    Field: TPersistentState;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPersistentState) <> (1 + 1)}
+  {$MESSAGE WARN 'Le type TPersistentState n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IFEND}
+
+type
+  TCheckAlignmentForTFunLabyPersistent = record
+    Dummy: Byte;
+    Field: TFunLabyPersistent;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFunLabyPersistent) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFunLabyPersistent n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTFunLabyPersistentClass = record
+    Dummy: Byte;
+    Field: TFunLabyPersistentClass;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFunLabyPersistentClass) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFunLabyPersistentClass n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTInterfacedFunLabyPersistent = record
+    Dummy: Byte;
+    Field: TInterfacedFunLabyPersistent;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTInterfacedFunLabyPersistent) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TInterfacedFunLabyPersistent n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTFunLabyCollection = record
+    Dummy: Byte;
+    Field: TFunLabyCollection;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFunLabyCollection) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFunLabyCollection n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTFunLabyFiler = record
+    Dummy: Byte;
+    Field: TFunLabyFiler;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFunLabyFiler) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFunLabyFiler n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTFunLabyReader = record
+    Dummy: Byte;
+    Field: TFunLabyReader;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFunLabyReader) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFunLabyReader n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTFunLabyWriter = record
+    Dummy: Byte;
+    Field: TFunLabyWriter;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFunLabyWriter) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFunLabyWriter n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlayerData = record
+    Dummy: Byte;
+    Field: TPlayerData;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlayerData) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlayerData n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlayerDataClass = record
+    Dummy: Byte;
+    Field: TPlayerDataClass;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlayerDataClass) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlayerDataClass n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTFunLabyComponent = record
+    Dummy: Byte;
+    Field: TFunLabyComponent;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFunLabyComponent) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFunLabyComponent n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTFunLabyComponentClass = record
+    Dummy: Byte;
+    Field: TFunLabyComponentClass;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFunLabyComponentClass) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFunLabyComponentClass n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTVisualComponent = record
+    Dummy: Byte;
+    Field: TVisualComponent;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTVisualComponent) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TVisualComponent n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlugin = record
+    Dummy: Byte;
+    Field: TPlugin;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlugin) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlugin n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPluginDynArray = record
+    Dummy: Byte;
+    Field: TPluginDynArray;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPluginDynArray) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPluginDynArray n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTObjectDefPlayerData = record
+    Dummy: Byte;
+    Field: TObjectDefPlayerData;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTObjectDefPlayerData) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TObjectDefPlayerData n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTObjectDef = record
+    Dummy: Byte;
+    Field: TObjectDef;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTObjectDef) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TObjectDef n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTSquareComponent = record
+    Dummy: Byte;
+    Field: TSquareComponent;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTSquareComponent) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TSquareComponent n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTField = record
+    Dummy: Byte;
+    Field: TField;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTField) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TField n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTEffect = record
+    Dummy: Byte;
+    Field: TEffect;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTEffect) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TEffect n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTTool = record
+    Dummy: Byte;
+    Field: TTool;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTTool) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TTool n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTObstacle = record
+    Dummy: Byte;
+    Field: TObstacle;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTObstacle) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TObstacle n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTSquare = record
+    Dummy: Byte;
+    Field: TSquare;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTSquare) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TSquare n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTMap = record
+    Dummy: Byte;
+    Field: TMap;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTMap) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TMap n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlayerModeClass = record
+    Dummy: Byte;
+    Field: TPlayerModeClass;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlayerModeClass) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlayerModeClass n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForIPlayerMode = record
+    Dummy: Byte;
+    Field: IPlayerMode;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForIPlayerMode) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type IPlayerMode n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlayerMode = record
+    Dummy: Byte;
+    Field: TPlayerMode;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlayerMode) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlayerMode n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTLabyrinthPlayerMode = record
+    Dummy: Byte;
+    Field: TLabyrinthPlayerMode;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTLabyrinthPlayerMode) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TLabyrinthPlayerMode n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlayer = record
+    Dummy: Byte;
+    Field: TPlayer;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlayer) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlayer n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTMaster = record
+    Dummy: Byte;
+    Field: TMaster;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTMaster) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TMaster n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FunLabyUtils;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(EFunLabyException, 12, 12);
+  CheckInstanceSize(EComponentNotFound, 12, 12);
+  CheckInstanceSize(EUnsupportedCommand, 12, 12);
+  CheckInstanceSize(EBadSquareDefException, 12, 12);
+  CheckInstanceSize(TDrawSquareContext, 60, 4);
+  CheckInstanceSize(TDrawViewContext, 72, 4);
+  CheckInstanceSize(TKeyEventContext, 12, 4);
+  CheckInstanceSize(TImagesMaster, 16, 4);
+  CheckInstanceSize(TPainter, 20, 4);
+  CheckInstanceSize(TMoveContext, 60, 4);
+  CheckInstanceSize(TFunLabyPersistent, 8, 4);
+  CheckInstanceSize(TInterfacedFunLabyPersistent, 16, 8);
+  CheckInstanceSize(TFunLabyCollection, 12, 8);
+  CheckInstanceSize(TFunLabyFiler, 16, 4);
+  CheckInstanceSize(TFunLabyReader, 16, 16);
+  CheckInstanceSize(TFunLabyWriter, 16, 16);
+  CheckInstanceSize(TPlayerData, 16, 8);
+  CheckInstanceSize(TFunLabyComponent, 28, 8);
+  CheckInstanceSize(TVisualComponent, 44, 28);
+  CheckInstanceSize(TPlugin, 40, 28);
+  CheckInstanceSize(TObjectDefPlayerData, 20, 16);
+  CheckInstanceSize(TObjectDef, 44, 44);
+  CheckInstanceSize(TSquareComponent, 44, 44);
+  CheckInstanceSize(TField, 48, 44);
+  CheckInstanceSize(TEffect, 44, 44);
+  CheckInstanceSize(TTool, 44, 44);
+  CheckInstanceSize(TObstacle, 44, 44);
+  CheckInstanceSize(TSquare, 60, 44);
+  CheckInstanceSize(TMap, 60, 28);
+  CheckInstanceSize(TPlayerMode, 28, 16);
+  CheckInstanceSize(TLabyrinthPlayerMode, 60, 28);
+  CheckInstanceSize(TPlayer, 128, 44);
+  CheckInstanceSize(TMaster, 68, 8);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

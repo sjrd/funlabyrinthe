@@ -14,6 +14,8 @@ uses
 var
   SepiImportsFLBFieldsLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -203,6 +205,94 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTGround = record
+    Dummy: Byte;
+    Field: TGround;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTGround) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TGround n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTWall = record
+    Dummy: Byte;
+    Field: TWall;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTWall) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TWall n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTWater = record
+    Dummy: Byte;
+    Field: TWater;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTWater) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TWater n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTHole = record
+    Dummy: Byte;
+    Field: THole;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTHole) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type THole n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTSky = record
+    Dummy: Byte;
+    Field: TSky;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTSky) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TSky n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTOutside = record
+    Dummy: Byte;
+    Field: TOutside;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTOutside) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TOutside n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBFields;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TGround, 48, 48);
+  CheckInstanceSize(TWall, 48, 48);
+  CheckInstanceSize(TWater, 48, 48);
+  CheckInstanceSize(THole, 48, 48);
+  CheckInstanceSize(TSky, 48, 48);
+  CheckInstanceSize(TOutside, 48, 48);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

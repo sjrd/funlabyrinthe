@@ -14,6 +14,8 @@ uses
 var
   SepiImportsFLBShowMessageLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -142,6 +144,61 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTCustomShowMessagePlugin = record
+    Dummy: Byte;
+    Field: TCustomShowMessagePlugin;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTCustomShowMessagePlugin) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TCustomShowMessagePlugin n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTDefaultShowMessagePluginPlayerData = record
+    Dummy: Byte;
+    Field: TDefaultShowMessagePluginPlayerData;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTDefaultShowMessagePluginPlayerData) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TDefaultShowMessagePluginPlayerData n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTDefaultShowMessagePlugin = record
+    Dummy: Byte;
+    Field: TDefaultShowMessagePlugin;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTDefaultShowMessagePlugin) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TDefaultShowMessagePlugin n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBShowMessage;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TCustomShowMessagePlugin, 40, 40);
+  CheckInstanceSize(TDefaultShowMessagePluginPlayerData, 96, 16);
+  CheckInstanceSize(TDefaultShowMessagePlugin, 40, 40);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

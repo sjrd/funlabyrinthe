@@ -116,8 +116,7 @@ type
   *}
   TSepiUnitFile = class(TUnitFile)
   private
-    FRuntimeUnit: TSepiRuntimeUnit; /// Unité Sepi runtime
-    FSepiUnit: TSepiUnit;           /// Unité Sepi
+    FSepiUnit: TSepiUnit; /// Unité Sepi
 
     procedure CallSimpleProc(const Name: string);
     procedure InitializeUnit(Params: TStrings);
@@ -136,7 +135,6 @@ type
 
     procedure GetParams(Params: TStrings); override;
 
-    property RuntimeUnit: TSepiRuntimeUnit read FRuntimeUnit;
     property SepiUnit: TSepiUnit read FSepiUnit;
   end;
 
@@ -285,8 +283,12 @@ end;
 *}
 procedure TSepiUnitFile.Load;
 begin
-  FRuntimeUnit := TSepiRuntimeUnit.Create(MasterFile.SepiRoot, FileName);
-  FSepiUnit := FRuntimeUnit.SepiUnit;
+  FSepiUnit := MasterFile.SepiRoot.GetComponent(
+    ChangeFileExt(ExtractFileName(FileName), '')) as TSepiUnit;
+
+  if FSepiUnit = nil then
+    FSepiUnit := TSepiRuntimeUnit.Create(MasterFile.SepiRoot,
+      FileName).SepiUnit;
 
   // Set the unit ref-count to 1
   SepiUnit.Root.LoadUnit(SepiUnit.Name);

@@ -32,12 +32,9 @@ type
     EditDifficulty: TEdit;
     LabelAuthor: TLabel;
     EditAuthor: TEdit;
-    LabelAuthorID: TLabel;
-    EditAuthorID: TEdit;
     ButtonOK: TButton;
     ButtonCancel: TButton;
     procedure ButtonOKClick(Sender: TObject);
-    procedure EditAuthorIDExit(Sender: TObject);
   private
     { Déclarations privées }
   public
@@ -63,7 +60,6 @@ begin
     EditDescription.Text := MasterFile.Description;
     EditDifficulty.Text := MasterFile.Difficulty;
     EditAuthor.Text := MasterFile.Author;
-    EditAuthorID.Text := IntToStr(MasterFile.AuthorID);
 
     if ShowModal <> mrOk then
       Result := False
@@ -73,7 +69,6 @@ begin
       MasterFile.Description := EditDescription.Text;
       MasterFile.Difficulty := EditDifficulty.Text;
       MasterFile.Author := EditAuthor.Text;
-      MasterFile.AuthorID := StrToInt(EditAuthorID.Text);
 
       Result := True;
     end;
@@ -83,21 +78,11 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnExit de la zone d'édition de l'ID de l'auteur
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormFileProperties.EditAuthorIDExit(Sender: TObject);
-begin
-  EditAuthorID.Text := IntToStr(StrToIntDef(EditAuthorID.Text, 0));
-end;
-
-{*
   Gestionnaire d'événement OnClick du bouton OK
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormFileProperties.ButtonOKClick(Sender: TObject);
 begin
-  EditAuthorIDExit(Sender);
   if EditTitle.Text = '' then
     ShowDialog(sUnfilledTitleTitle, sUnfilledTitle, dtError)
   else

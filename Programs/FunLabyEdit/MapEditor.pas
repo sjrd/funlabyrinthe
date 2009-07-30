@@ -334,6 +334,10 @@ begin
 
   // Recensement des cartes
   MapViewer.Master := Master;
+
+  // Centrer sur le premier joueur
+  if (Master.PlayerCount > 0) and (Master.Players[0].Map <> nil) then
+    CenterToPlayerPosition(Master.Players[0]);
 end;
 
 {*

@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Classes, Contnrs, ScUtils, ScLists, ScXML, SepiReflectionCore,
-  FunLabyUtils, FunLabyFilers, FunLabyCoreConsts, GraphicEx;
+  SepiRuntime, FunLabyUtils, FunLabyFilers, FunLabyCoreConsts, GraphicEx;
 
 type
   /// Mode d'ouverture d'un fichier FunLabyrinthe
@@ -196,7 +196,6 @@ type
     FTitle: string;       /// Titre du labyrinthe
     FDescription: string; /// Description
     FDifficulty: string;  /// Difficulté
-    FAuthorID: Integer;   /// ID Web de l'auteur, ou 0 si non renseigné
     FAuthor: string;      /// Nom de l'auteur
 
     FAllowEdit: Boolean;   /// Indique si le fichier peut être édité
@@ -212,6 +211,9 @@ type
     constructor BaseCreate(ABaseSepiRoot: TSepiRoot;
       const AFileName: TFileName = ''; AMode: TFileMode = fmEdit);
 
+    function LoadSepiUnit(Sender: TSepiRoot;
+      const UnitName: string): TSepiUnit;
+
     procedure InvalidFormat;
 
     procedure Load(const ADocument: IInterface);
@@ -222,7 +224,8 @@ type
     constructor Create(ABaseSepiRoot: TSepiRoot; const AFileName: TFileName;
       AMode: TFileMode);
     constructor CreateNew(ABaseSepiRoot: TSepiRoot;
-      const UnitFileDescs: TUnitFileDescs; const FileContents: string = '');
+      const UnitFileDescs: TUnitFileDescs); overload;
+    constructor CreateNew(ABaseSepiRoot: TSepiRoot); overload;
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -265,7 +268,6 @@ type
     property Title: string read FTitle write FTitle;
     property Description: string read FDescription write FDescription;
     property Difficulty: string read FDifficulty write FDifficulty;
-    property AuthorID: Integer read FAuthorID write FAuthorID default 0;
     property Author: string read FAuthor write FAuthor;
   end;
 
@@ -293,6 +295,8 @@ function FileNameToHRef(const FileName: TFileName;
 
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
+
+  FunLabyBaseHRef = 'FunLabyBase.bpl'; /// HRef de l'unité FunLabyBase
 
 var
   /// Gestionnaires d'unité : association extension <-> classe d'unité
@@ -341,7 +345,11 @@ var
   I: Integer;
   SubFile: TFileName;
 begin
+  {$IF HRefDelim <> PathDelim}
   SubFile := StringReplace(HRef, HRefDelim, PathDelim, [rfReplaceAll]);
+  {$ELSE}
+  SubFile := HRef;
+  {$IFEND}
 
   for I := Low(BaseDirs) to High(BaseDirs) do
   begin
@@ -380,7 +388,9 @@ begin
     end;
   end;
 
+  {$IF HRefDelim <> PathDelim}
   Result := StringReplace(Result, PathDelim, HRefDelim, [rfReplaceAll]);
+  {$IFEND}
 end;
 
 {-----------------------}
@@ -677,6 +687,8 @@ begin
 
   FUnitFiles := TUnitFileList.Create(Self);
   FSourceFiles := TSourceFileList.Create(Self);
+
+  FSepiRoot.OnLoadUnit := LoadSepiUnit;
 end;
 
 {*
@@ -699,15 +711,12 @@ end;
   Crée un nouveau fichier FunLabyrinthe en mode édition
   @param ABaseSepiRoot   Racine Sepi de base (peut être nil)
   @param UnitFileDescs   Descripteurs des fichiers unité à utiliser
-  @param FileContents    Contenu pré-créé du fichier (ou '' pour créer un vide)
-  @throws EInvalidFileFormat : Le fichier ne respecte pas le format attendu
 *}
 constructor TMasterFile.CreateNew(ABaseSepiRoot: TSepiRoot;
-  const UnitFileDescs: TUnitFileDescs; const FileContents: string = '');
+  const UnitFileDescs: TUnitFileDescs);
 var
   I, J: Integer;
   UnitFile: TUnitFile;
-  Document: IXMLDOMDocument;
 begin
   BaseCreate(ABaseSepiRoot);
 
@@ -732,18 +741,20 @@ begin
       end;
     end;
   end;
+end;
 
-  // Prendre en compte un éventuel XML de base
-  if FileContents <> '' then
-  begin
-    Document := CoDOMDocument.Create;
-    Document.async := False;
-    if not Document.loadXML(FileContents) then
-      InvalidFormat;
+{*
+  Crée un nouveau fichier FunLabyrinthe en mode édition
+  @param ABaseSepiRoot   Racine Sepi de base (peut être nil)
+*}
+constructor TMasterFile.CreateNew(ABaseSepiRoot: TSepiRoot);
+var
+  UnitFileDescs: TUnitFileDescs;
+begin
+  SetLength(UnitFileDescs, 1);
+  UnitFileDescs[0].HRef := FunLabyBaseHRef;
 
-    Load(Document);
-    TestOpeningValidity;
-  end;
+  CreateNew(ABaseSepiRoot, UnitFileDescs);
 end;
 
 {*
@@ -788,6 +799,34 @@ begin
 
   for I := UnitFiles.Count-1 downto 0 do
     UnitFiles[I].Unloading;
+end;
+
+{*
+  Charge une unité Sepi d'après son nom
+  @param Sender     Racine Sepi qui a déclenché l'événement
+  @param UnitName   Nom de l'unité à charger
+*}
+function TMasterFile.LoadSepiUnit(Sender: TSepiRoot;
+  const UnitName: string): TSepiUnit;
+var
+  Dirs: array of TFileName;
+  I: Integer;
+  FileName: TFileName;
+begin
+  SetLength(Dirs, UnitFiles.Count+1);
+  Dirs[0] := fUnitsDir;
+
+  for I := 0 to UnitFiles.Count-1 do
+    Dirs[I+1] := IncludeTrailingPathDelimiter(ExtractFilePath(
+      UnitFiles[I].FileName));
+
+  try
+    FileName := HRefToFileName(UnitName+'.scu', Dirs);
+    Result := TSepiRuntimeUnit.Create(Sender, FileName).SepiUnit;
+  except
+    on Error: EInOutError do
+      Result := nil;
+  end;
 end;
 
 {*

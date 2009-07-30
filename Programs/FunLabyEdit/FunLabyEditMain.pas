@@ -59,6 +59,7 @@ type
     ActionViewCompilerMessages: TAction;
     ActionViewMapViewer: TAction;
     ActionEditZoneSize: TAction;
+    ActionCompileAndReload: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -70,7 +71,6 @@ type
     procedure ActionSaveAllExecute(Sender: TObject);
     procedure ActionFilePropertiesExecute(Sender: TObject);
     procedure ActionEditUnitsExecute(Sender: TObject);
-    procedure ActionTestExecute(Sender: TObject);
     procedure ActionCloseFileExecute(Sender: TObject);
     procedure ActionExitExecute(Sender: TObject);
     procedure ActionAddMapExecute(Sender: TObject);
@@ -79,18 +79,18 @@ type
     procedure ActionAddExistingSourceExecute(Sender: TObject);
     procedure ActionAddNewSourceExecute(Sender: TObject);
     procedure ActionRemoveSourceExecute(Sender: TObject);
-    procedure ActionCompileAllExecute(Sender: TObject);
     procedure ActionViewAllSourcesExecute(Sender: TObject);
     procedure ActionViewSourceExecute(Sender: TObject);
     procedure ActionViewCompilerMessagesExecute(Sender: TObject);
     procedure ActionViewMapViewerExecute(Sender: TObject);
+    procedure ActionTestExecute(Sender: TObject);
+    procedure ActionCompileAllExecute(Sender: TObject);
+    procedure ActionCompileAndReloadExecute(Sender: TObject);
     procedure ActionHelpTopicsExecute(Sender: TObject);
     procedure ActionAboutExecute(Sender: TObject);
     procedure TabBarEditorsTabSelecting(Sender: TObject; Item: TJvTabBarItem;
       var AllowSelect: Boolean);
     procedure TabBarEditorsTabSelected(Sender: TObject; Item: TJvTabBarItem);
-    procedure TabBarEditorsTabClosing(Sender: TObject; Item: TJvTabBarItem;
-      var AllowClose: Boolean);
     procedure TabBarEditorsTabCloseQuery(Sender: TObject; Item: TJvTabBarItem;
       var CanClose: Boolean);
     procedure TabBarEditorsTabClosed(Sender: TObject; Item: TJvTabBarItem);
@@ -104,6 +104,7 @@ type
 
     BigMenuMaps: TActionClient;    /// Menu des cartes
     BigMenuSources: TActionClient; /// Menu des unités
+    BigMenuExecute: TActionClient; /// Menu d'exécution
 
     TabMapEditor: TJvTabBarItem;     /// Onglet d'édition des cartes
     FrameMapEditor: TFrameMapEditor; /// Cadre d'édition des cartes
@@ -138,6 +139,7 @@ type
     function SaveFile(FileName: TFileName = ''): Boolean;
     function SaveAll: Boolean;
     function CloseFile: Boolean;
+    function ReloadFile: Boolean;
 
     function CompilerLoadUnit(Sender: TSepiRoot;
       const UnitName: string): TSepiUnit;
@@ -171,8 +173,7 @@ type
   end;
 
 const {don't localize}
-  FunLabyBaseHRef = 'FunLabyBase.bpl'; /// HRef de l'unité FunLabyBase
-  idPlayer = 'Player';                 /// ID de l'unique joueur
+  idPlayer = 'Player'; /// ID de l'unique joueur
 
 var
   FormMain: TFormMain; /// Instance de la fiche principale
@@ -265,7 +266,6 @@ begin
   ActionCloseFile.Enabled := True;
   ActionFileProperties.Enabled := True;
   ActionEditUnits.Enabled := True;
-  ActionTest.Enabled := True;
 
   // Menu des cartes
   BigMenuMaps.Visible := True;
@@ -277,9 +277,14 @@ begin
   BigMenuSources.Visible := True;
   ActionAddExistingSource.Enabled := SourceFileEditors.FilterCount > 0;
   ActionAddNewSource.Enabled := not SourceFileCreators.IsEmpty;
-  ActionCompileAll.Enabled := True;
   ActionViewAllSources.Enabled := True;
   MakeSourceActions;
+
+  // Menu d'exécution
+  BigMenuExecute.Visible := True;
+  ActionTest.Enabled := True;
+  ActionCompileAll.Enabled := True;
+  ActionCompileAndReload.Enabled := True;
 
   // Chargement des cartes
   FrameMapEditor.LoadFile(MasterFile);
@@ -304,7 +309,6 @@ begin
   ActionCloseFile.Enabled := False;
   ActionFileProperties.Enabled := False;
   ActionEditUnits.Enabled := False;
-  ActionTest.Enabled := False;
 
   // Menu des cartes
   BigMenuMaps.Visible := False;
@@ -316,9 +320,14 @@ begin
   BigMenuSources.Visible := False;
   ActionAddExistingSource.Enabled := False;
   ActionAddNewSource.Enabled := False;
-  ActionCompileAll.Enabled := False;
   ActionViewAllSources.Enabled := False;
   DeleteSourceActions;
+
+  // Menu d'exécution
+  BigMenuExecute.Visible := False;
+  ActionTest.Enabled := False;
+  ActionCompileAll.Enabled := False;
+  ActionCompileAndReload.Enabled := False;
 
   // Autres variables
   SepiRoot := nil;
@@ -473,15 +482,10 @@ end;
   Crée un nouveau fichier et le charge
 *}
 procedure TFormMain.NewFile;
-var
-  UnitFileDescs: TUnitFileDescs;
 begin
-  SetLength(UnitFileDescs, 1);
-  UnitFileDescs[0].HRef := FunLabyBaseHRef;
-
   NeedBaseSepiRoot;
 
-  MasterFile := TMasterFile.CreateNew(BaseSepiRoot, UnitFileDescs);
+  MasterFile := TMasterFile.CreateNew(BaseSepiRoot);
   try
     if TFormFileProperties.ManageProperties(MasterFile) then
     begin
@@ -617,6 +621,44 @@ begin
 end;
 
 {*
+  Recharge le fichier couramment ouvert
+  @return True si le fichier a bien été fermé, False sinon
+*}
+function TFormMain.ReloadFile: Boolean;
+var
+  FileName: TFileName;
+  OpenSources: TStrings;
+  I: Integer;
+begin
+  Result := False;
+
+  if MasterFile = nil then
+    Exit;
+
+  FileName := MasterFile.FileName;
+  OpenSources := TStringList.Create;
+  try
+    for I := 0 to TabCount-1 do
+    begin
+      if IsEditor(I) then
+        OpenSources.Add(Editors[I].SourceFile.FileName);
+    end;
+
+    if not CloseFile then
+      Exit;
+    OpenFile(FileName);
+
+    for I := 0 to MasterFile.SourceFiles.Count-1 do
+      if OpenSources.IndexOf(MasterFile.SourceFiles[I].FileName) >= 0 then
+        OpenTab(MasterFile.SourceFiles[I]);
+  finally
+    OpenSources.Free;
+  end;
+
+  Result := True;
+end;
+
+{*
   Charge une unité dans le compilateur
   @param Sender     Racine Sepi
   @param UnitName   Nom de l'unité
@@ -652,7 +694,11 @@ begin
     end;
   end;
 
-  Result := nil;
+  if (Sender is TSepiRootFork) and
+    Assigned(TSepiRootFork(Sender).OriginalRoot.OnLoadUnit) then
+    Result := TSepiRootFork(Sender).OriginalRoot.OnLoadUnit(Sender, UnitName)
+  else
+    Result := nil;
 end;
 
 {*
@@ -915,6 +961,7 @@ begin
 
   BigMenuMaps := MainMenuBar.ActionClient.Items[1];
   BigMenuSources := MainMenuBar.ActionClient.Items[2];
+  BigMenuExecute := MainMenuBar.ActionClient.Items[4];
 
   TabMapEditor := TabBarEditors.Tabs[0];
   FrameMapEditor := TFrameMapEditor.Create(Self);
@@ -1056,30 +1103,12 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.ActionEditUnitsExecute(Sender: TObject);
-var
-  FileName: TFileName;
 begin
   if not SaveAll then
     Exit;
 
   if TFormEditUnits.EditUnits(MasterFile) then
-  begin
-    FileName := MasterFile.FileName;
-    CloseFile;
-    OpenFile(FileName);
-  end;
-end;
-
-{*
-  Gestionnaire d'événement OnExecute de l'action Tester
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormMain.ActionTestExecute(Sender: TObject);
-begin
-  {don't localize}
-  if (not Modified) or SaveFile(MasterFile.FileName) then
-    ShellExecute(0, 'open', PChar(Dir+'FunLaby.exe'),
-      PChar('"'+MasterFile.FileName+'"'), nil, SW_SHOWNORMAL);
+    ReloadFile;
 end;
 
 {*
@@ -1202,15 +1231,6 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnExecute de l'action Compiler
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormMain.ActionCompileAllExecute(Sender: TObject);
-begin
-  CompileAll;
-end;
-
-{*
   Gestionnaire d'événement OnExecute de l'action Voir toutes les unités
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -1258,6 +1278,42 @@ end;
 procedure TFormMain.ActionViewMapViewerExecute(Sender: TObject);
 begin
   FormMapViewer.Show;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Tester
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionTestExecute(Sender: TObject);
+begin
+  if Modified and (not SaveFile(MasterFile.FileName)) then
+    Exit;
+
+  if not CompileAll then
+    Exit;
+
+  {don't localize}
+  ShellExecute(0, 'open', PChar(Dir+'FunLaby.exe'),
+    PChar('"'+MasterFile.FileName+'"'), nil, SW_SHOWNORMAL);
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Compiler
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionCompileAllExecute(Sender: TObject);
+begin
+  CompileAll;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Compiler et recharger
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionCompileAndReloadExecute(Sender: TObject);
+begin
+  if SaveAll and CompileAll then
+    ReloadFile;
 end;
 
 {*
@@ -1336,19 +1392,6 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnTabClosing de la tab bar des éditeurs
-  @param Sender       Objet qui a déclenché l'événement
-  @param Item         Élément qui va être fermé
-  @param AllowClose   Positionner à False pour empêcher la fermeture
-*}
-procedure TFormMain.TabBarEditorsTabClosing(Sender: TObject;
-  Item: TJvTabBarItem; var AllowClose: Boolean);
-begin
-  if Item.Tag = MapEditorTag then
-    AllowClose := False;
-end;
-
-{*
   Gestionnaire d'événement OnTabCloseQuery de la tab bar des éditeurs
   @param Sender     Objet qui a déclenché l'événement
   @param Item       Élément qui va être fermé
@@ -1357,7 +1400,11 @@ end;
 procedure TFormMain.TabBarEditorsTabCloseQuery(Sender: TObject;
   Item: TJvTabBarItem; var CanClose: Boolean);
 begin
-  if IsEditor(Item) then
+  if Item.Tag = MapEditorTag then
+  begin
+    CloseFile;
+    CanClose := False;
+  end else if IsEditor(Item) then
     CanClose := GetTabEditor(Item).CanClose;
 end;
 

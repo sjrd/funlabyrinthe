@@ -14,6 +14,8 @@ uses
 var
   SepiImportsFLBPlankLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -140,6 +142,61 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTPlankPlugin = record
+    Dummy: Byte;
+    Field: TPlankPlugin;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlankPlugin) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlankPlugin n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlanks = record
+    Dummy: Byte;
+    Field: TPlanks;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlanks) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlanks n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPlankSquare = record
+    Dummy: Byte;
+    Field: TPlankSquare;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlankSquare) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlankSquare n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBPlank;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TPlankPlugin, 40, 40);
+  CheckInstanceSize(TPlanks, 44, 44);
+  CheckInstanceSize(TPlankSquare, 84, 80);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

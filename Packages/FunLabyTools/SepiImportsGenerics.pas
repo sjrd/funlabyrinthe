@@ -14,6 +14,8 @@ uses
 var
   SepiImportsGenericsLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -171,6 +173,72 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTDecorativeEffect = record
+    Dummy: Byte;
+    Field: TDecorativeEffect;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTDecorativeEffect) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TDecorativeEffect n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTDecorativeObstacle = record
+    Dummy: Byte;
+    Field: TDecorativeObstacle;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTDecorativeObstacle) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TDecorativeObstacle n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTObjectTool = record
+    Dummy: Byte;
+    Field: TObjectTool;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTObjectTool) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TObjectTool n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTOverriddenSquare = record
+    Dummy: Byte;
+    Field: TOverriddenSquare;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTOverriddenSquare) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TOverriddenSquare n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;Generics;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TDecorativeEffect, 44, 44);
+  CheckInstanceSize(TDecorativeObstacle, 44, 44);
+  CheckInstanceSize(TObjectTool, 52, 44);
+  CheckInstanceSize(TOverriddenSquare, 80, 60);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

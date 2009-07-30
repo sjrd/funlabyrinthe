@@ -13,6 +13,8 @@ uses
 var
   SepiImportsFLBBoatLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -124,6 +126,61 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTBoatPluginPlayerData = record
+    Dummy: Byte;
+    Field: TBoatPluginPlayerData;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTBoatPluginPlayerData) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TBoatPluginPlayerData n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTBoatPlugin = record
+    Dummy: Byte;
+    Field: TBoatPlugin;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTBoatPlugin) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TBoatPlugin n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTBoat = record
+    Dummy: Byte;
+    Field: TBoat;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTBoat) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TBoat n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBBoat;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TBoatPluginPlayerData, 20, 16);
+  CheckInstanceSize(TBoatPlugin, 40, 40);
+  CheckInstanceSize(TBoat, 48, 44);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

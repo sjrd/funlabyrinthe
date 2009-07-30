@@ -14,6 +14,8 @@ uses
 var
   SepiImportsFLBSimpleEffectsLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -204,6 +206,104 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTTransporterKind = record
+    Dummy: Byte;
+    Field: TTransporterKind;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTTransporterKind) <> (1 + 1)}
+  {$MESSAGE WARN 'Le type TTransporterKind n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTArrow = record
+    Dummy: Byte;
+    Field: TArrow;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTArrow) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TArrow n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTTransporter = record
+    Dummy: Byte;
+    Field: TTransporter;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTTransporter) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TTransporter n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTStairs = record
+    Dummy: Byte;
+    Field: TStairs;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTStairs) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TStairs n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTDirectTurnstile = record
+    Dummy: Byte;
+    Field: TDirectTurnstile;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTDirectTurnstile) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TDirectTurnstile n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTIndirectTurnstile = record
+    Dummy: Byte;
+    Field: TIndirectTurnstile;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTIndirectTurnstile) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TIndirectTurnstile n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTTreasure = record
+    Dummy: Byte;
+    Field: TTreasure;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTTreasure) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TTreasure n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBSimpleEffects;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TArrow, 48, 44);
+  CheckInstanceSize(TTransporter, 52, 44);
+  CheckInstanceSize(TStairs, 48, 44);
+  CheckInstanceSize(TDirectTurnstile, 44, 44);
+  CheckInstanceSize(TIndirectTurnstile, 44, 44);
+  CheckInstanceSize(TTreasure, 44, 44);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}

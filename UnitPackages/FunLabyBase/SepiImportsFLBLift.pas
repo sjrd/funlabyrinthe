@@ -13,6 +13,8 @@ uses
 var
   SepiImportsFLBLiftLazyLoad: Boolean = False;
 
+procedure DelphiSepiConsistencyAssertions;
+
 implementation
 
 {$R *.res}
@@ -138,6 +140,50 @@ end;
 
 procedure InitVarAddresses;
 begin
+end;
+
+{------------------------------------}
+{ Delphi-Sepi consistency assertions }
+{------------------------------------}
+
+type
+  TCheckAlignmentForTEngagedLiftSquare = record
+    Dummy: Byte;
+    Field: TEngagedLiftSquare;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTEngagedLiftSquare) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TEngagedLiftSquare n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTLift = record
+    Dummy: Byte;
+    Field: TLift;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTLift) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TLift n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+procedure CheckInstanceSize(AClass: TClass;
+  SepiInstSize, ParentSepiInstSize: Longint);
+begin
+  if (AClass.InstanceSize - SepiInstSize) =
+    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+    Exit;
+
+  WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBLift;%s;%s',
+    [SepiInstSize, AClass.InstanceSize, AClass.ClassName,
+    AClass.ClassParent.ClassName]));
+end;
+
+procedure DelphiSepiConsistencyAssertions;
+begin
+  {$ASSERTIONS ON}
+  CheckInstanceSize(TEngagedLiftSquare, 84, 80);
+  CheckInstanceSize(TLift, 44, 44);
+  {$ASSERTIONS OFF}
 end;
 
 {$WARN SYMBOL_DEPRECATED ON}
