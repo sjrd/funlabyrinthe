@@ -63,6 +63,9 @@ class function TFormAddMap.AddMap(MasterFile: TMasterFile): TComponentID;
 begin
   with Create(Application) do
   try
+    if MasterFile.Master.MapCount = 0 then
+      EditID.Text := 'MainMap';
+
     if ShowModal <> mrOk then
       Result := ''
     else

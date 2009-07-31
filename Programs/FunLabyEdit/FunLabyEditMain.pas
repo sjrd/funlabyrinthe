@@ -499,6 +499,8 @@ begin
     BackgroundDiscard(MasterFile);
     raise;
   end;
+
+  ActionAddMap.Execute;
 end;
 
 {*
