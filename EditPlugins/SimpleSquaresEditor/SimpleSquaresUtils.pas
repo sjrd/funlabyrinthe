@@ -615,7 +615,9 @@ begin
     else if MinimumCount > 1 then
       Line := Line + Format(' if Player has %d Self', [MinimumCount]);
     if DecrementOnUse then
-      Line := Line + ' then';
+      Line := Line + ' then'
+    else
+      Line := Line + ';';
     Code.Add(Line);
 
     if DecrementOnUse then
