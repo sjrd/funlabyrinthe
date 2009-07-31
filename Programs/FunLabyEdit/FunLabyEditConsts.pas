@@ -47,11 +47,7 @@ resourcestring
   sRemoveSource =
     'Êtes-vous certain de vouloir retirer ce fichier source du projet ?';
 
-  sNoUnitOpenerHandlerTitle = 'Pas de gestionnaire disponible';
-  sNoUnitOpenerHandler = 'Aucun gestionnaire disponible pour l''ajout d''unité';
-
-  sNoUnitCreatorTitle = 'Pas de gestionnaire disponible';
-  sNoUnitCreator = 'Aucun gestionnaire disponible pour la création d''unité';
+  SAllUnitTypes = 'Tous les types d''unité';
 
   sDuplicateUnitTitle = 'Unité déjà présente';
   sDuplicateUnit = 'Il y a déjà une unité ''%s''';

@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, ScLists, SdDialogs, FilesUtils, FunLabyUtils,
-  SourceEditors, FunLabyEditConsts, EditParameters;
+  Dialogs, StdCtrls, Buttons, ScLists, ScStrUtils, SdDialogs, FilesUtils,
+  FunLabyUtils, SourceEditors, FunLabyEditConsts, EditParameters;
 
 type
   TFormEditUnits = class(TForm)
@@ -158,27 +158,34 @@ end;
 procedure TFormEditUnits.FormCreate(Sender: TObject);
 var
   I: Integer;
-  Filter: string;
+  Filter, AllExtensions: string;
 begin
   // Lister les filtres d'unité
   Filters := TStringList.Create;
   UnitFilters.ForEach(AddUnitFilter);
 
-  //ButtonAddExisting.Enabled := Filters.Count > 0;
   OpenUnitDialog.InitialDir := fUnitsDir;
 
-  if Filters.Count > 0 then
+  if Filters.Count = 0 then
+    ButtonAdd.Enabled := False
+  else
   begin
     TStringList(Filters).Sorted := True;
 
-    Filter := Filters[0];
-    for I := 1 to Filters.Count-1 do
+    Filter := '';
+    AllExtensions := '';
+
+    for I := 0 to Filters.Count-1 do
+    begin
       Filter := Filter + '|' + Filters[I];
+      AllExtensions := AllExtensions + ';' + GetLastToken(Filters[I], '|');
+    end;
+
+    AllExtensions[1] := '|';
+    Filter := SAllUnitTypes + AllExtensions + Filter;
+
     OpenUnitDialog.Filter := Filter;
   end;
-
-  // Vérifier qu'il y a au moins un créateur d'unités
-  ButtonAdd.Enabled := not SourceFileCreators.IsEmpty;
 end;
 
 {*

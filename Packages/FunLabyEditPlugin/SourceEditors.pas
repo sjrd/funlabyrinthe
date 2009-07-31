@@ -11,6 +11,9 @@ uses
   SysUtils, Classes, Controls, ScUtils, ScLists, ScStrUtils, FilesUtils,
   UnitFiles, SepiReflectionCore, SepiCompilerErrors, FunLabyCoreConsts;
 
+resourcestring
+  SAllSourceTypes = 'Tous les types de source';
+
 type
   ISourceEditor50 = interface;
 
@@ -305,6 +308,7 @@ begin
 
   FFilters := TStringList.Create;
   FFilters.Delimiter := '|';
+  TStringList(FFilters).Sorted := True;
 end;
 
 {*
@@ -344,15 +348,23 @@ end;
 function TSourceEditorList.GetFiltersAsText: string;
 var
   I: Integer;
+  AllExtensions: string;
 begin
+  Result := '';
+
   if FFilters.Count = 0 then
-    Result := ''
-  else
+    Exit;
+
+  AllExtensions := '';
+
+  for I := 0 to FFilters.Count-1 do
   begin
-    Result := FFilters[0];
-    for I := 1 to FFilters.Count-1 do
-      Result := Result + '|' + FFilters[I];
+    Result := Result + '|' + FFilters[I];
+    AllExtensions := AllExtensions + ';' + GetLastToken(FFilters[I], '|');
   end;
+
+  AllExtensions[1] := '|';
+  Result := SAllSourceTypes + AllExtensions + Result;
 end;
 
 {*
