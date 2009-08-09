@@ -524,8 +524,13 @@ end;
 procedure TFormMain.PaintBoxPaintBuffer(Sender: TObject);
 begin
   if Assigned(Controller) then
-    Controller.DrawView(PaintBox.Buffer)
-  else
+  begin
+    if (PaintBox.Width <> Controller.ViewWidth) or
+      (PaintBox.Height <> Controller.ViewHeight) then
+      Exit;
+
+    Controller.DrawView(PaintBox.Buffer);
+  end else
     PaintBox.Buffer.Clear;
 end;
 

@@ -194,8 +194,8 @@ procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
   CheckInstanceSize(TPlankPlugin, 40, 40);
-  CheckInstanceSize(TPlanks, 44, 44);
-  CheckInstanceSize(TPlankSquare, 84, 80);
+  CheckInstanceSize(TPlanks, 48, 48);
+  CheckInstanceSize(TPlankSquare, 92, 88);
   {$ASSERTIONS OFF}
 end;
 

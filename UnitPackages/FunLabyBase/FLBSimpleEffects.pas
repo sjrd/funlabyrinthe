@@ -11,8 +11,8 @@ unit FLBSimpleEffects;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, SdDialogs, FunLabyUtils, MapTools, GraphicsTools,
-  FLBCommon, FLBFields;
+  SysUtils, Graphics, ScUtils, SdDialogs, FunLabyUtils, FunLabyCoreConsts,
+  MapTools, GraphicsTools, FLBCommon, FLBFields, GR32;
 
 resourcestring
   sNorthArrow = 'Flèche nord';                /// Nom de la flèche nord
@@ -21,11 +21,8 @@ resourcestring
   sWestArrow = 'Flèche ouest';                /// Nom de la flèche ouest
   sCrossroads = 'Carrefour';                  /// Nom du carrefour
 
-  sInactiveTransporter = 'Téléporteur inactif';      /// Téléporteur inactif
-  sTransporterNext = 'Téléporteur suivant n°%d';     /// Téléporteur suivant
-  sTransporterPrev = 'Téléporteur précédent n°%d';   /// Téléporteur précédent
-  sTransporterRandom = 'Téléporteur aléatoire n°%d'; /// Téléporteur aléatoire
-  sTransporterTemplate = 'Téléporteur';              /// Téléporteur modèle
+  sInactiveTransporter = 'Téléporteur inactif'; /// Téléporteur inactif
+  sTransporter = 'Téléporteur';                 /// Téléporteur
 
   sUpStairs = 'Escalier montant';             /// Nom de l'escalier montant
   sDownStairs = 'Escalier descendant';        /// Nom de l'escalier descendant
@@ -37,6 +34,9 @@ resourcestring
 
   sSunkenButton = 'Bouton enfoncé';           /// Nom du bouton enfoncé
 
+resourcestring
+  STransporterCreatorHint = 'Créer un nouveau téléporteur';
+
 const {don't localize}
   idNorthArrow = 'NorthArrow';                   /// ID de la flèche nord
   idEastArrow = 'EastArrow';                     /// ID de la flèche est
@@ -45,10 +45,9 @@ const {don't localize}
   idCrossroads = 'Crossroads';                   /// ID du carrefour
 
   idInactiveTransporter = 'InactiveTransporter'; /// ID du téléporteur inactif
-  idTransporterNext = 'TransporterNext%d';       /// ID du téléporteur suivant
-  idTransporterPrev = 'TransporterPrev%d';       /// ID du téléporteur précédent
-  idTransporterRandom = 'TransporterRandom%d';   /// ID du téléporteur aléatoire
-  idTransporterTemplate = 'TransporterTemplate'; /// ID du téléporteur modèle
+
+  /// ID du créateur de téléporteurs
+  idTransporterCreator = 'TransporterCreator';
 
   idUpStairs = 'UpStairs';                       /// ID de l'escalier montant
   idDownStairs = 'DownStairs';                   /// ID de l'escalier descendant
@@ -81,9 +80,6 @@ const {don't localize}
 
 resourcestring
   sFoundTreasure = 'BRAVO ! Tu as trouvé le trésor !';
-
-  sTransporterTitle = 'Numéro du téléporteur';
-  sTransporterPrompt = 'Numéro du téléporteur (0 à 45) :';
 
 resourcestring
   sPlaceStairsTitle = 'Placement d''un escalier';
@@ -131,19 +127,44 @@ type
   *}
   TTransporter = class(TEffect)
   private
-    FNumber: Integer;        /// Numéro du téléporteur
     FKind: TTransporterKind; /// Type de téléporteur
-  protected
-    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; ANumber: Integer;
-      AKind: TTransporterKind = tkInactive);
+      const AName: string);
 
     procedure Execute(Context: TMoveContext); override;
+  published
+    property Kind: TTransporterKind read FKind write FKind default tkNext;
+  end;
 
-    property Number: Integer read FNumber;
-    property Kind: TTransporterKind read FKind;
+  {*
+    Téléporteur inactif
+    @author sjrd
+    @version 1.0
+  *}
+  TInactiveTransporter = class(TTransporter)
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
+  protected
+    function GetCategory: string; override;
+  published
+    property Kind default tkInactive;
+  end;
+
+  {*
+    Créateur de téléporteurs
+    @author sjrd
+    @version 5.0
+  *}
+  TTransporterCreator = class(TComponentCreator)
+  protected
+    function GetHint: string; override;
+
+    function DoCreateComponent(
+      const AID: TComponentID): TFunLabyComponent; override;
+  public
+    constructor Create(AMaster: TMaster; AID: TComponentID);
   end;
 
   {*
@@ -262,37 +283,18 @@ end;
 
 {*
   Crée une instance de TTransporter
-  @param AMaster      Maître FunLabyrinthe
-  @param AID          ID de l'effet de case
-  @param AName        Nom de la case
-  @param AKind        Type de téléporteur
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du téléporteur
+  @param AName     Nom du téléporteur
 *}
 constructor TTransporter.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; ANumber: Integer;
-  AKind: TTransporterKind = tkInactive);
+  const AName: string);
 begin
-  inherited Create(AMaster, Format(AID, [ANumber]), Format(AName, [ANumber]));
+  inherited Create(AMaster, AID, AName);
 
-  FNumber := ANumber;
-  FKind := AKind;
+  FKind := tkNext;
+
   Painter.ImgNames.Add(fTransporter);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TTransporter.DoDraw(Context: TDrawSquareContext);
-begin
-  inherited;
-
-  if Master.Editing then
-  begin
-    case FKind of
-      tkNext:     DrawSquareNumber(Context, Number, clRed);
-      tkPrevious: DrawSquareNumber(Context, Number, clGreen);
-      tkRandom:   DrawSquareNumber(Context, Number, clBlue);
-    end;
-  end;
 end;
 
 {*
@@ -321,6 +323,65 @@ begin
     Master.Temporize;
     Player.MoveTo(Other);
   end;
+end;
+
+{-----------------------------}
+{ Classe TInactiveTransporter }
+{-----------------------------}
+
+{*
+  Crée une instance de TInactiveTransporter
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du téléporteur
+  @param AName     Nom du téléporteur
+*}
+constructor TInactiveTransporter.Create(AMaster: TMaster;
+  const AID: TComponentID; const AName: string);
+begin
+  inherited Create(AMaster, AID, AName);
+
+  Kind := tkInactive;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TInactiveTransporter.GetCategory: string;
+begin
+  Result := SCategoryNeutrals;
+end;
+
+{---------------------------}
+{ TTransporterCreator class }
+{---------------------------}
+
+{*
+  Crée un nouveau créateur de téléporteurs
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du créateur de téléporteurs
+*}
+constructor TTransporterCreator.Create(AMaster: TMaster; AID: TComponentID);
+begin
+  inherited Create(AMaster, AID);
+
+  IconPainter.ImgNames.Add(fTransporter);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TTransporterCreator.GetHint: string;
+begin
+  Result := STransporterCreatorHint;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TTransporterCreator.DoCreateComponent(
+  const AID: TComponentID): TFunLabyComponent;
+begin
+  Result := TTransporter.Create(Master, AID, sTransporter);
 end;
 
 {----------------}
@@ -362,7 +423,7 @@ begin
     else
       Dec(Other.Z);
 
-    if (esfAdding in Flags) and (not Map.InMap(Other)) then
+    if (Phase = espAdd) and (not Map.InMap(Other)) then
     begin
       if Up then
         ShowDialog(sPlaceStairsTitle, sCantPlaceUpStairsAtLastFloor, dtError)
@@ -377,14 +438,14 @@ begin
     if not Map.InMap(Other) then
       Exit;
 
-    if esfRemoving in Flags then
+    if Phase = espRemove then
     begin
       Map[Position] := RemoveEffect(Map[Position]);
       Map[Other] := RemoveEffect(Map[Other]);
       Include(Flags, esfHandled);
     end;
 
-    if esfAdding in Flags then
+    if Phase = espAdd then
     begin
       if Map[Other] <> Map[Position] then
       begin

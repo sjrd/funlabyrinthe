@@ -190,7 +190,7 @@ var
 begin
   with Msg do
   begin
-    if esfAdding in Flags then
+    if Phase = espAdd then
     begin
       if TFormPlaceLift.PlaceLift(QPos, Self) then
         Include(Flags, esfHandled)
@@ -198,7 +198,7 @@ begin
         Include(Flags, esfCancel);
     end;
 
-    if esfRemoving in Flags then
+    if Phase = espRemove then
     begin
       Map := QPos.Map;
 

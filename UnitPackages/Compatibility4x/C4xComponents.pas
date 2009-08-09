@@ -11,10 +11,12 @@ interface
 
 uses
   SysUtils, Classes, Graphics, Contnrs, StrUtils, Consts, ScUtils, ScLists,
-  FunLabyUtils, FilesUtils, MapTools, FLBFields, FLBSimpleEffects, C4xCommon;
+  FunLabyUtils, FilesUtils, MapTools, FLBFields, FLBSimpleEffects, FLBBoat,
+  C4xCommon;
 
 resourcestring
   sStairs = 'Escalier';             /// Nom de l'escalier
+  sNumberedBoat = 'Barque n°%d';    /// Nom d'une barque numérotée
 
   sButton = 'Bouton n°%d';          /// Nom du bouton
   sButtonTemplate = 'Bouton';       /// Nom du bouton modèle
@@ -26,6 +28,8 @@ const {don't localize}
   idUpStairs = 'UpStairs';                   /// ID de l'escalier montant
   idDownStairs = 'DownStairs';               /// ID de l'escalier descendant
   idOldStairs = 'OldStairs%d';               /// ID des escaliers de la v1.0
+
+  idNumberedBoat = 'Boat%d';                 /// ID d'une barque numérotée
 
   idActionsObject = 'ActionsObject%d';       /// ID de l'objet lié à des actions
   idActionsEffect = 'ActionsEffect%d';       /// ID de l'effet à actions
@@ -105,12 +109,29 @@ type
   *}
   TOldStairs = class(TEffect)
   protected
+    function GetIsDesignable: Boolean; override;
+
     procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
     procedure Execute(Context: TMoveContext); override;
+  end;
+
+  {*
+    Barque numérotée
+    @author sjrd
+    @version 5.0
+  *}
+  TNumberedBoat = class(TBoat)
+  private
+    FNumber: Integer; /// Numéro de cette barque
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; ANumber: Integer);
+
+    property Number: Integer read FNumber;
   end;
 
   {*
@@ -142,6 +163,8 @@ type
     FActions: TActions;          /// Actions propriétaires
     FAlternatePainter: TPainter; /// Peintre alternatif
   protected
+    function GetIsDesignable: Boolean; override;
+
     procedure DoDraw(Context: TDrawSquareContext); override;
 
     property AlternatePainter: TPainter read FAlternatePainter;
@@ -163,6 +186,8 @@ type
   TActionsObstacle = class(TObstacle)
   private
     FActions: TActions; /// Actions propriétaires
+  protected
+    function GetIsDesignable: Boolean; override;
   public
     constructor Create(AActions: TActions);
 
@@ -255,6 +280,10 @@ const {don't localize}
   /// Ensemble des types d'actions personnalisés
   CustomActionsKind: set of TActionsKind =
     [akCustom, akObject, akObstacle, akDirection];
+
+  /// Ensemble des types d'actions à placer dans la palette
+  RegisteredActionsKind: set of TActionsKind =
+    [akPushButton..akTransporterRandom, akCustom..akDirection];
 
   /// Sous-répertoire des images gardées pour compatibilité
   fCompatibility = 'Compatibility4x/';
@@ -386,6 +415,14 @@ end;
 {*
   [@inheritDoc]
 *}
+function TOldStairs.GetIsDesignable: Boolean;
+begin
+  Result := False;
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TOldStairs.DoDraw(Context: TDrawSquareContext);
 var
   StairsID: TComponentID;
@@ -429,6 +466,25 @@ begin
       Player.MoveTo(Other);
     end;
   end;
+end;
+
+{---------------------}
+{ TNumberedBoat class }
+{---------------------}
+
+{*
+  Crée une barque numérotée
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de la barque
+  @param AName     Nom de la barque
+  @param ANumber   Numéro de la barque
+*}
+constructor TNumberedBoat.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; ANumber: Integer);
+begin
+  inherited Create(AMaster, AID, AName);
+
+  FNumber := ANumber;
 end;
 
 {-----------------------}
@@ -512,6 +568,14 @@ end;
 {*
   [@inheritDoc]
 *}
+function TActionsEffect.GetIsDesignable: Boolean;
+begin
+  Result := False;
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TActionsEffect.AfterConstruction;
 begin
   inherited;
@@ -528,7 +592,7 @@ begin
     case Actions.Kind of
       akPushButton:
       begin
-        if QPos.Map.PlayersOn(QPos.Position) = 0 then
+        if IsNowhere or (QPos.Map.PlayersOn(QPos.Position) = 0) then
           Painter.Draw(Context)
         else
           AlternatePainter.Draw(Context);
@@ -616,6 +680,14 @@ begin
   inherited Create(AActions.Master, Format(idActionsObstacle,
     [AActions.Number]), Format(sButton, [AActions.Number]));
   FActions := AActions;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TActionsObstacle.GetIsDesignable: Boolean;
+begin
+  Result := False;
 end;
 
 {*

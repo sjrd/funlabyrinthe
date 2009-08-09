@@ -17,7 +17,9 @@ uses
   EditUnits in 'EditUnits.pas' {FormEditUnits},
   CompilerMessages in 'CompilerMessages.pas' {FormCompilerMessages},
   MapViewer in 'MapViewer.pas' {FormMapViewer},
-  BaseMapViewer in 'BaseMapViewer.pas' {FrameBaseMapViewer: TFrame};
+  BaseMapViewer in 'BaseMapViewer.pas' {FrameBaseMapViewer: TFrame},
+  ObjectInspector in 'ObjectInspector.pas' {FrameInspector: TFrame},
+  FunLabyEditTypes in 'FunLabyEditTypes.pas';
 
 {$R *.res}
 

@@ -149,6 +149,10 @@ var
 begin
   with Context do
   begin
+    if (not Same3DPoint(PointBefore(Dest, Player.Direction), Src)) or
+      (DestMap <> SrcMap) then
+      Exit;
+
     Behind := PointBehind(Dest, Player.Direction);
 
     Msg.MsgID := msgPlank;

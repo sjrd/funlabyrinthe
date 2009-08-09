@@ -34,7 +34,6 @@ type
 
     procedure PrepareInitializeUnitProc;
     procedure MakeInitializeUnitProc;
-    procedure MakeRegisterComponentsProc;
 
     procedure MakeTopLevelProcs;
   protected
@@ -198,8 +197,6 @@ type
     function ResolveIdent(const Identifier: string): ISepiExpression; override;
 
     procedure MakeInitialize(Compiler: TSepiMethodCompiler;
-      Instructions: TSepiInstructionList);
-    procedure MakeRegister(Compiler: TSepiMethodCompiler;
       Instructions: TSepiInstructionList);
 
     property IDConstant: TSepiConstant read FIDConstant;
@@ -582,6 +579,7 @@ begin
   NonTerminalClasses[ntConstExpression] := TSepiConstExpressionNode;
 
   NonTerminalClasses[ntDelphiBinaryOp] := TFunDelphiBinaryOpNode;
+  NonTerminalClasses[ntInOperation]    := TSepiInSetOperationNode;
   NonTerminalClasses[ntIsOperation]    := TFunDelphiIsOperationNode;
   NonTerminalClasses[ntAsOperation]    := TSepiAsOperationNode;
   NonTerminalClasses[ntCanOp]          := TFunDelphiCanOpNode;
@@ -750,26 +748,6 @@ begin
 end;
 
 {*
-  Construit la procédure RegisterComponents
-*}
-procedure TFunDelphiRootNode.MakeRegisterComponentsProc;
-var
-  SepiMethod: TSepiMethod;
-  Compiler: TSepiMethodCompiler;
-  I: Integer;
-begin
-  SepiMethod := TSepiMethod.Create(SepiContext, 'RegisterComponents', nil,
-    'procedure(Master: TMaster; '+
-    'RegisterSingleComponentProc: TRegisterSingleComponentProc; '+
-    'RegisterComponentSetProc: TRegisterComponentSetProc)');
-  Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
-
-  for I := 0 to FComponentDeclNodes.Count-1 do
-    TFunDelphiComponentDeclNode(FComponentDeclNodes[I]).MakeRegister(
-      Compiler, Compiler.Instructions);
-end;
-
-{*
   Construit les procédures top-level
 *}
 procedure TFunDelphiRootNode.MakeTopLevelProcs;
@@ -777,7 +755,6 @@ begin
   SepiContext.CurrentVisibility := mvPrivate;
 
   MakeInitializeUnitProc;
-  MakeRegisterComponentsProc;
 end;
 
 {*
@@ -1155,6 +1132,7 @@ function TFunDelphiCanOpNode.MakeOperation(
 var
   LeftValue, RightValue: ISepiReadableValue;
   WantingParams: ISepiWantingParams;
+  ZeroValue: ISepiReadableValue;
 begin
   RequireReadableValue(Left, LeftValue);
   RequireReadableValue(Right, RightValue);
@@ -1164,9 +1142,13 @@ begin
   RightValue := TSepiConvertOperation.ConvertValue(
     SystemUnit.LongString, RightValue);
 
+  ZeroValue := TSepiTrueConstValue.Create(SepiRoot, 0);
+  ISepiExpressionPart(ZeroValue).AttachToExpression(MakeExpression);
+
   WantingParams := LanguageRules.FieldSelection(SepiContext,
     LeftValue as ISepiExpression, 'DoAction') as ISepiWantingParams;
   WantingParams.AddParam(RightValue as ISepiExpression);
+  WantingParams.AddParam(ZeroValue as ISepiExpression);
   WantingParams.CompleteParams;
 
   Result := WantingParams as ISepiExpression;
@@ -1456,42 +1438,6 @@ begin
   for I := 0 to ParamsNode.ChildCount-1 do
     WantingParams.AddParam(
       (ParamsNode.Children[I] as TSepiExpressionNode).Expression);
-
-  WantingParams.CompleteParams;
-
-  Executable := WantingParams as ISepiExecutable;
-  Executable.CompileExecute(Compiler, Instructions);
-end;
-
-{*
-  Construit les instructions d'enregistrement
-  @param Compiler       Compilateur
-  @param Instructions   Instructions
-*}
-procedure TFunDelphiComponentDeclNode.MakeRegister(
-  Compiler: TSepiMethodCompiler; Instructions: TSepiInstructionList);
-var
-  ComponentExpr: ISepiExpression;
-  ProcValue: ISepiReadableValue;
-  WantingParams: ISepiWantingParams;
-  Executable: ISepiExecutable;
-begin
-  if not FRegisterable then
-    Exit;
-
-  ComponentExpr := LanguageRules.ResolveIdentInMethod(Compiler,
-    Children[0].AsText);
-  Assert(ComponentExpr <> nil);
-  ComponentExpr.SourcePos := Children[0].SourcePos;
-
-  ProcValue := LanguageRules.ResolveIdentInMethod(Compiler,
-    'RegisterSingleComponentProc') as ISepiReadableValue;
-  Assert(ProcValue.ValueType is TSepiMethodRefType);
-
-  WantingParams := TSepiMethodRefCall.Create(ProcValue, True);
-  WantingParams.AttachToExpression(TSepiExpression.Create(ComponentExpr));
-
-  WantingParams.AddParam(ComponentExpr);
 
   WantingParams.CompleteParams;
 

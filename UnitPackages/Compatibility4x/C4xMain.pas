@@ -13,7 +13,8 @@ interface
 uses
   Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
   SdDialogs, FunLabyUtils, FilesUtils, UnitFiles, Generics,
-  FLBFields, C4xCommon, C4xComponents, C4xFields, C4xSquaresTable;
+  FLBFields, FLBSimpleEffects, FLBBoat,
+  C4xCommon, C4xComponents, C4xFields, C4xSquaresTable;
 
 type
   TCompatibility4xUnit = class(TInterfacedUnitFile)
@@ -21,10 +22,6 @@ type
     FSourceHRef: string;
   protected
     procedure GameStarted; override;
-
-    procedure RegisterComponents(
-      RegisterSingleComponentProc: TRegisterSingleComponentProc;
-      RegisterComponentSetProc: TRegisterComponentSetProc); override;
   public
     constructor Create(AMasterFile: TMasterFile; Params: TStrings);
 
@@ -83,6 +80,7 @@ var
   Zone: T3DPoint;
   ActionsID: TComponentID;
   Actions: TActions;
+  Infos: TC4xInfos;
 begin
   { Don't localize any of the strings in this procedure. }
 
@@ -95,6 +93,11 @@ begin
   except
     FileName := '';
   end;
+
+  // Supprimer certains composants de FunLabyBase
+
+  Master.Component[idTransporterCreator].Free;
+  Master.Component[idBoatCreator].Free;
 
   // Plug-in
 
@@ -112,7 +115,11 @@ begin
   for I := 1 to 20 do
     TOldStairs.Create(Master, Format(idOldStairs, [I]), sStairs);
 
-  TDecorativeEffect.Create(Master, idButtonTemplate, sButtonTemplate, fButton);
+  // Outils
+
+  for I := 1 to 10 do
+    TNumberedBoat.Create(Master, Format(idNumberedBoat, [I]),
+      Format(sNumberedBoat, [I]), I);
 
   // Actions : elles sont stockées dans le fichier donné par FileName
 
@@ -200,12 +207,16 @@ begin
       Inc(Number);
     end;
 
-    TC4xInfos.Create(MasterFile, ActionsList);
+    Infos := TC4xInfos.Create(MasterFile, ActionsList);
   finally
     ActionsList.Free;
     SubContents.Free;
     FileContents.Free;
   end;
+
+  for I := 0 to Infos.ActionsCount-1 do
+    if Infos.Actions[I].Kind in RegisteredActionsKind then
+      Master.Square[Format(idActionsSquare, [I])].Category := SCategoryButtons;
 end;
 
 {*
@@ -216,20 +227,23 @@ var
   Infos: TC4xInfos;
   Player: TPlayer;
   I, J: Integer;
-  idOldOutside: TComponentID;
-  OldWater, OldHole, OldOutside: TSquare;
+  idOldOutside, idOldTreasure: TComponentID;
+  OldWater, OldHole, OldOutside, OldTreasure: TSquare;
   Map: TMap;
 begin
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   Player := Master.Players[0];
 
   idOldOutside := idOutside+'---';
+  idOldTreasure := idGrass+'-'+idTreasure+'--';
 
   for I := 0 to Infos.ActionsCount-1 do
   begin
     case Infos.Actions[I].Kind of
       akOutside:
         idOldOutside := Format(idActionsSquare, [I]);
+      akTreasure:
+        idOldTreasure := Format(idActionsSquare, [I]);
       akZone:
         Player.AddPlugin(Master.Plugin[idZonesPlugin]);
     end;
@@ -241,6 +255,7 @@ begin
   OldWater := Master.Square[idOldWater+'---'];
   OldHole  := Master.Square[idOldHole+'---'];
   OldOutside := Master.Square[idOldOutside];
+  OldTreasure := Master.Square[idOldTreasure];
 
   for I := 0 to Master.MapCount-1 do
   begin
@@ -249,42 +264,15 @@ begin
     for J := 0 to Map.LinearMapCount-1 do
     begin
       case AnsiIndexStr(Map.LinearMap[J].Field.ID,
-        ['Water', 'Hole', 'Outside']) of
+        [idWater, idHole, idOutside]) of
         0: Map.LinearMap[J] := OldWater;
         1: Map.LinearMap[J] := OldHole;
         2: Map.LinearMap[J] := OldOutside;
       end;
+
+      if Map.LinearMap[J].Effect.ID = idTreasure then
+        Map.LinearMap[J] := OldTreasure;
     end;
-  end;
-end;
-
-{*
-  [inheritDoc]
-*}
-procedure TCompatibility4xUnit.RegisterComponents(
-  RegisterSingleComponentProc: TRegisterSingleComponentProc;
-  RegisterComponentSetProc: TRegisterComponentSetProc);
-var
-  Infos: TC4xInfos;
-  I: Integer;
-  Components: array of TSquareComponent;
-begin
-  Infos := Master.Component[idC4xInfos] as TC4xInfos;
-  if Infos.ActionsCount > 0 then
-  begin
-    SetLength(Components, Infos.ActionsCount);
-
-    for I := 0 to Infos.ActionsCount-1 do
-    begin
-      if Infos.Actions[I].Kind in ActionsKindsWithoutSquare then
-        Components[I] := nil
-      else
-        Components[I] := Master.Square[Format(idActionsSquare, [I])];
-    end;
-
-    RegisterComponentSetProc(Master.SquareComponent[idActionsSquareTemplate],
-      Components, 0, sButtonTitle,
-      Format(sButtonPrompt, [Infos.ActionsCount-1]));
   end;
 end;
 

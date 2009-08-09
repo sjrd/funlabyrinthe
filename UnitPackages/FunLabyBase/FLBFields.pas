@@ -28,8 +28,6 @@ const {don't localize}
   idSky = 'Sky';         /// ID du ciel
   idOutside = 'Outside'; /// ID du dehors
 
-  idGroundWater = 'GroundWater'; /// ID de l'eau effet herbe
-
 const {don't localize}
   fGrass = 'Fields/Grass';     /// Fichier de l'herbe
   fWall = 'Fields/Wall';       /// Fichier du mur
@@ -59,8 +57,7 @@ type
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; const AImgName: string = fGrass;
-      ADelegateDrawTo: TField = nil);
+      const AName: string; const AImgName: string = fGrass);
   end;
 
   {*
@@ -72,7 +69,7 @@ type
   TWall = class(TField)
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; ADelegateDrawTo: TField = nil);
+      const AName: string);
 
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -89,9 +86,10 @@ type
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; ADelegateDrawTo: TField = nil);
+      const AName: string);
 
     procedure Entering(Context: TMoveContext); override;
+    procedure Entered(Context: TMoveContext); override;
   end;
 
   {*
@@ -106,7 +104,7 @@ type
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; ADelegateDrawTo: TField = nil);
+      const AName: string);
 
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -120,7 +118,7 @@ type
   TSky = class(TField)
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; ADelegateDrawTo: TField = nil);
+      const AName: string);
 
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -135,7 +133,7 @@ type
   TOutside = class(TGround)
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; ADelegateDrawTo: TField = nil);
+      const AName: string);
 
     procedure Entered(Context: TMoveContext); override;
   end;
@@ -148,17 +146,15 @@ implementation
 
 {*
   Crée une instance de TGrass
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
-  @param AImgName          Nom de l'image des graphismes (défaut : l'herbe)
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
+  @param AMaster    Maître FunLabyrinthe
+  @param AID        ID du terrain
+  @param AName      Nom du terrain
+  @param AImgName   Nom de l'image des graphismes (défaut : l'herbe)
 *}
 constructor TGround.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; const AImgName: string = fGrass;
-  ADelegateDrawTo: TField = nil);
+  const AName: string; const AImgName: string = fGrass);
 begin
-  inherited Create(AMaster, AID, AName, ADelegateDrawTo);
+  inherited Create(AMaster, AID, AName);
   if AImgName <> '' then
     Painter.ImgNames.Add(AImgName);
 end;
@@ -187,15 +183,14 @@ end;
 
 {*
   Crée une instance de TWall
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du terrain
+  @param AName     Nom du terrain
 *}
 constructor TWall.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; ADelegateDrawTo: TField = nil);
+  const AName: string);
 begin
-  inherited Create(AMaster, AID, AName, ADelegateDrawTo);
+  inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fWall);
 end;
 
@@ -213,15 +208,14 @@ end;
 
 {*
   Crée une instance de TWater
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du terrain
+  @param AName     Nom du terrain
 *}
 constructor TWater.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; ADelegateDrawTo: TField = nil);
+  const AName: string);
 begin
-  inherited Create(AMaster, AID, AName, ADelegateDrawTo);
+  inherited Create(AMaster, AID, AName);
 
   FStaticDraw := Master.Editing;
 
@@ -256,21 +250,28 @@ begin
   end;
 end;
 
+{*
+  [@inheritDoc]
+*}
+procedure TWater.Entered(Context: TMoveContext);
+begin
+  Context.Player.DoAction(actGoOnWater);
+end;
+
 {--------------}
 { Classe THole }
 {--------------}
 
 {*
   Crée une instance de THole
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du terrain
+  @param AName     Nom du terrain
 *}
 constructor THole.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; ADelegateDrawTo: TField = nil);
+  const AName: string);
 begin
-  inherited Create(AMaster, AID, AName, ADelegateDrawTo);
+  inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fHole);
 end;
 
@@ -304,15 +305,14 @@ end;
 
 {*
   Crée une instance de TSky
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du terrain
+  @param AName     Nom du terrain
 *}
 constructor TSky.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; ADelegateDrawTo: TField = nil);
+  const AName: string);
 begin
-  inherited Create(AMaster, AID, AName, ADelegateDrawTo);
+  inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fSky);
 end;
 
@@ -335,15 +335,14 @@ end;
 
 {*
   Crée une instance de TOutside
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID de l'effet de case
-  @param AName             Nom de la case
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'effet de case
+  @param AName     Nom de la case
 *}
 constructor TOutside.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; ADelegateDrawTo: TField = nil);
+  const AName: string);
 begin
-  inherited Create(AMaster, AID, AName, fOutside, ADelegateDrawTo);
+  inherited Create(AMaster, AID, AName, fOutside);
 end;
 
 {*

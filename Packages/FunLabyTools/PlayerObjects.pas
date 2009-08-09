@@ -43,7 +43,7 @@ implementation
 procedure TFormObjects.ListViewObjectsCustomDrawItem(Sender: TCustomListView;
   Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
 begin
-  TObjectDef(Item.Data).DrawToCanvas(Sender.Canvas,
+  TObjectDef(Item.Data).DrawIconToCanvas(Sender.Canvas,
     Item.DisplayRect(drIcon), TListView(Sender).Color);
 
   // Seems to be needed for correct drawing of the text

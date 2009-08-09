@@ -67,8 +67,8 @@ type
 
     procedure Moved(Context: TMoveContext); override;
 
-    function AbleTo(Player: TPlayer;
-      const Action: TPlayerAction): Boolean; override;
+    function AbleTo(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer): Boolean; override;
   end;
 
   {*
@@ -84,9 +84,10 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    function AbleTo(Player: TPlayer;
-      const Action: TPlayerAction): Boolean; override;
-    procedure UseFor(Player: TPlayer; const Action: TPlayerAction); override;
+    function AbleTo(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer): Boolean; override;
+    procedure UseFor(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer); override;
   end;
 
   {*
@@ -102,9 +103,10 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    function AbleTo(Player: TPlayer;
-      const Action: TPlayerAction): Boolean; override;
-    procedure UseFor(Player: TPlayer; const Action: TPlayerAction); override;
+    function AbleTo(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer): Boolean; override;
+    procedure UseFor(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer); override;
   end;
 
   {*
@@ -120,9 +122,10 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
 
-    function AbleTo(Player: TPlayer;
-      const Action: TPlayerAction): Boolean; override;
-    procedure UseFor(Player: TPlayer; const Action: TPlayerAction); override;
+    function AbleTo(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer): Boolean; override;
+    procedure UseFor(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer); override;
   end;
 
 implementation
@@ -162,8 +165,8 @@ end;
 {*
   [@inheritDoc]
 *}
-function TBuoyPlugin.AbleTo(Player: TPlayer;
-  const Action: TPlayerAction): Boolean;
+function TBuoyPlugin.AbleTo(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer): Boolean;
 begin
   Result := Action = actGoOnWater;
 end;
@@ -202,17 +205,18 @@ end;
 {*
   [@inheritDoc]
 *}
-function TBuoys.AbleTo(Player: TPlayer;
-  const Action: TPlayerAction): Boolean;
+function TBuoys.AbleTo(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer): Boolean;
 begin
   Result := ((Action = actGoOnWater) and (Count[Player] > 0)) or
-    (inherited AbleTo(Player, Action));
+    (inherited AbleTo(Player, Action, Param));
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TBuoys.UseFor(Player: TPlayer; const Action: TPlayerAction);
+procedure TBuoys.UseFor(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer);
 begin
   if Action = actGoOnWater then
     Player.AddPlugin(Master.Plugin[idBuoyPlugin])
@@ -254,17 +258,18 @@ end;
 {*
   [@inheritDoc]
 *}
-function TSilverKeys.AbleTo(Player: TPlayer;
-  const Action: TPlayerAction): Boolean;
+function TSilverKeys.AbleTo(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer): Boolean;
 begin
   Result := ((Action = actOpenSilverLock) and (Count[Player] > 0)) or
-    (inherited AbleTo(Player, Action));
+    (inherited AbleTo(Player, Action, Param));
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TSilverKeys.UseFor(Player: TPlayer; const Action: TPlayerAction);
+procedure TSilverKeys.UseFor(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer);
 begin
   if Action = actOpenSilverLock then
     Count[Player] := Count[Player]-1
@@ -306,17 +311,18 @@ end;
 {*
   [@inheritDoc]
 *}
-function TGoldenKeys.AbleTo(Player: TPlayer;
-  const Action: TPlayerAction): Boolean;
+function TGoldenKeys.AbleTo(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer): Boolean;
 begin
   Result := ((Action = actOpenGoldenLock) and (Count[Player] > 0)) or
-    (inherited AbleTo(Player, Action));
+    (inherited AbleTo(Player, Action, Param));
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TGoldenKeys.UseFor(Player: TPlayer; const Action: TPlayerAction);
+procedure TGoldenKeys.UseFor(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer);
 begin
   if Action = actOpenGoldenLock then
     Count[Player] := Count[Player]-1

@@ -98,10 +98,6 @@ type
     procedure GameStarted; virtual;
     procedure GameEnded; virtual;
 
-    procedure RegisterComponents(
-      RegisterSingleComponentProc: TRegisterSingleComponentProc;
-      RegisterComponentSetProc: TRegisterComponentSetProc); virtual;
-
     procedure GetParams(Params: TStrings); virtual;
   end;
 
@@ -240,10 +236,6 @@ type
 
     procedure GameStarted;
     procedure GameEnded;
-
-    procedure RegisterComponents(
-      RegisterSingleComponentProc: TRegisterSingleComponentProc;
-      RegisterComponentSetProc: TRegisterComponentSetProc);
 
     procedure GetUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
 
@@ -583,17 +575,6 @@ begin
 end;
 
 {*
-  Enregistre les différents composants à placer dans la palette d'édition
-  @param RegisterSingleComponentProc   Call-back pour un unique composant
-  @param RegisterComponentSetProc      Call-back pour un ensemble de composants
-*}
-procedure TUnitFile.RegisterComponents(
-  RegisterSingleComponentProc: TRegisterSingleComponentProc;
-  RegisterComponentSetProc: TRegisterComponentSetProc);
-begin
-end;
-
-{*
   Dresse la liste des paramètres à enregistrer
   Les descendants de TUnitFile peuvent surcharger cette méthode pour indiquer
   au fichier maître les paramètres qu'il doit enregistrer.
@@ -929,8 +910,7 @@ begin
         Maps.Add(Master.Maps[I].ID);
 
       for I := 0 to Master.PlayerCount-1 do
-        with Master.Players[I] do
-          Players.Values[ID] := Name;
+        Players.Add(Master.Players[I].ID);
     end;
 
     Filer.DefineStrings('Maps', Maps);
@@ -942,7 +922,7 @@ begin
         TMap.Create(Master, Maps[I]);
 
       for I := 0 to Players.Count-1 do
-        TPlayer.Create(Master, Players.Names[I], Players.ValueFromIndex[I]);
+        TPlayer.Create(Master, GetFirstToken(Players[I], '='));
     end;
   finally
     Maps.Free;
@@ -1019,24 +999,6 @@ var
 begin
   for I := 0 to UnitFiles.Count-1 do
     UnitFiles[I].GameEnded;
-end;
-
-{*
-  Enregistre les différents composants à placer dans la palette d'édition
-  @param RegisterSingleComponentProc   Call-back pour un unique composant
-  @param RegisterComponentSetProc      Call-back pour un ensemble de composants
-*}
-procedure TMasterFile.RegisterComponents(
-  RegisterSingleComponentProc: TRegisterSingleComponentProc;
-  RegisterComponentSetProc: TRegisterComponentSetProc);
-var
-  I: Integer;
-begin
-  for I := 0 to UnitFiles.Count-1 do
-  begin
-    UnitFiles[I].RegisterComponents(
-      RegisterSingleComponentProc, RegisterComponentSetProc);
-  end;
 end;
 
 {*

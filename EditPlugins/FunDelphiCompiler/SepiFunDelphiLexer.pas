@@ -15,7 +15,7 @@ uses
 
 const
   FirstTerminal = 0;
-  LastTerminal = 96;
+  LastTerminal = 97;
 
   tkEof = SepiLexerUtils.tkEof;         /// Fin de fichier
   tkBlank = SepiLexerUtils.tkBlank;     /// Lexème blanc
@@ -86,45 +86,46 @@ const
   tkGreaterThan = 59; // >
   tkGreaterEq = 60;   // >=
   tkNotEqual = 61;    // <>
-  tkIs = 62;          // is
-  tkAs = 63;          // as
+  tkIn = 62;          // in
+  tkIs = 63;          // is
+  tkAs = 64;          // as
 
-  tkBegin = 64; // begin
-  tkEnd = 65;   // end
+  tkBegin = 65; // begin
+  tkEnd = 66;   // end
 
-  tkString = 66; // string
-  tkNil = 67;    // nil
+  tkString = 67; // string
+  tkNil = 68;    // nil
 
-  tkIf = 68;        // if
-  tkThen = 69;      // then
-  tkElse = 70;      // else
-  tkWhile = 71;     // while
-  tkDo = 72;        // do
-  tkRepeat = 73;    // repeat
-  tkUntil = 74;     // until
-  tkFor = 75;       // for
-  tkTo = 76;        // to
-  tkDownTo = 77;    // downto
-  tkCase = 78;      // case
-  tkOf = 79;        // of
-  tkTry = 80;       // try
-  tkExcept = 81;    // except
-  tkOn = 82;        // on
-  tkFinally = 83;   // finally
-  tkRaise = 84;     // raise
-  tkInherited = 85; // inherited
+  tkIf = 69;        // if
+  tkThen = 70;      // then
+  tkElse = 71;      // else
+  tkWhile = 72;     // while
+  tkDo = 73;        // do
+  tkRepeat = 74;    // repeat
+  tkUntil = 75;     // until
+  tkFor = 76;       // for
+  tkTo = 77;        // to
+  tkDownTo = 78;    // downto
+  tkCase = 79;      // case
+  tkOf = 80;        // of
+  tkTry = 81;       // try
+  tkExcept = 82;    // except
+  tkOn = 83;        // on
+  tkFinally = 84;   // finally
+  tkRaise = 85;     // raise
+  tkInherited = 86; // inherited
 
-  tkCan = 86;      // can
-  tkHas = 87;      // has
-  tkAtKw = 88;     // at
-  tkLeast = 89;    // least
-  tkMost = 90;     // most
-  tkMore = 91;     // more
-  tkLess = 92;     // less
-  tkThan = 93;     // than
-  tkExactly = 94;  // exactly
-  tkReceives = 95; // receives
-  tkDiscards = 96; // discards
+  tkCan = 87;      // can
+  tkHas = 88;      // has
+  tkAtKw = 89;     // at
+  tkLeast = 90;    // least
+  tkMost = 91;     // most
+  tkMore = 92;     // more
+  tkLess = 93;     // less
+  tkThan = 94;     // than
+  tkExactly = 95;  // exactly
+  tkReceives = 96; // receives
+  tkDiscards = 97; // discards
 
 type
   {*
@@ -204,6 +205,7 @@ begin
     'h' : if Key = 'has'            then SymbolClass := tkHas;
     'i' : if Key = 'if'             then SymbolClass := tkIf else
           if Key = 'image'          then SymbolClass := tkImage else
+          if Key = 'in'             then SymbolClass := tkIn else
           if Key = 'inherited'      then SymbolClass := tkInherited else
           if Key = 'is'             then SymbolClass := tkIs;
     'l' : if Key = 'least'          then SymbolClass := tkLeast else
@@ -676,6 +678,7 @@ initialization
   SymbolClassNames[tkGreaterThan] := 'tkGreaterThan';
   SymbolClassNames[tkGreaterEq] := 'tkGreaterEq';
   SymbolClassNames[tkNotEqual] := 'tkNotEqual';
+  SymbolClassNames[tkIn] := 'tkIn';
   SymbolClassNames[tkIs] := 'tkIs';
   SymbolClassNames[tkAs] := 'tkAs';
 

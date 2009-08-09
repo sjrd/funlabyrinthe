@@ -39,6 +39,10 @@ object FormPrincipale: TFormPrincipale
     TabOrder = 0
     object TabSheet1: TTabSheet
       Caption = 'G'#233'n'#233'ral'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label1: TLabel
         Left = 24
         Top = 24

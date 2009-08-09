@@ -1176,7 +1176,7 @@ begin
   Square := GetSquareParam(Params, Map);
   SquareRef := GetSquareReference(Params, True);
 
-  if Copy(Square.ID, 1, Length(idGroundWater)) = idGroundWater then
+  if AnsiStartsStr(PrefixUnderBoat, Square.ID) then
     Replacement := Master.Square[idWaterSquare]
   else
     Replacement := Master.Square[idGrassSquare];
@@ -1526,7 +1526,7 @@ class procedure TActionsInterpreter.Execute(ACounter: PInteger;
   out AHasMoved, AHasShownMsg, ASuccessful: Boolean;
   const AInactive: TComponentID);
 var
-  PluginIDs: TStrings;
+  UsedBoat: TBoat;
   I: Integer;
 begin
   with Create do
@@ -1552,20 +1552,12 @@ begin
       Point3DToString(PointBehind(Position, Player.Direction));
 
     // Détermination du numéro de la barque
-    PluginIDs := TStringList.Create;
-    try
-      Player.GetPluginIDs(PluginIDs);
-      Boat := 10;
-      while Boat > 0 do
-      begin
-        if PluginIDs.IndexOf(Format(idBoat, [Boat])) < 0 then
-          Dec(Boat)
-        else
-          Break;
-      end;
-    finally
-      PluginIDs.Free;
-    end;
+    UsedBoat := (Master.Plugin[idBoatPlugin] as TBoatPlugin).GetUsedBoat(
+      Player);
+    if UsedBoat is TNumberedBoat then
+      Boat := TNumberedBoat(UsedBoat).Number
+    else
+      Boat := 0;
 
     // Construction du tableau des références
     SetLength(ReferencesStrings,

@@ -24,8 +24,8 @@ implementation
 const // don't localize
   UnitName = 'FLBBoat';
   ResourceName = 'SepiImportsFLBBoat';
-  TypeCount = 3;
-  MethodCount = 1;
+  TypeCount = 5;
+  MethodCount = 4;
   VariableCount = 1;
 
 var
@@ -34,10 +34,29 @@ var
   VarAddresses: array[0..VariableCount-1] of Pointer;
 
 type
+  TSepiImportsTBoatPlugin = class(TBoatPlugin)
+  private
+    class procedure InitMethodAddresses;
+  end;
+
   TSepiImportsTBoat = class(TBoat)
   private
     class procedure InitMethodAddresses;
   end;
+
+  TSepiImportsTBoatCreator = class(TBoatCreator)
+  private
+    class procedure InitMethodAddresses;
+  end;
+
+{--------------------}
+{ TBoatPlugin import }
+{--------------------}
+
+class procedure TSepiImportsTBoatPlugin.InitMethodAddresses;
+begin
+  MethodAddresses[0] := @TSepiImportsTBoatPlugin.GetUsedBoat;
+end;
 
 {--------------}
 { TBoat import }
@@ -45,7 +64,17 @@ type
 
 class procedure TSepiImportsTBoat.InitMethodAddresses;
 begin
-  MethodAddresses[0] := @TSepiImportsTBoat.Create;
+  MethodAddresses[1] := @TSepiImportsTBoat.Create;
+  MethodAddresses[2] := @TSepiImportsTBoat.ToUnderBoatWater;
+end;
+
+{---------------------}
+{ TBoatCreator import }
+{---------------------}
+
+class procedure TSepiImportsTBoatCreator.InitMethodAddresses;
+begin
+  MethodAddresses[3] := @TSepiImportsTBoatCreator.Create;
 end;
 
 {---------------------}
@@ -117,11 +146,15 @@ begin
   TypeInfoArray[0] := TypeInfo(TBoatPluginPlayerData);
   TypeInfoArray[1] := TypeInfo(TBoatPlugin);
   TypeInfoArray[2] := TypeInfo(TBoat);
+  TypeInfoArray[3] := TypeInfo(TBoatCreator);
+  TypeInfoArray[4] := TypeInfo(TUnderBoatCreator);
 end;
 
 procedure InitMethodAddresses;
 begin
+  TSepiImportsTBoatPlugin.InitMethodAddresses;
   TSepiImportsTBoat.InitMethodAddresses;
+  TSepiImportsTBoatCreator.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;
@@ -162,6 +195,26 @@ type
   {$MESSAGE WARN 'Le type TBoat n''a pas l''alignement calculé par Sepi'}
 {$IFEND}
 
+type
+  TCheckAlignmentForTBoatCreator = record
+    Dummy: Byte;
+    Field: TBoatCreator;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTBoatCreator) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TBoatCreator n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTUnderBoatCreator = record
+    Dummy: Byte;
+    Field: TUnderBoatCreator;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTUnderBoatCreator) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TUnderBoatCreator n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
@@ -179,7 +232,9 @@ begin
   {$ASSERTIONS ON}
   CheckInstanceSize(TBoatPluginPlayerData, 20, 16);
   CheckInstanceSize(TBoatPlugin, 40, 40);
-  CheckInstanceSize(TBoat, 48, 44);
+  CheckInstanceSize(TBoat, 48, 48);
+  CheckInstanceSize(TBoatCreator, 36, 36);
+  CheckInstanceSize(TUnderBoatCreator, 36, 36);
   {$ASSERTIONS OFF}
 end;
 

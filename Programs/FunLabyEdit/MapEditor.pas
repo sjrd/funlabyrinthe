@@ -5,39 +5,11 @@ interface
 uses
   Types, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
-  ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils, FilesUtils,
+  StrUtils, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils, FilesUtils,
   FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters, AddMap,
-  BaseMapViewer, MapTools, GR32;
+  BaseMapViewer, MapTools, GR32, ObjectInspector, FunLabyEditTypes;
 
 type
-  {*
-    Méthode de call-back indiquant un fichier comme modifié
-  *}
-  TMarkModifiedProc = procedure of object;
-
-  {*
-    Représente un ensemble de composants enregistré
-    @author sjrd
-    @version 5.0
-  *}
-  TComponentSet = class
-  private
-    FTemplate: TVisualComponent;            /// Template
-    FMinIndex: Integer;                     /// Index minimal
-    FMaxIndex: Integer;                     /// Index maximal
-    FComponents: array of TSquareComponent; /// Ensemble des composants
-    FDialogTitle: string;                   /// Titre de la boîte de dialogue
-    FDialogPrompt: string;                  /// Invite de la boîte de dialogue
-  public
-    constructor Create(ATemplate: TVisualComponent;
-      const AComponents: array of TSquareComponent; BaseIndex: Integer;
-      const ADialogTitle, ADialogPrompt: string);
-
-    function ChooseComponent(var LastIndex: Integer): TSquareComponent;
-
-    property Template: TVisualComponent read FTemplate;
-  end;
-
   {*
     Cadre d'édition des cartes
     @author sjrd
@@ -47,38 +19,48 @@ type
     SplitterSquares: TSplitter;
     SplitterPlayers: TSplitter;
     SquaresContainer: TCategoryButtons;
-    PlayersContainer: TCategoryButtons;
     PanelCenter: TPanel;
-    SquaresImages: TImageList;
     MapViewer: TFrameBaseMapViewer;
+    PanelRight: TPanel;
+    FrameInspector: TFrameInspector;
     procedure SquaresContainerDrawIcon(Sender: TObject;
       const Button: TButtonItem; Canvas: TCanvas; Rect: TRect;
       State: TButtonDrawState; var TextOffset: Integer);
     procedure SquaresContainerButtonClicked(Sender: TObject;
-      const Button: TButtonItem);
-    procedure PlayersContainerButtonClicked(Sender: TObject;
       const Button: TButtonItem);
     procedure MapViewerClickSquare(Sender: TObject; const QPos: TQualifiedPos);
   private
     MasterFile: TMasterFile; /// Fichier maître
     Master: TMaster;         /// Maître FunLabyrinthe
 
-    LastCompIndex: Integer;      /// Dernier index de composant choisi
-    Component: TVisualComponent; /// Composant à placer
+    LastCompIndex: Integer;        /// Dernier index de composant choisi
+    FComponent: TFunLabyComponent; /// Composant à placer
 
     /// Call-back marquant le fichier comme modifé
     FMarkModified: TMarkModifiedProc;
 
-    function AddSquareButton(Template: TVisualComponent): TButtonItem;
-    procedure RegisterSingleComponent(Component: TSquareComponent);
-    procedure RegisterComponentSet(Template: TSquareComponent;
-      const Components: array of TSquareComponent; BaseIndex: Integer;
-      const DialogTitle, DialogPrompt: string);
+    procedure InspectorMarkModified;
 
-    procedure LoadPlayers;
+    function AddComponentButton(Component: TFunLabyComponent): TButtonItem;
+    procedure UpdateComponentButton(Button: TButtonItem); overload;
+    procedure UpdateComponentButton(Component: TFunLabyComponent); overload;
+    procedure RegisterComponent(Component: TFunLabyComponent);
+
+    function CreateNewComponent(Creator: TComponentCreator): TFunLabyComponent;
+
+    procedure ClearSquareComponent(const QPos: TQualifiedPos;
+      ComponentIndex: Integer);
+    procedure AddSquareComponent(const QPos: TQualifiedPos;
+      ComponentIndex: Integer; Component: TSquareComponent);
+    procedure EditMapSquare(const QPos: TQualifiedPos;
+      Component: TSquareComponent);
+
+    procedure SetComponent(Value: TFunLabyComponent);
 
     function GetCurrentMap: TMap;
     procedure SetCurrentMap(Value: TMap);
+
+    property Component: TFunLabyComponent read FComponent write SetComponent;
   public
     constructor Create(AOwner: TComponent); override;
 
@@ -102,60 +84,6 @@ implementation
 
 {$R *.dfm}
 
-const
-  opMask = $07;           /// Masque d'opération
-  opShift = 3;            /// Décalage de l'information d'opération
-  opCenterToPosition = 1; /// Opération centrer sur la position
-  opShowPlugins = 2;      /// Opération montrer les plug-in
-  opShowAttributes = 3;   /// Opération montrer les attributs
-  opShowObjects = 4;      /// Opération montrer les objets
-
-{----------------------}
-{ Classe TComponentSet }
-{----------------------}
-
-{*
-  Crée une instance de TComponentSet
-  @param ATemplate       Template
-  @param AComponents     Ensemble de composants
-  @param ADialogTitle    Titre de la boîte de dialogue
-  @param ADialogPrompt   Invite de la boîte de dialogue
-*}
-constructor TComponentSet.Create(ATemplate: TVisualComponent;
-  const AComponents: array of TSquareComponent; BaseIndex: Integer;
-  const ADialogTitle, ADialogPrompt: string);
-var
-  Len, I: Integer;
-begin
-  inherited Create;
-
-  FTemplate := ATemplate;
-
-  Len := Length(AComponents);
-  FMinIndex := BaseIndex;
-  FMaxIndex := BaseIndex+Len-1;
-
-  SetLength(FComponents, Len);
-  for I := 0 to Len-1 do
-    FComponents[I] := AComponents[Low(AComponents) + I];
-
-  FDialogTitle := ADialogTitle;
-  FDialogPrompt := ADialogPrompt;
-end;
-
-{*
-  Demande à l'utilisateur de choisir un composant dans l'ensemble de composants
-  @param LastIndex   Dernier index entré, contient le nouvel index en sortie
-  @return Référence au composant choisi
-*}
-function TComponentSet.ChooseComponent(
-  var LastIndex: Integer): TSquareComponent;
-begin
-  LastIndex := QueryNumber(FDialogTitle, FDialogPrompt,
-    MinMax(LastIndex, FMinIndex, FMaxIndex), FMinIndex, FMaxIndex);
-  Result := FComponents[LastIndex - FMinIndex];
-end;
-
 {------------------------}
 { Classe TFrameMapEditor }
 {------------------------}
@@ -171,116 +99,320 @@ begin
   Component := nil;
 
   MapViewer.OnClickSquare := MapViewerClickSquare;
+  FrameInspector.MarkModified := InspectorMarkModified;
 end;
 
 {*
-  Ajoute un bouton de case à partir d'un modèle de case et le renvoie
-  @param Template   Modèle de case, pour l'image et le hint du bouton
+  Gestionnaire d'événement MarkModified de l'inspector d'objets
+*}
+procedure TFrameMapEditor.InspectorMarkModified;
+begin
+  if FrameInspector.InspectObject is TFunLabyComponent then
+    UpdateComponentButton(TFunLabyComponent(FrameInspector.InspectObject));
+
+  MarkModified;
+end;
+
+{*
+  Ajoute un bouton de sélection d'un composant
+  @param Component   Composant sélectionné par ce bouton
   @return Le bouton nouvellement créé
 *}
-function TFrameMapEditor.AddSquareButton(
-  Template: TVisualComponent): TButtonItem;
+function TFrameMapEditor.AddComponentButton(
+  Component: TFunLabyComponent): TButtonItem;
 var
+  CategoryName: string;
+  I: Integer;
   Category: TButtonCategory;
 begin
   // Choix de la catégorie
-  if Template is TField then
-    Category := SquaresContainer.Categories[0]
-  else if Template is TEffect then
-    Category := SquaresContainer.Categories[1]
-  else if Template is TTool then
-    Category := SquaresContainer.Categories[2]
-  else if Template is TObstacle then
-    Category := SquaresContainer.Categories[3]
-  else if Template is TSquare then
-    Category := SquaresContainer.Categories[4]
-  else
-    Category := SquaresContainer.Categories[5];
+  CategoryName := Component.Category;
+  Category := nil;
+  for I := 0 to SquaresContainer.Categories.Count-1 do
+  begin
+    if AnsiSameText(SquaresContainer.Categories[I].Caption, CategoryName) then
+    begin
+      Category := SquaresContainer.Categories[I];
+      Break;
+    end;
+  end;
+
+  if Category = nil then
+  begin
+    Category := SquaresContainer.Categories.Add;
+    Category.Assign(SquaresContainer.Categories[0]);
+    Category.Caption := CategoryName;
+  end;
 
   // Ajout du bouton
   Result := Category.Items.Add;
   Result.ImageIndex := 0;
-  Result.Hint := Template.Name;
+  Result.Hint := Component.Hint;
+  Result.Data := Component;
 end;
 
 {*
-  Enregistre un unique composant
-  @param Component   Le composant à enregistrer
+  Met à jour le bouton représentant un composant
+  @param Button   Bouton à mettre à jour
 *}
-procedure TFrameMapEditor.RegisterSingleComponent(Component: TSquareComponent);
-var
-  Button: TButtonItem;
+procedure TFrameMapEditor.UpdateComponentButton(Button: TButtonItem);
 begin
-  Button := AddSquareButton(Component);
-  Button.Data := Component;
+  Button.Hint := TFunLabyComponent(Button.Data).Hint;
+  SquaresContainer.UpdateButton(Button);
 end;
 
 {*
-  Enregistre un ensemble de composants
-  @param Template       Composant modèle pour l'image et le nom à afficher
-  @param Components     Liste des composants faisant partie de l'ensemble
-  @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
-  @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
+  Met à jour le bouton représentant un composant
+  @param Component   Composant dont mettre à jour le bouton
 *}
-procedure TFrameMapEditor.RegisterComponentSet(Template: TSquareComponent;
-  const Components: array of TSquareComponent; BaseIndex: Integer;
-  const DialogTitle, DialogPrompt: string);
+procedure TFrameMapEditor.UpdateComponentButton(Component: TFunLabyComponent);
 var
-  Button: TButtonItem;
+  CatIndex, ButtonIndex: Integer;
+  Category: TButtonCategory;
 begin
-  Button := AddSquareButton(Template);
-  Button.Data := TComponentSet.Create(Template, Components,
-    BaseIndex, DialogTitle, DialogPrompt);
-end;
-
-{*
-  Charge les infos sur les joueurs
-*}
-procedure TFrameMapEditor.LoadPlayers;
-var
-  I: Integer;
-  Player: TPlayer;
-begin
-  for I := 0 to Master.PlayerCount-1 do
+  for CatIndex := 0 to SquaresContainer.Categories.Count-1 do
   begin
-    Player := Master.Players[I];
+    Category := SquaresContainer.Categories[CatIndex];
 
-    AddSquareButton(Player).Data := Player;
-
-    with PlayersContainer.Categories.Add do
+    for ButtonIndex := 0 to Category.Items.Count-1 do
     begin
-      Caption := Player.ID;
-      Color := $E8BBA2;
-
-      Items.Add.Caption := Player.Name;
-
-      with Items.Add do
+      if Category.Items[ButtonIndex].Data = Component then
       begin
-        Caption := Format(sPlayerPosition,
-          [Point3DToString(Player.Position, ', ')]);
-        Hint := sCenterToPosition;
-        Data := Pointer(I shl opShift + opCenterToPosition);
-      end;
-
-      with Items.Add do
-      begin
-        Caption := sShowPlugins;
-        Data := Pointer(I shl opShift + opShowPlugins);
-      end;
-
-      with Items.Add do
-      begin
-        Caption := sShowAttributes;
-        Data := Pointer(I shl opShift + opShowAttributes);
-      end;
-
-      with Items.Add do
-      begin
-        Caption := sShowObjects;
-        Data := Pointer(I shl opShift + opShowObjects);
+        UpdateComponentButton(Category.Items[ButtonIndex]);
+        Exit;
       end;
     end;
   end;
+end;
+
+{*
+  Enregistre un composant
+  @param Component   Composant à enregistrer
+*}
+procedure TFrameMapEditor.RegisterComponent(Component: TFunLabyComponent);
+begin
+  AddComponentButton(Component);
+end;
+
+{*
+  Crée un nouveau composant avec un créateur de composants
+  @param Creator   Créateur de composants
+  @return Composant créé (peut être nil)
+*}
+function TFrameMapEditor.CreateNewComponent(
+  Creator: TComponentCreator): TFunLabyComponent;
+var
+  I: Integer;
+  NewID: string;
+begin
+  Result := Creator;
+
+  NewID := Creator.ID;
+  if AnsiEndsText('Creator', NewID) then
+    SetLength(NewID, Length(NewID) - 7);
+
+  I := 1;
+  while Master.ComponentExists(NewID + IntToStr(I)) do
+    Inc(I);
+
+  NewID := NewID + IntToStr(I);
+
+  if InputQuery(SCreateCompChooseIDTitle, SCreateCompChooseID, NewID) then
+  begin
+    if not IsValidIdent(NewID) then
+    begin
+      ShowDialog(SInvalidComponentIDTitle, SBadComponentID, dtError);
+    end else if Master.ComponentExists(NewID) then
+    begin
+      ShowDialog(SInvalidComponentIDTitle, SComponentAlreadyExists,
+        dtError);
+    end else
+    begin
+      Result := Creator.CreateComponent(NewID);
+
+      if Result.IsDesignable then
+        RegisterComponent(Result);
+
+      MarkModified;
+    end;
+  end;
+end;
+
+{*
+  Supprime un composant d'une case
+  @param QPos             Position qualifiée de la case à modifier
+  @param ComponentIndex   Index du composant à supprimer
+*}
+procedure TFrameMapEditor.ClearSquareComponent(const QPos: TQualifiedPos;
+  ComponentIndex: Integer);
+var
+  Msg: TEditMapSquareMessage;
+  I: Integer;
+begin
+  Msg.MsgID := msgEditMapSquare;
+  Msg.Component := QPos.Components[ComponentIndex];
+  Msg.QPos := QPos;
+
+  // Removing phase
+  Msg.Phase := espRemoving;
+  for I := 0 to QPos.ComponentCount-1 do
+  begin
+    if I = ComponentIndex then
+      Continue;
+
+    Msg.Flags := [];
+    if Msg.QPos.Components[I] <> nil then
+      Msg.QPos.Components[I].Dispatch(Msg);
+
+    if esfCancel in Msg.Flags then
+      Abort;
+  end;
+
+  if Msg.QPos.Components[ComponentIndex] <> nil then
+  begin
+    // Remove phase
+    Msg.Phase := espRemove;
+    Msg.Flags := [];
+    Msg.QPos.Components[ComponentIndex].Dispatch(Msg);
+
+    if esfCancel in Msg.Flags then
+      Abort;
+
+    // Effectively remove the component - don't do this for a field
+    if ComponentIndex > 0 then
+      Msg.QPos.Components[ComponentIndex] := nil;
+    MarkModified;
+  end;
+
+  // Removed phase
+  Msg.Phase := espRemoved;
+  for I := 0 to QPos.ComponentCount-1 do
+  begin
+    if I = ComponentIndex then
+      Continue;
+
+    Msg.Flags := [];
+    if Msg.QPos.Components[I] <> nil then
+      Msg.QPos.Components[I].Dispatch(Msg);
+  end;
+end;
+
+{*
+  Ajoute un composant sur une case
+  @param QPos             Position qualifiée de la case à modifier
+  @param ComponentIndex   Index du composant à ajouter
+  @param Component        Composant à placer sur cette case
+*}
+procedure TFrameMapEditor.AddSquareComponent(const QPos: TQualifiedPos;
+  ComponentIndex: Integer; Component: TSquareComponent);
+var
+  Msg: TEditMapSquareMessage;
+  I: Integer;
+begin
+  Msg.MsgID := msgEditMapSquare;
+  Msg.Component := Component;
+  Msg.QPos := QPos;
+
+  // Removing phase
+  Msg.Phase := espAdding;
+  for I := 0 to QPos.ComponentCount-1 do
+  begin
+    if I = ComponentIndex then
+      Continue;
+
+    Msg.Flags := [];
+    if Msg.QPos.Components[I] <> nil then
+      Msg.QPos.Components[I].Dispatch(Msg);
+
+    if esfCancel in Msg.Flags then
+      Abort;
+  end;
+
+  // Remove phase
+  Msg.Phase := espAdd;
+  Msg.Flags := [];
+  Component.Dispatch(Msg);
+
+  if esfCancel in Msg.Flags then
+    Abort;
+
+  // Effectively add the component - unless it's already been handled
+  if not (esfHandled in Msg.Flags) then
+  begin
+    if Msg.QPos.IsInside then
+      Msg.QPos.Components[ComponentIndex] := Component
+    else
+    begin
+      if not (Component is TField) then
+      begin
+        ShowDialog(SOnlyFieldOutsideTitle, SOnlyFieldOutside, dtError);
+        Abort;
+      end;
+
+      Msg.QPos.Map.Outside[Msg.QPos.Z] := Master.SquareByComps(
+        Component.ID, '', '', '');
+    end;
+  end;
+
+  MarkModified;
+
+  // Removed phase
+  Msg.Phase := espAdded;
+  for I := 0 to QPos.ComponentCount-1 do
+  begin
+    if I = ComponentIndex then
+      Continue;
+
+    Msg.Flags := [];
+    if Msg.QPos.Components[I] <> nil then
+      Msg.QPos.Components[I].Dispatch(Msg);
+  end;
+end;
+
+{*
+  Modifie une case de la carte
+  @param QPos        Position qualifiée de la carte
+  @param Component   Composant à placer
+*}
+procedure TFrameMapEditor.EditMapSquare(const QPos: TQualifiedPos;
+  Component: TSquareComponent);
+var
+  Square: TSquare;
+  ComponentIndex, I: Integer;
+begin
+  // Only fields outside of maps
+  if QPos.IsOutside and not (Component is TField) then
+  begin
+    ShowDialog(SOnlyFieldOutsideTitle, SOnlyFieldOutside, dtError);
+    Abort;
+  end;
+
+  // Find component index
+  Square := QPos.Square;
+  ComponentIndex := Square.ComponentCount-1;
+  while (ComponentIndex >= 0) and
+    (not (Component is Square.ComponentClasses[ComponentIndex])) do
+    Dec(ComponentIndex);
+
+  // Clear in-the-way components
+  for I := Square.ComponentCount-1 downto ComponentIndex do
+    if ComponentIndex >= 0 then
+      ClearSquareComponent(QPos, I);
+
+  // Add the new component
+  AddSquareComponent(QPos, ComponentIndex, Component);
+end;
+
+{*
+  Modifie le composant à placer
+  @param Value   Nouveau composant à placer
+*}
+procedure TFrameMapEditor.SetComponent(Value: TFunLabyComponent);
+begin
+  FComponent := Value;
+
+  if (Value <> nil) and (not (Value is TSquare)) then
+    FrameInspector.InspectObject := Value;
 end;
 
 {*
@@ -318,26 +450,33 @@ end;
 
 {*
   Charge un fichier
-  @param ASepiRoot     Racine Sepi
   @param AMasterFile   Fichier maître
 *}
 procedure TFrameMapEditor.LoadFile(AMasterFile: TMasterFile);
+var
+  I: Integer;
 begin
   MasterFile := AMasterFile;
   Master := MasterFile.Master;
 
   // Recensement des composants d'édition
-  MasterFile.RegisterComponents(RegisterSingleComponent, RegisterComponentSet);
+  Master.RegisterComponents(RegisterComponent);
 
-  // Chargement des infos des joueurs
-  LoadPlayers;
+  // Chargement du fichier dans l'inspecteur
+  FrameInspector.LoadFile(AMasterFile);
 
   // Recensement des cartes
   MapViewer.Master := Master;
 
-  // Centrer sur le premier joueur
-  if (Master.PlayerCount > 0) and (Master.Players[0].Map <> nil) then
-    CenterToPlayerPosition(Master.Players[0]);
+  // Centrer sur le premier joueur placé
+  for I := 0 to Master.PlayerCount-1 do
+  begin
+    if Master.Players[I].Map <> nil then
+    begin
+      CenterToPlayerPosition(Master.Players[I]);
+      Break;
+    end;
+  end;
 end;
 
 {*
@@ -350,26 +489,18 @@ begin
   // Vider les onglets de carte
   MapViewer.Master := nil;
 
-  // Vider les onglets des joueurs
-  PlayersContainer.Categories.Clear;
+  // Vider l'inspecteur d'objets
+  FrameInspector.UnloadFile;
 
   // Vider les composants d'édition
   with SquaresContainer do
   begin
-    for I := 0 to Categories.Count-1 do
-    begin
-      with Categories[I] do
-      begin
-        while Items.Count > 0 do
-        begin
-          if TObject(Items[0].Data) is TComponentSet then
-            TObject(Items[0].Data).Free;
-          Items.Delete(0);
-        end;
-      end;
-    end;
+    for I := Categories.Count-1 downto 7 do
+      Categories.Delete(I);
+
+    for I := Categories.Count-1 downto 0 do
+      Categories[I].Items.Clear;
   end;
-  SquaresImages.Clear;
 
   // Autres variables
   Component := nil;
@@ -449,7 +580,7 @@ procedure TFrameMapEditor.SquaresContainerDrawIcon(Sender: TObject;
   State: TButtonDrawState; var TextOffset: Integer);
 var
   BackgroundColor: TColor;
-  Component: TVisualComponent;
+  Component: TFunLabyComponent;
   RectCenter: TPoint;
 begin
   if bdsSelected in State then
@@ -459,10 +590,7 @@ begin
   else
     BackgroundColor := SquaresContainer.RegularButtonColor;
 
-  if TObject(Button.Data) is TComponentSet then
-    Component := TComponentSet(Button.Data).Template
-  else
-    Component := TVisualComponent(Button.Data);
+  Component := TFunLabyComponent(Button.Data);
 
   with Rect do
     RectCenter := Point((Left+Right) div 2, (Top+Bottom) div 2);
@@ -479,7 +607,7 @@ begin
       X + HalfSquareSize, Y + HalfSquareSize);
   end;
 
-  Component.DrawToCanvas(Canvas, Rect, BackgroundColor);
+  Component.DrawIconToCanvas(Canvas, Rect, BackgroundColor);
 end;
 
 {*
@@ -490,40 +618,10 @@ end;
 procedure TFrameMapEditor.SquaresContainerButtonClicked(Sender: TObject;
   const Button: TButtonItem);
 begin
-  if TObject(Button.Data) is TComponentSet then
-    Component := TComponentSet(Button.Data).ChooseComponent(LastCompIndex)
-  else
-    Component := TSquareComponent(Button.Data);
-end;
+  Component := TFunLabyComponent(Button.Data);
 
-{*
-  Gestionnaire d'événement OnButtonClicked des boutons de joueur
-  @param Sender   Objet qui a déclenché l'événement
-  @param Button   Référence au bouton cliqué
-*}
-procedure TFrameMapEditor.PlayersContainerButtonClicked(Sender: TObject;
-  const Button: TButtonItem);
-var
-  Player: TPlayer;
-begin
-  Player := Master.Players[Integer(Button.Data) shr opShift];
-  case Integer(Button.Data) and opMask of
-    opCenterToPosition: CenterToPlayerPosition(Player);
-    opShowPlugins:
-    begin
-      if TFormPlugins.ManagePlugins(Player) then
-      begin
-        MarkModified;
-        MapViewer.InvalidateMap;
-      end;
-    end;
-    opShowAttributes:
-    begin
-      if TFormParameters.EditPlayerAttributes(Player) then
-        MarkModified;
-    end;
-    opShowObjects: TFormObjects.ShowObjects(Player);
-  end;
+  if Component is TComponentCreator then
+    Component := CreateNewComponent(TComponentCreator(Component));
 end;
 
 {*
@@ -533,126 +631,24 @@ end;
 *}
 procedure TFrameMapEditor.MapViewerClickSquare(Sender: TObject;
   const QPos: TQualifiedPos);
-type
-  TRemoveProc = function(Square: TSquare): TSquare;
-var
-  Modified: Boolean;
-  Map: TMap;
-  Position: T3DPoint;
-  BaseFlags: TEditMapSquareFlags;
-  EditMapSquareMsg: TEditMapSquareMessage;
-
-  function GetSquare: TSquare;
-  begin
-    Result := Map[Position];
-  end;
-
-  procedure SetSquare(Value: TSquare);
-  begin
-    if esfOutside in BaseFlags then
-      Map.Outside[Position.Z] := Value
-    else
-      Map[Position] := Value;
-  end;
-
-  procedure BuildMessage(AdditionalFlags: TEditMapSquareFlags);
-  begin
-    EditMapSquareMsg.MsgID := msgEditMapSquare;
-    EditMapSquareMsg.Flags := BaseFlags + AdditionalFlags;
-    EditMapSquareMsg.QPos := QPos;
-  end;
-
-  function ClearComponent(Component: TSquareComponent;
-    RemoveProc: TRemoveProc): Boolean;
-  begin
-    if Component = nil then
-      Result := True
-    else
-    begin
-      BuildMessage([esfRemoving]);
-      Component.Dispatch(EditMapSquareMsg);
-
-      Result := not (esfCancel in EditMapSquareMsg.Flags);
-
-      if Result then
-      begin
-        if (not (esfHandled in EditMapSquareMsg.Flags)) and
-          Assigned(RemoveProc) then
-          SetSquare(RemoveProc(GetSquare));
-        Modified := True;
-      end;
-    end;
-  end;
-
 begin
-  if Component = nil then
+  if (Component = nil) or IsNoQPos(QPos) then
     Exit;
 
-  Modified := False;
   try
-    Map := QPos.Map;
-    Position := QPos.Position;
-
     if Component is TPlayer then
     begin
-      TPlayer(Component).ChangePosition(Map, Position);
-      Modified := True;
-    end else
-    begin
-      if Map.InMap(Position) then
-        BaseFlags := []
-      else
-      begin
-        BaseFlags := [esfOutside];
-
-        if not (Component is TField) then
-        begin
-          ShowDialog(sOnlyFieldOutsideTitle, sOnlyFieldOutside, dtError);
-          Exit;
-        end;
-
-        if ShowDialog(sReplaceOutsideTitle, sReplaceOutside,
-          dtConfirmation, dbOKCancel) <> drOK then
-          Exit;
-      end;
-
-      // Clear in-the-way components
-      if not ClearComponent(GetSquare.Obstacle, RemoveObstacle) then
-        Exit;
-      if not (Component is TObstacle) then
-      begin
-        if not ClearComponent(GetSquare.Tool, RemoveTool) then
-          Exit;
-        if not (Component is TTool) then
-        begin
-          if not ClearComponent(GetSquare.Effect, RemoveEffect) then
-            Exit;
-          if not (Component is TEffect) then
-          begin
-            if not ClearComponent(GetSquare.Field, nil) then
-              Exit;
-          end;
-        end;
-      end;
-
-      // Add the new component
-      BuildMessage([esfAdding]);
-      Component.Dispatch(EditMapSquareMsg);
-
-      if esfCancel in EditMapSquareMsg.Flags then
-        Exit;
-
-      if not (esfHandled in EditMapSquareMsg.Flags) then
-        SetSquare(ChangeComp(GetSquare, Component as TSquareComponent));
-      Modified := True;
-    end;
-  finally
-    if Modified then
-    begin
+      TPlayer(Component).ChangePosition(QPos.Map, QPos.Position);
       MarkModified;
-      MapViewer.InvalidateMap;
+    end else if Component is TSquareComponent then
+    begin
+      EditMapSquare(QPos, TSquareComponent(Component));
     end;
+  except
+    on EAbort do;
   end;
+
+  InvalidateMap;
 end;
 
 end.

@@ -59,15 +59,6 @@ type
     procedure GameEnded;
 
     {*
-      Enregistre les différents composants à placer dans la palette d'édition
-      @param RegisterSingleComponentProc   Call-back pour un unique composant
-      @param RegisterComponentSetProc      Call-back pour un set de composants
-    *}
-    procedure RegisterComponents(
-      RegisterSingleComponentProc: TRegisterSingleComponentProc;
-      RegisterComponentSetProc: TRegisterComponentSetProc);
-
-    {*
       Dresse la liste des paramètres à enregistrer
       Les descendants de TUnitFile peuvent surcharger cette méthode pour
       indiquer au fichier maître les paramètres qu'il doit enregistrer.
@@ -98,10 +89,6 @@ type
     procedure GameStarted; override;
     procedure GameEnded; override;
 
-    procedure RegisterComponents(
-      RegisterSingleComponentProc: TRegisterSingleComponentProc;
-      RegisterComponentSetProc: TRegisterComponentSetProc); override;
-
     procedure GetParams(Params: TStrings); override;
 
     property Handle: HMODULE read FHandle;
@@ -129,10 +116,6 @@ type
     procedure GameStarted; override;
     procedure GameEnded; override;
 
-    procedure RegisterComponents(
-      RegisterSingleComponentProc: TRegisterSingleComponentProc;
-      RegisterComponentSetProc: TRegisterComponentSetProc); override;
-
     procedure GetParams(Params: TStrings); override;
 
     property SepiUnit: TSepiUnit read FSepiUnit;
@@ -153,10 +136,6 @@ type
 
     procedure GameStarted; virtual;
     procedure GameEnded; virtual;
-
-    procedure RegisterComponents(
-      RegisterSingleComponentProc: TRegisterSingleComponentProc;
-      RegisterComponentSetProc: TRegisterComponentSetProc); virtual;
 
     procedure GetParams(Params: TStrings); virtual;
 
@@ -193,9 +172,6 @@ destructor TBPLUnitFile.Destroy;
 begin
   FUnitFileIntf := nil;
 
-  if FHandle <> 0 then
-    UnloadPackage(FHandle);
-
   inherited;
 end;
 
@@ -209,6 +185,7 @@ type
 var
   CreateUnitFile: TCreateUnitFileProc;
 begin
+  // TODO Avoid loading the same package again and again
   FHandle := LoadPackage(FileName);
   if FHandle = 0 then
     raise EInOutError.CreateFmt(SCantLoadPackage, [FileName]);
@@ -252,17 +229,6 @@ end;
 procedure TBPLUnitFile.GameEnded;
 begin
   UnitFileIntf.GameEnded;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TBPLUnitFile.RegisterComponents(
-  RegisterSingleComponentProc: TRegisterSingleComponentProc;
-  RegisterComponentSetProc: TRegisterComponentSetProc);
-begin
-  UnitFileIntf.RegisterComponents(
-    RegisterSingleComponentProc, RegisterComponentSetProc);
 end;
 
 {*
@@ -410,55 +376,6 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TSepiUnitFile.RegisterComponents(
-  RegisterSingleComponentProc: TRegisterSingleComponentProc;
-  RegisterComponentSetProc: TRegisterComponentSetProc);
-type
-  TRegisterComponentsProc = procedure(Master: TMaster;
-    RegisterSingleComponentProc: TRegisterSingleComponentProc;
-    RegisterComponentSetProc: TRegisterComponentSetProc);
-var
-  Method: TSepiMethod;
-  FunLabyUtilsUnit: TSepiUnit;
-  RegisterComponentsProc: TRegisterComponentsProc;
-begin
-  // Don't localize strings in this method
-
-  // Get method
-  if not (SepiUnit.GetComponent('RegisterComponents') is TSepiMethod) then
-    Exit;
-  Method := TSepiMethod(SepiUnit.GetComponent('RegisterComponents'));
-
-  // Check signature
-  with Method.Signature do
-  begin
-    FunLabyUtilsUnit := SepiUnit.Root.GetComponent('FunLabyUtils') as TSepiUnit;
-
-    if Kind <> skStaticProcedure then
-      Exit;
-    if ParamCount <> 3 then
-      Exit;
-    if not Params[0].CompatibleWith(FunLabyUtilsUnit.FindClass(TMaster)) then
-      Exit;
-    if not Params[1].CompatibleWith(FunLabyUtilsUnit.FindComponent(
-      'TRegisterSingleComponentProc') as TSepiType) then
-      Exit;
-    if not Params[2].CompatibleWith(FunLabyUtilsUnit.FindComponent(
-      'TRegisterComponentSetProc') as TSepiType) then
-      Exit;
-    if CallingConvention <> ccRegister then
-      Exit;
-  end;
-
-  // Call the procedure
-  @RegisterComponentsProc := Method.Code;
-  RegisterComponentsProc(Master, RegisterSingleComponentProc,
-    RegisterComponentSetProc);
-end;
-
-{*
-  [@inheritDoc]
-*}
 procedure TSepiUnitFile.GetParams(Params: TStrings);
 type
   TGetParamsProc = procedure(Params: TStrings);
@@ -537,15 +454,6 @@ end;
   [@inheritDoc]
 *}
 procedure TInterfacedUnitFile.GameEnded;
-begin
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TInterfacedUnitFile.RegisterComponents(
-  RegisterSingleComponentProc: TRegisterSingleComponentProc;
-  RegisterComponentSetProc: TRegisterComponentSetProc);
 begin
 end;
 

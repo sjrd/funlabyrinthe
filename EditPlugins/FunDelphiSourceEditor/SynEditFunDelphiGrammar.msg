@@ -50,6 +50,7 @@ or
 and
 xor
 not
+in
 is
 as
 

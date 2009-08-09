@@ -24,21 +24,11 @@ const {don't localize}
   /// Couleur transparente
   clTransparent32 = FunLabyGraphics.clTransparent32;
 
-  attrColor = 'Color';             /// Attribut de joueur pour Color
-  attrShowCounter = 'ShowCounter'; /// Attribut de joueur pour ShowCounter
-
-  /// Attribut de joueur pour ViewBorderSize
-  attrViewBorderSize = 'ViewBorderSize';
-
   msgShowMessage = $01; /// Message pour afficher un message au joueur
   msgGameStarted = $02; /// Message envoyé lorsque le jeu commence
 
   /// Message envoyé aux composants d'une case lorsque celle-ci est éditée
   msgEditMapSquare = $03;
-
-  CommandShowDialog = 'ShowDialog';           /// Commande ShowDialog
-  CommandShowDialogRadio = 'ShowDialogRadio'; /// Commande ShowDialogRadio
-  CommandChooseNumber = 'ChooseNumber';       /// Commande ChooseNumber
 
   SquareIDDelim = '-';            /// Délimiteur des parties d'un ID de case
   SquareIDFormat = '%s-%s-%s-%s'; /// Format d'un ID de case
@@ -80,10 +70,15 @@ type
   /// Générée en cas de mauvaise définition d'une case
   EBadSquareDefException = class(EFunLabyException);
 
+  TDrawViewContext = class;
   TFunLabyFiler = class;
   TPlayerData = class;
   TFunLabyComponent = class;
   TSquareComponent = class;
+  TField = class;
+  TEffect = class;
+  TTool = class;
+  TObstacle = class;
   TSquare = class;
   TMap = class;
   IPlayerMode = interface;
@@ -99,6 +94,50 @@ type
   TQualifiedPos = record
     Map: TMap;          /// Carte, ou nil pour une position nulle
     Position: T3DPoint; /// Position sur la carte, si Map <> nil
+
+  {$IFNDEF SEPIPARSER}
+  private
+    function GetIsNoQPos: Boolean; inline;
+    function GetIsInside: Boolean; inline;
+    function GetIsOutside: Boolean; inline;
+
+    function GetSquare: TSquare; inline;
+    function GetField: TField; inline;
+    function GetEffect: TEffect; inline;
+    function GetTool: TTool; inline;
+    function GetObstacle: TObstacle; inline;
+
+    procedure SetSquare(Value: TSquare); inline;
+    procedure SetField(Value: TField);
+    procedure SetEffect(Value: TEffect);
+    procedure SetTool(Value: TTool);
+    procedure SetObstacle(Value: TObstacle);
+
+    function GetComponentCount: Integer; inline;
+    function GetComponents(Index: Integer): TSquareComponent; inline;
+    procedure SetComponents(Index: Integer; Value: TSquareComponent);
+  public
+    class operator Implicit(const Value: TQualifiedPos): TMap;
+    class operator Implicit(const Value: TQualifiedPos): T3DPoint;
+
+    property X: Integer read Position.X write Position.X;
+    property Y: Integer read Position.Y write Position.Y;
+    property Z: Integer read Position.Z write Position.Z;
+
+    property IsNoQPos: Boolean read GetIsNoQPos;
+    property IsInside: Boolean read GetIsInside;
+    property IsOutside: Boolean read GetIsOutside;
+
+    property Square: TSquare read GetSquare write SetSquare;
+    property Field: TField read GetField write SetField;
+    property Effect: TEffect read GetEffect write SetEffect;
+    property Tool: TTool read GetTool write SetTool;
+    property Obstacle: TObstacle read GetObstacle write SetObstacle;
+
+    property ComponentCount: Integer read GetComponentCount;
+    property Components[Index: Integer]: TSquareComponent
+      read GetComponents write SetComponents;
+  {$ENDIF}
   end;
 
   {*
@@ -130,17 +169,28 @@ type
   end;
 
   {*
+    Phase d'édition d'une case de la carte
+    - espAdding : Un composant va être ajouté
+    - espAdd : Ce composant-ci doit être ajouté
+    - espAdded : Un composant a été ajouté
+    - espRemoving : Un composant va être retiré
+    - espRemove : Ce composant-ci doit être retiré
+    - espRemoved : Un composant a été retiré
+  *}
+  TEditMapSquarePhase = (
+    espAdding, espAdd, espAdded, espRemoving, espRemove, espRemoved
+  );
+
+  {*
     Flag de traitement d'un message TEditMapSquareMessage
-    - esfHandled : Si présent en sortie, l'éditeur ne fait plus son action
-      par défaut (pris en compte uniquement avec esfAdding)
     - esfCancel : Si présent en sortie, l'éditeur ne fait plus son action par
-      défaut et ne considère pas que la carte a été modifiée
-    - esfAdding : Le composant va être ajouté
-    - esfRemoving : Le composant va être retiré
-    - esfOutside : La position est en dehors de la carte (terrain seulement)
+      défaut et ne considère pas que la carte a été modifiée (n'est pas pris
+      en compte en phase Added ou Removed)
+    - esfHandled : Si présent en sortie, l'éditeur ne fait plus son action
+      par défaut (pris en compte uniquement pendant la phase Add)
   *}
   TEditMapSquareFlag = (
-    esfHandled, esfCancel, esfAdding, esfRemoving, esfOutside
+    esfCancel, esfHandled
   );
 
   /// Flags de traitement d'un message TEditMapSquareMessage
@@ -152,39 +202,18 @@ type
     @version 5.0
   *}
   TEditMapSquareMessage = record
-    MsgID: Word;                /// ID du message
-    Flags: TEditMapSquareFlags; /// Flags du message
-    QPos: TQualifiedPos;        /// Position qualifiée de la case éditée
+    MsgID: Word;                  /// ID du message
+    Phase: TEditMapSquarePhase;   /// Phase de modification d'une case
+    Flags: TEditMapSquareFlags;   /// Flags du message
+    Component: TFunLabyComponent; /// Composant qui va être placé/retiré
+    QPos: TQualifiedPos;          /// Position qualifiée de la case éditée
   end;
 
   {*
-    Type des gestionnaires d'événements OnSendCommand de TPlayer
-    @param Sender    Joueur concerné
-    @param Command   Commande à effectuer
-    @param Params    Paramètres de la commande
-    @return Résultat de la commande
-    @throws EUnsupportedCommand : La commande demandée n'est pas supportée
+    Type de méthode call-back pour l'enregistrement d'un composant
+    @param Component   Composant à enregistrer
   *}
-  TSendCommandEvent = function(Sender: TPlayer;
-    const Command: string; const Params: string = ''): string of object;
-
-  {*
-    Type de méthode call-back pour l'enregistrement d'un unique composant
-    @param Component   Le composant à enregistrer
-  *}
-  TRegisterSingleComponentProc = procedure(
-    Component: TSquareComponent) of object;
-
-  {*
-    Type de méthode call-back pour l'enregistrement d'un ensemble de composants
-    @param Template       Composant modèle pour l'image et le nom à afficher
-    @param Components     Liste des composants faisant partie de l'ensemble
-    @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
-    @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
-  *}
-  TRegisterComponentSetProc = procedure(Template: TSquareComponent;
-    const Components: array of TSquareComponent; BaseIndex: Integer;
-    const DialogTitle, DialogPrompt: string) of object;
+  TRegisterComponentProc = procedure(Component: TFunLabyComponent) of object;
 
   {*
     Contexte de dessin d'une case
@@ -201,6 +230,8 @@ type
     FIsNowhere: Boolean;  /// Indique si le dessin est fait "nulle part"
     FQPos: TQualifiedPos; /// Position dessinée
 
+    /// Contexte de dessin de la vue (si applicable)
+    FDrawViewContext: TDrawViewContext;
     FTickCount: Cardinal; /// Tick count pour ce contexte
 
     FPlayer: TPlayer; /// Joueur à dessiner (si applicable)
@@ -211,8 +242,13 @@ type
     constructor Create(ABitmap: TBitmap32; X, Y: Integer); overload;
     constructor Create(ABitmap: TBitmap32; X, Y: Integer;
       const AQPos: TQualifiedPos); overload;
+    constructor Create(Source: TDrawSquareContext;
+      const AQPos: TQualifiedPos); overload;
 
+    procedure SetDrawViewContext(ADrawViewContext: TDrawViewContext);
     procedure SetTickCount(ATickCount: Cardinal);
+
+    procedure Assign(Source: TDrawSquareContext);
 
     procedure DrawSquareBitmap(SquareBitmap: TBitmap32);
 
@@ -226,6 +262,7 @@ type
     property Map: TMap read FQPos.Map;
     property Pos: T3DPoint read FQPos.Position;
 
+    property DrawViewContext: TDrawViewContext read FDrawViewContext;
     property TickCount: Cardinal read FTickCount;
 
     property Player: TPlayer read FPlayer;
@@ -357,6 +394,8 @@ type
     procedure DrawNotStatic;
 
     procedure ImgNamesChange(Sender: TObject);
+
+    function GetIsEmpty: Boolean;
   public
     constructor Create(AMaster: TImagesMaster);
     destructor Destroy; override;
@@ -366,6 +405,7 @@ type
     property Master: TImagesMaster read FMaster;
     property ImgNames: TStrings read FImgNames;
     property StaticDraw: Boolean read FStaticDraw;
+    property IsEmpty: Boolean read GetIsEmpty;
   end;
 
   {*
@@ -507,6 +547,8 @@ type
     procedure Notify(Item: TFunLabyPersistent;
       Action: TListNotification); virtual;
 
+    function GetDefaultItemClass: TFunLabyPersistentClass; virtual;
+
     function AddItem(Item: TFunLabyPersistent): Integer;
     function InsertItem(Index: Integer; Item: TFunLabyPersistent): Integer;
   public
@@ -515,6 +557,7 @@ type
 
     procedure Clear;
     function Add(ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
+    function AddDefault: TFunLabyPersistent;
     function Insert(Index: Integer;
       ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
     procedure Delete(Index: Integer);
@@ -523,8 +566,10 @@ type
     procedure Move(CurIndex, NewIndex: Integer);
     function IndexOf(Item: TFunLabyPersistent): Integer;
 
+    function HasDefault: Boolean;
+
     property Count: Integer read GetCount;
-    property Items[Index: Integer]: TFunLabyPersistent read GetItems;
+    property Items[Index: Integer]: TFunLabyPersistent read GetItems; default;
   end;
 
   {*
@@ -652,11 +697,11 @@ type
   private
     FMaster: TMaster;  /// Maître FunLabyrinthe
     FID: TComponentID; /// ID du composant
+
     {*
-      Valeur non fonctionnelle pouvant servir au fonctionnement d'un algorithme
-      Cette valeur est susceptible d'être utilisée par beaucoup d'algorithmes
-      différents, et donc interférer. Il ne faut donc l'utiliser que
-      ponctuellement.
+      Stocke une valeur entière dans un composant
+      Tag n'a pas de signification prédéfinie. Elle est fournie pour les besoins
+      du développeur.
     *}
     FTag: Integer;
 
@@ -670,15 +715,30 @@ type
 
     function HasPlayerData(Player: TPlayer): Boolean;
     function GetPlayerData(Player: TPlayer): TPlayerData;
+
+    function GetCategory: string; virtual;
+    function GetHint: string; virtual;
+    function GetIsDesignable: Boolean; virtual;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID);
     destructor Destroy; override;
 
+    class function UsePlayerData: Boolean;
+
+    procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+      Y: Integer = 0); virtual;
+    procedure DrawIconToCanvas(Canvas: TCanvas; const DestRect: TRect;
+      BackgroundColor: TColor);
+
     property Master: TMaster read FMaster;
+    property ID: TComponentID read FID;
     property SafeID: TComponentID read GetSafeID;
     property Transient: Boolean read FTransient;
+
+    property Category: string read GetCategory;
+    property Hint: string read GetHint;
+    property IsDesignable: Boolean read GetIsDesignable;
   published
-    property ID: TComponentID read FID;
     property Tag: Integer read FTag write FTag default 0;
   end;
 
@@ -694,13 +754,18 @@ type
   *}
   TVisualComponent = class(TFunLabyComponent)
   private
+    FOriginalName: string; /// Nom original du composant
     FName: string;         /// Nom du composant
     FPainter: TPainter;    /// Peintre par défaut
     FCachedImg: TBitmap32; /// Image en cache (pour les dessins invariants)
 
+    function IsNameStored: Boolean;
+
     procedure PrivDraw(Context: TDrawSquareContext); virtual;
   protected
     FStaticDraw: Boolean; /// Indique si le dessin du composant est invariant
+
+    function GetHint: string; override;
 
     procedure DoDraw(Context: TDrawSquareContext); virtual;
 
@@ -715,12 +780,50 @@ type
     procedure Draw(const QPos: TQualifiedPos; Bitmap: TBitmap32;
       X: Integer = 0; Y: Integer = 0); overload;
 
-    procedure DrawToCanvas(Canvas: TCanvas; const DestRect: TRect;
-      BackgroundColor: TColor);
+    procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+      Y: Integer = 0); override;
 
     property StaticDraw: Boolean read FStaticDraw;
   published
-    property Name: string read FName;
+    property Name: string read FName write FName stored IsNameStored;
+  end;
+
+  {*
+    Pseudo-composant qui permet de créer de nouveaux composants
+    @author sjrd
+    @version 5.0
+  *}
+  TComponentCreator = class(TFunLabyComponent)
+  private
+    FIconPainter: TPainter;          /// Peintre de l'icône
+    FCreatedComponents: TObjectList; /// Composants créés
+
+    function GetCreatedComponentCount: Integer;
+    function GetCreatedComponents(Index: Integer): TFunLabyComponent;
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
+    function GetCategory: string; override;
+    function GetHint: string; override;
+
+    function DoCreateComponent(
+      const AID: TComponentID): TFunLabyComponent; virtual; abstract;
+
+    property IconPainter: TPainter read FIconPainter;
+  public
+    constructor Create(AMaster: TMaster; AID: TComponentID);
+    destructor Destroy; override;
+
+    procedure AfterConstruction; override;
+
+    procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+      Y: Integer = 0); override;
+
+    function CreateComponent(const AID: TComponentID): TFunLabyComponent;
+
+    property CreatedComponentCount: Integer read GetCreatedComponentCount;
+    property CreatedComponents[Index: Integer]: TFunLabyComponent
+      read GetCreatedComponents;
   end;
 
   {*
@@ -729,6 +832,8 @@ type
     Un plug-in peut agir de plusieurs façons sur le joueur :
     - Dessiner sous et sur le joueur ;
     - Empêcher le déplacement du joueur et réagir à son déplacement effectif ;
+    - Modifier la vue complète du joueur ;
+    - Réagir à l'appui sur un touche ;
     - Indiquer au joueur qu'il a la capacité de faire certaines actions.
     @author sjrd
     @version 5.0
@@ -739,6 +844,9 @@ type
     FPainterAfter: TPainter;  /// Peintre par défaut sur le joueur
   protected
     FZIndex: Integer; /// Z-index parmi les plug-in
+
+    function GetCategory: string; override;
+    function GetIsDesignable: Boolean; override;
 
     property PainterBefore: TPainter read FPainterBefore;
     property PainterAfter: TPainter read FPainterAfter;
@@ -756,8 +864,8 @@ type
     procedure DrawView(Context: TDrawViewContext); virtual;
     procedure PressKey(Context: TKeyEventContext); virtual;
 
-    function AbleTo(Player: TPlayer;
-      const Action: TPlayerAction): Boolean; virtual;
+    function AbleTo(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer): Boolean; virtual;
 
     property ZIndex: Integer read FZIndex;
   end;
@@ -789,14 +897,17 @@ type
   protected
     class function GetPlayerDataClass: TPlayerDataClass; override;
 
+    function GetCategory: string; override;
+
     function GetCount(Player: TPlayer): Integer; virtual;
     procedure SetCount(Player: TPlayer; Value: Integer); virtual;
 
     function GetShownInfos(Player: TPlayer): string; virtual;
   public
-    function AbleTo(Player: TPlayer;
-      const Action: TPlayerAction): Boolean; virtual;
-    procedure UseFor(Player: TPlayer; const Action: TPlayerAction); virtual;
+    function AbleTo(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer): Boolean; virtual;
+    procedure UseFor(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer); virtual;
 
     property Count[Player: TPlayer]: Integer read GetCount write SetCount;
     property ShownInfos[Player: TPlayer]: string read GetShownInfos;
@@ -810,6 +921,9 @@ type
   TSquareComponent = class(TVisualComponent)
   end;
 
+  /// Classe de TSquareComponent
+  TSquareComponentClass = class of TSquareComponent;
+
   {*
     Classe de base pour les terrains
     TField est la classe de base pour la création de terrains. Les terrains
@@ -822,9 +936,21 @@ type
     FDelegateDrawTo: TField; /// Terrain délégué pour l'affichage
 
     procedure PrivDraw(Context: TDrawSquareContext); override;
+  protected
+    function GetCategory: string; override;
+    function GetIsDesignable: Boolean; override;
+
+    procedure DoDrawCeiling(Context: TDrawSquareContext); virtual;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; ADelegateDrawTo: TField = nil);
+      const AName: string);
+
+    class function NewDelegateDraw(ADelegateDrawTo: TField): TField;
+
+    procedure DrawCeiling(Context: TDrawSquareContext);
+
+    procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+      Y: Integer = 0); override;
 
     procedure Entering(Context: TMoveContext); virtual;
     procedure Exiting(Context: TMoveContext); virtual;
@@ -841,6 +967,8 @@ type
     @version 5.0
   *}
   TEffect = class(TSquareComponent)
+  protected
+    function GetCategory: string; override;
   public
     procedure Entered(Context: TMoveContext); virtual;
     procedure Exited(Context: TMoveContext); virtual;
@@ -856,6 +984,8 @@ type
     @version 5.0
   *}
   TTool = class(TSquareComponent)
+  protected
+    function GetCategory: string; override;
   public
     procedure Find(Context: TMoveContext); virtual;
   end;
@@ -868,6 +998,8 @@ type
     @version 5.0
   *}
   TObstacle = class(TSquareComponent)
+  protected
+    function GetCategory: string; override;
   public
     procedure Pushing(Context: TMoveContext); virtual;
   end;
@@ -882,12 +1014,22 @@ type
   *}
   TSquare = class(TSquareComponent)
   private
+    FCategory: string; /// Catégorie
+
     FField: TField;       /// Terrain
     FEffect: TEffect;     /// Effet
     FTool: TTool;         /// Outil
     FObstacle: TObstacle; /// Obstacle
+
+    function GetComponentCount: Integer;
+    function GetComponents(Index: Integer): TSquareComponent;
+    function GetComponentClasses(Index: Integer): TSquareComponentClass;
   protected
+    function GetCategory: string; override;
+    procedure SetCategory(const Value: string); virtual;
+
     procedure DoDraw(Context: TDrawSquareContext); override;
+    procedure DoDrawCeiling(Context: TDrawSquareContext); virtual;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string; AField: TField; AEffect: TEffect; ATool: TTool;
@@ -896,6 +1038,11 @@ type
     procedure DefaultHandler(var Msg); override;
 
     function Contains(Component: TSquareComponent): Boolean;
+
+    procedure DrawCeiling(Context: TDrawSquareContext);
+
+    procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+      Y: Integer = 0); override;
 
     procedure Entering(Context: TMoveContext); virtual;
     procedure Exiting(Context: TMoveContext); virtual;
@@ -907,10 +1054,17 @@ type
 
     procedure Pushing(Context: TMoveContext); virtual;
 
+    property Category: string read GetCategory write SetCategory;
+
     property Field: TField read FField;
     property Effect: TEffect read FEffect;
     property Tool: TTool read FTool;
     property Obstacle: TObstacle read FObstacle;
+
+    property ComponentCount: Integer read GetComponentCount;
+    property Components[Index: Integer]: TSquareComponent read GetComponents;
+    property ComponentClasses[Index: Integer]: TSquareComponentClass
+      read GetComponentClasses;
   end;
 
   {*
@@ -1088,6 +1242,7 @@ type
     procedure InvalidateCacheIfNeeded(Context: TDrawViewContext);
     procedure UpdateCache(Context: TDrawViewContext);
     procedure DrawPlayers(Context: TDrawViewContext);
+    procedure DrawCeiling(Context: TDrawViewContext);
 
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
@@ -1112,18 +1267,17 @@ type
   *}
   TPlayer = class(TVisualComponent)
   private
-    FMap: TMap;                        /// Carte
-    FPosition: T3DPoint;               /// Position
-    FDirection: TDirection;            /// Direction
-    FMode: IPlayerMode;                /// Mode principal
-    FModeStack: IInterfaceList;        /// Pile des modes sauvegardés
-    FShowCounter: Integer;             /// Compteur de visibilité
-    FColor: TColor32;                  /// Couleur
-    FViewBorderSize: Integer;          /// Taille de la bordure de la vue
-    FPlugins: TObjectList;             /// Liste des plug-in
-    FAttributes: TStrings;             /// Liste des attributs
-    FOnSendCommand: TSendCommandEvent; /// Événement d'exécution de commande
-    FPlayState: TPlayState;            /// État de victoire/défaite
+    FMap: TMap;                 /// Carte
+    FPosition: T3DPoint;        /// Position
+    FDirection: TDirection;     /// Direction
+    FMode: IPlayerMode;         /// Mode principal
+    FModeStack: IInterfaceList; /// Pile des modes sauvegardés
+    FShowCounter: Integer;      /// Compteur de visibilité
+    FColor: TColor32;           /// Couleur
+    FViewBorderSize: Integer;   /// Taille de la bordure de la vue
+    FPlugins: TObjectList;      /// Liste des plug-in
+    FAttributes: TStrings;      /// Liste des attributs
+    FPlayState: TPlayState;     /// État de victoire/défaite
 
     /// Verrou global pour le joueur
     FLock: TMultiReadExclusiveWriteSynchronizer;
@@ -1143,30 +1297,28 @@ type
 
     procedure PrivDraw(Context: TDrawSquareContext); override;
 
-    function IsMoveAllowed(Context: TMoveContext): Boolean;
-    procedure MoveTo(Context: TMoveContext; Execute: Boolean = True); overload;
-
     procedure ActionProc(Coroutine: TCoroutine);
 
     function GetVisible: Boolean;
+
+    function GetAttribute(const AttrName: string): Integer;
+    procedure SetAttribute(const AttrName: string; Value: Integer);
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
+
+    function GetCategory: string; override;
 
     procedure DoDraw(Context: TDrawSquareContext); override;
 
     procedure PositionChanged; virtual;
-
-    function GetAttribute(const AttrName: string): Integer; virtual;
-    procedure SetAttribute(const AttrName: string; Value: Integer); virtual;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID);
     destructor Destroy; override;
 
     procedure Dispatch(var Msg); override;
     procedure DefaultHandler(var Msg); override;
 
-    procedure GetAttributes(Attributes: TStrings); virtual;
+    procedure GetAttributes(Attributes: TStrings);
     procedure GetPluginIDs(PluginIDs: TStrings);
 
     procedure DrawInPlace(Bitmap: TBitmap32; X: Integer = 0;
@@ -1178,13 +1330,19 @@ type
 
     procedure AddPlugin(Plugin: TPlugin);
     procedure RemovePlugin(Plugin: TPlugin);
+    function HasPlugin(Plugin: TPlugin): Boolean;
 
-    function AbleTo(const Action: TPlayerAction): Boolean;
-    function DoAction(const Action: TPlayerAction): Boolean;
+    function AbleTo(const Action: TPlayerAction; Param: Integer = 0): Boolean;
+    function DoAction(const Action: TPlayerAction; Param: Integer = 0): Boolean;
 
     procedure Move(Dir: TDirection; KeyPressed: Boolean;
       out Redo: Boolean);
 
+    function IsMoveAllowed(Context: TMoveContext): Boolean; overload;
+    function IsMoveAllowed(const Dest: T3DPoint;
+      KeyPressed: Boolean = False): Boolean; overload;
+
+    procedure MoveTo(Context: TMoveContext; Execute: Boolean = True); overload;
     procedure MoveTo(const Dest: T3DPoint; Execute: Boolean;
       out Redo: Boolean); overload;
     procedure MoveTo(const Dest: T3DPoint); overload;
@@ -1199,19 +1357,6 @@ type
 
     procedure Show;
     procedure Hide;
-
-    function SendCommand(const Command: string;
-      const Params: string = ''): string;
-
-    function ShowDialog(const Title, Text: string;
-      DlgType: TDialogType = dtInformation; DlgButtons: TDialogButtons = dbOK;
-      DefButton: Byte = 1; AddFlags: LongWord = 0): TDialogResult;
-    function ShowDialogRadio(const Title, Text: string; DlgType: TMsgDlgType;
-      DlgButtons: TMsgDlgButtons; DefButton: TModalResult;
-      const RadioTitles: array of string; var Selected: Integer;
-      OverButtons: Boolean = False): Word;
-    function ChooseNumber(const Title, Prompt: string;
-      Default, Min, Max: Integer): Integer;
 
     procedure ShowMessage(const Text: string);
 
@@ -1241,8 +1386,6 @@ type
     property Visible: Boolean read GetVisible;
     property Attribute[const AttrName: string]: Integer
       read GetAttribute write SetAttribute;
-    property OnSendCommand: TSendCommandEvent
-      read FOnSendCommand write FOnSendCommand;
     property PlayState: TPlayState read FPlayState;
   published
     property Direction: TDirection read FDirection write FDirection
@@ -1329,8 +1472,14 @@ type
 
     procedure Temporize;
 
+    function ComponentExists(const ID: TComponentID): Boolean;
+
     function SquareByComps(
-      const Field, Effect, Tool, Obstacle: TComponentID): TSquare;
+      const Field, Effect, Tool, Obstacle: TComponentID): TSquare; overload;
+    function SquareByComps(Field: TField; Effect: TEffect = nil;
+      Tool: TTool = nil; Obstacle: TObstacle = nil): TSquare; overload;
+
+    procedure RegisterComponents(RegisterComponent: TRegisterComponentProc);
 
     property ImagesMaster: TImagesMaster read FImagesMaster;
 
@@ -1438,7 +1587,8 @@ function FunLabyFindClass(const ClassName: string): TFunLabyPersistentClass;
 implementation
 
 uses
-  IniFiles, StrUtils, Forms, ScStrUtils, ScDelphiLanguage, GraphicEx;
+  IniFiles, StrUtils, Forms, ScStrUtils, ScDelphiLanguage, ScCompilerMagic,
+  GraphicEx;
 
 const
   /// Code de format d'un flux carte (TMap) (correspond à '.flm')
@@ -1712,6 +1862,187 @@ begin
     raise EClassNotFound.CreateFmt(SClassNotFound, [ClassName]);
 end;
 
+{----------------------}
+{ TQualifiedPos record }
+{----------------------}
+
+{*
+  Indique si cette position qualifiée est la position nulle
+  @return True si c'est la position nulle, False sinon
+*}
+function TQualifiedPos.GetIsNoQPos: Boolean;
+begin
+  Result := Map = nil;
+end;
+
+{*
+  Indique si cette position qualifiée est dans la carte
+  @return True si elle est dans la carte, False sinon
+*}
+function TQualifiedPos.GetIsInside: Boolean;
+begin
+  Result := Map.InMap(Position);
+end;
+
+{*
+  Indique si cette position qualifiée est hors de la carte
+  @return True si elle est hors de la carte, False sinon
+*}
+function TQualifiedPos.GetIsOutside: Boolean;
+begin
+  Result := not Map.InMap(Position);
+end;
+
+{*
+  Case présente à cette position qualifiée
+  @return Case présente à cette position qualifiée
+*}
+function TQualifiedPos.GetSquare: TSquare;
+begin
+  Result := Map[Position];
+end;
+
+{*
+  Terrain présent à cette position qualifiée
+  @return Terrain présent à cette position qualifiée
+*}
+function TQualifiedPos.GetField: TField;
+begin
+  Result := Map[Position].Field;
+end;
+
+{*
+  Effet présent à cette position qualifiée
+  @return Effet présent à cette position qualifiée
+*}
+function TQualifiedPos.GetEffect: TEffect;
+begin
+  Result := Map[Position].Effect;
+end;
+
+{*
+  Outil présent à cette position qualifiée
+  @return Outil présent à cette position qualifiée
+*}
+function TQualifiedPos.GetTool: TTool;
+begin
+  Result := Map[Position].Tool;
+end;
+
+{*
+  Obstacle présent à cette position qualifiée
+  @return Obstacle présent à cette position qualifiée
+*}
+function TQualifiedPos.GetObstacle: TObstacle;
+begin
+  Result := Map[Position].Obstacle;
+end;
+
+{*
+  Modifie la case présente à cette position qualifiée
+  @param Value   Nouvelle case à placer
+*}
+procedure TQualifiedPos.SetSquare(Value: TSquare);
+begin
+  Map[Position] := Value;
+end;
+
+{*
+  Modifie le terrain présent à cette position qualifiée
+  @param Value   Nouveau terrain à placer
+*}
+procedure TQualifiedPos.SetField(Value: TField);
+begin
+  with Map[Position] do
+    Map[Position] := Master.SquareByComps(Value, Effect, Tool, Obstacle);
+end;
+
+{*
+  Modifie l'effet présent à cette position qualifiée
+  @param Value   Nouvel effet à placer
+*}
+procedure TQualifiedPos.SetEffect(Value: TEffect);
+begin
+  with Map[Position] do
+    Map[Position] := Master.SquareByComps(Field, Value, Tool, Obstacle);
+end;
+
+{*
+  Modifie l'outil présent à cette position qualifiée
+  @param Value   Nouvel outil à placer
+*}
+procedure TQualifiedPos.SetTool(Value: TTool);
+begin
+  with Map[Position] do
+    Map[Position] := Master.SquareByComps(Field, Effect, Value, Obstacle);
+end;
+
+{*
+  Modifie l'obstacle présent à cette position qualifiée
+  @param Value   Nouvel obstacle à placer
+*}
+procedure TQualifiedPos.SetObstacle(Value: TObstacle);
+begin
+  with Map[Position] do
+    Map[Position] := Master.SquareByComps(Field, Effect, Tool, Value);
+end;
+
+{*
+  Nombre de composants
+  @return Nombre de composants
+*}
+function TQualifiedPos.GetComponentCount: Integer;
+begin
+  Result := Map[Position].ComponentCount;
+end;
+
+{*
+  Tableau zero-based des composants
+  @param Index   Index compris entre 0 inclus et ComponentCount exclus
+  @return Composant à l'index spécifié
+*}
+function TQualifiedPos.GetComponents(Index: Integer): TSquareComponent;
+begin
+  Result := Map[Position].Components[Index];
+end;
+
+{*
+  Modifie un composant
+  @param Index   Index compris entre 0 inclus et ComponentCount exclus
+  @param Value   Nouveau composant à placer à l'index spécifié
+*}
+procedure TQualifiedPos.SetComponents(Index: Integer; Value: TSquareComponent);
+begin
+  case Index of
+    0: Field := Value as TField;
+    1: Effect := Value as TEffect;
+    2: Tool := Value as TTool;
+    3: Obstacle := Value as TObstacle;
+  else
+    raise EListError.CreateResFmt(@SListIndexError, [Index]);
+  end;
+end;
+
+{*
+  Conversion implicite en TMap
+  @param Value   Position qualifiée à convertir
+  @return Carte de la position qualifiée
+*}
+class operator TQualifiedPos.Implicit(const Value: TQualifiedPos): TMap;
+begin
+  Result := Value.Map;
+end;
+
+{*
+  Conversion implicite en T3DPoint
+  @param Value   Position qualifiée à convertir
+  @return Position non qualifiée de la position qualifiée
+*}
+class operator TQualifiedPos.Implicit(const Value: TQualifiedPos): T3DPoint;
+begin
+  Result := Value.Position;
+end;
+
 {--------------------------}
 { TDrawSquareContext class }
 {--------------------------}
@@ -1758,6 +2089,19 @@ begin
 end;
 
 {*
+  Crée un contexte de dessin de case
+  @param Source   Contexte à imiter
+  @param AQPos    Position qualifiée à dessiner
+*}
+constructor TDrawSquareContext.Create(Source: TDrawSquareContext;
+  const AQPos: TQualifiedPos);
+begin
+  Create(Source.Bitmap, Source.X, Source.Y, AQPos);
+
+  Assign(Source);
+end;
+
+{*
   Spécifie le joueur à dessiner
   @param APlayer   Joueur à dessiner
 *}
@@ -1767,12 +2111,35 @@ begin
 end;
 
 {*
+  Spécifie le contexte de dessin de la vue
+  @param ADrawViewContext   Contexte de dessin de la vue
+*}
+procedure TDrawSquareContext.SetDrawViewContext(
+  ADrawViewContext: TDrawViewContext);
+begin
+  FDrawViewContext := ADrawViewContext;
+  FTickCount := ADrawViewContext.TickCount;
+end;
+
+{*
   Spécifie le tick count pour ce contexte de dessin
   @param ATickCount   Tick count pour ce contexte de dessin
 *}
 procedure TDrawSquareContext.SetTickCount(ATickCount: Cardinal);
 begin
   FTickCount := ATickCount;
+end;
+
+{*
+  Copie les informations de contexte depuis un autre contexte
+  Sont copiés : DrawViewContext, TickCount et Player.
+  @param Source   Contexte source
+*}
+procedure TDrawSquareContext.Assign(Source: TDrawSquareContext);
+begin
+  FDrawViewContext := Source.DrawViewContext;
+  FTickCount := Source.TickCount;
+  FPlayer := Source.Player;
 end;
 
 {*
@@ -2311,6 +2678,15 @@ begin
 end;
 
 {*
+  Indique si ce peintre est vide
+  @return True si ce peintre est vide, False sinon
+*}
+function TPainter.GetIsEmpty: Boolean;
+begin
+  Result := ImgNames.Count = 0;
+end;
+
+{*
   Dessine les images sur un canevas
   La méthode Draw dessine les images de ImgNames sur le canevas, à la
   position indiquée. Les différentes images sont superposées, celle d'index
@@ -2628,6 +3004,25 @@ begin
 end;
 
 {*
+  Notification qu'un élément a été ajouté ou supprimé
+  @param Item     Élément concerné
+  @param Action   Action faite sur l'élément
+*}
+procedure TFunLabyCollection.Notify(Item: TFunLabyPersistent;
+  Action: TListNotification);
+begin
+end;
+
+{*
+  Obtient la classe d'élément par défaut
+  @return Classe d'élément par défaut
+*}
+function TFunLabyCollection.GetDefaultItemClass: TFunLabyPersistentClass;
+begin
+  Result := nil;
+end;
+
+{*
   Ajoute un élément déjà créé à la collection
   @param Item   Élément à ajouter
   @return Index du nouvel élément
@@ -2669,6 +3064,23 @@ function TFunLabyCollection.Add(
   ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
 begin
   Result := Insert(Count, ItemClass);
+end;
+
+{*
+  Ajoute un élément de la classe par défaut à la collection
+  @return Élément ajouté
+  @throws EAbstractError Cette collection n'a pas de classe par défaut
+*}
+function TFunLabyCollection.AddDefault: TFunLabyPersistent;
+var
+  ItemClass: TFunLabyPersistentClass;
+begin
+  ItemClass := GetDefaultItemClass;
+
+  if ItemClass = nil then
+    AbstractError;
+
+  Result := Add(ItemClass);
 end;
 
 {*
@@ -2738,16 +3150,6 @@ begin
 end;
 
 {*
-  Notification qu'un élément a été ajouté ou supprimé
-  @param Item     Élément concerné
-  @param Action   Action faite sur l'élément
-*}
-procedure TFunLabyCollection.Notify(Item: TFunLabyPersistent;
-  Action: TListNotification);
-begin
-end;
-
-{*
   Cherche un élément dans la collection
   @param Item   Élément recherché
   @return Index de cet élément dans la collection, ou -1 si non trouvé
@@ -2755,6 +3157,15 @@ end;
 function TFunLabyCollection.IndexOf(Item: TFunLabyPersistent): Integer;
 begin
   Result := FItems.IndexOf(Item);
+end;
+
+{*
+  Teste si cette collection a une classe d'éléments par défaut
+  @return True si elle a une classe d'éléments par défaut, False sinon
+*}
+function TFunLabyCollection.HasDefault: Boolean;
+begin
+  Result := GetDefaultItemClass <> nil;
 end;
 
 {---------------------}
@@ -3156,6 +3567,78 @@ begin
   Result := TPlayerData(FPlayerData[I].Data);
 end;
 
+{*
+  Catégorie de ce composant
+  La catégorie est utilisée en mode édition pour savoir comment organiser les
+  différent composant dans la palette des composants. Si la catégorie est une
+  chaîne vide, ce composant n'est pas disponible dans la palette.
+  @return Catégorie de ce composant
+*}
+function TFunLabyComponent.GetCategory: string;
+begin
+  Result := '';
+end;
+
+{*
+  Description de ce composant pour une bulle d'aide (hint)
+  @return Description de ce composant pour une bulle d'aide
+*}
+function TFunLabyComponent.GetHint: string;
+begin
+  Result := ID;
+end;
+
+{*
+  Indique si ce composant peut être placé dans une palette des composants
+  @return True s'il peut être placé dans une palette des composants, False sinon
+*}
+function TFunLabyComponent.GetIsDesignable: Boolean;
+begin
+  Result := Category <> '';
+end;
+
+{*
+  Indique si cette classe utilise des données liées au joueur
+  @return True si cette classe utilise des données liées au joueur, False sinon
+*}
+class function TFunLabyComponent.UsePlayerData: Boolean;
+begin
+  Result := GetPlayerDataClass <> TPlayerData;
+end;
+
+{*
+  Dessine l'icône de ce composant
+  @param Bitmap   Bitmap destination
+  @param X        Abscisse
+  @param Y        Ordonnée
+*}
+procedure TFunLabyComponent.DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+  Y: Integer = 0);
+begin
+end;
+
+{*
+  Dessine l'icône de ce composant sur un canevas VCL
+  @param Canvas            Canevas cible
+  @param DestRect          Rectangle dans lequel dessiner le bitmap
+  @param BackgroundColor   Couleur de fond sur le canevas
+*}
+procedure TFunLabyComponent.DrawIconToCanvas(Canvas: TCanvas;
+  const DestRect: TRect; BackgroundColor: TColor);
+var
+  TempBitmap: TBitmap32;
+begin
+  TempBitmap := TBitmap32.Create;
+  try
+    TempBitmap.SetSize(SquareSize, SquareSize);
+    TempBitmap.Clear(Color32(BackgroundColor));
+    DrawIcon(TempBitmap);
+    Canvas.CopyRect(DestRect, TempBitmap.Canvas, TempBitmap.BoundsRect);
+  finally
+    TempBitmap.Free;
+  end;
+end;
+
 {-------------------------}
 { Classe TVisualComponent }
 {-------------------------}
@@ -3171,6 +3654,7 @@ constructor TVisualComponent.Create(AMaster: TMaster; const AID: TComponentID;
 begin
   inherited Create(AMaster, AID);
 
+  FOriginalName := AName;
   FName := AName;
   FPainter := TPainter.Create(FMaster.ImagesMaster);
   FPainter.ImgNames.BeginUpdate;
@@ -3186,6 +3670,15 @@ begin
   FPainter.Free;
 
   inherited;
+end;
+
+{*
+  Teste si la propriété Name doit être enregistrée dans un flux
+  @return True si elle doit être enregistrée, False sinon
+*}
+function TVisualComponent.IsNameStored: Boolean;
+begin
+  Result := FName <> FOriginalName;
 end;
 
 {*
@@ -3223,6 +3716,14 @@ end;
 procedure TVisualComponent.PrivDraw(Context: TDrawSquareContext);
 begin
   DoDraw(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TVisualComponent.GetHint: string;
+begin
+  Result := Name;
 end;
 
 {*
@@ -3270,25 +3771,148 @@ begin
 end;
 
 {*
-  Dessine le composant sur un canevas VCL
-  @param Canvas            Canevas cible
-  @param DestRect          Rectangle dans lequel dessiner le bitmap
-  @param BackgroundColor   Couleur de fond sur le canevas
+  [@inheritDoc]
 *}
-procedure TVisualComponent.DrawToCanvas(Canvas: TCanvas; const DestRect: TRect;
-  BackgroundColor: TColor);
-var
-  TempBitmap: TBitmap32;
+procedure TVisualComponent.DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+  Y: Integer = 0);
 begin
-  TempBitmap := TBitmap32.Create;
+  Draw(NoQPos, Bitmap, X, Y);
+end;
+
+{-------------------------}
+{ TComponentCreator class }
+{-------------------------}
+
+{*
+  Crée une instance de TComponentCreator
+  @param AID   ID de ce composant
+*}
+constructor TComponentCreator.Create(AMaster: TMaster; AID: TComponentID);
+begin
+  inherited Create(AMaster, AID);
+
+  FIconPainter := TPainter.Create(AMaster.ImagesMaster);
+  FCreatedComponents := TObjectList.Create(False);
+
+  FIconPainter.ImgNames.BeginUpdate;
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TComponentCreator.Destroy;
+begin
+  FCreatedComponents.Free;
+  FIconPainter.Free;
+
+  inherited;
+end;
+
+{*
+  Nombre de composants créés
+  @return Nombre de composants créés
+*}
+function TComponentCreator.GetCreatedComponentCount: Integer;
+begin
+  Result := FCreatedComponents.Count;
+end;
+
+{*
+  Tableau zero-based des composants créés
+  @param Index   Index d'un composant
+  @return Composant créé à l'index spécifié
+*}
+function TComponentCreator.GetCreatedComponents(
+  Index: Integer): TFunLabyComponent;
+begin
+  Result := TFunLabyComponent(FCreatedComponents[Index]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TComponentCreator.DefineProperties(Filer: TFunLabyFiler);
+var
+  ComponentIDs: TStrings;
+  I: Integer;
+begin
+  inherited;
+
+  ComponentIDs := TStringList.Create;
   try
-    TempBitmap.SetSize(SquareSize, SquareSize);
-    TempBitmap.Clear(Color32(BackgroundColor));
-    Draw(NoQPos, TempBitmap);
-    Canvas.CopyRect(DestRect, TempBitmap.Canvas, TempBitmap.BoundsRect);
+    if psWriting in PersistentState then
+    begin
+      for I := 0 to CreatedComponentCount-1 do
+        ComponentIDs.Add(CreatedComponents[I].ID);
+    end;
+
+    Filer.DefineStrings('CreatedComponents', ComponentIDs);
+
+    if psReading in PersistentState then
+    begin
+      for I := 0 to ComponentIDs.Count-1 do
+        CreateComponent(ComponentIDs[I]);
+    end;
   finally
-    TempBitmap.Free;
+    ComponentIDs.Free;
   end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TComponentCreator.GetCategory: string;
+begin
+  Result := SCategoryComponentCreators;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TComponentCreator.GetHint: string;
+begin
+  Result := SComponentCreatorHint;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TComponentCreator.AfterConstruction;
+begin
+  inherited;
+
+  FIconPainter.ImgNames.EndUpdate;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TComponentCreator.DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+  Y: Integer = 0);
+var
+  Context: TDrawSquareContext;
+begin
+  if IconPainter.IsEmpty then
+    Exit;
+
+  Context := TDrawSquareContext.Create(Bitmap, X, Y, NoQPos);
+  try
+    IconPainter.Draw(Context);
+  finally
+    Context.Free;
+  end;
+end;
+
+{*
+  Crée un nouveau composant
+  @param AID   ID du composant à créer
+  @return Composant créé
+*}
+function TComponentCreator.CreateComponent(
+  const AID: TComponentID): TFunLabyComponent;
+begin
+  Result := DoCreateComponent(AID);
+  FCreatedComponents.Add(Result);
 end;
 
 {----------------}
@@ -3317,6 +3941,24 @@ begin
   FPainterAfter.Free;
   FPainterBefore.Free;
   inherited;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TPlugin.GetCategory: string;
+begin
+  Result := SCategoryPlugins;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TPlugin.GetIsDesignable: Boolean;
+begin
+  Result := (inherited GetIsDesignable) and
+    (GetPropList(ClassInfo, tkProperties, nil, False) >
+    GetPropList(TypeInfo(TPlugin), tkProperties, nil, False));
 end;
 
 {*
@@ -3394,10 +4036,11 @@ end;
   l'action donnée en paramètre.
   @param Player   Joueur concerné
   @param Action   Action à tester
+  @param Param    Paramètre de l'action
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TPlugin.AbleTo(Player: TPlayer;
-  const Action: TPlayerAction): Boolean;
+function TPlugin.AbleTo(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer): Boolean;
 begin
   Result := False;
 end;
@@ -3412,6 +4055,14 @@ end;
 class function TObjectDef.GetPlayerDataClass: TPlayerDataClass;
 begin
   Result := TObjectDefPlayerData;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TObjectDef.GetCategory: string;
+begin
+  Result := SCategoryObjects;
 end;
 
 {*
@@ -3451,10 +4102,11 @@ end;
   d'effectuer l'action donnée en paramètre.
   @param Player   Joueur concerné
   @param Action   Action à tester
+  @param Param    Paramètre de l'action
   @return True si l'objet permet d'effectuer l'action, False sinon
 *}
-function TObjectDef.AbleTo(Player: TPlayer;
-  const Action: TPlayerAction): Boolean;
+function TObjectDef.AbleTo(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer): Boolean;
 begin
   Result := False;
 end;
@@ -3465,8 +4117,10 @@ end;
   effectuer l'action donnée en paramètre.
   @param Player   Joueur concerné
   @param Action   Action à effectuer
+  @param Param    Paramètre de l'action
 *}
-procedure TObjectDef.UseFor(Player: TPlayer; const Action: TPlayerAction);
+procedure TObjectDef.UseFor(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer);
 begin
 end;
 
@@ -3482,10 +4136,10 @@ end;
   @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
 constructor TField.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; ADelegateDrawTo: TField = nil);
+  const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
-  FDelegateDrawTo := ADelegateDrawTo;
+
   if Assigned(FDelegateDrawTo) then
     FStaticDraw := FDelegateDrawTo.StaticDraw;
 end;
@@ -3499,6 +4153,67 @@ begin
     inherited
   else
     FDelegateDrawTo.Draw(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TField.GetCategory: string;
+begin
+  Result := SCategoryFields;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TField.GetIsDesignable: Boolean;
+begin
+  Result := (inherited GetIsDesignable) and (not Assigned(FDelegateDrawTo));
+end;
+
+{*
+  Dessine le plafond de ce terrain
+  @param Context   Contexte de dessin d'une case
+*}
+procedure TField.DoDrawCeiling(Context: TDrawSquareContext);
+begin
+end;
+
+{*
+  Alloue une nouvelle instance qui délègera son affichage à un autre terrain
+  @param ADelegateDrawTo   Terrain à qui déléguer l'affichage
+  @return Instance allouée (non créée)
+*}
+class function TField.NewDelegateDraw(ADelegateDrawTo: TField): TField;
+begin
+  Result := TField(NewInstance);
+  Result.FDelegateDrawTo := ADelegateDrawTo;
+end;
+
+{*
+  Dessine le plafond de ce terrain
+  @param Context   Contexte de dessin d'une case
+*}
+procedure TField.DrawCeiling(Context: TDrawSquareContext);
+begin
+  DoDrawCeiling(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TField.DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+  Y: Integer = 0);
+var
+  Context: TDrawSquareContext;
+begin
+  Context := TDrawSquareContext.Create(Bitmap, X, Y);
+  try
+    Draw(Context);
+    DrawCeiling(Context);
+  finally
+    Context.Free;
+  end;
 end;
 
 {*
@@ -3542,6 +4257,14 @@ end;
 {----------------}
 
 {*
+  [@inheritDoc]
+*}
+function TEffect.GetCategory: string;
+begin
+  Result := SCategoryEffects;
+end;
+
+{*
   Exécuté lorsque le joueur est arrivé sur la case
   @param Context   Contexte du déplacement
 *}
@@ -3570,6 +4293,14 @@ end;
 {--------------}
 
 {*
+  [@inheritDoc]
+*}
+function TTool.GetCategory: string;
+begin
+  Result := SCategoryTools;
+end;
+
+{*
   Exécuté lorsque le joueur trouve l'outil
   Find est exécuté lorsque le joueur trouve l'outil. C'est-à-dire lorsqu'il
   arrive sur une case sur laquelle se trouve l'outil.
@@ -3582,6 +4313,14 @@ end;
 {------------------}
 { Classe TObstacle }
 {------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TObstacle.GetCategory: string;
+begin
+  Result := SCategoryObstacles;
+end;
 
 {*
   Exécuté lorsque le joueur pousse sur l'obstacle
@@ -3632,6 +4371,67 @@ begin
 end;
 
 {*
+  Nombre de composants
+  @return Nombre de composants
+*}
+function TSquare.GetComponentCount: Integer;
+begin
+  Result := 4;
+end;
+
+{*
+  Tableau zero-based des composants
+  @param Index   Index compris entre 0 inclus et ComponentCount exclus
+  @return Composant à l'index spécifié
+*}
+function TSquare.GetComponents(Index: Integer): TSquareComponent;
+begin
+  case Index of
+    0: Result := FField;
+    1: Result := FEffect;
+    2: Result := FTool;
+    3: Result := FObstacle;
+  else
+    raise EListError.CreateResFmt(@SListIndexError, [Index]);
+  end;
+end;
+
+{*
+  Tableau zero-based des classes requises des composants
+  @param Index   Index compris entre 0 inclus et ComponentCount exclus
+  @return Classe requise du composant à l'index spécifié
+*}
+function TSquare.GetComponentClasses(Index: Integer): TSquareComponentClass;
+begin
+  case Index of
+    0: Result := TField;
+    1: Result := TEffect;
+    2: Result := TTool;
+    3: Result := TObstacle;
+  else
+    raise EListError.CreateResFmt(@SListIndexError, [Index]);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSquare.GetCategory: string;
+begin
+  Result := FCategory;
+end;
+
+{*
+  Modifie la propriété Category
+  @param Value   Nouvelle valeur de Category
+*}
+procedure TSquare.SetCategory(const Value: string);
+begin
+  if ClassType = TSquare then
+    FCategory := Value;
+end;
+
+{*
   [@inheritDoc]
 *}
 procedure TSquare.DoDraw(Context: TDrawSquareContext);
@@ -3646,6 +4446,16 @@ begin
     Obstacle.Draw(Context);
 
   inherited;
+end;
+
+{*
+  Dessine le plafond de la case
+  @param Context   Contexte de dessin d'une case
+*}
+procedure TSquare.DoDrawCeiling(Context: TDrawSquareContext);
+begin
+  if Assigned(Field) then
+    Field.DrawCeiling(Context);
 end;
 
 {*
@@ -3685,6 +4495,32 @@ begin
     Result := Self = Component
   else
     Result := False;
+end;
+
+{*
+  Dessine le plafond de la case
+  @param Context   Contexte de dessin d'une case
+*}
+procedure TSquare.DrawCeiling(Context: TDrawSquareContext);
+begin
+  DoDrawCeiling(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSquare.DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
+  Y: Integer = 0);
+var
+  Context: TDrawSquareContext;
+begin
+  Context := TDrawSquareContext.Create(Bitmap, X, Y);
+  try
+    Draw(Context);
+    DrawCeiling(Context);
+  finally
+    Context.Free;
+  end;
 end;
 
 {*
@@ -4189,7 +5025,7 @@ begin
           DrawSquareContext := TDrawSquareContext.Create(FCacheBitmap,
             X*SquareSize, Y*SquareSize, QPos);
           try
-            DrawSquareContext.SetTickCount(Context.TickCount);
+            DrawSquareContext.SetDrawViewContext(Context);
             Square.Draw(DrawSquareContext);
           finally
             DrawSquareContext.Free;
@@ -4222,6 +5058,43 @@ begin
         DrawInPlace(Context.Bitmap,
           (Position.X-Context.Zone.Left) * SquareSize,
           (Position.Y-Context.Zone.Top) * SquareSize);
+      end;
+    end;
+  end;
+end;
+
+{*
+  Dessine le plafond
+  @param Context   Contexte de dessin de la vue
+*}
+procedure TLabyrinthPlayerMode.DrawCeiling(Context: TDrawViewContext);
+var
+  QPos: TQualifiedPos;
+  X, Y: Integer;
+  Square: TSquare;
+  DrawSquareContext: TDrawSquareContext;
+begin
+  with Context do
+  begin
+    QPos.Map := Map;
+    QPos.Position.Z := Floor;
+
+    for X := 0 to ZoneWidth-1 do
+    begin
+      for Y := 0 to ZoneHeight-1 do
+      begin
+        QPos.Position.X := Zone.Left + X;
+        QPos.Position.Y := Zone.Top + Y;
+        Square := Map[QPos.Position];
+
+        DrawSquareContext := TDrawSquareContext.Create(Bitmap,
+          X*SquareSize, Y*SquareSize, QPos);
+        try
+          DrawSquareContext.SetDrawViewContext(Context);
+          Square.DrawCeiling(DrawSquareContext);
+        finally
+          DrawSquareContext.Free;
+        end;
       end;
     end;
   end;
@@ -4262,6 +5135,7 @@ begin
   Context.Bitmap.Draw(0, 0, FCacheBitmap);
 
   DrawPlayers(Context);
+  DrawCeiling(Context);
 end;
 
 {*
@@ -4299,12 +5173,10 @@ end;
   Crée une instance de TPlayer
   @param AMaster   Maître FunLabyrinthe
   @param AID       ID du joueur
-  @param AName     Nom du joueur
 *}
-constructor TPlayer.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TPlayer.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited Create(AMaster, AID, SDefaultPlayerName);
 
   FStaticDraw := False;
   FMode := TLabyrinthPlayerMode.Create(Self);
@@ -4481,92 +5353,6 @@ begin
 end;
 
 {*
-  Teste si un déplacement est permis
-  @param Context   Contexte de déplacement
-  @return True si le déplacement est permis, False sinon
-*}
-function TPlayer.IsMoveAllowed(Context: TMoveContext): Boolean;
-var
-  Plugins: TPluginDynArray;
-  I: Integer;
-begin
-  Result := False;
-
-  with Context do
-  begin
-    SwitchToSrc;
-
-    // Case source : exiting
-    SrcSquare.Exiting(Context);
-    if Cancelled then
-      Exit;
-
-    // Plug-in : moving
-    GetPluginList(Plugins);
-    for I := 0 to Length(Plugins)-1 do
-      Plugins[I].Moving(Context);
-    if Cancelled then
-      Exit;
-
-    SwitchToDest;
-
-    // Case destination : entering
-    DestSquare.Entering(Context);
-    if Cancelled then
-      Exit;
-
-    // Case destination : pushing
-    DestSquare.Pushing(Context);
-    if Cancelled then
-      Exit;
-  end;
-
-  Result := True;
-end;
-
-{*
-  Déplace le joueur
-  @param Context   Contexte de déplacement
-  @param Execute   Indique s'il faut exécuter la case d'arrivée (défaut = True)
-*}
-procedure TPlayer.MoveTo(Context: TMoveContext; Execute: Boolean = True);
-var
-  Plugins: TPluginDynArray;
-  I: Integer;
-begin
-  FLock.BeginWrite;
-  try
-    FMap := Context.DestMap;
-    FPosition := Context.Dest;
-    PositionChanged;
-  finally
-    FLock.EndWrite;
-  end;
-
-  with Context do
-  begin
-    SwitchToSrc;
-
-    // Case source : exited
-    SrcSquare.Exited(Context);
-
-    SwitchToDest;
-
-    // Plug-in : moved
-    GetPluginList(Plugins);
-    for I := 0 to Length(Plugins)-1 do
-      Plugins[I].Moved(Context);
-
-    // Case destination : entered
-    DestSquare.Entered(Context);
-  end;
-
-  // Case destination : execute (seulement si Execute vaut True)
-  if Execute then
-    Map[Position].Execute(Context);
-end;
-
-{*
   Procédure de la coroutine d'appui sur touche
   @param Coroutine   Objet coroutine gérant cette procédure
 *}
@@ -4612,6 +5398,55 @@ begin
 end;
 
 {*
+  Tableau indexé par chaîne des attributs du joueur
+  @param AttrName   Nom de l'attribut à récupérer
+  @return Attribut dont le nom a été spécifié
+*}
+function TPlayer.GetAttribute(const AttrName: string): Integer;
+var
+  Index: Integer;
+begin
+  FLock.BeginRead;
+  try
+    Index := FAttributes.IndexOf(AttrName);
+    if Index < 0 then
+      Result := 0
+    else
+      Result := Integer(FAttributes.Objects[Index]);
+  finally
+    FLock.EndRead;
+  end;
+end;
+
+{*
+  Modifie le tableau indexé par chaîne des attributs du joueur
+  @param AttrName   Nom de l'attribut à modifier
+  @param Value      Nouvelle valeur de l'attribut
+*}
+procedure TPlayer.SetAttribute(const AttrName: string; Value: Integer);
+var
+  Index: Integer;
+begin
+  FLock.BeginWrite;
+  try
+    Index := FAttributes.IndexOf(AttrName);
+    if Index < 0 then
+    begin
+      if Value <> 0 then
+        FAttributes.AddObject(AttrName, TObject(Value));
+    end else
+    begin
+      if Value = 0 then
+        FAttributes.Delete(Index)
+      else
+        FAttributes.Objects[Index] := TObject(Value);
+    end;
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+{*
   [@inheritDoc]
 *}
 procedure TPlayer.DefineProperties(Filer: TFunLabyFiler);
@@ -4645,6 +5480,14 @@ end;
 {*
   [@inheritDoc]
 *}
+function TPlayer.GetCategory: string;
+begin
+  Result := SCategoryPlayers;
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TPlayer.DoDraw(Context: TDrawSquareContext);
 var
   Color: TColor32;
@@ -4670,69 +5513,6 @@ procedure TPlayer.PositionChanged;
 begin
   if (Map <> nil) and (ViewBorderSize > Map.MaxViewSize) then
     ViewBorderSize := Map.MaxViewSize;
-end;
-
-{*
-  Tableau indexé par chaîne des attributs du joueur
-  @param AttrName   Nom de l'attribut à récupérer
-  @return Attribut dont le nom a été spécifié
-*}
-function TPlayer.GetAttribute(const AttrName: string): Integer;
-var
-  Index: Integer;
-begin
-  FLock.BeginRead;
-  try
-    case AnsiIndexStr(AttrName,
-      [attrColor, attrShowCounter, attrViewBorderSize]) of
-      0: Result := FColor;
-      1: Result := FShowCounter;
-      2: Result := FViewBorderSize;
-    else
-      Index := FAttributes.IndexOf(AttrName);
-      if Index < 0 then
-        Result := 0
-      else
-        Result := Integer(FAttributes.Objects[Index]);
-    end;
-  finally
-    FLock.EndRead;
-  end;
-end;
-
-{*
-  Modifie le tableau indexé par chaîne des attributs du joueur
-  @param AttrName   Nom de l'attribut à modifier
-  @param Value      Nouvelle valeur de l'attribut
-*}
-procedure TPlayer.SetAttribute(const AttrName: string; Value: Integer);
-var
-  Index: Integer;
-begin
-  FLock.BeginWrite;
-  try
-    case AnsiIndexStr(AttrName,
-      [attrColor, attrShowCounter, attrViewBorderSize]) of
-      0: FColor := Value;
-      1: FShowCounter := Value;
-      2: FViewBorderSize := MinMax(Value, MinViewSize, Map.MaxViewSize);
-    else
-      Index := FAttributes.IndexOf(AttrName);
-      if Index < 0 then
-      begin
-        if Value <> 0 then
-          FAttributes.AddObject(AttrName, TObject(Value));
-      end else
-      begin
-        if Value = 0 then
-          FAttributes.Delete(Index)
-        else
-          FAttributes.Objects[Index] := TObject(Value);
-      end;
-    end;
-  finally
-    FLock.EndWrite;
-  end;
 end;
 
 {*
@@ -4771,16 +5551,7 @@ procedure TPlayer.GetAttributes(Attributes: TStrings);
 begin
   FLock.BeginRead;
   try
-    with Attributes do
-    begin
-      Assign(FAttributes);
-      if FColor <> DefaultPlayerColor then
-        AddObject(attrColor, TObject(FColor));
-      if FShowCounter <> 0 then
-        AddObject(attrShowCounter, TObject(FShowCounter));
-      if FViewBorderSize <> DefaultViewBorderSize then
-        AddObject(attrViewBorderSize, TObject(FViewBorderSize));
-    end;
+    Attributes.Assign(FAttributes);
   finally
     FLock.EndRead;
   end;
@@ -4914,13 +5685,30 @@ begin
 end;
 
 {*
+  Teste si un plug-in donné est attaché au joueur
+  @param Plugin   Plug-in à tester
+  @return True si le plug-in est attaché au joueur, False sinon
+*}
+function TPlayer.HasPlugin(Plugin: TPlugin): Boolean;
+begin
+  FLock.BeginRead;
+  try
+    Result := FPlugins.IndexOf(Plugin) >= 0;
+  finally
+    FLock.EndRead;
+  end;
+end;
+
+{*
   Indique si le joueur est capable d'effectuer une action donnée
   Un joueur est capable d'effectuer une action si l'un de ses plug-in ou l'un de
   ses objets le lui permet.
   @param Action   Action à tester
+  @param Param    Paramètre de l'action
   @return True si le joueur est capable d'effectuer l'action, False sinon
 *}
-function TPlayer.AbleTo(const Action: TPlayerAction): Boolean;
+function TPlayer.AbleTo(const Action: TPlayerAction;
+  Param: Integer = 0): Boolean;
 var
   Plugins: TPluginDynArray;
   I: Integer;
@@ -4929,11 +5717,11 @@ begin
 
   GetPluginList(Plugins);
   for I := 0 to Length(Plugins)-1 do
-    if Plugins[I].AbleTo(Self, Action) then
+    if Plugins[I].AbleTo(Self, Action, Param) then
       Exit;
 
   for I := 0 to Master.ObjectDefCount-1 do
-    if Master.ObjectDefs[I].AbleTo(Self, Action) then
+    if Master.ObjectDefs[I].AbleTo(Self, Action, Param) then
       Exit;
 
   Result := False;
@@ -4945,9 +5733,11 @@ end;
   objets permettent d'effectuer l'action, le joueur se voit demander d'en
   choisir un.
   @param Action   Action à tester
+  @param Param    Paramètre de l'action
   @return True si le joueur a été capable d'effectuer l'action, False sinon
 *}
-function TPlayer.DoAction(const Action: TPlayerAction): Boolean;
+function TPlayer.DoAction(const Action: TPlayerAction;
+  Param: Integer = 0): Boolean;
 var
   Plugins: TPluginDynArray;
   I, GoodObjectCount: Integer;
@@ -4960,7 +5750,7 @@ begin
   // Les plug-in ont la priorité, puisqu'ils n'ont pas d'effet de bord
   GetPluginList(Plugins);
   for I := 0 to Length(Plugins)-1 do
-    if Plugins[I].AbleTo(Self, Action) then
+    if Plugins[I].AbleTo(Self, Action, Param) then
       Exit;
 
   FLock.BeginWrite;
@@ -4970,7 +5760,7 @@ begin
     GoodObjectCount := 0;
     for I := 0 to Master.ObjectDefCount-1 do
     begin
-      if Master.ObjectDefs[I].AbleTo(Self, Action) then
+      if Master.ObjectDefs[I].AbleTo(Self, Action, Param) then
       begin
         GoodObjects[GoodObjectCount] := Master.ObjectDefs[I];
         Inc(GoodObjectCount);
@@ -4997,7 +5787,7 @@ begin
     end;
 
     // Utilisation de l'objet
-    GoodObject.UseFor(Self, Action);
+    GoodObject.UseFor(Self, Action, Param);
   finally
     FLock.EndWrite;
   end;
@@ -5036,6 +5826,117 @@ begin
   finally
     Context.Free;
   end;
+end;
+
+{*
+  Teste si un déplacement est permis
+  @param Context   Contexte de déplacement
+  @return True si le déplacement est permis, False sinon
+*}
+function TPlayer.IsMoveAllowed(Context: TMoveContext): Boolean;
+var
+  Plugins: TPluginDynArray;
+  I: Integer;
+begin
+  Result := False;
+
+  with Context do
+  begin
+    SwitchToSrc;
+
+    // Case source : exiting
+    SrcSquare.Exiting(Context);
+    if Cancelled then
+      Exit;
+
+    // Plug-in : moving
+    GetPluginList(Plugins);
+    for I := 0 to Length(Plugins)-1 do
+      Plugins[I].Moving(Context);
+    if Cancelled then
+      Exit;
+
+    SwitchToDest;
+
+    // Case destination : entering
+    DestSquare.Entering(Context);
+    if Cancelled then
+      Exit;
+
+    // Case destination : pushing
+    DestSquare.Pushing(Context);
+    if Cancelled then
+      Exit;
+  end;
+
+  Result := True;
+end;
+
+{*
+  Teste si un déplacement est permis
+  @param Dest   Case destination
+  @return True si le déplacement est permis, False sinon
+*}
+function TPlayer.IsMoveAllowed(const Dest: T3DPoint;
+  KeyPressed: Boolean = False): Boolean;
+var
+  Context: TMoveContext;
+begin
+  // Le joueur est-il toujours en train de jouer ?
+  if PlayState <> psPlaying then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  Context := TMoveContext.Create(Self, Dest, KeyPressed);
+  try
+    Result := IsMoveAllowed(Context);
+  finally
+    Context.Free;
+  end;
+end;
+
+{*
+  Déplace le joueur
+  @param Context   Contexte de déplacement
+  @param Execute   Indique s'il faut exécuter la case d'arrivée (défaut = True)
+*}
+procedure TPlayer.MoveTo(Context: TMoveContext; Execute: Boolean = True);
+var
+  Plugins: TPluginDynArray;
+  I: Integer;
+begin
+  FLock.BeginWrite;
+  try
+    FMap := Context.DestMap;
+    FPosition := Context.Dest;
+    PositionChanged;
+  finally
+    FLock.EndWrite;
+  end;
+
+  with Context do
+  begin
+    SwitchToSrc;
+
+    // Case source : exited
+    SrcSquare.Exited(Context);
+
+    SwitchToDest;
+
+    // Plug-in : moved
+    GetPluginList(Plugins);
+    for I := 0 to Length(Plugins)-1 do
+      Plugins[I].Moved(Context);
+
+    // Case destination : entered
+    DestSquare.Entered(Context);
+  end;
+
+  // Case destination : execute (seulement si Execute vaut True)
+  if Execute and (Map = Context.Map) and Same3DPoint(Position, Context.Pos) then
+    Map[Position].Execute(Context);
 end;
 
 {*
@@ -5158,112 +6059,6 @@ end;
 procedure TPlayer.Hide;
 begin
   InterlockedDecrement(FShowCounter);
-end;
-
-{*
-  Envoie une commande au joueur
-  @param Command   Commande à envoyer
-  @param Params    Paramètres de la commande
-  @return Résultat de la commande
-  @throws EUnsupportedCommand : La commande demandée n'est pas supportée
-*}
-function TPlayer.SendCommand(const Command: string;
-  const Params: string = ''): string;
-begin
-  if Assigned(FOnSendCommand) then
-    Result := FOnSendCommand(Self, Command, Params)
-  else
-    Result := '';
-end;
-
-{*
-  Affiche une boîte de dialogue
-  @param Title        Titre de la boîte de dialogue
-  @param Text         Texte de la boîte de dialogue
-  @param DlgType      Type de boîte de dialogue
-  @param DlgButtons   Boutons présents dans la boîte de dialogue
-  @param DefButton    Bouton sélectionné par défaut
-  @param AddFlags     Flags additionnels pour MessageBox
-  @return Bouton sur lequel l'utilisateur a cliqué
-*}
-function TPlayer.ShowDialog(const Title, Text: string;
-  DlgType: TDialogType = dtInformation; DlgButtons: TDialogButtons = dbOK;
-  DefButton: Byte = 1; AddFlags: LongWord = 0): TDialogResult;
-var
-  Params: string;
-begin
-  Params := StrToStrRepres(Title);
-  Params := Params + #10 + StrToStrRepres(Text);
-  Params := Params + #10 + GetEnumName(
-    TypeInfo(TDialogType), Integer(DlgType));
-  Params := Params + #10 + GetEnumName(
-    TypeInfo(TDialogButtons), Integer(DlgButtons));
-  Params := Params + #10 + IntToStr(DefButton);
-  Params := Params + #10 + IntToStr(AddFlags);
-
-  Result := TDialogResult(GetEnumValue(TypeInfo(TDialogResult),
-    SendCommand(CommandShowDialog, Params)));
-end;
-
-{*
-  Affiche une boîte de dialogue avec des boutons radio
-  ShowDialogRadio est une variante de ShowDialog qui affiche des boutons radio
-  pour chaque choix possible.
-  @param Title         Titre de la boîte de dialogue
-  @param Text          Texte de la boîte de dialogue
-  @param DlgType       Type de boîte de dialogue
-  @param DlgButtons    Boutons présents dans la boîte de dialogue
-  @param DefButton     Bouton sélectionné par défaut
-  @param RadioTitles   Libellés des différents boutons radio
-  @param Selected      Bouton radio sélectionné
-  @param OverButtons   Boutons radio placés au-dessus des boutons si True
-  @return Bouton sur lequel l'utilisateur a cliqué
-*}
-function TPlayer.ShowDialogRadio(const Title, Text: string;
-  DlgType: TMsgDlgType; DlgButtons: TMsgDlgButtons; DefButton: TModalResult;
-  const RadioTitles: array of string; var Selected: Integer;
-  OverButtons: Boolean = False): Word;
-var
-  Params, CmdResult: string;
-  I: Integer;
-begin
-  Params := StrToStrRepres(Title);
-  Params := Params + #10 + StrToStrRepres(Text);
-  Params := Params + #10 + GetEnumName(TypeInfo(TMsgDlgType), Integer(DlgType));
-  Params := Params + #10 + EnumSetToStr(DlgButtons, TypeInfo(TMsgDlgButtons));
-  Params := Params + #10 + IntToStr(DefButton);
-  Params := Params + #10 + IntToStr(Length(RadioTitles));
-  for I := Low(RadioTitles) to High(RadioTitles) do
-    Params := Params + #10 + StrToStrRepres(RadioTitles[I]);
-  Params := Params + #10 + IntToStr(Selected);
-  Params := Params + #10 + GetEnumName(TypeInfo(Boolean), Integer(OverButtons));
-
-  CmdResult := SendCommand(CommandShowDialogRadio, Params);
-  Selected := StrToInt(GetFirstToken(CmdResult, ' '));
-  Result := StrToInt(GetLastToken(CmdResult, ' '));
-end;
-
-{*
-  Affiche une invite au joueur lui demandant de choisir un nombre
-  @param Title     Titre de la boîte de dialogue
-  @param Prompt    Invite
-  @param Default   Valeur par défaut affichée
-  @param Min       Valeur minimale que peut choisir le joueur
-  @param Max       Valeur maximale que peut choisir le joueur
-  @return La valeur qu'a choisie le joueur
-*}
-function TPlayer.ChooseNumber(const Title, Prompt: string;
-  Default, Min, Max: Integer): Integer;
-var
-  Params: string;
-begin
-  Params := StrToStrRepres(Title);
-  Params := Params + #10 + StrToStrRepres(Prompt);
-  Params := Params + #10 + IntToStr(Default);
-  Params := Params + #10 + IntToStr(Min);
-  Params := Params + #10 + IntToStr(Max);
-
-  Result := StrToInt(SendCommand(CommandChooseNumber, Params));
 end;
 
 {*
@@ -6053,12 +6848,17 @@ begin
   Filer.DefineFieldProperty('Terminated', TypeInfo(Boolean),
     @FTerminated, Terminated);
 
-  for I := 0 to ComponentCount-1 do
+  { We need a while here, because reading component creators may increment
+    ComponentCount. }
+  I := 0;
+  while I < ComponentCount do
   begin
     Component := Components[I];
 
     if not Component.Transient then
       Filer.DefinePersistent(Component.ID, Component);
+
+    Inc(I);
   end;
 end;
 
@@ -6068,6 +6868,16 @@ end;
 procedure TMaster.Temporize;
 begin
   Sleep(Temporization);
+end;
+
+{*
+  Teste si un composant existe
+  @param ID   ID de composant à tester
+  @return True si un composant avec cet ID existe déjà, False sinon
+*}
+function TMaster.ComponentExists(const ID: TComponentID): Boolean;
+begin
+  Result := FComponents.IndexOf(ID) >= 0;
 end;
 
 {*
@@ -6082,6 +6892,34 @@ function TMaster.SquareByComps(
   const Field, Effect, Tool, Obstacle: TComponentID): TSquare;
 begin
   Result := Square[Format(SquareIDFormat, [Field, Effect, Tool, Obstacle])];
+end;
+
+{*
+  Obtient une case à partir de ses composantes
+  @param Field      Terrain
+  @param Effect     Effet
+  @param Tool       Outil
+  @param Obstacle   Obstacle
+  @return Case avec avec les composantes spécifiées
+*}
+function TMaster.SquareByComps(Field: TField; Effect: TEffect = nil;
+  Tool: TTool = nil; Obstacle: TObstacle = nil): TSquare;
+begin
+  Result := Square[Format(SquareIDFormat,
+    [Field.SafeID, Effect.SafeID, Tool.SafeID, Obstacle.SafeID])];
+end;
+
+{*
+  Enregistre tous les composants qui doivent être mis dans la palette
+  @param RegisterComponent   Méthode call-back pour l'enregistrement
+*}
+procedure TMaster.RegisterComponents(RegisterComponent: TRegisterComponentProc);
+var
+  I: Integer;
+begin
+  for I := 0 to ComponentCount-1 do
+    if Components[I].IsDesignable then
+      RegisterComponent(Components[I]);
 end;
 
 initialization

@@ -3,7 +3,7 @@ unit Generics;
 interface
 
 uses
-  Graphics, ScUtils, FunLabyUtils;
+  Graphics, ScUtils, FunLabyUtils, FunLabyCoreConsts;
 
 const
   fButton = 'Buttons/Button';             /// Image du bouton
@@ -20,6 +20,8 @@ type
     @version 5.0
   *}
   TDecorativeEffect = class(TEffect)
+  protected
+    function GetCategory: string; override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName, AImgName: string);
@@ -59,7 +61,8 @@ type
   public
     procedure Execute(Context: TMoveContext); override;
   published
-    property GlobalCounter: Integer read FGlobalCounter write FGlobalCounter;
+    property GlobalCounter: Integer read FGlobalCounter write FGlobalCounter
+      default 0;
   end;
 
   {*
@@ -196,6 +199,14 @@ constructor TDecorativeEffect.Create(AMaster: TMaster;
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(AImgName);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TDecorativeEffect.GetCategory: string;
+begin
+  Result := SCategoryNeutrals;
 end;
 
 {-----------------------}

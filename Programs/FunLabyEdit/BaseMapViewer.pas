@@ -246,6 +246,7 @@ var
   LeftZone, TopZone, RightZone, BottomZone: Integer;
   I, X, Y: Integer;
   QPos: TQualifiedPos;
+  Context: TDrawSquareContext;
 begin
   if CurrentMap = nil then
   begin
@@ -272,8 +273,14 @@ begin
     for Y := Top to Bottom do
     begin
       QPos.Position := Point3D(X, Y, CurrentFloor);
-      CurrentMap[QPos.Position].Draw(QPos, PaintBoxMap.Buffer,
-        (MinViewSize+X) * SquareSize, (MinViewSize+Y) * SquareSize);
+
+      Context := TDrawSquareContext.Create(PaintBoxMap.Buffer,
+        (MinViewSize+X) * SquareSize, (MinViewSize+Y) * SquareSize, QPos);
+      try
+        CurrentMap[QPos.Position].Draw(Context);
+      finally
+        Context.free;
+      end;
     end;
   end;
 
@@ -286,6 +293,24 @@ begin
       begin
         DrawInPlace(PaintBoxMap.Buffer, (MinViewSize+Position.X) * SquareSize,
           (MinViewSize+Position.Y) * SquareSize);
+      end;
+    end;
+  end;
+
+  // Dessin du plafond
+  QPos.Map := CurrentMap;
+  for X := Left to Right do
+  begin
+    for Y := Top to Bottom do
+    begin
+      QPos.Position := Point3D(X, Y, CurrentFloor);
+
+      Context := TDrawSquareContext.Create(PaintBoxMap.Buffer,
+        (MinViewSize+X) * SquareSize, (MinViewSize+Y) * SquareSize, QPos);
+      try
+        CurrentMap[QPos.Position].DrawCeiling(Context);
+      finally
+        Context.free;
       end;
     end;
   end;

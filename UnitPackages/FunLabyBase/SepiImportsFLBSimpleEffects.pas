@@ -25,8 +25,8 @@ implementation
 const // don't localize
   UnitName = 'FLBSimpleEffects';
   ResourceName = 'SepiImportsFLBSimpleEffects';
-  TypeCount = 7;
-  MethodCount = 6;
+  TypeCount = 9;
+  MethodCount = 8;
   VariableCount = 1;
 
 var
@@ -41,6 +41,16 @@ type
   end;
 
   TSepiImportsTTransporter = class(TTransporter)
+  private
+    class procedure InitMethodAddresses;
+  end;
+
+  TSepiImportsTInactiveTransporter = class(TInactiveTransporter)
+  private
+    class procedure InitMethodAddresses;
+  end;
+
+  TSepiImportsTTransporterCreator = class(TTransporterCreator)
   private
     class procedure InitMethodAddresses;
   end;
@@ -83,13 +93,31 @@ begin
   MethodAddresses[1] := @TSepiImportsTTransporter.Create;
 end;
 
+{-----------------------------}
+{ TInactiveTransporter import }
+{-----------------------------}
+
+class procedure TSepiImportsTInactiveTransporter.InitMethodAddresses;
+begin
+  MethodAddresses[2] := @TSepiImportsTInactiveTransporter.Create;
+end;
+
+{----------------------------}
+{ TTransporterCreator import }
+{----------------------------}
+
+class procedure TSepiImportsTTransporterCreator.InitMethodAddresses;
+begin
+  MethodAddresses[3] := @TSepiImportsTTransporterCreator.Create;
+end;
+
 {----------------}
 { TStairs import }
 {----------------}
 
 class procedure TSepiImportsTStairs.InitMethodAddresses;
 begin
-  MethodAddresses[2] := @TSepiImportsTStairs.Create;
+  MethodAddresses[4] := @TSepiImportsTStairs.Create;
 end;
 
 {-------------------------}
@@ -98,7 +126,7 @@ end;
 
 class procedure TSepiImportsTDirectTurnstile.InitMethodAddresses;
 begin
-  MethodAddresses[3] := @TSepiImportsTDirectTurnstile.Create;
+  MethodAddresses[5] := @TSepiImportsTDirectTurnstile.Create;
 end;
 
 {---------------------------}
@@ -107,7 +135,7 @@ end;
 
 class procedure TSepiImportsTIndirectTurnstile.InitMethodAddresses;
 begin
-  MethodAddresses[4] := @TSepiImportsTIndirectTurnstile.Create;
+  MethodAddresses[6] := @TSepiImportsTIndirectTurnstile.Create;
 end;
 
 {------------------}
@@ -116,7 +144,7 @@ end;
 
 class procedure TSepiImportsTTreasure.InitMethodAddresses;
 begin
-  MethodAddresses[5] := @TSepiImportsTTreasure.Create;
+  MethodAddresses[7] := @TSepiImportsTTreasure.Create;
 end;
 
 {---------------------}
@@ -188,16 +216,20 @@ begin
   TypeInfoArray[0] := TypeInfo(TTransporterKind);
   TypeInfoArray[1] := TypeInfo(TArrow);
   TypeInfoArray[2] := TypeInfo(TTransporter);
-  TypeInfoArray[3] := TypeInfo(TStairs);
-  TypeInfoArray[4] := TypeInfo(TDirectTurnstile);
-  TypeInfoArray[5] := TypeInfo(TIndirectTurnstile);
-  TypeInfoArray[6] := TypeInfo(TTreasure);
+  TypeInfoArray[3] := TypeInfo(TInactiveTransporter);
+  TypeInfoArray[4] := TypeInfo(TTransporterCreator);
+  TypeInfoArray[5] := TypeInfo(TStairs);
+  TypeInfoArray[6] := TypeInfo(TDirectTurnstile);
+  TypeInfoArray[7] := TypeInfo(TIndirectTurnstile);
+  TypeInfoArray[8] := TypeInfo(TTreasure);
 end;
 
 procedure InitMethodAddresses;
 begin
   TSepiImportsTArrow.InitMethodAddresses;
   TSepiImportsTTransporter.InitMethodAddresses;
+  TSepiImportsTInactiveTransporter.InitMethodAddresses;
+  TSepiImportsTTransporterCreator.InitMethodAddresses;
   TSepiImportsTStairs.InitMethodAddresses;
   TSepiImportsTDirectTurnstile.InitMethodAddresses;
   TSepiImportsTIndirectTurnstile.InitMethodAddresses;
@@ -240,6 +272,26 @@ type
 
 {$IF SizeOf(TCheckAlignmentForTTransporter) <> (4 + 4)}
   {$MESSAGE WARN 'Le type TTransporter n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTInactiveTransporter = record
+    Dummy: Byte;
+    Field: TInactiveTransporter;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTInactiveTransporter) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TInactiveTransporter n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTTransporterCreator = record
+    Dummy: Byte;
+    Field: TTransporterCreator;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTTransporterCreator) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TTransporterCreator n''a pas l''alignement calculé par Sepi'}
 {$IFEND}
 
 type
@@ -297,12 +349,14 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TArrow, 48, 44);
-  CheckInstanceSize(TTransporter, 52, 44);
-  CheckInstanceSize(TStairs, 48, 44);
-  CheckInstanceSize(TDirectTurnstile, 44, 44);
-  CheckInstanceSize(TIndirectTurnstile, 44, 44);
-  CheckInstanceSize(TTreasure, 44, 44);
+  CheckInstanceSize(TArrow, 52, 48);
+  CheckInstanceSize(TTransporter, 52, 48);
+  CheckInstanceSize(TInactiveTransporter, 52, 52);
+  CheckInstanceSize(TTransporterCreator, 36, 36);
+  CheckInstanceSize(TStairs, 52, 48);
+  CheckInstanceSize(TDirectTurnstile, 48, 48);
+  CheckInstanceSize(TIndirectTurnstile, 48, 48);
+  CheckInstanceSize(TTreasure, 48, 48);
   {$ASSERTIONS OFF}
 end;
 

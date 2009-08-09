@@ -3,58 +3,71 @@ unit FunLabyEditConsts;
 interface
 
 resourcestring
-  sFatalErrorTitle = 'Erreur fatale';
+  SFatalErrorTitle = 'Erreur fatale';
 
-  sBaseSepiRootLoadError =
+  SBaseSepiRootLoadError =
     'Erreur au chargement des fonctionnalités coeur de FunLabyrinthe avec le '+
     'message "%s". FunLabyrinthe ne peut continuer et doit fermer.';
 
-  sFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
+  SFeatureIsNotImplementedYet = 'Cette fonction n''est pas encore implémentée';
 
-  sDefaultPlayerName = 'Joueur';
+  SDefaultPlayerName = 'Joueur';
 
-  sPlayerPosition = 'Position : %s';
-  sCenterToPosition = 'Centrer la vue sur ce joueur';
-  sShowPlugins = 'Plug-in...';
-  sShowAttributes = 'Attributs...';
-  sShowObjects = 'Objets...';
+  SPlayerPosition = 'Position : %s';
+  SCenterToPosition = 'Centrer la vue sur ce joueur';
+  SShowPlugins = 'Plug-in...';
+  SShowAttributes = 'Attributs...';
+  SShowObjects = 'Objets...';
 
-  sConfirmExitTitle = 'Enregistrer le fichier';
-  sConfirmExit = 'Le fichier a été modifié. Voulez-vous l''enregistrer ?';
+  SConfirmExitTitle = 'Enregistrer le fichier';
+  SConfirmExit = 'Le fichier a été modifié. Voulez-vous l''enregistrer ?';
 
-  sCantSave = 'Impossible d''enregistrer';
-  sCantSaveUnplacedPlayer =
+  SCantSave = 'Impossible d''enregistrer';
+  SCantSaveUnplacedPlayer =
     'Impossible d''enregistrer car le joueur d''ID %s n''a pas été placé';
 
-  sCantCenterToPosition = 'Impossible de centrer le joueur';
-  sCantCenterToUnplacedPlayer =
+  SCantCenterToPosition = 'Impossible de centrer le joueur';
+  SCantCenterToUnplacedPlayer =
     'Impossible de centrer sur ce joueur car il n''a pas été placé';
 
-  sOnlyFieldOutsideTitle = 'Remplacer l''extérieur de la carte';
-  sOnlyFieldOutside =
+  SOnlyFieldOutsideTitle = 'Remplacer l''extérieur de la carte';
+  SOnlyFieldOutside =
     'Seuls les terrains sont acceptés en dehors de la carte';
 
-  sReplaceOutsideTitle = 'Remplacer l''extérieur de la carte';
-  sReplaceOutside = 'Voulez-vous vraiment modifier l''extérieur de la carte ?';
-
-  sRemoveMapTitle = 'Retirer une carte';
-  sRemoveMap = 'Êtes-vous certain de vouloir retirer cette carte du projet ?';
+  SRemoveMapTitle = 'Supprimer une carte';
+  SRemoveMap =
+    'Êtes-vous certain de vouloir supprimer complètement cette carte ?';
 
   SDuplicateSourceTitle = 'Fichier source déjà présent';
   SDuplicateSource = 'Ce fichier source est déjà présent dans le projet';
 
-  sRemoveSourceTitle = 'Retirer un fichier source';
-  sRemoveSource =
+  SRemoveSourceTitle = 'Retirer un fichier source';
+  SRemoveSource =
     'Êtes-vous certain de vouloir retirer ce fichier source du projet ?';
 
   SAllUnitTypes = 'Tous les types d''unité';
 
-  sDuplicateUnitTitle = 'Unité déjà présente';
-  sDuplicateUnit = 'Il y a déjà une unité ''%s''';
+  SDuplicateUnitTitle = 'Unité déjà présente';
+  SDuplicateUnit = 'Il y a déjà une unité ''%s''';
 
-  sRemoveUnitTitle = 'Supprimer une unité';
-  sCantRemoveLastUnit = 'Il faut toujours garder au moins une unité';
-  sConfirmRemoveUnit = 'Êtes-vous sûr-e de vouloir supprimer l''unité ''%s'' ?';
+  SRemoveUnitTitle = 'Supprimer une unité';
+  SCantRemoveLastUnit = 'Il faut toujours garder au moins une unité';
+  SConfirmRemoveUnit = 'Êtes-vous sûr-e de vouloir supprimer l''unité ''%s'' ?';
+
+  SComponentDataTitle = 'Propriétés du composant';
+  SPlayerDataTitle = 'Propriétés par joueur';
+  SPlayerAttributesTitle = 'Attributs du joueur';
+  SPlayerPluginsTitle = 'Plug-in attachés au joueur';
+
+  SCollectionItemTitle = '%d - %s';
+
+  SCreateCompChooseIDTitle = 'Création d''un nouveau composant';
+  SCreateCompChooseID = 'Veuillez choisir l''ID du nouveau composant';
+
+  SInvalidComponentIDTitle = 'ID de composant invalide';
+  SBadComponentID =
+    'L''ID ne doit contenir que des lettres non accentuées et des chiffres';
+  SComponentAlreadyExists = 'Il existe déjà un composant avec cet ID';
 
 implementation
 

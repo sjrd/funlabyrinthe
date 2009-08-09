@@ -80,6 +80,11 @@ begin
     Add('');
     Add('interface');
     Add('');
+    Add('uses');
+    Add('  Types, SysUtils, Classes, TypInfo, Graphics, Contnrs, Controls,');
+    Add('  Dialogs, ScUtils, GR32, FunLabyUtils, FunLabyCoreConsts,');
+    Add('  FunLabyToolsConsts, Generics, GraphicsTools, MapTools;');
+    Add('');
     Add('implementation');
     Add('');
     Add('end.');

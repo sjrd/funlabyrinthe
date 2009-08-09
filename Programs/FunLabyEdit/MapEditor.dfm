@@ -1,7 +1,7 @@
 object FrameMapEditor: TFrameMapEditor
   Left = 0
   Top = 0
-  Width = 670
+  Width = 720
   Height = 421
   TabOrder = 0
   TabStop = True
@@ -28,8 +28,13 @@ object FrameMapEditor: TFrameMapEditor
     ButtonHeight = 36
     ButtonWidth = 38
     ButtonOptions = [boGradientFill, boBoldCaptions, boCaptionOnlyBorder]
-    Images = SquaresImages
     Categories = <
+      item
+        Caption = 'Joueurs'
+        Color = 15252386
+        Collapsed = False
+        Items = <>
+      end
       item
         Caption = 'Terrains'
         Color = 15252386
@@ -55,13 +60,13 @@ object FrameMapEditor: TFrameMapEditor
         Items = <>
       end
       item
-        Caption = 'Cases'
+        Caption = 'Neutres'
         Color = 15252386
         Collapsed = False
         Items = <>
       end
       item
-        Caption = 'Joueurs'
+        Caption = 'Composants suppl'#233'mentaires'
         Color = 15252386
         Collapsed = False
         Items = <>
@@ -74,22 +79,6 @@ object FrameMapEditor: TFrameMapEditor
     OnButtonClicked = SquaresContainerButtonClicked
     OnDrawIcon = SquaresContainerDrawIcon
   end
-  object PlayersContainer: TCategoryButtons
-    Left = 520
-    Top = 0
-    Width = 150
-    Height = 421
-    Align = alRight
-    ButtonFlow = cbfVertical
-    ButtonOptions = [boFullSize, boGradientFill, boShowCaptions, boBoldCaptions, boCaptionOnlyBorder]
-    Categories = <>
-    Color = clWhite
-    RegularButtonColor = 15660791
-    SelectedButtonColor = 15711942
-    ShowHint = True
-    TabOrder = 1
-    OnButtonClicked = PlayersContainerButtonClicked
-  end
   object PanelCenter: TPanel
     Left = 153
     Top = 0
@@ -98,7 +87,7 @@ object FrameMapEditor: TFrameMapEditor
     Align = alClient
     BevelKind = bkTile
     BevelOuter = bvNone
-    TabOrder = 2
+    TabOrder = 1
     inline MapViewer: TFrameBaseMapViewer
       Left = 0
       Top = 0
@@ -130,6 +119,21 @@ object FrameMapEditor: TFrameMapEditor
           Left = 256
           ExplicitLeft = 256
         end
+        inherited StaticPosition: TStaticText
+          Anchors = [akLeft, akTop, akRight]
+        end
+        inherited StaticField: TStaticText
+          Anchors = [akLeft, akTop, akRight]
+        end
+        inherited StaticEffect: TStaticText
+          Anchors = [akLeft, akTop, akRight]
+        end
+        inherited StaticTool: TStaticText
+          Anchors = [akLeft, akTop, akRight]
+        end
+        inherited StaticObstacle: TStaticText
+          Anchors = [akLeft, akTop, akRight]
+        end
         inherited EditFloor: TSpinEdit
           Left = 296
           ExplicitLeft = 296
@@ -137,10 +141,53 @@ object FrameMapEditor: TFrameMapEditor
       end
     end
   end
-  object SquaresImages: TImageList
-    Height = 30
-    Width = 30
-    Left = 248
-    Top = 248
+  object PanelRight: TPanel
+    Left = 520
+    Top = 0
+    Width = 200
+    Height = 421
+    Align = alRight
+    BevelOuter = bvNone
+    TabOrder = 2
+    inline FrameInspector: TFrameInspector
+      Left = 0
+      Top = 0
+      Width = 200
+      Height = 421
+      Align = alClient
+      TabOrder = 0
+      ExplicitWidth = 200
+      ExplicitHeight = 421
+      inherited Inspector: TJvInspector
+        Width = 200
+        Height = 267
+        ExplicitTop = 25
+        ExplicitWidth = 200
+        ExplicitHeight = 267
+      end
+      inherited PanelCollectionEditor: TPanel
+        Top = 292
+        Width = 200
+        ExplicitTop = 292
+        ExplicitWidth = 200
+        inherited PanelCollectionEditorTitle: TPanel
+          Width = 200
+          ExplicitWidth = 200
+        end
+        inherited ToolBarCollectionEditor: TToolBar
+          Width = 200
+          ExplicitWidth = 200
+        end
+        inherited ListBoxCollectionItems: TListBox
+          Width = 200
+          ExplicitWidth = 200
+        end
+      end
+      inherited PanelInspectorTitle: TPanel
+        Width = 200
+        ExplicitTop = 0
+        ExplicitWidth = 200
+      end
+    end
   end
 end

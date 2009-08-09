@@ -82,9 +82,6 @@ begin
     // Don't localize
     Add(Format('unit %s;', [UnitName]));
     Add('');
-    Add('uses');
-    Add('  Generics, GenericButtons;');
-    Add('');
     Add('// Modèle de définition d''un type d''action');
     Add('actions');
     Add('  Dive;');

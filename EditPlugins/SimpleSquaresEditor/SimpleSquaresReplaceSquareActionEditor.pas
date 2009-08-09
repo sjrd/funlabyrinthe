@@ -36,10 +36,7 @@ type
 
     FCurrentAction: TReplaceSquareAction; /// Action courante
 
-    procedure RegisterSingleComponent(Component: TSquareComponent);
-    procedure RegisterComponentSet(Template: TSquareComponent;
-      const Components: array of TSquareComponent; BaseIndex: Integer;
-      const DialogTitle, DialogPrompt: string);
+    procedure RegisterComponent(Component: TFunLabyComponent);
 
     procedure FillIDEdits;
   protected
@@ -59,14 +56,13 @@ implementation
 {---------------------------------------}
 
 {*
-  Enregistre un unique composant
+  Enregistre un composant
   @param Component   Le composant à enregistrer
 *}
-procedure TFrameReplaceSquareActionEditor.RegisterSingleComponent(
-  Component: TSquareComponent);
+procedure TFrameReplaceSquareActionEditor.RegisterComponent(
+  Component: TFunLabyComponent);
 var
   SquareBmp: TBitmap;
-  SquareBmp32: TBitmap32;
   ImageIndex: Integer;
   Category: TComboExItems;
   Item: TComboExItem;
@@ -84,38 +80,22 @@ begin
     Exit; // ignore
 
   // Ajout de l'image du composant dans la liste d'images
-  SquareBmp32 := nil;
   SquareBmp := TBitmap.Create;
   try
-    SquareBmp32 := CreateEmptySquareBitmap;
-    SquareBmp32.Clear(clBmpTransparent32);
-    Component.Draw(NoQPos, SquareBmp32);
-    SquareBmp.Assign(SquareBmp32);
+    SquareBmp.SetSize(SquareSize, SquareSize);
+    Component.DrawIconToCanvas(SquareBmp.Canvas, BaseSquareRect,
+      WinColor(clBmpTransparent32));
+
     ImageIndex := SquaresImages.AddMasked(SquareBmp,
       WinColor(clBmpTransparent32));
   finally
     SquareBmp.Free;
-    SquareBmp32.Free;
   end;
 
   // Ajout du bouton
   Item := Category.Add;
   Item.Caption := Component.ID;
   Item.ImageIndex := ImageIndex;
-end;
-
-{*
-  Enregistre un ensemble de composants
-  @param Template       Composant modèle pour l'image et le nom à afficher
-  @param Components     Liste des composants faisant partie de l'ensemble
-  @param DialogTitle    Titre de la boîte de dialogue du choix du numéro
-  @param DialogPrompt   Invite de la boîte de dialogue du choix du numéro
-*}
-procedure TFrameReplaceSquareActionEditor.RegisterComponentSet(
-  Template: TSquareComponent; const Components: array of TSquareComponent;
-  BaseIndex: Integer; const DialogTitle, DialogPrompt: string);
-begin
-  // No support for component sets
 end;
 
 {*
@@ -153,8 +133,7 @@ begin
     EditObstacleID.ItemsEx.Add.Caption := SNone;
 
     MasterFile := GetFunLabyEditMainForm.MasterFile;
-    MasterFile.RegisterComponents(RegisterSingleComponent,
-      RegisterComponentSet);
+    MasterFile.Master.RegisterComponents(RegisterComponent);
 
     MapViewer := GetFunLabyEditMainForm.MapViewer;
   end;

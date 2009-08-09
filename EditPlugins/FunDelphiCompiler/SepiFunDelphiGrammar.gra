@@ -70,6 +70,7 @@ tkLowerEq	<=
 tkGreaterThan	>
 tkGreaterEq	>=
 tkNotEqual	<>
+tkIn	in
 tkIs	is
 tkAs	as
 
@@ -280,6 +281,7 @@ ntSetRange	SetRange
 
 ntBinaryOp	BinaryOp	Simplify
 	DelphiBinaryOp
+	InOperation
 	IsOperation
 	AsOperation
 	CanOp
@@ -303,6 +305,9 @@ ntDelphiBinaryOp	DelphiBinaryOp
 	'>'
 	'>='
 	'<>'
+
+ntInOperation	InOperation
+	'in'
 
 ntIsOperation	IsOperation
 	'is'

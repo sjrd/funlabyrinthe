@@ -10,30 +10,30 @@ unit FLBBoat;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, GraphicsTools, MapTools, FLBCommon,
-  FLBFields, GR32;
+  SysUtils, Graphics, StrUtils, ScUtils, FunLabyUtils, GraphicsTools, MapTools,
+  FLBCommon, FLBFields, GR32;
 
 const {don't localize}
   idBoatPlugin = 'BoatPlugin'; /// ID du plug-in barque
 
 resourcestring
-  sBoat = 'Barque n°%d';    /// Nom de la barque
-  sBoatTemplate = 'Barque'; /// Nom de la barque modèle
+  sBoat = 'Barque'; /// Nom de la barque
+
+resourcestring
+  /// Hint du créateur de barques
+  sBoatCreatorHint = 'Créer une nouvelle barque';
 
 const {don't localize}
-  idBoat = 'Boat%d';               /// ID de la barque
-  idBoatTemplate = 'BoatTemplate'; /// ID de la barque modèle
+  idBoatCreator = 'BoatCreator'; /// ID du créateur de barques
 
-  idBoatSquare = idGroundWater+'--'+idBoat+'-'; /// ID de la case barque
-  /// Barque modèle
-  idBoatSquareTemplate = idGroundWater+'--'+idBoatTemplate+'-';
+  /// ID du créateur de terrains d'eau spéciale pour mettre sous les barques
+  idUnderBoatCreator = 'UnderBoatCreator';
+
+  /// Préfixe pour l'ID d'une eau en-dessous d'une barque
+  PrefixUnderBoat = 'UnderBoat.';
 
 const {don't localize}
   fBoat = 'Objects/Boat'; /// Fichier de la barque
-
-resourcestring
-  sBoatTitle = 'Numéro de la barque';
-  sBoatPrompt = 'Numéro de la barque (1 à 10) :';
 
 type
   TBoat = class;
@@ -46,6 +46,8 @@ type
   TBoatPluginPlayerData = class(TPlayerData)
   private
     FUsedBoat: TBoat;
+  published
+    property UsedBoat: TBoat read FUsedBoat write FUsedBoat;
   end;
 
   {*
@@ -66,8 +68,10 @@ type
     procedure Moving(Context: TMoveContext); override;
     procedure Moved(Context: TMoveContext); override;
 
-    function AbleTo(Player: TPlayer;
-      const Action: TPlayerAction): Boolean; override;
+    function AbleTo(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer): Boolean; override;
+
+    function GetUsedBoat(Player: TPlayer): TBoat;
   end;
 
   {*
@@ -77,17 +81,41 @@ type
     @version 5.0
   *}
   TBoat = class(TTool)
-  private
-    FNumber: Integer; /// Numéro de la barque
-  protected
-    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; ANumber: Integer);
+      const AName: string);
 
     procedure Find(Context: TMoveContext); override;
 
-    property Number: Integer read FNumber;
+    class function ToUnderBoatWater(Square: TSquare): TSquare;
+  end;
+
+  {*
+    Créateur de barques
+    @author sjrd
+    @version 5.0
+  *}
+  TBoatCreator = class(TComponentCreator)
+  protected
+    function GetHint: string; override;
+
+    function DoCreateComponent(
+      const AID: TComponentID): TFunLabyComponent; override;
+  public
+    constructor Create(AMaster: TMaster; AID: TComponentID);
+  end;
+
+  {*
+    Créateur de terrains d'eau spéciale pour mettre sous les barques
+    @author sjrd
+    @version 5.0
+  *}
+  TUnderBoatCreator = class(TComponentCreator)
+  protected
+    function GetIsDesignable: Boolean; override;
+
+    function DoCreateComponent(
+      const AID: TComponentID): TFunLabyComponent; override;
   end;
 
 const
@@ -107,7 +135,7 @@ implementation
 *}
 procedure TBoatPlugin.SetUsedBoat(Player: TPlayer; UsedBoat: TBoat);
 begin
-  TBoatPluginPlayerData(GetPlayerData(Player)).FUsedBoat := UsedBoat;
+  TBoatPluginPlayerData(GetPlayerData(Player)).UsedBoat := UsedBoat;
 end;
 
 {*
@@ -223,12 +251,13 @@ begin
       Player.RemovePlugin(Self);
 
       // Placer un outil barque sur la case source
-      with SrcSquare do
-        SrcSquare := Master.SquareByComps(idGroundWater, Effect.SafeID,
-          PlayerData.FUsedBoat.SafeID, Obstacle.SafeID);
+      SrcSquare := ChangeTool(SrcSquare, PlayerData.UsedBoat);
 
-      // Remettre à 0 l'attribut du joueur concernant la barque
-      PlayerData.FUsedBoat := nil;
+      // Placer de l'eau spéciale sous barque
+      SrcSquare := TBoat.ToUnderBoatWater(SrcSquare);
+
+      // Indiquer que ce joueur n'utilise plus de barqe
+      PlayerData.UsedBoat := nil;
     end;
   end;
 end;
@@ -236,10 +265,20 @@ end;
 {*
   [@inheritDoc]
 *}
-function TBoatPlugin.AbleTo(Player: TPlayer;
-  const Action: TPlayerAction): Boolean;
+function TBoatPlugin.AbleTo(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer): Boolean;
 begin
   Result := Action = actGoOnWater;
+end;
+
+{*
+  Obtient la barque qu'est en train d'utiliser un joueur
+  @param Player   Joueur dont obtenir la barque
+  @return Barque utilisée par ce joueur, ou nil s'il n'en utilise pas
+*}
+function TBoatPlugin.GetUsedBoat(Player: TPlayer): TBoat;
+begin
+  Result := TBoatPluginPlayerData(GetPlayerData(Player)).UsedBoat;
 end;
 
 {--------------}
@@ -251,25 +290,13 @@ end;
   @param AMaster   Maître FunLabyrinthe
   @param AID       ID de l'outil
   @param AName     Nom de l'outil
-  @param ANumber   Numéro de la barque
 *}
 constructor TBoat.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; ANumber: Integer);
+  const AName: string);
 begin
-  inherited Create(AMaster, Format(AID, [ANumber]), Format(AName, [ANumber]));
-  FNumber := ANumber;
+  inherited Create(AMaster, AID, AName);
+
   Painter.ImgNames.Add(fBoat);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TBoat.DoDraw(Context: TDrawSquareContext);
-begin
-  inherited;
-
-  if Master.Editing and (Number <> 0) then
-    DrawSquareNumber(Context, Number);
 end;
 
 {*
@@ -278,15 +305,22 @@ end;
 procedure TBoat.Find(Context: TMoveContext);
 var
   BoatPlugin: TBoatPlugin;
+  UnderBoatWaterID, WaterID: TComponentID;
 begin
   BoatPlugin := Master.Plugin[idBoatPlugin] as TBoatPlugin;
 
   with Context do
   begin
-    // Remplacement de la case par de l'eau simple
-    with Square do
-      Square := Master.SquareByComps(idWater, Effect.SafeID,
-        '', Obstacle.SafeID);
+    // Remplacer la case par de l'eau normale
+    UnderBoatWaterID := Square.Field.ID;
+    if AnsiStartsStr(PrefixUnderBoat, UnderBoatWaterID) then
+    begin
+      WaterID := Copy(UnderBoatWaterID, Length(PrefixUnderBoat)+1, MaxInt);
+      Square := ChangeField(Square, WaterID);
+    end;
+
+    // Retirer la barque
+    Square := RemoveTool(Square);
 
     // Mémoriser la barque utilisée
     BoatPlugin.SetUsedBoat(Player, Self);
@@ -294,6 +328,94 @@ begin
     // Ajout du plug-in barque
     Player.AddPlugin(BoatPlugin);
   end;
+end;
+
+{*
+  Transforme une case pour avoir de l'eau spéciale sous barque
+  @param Square   Case à transformer
+  @return Case transformée
+*}
+class function TBoat.ToUnderBoatWater(Square: TSquare): TSquare;
+var
+  UnderBoatWaterID: TComponentID;
+begin
+  with Square do
+  begin
+    if (Field is TWater) and (ID <> '') then
+    begin
+      UnderBoatWaterID := PrefixUnderBoat + Field.ID;
+
+      if not Master.ComponentExists(UnderBoatWaterID) then
+        with Master.Component[idUnderBoatCreator] as TUnderBoatCreator do
+          CreateComponent(UnderBoatWaterID);
+
+      Result := ChangeField(Square, UnderBoatWaterID);
+    end else
+      Result := Square;
+  end;
+end;
+
+{--------------------}
+{ TBoatCreator class }
+{--------------------}
+
+{*
+  Crée un nouveau créateur de barques
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID du créateur de barques
+*}
+constructor TBoatCreator.Create(AMaster: TMaster; AID: TComponentID);
+begin
+  inherited Create(AMaster, AID);
+
+  IconPainter.ImgNames.Add(fBoat);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TBoatCreator.GetHint: string;
+begin
+  Result := SBoatCreatorHint;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TBoatCreator.DoCreateComponent(
+  const AID: TComponentID): TFunLabyComponent;
+begin
+  Result := TBoat.Create(Master, AID, sBoat);
+end;
+
+{-------------------------}
+{ TUnderBoatCreator class }
+{-------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TUnderBoatCreator.GetIsDesignable: Boolean;
+begin
+  Result := False;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TUnderBoatCreator.DoCreateComponent(
+  const AID: TComponentID): TFunLabyComponent;
+var
+  WaterID: TComponentID;
+  WaterField: TField;
+begin
+  Assert(AnsiStartsStr(PrefixUnderBoat, AID));
+
+  WaterID := Copy(AID, Length(PrefixUnderBoat)+1, MaxInt);
+  WaterField := Master.Field[WaterID];
+
+  Result := TGround(TGround.NewDelegateDraw(WaterField)).Create(
+    Master, AID, WaterField.Name)
 end;
 
 end.

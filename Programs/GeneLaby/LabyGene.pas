@@ -122,7 +122,7 @@ begin
   try
     MasterFile := TMasterFile.CreateNew(nil, UnitFileDescs);
     Master := MasterFile.Master;
-    Player := TPlayer.Create(Master, 'Player', 'Joueur');
+    Player := TPlayer.Create(Master, 'Player');
     Map := TMap.Create(Master, 'MainMap', Point3D(DimX, DimY, DimZ), 7, 7);
     Map.MaxViewSize := MaxViewSize;
 

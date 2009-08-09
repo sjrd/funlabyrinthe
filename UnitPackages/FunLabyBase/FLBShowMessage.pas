@@ -44,7 +44,8 @@ type
     FActivated: Boolean; /// Indique si la boîte de message est activée
 
     FPadding: TPoint;       /// Marges de la boîte de message (bordure comprise)
-    FMaxLineCount: Integer; /// Nombre de lignes à afficher maximum
+    FMinLineCount: Integer; /// Nombre minimum de lignes à afficher
+    FMaxLineCount: Integer; /// Nombre maximum de lignes à afficher
 
     FSelBulletWidth: Integer; /// Largeur du bullet indiquant la sélection
     FColSepWidth: Integer;    /// Largeur de la séparation entre colonnes
@@ -74,6 +75,7 @@ type
     property Activated: Boolean read FActivated;
 
     property Padding: TPoint read FPadding write FPadding;
+    property MinLineCount: Integer read FMinLineCount write FMinLineCount;
     property MaxLineCount: Integer read FMaxLineCount write FMaxLineCount;
 
     property SelBulletWidth: Integer read FSelBulletWidth write FSelBulletWidth;
@@ -268,7 +270,8 @@ begin
   with PlayerData do
   begin
     Padding := Point(10, 4);
-    MaxLineCount := 2;
+    MinLineCount := 2;
+    MaxLineCount := 3;
 
     SelBulletWidth := 15;
     ColSepWidth := 15;
@@ -393,8 +396,7 @@ var
 begin
   with Context, Bitmap.Canvas do
   begin
-    BorderRect := Context.ViewRect;
-    BorderRect.Top := BorderRect.Bottom - 40;
+    BorderRect := PlayerData.MessageRect;
 
     Brush.Style := bsSolid;
     Brush.Color := clWhite;
@@ -655,6 +657,7 @@ procedure TDefaultShowMessagePlugin.ShowMessage(
 var
   PlayerData: TDefaultShowMessagePluginPlayerData;
   ViewSize: TPoint;
+  NeededLineCount: Integer;
   Direction: TDirection;
 begin
   PlayerData := TDefaultShowMessagePluginPlayerData(
@@ -689,6 +692,20 @@ begin
       PrepareAnswers(PlayerData, Context.Answers)
     else
       AnswerRowCount := 0;
+
+    // Don't show a big box for a small message
+    NeededLineCount := Lines.Count + AnswerRowCount;
+    if NeededLineCount < MaxLineCount then
+    begin
+      if NeededLineCount > MinLineCount then
+        MaxLineCount := NeededLineCount
+      else
+        MaxLineCount := MinLineCount;
+
+      MessageRect := Rect(MessageRect.Left,
+        ViewSize.Y - 2*Padding.Y - MaxLineCount*WorkCanvas.TextHeight('A'),
+        MessageRect.Right, MessageRect.Bottom);
+    end;
 
     // Show message
     Activate;

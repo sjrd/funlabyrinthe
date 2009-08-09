@@ -10,18 +10,14 @@ unit FLBMain;
 interface
 
 uses
-  SysUtils, Classes, FunLabyUtils, FilesUtils, UnitFiles, Generics, FLBCommon,
-  FLBFields, FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBBoat, FLBLift,
-  FLBObstacles, FLBShowMessage;
+  SysUtils, Classes, ScUtils, FunLabyUtils, FilesUtils, UnitFiles, Generics,
+  FLBCommon, FLBFields, FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBBoat,
+  FLBLift, FLBObstacles, FLBShowMessage;
 
 type
   TFunLabyBaseUnit = class(TInterfacedUnitFile)
   protected
     procedure GameStarted; override;
-
-    procedure RegisterComponents(
-      RegisterSingleComponentProc: TRegisterSingleComponentProc;
-      RegisterComponentSetProc: TRegisterComponentSetProc); override;
   public
     constructor Create(AMasterFile: TMasterFile; Params: TStrings);
   end;
@@ -58,7 +54,6 @@ constructor TFunLabyBaseUnit.Create(AMasterFile: TMasterFile;
   Params: TStrings);
 var
   Buoys, Planks, SilverKeys, GoldenKeys: TObjectDef;
-  I: Integer;
 begin
   inherited Create(AMasterFile);
 
@@ -83,8 +78,6 @@ begin
   TSky.Create(Master, idSky, sSky);
   TOutside.Create(Master, idOutside, sOutside);
 
-  TGround.Create(Master, idGroundWater, sWater, '', Master.Field[idWater]);
-
   // Effets de case
 
   TArrow.Create(Master, idNorthArrow, sNorthArrow, diNorth);
@@ -93,17 +86,9 @@ begin
   TArrow.Create(Master, idWestArrow , sWestArrow , diWest );
   TArrow.Create(Master, idCrossroads, sCrossroads, diNone );
 
-  TTransporter.Create(Master, idInactiveTransporter, sInactiveTransporter, 0);
-  for I := 1 to 15 do
-    TTransporter.Create(Master, idTransporterNext, sTransporterNext,
-      I, tkNext);
-  for I := 16 to 30 do
-    TTransporter.Create(Master, idTransporterPrev, sTransporterPrev,
-      I, tkPrevious);
-  for I := 31 to 45 do
-    TTransporter.Create(Master, idTransporterRandom, sTransporterRandom,
-      I, tkRandom);
-  TTransporter.Create(Master, idTransporterTemplate, sTransporterTemplate, 0);
+  TInactiveTransporter.Create(Master, idInactiveTransporter,
+    sInactiveTransporter);
+  TTransporterCreator.Create(Master, idTransporterCreator);
 
   TStairs.Create(Master, idUpStairs, sUpStairs, True);
   TStairs.Create(Master, idDownStairs, sDownStairs, False);
@@ -117,9 +102,9 @@ begin
   TDecorativeEffect.Create(Master, idSunkenButton,
     sSunkenButton, fSunkenButton);
 
-  for I := 1 to 10 do
-    TBoat.Create(Master, idBoat, sBoat, I);
-  TBoat.Create(Master, idBoatTemplate, sBoatTemplate, 0);
+  TBoatCreator.Create(Master, idBoatCreator);
+  if not Master.Editing then
+    TUnderBoatCreator.Create(Master, idUnderBoatCreator);
 
   // Outils
 
@@ -144,8 +129,10 @@ procedure TFunLabyBaseUnit.GameStarted;
 var
   TestMsg: TPlayerShowMsgMessage;
   DefaultShowMessagePlugin: TPlugin;
-  I: Integer;
+  I, J, X, Y, Z: Integer;
   Player: TPlayer;
+  Map: TMap;
+  Pos: T3DPoint;
 begin
   { For each player, if no plug-in handles the ShowMessage player message, give
     him a default plug-in for his messages. }
@@ -161,89 +148,35 @@ begin
     if not TestMsg.Handled then
       Player.AddPlugin(DefaultShowMessagePlugin);
   end;
-end;
 
-{*
-  [@inheritDoc]
-*}
-procedure TFunLabyBaseUnit.RegisterComponents(
-  RegisterSingleComponentProc: TRegisterSingleComponentProc;
-  RegisterComponentSetProc: TRegisterComponentSetProc);
-
-  procedure RegSingle(Component: TComponentID);
+  { If there is at least a TBoat component, look for every TBoat in every map
+    and put there a special under-boat water. }
+  for I := 0 to Master.ToolCount-1 do
   begin
-    RegisterSingleComponentProc(Master.SquareComponent[Component]);
+    if Master.Tools[I] is TBoat then
+    begin
+      for J := 0 to Master.MapCount-1 do
+      begin
+        Map := Master.Maps[J];
+
+        for X := 0 to Map.Dimensions.X-1 do
+        begin
+          for Y := 0 to Map.Dimensions.Y-1 do
+          begin
+            for Z := 0 to Map.Dimensions.Z-1 do
+            begin
+              Pos := Point3D(X, Y, Z);
+
+              if Map[Pos].Tool is TBoat then
+                Map[Pos] := TBoat.ToUnderBoatWater(Map[Pos]);
+            end;
+          end;
+        end;
+      end;
+
+      Break;
+    end;
   end;
-
-  procedure RegSet(Template: TComponentID;
-    const Components: array of TSquareComponent; BaseIndex: Integer;
-    const DialogTitle, DialogPrompt: string);
-  begin
-    RegisterComponentSetProc(Master.SquareComponent[Template],
-      Components, BaseIndex, DialogTitle, DialogPrompt);
-  end;
-
-var
-  I: Integer;
-  Transporters: array[0..45] of TSquareComponent;
-  Boats: array[1..10] of TSquareComponent;
-begin
-  // Terrains
-
-  RegSingle(idGrass);
-  RegSingle(idWall);
-  RegSingle(idWater);
-  RegSingle(idHole);
-  RegSingle(idSky);
-  RegSingle(idOutside);
-
-  // Effets
-
-  RegSingle(idNorthArrow);
-  RegSingle(idEastArrow);
-  RegSingle(idSouthArrow);
-  RegSingle(idWestArrow);
-  RegSingle(idCrossroads);
-
-  Transporters[0] := Master.SquareComponent[idInactiveTransporter];
-  for I := 1 to 15 do
-    Transporters[I] := Master.SquareComponent[Format(idTransporterNext, [I])];
-  for I := 16 to 30 do
-    Transporters[I] := Master.SquareComponent[Format(idTransporterPrev, [I])];
-  for I := 31 to 45 do
-    Transporters[I] := Master.SquareComponent[Format(idTransporterRandom, [I])];
-  RegSet(idTransporterTemplate, Transporters, Low(Transporters),
-    sTransporterTitle, sTransporterPrompt);
-
-  RegSingle(idUpStairs);
-  RegSingle(idDownStairs);
-  RegSingle(idLift);
-
-  RegSingle(idDirectTurnstile);
-  RegSingle(idIndirectTurnstile);
-
-  RegSingle(idTreasure);
-
-  RegSingle(idSunkenButton);
-
-  // Outils
-
-  RegSingle(idBuoy);
-  RegSingle(idPlank);
-  RegSingle(idSilverKey);
-  RegSingle(idGoldenKey);
-
-  // Obstacles
-
-  RegSingle(idSilverBlock);
-  RegSingle(idGoldenBlock);
-  RegSingle(idSecretWay);
-
-  // Cases
-
-  for I := 1 to 10 do
-    Boats[I] := Master.SquareComponent[Format(idBoatSquare, [I])];
-  RegSet(idBoatSquareTemplate, Boats, Low(Boats), sBoatTitle, sBoatPrompt);
 end;
 
 {$IFNDEF DCTD}

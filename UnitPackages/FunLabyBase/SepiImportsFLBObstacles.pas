@@ -208,9 +208,9 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TSilverBlock, 44, 44);
-  CheckInstanceSize(TGoldenBlock, 44, 44);
-  CheckInstanceSize(TSecretWay, 44, 44);
+  CheckInstanceSize(TSilverBlock, 48, 48);
+  CheckInstanceSize(TGoldenBlock, 48, 48);
+  CheckInstanceSize(TSecretWay, 48, 48);
   {$ASSERTIONS OFF}
 end;
 

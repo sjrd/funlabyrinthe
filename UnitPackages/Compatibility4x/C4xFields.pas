@@ -30,6 +30,8 @@ type
   TOldWater = class(TWater)
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
+  protected
+    function GetIsDesignable: Boolean; override;
   public
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -44,6 +46,8 @@ type
   TOldHole = class(THole)
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
+  protected
+    function GetIsDesignable: Boolean; override;
   public
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -72,6 +76,14 @@ implementation
 *}
 procedure TOldWater.PlankMessage(var Msg: TPlankMessage);
 begin
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TOldWater.GetIsDesignable: Boolean;
+begin
+  Result := False;
 end;
 
 {*
@@ -129,6 +141,14 @@ end;
 *}
 procedure TOldHole.PlankMessage(var Msg: TPlankMessage);
 begin
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TOldHole.GetIsDesignable: Boolean;
+begin
+  Result := False;
 end;
 
 {*

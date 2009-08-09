@@ -21,6 +21,19 @@ resourcestring
   SToolName = '%s avec %s';
   SObstacleName = '%s obstrué par %s';
   SWhichObject = 'Quel objet voulez-vous utiliser ?';
+  SDefaultPlayerName = 'Joueur';
+  SComponentCreatorHint = 'Créer un nouveau composant de ce type';
+
+  // Noms des catégories standard
+  SCategoryFields = 'Terrains';
+  SCategoryEffects = 'Effets';
+  SCategoryTools = 'Outils';
+  SCategoryObstacles = 'Obstacles';
+  SCategoryNeutrals = 'Neutres';
+  SCategoryPlayers = 'Joueurs';
+  SCategoryObjects = 'Objets';
+  SCategoryPlugins = 'Plug-in';
+  SCategoryComponentCreators = 'Composants supplémentaires';
 
   // Erreurs de composants
   SComponentNotFound = 'Le composant d''ID %s n''existe pas';
