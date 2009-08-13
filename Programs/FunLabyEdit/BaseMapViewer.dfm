@@ -22,29 +22,6 @@ object FrameBaseMapViewer: TFrameBaseMapViewer
     TabPosition = tpTop
     OnChange = MapTabSetChange
   end
-  object ScrollBoxMap: TScrollBox
-    Left = 0
-    Top = 21
-    Width = 364
-    Height = 294
-    HorzScrollBar.Increment = 30
-    VertScrollBar.Increment = 30
-    Align = alClient
-    BorderStyle = bsNone
-    Constraints.MinHeight = 280
-    Constraints.MinWidth = 360
-    TabOrder = 1
-    object PaintBoxMap: TPaintBox32
-      Left = 0
-      Top = 0
-      Width = 100
-      Height = 100
-      TabOrder = 0
-      OnMouseDown = PaintBoxMapMouseDown
-      OnMouseMove = PaintBoxMapMouseMove
-      OnPaintBuffer = PaintBoxMapPaintBuffer
-    end
-  end
   object PanelMapInfos: TPanel
     Left = 0
     Top = 315
@@ -53,7 +30,7 @@ object FrameBaseMapViewer: TFrameBaseMapViewer
     Align = alBottom
     BevelOuter = bvNone
     Constraints.MinWidth = 360
-    TabOrder = 2
+    TabOrder = 1
     DesignSize = (
       364
       106)
@@ -158,6 +135,26 @@ object FrameBaseMapViewer: TFrameBaseMapViewer
       TabOrder = 5
       Value = 0
       OnChange = EditFloorChange
+    end
+  end
+  inline MapView: TFrameMapImage
+    Left = 0
+    Top = 21
+    Width = 364
+    Height = 294
+    Align = alClient
+    TabOrder = 2
+    ExplicitLeft = 48
+    ExplicitTop = 80
+    ExplicitWidth = 257
+    ExplicitHeight = 193
+    inherited MapView: TImgView32
+      Width = 364
+      Height = 294
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 321
+      ExplicitHeight = 241
     end
   end
 end

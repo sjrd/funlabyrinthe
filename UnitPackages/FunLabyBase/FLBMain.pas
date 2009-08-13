@@ -71,7 +71,7 @@ begin
 
   // Terrains
 
-  TGround.Create(Master, idGrass, sGrass);
+  TGround.Create(Master, idGrass, sGrass, fGrass);
   TWall.Create(Master, idWall, sWall);
   TWater.Create(Master, idWater, sWater);
   THole.Create(Master, idHole, sHole);

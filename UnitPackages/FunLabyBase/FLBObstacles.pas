@@ -33,12 +33,33 @@ resourcestring
 
 type
   {*
+    Classe de base pour les blocs
+    Un bloc est un obstacle qui peut avoir la faculté de cacher l'effet et
+    l'outil en-dessous de lui, malgré que son dessin comporte des parties
+    transparentes.
+    @author sjrd
+    @version 5.0
+  *}
+  TBlock = class(TObstacle)
+  private
+    FHideEffectAndTool: Boolean; /// Indique s'il faut cacher l'effet et l'outil
+  protected
+    procedure DoDraw(Context: TDrawSquareContext); override;
+  published
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
+
+    property HideEffectAndTool: Boolean
+      read FHideEffectAndTool write FHideEffectAndTool default False;
+  end;
+
+  {*
     Bloc en argent
     Le bloc en argent peut être détruit au moyen d'une clef en argent.
     @author sjrd
     @version 5.0
   *}
-  TSilverBlock = class(TObstacle)
+  TSilverBlock = class(TBlock)
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
@@ -52,7 +73,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TGoldenBlock = class(TObstacle)
+  TGoldenBlock = class(TBlock)
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
@@ -78,6 +99,35 @@ type
 
 implementation
 
+{--------------}
+{ TBlock class }
+{--------------}
+
+{*
+  Crée une instance de TBlock
+  @param AMaster   Maître FunLabyrinthe
+  @param AID       ID de l'obstacle
+  @param AName     Nom de l'obstacle
+*}
+constructor TBlock.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
+begin
+  inherited Create(AMaster, AID, AName);
+
+  FStaticDraw := False;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TBlock.DoDraw(Context: TDrawSquareContext);
+begin
+  if HideEffectAndTool and (not Context.IsNowhere) then
+    Context.QPos.Field.Draw(Context);
+
+  inherited;
+end;
+
 {---------------------}
 { Classe TSilverBlock }
 {---------------------}
@@ -85,7 +135,7 @@ implementation
 {*
   Crée une instance de TSilverBlock
   @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du terrain
+  @param AID       ID de l'obstacle
   @param AName     Nom de l'obstacle
 *}
 constructor TSilverBlock.Create(AMaster: TMaster; const AID: TComponentID;
@@ -122,7 +172,7 @@ end;
 {*
   Crée une instance de TGoldenBlock
   @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du terrain
+  @param AID       ID de l'obstacle
   @param AName     Nom de l'obstacle
 *}
 constructor TGoldenBlock.Create(AMaster: TMaster; const AID: TComponentID;

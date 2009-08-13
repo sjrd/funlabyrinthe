@@ -10,7 +10,7 @@ unit FLBPlank;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, Generics, FLBCommon, GR32;
+  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, Generics, FLBCommon, GR32;
 
 const {don't localize}
   idPlankPlugin = 'PlankPlugin'; /// ID du plug-in planche
@@ -45,6 +45,8 @@ type
     @version 5.0
   *}
   TPlankPlugin = class(TPlugin)
+  private
+    FRequiredShift: TShiftState; /// État des touches spéciales requis
   public
     procedure DrawBefore(Context: TDrawSquareContext); override;
 
@@ -58,6 +60,10 @@ type
     @version 5.0
   *}
   TPlanks = class(TObjectDef)
+  private
+    FRequiredShift: TShiftState; /// État des touches spéciales requis
+
+    procedure SetRequiredShift(Value: TShiftState);
   protected
     procedure SetCount(Player: TPlayer; Value: Integer); override;
 
@@ -65,6 +71,9 @@ type
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
+  published
+    property RequiredShift: TShiftState
+      read FRequiredShift write SetRequiredShift default [];
   end;
 
   {*
@@ -153,6 +162,9 @@ begin
       (DestMap <> SrcMap) then
       Exit;
 
+    if not (FRequiredShift <= Context.Shift) then
+      Exit;
+
     Behind := PointBehind(Dest, Player.Direction);
 
     Msg.MsgID := msgPlank;
@@ -200,6 +212,15 @@ constructor TPlanks.Create(AMaster: TMaster; const AID: TComponentID;
 begin
   inherited Create(AMaster, AID, AName);
   Painter.ImgNames.Add(fPlank);
+end;
+
+{*
+  Modifie l'état des touches spéciales requis
+*}
+procedure TPlanks.SetRequiredShift(Value: TShiftState);
+begin
+  FRequiredShift := Value;
+  (Master.Plugin[idPlankPlugin] as TPlankPlugin).FRequiredShift := Value;
 end;
 
 {*

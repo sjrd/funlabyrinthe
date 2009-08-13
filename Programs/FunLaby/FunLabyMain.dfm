@@ -37,19 +37,7 @@ object FormMain: TFormMain
     Top = 270
     Width = 270
     Height = 19
-    Panels = <
-      item
-        Width = 55
-      end
-      item
-        Width = 65
-      end
-      item
-        Width = 86
-      end
-      item
-        Width = 91
-      end>
+    Panels = <>
     SizeGrip = False
   end
   object PaintBox: TPaintBox32

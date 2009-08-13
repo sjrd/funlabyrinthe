@@ -25,8 +25,8 @@ implementation
 const // don't localize
   UnitName = 'Generics';
   ResourceName = 'SepiImportsGenerics';
-  TypeCount = 8;
-  MethodCount = 10;
+  TypeCount = 10;
+  MethodCount = 11;
   VariableCount = 1;
 
 var
@@ -35,6 +35,11 @@ var
   VarAddresses: array[0..VariableCount-1] of Pointer;
 
 type
+  TSepiImportsTGround = class(TGround)
+  private
+    class procedure InitMethodAddresses;
+  end;
+
   TSepiImportsTDecorativeEffect = class(TDecorativeEffect)
   private
     class procedure InitMethodAddresses;
@@ -72,13 +77,22 @@ type
     class procedure InitMethodAddresses;
   end;
 
+{----------------}
+{ TGround import }
+{----------------}
+
+class procedure TSepiImportsTGround.InitMethodAddresses;
+begin
+  MethodAddresses[0] := @TSepiImportsTGround.Create;
+end;
+
 {--------------------------}
 { TDecorativeEffect import }
 {--------------------------}
 
 class procedure TSepiImportsTDecorativeEffect.InitMethodAddresses;
 begin
-  MethodAddresses[0] := @TSepiImportsTDecorativeEffect.Create;
+  MethodAddresses[1] := @TSepiImportsTDecorativeEffect.Create;
 end;
 
 {-----------------------}
@@ -97,10 +111,10 @@ end;
 
 class procedure TSepiImportsTCounterEffect.InitMethodAddresses;
 begin
-  MethodAddresses[1] := @TSepiImportsTCounterEffect.GetCounter;
-  MethodAddresses[2] := @TSepiImportsTCounterEffect.SetCounter;
-  MethodAddresses[3] := @TSepiImportsTCounterEffect.IncCounter;
-  MethodAddresses[4] := @TSepiImportsTCounterEffect.IsFirstTime;
+  MethodAddresses[2] := @TSepiImportsTCounterEffect.GetCounter;
+  MethodAddresses[3] := @TSepiImportsTCounterEffect.SetCounter;
+  MethodAddresses[4] := @TSepiImportsTCounterEffect.IncCounter;
+  MethodAddresses[5] := @TSepiImportsTCounterEffect.IsFirstTime;
 end;
 
 {--------------------}
@@ -109,7 +123,7 @@ end;
 
 class procedure TSepiImportsTPushButton.InitMethodAddresses;
 begin
-  MethodAddresses[5] := @TSepiImportsTPushButton.Create;
+  MethodAddresses[6] := @TSepiImportsTPushButton.Create;
 end;
 
 {----------------}
@@ -118,7 +132,7 @@ end;
 
 class procedure TSepiImportsTSwitch.InitMethodAddresses;
 begin
-  MethodAddresses[6] := @TSepiImportsTSwitch.Create;
+  MethodAddresses[7] := @TSepiImportsTSwitch.Create;
 end;
 
 {----------------------------}
@@ -127,7 +141,7 @@ end;
 
 class procedure TSepiImportsTDecorativeObstacle.InitMethodAddresses;
 begin
-  MethodAddresses[7] := @TSepiImportsTDecorativeObstacle.Create;
+  MethodAddresses[8] := @TSepiImportsTDecorativeObstacle.Create;
 end;
 
 {--------------------}
@@ -136,7 +150,7 @@ end;
 
 class procedure TSepiImportsTObjectTool.InitMethodAddresses;
 begin
-  MethodAddresses[8] := @TSepiImportsTObjectTool.Create;
+  MethodAddresses[9] := @TSepiImportsTObjectTool.Create;
 end;
 
 {--------------------------}
@@ -145,7 +159,7 @@ end;
 
 class procedure TSepiImportsTOverriddenSquare.InitMethodAddresses;
 begin
-  MethodAddresses[9] := @TSepiImportsTOverriddenSquare.Create;
+  MethodAddresses[10] := @TSepiImportsTOverriddenSquare.Create;
 end;
 
 {---------------------}
@@ -214,18 +228,21 @@ end;
 
 procedure InitTypeInfoArray;
 begin
-  TypeInfoArray[0] := TypeInfo(TDecorativeEffect);
-  TypeInfoArray[1] := TypeInfo(TCounterEffectPlayerData);
-  TypeInfoArray[2] := TypeInfo(TCounterEffect);
-  TypeInfoArray[3] := TypeInfo(TPushButton);
-  TypeInfoArray[4] := TypeInfo(TSwitch);
-  TypeInfoArray[5] := TypeInfo(TDecorativeObstacle);
-  TypeInfoArray[6] := TypeInfo(TObjectTool);
-  TypeInfoArray[7] := TypeInfo(TOverriddenSquare);
+  TypeInfoArray[0] := TypeInfo(TPlankMessageKind);
+  TypeInfoArray[1] := TypeInfo(TGround);
+  TypeInfoArray[2] := TypeInfo(TDecorativeEffect);
+  TypeInfoArray[3] := TypeInfo(TCounterEffectPlayerData);
+  TypeInfoArray[4] := TypeInfo(TCounterEffect);
+  TypeInfoArray[5] := TypeInfo(TPushButton);
+  TypeInfoArray[6] := TypeInfo(TSwitch);
+  TypeInfoArray[7] := TypeInfo(TDecorativeObstacle);
+  TypeInfoArray[8] := TypeInfo(TObjectTool);
+  TypeInfoArray[9] := TypeInfo(TOverriddenSquare);
 end;
 
 procedure InitMethodAddresses;
 begin
+  TSepiImportsTGround.InitMethodAddresses;
   TSepiImportsTDecorativeEffect.InitMethodAddresses;
   TSepiImportsTCounterEffect.InitMethodAddresses;
   TSepiImportsTPushButton.InitMethodAddresses;
@@ -242,6 +259,42 @@ end;
 {------------------------------------}
 { Delphi-Sepi consistency assertions }
 {------------------------------------}
+
+type
+  TCheckAlignmentForTPlankMessageKind = record
+    Dummy: Byte;
+    Field: TPlankMessageKind;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlankMessageKind) <> (1 + 1)}
+  {$MESSAGE WARN 'Le type TPlankMessageKind n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IF SizeOf(TPlankMessage) <> 44}
+  {$MESSAGE WARN 'Le type TPlankMessage n''a pas la taille calculée par Sepi'}
+{$ELSE}
+
+type
+  TCheckAlignmentForTPlankMessage = record
+    Dummy: Byte;
+    Field: TPlankMessage;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlankMessage) <> (4 + 44)}
+  {$MESSAGE WARN 'Le type TPlankMessage n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IFEND}
+
+type
+  TCheckAlignmentForTGround = record
+    Dummy: Byte;
+    Field: TGround;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTGround) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TGround n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
 
 type
   TCheckAlignmentForTDecorativeEffect = record
@@ -338,6 +391,7 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
+  CheckInstanceSize(TGround, 52, 52);
   CheckInstanceSize(TDecorativeEffect, 48, 48);
   CheckInstanceSize(TCounterEffectPlayerData, 20, 16);
   CheckInstanceSize(TCounterEffect, 52, 48);

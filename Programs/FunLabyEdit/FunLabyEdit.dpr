@@ -19,7 +19,9 @@ uses
   MapViewer in 'MapViewer.pas' {FormMapViewer},
   BaseMapViewer in 'BaseMapViewer.pas' {FrameBaseMapViewer: TFrame},
   ObjectInspector in 'ObjectInspector.pas' {FrameInspector: TFrame},
-  FunLabyEditTypes in 'FunLabyEditTypes.pas';
+  FunLabyEditTypes in 'FunLabyEditTypes.pas',
+  EditMap in 'EditMap.pas' {FormEditMap},
+  MapImage in 'MapImage.pas' {FrameMapImage: TFrame};
 
 {$R *.res}
 
@@ -27,6 +29,7 @@ begin
   Application.Initialize;
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.CreateForm(TFormMain, FormMain);
+  Application.CreateForm(TFormEditMap, FormEditMap);
   Application.Run;
 end.
 

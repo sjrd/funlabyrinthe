@@ -5,15 +5,9 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, StdCtrls, Spin, ExtCtrls, Tabs, ScUtils, FunLabyUtils, FilesUtils,
-  GR32, GR32_Image;
+  GR32, GR32_Image, MapImage;
 
 type
-  TPaintMapEvent = procedure(Sender: TObject; Bitmap: TBitmap32;
-    const SquareClipRect: TRect) of object;
-
-  TSquarePosEvent = procedure(Sender: TObject;
-    const QPos: TQualifiedPos) of object;
-
   {*
     Cadre de base pour un visualisateur de cartes
     @author sjrd
@@ -21,7 +15,6 @@ type
   *}
   TFrameBaseMapViewer = class(TFrame)
     MapTabSet: TTabSet;
-    ScrollBoxMap: TScrollBox;
     PanelMapInfos: TPanel;
     LabelPosition: TLabel;
     LabelField: TLabel;
@@ -35,30 +28,29 @@ type
     StaticTool: TStaticText;
     StaticObstacle: TStaticText;
     EditFloor: TSpinEdit;
-    PaintBoxMap: TPaintBox32;
+    MapView: TFrameMapImage;
     procedure MapTabSetChange(Sender: TObject; NewTab: Integer;
       var AllowChange: Boolean);
-    procedure PaintBoxMapPaintBuffer(Sender: TObject);
-    procedure PaintBoxMapMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure PaintBoxMapMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
+    procedure MapViewClickSquare(Sender: TObject; const QPos: TQualifiedPos);
+    procedure MapViewHoverSquare(Sender: TObject; const QPos: TQualifiedPos);
     procedure EditFloorChange(Sender: TObject);
   private
     FMaster: TMaster; /// Maître FunLabyrinthe
 
-    FCurrentMap: TMap;      /// Carte courante
-    FCurrentFloor: Integer; /// Étage courant
-
-    FOnAfterPaint: TPaintMapEvent; /// Dessine au-dessus du reste
-
     FOnClickSquare: TSquarePosEvent; /// Déclenché au clic sur une case
-    FOnOverSquare: TSquarePosEvent;  /// Déclenché au passage sur une case
+    FOnHoverSquare: TSquarePosEvent; /// Déclenché au passage sur une case
 
     procedure SetMaster(Value: TMaster);
 
+    function GetCurrentMap: TMap;
     procedure SetCurrentMap(Value: TMap);
+    function GetCurrentFloor: Integer;
     procedure SetCurrentFloor(Value: Integer);
+
+    function GetOnAfterPaintMap: TPaintMapEvent;
+    procedure SetOnAfterPaintMap(Value: TPaintMapEvent);
+  protected
+    procedure Loaded; override;
   public
     procedure ShowPosition(const QPos: TQualifiedPos); overload;
     procedure ShowPosition(Map: TMap; const Position: T3DPoint); overload;
@@ -68,16 +60,16 @@ type
 
     property Master: TMaster read FMaster write SetMaster;
 
-    property CurrentMap: TMap read FCurrentMap write SetCurrentMap;
-    property CurrentFloor: Integer read FCurrentFloor write SetCurrentFloor;
+    property CurrentMap: TMap read GetCurrentMap write SetCurrentMap;
+    property CurrentFloor: Integer read GetCurrentFloor write SetCurrentFloor;
   published
-    property OnAfterPaint: TPaintMapEvent
-      read FOnAfterPaint write FOnAfterPaint;
+    property OnAfterPaintMap: TPaintMapEvent
+      read GetOnAfterPaintMap write SetOnAfterPaintMap;
 
     property OnClickSquare: TSquarePosEvent
       read FOnClickSquare write FOnClickSquare;
-    property OnOverSquare: TSquarePosEvent
-      read FOnOverSquare write FOnOverSquare;
+    property OnHoverSquare: TSquarePosEvent
+      read FOnHoverSquare write FOnHoverSquare;
   end;
 
 implementation
@@ -101,10 +93,6 @@ begin
   if Value = FMaster then
     Exit;
 
-  // Make the paint box opaque
-  TControlStyleAccess(PaintBoxMap).ControlStyle :=
-    TControlStyleAccess(PaintBoxMap).ControlStyle + [csOpaque];
-
   // Clear any active tabs
   if FMaster <> nil then
   begin
@@ -123,6 +111,15 @@ begin
 end;
 
 {*
+  Carte courante
+  @return Carte courante
+*}
+function TFrameBaseMapViewer.GetCurrentMap: TMap;
+begin
+  Result := MapView.Map;
+end;
+
+{*
   Modifie la carte courante
   @param Value   Nouvelle carte
 *}
@@ -136,12 +133,50 @@ begin
 end;
 
 {*
+  Étage courant
+  @param Étage courant
+*}
+function TFrameBaseMapViewer.GetCurrentFloor: Integer;
+begin
+  Result := MapView.Floor;
+end;
+
+{*
   Modifie l'étage courant
   @param Value   Nouvel étage
 *}
 procedure TFrameBaseMapViewer.SetCurrentFloor(Value: Integer);
 begin
   EditFloor.Value := Value; // Will trigger EditFloor.OnChange
+end;
+
+{*
+  Dessine par-dessus la carte
+  @return Gestionnaire d'événement OnAfterPaintMap
+*}
+function TFrameBaseMapViewer.GetOnAfterPaintMap: TPaintMapEvent;
+begin
+  Result := MapView.OnAfterPaintMap;
+end;
+
+{*
+  Modifie le gestionnaire d'événement OnAfterPaintMap
+  @param Value   Nouveau gestionnaire
+*}
+procedure TFrameBaseMapViewer.SetOnAfterPaintMap(Value: TPaintMapEvent);
+begin
+  MapView.OnAfterPaintMap := Value;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFrameBaseMapViewer.Loaded;
+begin
+  inherited;
+
+  MapView.OnClickSquare := MapViewClickSquare;
+  MapView.OnHoverSquare := MapViewHoverSquare;
 end;
 
 {*
@@ -159,20 +194,10 @@ end;
   @param Position   Position à montrer
 *}
 procedure TFrameBaseMapViewer.ShowPosition(Map: TMap; const Position: T3DPoint);
-var
-  X, Y: Integer;
 begin
   CurrentMap := Map;
-
-  X := Position.X * SquareSize + SquareSize div 2;
-  Y := Position.Y * SquareSize + SquareSize div 2;
   CurrentFloor := Position.Z;
-
-  with ScrollBoxMap do
-  begin
-    HorzScrollBar.Position := X - ClientWidth  div 2;
-    VertScrollBar.Position := Y - ClientHeight div 2;
-  end;
+  MapView.ShowPosition(Position);
 end;
 
 {*
@@ -192,7 +217,7 @@ end;
 *}
 procedure TFrameBaseMapViewer.InvalidateMap;
 begin
-  PaintBoxMap.Invalidate;
+  MapView.InvalidateMap;
 end;
 
 {*
@@ -212,186 +237,41 @@ begin
 
   if NewTab < 0 then
   begin
-    FCurrentMap := nil;
+    MapView.Map := nil;
 
-    CurrentFloor := 0;
     EditFloor.Enabled := False;
-
-    PaintBoxMap.Width := 100;
-    PaintBoxMap.Height := 100;
   end else
   begin
-    FCurrentMap := Master.Maps[NewTab];
+    MapView.Map := Master.Maps[NewTab];
 
     EditFloor.MaxValue := CurrentMap.Dimensions.Z-1;
     EditFloor.Enabled := CurrentMap.Dimensions.Z > 1;
-    if CurrentFloor >= CurrentMap.Dimensions.Z then
-      CurrentFloor := CurrentMap.Dimensions.Z-1;
-
-    PaintBoxMap.Width  := (CurrentMap.Dimensions.X + 2*MinViewSize)*SquareSize;
-    PaintBoxMap.Height := (CurrentMap.Dimensions.Y + 2*MinViewSize)*SquareSize;
   end;
-
-  PaintBoxMap.Invalidate;
 end;
 
 {*
-  Gestionnaire d'événement OnPaintBuffer de la paint-box de la carte
+  Gestionnaire d'événement OnClickSquare de la vue de la carte
   @param Sender   Objet qui a déclenché l'événement
+  @param QPos     Position qualifiée de la case cliquée
 *}
-procedure TFrameBaseMapViewer.PaintBoxMapPaintBuffer(Sender: TObject);
-var
-  Left, Top, Right, Bottom: Integer;
-  SquareClipRect: TRect;
-  LeftZone, TopZone, RightZone, BottomZone: Integer;
-  I, X, Y: Integer;
-  QPos: TQualifiedPos;
-  Context: TDrawSquareContext;
+procedure TFrameBaseMapViewer.MapViewClickSquare(Sender: TObject;
+  const QPos: TQualifiedPos);
 begin
-  if CurrentMap = nil then
-  begin
-    PaintBoxMap.Buffer.Clear(Color32(ScrollBoxMap.Color));
-    Exit;
-  end;
-
-  // Calcul des coordonnées à afficher
-  Left := 0 - MinViewSize;
-  Top := 0 - MinViewSize;
-  Right := CurrentMap.Dimensions.X + MinViewSize;
-  Bottom := CurrentMap.Dimensions.Y + MinViewSize;
-  SquareClipRect := Rect(Left, Top, Right, Bottom);
-
-  LeftZone   := Left   div CurrentMap.ZoneWidth;
-  TopZone    := Top    div CurrentMap.ZoneHeight;
-  RightZone  := Right  div CurrentMap.ZoneWidth;
-  BottomZone := Bottom div CurrentMap.ZoneHeight;
-
-  // Dessin des cases
-  QPos.Map := CurrentMap;
-  for X := Left to Right do
-  begin
-    for Y := Top to Bottom do
-    begin
-      QPos.Position := Point3D(X, Y, CurrentFloor);
-
-      Context := TDrawSquareContext.Create(PaintBoxMap.Buffer,
-        (MinViewSize+X) * SquareSize, (MinViewSize+Y) * SquareSize, QPos);
-      try
-        CurrentMap[QPos.Position].Draw(Context);
-      finally
-        Context.free;
-      end;
-    end;
-  end;
-
-  // Dessin des joueurs
-  for I := 0 to Master.PlayerCount-1 do
-  begin
-    with Master.Players[I] do
-    begin
-      if (Map = CurrentMap) and (Position.Z = CurrentFloor) then
-      begin
-        DrawInPlace(PaintBoxMap.Buffer, (MinViewSize+Position.X) * SquareSize,
-          (MinViewSize+Position.Y) * SquareSize);
-      end;
-    end;
-  end;
-
-  // Dessin du plafond
-  QPos.Map := CurrentMap;
-  for X := Left to Right do
-  begin
-    for Y := Top to Bottom do
-    begin
-      QPos.Position := Point3D(X, Y, CurrentFloor);
-
-      Context := TDrawSquareContext.Create(PaintBoxMap.Buffer,
-        (MinViewSize+X) * SquareSize, (MinViewSize+Y) * SquareSize, QPos);
-      try
-        CurrentMap[QPos.Position].DrawCeiling(Context);
-      finally
-        Context.free;
-      end;
-    end;
-  end;
-
-  // Dessin des lignes de séparation des zones
-  with PaintBoxMap.Buffer do
-  begin
-    for X := LeftZone to RightZone do
-    begin
-      FillRectS(
-        (CurrentMap.ZoneWidth * X + 1) * SquareSize - 1,
-        Top * SquareSize,
-        (CurrentMap.ZoneWidth * X + 1) * SquareSize + 1,
-        (Bottom+2) * SquareSize,
-        clBlack32);
-    end;
-
-    for Y := TopZone to BottomZone do
-    begin
-      FillRectS(
-        Left * SquareSize,
-        (CurrentMap.ZoneHeight * Y + 1) * SquareSize - 1,
-        (Right+2) * SquareSize,
-        (CurrentMap.ZoneHeight * Y + 1) * SquareSize + 1,
-        clBlack32);
-    end;
-  end;
-
-  // Dessins supplémentaires
-  if Assigned(FOnAfterPaint) then
-    FOnAfterPaint(Self, PaintBoxMap.Buffer, SquareClipRect);
-end;
-
-{*
-  Gestionnaire d'événement OnMouseDown de la paint-box de la carte
-  @param Sender   Objet qui a déclenché l'événement
-  @param Button   Boutonde la souris qui a été enfoncé
-  @param Shift    État des touches système
-  @param X        Abscisse du point cliqué
-  @param Y        Ordonnée du point cliqué
-*}
-procedure TFrameBaseMapViewer.PaintBoxMapMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  QPos: TQualifiedPos;
-begin
-  if (Button <> mbLeft) or (CurrentMap = nil) then
-    Exit;
-
   if Assigned(FOnClickSquare) then
-  begin
-    QPos.Map := CurrentMap;
-    QPos.Position :=
-      Point3D(X div SquareSize - 1, Y div SquareSize - 1, CurrentFloor);
-
     FOnClickSquare(Self, QPos);
-  end;
 end;
 
 {*
-  Gestionnaire d'événement OnMouseMove de la paint-box de la carte
+  Gestionnaire d'événement OnHoverSquare de la vue de la carte
   @param Sender   Objet qui a déclenché l'événement
-  @param Shift    État des touches système
-  @param X        Abscisse du point cliqué
-  @param Y        Ordonnée du point cliqué
+  @param QPos     Position qualifiée de la case survolée
 *}
-procedure TFrameBaseMapViewer.PaintBoxMapMouseMove(Sender: TObject;
-  Shift: TShiftState; X, Y: Integer);
-var
-  QPos: TQualifiedPos;
+procedure TFrameBaseMapViewer.MapViewHoverSquare(Sender: TObject;
+  const QPos: TQualifiedPos);
 begin
-  if CurrentMap = nil then
-    Exit;
-
-  QPos.Map := CurrentMap;
-  QPos.Position :=
-    Point3D(X div SquareSize - 1, Y div SquareSize - 1, CurrentFloor);
-
   StaticPosition.Caption := Point3DToString(QPos.Position, ', ');
 
-  with CurrentMap[QPos.Position] do
+  with QPos.Square do
   begin
     StaticField.Caption := Field.Name;
 
@@ -411,8 +291,8 @@ begin
       StaticObstacle.Caption := Obstacle.Name;
   end;
 
-  if Assigned(FOnOverSquare) then
-    FOnOverSquare(Self, QPos);
+  if Assigned(FOnHoverSquare) then
+    FOnHoverSquare(Self, QPos);
 end;
 
 {*
@@ -421,8 +301,7 @@ end;
 *}
 procedure TFrameBaseMapViewer.EditFloorChange(Sender: TObject);
 begin
-  FCurrentFloor := EditFloor.Value;
-  PaintBoxMap.Invalidate;
+  MapView.Floor := EditFloor.Value;
 end;
 
 end.

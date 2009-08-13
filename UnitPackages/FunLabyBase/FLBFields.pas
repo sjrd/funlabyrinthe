@@ -10,7 +10,8 @@ unit FLBFields;
 interface
 
 uses
-  Graphics, ScUtils, SdDialogs, FunLabyUtils, FLBCommon;
+  Types, Graphics, ScUtils, SdDialogs, GR32, FunLabyUtils, Generics,
+  GraphicsTools, FLBCommon;
 
 resourcestring
   sGrass = 'Herbe';    /// Nom de l'herbe
@@ -45,22 +46,6 @@ resourcestring
 
 type
   {*
-    Sol
-    Le sol est le terrain de base de FunLabyrinthe. Il n'a pas de condition. On
-    peut en créer plusieurs versions, avec des graphismes différents. Par
-    défaut, il existe un type de sol : l'herbe.
-    @author sjrd
-    @version 5.0
-  *}
-  TGround = class(TField)
-  private
-    procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
-  public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; const AImgName: string = fGrass);
-  end;
-
-  {*
     Mur
     Le mur est un terrain qui bloque systématiquement le joueur.
     @author sjrd
@@ -84,6 +69,8 @@ type
   TWater = class(TField)
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
+  protected
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
@@ -102,6 +89,8 @@ type
   THole = class(TField)
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
+  protected
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
@@ -139,43 +128,6 @@ type
   end;
 
 implementation
-
-{---------------}
-{ Classe TGrass }
-{---------------}
-
-{*
-  Crée une instance de TGrass
-  @param AMaster    Maître FunLabyrinthe
-  @param AID        ID du terrain
-  @param AName      Nom du terrain
-  @param AImgName   Nom de l'image des graphismes (défaut : l'herbe)
-*}
-constructor TGround.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; const AImgName: string = fGrass);
-begin
-  inherited Create(AMaster, AID, AName);
-  if AImgName <> '' then
-    Painter.ImgNames.Add(AImgName);
-end;
-
-{*
-  Gestionnaire de message msgPlank
-  TGround permet d'y poser la planche pour autant que de l'autre côté, il y ait
-  également un TGround, et qu'il n'y ait d'obstacle d'aucun côté.
-  @param Msg   Message
-*}
-procedure TGround.PlankMessage(var Msg: TPlankMessage);
-begin
-  with Msg, Player do
-  begin
-    if Kind = pmkLeaveFrom then
-    begin
-      Result := (Map[Dest].Field is TGround) and
-        (Map[Src].Obstacle = nil) and (Map[Dest].Obstacle = nil);
-    end;
-  end;
-end;
 
 {--------------}
 { Classe TWall }
@@ -237,6 +189,16 @@ end;
 {*
   [@inheritDoc]
 *}
+procedure TWater.DoDraw(Context: TDrawSquareContext);
+begin
+  inherited;
+
+  DissipateGroundNeighbors(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TWater.Entering(Context: TMoveContext);
 begin
   with Context do
@@ -272,6 +234,9 @@ constructor THole.Create(AMaster: TMaster; const AID: TComponentID;
   const AName: string);
 begin
   inherited Create(AMaster, AID, AName);
+
+  FStaticDraw := False;
+
   Painter.ImgNames.Add(fHole);
 end;
 
@@ -284,6 +249,16 @@ procedure THole.PlankMessage(var Msg: TPlankMessage);
 begin
   if Msg.Kind = pmkPassOver then
     Msg.Result := True;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure THole.DoDraw(Context: TDrawSquareContext);
+begin
+  inherited;
+
+  DissipateGroundNeighbors(Context);
 end;
 
 {*

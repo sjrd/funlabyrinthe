@@ -9,8 +9,8 @@ unit C4xFields;
 interface
 
 uses
-  ScUtils, SdDialogs, FunLabyUtils, MapTools, FLBFields, FLBPlank, FLBCommon,
-  C4xComponents;
+  ScUtils, SdDialogs, FunLabyUtils, MapTools, Generics, FLBFields, FLBPlank,
+  FLBCommon, C4xComponents;
 
 const
   idOldWater = 'OldWater'; /// ID de l'eau ancienne version

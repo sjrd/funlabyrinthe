@@ -58,6 +58,9 @@ type
   /// État de victoire/défaite d'un joueur
   TPlayState = (psPlaying, psWon, psLost);
 
+  /// Mode de dessin d'un joueur
+  TPlayerDrawMode = (dmCircle, dmPainter, dmDirPainter);
+
   /// Classe de base des exceptions FunLabyrinthe
   EFunLabyException = class(Exception);
 
@@ -117,9 +120,6 @@ type
     function GetComponents(Index: Integer): TSquareComponent; inline;
     procedure SetComponents(Index: Integer; Value: TSquareComponent);
   public
-    class operator Implicit(const Value: TQualifiedPos): TMap;
-    class operator Implicit(const Value: TQualifiedPos): T3DPoint;
-
     property X: Integer read Position.X write Position.X;
     property Y: Integer read Position.Y write Position.Y;
     property Z: Integer read Position.Z write Position.Z;
@@ -340,75 +340,6 @@ type
   end;
 
   {*
-    Gère le chargement des images d'après leur nom
-    TImagesMaster s'occupe de charger automatiquement les images qu'on lui
-    demande d'afficher. Il les conserve dans une liste d'image.
-    @author sjrd
-    @version 5.0
-  *}
-  TImagesMaster = class(TObject)
-  private
-    FExtensions: TStrings; /// Extensions d'images reconnues
-    FImgList: TObjectList; /// Liste d'images interne
-    FImgNames: TStrings;   /// Liste des noms des images
-
-    function ResolveImgName(const BaseImgName: string): TFileName;
-    function LoadImage(const ImgName: string): TBitmap32;
-    function Add(const ImgName: string): Integer;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    function IndexOf(const ImgName: string): Integer;
-
-    procedure Draw(Index: Integer; Context: TDrawSquareContext); overload;
-    procedure Draw(const ImgName: string;
-      Context: TDrawSquareContext); overload;
-
-    procedure Draw(Index: Integer; Bitmap: TBitmap32;
-      X: Integer = 0; Y: Integer = 0); overload;
-    procedure Draw(const ImgName: string; Bitmap: TBitmap32;
-      X: Integer = 0; Y: Integer = 0); overload;
-
-    function GetInternalBitmap(Index: Integer): TBitmap32;
-  end;
-
-  {*
-    Enregistre et affiche par superposition une liste d'images
-    TPainter enregistre une liste d'images par leur noms et propose une méthode
-    pour les dessiner les unes sur les autres, par transparence.
-    @author sjrd
-    @version 5.0
-  *}
-  TPainter = class(TObject)
-  private
-    FMaster: TImagesMaster; /// Maître d'images
-
-    FImgNames: TStrings;           /// Liste des noms des images
-    FCachedImg: TAnimatedBitmap32; /// Copie cache de l'image résultante
-
-    FStaticDraw: Boolean; /// Indique si ce peintre dessine une image statique
-
-    procedure UpdateStaticDraw;
-    procedure DrawStatic;
-    procedure DrawNotStatic;
-
-    procedure ImgNamesChange(Sender: TObject);
-
-    function GetIsEmpty: Boolean;
-  public
-    constructor Create(AMaster: TImagesMaster);
-    destructor Destroy; override;
-
-    procedure Draw(Context: TDrawSquareContext);
-
-    property Master: TImagesMaster read FMaster;
-    property ImgNames: TStrings read FImgNames;
-    property StaticDraw: Boolean read FStaticDraw;
-    property IsEmpty: Boolean read GetIsEmpty;
-  end;
-
-  {*
     Contexte d'un mouvement du joueur
     @author sjrd
     @version 5.0
@@ -426,6 +357,8 @@ type
 
     FOldDirection: TDirection; /// Ancienne direction du joueur
     FKeyPressed: Boolean;      /// True si une touche a été pressée
+    FKey: Word;                /// Touche pressée (si KeyPressed)
+    FShift: TShiftState;       /// État des touches spéciales (si KeyPressed)
 
     FCancelled: Boolean;  /// True si le déplacement a été annulé
     FGoOnMoving: Boolean; /// True s'il faut réitérer le déplacement
@@ -441,9 +374,9 @@ type
     procedure SetSquare(Value: TSquare);
   public
     constructor Create(APlayer: TPlayer; const ADest: TQualifiedPos;
-      AKeyPressed: Boolean); overload;
+      AKey: Word = 0; AShift: TShiftState = []); overload;
     constructor Create(APlayer: TPlayer; const ADest: T3DPoint;
-      AKeyPressed: Boolean); overload;
+      AKey: Word = 0; AShift: TShiftState = []); overload;
 
     procedure Cancel;
 
@@ -463,6 +396,8 @@ type
 
     property OldDirection: TDirection read FOldDirection;
     property KeyPressed: Boolean read FKeyPressed;
+    property Key: Word read FKey;
+    property Shift: TShiftState read FShift;
 
     property Cancelled: Boolean read FCancelled write FCancelled;
     property GoOnMoving: Boolean read FGoOnMoving write FGoOnMoving;
@@ -492,6 +427,7 @@ type
     FPersistentState: TPersistentState; /// État
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); virtual;
+    procedure StoreDefaults; virtual;
 
     procedure BeginState(State: TPersistentState); virtual;
     procedure EndState(State: TPersistentState); virtual;
@@ -628,7 +564,9 @@ type
       SubInstance: TFunLabyPersistent);
 
     procedure DefineStrings(const Name: string; Strings: TStrings;
-      ObjectType: PTypeInfo = nil; HasData: Boolean = True);
+      ObjectType: PTypeInfo = nil); overload;
+    procedure DefineStrings(const Name: string; Strings: TStrings;
+      ObjectType: PTypeInfo; HasData: Boolean); overload;
 
     procedure DefineBinaryProperty(const Name: string;
       ReadProc, WriteProc: TStreamProc; HasData: Boolean = True);
@@ -660,6 +598,108 @@ type
     constructor Create(AInstance: TFunLabyPersistent;
       AOwner: TFunLabyWriter = nil);
     destructor Destroy; override;
+  end;
+
+  {*
+    Pseudo-filer servant à enregistrer récursivement les propriétés par défaut
+    @author sjrd
+    @version 5.0
+  *}
+  TFunLabyStoredDefaultsFiler = class(TFunLabyFiler)
+  protected
+    procedure HandleProperty(PropInfo: PPropInfo; HasData: Boolean); override;
+
+    procedure HandlePersistent(const Name: string;
+      SubInstance: TFunLabyPersistent); override;
+
+    procedure HandleCollection(const Name: string;
+      Collection: TFunLabyCollection); override;
+
+    procedure HandleComponent(const Name: string;
+      Component: TFunLabyComponent); override;
+
+    procedure HandleStrings(const Name: string; Strings: TStrings;
+      ObjectType: PTypeInfo; HasData: Boolean); override;
+
+    procedure HandleBinaryProperty(const Name: string;
+      ReadProc, WriteProc: TStreamProc; HasData: Boolean); override;
+  end;
+
+  {*
+    Gère le chargement des images d'après leur nom
+    TImagesMaster s'occupe de charger automatiquement les images qu'on lui
+    demande d'afficher. Il les conserve dans une liste d'image.
+    @author sjrd
+    @version 5.0
+  *}
+  TImagesMaster = class(TObject)
+  private
+    FExtensions: TStrings; /// Extensions d'images reconnues
+    FImgList: TObjectList; /// Liste d'images interne
+    FImgNames: TStrings;   /// Liste des noms des images
+
+    function ResolveImgName(const BaseImgName: string): TFileName;
+    function LoadImage(const ImgName: string): TBitmap32;
+    function Add(const ImgName: string): Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    function IndexOf(const ImgName: string): Integer;
+
+    procedure Draw(Index: Integer; Context: TDrawSquareContext); overload;
+    procedure Draw(const ImgName: string;
+      Context: TDrawSquareContext); overload;
+
+    procedure Draw(Index: Integer; Bitmap: TBitmap32;
+      X: Integer = 0; Y: Integer = 0); overload;
+    procedure Draw(const ImgName: string; Bitmap: TBitmap32;
+      X: Integer = 0; Y: Integer = 0); overload;
+
+    function GetInternalBitmap(Index: Integer): TBitmap32;
+  end;
+
+  {*
+    Enregistre et affiche par superposition une liste d'images
+    TPainter enregistre une liste d'images par leur noms et propose une méthode
+    pour les dessiner les unes sur les autres, par transparence.
+    @author sjrd
+    @version 5.0
+  *}
+  TPainter = class(TFunLabyPersistent)
+  private
+    FMaster: TImagesMaster; /// Maître d'images
+
+    FImgNames: TStrings;           /// Liste des noms des images
+    FDefaultImgNames: TStrings;    /// Noms d'images par défaut
+    FCachedImgIndex: Integer;      /// Index de l'image dans le maître d'images
+    FCachedImg: TAnimatedBitmap32; /// Copie cache de l'image résultante
+
+    FStaticDraw: Boolean; /// Indique si ce peintre dessine une image statique
+
+    procedure UpdateStaticDraw;
+    procedure NeedCachedImg;
+    procedure DrawStatic;
+    procedure DrawNotStatic;
+
+    procedure ImgNamesChange(Sender: TObject);
+
+    function IsImgNamesStored: Boolean;
+
+    function GetIsEmpty: Boolean;
+  protected
+    procedure StoreDefaults; override;
+  public
+    constructor Create(AMaster: TImagesMaster);
+    destructor Destroy; override;
+
+    procedure Draw(Context: TDrawSquareContext);
+
+    property Master: TImagesMaster read FMaster;
+    property StaticDraw: Boolean read FStaticDraw;
+    property IsEmpty: Boolean read GetIsEmpty;
+  published
+    property ImgNames: TStrings read FImgNames stored IsImgNamesStored;
   end;
 
   {*
@@ -754,7 +794,7 @@ type
   *}
   TVisualComponent = class(TFunLabyComponent)
   private
-    FOriginalName: string; /// Nom original du composant
+    FDefaultName: string;  /// Nom par défaut du composant
     FName: string;         /// Nom du composant
     FPainter: TPainter;    /// Peintre par défaut
     FCachedImg: TBitmap32; /// Image en cache (pour les dessins invariants)
@@ -765,11 +805,11 @@ type
   protected
     FStaticDraw: Boolean; /// Indique si le dessin du composant est invariant
 
+    procedure StoreDefaults; override;
+
     function GetHint: string; override;
 
     procedure DoDraw(Context: TDrawSquareContext); virtual;
-
-    property Painter: TPainter read FPainter;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       const AName: string);
@@ -786,6 +826,7 @@ type
     property StaticDraw: Boolean read FStaticDraw;
   published
     property Name: string read FName write FName stored IsNameStored;
+    property Painter: TPainter read FPainter;
   end;
 
   {*
@@ -894,6 +935,9 @@ type
     @version 5.0
   *}
   TObjectDef = class(TVisualComponent)
+  private
+    FDisplayInObjectList: Boolean; /// Afficher dans la liste des objets
+    FDisplayInStatusBar: Boolean;  /// Afficher dans la barre de statut
   protected
     class function GetPlayerDataClass: TPlayerDataClass; override;
 
@@ -904,6 +948,9 @@ type
 
     function GetShownInfos(Player: TPlayer): string; virtual;
   public
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string);
+
     function AbleTo(Player: TPlayer; const Action: TPlayerAction;
       Param: Integer): Boolean; virtual;
     procedure UseFor(Player: TPlayer; const Action: TPlayerAction;
@@ -911,6 +958,11 @@ type
 
     property Count[Player: TPlayer]: Integer read GetCount write SetCount;
     property ShownInfos[Player: TPlayer]: string read GetShownInfos;
+  published
+    property DisplayInObjectList: Boolean
+      read FDisplayInObjectList write FDisplayInObjectList default True;
+    property DisplayInStatusBar: Boolean
+      read FDisplayInStatusBar write FDisplayInStatusBar default True;
   end;
 
   {*
@@ -951,6 +1003,8 @@ type
 
     procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
       Y: Integer = 0); override;
+
+    function GetEffectiveDrawingField: TField;
 
     procedure Entering(Context: TMoveContext); virtual;
     procedure Exiting(Context: TMoveContext); virtual;
@@ -1278,6 +1332,10 @@ type
     FPlugins: TObjectList;      /// Liste des plug-in
     FAttributes: TStrings;      /// Liste des attributs
     FPlayState: TPlayState;     /// État de victoire/défaite
+    FFoundObjects: TObjectList; /// Objets trouvés (dans l'ordre)
+
+    FDrawMode: TPlayerDrawMode;                  /// Mode de dessin
+    FDirPainters: array[TDirection] of TPainter; /// Peintres par direction
 
     /// Verrou global pour le joueur
     FLock: TMultiReadExclusiveWriteSynchronizer;
@@ -1292,6 +1350,8 @@ type
     procedure SetPluginListStr(const Value: string);
     function GetModeListStr: string;
     procedure SetModeListStr(const Value: string);
+    function GetFoundObjectsStr: string;
+    procedure SetFoundObjectsStr(const Value: string);
 
     procedure GetPluginList(out PluginList: TPluginDynArray);
 
@@ -1299,10 +1359,14 @@ type
 
     procedure ActionProc(Coroutine: TCoroutine);
 
+    procedure FoundObject(ObjectDef: TObjectDef);
+
     function GetVisible: Boolean;
 
     function GetAttribute(const AttrName: string): Integer;
     procedure SetAttribute(const AttrName: string; Value: Integer);
+
+    function GetPainters(Dir: TDirection): TPainter;
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
 
@@ -1321,6 +1385,8 @@ type
     procedure GetAttributes(Attributes: TStrings);
     procedure GetPluginIDs(PluginIDs: TStrings);
 
+    procedure GetFoundObjects(ObjectDefs: TObjectList);
+
     procedure DrawInPlace(Bitmap: TBitmap32; X: Integer = 0;
       Y: Integer = 0);
 
@@ -1335,20 +1401,25 @@ type
     function AbleTo(const Action: TPlayerAction; Param: Integer = 0): Boolean;
     function DoAction(const Action: TPlayerAction; Param: Integer = 0): Boolean;
 
-    procedure Move(Dir: TDirection; KeyPressed: Boolean;
-      out Redo: Boolean);
+    procedure Move(Dir: TDirection; Key: Word; Shift: TShiftState;
+      out Redo: Boolean); overload;
+    procedure Move(Dir: TDirection; out Redo: Boolean); overload;
+    procedure Move(Dir: TDirection; Key: Word; Shift: TShiftState); overload;
+    procedure Move(Dir: TDirection); overload;
 
     function IsMoveAllowed(Context: TMoveContext): Boolean; overload;
-    function IsMoveAllowed(const Dest: T3DPoint;
-      KeyPressed: Boolean = False): Boolean; overload;
+    function IsMoveAllowed(const Dest: T3DPoint; Key: Word;
+      Shift: TShiftState): Boolean; overload;
+    function IsMoveAllowed(const Dest: T3DPoint): Boolean; overload;
 
     procedure MoveTo(Context: TMoveContext; Execute: Boolean = True); overload;
     procedure MoveTo(const Dest: T3DPoint; Execute: Boolean;
       out Redo: Boolean); overload;
-    procedure MoveTo(const Dest: T3DPoint); overload;
+    procedure MoveTo(const Dest: T3DPoint; Execute: Boolean = False); overload;
     procedure MoveTo(const Dest: TQualifiedPos; Execute: Boolean;
       out Redo: Boolean); overload;
-    procedure MoveTo(const Dest: TQualifiedPos); overload;
+    procedure MoveTo(const Dest: TQualifiedPos;
+      Execute: Boolean = False); overload;
 
     procedure Temporize;
     procedure NaturalMoving;
@@ -1394,6 +1465,13 @@ type
       default DefaultPlayerColor;
     property ViewBorderSize: Integer read FViewBorderSize write FViewBorderSize
       default DefaultViewBorderSize;
+
+    property DrawMode: TPlayerDrawMode read FDrawMode write FDrawMode
+      default dmCircle;
+    property NorthPainter: TPainter index diNorth read GetPainters;
+    property EastPainter: TPainter index diEast read GetPainters;
+    property SouthPainter: TPainter index diSouth read GetPainters;
+    property WestPainter: TPainter index diWest read GetPainters;
   end;
 
   {*
@@ -1470,6 +1548,8 @@ type
     constructor Create(AEditing: Boolean);
     destructor Destroy; override;
 
+    procedure StoreDefaults; override;
+    
     procedure Temporize;
 
     function ComponentExists(const ID: TComponentID): Boolean;
@@ -1541,6 +1621,16 @@ const {don't localize}
   /// Application d'une direction vers la direction opposée
   NegDir: array[TDirection] of TDirection = (
     diNone, diSouth, diWest, diNorth, diEast
+  );
+
+  /// Application d'une direction vers la direction à sa droite
+  RightDir: array[TDirection] of TDirection = (
+    diNone, diEast, diSouth, diWest, diNorth
+  );
+
+  /// Application d'une direction vers la direction à sa gauche
+  LeftDir: array[TDirection] of TDirection = (
+    diNone, diWest, diNorth, diEast, diSouth
   );
 
 var {don't localize}
@@ -2023,26 +2113,6 @@ begin
   end;
 end;
 
-{*
-  Conversion implicite en TMap
-  @param Value   Position qualifiée à convertir
-  @return Carte de la position qualifiée
-*}
-class operator TQualifiedPos.Implicit(const Value: TQualifiedPos): TMap;
-begin
-  Result := Value.Map;
-end;
-
-{*
-  Conversion implicite en T3DPoint
-  @param Value   Position qualifiée à convertir
-  @return Position non qualifiée de la position qualifiée
-*}
-class operator TQualifiedPos.Implicit(const Value: TQualifiedPos): T3DPoint;
-begin
-  Result := Value.Position;
-end;
-
 {--------------------------}
 { TDrawSquareContext class }
 {--------------------------}
@@ -2516,12 +2586,8 @@ begin
 
   FMaster := AMaster;
   FImgNames := TStringList.Create;
+  FDefaultImgNames := TStringList.Create;
   TStringList(FImgNames).OnChange := ImgNamesChange;
-
-  FCachedImg := TAnimatedBitmap32.Create;
-  FCachedImg.SetSize(SquareSize, SquareSize);
-  FCachedImg.Clear(clTransparent32);
-  FCachedImg.DrawMode := dmBlend;
 
   FStaticDraw := True;
 end;
@@ -2532,6 +2598,7 @@ end;
 destructor TPainter.Destroy;
 begin
   FCachedImg.Free;
+  FDefaultImgNames.Free;
   FImgNames.Free;
 
   inherited;
@@ -2555,6 +2622,20 @@ begin
   end;
 
   FStaticDraw := True;
+end;
+
+{*
+  Crée l'image cache si elle n'est pas encore créée
+*}
+procedure TPainter.NeedCachedImg;
+begin
+  if FCachedImg <> nil then
+    Exit;
+
+  FCachedImg := TAnimatedBitmap32.Create;
+  FCachedImg.SetSize(SquareSize, SquareSize);
+  FCachedImg.Clear(clTransparent32);
+  FCachedImg.DrawMode := dmBlend;
 end;
 
 {*
@@ -2671,10 +2752,28 @@ procedure TPainter.ImgNamesChange(Sender: TObject);
 begin
   UpdateStaticDraw;
 
-  if StaticDraw then
-    DrawStatic
-  else
-    DrawNotStatic;
+  if ImgNames.Count <= 1 then
+  begin
+    FreeAndNil(FCachedImg);
+    if ImgNames.Count > 0 then
+      FCachedImgIndex := Master.IndexOf(ImgNames[0]);
+  end else
+  begin
+    NeedCachedImg;
+
+    if StaticDraw then
+      DrawStatic
+    else
+      DrawNotStatic;
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TPainter.IsImgNamesStored: Boolean;
+begin
+  Result := not FImgNames.Equals(FDefaultImgNames);
 end;
 
 {*
@@ -2687,6 +2786,16 @@ begin
 end;
 
 {*
+  [@inheritDoc]
+*}
+procedure TPainter.StoreDefaults;
+begin
+  inherited;
+
+  FDefaultImgNames.Assign(FImgNames);
+end;
+
+{*
   Dessine les images sur un canevas
   La méthode Draw dessine les images de ImgNames sur le canevas, à la
   position indiquée. Les différentes images sont superposées, celle d'index
@@ -2695,8 +2804,12 @@ end;
 *}
 procedure TPainter.Draw(Context: TDrawSquareContext);
 begin
-  if ImgNames.Count > 0 then
+  case ImgNames.Count of
+    0: ;
+    1: Master.Draw(FCachedImgIndex, Context);
+  else
     Context.DrawSquareBitmap(FCachedImg);
+  end;
 end;
 
 {--------------------}
@@ -2705,12 +2818,13 @@ end;
 
 {*
   Crée un contexte de déplacement du joueur
-  @param APlayer       Joueur qui se déplace
-  @param ADest         Destination
-  @param AKeyPressed   True si une touche a été pressée
+  @param APlayer   Joueur qui se déplace
+  @param ADest     Destination
+  @param AKey      Touche pressée (ou 0 si pas de touche pressée)
+  @param AShift    État des touches spéciales (si une touche a été pressée)
 *}
 constructor TMoveContext.Create(APlayer: TPlayer; const ADest: TQualifiedPos;
-  AKeyPressed: Boolean);
+  AKey: Word = 0; AShift: TShiftState = []);
 begin
   inherited Create;
 
@@ -2724,7 +2838,9 @@ begin
   SwitchToSrc;
 
   FOldDirection := Player.Direction;
-  FKeyPressed := AKeyPressed;
+  FKeyPressed := AKey <> 0;
+  FKey := AKey;
+  FShift := AShift;
 
   FCancelled := False;
   FGoOnMoving := False;
@@ -2732,19 +2848,20 @@ end;
 
 {*
   Crée un contexte de déplacement du joueur restant sur la même carte
-  @param APlayer       Joueur qui se déplace
-  @param ADest         Destination
-  @param AKeyPressed   True si une touche a été pressée
+  @param APlayer   Joueur qui se déplace
+  @param ADest     Destination
+  @param AKey      Touche pressée (ou 0 si pas de touche pressée)
+  @param AShift    État des touches spéciales (si une touche a été pressée)
 *}
 constructor TMoveContext.Create(APlayer: TPlayer; const ADest: T3DPoint;
-  AKeyPressed: Boolean);
+  AKey: Word = 0; AShift: TShiftState = []);
 var
   DestQPos: TQualifiedPos;
 begin
   DestQPos.Map := APlayer.Map;
   DestQPos.Position := ADest;
 
-  Create(APlayer, DestQPos, AKeyPressed);
+  Create(APlayer, DestQPos, AKey, AShift);
 end;
 
 {*
@@ -2853,6 +2970,21 @@ begin
 end;
 
 {*
+  Enregistre l'état actuel des propriétés comme étant par défaut
+*}
+procedure TFunLabyPersistent.StoreDefaults;
+var
+  StoreDefaultsFiler: TFunLabyStoredDefaultsFiler;
+begin
+  StoreDefaultsFiler := TFunLabyStoredDefaultsFiler.Create(Self);
+  try
+    DefineProperties(StoreDefaultsFiler);
+  finally
+    StoreDefaultsFiler.Free;
+  end;
+end;
+
+{*
   Début d'un état
   @param State   État qui commence
 *}
@@ -2886,6 +3018,7 @@ procedure TFunLabyPersistent.AfterConstruction;
 begin
   inherited;
   EndState([psCreating]);
+  StoreDefaults;
 end;
 
 {*
@@ -3364,12 +3497,24 @@ end;
   @param HasData      Indique si la liste de chaîne contient des données
 *}
 procedure TFunLabyFiler.DefineStrings(const Name: string; Strings: TStrings;
-  ObjectType: PTypeInfo = nil; HasData: Boolean = True);
+  ObjectType: PTypeInfo; HasData: Boolean);
 begin
   Assert((ObjectType = nil) or
     (ObjectType.Kind in [tkInteger, tkChar, tkEnumeration, tkSet, tkClass]));
 
   HandleStrings(Name, Strings, ObjectType, HasData);
+end;
+
+{*
+  Définit une propriété de type TStrings qui a des données si non vide
+  @param Name         Nom de la propriété
+  @param Strings      Liste de chaînes
+  @param ObjectType   Type d'objet stocké (peut être nil)
+*}
+procedure TFunLabyFiler.DefineStrings(const Name: string; Strings: TStrings;
+  ObjectType: PTypeInfo = nil);
+begin
+  DefineStrings(Name, Strings, ObjectType, Strings.Count > 0);
 end;
 
 {*
@@ -3437,6 +3582,61 @@ begin
   Instance.EndState([psWriting]);
 
   inherited;
+end;
+
+{-----------------------------------}
+{ TFunLabyStoredDefaultsFiler class }
+{-----------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyStoredDefaultsFiler.HandleProperty(PropInfo: PPropInfo;
+  HasData: Boolean);
+begin
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyStoredDefaultsFiler.HandlePersistent(const Name: string;
+  SubInstance: TFunLabyPersistent);
+begin
+  SubInstance.StoreDefaults;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyStoredDefaultsFiler.HandleCollection(const Name: string;
+  Collection: TFunLabyCollection);
+begin
+  Collection.StoreDefaults;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyStoredDefaultsFiler.HandleComponent(const Name: string;
+  Component: TFunLabyComponent);
+begin
+  Component.StoreDefaults;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyStoredDefaultsFiler.HandleStrings(const Name: string;
+  Strings: TStrings; ObjectType: PTypeInfo; HasData: Boolean);
+begin
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyStoredDefaultsFiler.HandleBinaryProperty(const Name: string;
+  ReadProc, WriteProc: TStreamProc; HasData: Boolean);
+begin
 end;
 
 {-------------------}
@@ -3654,7 +3854,6 @@ constructor TVisualComponent.Create(AMaster: TMaster; const AID: TComponentID;
 begin
   inherited Create(AMaster, AID);
 
-  FOriginalName := AName;
   FName := AName;
   FPainter := TPainter.Create(FMaster.ImagesMaster);
   FPainter.ImgNames.BeginUpdate;
@@ -3678,7 +3877,7 @@ end;
 *}
 function TVisualComponent.IsNameStored: Boolean;
 begin
-  Result := FName <> FOriginalName;
+  Result := FName <> FDefaultName;
 end;
 
 {*
@@ -3716,6 +3915,16 @@ end;
 procedure TVisualComponent.PrivDraw(Context: TDrawSquareContext);
 begin
   DoDraw(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TVisualComponent.StoreDefaults;
+begin
+  inherited;
+
+  FDefaultName := FName;
 end;
 
 {*
@@ -4050,6 +4259,21 @@ end;
 {-------------------}
 
 {*
+  Crée une instance de TObjectDef
+  @param Master   Maître FunLabyrinthe
+  @param AID      ID de l'objet
+  @param AName    Nom de l'objet
+*}
+constructor TObjectDef.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string);
+begin
+  inherited Create(AMaster, AID, AName);
+
+  FDisplayInObjectList := True;
+  FDisplayInStatusBar := True;
+end;
+
+{*
   [@inheritDoc]
 *}
 class function TObjectDef.GetPlayerDataClass: TPlayerDataClass;
@@ -4081,8 +4305,17 @@ end;
   @param Value    Nouveau nombre d'objets
 *}
 procedure TObjectDef.SetCount(Player: TPlayer; Value: Integer);
+var
+  Found: Boolean;
 begin
-  TObjectDefPlayerData(GetPlayerData(Player)).Count := Value;
+  with TObjectDefPlayerData(GetPlayerData(Player)) do
+  begin
+    Found := Value > Count;
+    Count := Value;
+  end;
+
+  if Found then
+    Player.FoundObject(Self);
 end;
 
 {*
@@ -4214,6 +4447,18 @@ begin
   finally
     Context.Free;
   end;
+end;
+
+{*
+  Trouve le terrain qui se charge effectivement de l'affichage de ce terrain
+  @return Terrain chargé de l'affichage de ce terrain
+*}
+function TField.GetEffectiveDrawingField: TField;
+begin
+  Result := Self;
+
+  while Result.FDelegateDrawTo <> nil do
+    Result := Result.FDelegateDrawTo;
 end;
 
 {*
@@ -5144,11 +5389,7 @@ end;
 procedure TLabyrinthPlayerMode.PressKey(Context: TKeyEventContext);
 var
   Dir: TDirection;
-  Redo: Boolean;
 begin
-  if Context.Shift <> [] then
-    Exit;
-
   case Context.Key of
     VK_UP: Dir := diNorth;
     VK_RIGHT: Dir := diEast;
@@ -5160,9 +5401,7 @@ begin
 
   Context.Handled := True;
 
-  Player.Move(Dir, True, Redo);
-  if Redo then
-    Player.NaturalMoving;
+  Player.Move(Dir, Context.Key, Context.Shift);
 end;
 
 {----------------}
@@ -5175,6 +5414,8 @@ end;
   @param AID       ID du joueur
 *}
 constructor TPlayer.Create(AMaster: TMaster; const AID: TComponentID);
+var
+  Dir: TDirection;
 begin
   inherited Create(AMaster, AID, SDefaultPlayerName);
 
@@ -5186,6 +5427,11 @@ begin
   FPlugins := TObjectList.Create(False);
   FAttributes := THashedStringList.Create;
   TStringList(FAttributes).CaseSensitive := True;
+  FFoundObjects := TObjectList.Create(False);
+
+  FDirPainters[diNone] := Painter;
+  for Dir := diNorth to diWest do
+    FDirPainters[Dir] := TPainter.Create(Master.ImagesMaster);
 
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
 
@@ -5196,11 +5442,17 @@ end;
   [@inheritDoc]
 *}
 destructor TPlayer.Destroy;
+var
+  Dir: TDirection;
 begin
   FActionCoroutine.Free;
 
   FLock.Free;
 
+  for Dir := diNorth to diWest do
+    FDirPainters[Dir].Free;
+
+  FFoundObjects.Free;
   FAttributes.Free;
   FPlugins.Free;
   
@@ -5305,6 +5557,51 @@ begin
 end;
 
 {*
+  Liste des plug-in attachés au joueur sous forme de chaîne
+  @return Liste des plug-in attachés au joueur sous forme de chaîne
+*}
+function TPlayer.GetFoundObjectsStr: string;
+var
+  I: Integer;
+begin
+  FLock.BeginRead;
+  try
+    if FFoundObjects.Count > 0 then
+    begin
+      for I := 0 to FFoundObjects.Count-1 do
+        Result := Result + TObjectDef(FFoundObjects[I]).ID + ' ';
+      SetLength(Result, Length(Result)-1);
+    end;
+  finally
+    FLock.EndRead;
+  end;
+end;
+
+{*
+  Modifie la liste des plug-in attachés au joueur à partir d'une chaîne
+  @param Value   Liste des plug-in à attacher au joueur sous forme de chaîne
+*}
+procedure TPlayer.SetFoundObjectsStr(const Value: string);
+var
+  ObjectID, Remaining, Temp: string;
+begin
+  FLock.BeginWrite;
+  try
+    FFoundObjects.Clear;
+
+    Remaining := Value;
+    while Remaining <> '' do
+    begin
+      SplitToken(Remaining, ' ', ObjectID, Temp);
+      Remaining := Temp;
+      FFoundObjects.Add(Master.ObjectDef[ObjectID]);
+    end;
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+{*
   Obtient une une liste des plug-in du joueur
   @param PluginList   Liste où enregistrer la liste des plug-in
 *}
@@ -5389,6 +5686,24 @@ begin
 end;
 
 {*
+  Indique que ce joueur a trouvé un objet
+  @param ObjectDef   Définition de l'objet trouvé
+*}
+procedure TPlayer.FoundObject(ObjectDef: TObjectDef);
+begin
+  if Master.Editing or (not ObjectDef.DisplayInStatusBar) then
+    Exit;
+
+  FLock.BeginWrite;
+  try
+    if FFoundObjects.IndexOf(ObjectDef) < 0 then
+      FFoundObjects.Add(ObjectDef);
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+{*
   Indique si le joueur est visible
   @return True s'il est visible, False sinon
 *}
@@ -5447,6 +5762,16 @@ begin
 end;
 
 {*
+  Peintres de ce joueur par direction
+  @param Dir   Direction
+  @return Peintre de ce joueur pour la direction Dir
+*}
+function TPlayer.GetPainters(Dir: TDirection): TPainter;
+begin
+  Result := FDirPainters[Dir];
+end;
+
+{*
   [@inheritDoc]
 *}
 procedure TPlayer.DefineProperties(Filer: TFunLabyFiler);
@@ -5475,6 +5800,10 @@ begin
 
   Filer.DefineProcProperty('Modes', TypeInfo(string),
     @TPlayer.GetModeListStr, @TPlayer.SetModeListStr);
+
+  Filer.DefineProcProperty('FoundObjects', TypeInfo(string),
+    @TPlayer.GetFoundObjectsStr, @TPlayer.SetFoundObjectsStr,
+    not Master.Editing);
 end;
 
 {*
@@ -5492,17 +5821,28 @@ procedure TPlayer.DoDraw(Context: TDrawSquareContext);
 var
   Color: TColor32;
 begin
-  Color := FColor;
-
-  if Color <> clTransparent32 then
-  begin
-    with Context, Bitmap.Canvas do
+  case DrawMode of
+    dmCircle:
     begin
-      Brush.Color := WinColor(Color);
-      Brush.Style := bsSolid;
-      Pen.Style := psClear;
-      Ellipse(X+6, Y+6, X+SquareSize-6, Y+SquareSize-6);
+      Color := FColor;
+
+      if Color <> clTransparent32 then
+      begin
+        with Context, Bitmap.Canvas do
+        begin
+          Brush.Color := WinColor(Color);
+          Brush.Style := bsSolid;
+          Pen.Style := psClear;
+          Ellipse(X+6, Y+6, X+SquareSize-6, Y+SquareSize-6);
+        end;
+      end;
     end;
+
+    dmPainter:
+      Painter.Draw(Context);
+
+    dmDirPainter:
+      FDirPainters[Direction].Draw(Context);
   end;
 end;
 
@@ -5570,6 +5910,20 @@ begin
   PluginIDs.Clear;
   for I := 0 to Length(Plugins)-1 do
     PluginIDs.AddObject(Plugins[I].ID, Plugins[I]);
+end;
+
+{*
+  Obtient la liste des objets trouvés, dans l'odre où il les a trouvés
+  @param ObjectDefs   En sortie, remplie avec la liste des objets trouvés
+*}
+procedure TPlayer.GetFoundObjects(ObjectDefs: TObjectList);
+begin
+  FLock.BeginRead;
+  try
+    ObjectDefs.Assign(FFoundObjects);
+  finally
+    FLock.EndRead;
+  end;
 end;
 
 {*
@@ -5797,11 +6151,12 @@ end;
   Déplace le joueur dans la direction indiquée
   Move déplace le joueur dans la direction indiquée, en appliquant les
   comportements conjugués des cases et plug-in.
-  @param Dir          Direction du déplacement
-  @param KeyPressed   True si une touche a été pressée pour le déplacement
-  @param Redo         Indique s'il faut réitérer le déplacement
+  @param Dir     Direction du déplacement
+  @param Key     Touche qui a été pressée pour le déplacement
+  @param Shift   État des touches spéciales
+  @param Redo    Indique s'il faut réitérer le déplacement
 *}
-procedure TPlayer.Move(Dir: TDirection; KeyPressed: Boolean;
+procedure TPlayer.Move(Dir: TDirection; Key: Word; Shift: TShiftState;
   out Redo: Boolean);
 var
   Context: TMoveContext;
@@ -5812,7 +6167,8 @@ begin
   if PlayState <> psPlaying then
     Exit;
 
-  Context := TMoveContext.Create(Self, PointBehind(Position, Dir), KeyPressed);
+  Context := TMoveContext.Create(Self, PointBehind(Position, Dir),
+    Key, Shift);
   try
     FDirection := Dir;
 
@@ -5826,6 +6182,50 @@ begin
   finally
     Context.Free;
   end;
+end;
+
+{*
+  Déplace le joueur dans la direction indiquée
+  Move déplace le joueur dans la direction indiquée, en appliquant les
+  comportements conjugués des cases et plug-in.
+  @param Dir    Direction du déplacement
+  @param Redo   Indique s'il faut réitérer le déplacement
+*}
+procedure TPlayer.Move(Dir: TDirection; out Redo: Boolean);
+begin
+  Move(Dir, 0, [], Redo);
+end;
+
+{*
+  Déplace le joueur dans la direction indiquée
+  Move déplace le joueur dans la direction indiquée, en appliquant les
+  comportements conjugués des cases et plug-in.
+  @param Dir     Direction du déplacement
+  @param Key     Touche qui a été pressée pour le déplacement
+  @param Shift   État des touches spéciales
+*}
+procedure TPlayer.Move(Dir: TDirection; Key: Word; Shift: TShiftState);
+var
+  Redo: Boolean;
+begin
+  Move(Dir, Key, Shift, Redo);
+  if Redo then
+    NaturalMoving;
+end;
+
+{*
+  Déplace le joueur dans la direction indiquée
+  Move déplace le joueur dans la direction indiquée, en appliquant les
+  comportements conjugués des cases et plug-in.
+  @param Dir   Direction du déplacement
+*}
+procedure TPlayer.Move(Dir: TDirection);
+var
+  Redo: Boolean;
+begin
+  Move(Dir, 0, [], Redo);
+  if Redo then
+    NaturalMoving;
 end;
 
 {*
@@ -5874,11 +6274,13 @@ end;
 
 {*
   Teste si un déplacement est permis
-  @param Dest   Case destination
+  @param Dest    Case destination
+  @param Key     Touche pressée pour le déplacement
+  @param Shift   État des touches spéciales
   @return True si le déplacement est permis, False sinon
 *}
-function TPlayer.IsMoveAllowed(const Dest: T3DPoint;
-  KeyPressed: Boolean = False): Boolean;
+function TPlayer.IsMoveAllowed(const Dest: T3DPoint; Key: Word;
+  Shift: TShiftState): Boolean;
 var
   Context: TMoveContext;
 begin
@@ -5889,12 +6291,22 @@ begin
     Exit;
   end;
 
-  Context := TMoveContext.Create(Self, Dest, KeyPressed);
+  Context := TMoveContext.Create(Self, Dest, Key, Shift);
   try
     Result := IsMoveAllowed(Context);
   finally
     Context.Free;
   end;
+end;
+
+{*
+  Teste si un déplacement est permis
+  @param Dest   Case destination
+  @return True si le déplacement est permis, False sinon
+*}
+function TPlayer.IsMoveAllowed(const Dest: T3DPoint): Boolean;
+begin
+  Result := IsMoveAllowed(Dest, 0, []);
 end;
 
 {*
@@ -5961,11 +6373,13 @@ end;
   Cette variante de MoveTo n'exécute pas la case d'arrivée
   @param Dest   Position de destination
 *}
-procedure TPlayer.MoveTo(const Dest: T3DPoint);
+procedure TPlayer.MoveTo(const Dest: T3DPoint; Execute: Boolean = False);
 var
   Redo: Boolean;
 begin
-  MoveTo(Dest, False, Redo);
+  MoveTo(Dest, Execute, Redo);
+  if Redo then
+    NaturalMoving;
 end;
 
 {*
@@ -5985,7 +6399,7 @@ begin
   if PlayState <> psPlaying then
     Exit;
 
-  Context := TMoveContext.Create(Self, Dest, False);
+  Context := TMoveContext.Create(Self, Dest);
   try
     MoveTo(Context, Execute);
     Redo := Context.GoOnMoving;
@@ -5999,11 +6413,13 @@ end;
   Cette variante de MoveTo n'exécute pas la case d'arrivée
   @param Dest   Position de destination
 *}
-procedure TPlayer.MoveTo(const Dest: TQualifiedPos);
+procedure TPlayer.MoveTo(const Dest: TQualifiedPos; Execute: Boolean = False);
 var
   Redo: Boolean;
 begin
-  MoveTo(Dest, False, Redo);
+  MoveTo(Dest, Execute, Redo);
+  if Redo then
+    NaturalMoving;
 end;
 
 {*
@@ -6025,7 +6441,7 @@ var
 begin
   repeat
     Temporize;
-    Move(Direction, False, Redo);
+    Move(Direction, Redo);
   until not Redo;
 end;
 
@@ -6860,6 +7276,14 @@ begin
 
     Inc(I);
   end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMaster.StoreDefaults;
+begin
+  inherited;
 end;
 
 {*

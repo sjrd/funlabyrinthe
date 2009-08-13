@@ -25,8 +25,8 @@ implementation
 const // don't localize
   UnitName = 'FLBFields';
   ResourceName = 'SepiImportsFLBFields';
-  TypeCount = 6;
-  MethodCount = 6;
+  TypeCount = 5;
+  MethodCount = 5;
   VariableCount = 1;
 
 var
@@ -35,11 +35,6 @@ var
   VarAddresses: array[0..VariableCount-1] of Pointer;
 
 type
-  TSepiImportsTGround = class(TGround)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
   TSepiImportsTWall = class(TWall)
   private
     class procedure InitMethodAddresses;
@@ -65,22 +60,13 @@ type
     class procedure InitMethodAddresses;
   end;
 
-{----------------}
-{ TGround import }
-{----------------}
-
-class procedure TSepiImportsTGround.InitMethodAddresses;
-begin
-  MethodAddresses[0] := @TSepiImportsTGround.Create;
-end;
-
 {--------------}
 { TWall import }
 {--------------}
 
 class procedure TSepiImportsTWall.InitMethodAddresses;
 begin
-  MethodAddresses[1] := @TSepiImportsTWall.Create;
+  MethodAddresses[0] := @TSepiImportsTWall.Create;
 end;
 
 {---------------}
@@ -89,7 +75,7 @@ end;
 
 class procedure TSepiImportsTWater.InitMethodAddresses;
 begin
-  MethodAddresses[2] := @TSepiImportsTWater.Create;
+  MethodAddresses[1] := @TSepiImportsTWater.Create;
 end;
 
 {--------------}
@@ -98,7 +84,7 @@ end;
 
 class procedure TSepiImportsTHole.InitMethodAddresses;
 begin
-  MethodAddresses[3] := @TSepiImportsTHole.Create;
+  MethodAddresses[2] := @TSepiImportsTHole.Create;
 end;
 
 {-------------}
@@ -107,7 +93,7 @@ end;
 
 class procedure TSepiImportsTSky.InitMethodAddresses;
 begin
-  MethodAddresses[4] := @TSepiImportsTSky.Create;
+  MethodAddresses[3] := @TSepiImportsTSky.Create;
 end;
 
 {-----------------}
@@ -116,7 +102,7 @@ end;
 
 class procedure TSepiImportsTOutside.InitMethodAddresses;
 begin
-  MethodAddresses[5] := @TSepiImportsTOutside.Create;
+  MethodAddresses[4] := @TSepiImportsTOutside.Create;
 end;
 
 {---------------------}
@@ -185,17 +171,15 @@ end;
 
 procedure InitTypeInfoArray;
 begin
-  TypeInfoArray[0] := TypeInfo(TGround);
-  TypeInfoArray[1] := TypeInfo(TWall);
-  TypeInfoArray[2] := TypeInfo(TWater);
-  TypeInfoArray[3] := TypeInfo(THole);
-  TypeInfoArray[4] := TypeInfo(TSky);
-  TypeInfoArray[5] := TypeInfo(TOutside);
+  TypeInfoArray[0] := TypeInfo(TWall);
+  TypeInfoArray[1] := TypeInfo(TWater);
+  TypeInfoArray[2] := TypeInfo(THole);
+  TypeInfoArray[3] := TypeInfo(TSky);
+  TypeInfoArray[4] := TypeInfo(TOutside);
 end;
 
 procedure InitMethodAddresses;
 begin
-  TSepiImportsTGround.InitMethodAddresses;
   TSepiImportsTWall.InitMethodAddresses;
   TSepiImportsTWater.InitMethodAddresses;
   TSepiImportsTHole.InitMethodAddresses;
@@ -210,16 +194,6 @@ end;
 {------------------------------------}
 { Delphi-Sepi consistency assertions }
 {------------------------------------}
-
-type
-  TCheckAlignmentForTGround = record
-    Dummy: Byte;
-    Field: TGround;
-  end;
-
-{$IF SizeOf(TCheckAlignmentForTGround) <> (4 + 4)}
-  {$MESSAGE WARN 'Le type TGround n''a pas l''alignement calculé par Sepi'}
-{$IFEND}
 
 type
   TCheckAlignmentForTWall = record
@@ -286,7 +260,6 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TGround, 52, 52);
   CheckInstanceSize(TWall, 52, 52);
   CheckInstanceSize(TWater, 52, 52);
   CheckInstanceSize(THole, 52, 52);

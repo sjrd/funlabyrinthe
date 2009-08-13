@@ -1,0 +1,30 @@
+object FrameMapImage: TFrameMapImage
+  Left = 0
+  Top = 0
+  Width = 321
+  Height = 241
+  TabOrder = 0
+  object MapView: TImgView32
+    Left = 0
+    Top = 0
+    Width = 321
+    Height = 241
+    Align = alClient
+    Bitmap.ResamplerClassName = 'TNearestResampler'
+    BitmapAlign = baCustom
+    Scale = 1.000000000000000000
+    ScaleMode = smScale
+    ScrollBars.ShowHandleGrip = True
+    ScrollBars.Style = rbsDefault
+    SizeGrip = sgNone
+    OverSize = 0
+    TabOrder = 0
+    OnMouseDown = MapViewMouseDown
+    OnMouseMove = MapViewMouseMove
+    OnMouseUp = MapViewMouseUp
+    ExplicitLeft = 40
+    ExplicitTop = 64
+    ExplicitWidth = 121
+    ExplicitHeight = 105
+  end
+end

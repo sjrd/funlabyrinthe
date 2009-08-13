@@ -21,34 +21,6 @@ const {don't localize}
   /// Action d'ouvrir une serrure en or
   actOpenGoldenLock = 'OpenGoldenLock';
 
-const
-  /// Message lié à la planche
-  msgPlank = $10;
-
-type
-  {*
-    Type de message lié à la planche
-    - plkPassOver : Test sur la case au-dessus de laquelle on passe
-    - plkArriveAt : Test sur la case sur laquelle on arriverait
-    - plkLeaveFrom : Test sur la case de laquelle on vient
-  *}
-  TPlankMessageKind = (pmkPassOver, pmkLeaveFrom, pmkArriveAt);
-
-  {*
-    Message lié à la planche
-    @author sjrd
-    @version 5.0
-  *}
-  TPlankMessage = record
-    MsgID: Word;             /// ID du message
-    Kind: TPlankMessageKind; /// Type de message
-    Result: Boolean;         /// True pour autoriser, False sinon
-    Player: TPlayer;         /// Joueur concerné
-    Pos: T3DPoint;           /// Case au-dessus de laquelle on passe
-    Src: T3DPoint;           /// Case dont on vient
-    Dest: T3DPoint;          /// Case vers laquelle on va
-  end;
-
 implementation
 
 end.

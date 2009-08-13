@@ -104,12 +104,6 @@ object FrameMapEditor: TFrameMapEditor
         Width = 360
         ExplicitWidth = 360
       end
-      inherited ScrollBoxMap: TScrollBox
-        Width = 360
-        Height = 290
-        ExplicitWidth = 360
-        ExplicitHeight = 290
-      end
       inherited PanelMapInfos: TPanel
         Top = 311
         Width = 360
@@ -137,6 +131,20 @@ object FrameMapEditor: TFrameMapEditor
         inherited EditFloor: TSpinEdit
           Left = 296
           ExplicitLeft = 296
+        end
+      end
+      inherited MapView: TFrameMapImage
+        Width = 360
+        Height = 290
+        ExplicitLeft = 0
+        ExplicitTop = 21
+        ExplicitWidth = 360
+        ExplicitHeight = 290
+        inherited MapView: TImgView32
+          Width = 360
+          Height = 290
+          ExplicitWidth = 360
+          ExplicitHeight = 290
         end
       end
     end

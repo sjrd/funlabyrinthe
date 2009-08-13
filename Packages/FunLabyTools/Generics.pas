@@ -11,7 +11,50 @@ const
   fSwitchOff = 'Buttons/SwitchOff';       /// Image de l'interrupteur off
   fSwitchOn = 'Buttons/SwitchOn';         /// Image de l'interrupteur on
 
+const
+  /// Message lié à la planche
+  msgPlank = $10;
+
 type
+  {*
+    Type de message lié à la planche
+    - plkPassOver : Test sur la case au-dessus de laquelle on passe
+    - plkArriveAt : Test sur la case sur laquelle on arriverait
+    - plkLeaveFrom : Test sur la case de laquelle on vient
+  *}
+  TPlankMessageKind = (pmkPassOver, pmkLeaveFrom, pmkArriveAt);
+
+  {*
+    Message lié à la planche
+    @author sjrd
+    @version 5.0
+  *}
+  TPlankMessage = record
+    MsgID: Word;             /// ID du message
+    Kind: TPlankMessageKind; /// Type de message
+    Result: Boolean;         /// True pour autoriser, False sinon
+    Player: TPlayer;         /// Joueur concerné
+    Pos: T3DPoint;           /// Case au-dessus de laquelle on passe
+    Src: T3DPoint;           /// Case dont on vient
+    Dest: T3DPoint;          /// Case vers laquelle on va
+  end;
+
+type
+  {*
+    Sol
+    Le sol est le terrain de base de FunLabyrinthe. Il n'a pas de condition. On
+    peut en créer plusieurs versions, avec des graphismes différents.
+    @author sjrd
+    @version 5.0
+  *}
+  TGround = class(TField)
+  private
+    procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID;
+      const AName: string; const AImgName: string);
+  end;
+
   {*
     Effet décoratif
     La classe TDecorativeEffect permet de créer facilement un effet qui ne fait
@@ -182,6 +225,44 @@ implementation
 
 uses
   MapTools;
+
+{----------------}
+{ Classe TGround }
+{----------------}
+
+{*
+  Crée une instance de TGround
+  @param AMaster    Maître FunLabyrinthe
+  @param AID        ID du terrain
+  @param AName      Nom du terrain
+  @param AImgName   Nom de l'image des graphismes (défaut : l'herbe)
+*}
+constructor TGround.Create(AMaster: TMaster; const AID: TComponentID;
+  const AName: string; const AImgName: string);
+begin
+  inherited Create(AMaster, AID, AName);
+
+  if AImgName <> '' then
+    Painter.ImgNames.Add(AImgName);
+end;
+
+{*
+  Gestionnaire de message msgPlank
+  TGround permet d'y poser la planche pour autant que de l'autre côté, il y ait
+  également un TGround, et qu'il n'y ait d'obstacle d'aucun côté.
+  @param Msg   Message
+*}
+procedure TGround.PlankMessage(var Msg: TPlankMessage);
+begin
+  with Msg, Player do
+  begin
+    if Kind = pmkLeaveFrom then
+    begin
+      Result := (Map[Dest].Field is TGround) and
+        (Map[Src].Obstacle = nil) and (Map[Dest].Obstacle = nil);
+    end;
+  end;
+end;
 
 {--------------------------}
 { Classe TDecorativeEffect }
@@ -487,6 +568,9 @@ var
   AOriginalSquare: TSquare;
 begin
   AOriginalSquare := AMap[APosition];
+  if AField = nil then
+    AField := AOriginalSquare.Field;
+
   inherited Create(AMaster, AID, AOriginalSquare.Name,
     AField, AEffect, ATool, AObstacle);
 
@@ -516,7 +600,6 @@ end;
 procedure TOverriddenSquare.DoDraw(Context: TDrawSquareContext);
 begin
   OriginalSquare.Draw(Context);
-  inherited;
 end;
 
 end.

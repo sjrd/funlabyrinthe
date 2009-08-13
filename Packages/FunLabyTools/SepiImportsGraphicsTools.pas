@@ -9,7 +9,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, TypInfo, SepiReflectionCore, SepiMembers, 
-  GraphicsTools;
+  FunLabyUtils, GraphicsTools;
 
 var
   SepiImportsGraphicsToolsLazyLoad: Boolean = False;
@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'GraphicsTools';
   ResourceName = 'SepiImportsGraphicsTools';
   TypeCount = 1;
-  MethodCount = 2;
+  MethodCount = 5;
   VariableCount = 1;
 
 var
@@ -37,6 +37,16 @@ var
 {---------------------}
 { Overloaded routines }
 {---------------------}
+
+procedure DissipateNeighbors_0(Context: TDrawSquareContext; const Predicate: TFieldPredicate);
+begin
+  DissipateNeighbors(Context, Predicate);
+end;
+
+procedure DissipateNeighbors_1(Context: TDrawSquareContext);
+begin
+  DissipateNeighbors(Context);
+end;
 
 {-------------}
 { Unit import }
@@ -106,6 +116,9 @@ procedure InitMethodAddresses;
 begin
   MethodAddresses[0] := @DrawSquareText;
   MethodAddresses[1] := @DrawSquareNumber;
+  MethodAddresses[2] := @DissipateNeighbors_0;
+  MethodAddresses[3] := @DissipateNeighbors_1;
+  MethodAddresses[4] := @DissipateGroundNeighbors;
 end;
 
 procedure InitVarAddresses;
@@ -115,6 +128,16 @@ end;
 {------------------------------------}
 { Delphi-Sepi consistency assertions }
 {------------------------------------}
+
+type
+  TCheckAlignmentForTFieldPredicate = record
+    Dummy: Byte;
+    Field: TFieldPredicate;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFieldPredicate) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFieldPredicate n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
 
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);

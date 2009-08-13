@@ -8,7 +8,7 @@ unit SepiImportsFLBPlank;
 interface
 
 uses
-  Windows, SysUtils, Classes, TypInfo, SepiReflectionCore, SepiMembers, 
+  Windows, SysUtils, TypInfo, SepiReflectionCore, SepiMembers, Classes, 
   FLBPlank;
 
 var
@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'FLBPlank';
   ResourceName = 'SepiImportsFLBPlank';
   TypeCount = 3;
-  MethodCount = 2;
+  MethodCount = 3;
   VariableCount = 1;
 
 var
@@ -37,6 +37,7 @@ var
 type
   TSepiImportsTPlanks = class(TPlanks)
   private
+    procedure SetRequiredShift(Value: TShiftState);
     class procedure InitMethodAddresses;
   end;
 
@@ -49,9 +50,15 @@ type
 { TPlanks import }
 {----------------}
 
+procedure TSepiImportsTPlanks.SetRequiredShift(Value: TShiftState);
+begin
+  RequiredShift := Value;
+end;
+
 class procedure TSepiImportsTPlanks.InitMethodAddresses;
 begin
-  MethodAddresses[0] := @TSepiImportsTPlanks.Create;
+  MethodAddresses[0] := @TSepiImportsTPlanks.SetRequiredShift;
+  MethodAddresses[1] := @TSepiImportsTPlanks.Create;
 end;
 
 {---------------------}
@@ -60,7 +67,7 @@ end;
 
 class procedure TSepiImportsTPlankSquare.InitMethodAddresses;
 begin
-  MethodAddresses[1] := @TSepiImportsTPlankSquare.Create;
+  MethodAddresses[2] := @TSepiImportsTPlankSquare.Create;
 end;
 
 {---------------------}
@@ -193,8 +200,8 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TPlankPlugin, 40, 40);
-  CheckInstanceSize(TPlanks, 48, 48);
+  CheckInstanceSize(TPlankPlugin, 44, 40);
+  CheckInstanceSize(TPlanks, 56, 52);
   CheckInstanceSize(TPlankSquare, 92, 88);
   {$ASSERTIONS OFF}
 end;

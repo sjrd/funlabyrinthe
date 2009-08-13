@@ -586,7 +586,7 @@ var
   StringsNode, ItemsNode, ItemNode: IXMLDOMElement;
   I: Integer;
 begin
-  if (not HasData) or (Strings.Count = 0) then
+  if not HasData then
     Exit;
 
   StringsNode := Node.ownerDocument.createElement('collection');

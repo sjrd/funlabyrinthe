@@ -216,6 +216,7 @@ type
     procedure TestOpeningValidity;
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
+    procedure StoreDefaults; override;
   public
     constructor Create(ABaseSepiRoot: TSepiRoot; const AFileName: TFileName;
       AMode: TFileMode);
@@ -929,7 +930,17 @@ begin
     Players.Free;
   end;
 
+  if psReading in PersistentState then
+    Master.StoreDefaults;
+
   Filer.DefinePersistent('Master', Master);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMasterFile.StoreDefaults;
+begin
 end;
 
 {*

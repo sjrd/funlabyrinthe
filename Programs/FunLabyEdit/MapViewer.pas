@@ -14,8 +14,8 @@ type
   *}
   TFormMapViewer = class(TForm, IOTAMapViewer50)
     MapViewer: TFrameBaseMapViewer;
-    procedure MapViewerAfterPaint(Sender: TObject; Bitmap: TBitmap32;
-      const SquareClipRect: TRect);
+    procedure MapViewerAfterPaintMap(Sender: TObject; Bitmap: TBitmap32;
+      Map: TMap; Floor: Integer);
     procedure MapViewerClickSquare(Sender: TObject; const QPos: TQualifiedPos);
   private
     FSelectedSquare: TQualifiedPos; /// Case sélectionnée
@@ -63,7 +63,7 @@ constructor TFormMapViewer.Create(AOwner: TComponent);
 begin
   inherited;
 
-  MapViewer.OnAfterPaint := MapViewerAfterPaint;
+  MapViewer.OnAfterPaintMap := MapViewerAfterPaintMap;
   MapViewer.OnClickSquare := MapViewerClickSquare;
 end;
 
@@ -165,22 +165,19 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnAfterPaint du visualisateur de cartes
-  @param Sender           Objet qui a déclenché l'événement
-  @param Bitmap           Bitmap
-  @param SquareClipRect   Clip-rect des cases
+  Gestionnaire d'événement OnAfterPaintMap du visualisateur de cartes
+  @param Sender   Objet qui a déclenché l'événement
+  @param Bitmap   Bitmap
 *}
-procedure TFormMapViewer.MapViewerAfterPaint(Sender: TObject; Bitmap: TBitmap32;
-  const SquareClipRect: TRect);
+procedure TFormMapViewer.MapViewerAfterPaintMap(Sender: TObject;
+  Bitmap: TBitmap32; Map: TMap; Floor: Integer);
 var
   SelPoint: TPoint;
   I: Integer;
 begin
   SelPoint := Point(SelectedPos.X, SelectedPos.Y);
 
-  if (SelectedMap = MapViewer.CurrentMap) and
-    (SelectedPos.Z = MapViewer.CurrentFloor) and
-    PtInRect(SquareClipRect, SelPoint) then
+  if (SelectedMap = Map) and (SelectedPos.Z = Floor) then
   begin
     // Draw the selection rectangle
     for I := -1 to 1 do

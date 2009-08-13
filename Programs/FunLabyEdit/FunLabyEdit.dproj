@@ -46,46 +46,6 @@
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Composants Microsoft Office XP Sample Automation Server Wrapper</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcboffice2k100.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcbofficexp100.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
@@ -107,6 +67,9 @@
     <DCCReference Include="CompilerMessages.pas">
       <Form>FormCompilerMessages</Form>
     </DCCReference>
+    <DCCReference Include="EditMap.pas">
+      <Form>FormEditMap</Form>
+    </DCCReference>
     <DCCReference Include="EditParameters.pas">
       <Form>FormParameters</Form>
     </DCCReference>
@@ -127,6 +90,10 @@
     </DCCReference>
     <DCCReference Include="MapEditor.pas">
       <Form>FrameMapEditor</Form>
+      <DesignClass>TFrame</DesignClass>
+    </DCCReference>
+    <DCCReference Include="MapImage.pas">
+      <Form>FrameMapImage</Form>
       <DesignClass>TFrame</DesignClass>
     </DCCReference>
     <DCCReference Include="MapViewer.pas">

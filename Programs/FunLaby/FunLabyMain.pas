@@ -9,8 +9,8 @@ unit FunLabyMain;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Menus, ComCtrls, ExtCtrls, ShellAPI,
+  Windows, Messages, SysUtils, Classes, Contnrs, Graphics, Controls, Forms,
+  Dialogs, Menus, ComCtrls, ExtCtrls, ShellAPI,
   ScUtils, ScStrUtils, ScSyncObjs, SdDialogs,
   FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
   UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts,
@@ -258,6 +258,8 @@ begin
   MenuPlayerObjects.Enabled := False;
   MenuViewSize.Enabled := False;
 
+  StatusBar.Panels.Clear;
+
   Controller.Free;
   MasterFile.Free;
 
@@ -296,16 +298,29 @@ end;
 *}
 procedure TFormMain.ShowStatus;
 var
+  FoundObjects: TObjectList;
   I: Integer;
 begin
   if MasterFile = nil then
     Exit;
-  for I := 0 to 3 do
-  begin
-    if I >= Master.ObjectDefCount then
-      Break;
-    StatusBar.Panels[I].Text :=
-      Master.ObjectDefs[I].ShownInfos[Controller.Player];
+
+  FoundObjects := TObjectList.Create(False);
+  try
+    Controller.Player.GetFoundObjects(FoundObjects);
+
+    for I := StatusBar.Panels.Count to FoundObjects.Count-1 do
+      StatusBar.Panels.Add;
+
+    for I := 0 to FoundObjects.Count-1 do
+    begin
+      with StatusBar.Panels[I] do
+      begin
+        Text := TObjectDef(FoundObjects[I]).ShownInfos[Controller.Player];
+        Width := StatusBar.Canvas.TextWidth(Text) + 4;
+      end;
+    end;
+  finally
+    FoundObjects.Free;
   end;
 end;
 

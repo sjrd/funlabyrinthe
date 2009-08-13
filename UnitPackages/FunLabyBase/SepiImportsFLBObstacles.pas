@@ -25,8 +25,8 @@ implementation
 const // don't localize
   UnitName = 'FLBObstacles';
   ResourceName = 'SepiImportsFLBObstacles';
-  TypeCount = 3;
-  MethodCount = 3;
+  TypeCount = 4;
+  MethodCount = 4;
   VariableCount = 1;
 
 var
@@ -35,6 +35,11 @@ var
   VarAddresses: array[0..VariableCount-1] of Pointer;
 
 type
+  TSepiImportsTBlock = class(TBlock)
+  private
+    class procedure InitMethodAddresses;
+  end;
+
   TSepiImportsTSilverBlock = class(TSilverBlock)
   private
     class procedure InitMethodAddresses;
@@ -50,13 +55,22 @@ type
     class procedure InitMethodAddresses;
   end;
 
+{---------------}
+{ TBlock import }
+{---------------}
+
+class procedure TSepiImportsTBlock.InitMethodAddresses;
+begin
+  MethodAddresses[0] := @TSepiImportsTBlock.Create;
+end;
+
 {---------------------}
 { TSilverBlock import }
 {---------------------}
 
 class procedure TSepiImportsTSilverBlock.InitMethodAddresses;
 begin
-  MethodAddresses[0] := @TSepiImportsTSilverBlock.Create;
+  MethodAddresses[1] := @TSepiImportsTSilverBlock.Create;
 end;
 
 {---------------------}
@@ -65,7 +79,7 @@ end;
 
 class procedure TSepiImportsTGoldenBlock.InitMethodAddresses;
 begin
-  MethodAddresses[1] := @TSepiImportsTGoldenBlock.Create;
+  MethodAddresses[2] := @TSepiImportsTGoldenBlock.Create;
 end;
 
 {-------------------}
@@ -74,7 +88,7 @@ end;
 
 class procedure TSepiImportsTSecretWay.InitMethodAddresses;
 begin
-  MethodAddresses[2] := @TSepiImportsTSecretWay.Create;
+  MethodAddresses[3] := @TSepiImportsTSecretWay.Create;
 end;
 
 {---------------------}
@@ -143,13 +157,15 @@ end;
 
 procedure InitTypeInfoArray;
 begin
-  TypeInfoArray[0] := TypeInfo(TSilverBlock);
-  TypeInfoArray[1] := TypeInfo(TGoldenBlock);
-  TypeInfoArray[2] := TypeInfo(TSecretWay);
+  TypeInfoArray[0] := TypeInfo(TBlock);
+  TypeInfoArray[1] := TypeInfo(TSilverBlock);
+  TypeInfoArray[2] := TypeInfo(TGoldenBlock);
+  TypeInfoArray[3] := TypeInfo(TSecretWay);
 end;
 
 procedure InitMethodAddresses;
 begin
+  TSepiImportsTBlock.InitMethodAddresses;
   TSepiImportsTSilverBlock.InitMethodAddresses;
   TSepiImportsTGoldenBlock.InitMethodAddresses;
   TSepiImportsTSecretWay.InitMethodAddresses;
@@ -162,6 +178,16 @@ end;
 {------------------------------------}
 { Delphi-Sepi consistency assertions }
 {------------------------------------}
+
+type
+  TCheckAlignmentForTBlock = record
+    Dummy: Byte;
+    Field: TBlock;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTBlock) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TBlock n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
 
 type
   TCheckAlignmentForTSilverBlock = record
@@ -208,8 +234,9 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TSilverBlock, 48, 48);
-  CheckInstanceSize(TGoldenBlock, 48, 48);
+  CheckInstanceSize(TBlock, 52, 48);
+  CheckInstanceSize(TSilverBlock, 52, 52);
+  CheckInstanceSize(TGoldenBlock, 52, 52);
   CheckInstanceSize(TSecretWay, 48, 48);
   {$ASSERTIONS OFF}
 end;

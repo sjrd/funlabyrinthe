@@ -10,8 +10,8 @@ unit FLBBoat;
 interface
 
 uses
-  SysUtils, Graphics, StrUtils, ScUtils, FunLabyUtils, GraphicsTools, MapTools,
-  FLBCommon, FLBFields, GR32;
+  SysUtils, Graphics, StrUtils, ScUtils, FunLabyUtils, Generics, GraphicsTools,
+  MapTools, FLBCommon, FLBFields, GR32;
 
 const {don't localize}
   idBoatPlugin = 'BoatPlugin'; /// ID du plug-in barque
@@ -415,7 +415,7 @@ begin
   WaterField := Master.Field[WaterID];
 
   Result := TGround(TGround.NewDelegateDraw(WaterField)).Create(
-    Master, AID, WaterField.Name)
+    Master, AID, WaterField.Name, '')
 end;
 
 end.

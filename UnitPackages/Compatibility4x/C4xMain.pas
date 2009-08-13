@@ -270,7 +270,7 @@ begin
         2: Map.LinearMap[J] := OldOutside;
       end;
 
-      if Map.LinearMap[J].Effect.ID = idTreasure then
+      if Map.LinearMap[J].Effect.SafeID = idTreasure then
         Map.LinearMap[J] := OldTreasure;
     end;
   end;

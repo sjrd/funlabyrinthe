@@ -522,21 +522,15 @@ var
 begin
   with Context do
   begin
-    Master.Temporize;
+    Player.Temporize;
 
-    if Player.Direction = diWest then
-      Dir := diNorth
-    else
-      Dir := Succ(Player.Direction);
+    Dir := RightDir[Player.Direction];
 
     repeat
-      Player.Move(Dir, False, Redo);
+      Player.Move(Dir, Redo);
       GoOnMoving := Redo;
 
-      if Player.Direction = diNorth then
-        Dir := diWest
-      else
-        Dir := Pred(Player.Direction);
+      Dir := LeftDir[Player.Direction];
     until not Same3DPoint(Player.Position, Pos);
   end;
 end;
@@ -578,21 +572,15 @@ var
 begin
   with Context do
   begin
-    Master.Temporize;
+    Player.Temporize;
 
-    if Player.Direction = diNorth then
-      Dir := diWest
-    else
-      Dir := Pred(Player.Direction);
+    Dir := LeftDir[Player.Direction];
 
     repeat
-      Player.Move(Dir, False, Redo);
+      Player.Move(Dir, Redo);
       GoOnMoving := Redo;
 
-      if Player.Direction = diWest then
-        Dir := diNorth
-      else
-        Dir := Succ(Player.Direction);
+      Dir := RightDir[Player.Direction];
     until not Same3DPoint(Player.Position, Pos);
   end;
 end;

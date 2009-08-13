@@ -70,7 +70,7 @@ begin
       ObjectDef := Master.ObjectDefs[I];
       Infos := ObjectDef.ShownInfos[Player];
 
-      if Infos <> '' then
+      if ObjectDef.DisplayInObjectList and (Infos <> '') then
       begin
         with ListViewObjects.Items.Add do
         begin

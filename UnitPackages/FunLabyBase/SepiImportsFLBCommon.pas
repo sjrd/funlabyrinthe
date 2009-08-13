@@ -100,7 +100,6 @@ end;
 
 procedure InitTypeInfoArray;
 begin
-  TypeInfoArray[0] := TypeInfo(TPlankMessageKind);
 end;
 
 procedure InitMethodAddresses;
@@ -114,32 +113,6 @@ end;
 {------------------------------------}
 { Delphi-Sepi consistency assertions }
 {------------------------------------}
-
-type
-  TCheckAlignmentForTPlankMessageKind = record
-    Dummy: Byte;
-    Field: TPlankMessageKind;
-  end;
-
-{$IF SizeOf(TCheckAlignmentForTPlankMessageKind) <> (1 + 1)}
-  {$MESSAGE WARN 'Le type TPlankMessageKind n''a pas l''alignement calculé par Sepi'}
-{$IFEND}
-
-{$IF SizeOf(TPlankMessage) <> 44}
-  {$MESSAGE WARN 'Le type TPlankMessage n''a pas la taille calculée par Sepi'}
-{$ELSE}
-
-type
-  TCheckAlignmentForTPlankMessage = record
-    Dummy: Byte;
-    Field: TPlankMessage;
-  end;
-
-{$IF SizeOf(TCheckAlignmentForTPlankMessage) <> (4 + 44)}
-  {$MESSAGE WARN 'Le type TPlankMessage n''a pas l''alignement calculé par Sepi'}
-{$IFEND}
-
-{$IFEND}
 
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
