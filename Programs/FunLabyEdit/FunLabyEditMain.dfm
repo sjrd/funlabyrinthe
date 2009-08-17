@@ -25,6 +25,7 @@ object FormMain: TFormMain
   Position = poScreenCenter
   Scaled = False
   ShowHint = True
+  WindowState = wsMaximized
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -656,8 +657,8 @@ object FormMain: TFormMain
                 Caption = '&Retirer'
               end
               item
-                Action = ActionEditZoneSize
-                Caption = '&Taille de zone...'
+                Action = ActionEditMap
+                Caption = 'R&edimensionner/remplir'
               end>
             Visible = False
             Caption = '&Cartes'
@@ -714,6 +715,7 @@ object FormMain: TFormMain
               end
               item
                 Action = ActionCompileAndReload
+                Caption = '&Recharger'
                 ImageIndex = 10
                 ShortCut = 24696
               end>
@@ -920,15 +922,6 @@ object FormMain: TFormMain
       Hint = 'Visualisateur de cartes|Voir le visualisateur de cartes'
       OnExecute = ActionViewMapViewerExecute
     end
-    object ActionEditZoneSize: TAction
-      Category = 'Maps'
-      Caption = 'Taille de zone...'
-      Enabled = False
-      Hint = 
-        'Modifier la taille de zone|Modifier la taille de zone de cette c' +
-        'arte'
-      OnExecute = ActionEditZoneSizeExecute
-    end
     object ActionCompileAndReload: TAction
       Category = 'Execute'
       Caption = 'Recharger'
@@ -939,6 +932,14 @@ object FormMain: TFormMain
       ImageIndex = 10
       ShortCut = 24696
       OnExecute = ActionCompileAndReloadExecute
+    end
+    object ActionEditMap: TAction
+      Category = 'Maps'
+      Caption = 'Redimensionner/remplir'
+      Hint = 
+        'Redimensionner la carte ou la taille de zone, et/ou remplir auto' +
+        'matiquement des zones'
+      OnExecute = ActionEditMapExecute
     end
   end
   object SquaresImages: TImageList

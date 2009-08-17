@@ -104,7 +104,7 @@ implementation
 {$R *.DFM}
 
 procedure CreeSortie(Labyrinthe: TStrings; const MasterFileName: TFileName;
-  DimX, DimY, DimZ: Integer; MaxViewSize: Integer = 1);
+  DimX, DimY, DimZ: Integer);
 var
   UnitFileDescs: TUnitFileDescs;
   MasterFile: TMasterFile;
@@ -123,8 +123,7 @@ begin
     MasterFile := TMasterFile.CreateNew(nil, UnitFileDescs);
     Master := MasterFile.Master;
     Player := TPlayer.Create(Master, 'Player');
-    Map := TMap.Create(Master, 'MainMap', Point3D(DimX, DimY, DimZ), 7, 7);
-    Map.MaxViewSize := MaxViewSize;
+    Map := TMap.CreateSized(Master, 'MainMap', Point3D(DimX, DimY, DimZ), 7, 7);
 
     with MasterFile do
     begin

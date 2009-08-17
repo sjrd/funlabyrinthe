@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'Generics';
   ResourceName = 'SepiImportsGenerics';
   TypeCount = 10;
-  MethodCount = 11;
+  MethodCount = 9;
   VariableCount = 1;
 
 var
@@ -52,16 +52,6 @@ type
     class procedure InitMethodAddresses;
   end;
 
-  TSepiImportsTPushButton = class(TPushButton)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTSwitch = class(TSwitch)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
   TSepiImportsTDecorativeObstacle = class(TDecorativeObstacle)
   private
     class procedure InitMethodAddresses;
@@ -83,7 +73,7 @@ type
 
 class procedure TSepiImportsTGround.InitMethodAddresses;
 begin
-  MethodAddresses[0] := @TSepiImportsTGround.Create;
+  MethodAddresses[0] := @TSepiImportsTGround.CreateGround;
 end;
 
 {--------------------------}
@@ -92,7 +82,7 @@ end;
 
 class procedure TSepiImportsTDecorativeEffect.InitMethodAddresses;
 begin
-  MethodAddresses[1] := @TSepiImportsTDecorativeEffect.Create;
+  MethodAddresses[1] := @TSepiImportsTDecorativeEffect.CreateDeco;
 end;
 
 {-----------------------}
@@ -117,31 +107,13 @@ begin
   MethodAddresses[5] := @TSepiImportsTCounterEffect.IsFirstTime;
 end;
 
-{--------------------}
-{ TPushButton import }
-{--------------------}
-
-class procedure TSepiImportsTPushButton.InitMethodAddresses;
-begin
-  MethodAddresses[6] := @TSepiImportsTPushButton.Create;
-end;
-
-{----------------}
-{ TSwitch import }
-{----------------}
-
-class procedure TSepiImportsTSwitch.InitMethodAddresses;
-begin
-  MethodAddresses[7] := @TSepiImportsTSwitch.Create;
-end;
-
 {----------------------------}
 { TDecorativeObstacle import }
 {----------------------------}
 
 class procedure TSepiImportsTDecorativeObstacle.InitMethodAddresses;
 begin
-  MethodAddresses[8] := @TSepiImportsTDecorativeObstacle.Create;
+  MethodAddresses[6] := @TSepiImportsTDecorativeObstacle.CreateDeco;
 end;
 
 {--------------------}
@@ -150,7 +122,7 @@ end;
 
 class procedure TSepiImportsTObjectTool.InitMethodAddresses;
 begin
-  MethodAddresses[9] := @TSepiImportsTObjectTool.Create;
+  MethodAddresses[7] := @TSepiImportsTObjectTool.CreateTool;
 end;
 
 {--------------------------}
@@ -159,7 +131,7 @@ end;
 
 class procedure TSepiImportsTOverriddenSquare.InitMethodAddresses;
 begin
-  MethodAddresses[10] := @TSepiImportsTOverriddenSquare.Create;
+  MethodAddresses[8] := @TSepiImportsTOverriddenSquare.Create;
 end;
 
 {---------------------}
@@ -245,8 +217,6 @@ begin
   TSepiImportsTGround.InitMethodAddresses;
   TSepiImportsTDecorativeEffect.InitMethodAddresses;
   TSepiImportsTCounterEffect.InitMethodAddresses;
-  TSepiImportsTPushButton.InitMethodAddresses;
-  TSepiImportsTSwitch.InitMethodAddresses;
   TSepiImportsTDecorativeObstacle.InitMethodAddresses;
   TSepiImportsTObjectTool.InitMethodAddresses;
   TSepiImportsTOverriddenSquare.InitMethodAddresses;
@@ -398,7 +368,7 @@ begin
   CheckInstanceSize(TPushButton, 56, 52);
   CheckInstanceSize(TSwitch, 64, 52);
   CheckInstanceSize(TDecorativeObstacle, 48, 48);
-  CheckInstanceSize(TObjectTool, 56, 48);
+  CheckInstanceSize(TObjectTool, 64, 48);
   CheckInstanceSize(TOverriddenSquare, 88, 68);
   {$ASSERTIONS OFF}
 end;

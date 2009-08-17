@@ -15,24 +15,24 @@ uses
   MapTools, GraphicsTools, FLBCommon, FLBFields, GR32;
 
 resourcestring
-  sNorthArrow = 'Flèche nord';                /// Nom de la flèche nord
-  sEastArrow = 'Flèche est';                  /// Nom de la flèche est
-  sSouthArrow = 'Flèche sud';                 /// Nom de la flèche sud
-  sWestArrow = 'Flèche ouest';                /// Nom de la flèche ouest
-  sCrossroads = 'Carrefour';                  /// Nom du carrefour
+  SNorthArrow = 'Flèche nord';                /// Nom de la flèche nord
+  SEastArrow = 'Flèche est';                  /// Nom de la flèche est
+  SSouthArrow = 'Flèche sud';                 /// Nom de la flèche sud
+  SWestArrow = 'Flèche ouest';                /// Nom de la flèche ouest
+  SCrossroads = 'Carrefour';                  /// Nom du carrefour
 
-  sInactiveTransporter = 'Téléporteur inactif'; /// Téléporteur inactif
-  sTransporter = 'Téléporteur';                 /// Téléporteur
+  SInactiveTransporter = 'Téléporteur inactif'; /// Téléporteur inactif
+  STransporter = 'Téléporteur';                 /// Téléporteur
 
-  sUpStairs = 'Escalier montant';             /// Nom de l'escalier montant
-  sDownStairs = 'Escalier descendant';        /// Nom de l'escalier descendant
+  SUpStairs = 'Escalier montant';             /// Nom de l'escalier montant
+  SDownStairs = 'Escalier descendant';        /// Nom de l'escalier descendant
 
-  sDirectTurnstile = 'Tourniquet direct';     /// Nom du tourniquet direct
-  sIndirectTurnstile = 'Tourniquet indirect'; /// Nom du tourniquet indirect
+  SDirectTurnstile = 'Tourniquet direct';     /// Nom du tourniquet direct
+  SIndirectTurnstile = 'Tourniquet indirect'; /// Nom du tourniquet indirect
 
-  sTreasure = 'Trésor';                       /// Nom du trésor
+  STreasure = 'Trésor';                       /// Nom du trésor
 
-  sSunkenButton = 'Bouton enfoncé';           /// Nom du bouton enfoncé
+  SSunkenButton = 'Bouton enfoncé';           /// Nom du bouton enfoncé
 
 resourcestring
   STransporterCreatorHint = 'Créer un nouveau téléporteur';
@@ -109,14 +109,20 @@ type
   *}
   TArrow = class(TEffect)
   private
-    FDirection: TDirection; /// Direction de la flèche
+    FDirection: TDirection;        /// Direction de la flèche
+    FDefaultDirection: TDirection; /// Direction par défaut
+
+    function IsDirectionStored: Boolean;
+  protected
+    procedure StoreDefaults; override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
+    constructor CreateArrow(AMaster: TMaster; const AID: TComponentID;
       const AName: string; ADirection: TDirection);
 
     procedure Execute(Context: TMoveContext); override;
-
-    property Direction: TDirection read FDirection;
+  published
+    property Direction: TDirection read FDirection write FDirection
+      stored IsDirectionStored;
   end;
 
   {*
@@ -129,8 +135,7 @@ type
   private
     FKind: TTransporterKind; /// Type de téléporteur
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Execute(Context: TMoveContext); override;
   published
@@ -144,8 +149,7 @@ type
   *}
   TInactiveTransporter = class(TTransporter)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
   protected
     function GetCategory: string; override;
   published
@@ -164,7 +168,7 @@ type
     function DoCreateComponent(
       const AID: TComponentID): TFunLabyComponent; override;
   public
-    constructor Create(AMaster: TMaster; AID: TComponentID);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
   end;
 
   {*
@@ -180,8 +184,8 @@ type
     procedure EditSquareMap(var Msg: TEditMapSquareMessage);
       message msgEditMapSquare;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; AUp: Boolean);
+    constructor CreateStairs(AMaster: TMaster; const AID: TComponentID;
+      AUp: Boolean);
 
     procedure Execute(Context: TMoveContext); override;
 
@@ -197,8 +201,7 @@ type
   *}
   TDirectTurnstile = class(TEffect)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Exited(Context: TMoveContext); override;
 
@@ -214,8 +217,7 @@ type
   *}
   TIndirectTurnstile = class(TEffect)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Exited(Context: TMoveContext); override;
 
@@ -230,8 +232,7 @@ type
   *}
   TTreasure = class(TEffect)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Execute(Context: TMoveContext); override;
   end;
@@ -249,19 +250,40 @@ implementation
   @param AName        Nom de la case
   @param ADirection   Direction de la flèche
 *}
-constructor TArrow.Create(AMaster: TMaster; const AID: TComponentID;
+constructor TArrow.CreateArrow(AMaster: TMaster; const AID: TComponentID;
   const AName: string; ADirection: TDirection);
 begin
-  inherited Create(AMaster, AID, AName);
+  Create(AMaster, AID);
 
-  FDirection := ADirection;
-  case FDirection of
+  Name := AName;
+  Direction := ADirection;
+
+  case Direction of
     diNone:  Painter.ImgNames.Add(fCrossroads);
     diNorth: Painter.ImgNames.Add(fNorthArrow);
     diEast:  Painter.ImgNames.Add(fEastArrow);
     diSouth: Painter.ImgNames.Add(fSouthArrow);
     diWest:  Painter.ImgNames.Add(fWestArrow);
   end;
+end;
+
+{*
+  Teste si la propriété Direction doit être enregistrée
+  @return True si la propriété Direction doit être enregistrée, False sinon
+*}
+function TArrow.IsDirectionStored: Boolean;
+begin
+  Result := FDirection <> FDefaultDirection;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TArrow.StoreDefaults;
+begin
+  inherited;
+
+  FDefaultDirection := FDirection;
 end;
 
 {*
@@ -282,18 +304,15 @@ end;
 {---------------------}
 
 {*
-  Crée une instance de TTransporter
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du téléporteur
-  @param AName     Nom du téléporteur
+  [@inheritDoc]
 *}
-constructor TTransporter.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TTransporter.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
   FKind := tkNext;
 
+  Name := STransporter;
   Painter.ImgNames.Add(fTransporter);
 end;
 
@@ -330,15 +349,12 @@ end;
 {-----------------------------}
 
 {*
-  Crée une instance de TInactiveTransporter
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du téléporteur
-  @param AName     Nom du téléporteur
+  [@inheritDoc]
 *}
 constructor TInactiveTransporter.Create(AMaster: TMaster;
-  const AID: TComponentID; const AName: string);
+  const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
   Kind := tkInactive;
 end;
@@ -356,13 +372,12 @@ end;
 {---------------------------}
 
 {*
-  Crée un nouveau créateur de téléporteurs
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du créateur de téléporteurs
+  [@inheritDoc]
 *}
-constructor TTransporterCreator.Create(AMaster: TMaster; AID: TComponentID);
+constructor TTransporterCreator.Create(AMaster: TMaster;
+  const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID);
+  inherited;
 
   IconPainter.ImgNames.Add(fTransporter);
 end;
@@ -381,7 +396,7 @@ end;
 function TTransporterCreator.DoCreateComponent(
   const AID: TComponentID): TFunLabyComponent;
 begin
-  Result := TTransporter.Create(Master, AID, sTransporter);
+  Result := TTransporter.Create(Master, AID);
 end;
 
 {----------------}
@@ -395,16 +410,22 @@ end;
   @param AName        Nom de la case
   @param AUp          Indique si l'escalier est montant
 *}
-constructor TStairs.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; AUp: Boolean);
+constructor TStairs.CreateStairs(AMaster: TMaster; const AID: TComponentID;
+  AUp: Boolean);
 begin
-  inherited Create(AMaster, AID, AName);
+  Create(AMaster, AID);
 
   FUp := AUp;
+
   if Up then
-    Painter.ImgNames.Add(fUpStairs)
-  else
+  begin
+    Name := SUpStairs;
+    Painter.ImgNames.Add(fUpStairs);
+  end else
+  begin
+    Name := SDownStairs;
     Painter.ImgNames.Add(fDownStairs);
+  end;
 end;
 
 {*
@@ -490,16 +511,13 @@ end;
 {-------------------------}
 
 {*
-  Crée une instance de TDirectTurnstile
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
+  [@inheritDoc]
 *}
-constructor TDirectTurnstile.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TDirectTurnstile.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
+  Name := SDirectTurnstile;
   Painter.ImgNames.Add(fDirectTurnstile);
 end;
 
@@ -540,16 +558,14 @@ end;
 {---------------------------}
 
 {*
-  Crée une instance de TIndirectTurnstile
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
+  [@inheritDoc]
 *}
 constructor TIndirectTurnstile.Create(AMaster: TMaster;
-  const AID: TComponentID; const AName: string);
+  const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
+  Name := SIndirectTurnstile;
   Painter.ImgNames.Add(fIndirectTurnstile);
 end;
 
@@ -590,16 +606,13 @@ end;
 {------------------}
 
 {*
-  Crée une instance de TTreasure
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
+  [@inheritDoc]
 *}
-constructor TTreasure.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TTreasure.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
+  Name := STreasure;
   Painter.ImgNames.Add(fTreasure);
 end;
 

@@ -25,7 +25,7 @@ const // don't localize
   UnitName = 'FLBBoat';
   ResourceName = 'SepiImportsFLBBoat';
   TypeCount = 5;
-  MethodCount = 4;
+  MethodCount = 2;
   VariableCount = 1;
 
 var
@@ -40,11 +40,6 @@ type
   end;
 
   TSepiImportsTBoat = class(TBoat)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTBoatCreator = class(TBoatCreator)
   private
     class procedure InitMethodAddresses;
   end;
@@ -64,17 +59,7 @@ end;
 
 class procedure TSepiImportsTBoat.InitMethodAddresses;
 begin
-  MethodAddresses[1] := @TSepiImportsTBoat.Create;
-  MethodAddresses[2] := @TSepiImportsTBoat.ToUnderBoatWater;
-end;
-
-{---------------------}
-{ TBoatCreator import }
-{---------------------}
-
-class procedure TSepiImportsTBoatCreator.InitMethodAddresses;
-begin
-  MethodAddresses[3] := @TSepiImportsTBoatCreator.Create;
+  MethodAddresses[1] := @TSepiImportsTBoat.ToUnderBoatWater;
 end;
 
 {---------------------}
@@ -154,7 +139,6 @@ procedure InitMethodAddresses;
 begin
   TSepiImportsTBoatPlugin.InitMethodAddresses;
   TSepiImportsTBoat.InitMethodAddresses;
-  TSepiImportsTBoatCreator.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;

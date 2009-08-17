@@ -40,7 +40,8 @@ requires
   FunLabyEditPluginUtils,
   FunLabyTools,
   SepiCompiler110,
-  SepiReflection110;
+  SepiReflection110,
+  FunLabyEditTools;
 
 contains
   SimpleSquaresUtils in 'SimpleSquaresUtils.pas',

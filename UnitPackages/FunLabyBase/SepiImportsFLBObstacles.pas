@@ -26,70 +26,13 @@ const // don't localize
   UnitName = 'FLBObstacles';
   ResourceName = 'SepiImportsFLBObstacles';
   TypeCount = 4;
-  MethodCount = 4;
+  MethodCount = 1;
   VariableCount = 1;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
   MethodAddresses: array[0..MethodCount-1] of Pointer;
   VarAddresses: array[0..VariableCount-1] of Pointer;
-
-type
-  TSepiImportsTBlock = class(TBlock)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTSilverBlock = class(TSilverBlock)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTGoldenBlock = class(TGoldenBlock)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTSecretWay = class(TSecretWay)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-{---------------}
-{ TBlock import }
-{---------------}
-
-class procedure TSepiImportsTBlock.InitMethodAddresses;
-begin
-  MethodAddresses[0] := @TSepiImportsTBlock.Create;
-end;
-
-{---------------------}
-{ TSilverBlock import }
-{---------------------}
-
-class procedure TSepiImportsTSilverBlock.InitMethodAddresses;
-begin
-  MethodAddresses[1] := @TSepiImportsTSilverBlock.Create;
-end;
-
-{---------------------}
-{ TGoldenBlock import }
-{---------------------}
-
-class procedure TSepiImportsTGoldenBlock.InitMethodAddresses;
-begin
-  MethodAddresses[2] := @TSepiImportsTGoldenBlock.Create;
-end;
-
-{-------------------}
-{ TSecretWay import }
-{-------------------}
-
-class procedure TSepiImportsTSecretWay.InitMethodAddresses;
-begin
-  MethodAddresses[3] := @TSepiImportsTSecretWay.Create;
-end;
 
 {---------------------}
 { Overloaded routines }
@@ -165,10 +108,6 @@ end;
 
 procedure InitMethodAddresses;
 begin
-  TSepiImportsTBlock.InitMethodAddresses;
-  TSepiImportsTSilverBlock.InitMethodAddresses;
-  TSepiImportsTGoldenBlock.InitMethodAddresses;
-  TSepiImportsTSecretWay.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;

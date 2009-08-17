@@ -7,7 +7,7 @@ uses
   Dialogs, StdCtrls, Buttons, ExtCtrls, ExtDlgs, StrUtils, SdDialogs,
   FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresEffectEditor,
   SimpleSquaresObjectEditor, SimpleSquaresObstacleEditor, FunLabyCoreConsts,
-  GraphicEx;
+  GraphicEx, PainterEditor;
 
 resourcestring
   SInvalidImageFileName =
@@ -24,27 +24,16 @@ type
     PanelCommon: TPanel;
     LabelID: TLabel;
     LabelName: TLabel;
-    LabelImages: TLabel;
-    ButtonNewImage: TSpeedButton;
-    ButtonRemoveImage: TSpeedButton;
-    ButtonUpImage: TSpeedButton;
-    ButtonDownImage: TSpeedButton;
     PaintBoxImage: TPaintBox;
     LabelParentClass: TLabel;
     EditID: TEdit;
     EditName: TEdit;
-    ListBoxImages: TListBox;
     EditParentClass: TEdit;
-    OpenImageDialog: TOpenPictureDialog;
-    procedure ListBoxImagesClick(Sender: TObject);
+    LabelImage: TLabel;
+    ButtonEditImage: TSpeedButton;
     procedure EditNameChange(Sender: TObject);
-    procedure ListBoxImagesData(Control: TWinControl; Index: Integer;
-      var Data: string);
-    procedure ButtonNewImageClick(Sender: TObject);
-    procedure ButtonRemoveImageClick(Sender: TObject);
-    procedure ButtonUpImageClick(Sender: TObject);
-    procedure ButtonDownImageClick(Sender: TObject);
     procedure PaintBoxImagePaint(Sender: TObject);
+    procedure ButtonEditImageClick(Sender: TObject);
   private
     FCurrentSquare: TSimpleSquare; /// Case courante
 
@@ -55,7 +44,6 @@ type
     ObjectEditor: TFrameObjectEditor;     /// Éditeur d'objet
     ObstacleEditor: TFrameObstacleEditor; /// Éditeur d'obstacle
 
-    procedure UpdateImagesButtons;
     procedure ImageChanged;
 
     function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
@@ -63,8 +51,6 @@ type
     procedure SetCurrentSquare(const Value: TSimpleSquare);
   public
     constructor Create(AOwner: TComponent); override;
-
-    procedure AfterConstruction; override;
 
     procedure MarkModified;
 
@@ -97,35 +83,10 @@ begin
 end;
 
 {*
-  Met à jour les boutons d'édition des images
-*}
-procedure TFrameEditSimpleSquare.UpdateImagesButtons;
-var
-  Index: Integer;
-begin
-  Index := ListBoxImages.ItemIndex;
-
-  if (CurrentSquare = nil) or (not CurrentSquare.CanEditImgNames) then
-  begin
-    ButtonNewImage.Enabled := False;
-    ButtonRemoveImage.Enabled := False;
-    ButtonUpImage.Enabled := False;
-    ButtonDownImage.Enabled := False;
-  end else
-  begin
-    ButtonNewImage.Enabled := True;
-    ButtonRemoveImage.Enabled := Index >= 0;
-    ButtonUpImage.Enabled := Index > 0;
-    ButtonDownImage.Enabled := Index < CurrentSquare.ImgNames.Count-1;
-  end;
-end;
-
-{*
   Signale que l'image a changé
 *}
 procedure TFrameEditSimpleSquare.ImageChanged;
 begin
-  ListBoxImages.Count := CurrentSquare.ImgNames.Count;
   PaintBoxImage.Invalidate;
   if Assigned(FOnNameImageChange) then
     FOnNameImageChange(Self);
@@ -151,7 +112,6 @@ begin
   ObjectEditor.CurrentObject := nil;
   ObstacleEditor.CurrentObstacle := nil;
 
-  ListBoxImages.Count := 0;
   EditName.OnChange := nil;
 
   FCurrentSquare := Value;
@@ -163,6 +123,7 @@ begin
     EditID.Clear;
     EditName.Clear;
     EditParentClass.Clear;
+    ButtonEditImage.Enabled := False;
   end else
   begin
     Enabled := True;
@@ -170,12 +131,7 @@ begin
     EditID.Text := CurrentSquare.ID;
     EditName.Text := CurrentSquare.Name;
     EditParentClass.Text := CurrentSquare.ParentClassName;
-
-    if CurrentSquare.ImgNames.Count > 0 then
-    begin
-      ListBoxImages.Count := CurrentSquare.ImgNames.Count;
-      ListBoxImages.ItemIndex := 0;
-    end;
+    ButtonEditImage.Enabled := CurrentSquare.CanEditImgNames;
 
     EditName.OnChange := EditNameChange;
 
@@ -188,20 +144,6 @@ begin
   end;
 
   PaintBoxImage.Invalidate;
-  UpdateImagesButtons;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TFrameEditSimpleSquare.AfterConstruction;
-begin
-  inherited;
-
-  OpenImageDialog.InitialDir := fSquaresDir;
-  OpenImageDialog.Filter := FileFormatList.GetGraphicFilter(
-    [], fstDescription, [foCompact, foIncludeAll, foIncludeExtension], nil);
-  OpenImageDialog.DefaultExt := PreferredImageExtension;
 end;
 
 {*
@@ -225,136 +167,15 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnData de la liste des images
-  @param Control   Contrôle qui a déclenché l'événement
-  @param Index     Index de la chaîne demandée
-  @param Data      En sortie : chaîne à la position indiquée
-*}
-procedure TFrameEditSimpleSquare.ListBoxImagesData(Control: TWinControl;
-  Index: Integer; var Data: string);
-begin
-  Assert(CurrentSquare <> nil);
-  Data := CurrentSquare.ImgNames[Index];
-end;
-
-{*
-  Gestionnaire d'événement OnClick de la liste des images
+  Gestionnaire d'événement OnClick du bouton Modifier l'image
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFrameEditSimpleSquare.ListBoxImagesClick(Sender: TObject);
-begin
-  UpdateImagesButtons;
-end;
-
-{*
-  Gestionnaire d'événement OnClick du bouton Ajouter une image
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFrameEditSimpleSquare.ButtonNewImageClick(Sender: TObject);
-var
-  I: Integer;
-  FileName: TFileName;
+procedure TFrameEditSimpleSquare.ButtonEditImageClick(Sender: TObject);
 begin
   Assert(CurrentSquare.CanEditImgNames);
 
-  if OpenImageDialog.Execute then
-  begin
-    CurrentSquare.ImgNames.BeginUpdate;
-    try
-      for I := 0 to OpenImageDialog.Files.Count-1 do
-      begin
-        FileName := OpenImageDialog.Files[I];
-
-        if not AnsiStartsText(fSquaresDir, FileName) then
-        begin
-          ShowDialog(SError, SInvalidImageFileName, dtError);
-          Exit;
-        end;
-
-        Delete(FileName, 1, Length(fSquaresDir));
-        FileName := ChangeFileExt(FileName, '');
-        FileName := AnsiReplaceStr(FileName, '\', '/');
-
-        CurrentSquare.ImgNames.Add(FileName);
-      end;
-    finally
-      CurrentSquare.ImgNames.EndUpdate;
-    end;
-
+  if TFormPainterEditor.EditPainter(CurrentSquare.Painter) then
     ImageChanged;
-  end;
-
-  ListBoxImages.ItemIndex := CurrentSquare.ImgNames.Count-1;
-  UpdateImagesButtons;
-end;
-
-{*
-  Gestionnaire d'événement OnClick du bouton Supprimer l'image
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFrameEditSimpleSquare.ButtonRemoveImageClick(Sender: TObject);
-var
-  Index: Integer;
-begin
-  Assert(CurrentSquare.CanEditImgNames);
-
-  Index := ListBoxImages.ItemIndex;
-  if Index >= 0 then
-  begin
-    CurrentSquare.ImgNames.Delete(Index);
-    ImageChanged;
-
-    if Index < CurrentSquare.ImgNames.Count then
-      ListBoxImages.ItemIndex := Index
-    else
-      ListBoxImages.ItemIndex := Index-1;
-  end;
-
-  UpdateImagesButtons;
-end;
-
-{*
-  Gestionnaire d'événement OnClick du bouton Monter l'image
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFrameEditSimpleSquare.ButtonUpImageClick(Sender: TObject);
-var
-  Index: Integer;
-begin
-  Assert(CurrentSquare.CanEditImgNames);
-
-  Index := ListBoxImages.ItemIndex;
-  if Index > 0 then
-  begin
-    CurrentSquare.ImgNames.Exchange(Index, Index-1);
-    ImageChanged;
-
-    ListBoxImages.ItemIndex := Index-1;
-  end;
-
-  UpdateImagesButtons;
-end;
-
-{*
-  Gestionnaire d'événement OnClick du bouton Descendre l'image
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFrameEditSimpleSquare.ButtonDownImageClick(Sender: TObject);
-var
-  Index: Integer;
-begin
-  Assert(CurrentSquare.CanEditImgNames);
-
-  Index := ListBoxImages.ItemIndex;
-  if Index < CurrentSquare.ImgNames.Count-1 then
-  begin
-    CurrentSquare.ImgNames.Exchange(Index, Index+1);
-    ImageChanged;
-
-    ListBoxImages.ItemIndex := Index+1;
-  end;
-
-  UpdateImagesButtons;
 end;
 
 {*

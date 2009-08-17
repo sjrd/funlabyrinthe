@@ -37,7 +37,7 @@ attributes
 actions
 
 constructor
-destructor
+name
 zindex
 image
 action

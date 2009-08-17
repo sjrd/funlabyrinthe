@@ -10,7 +10,8 @@ unit FLBPlank;
 interface
 
 uses
-  SysUtils, Classes, Graphics, ScUtils, FunLabyUtils, Generics, FLBCommon, GR32;
+  SysUtils, Classes, Graphics, StrUtils, ScUtils, ScDelphiLanguage,
+  FunLabyUtils, Generics, FLBCommon, GR32;
 
 const {don't localize}
   idPlankPlugin = 'PlankPlugin'; /// ID du plug-in planche
@@ -34,8 +35,9 @@ const {don't localize}
   attrUsePlank = 'UsePlank'; /// Attribut indiquant l'usage de la planche
 
 resourcestring
-  sFoundPlank = 'Tu as trouvé une planche.'+#10+
+  SFoundPlank = 'Tu as trouvé une planche.'+#10+
     'Tu peux franchir certains obstacles.';
+  SPlankShiftExplanation = 'Appuie sur %s pour l''utiliser.';
 
 type
   {*
@@ -69,11 +71,20 @@ type
 
     function GetShownInfos(Player: TPlayer): string; override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
   published
     property RequiredShift: TShiftState
       read FRequiredShift write SetRequiredShift default [];
+  end;
+
+  {*
+    Outil planche
+    @author sjrd
+    @version 5.0
+  *}
+  TPlankTool = class(TObjectTool)
+  public
+    procedure Find(Context: TMoveContext); override;
   end;
 
   {*
@@ -202,15 +213,13 @@ end;
 {----------------}
 
 {*
-  Crée une instance de TPlanks
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du composant
-  @param AName     Nom du composant
+  [@inheritDoc]
 *}
-constructor TPlanks.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TPlanks.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
+
+  Name := SPlanks;
   Painter.ImgNames.Add(fPlank);
 end;
 
@@ -250,9 +259,34 @@ begin
     Result := Format(sPlanksInfos, [ACount]);
 end;
 
-{--------------------}
+{------------------}
+{ TPlankTool class }
+{------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TPlankTool.Find(Context: TMoveContext);
+var
+  RequiredShift: TShiftState;
+  ShiftStr: string;
+begin
+  inherited;
+
+  RequiredShift := (ObjectDef as TPlanks).RequiredShift;
+  if RequiredShift = [] then
+    Exit;
+
+  ShiftStr := EnumSetToStr(RequiredShift, TypeInfo(TShiftState));
+  Delete(ShiftStr, 1, 2);
+  ShiftStr := AnsiReplaceStr(ShiftStr, ', ss', '+');
+
+  Context.Player.ShowMessage(Format(SPlankShiftExplanation, [ShiftStr]));
+end;
+
+{---------------------}
 { Classe TPlankSquare }
-{--------------------}
+{---------------------}
 
 {*
   Crée une instance de TPlankSquare

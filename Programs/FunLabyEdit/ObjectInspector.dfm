@@ -16,8 +16,6 @@ object FrameInspector: TFrameInspector
     TabStop = True
     TabOrder = 0
     OnDataValueChanged = InspectorDataValueChanged
-    ExplicitTop = 0
-    ExplicitHeight = 184
   end
   object PanelCollectionEditor: TPanel
     Left = 0
@@ -117,7 +115,6 @@ object FrameInspector: TFrameInspector
     ParentBackground = False
     ParentFont = False
     TabOrder = 2
-    ExplicitTop = 8
   end
   object CollectionImages: TImageList
     Left = 64

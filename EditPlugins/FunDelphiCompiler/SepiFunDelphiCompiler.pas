@@ -203,6 +203,18 @@ type
   end;
 
   {*
+    Noeud paramètre de composant
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiComponentParamNode = class(TSepiAssignmentOpNode)
+  public
+    procedure MakeParameterize(Compiler: TSepiMethodCompiler;
+      Instructions: TSepiInstructionList;
+      const ComponentValue: ISepiExpression);
+  end;
+
+  {*
     Noeud définition de classe
     @author sjrd
     @version 5.0
@@ -338,26 +350,6 @@ type
   end;
 
   {*
-    Noeud en-tête de constructeur
-    @author sjrd
-    @version 5.0
-  *}
-  TFunDelphiConstructorHeaderNode = class(TFunDelphiMethodDeclNode)
-  public
-    procedure BeginParsing; override;
-  end;
-
-  {*
-    Noeud en-tête de destructeur
-    @author sjrd
-    @version 5.0
-  *}
-  TFunDelphiDestructorHeaderNode = class(TFunDelphiMethodDeclNode)
-  public
-    procedure BeginParsing; override;
-  end;
-
-  {*
     Noeud auto-override (met override sans marque dans le code source)
     @author sjrd
     @version 5.0
@@ -383,6 +375,19 @@ type
     property Instructions: TSepiInstructionList read FInstructions;
   public
     procedure BeginParsing; override;
+  end;
+
+  {*
+    Noeud name d'un composant visuel
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiNameNode = class(TFunDelphiConstructorCodeNode)
+  private
+    procedure SetName(const NameValue: ISepiReadableValue);
+  protected
+    procedure ChildBeginParsing(Child: TSepiParseTreeNode); override;
+    procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
   end;
 
   {*
@@ -609,25 +614,23 @@ begin
   NonTerminalClasses[ntArrayIndices]    := TFunDelphiArrayIndicesModifierNode;
   NonTerminalClasses[ntFieldSelection]  := TSepiFieldSelectionModifierNode;
 
-  NonTerminalClasses[ntConstDecl]         := TDelphiConstantDeclNode;
-  NonTerminalClasses[ntGlobalVar]         := TDelphiVariableDeclNode;
-  NonTerminalClasses[ntActionsSection]    := TFunDelphiActionsNode;
-  NonTerminalClasses[ntAttributesSection] := TFunDelphiAttributesNode;
-  NonTerminalClasses[ntComponent]         := TFunDelphiComponentDeclNode;
-  NonTerminalClasses[ntPluginSection]     := TFunDelphiPluginNode;
-  NonTerminalClasses[ntObjectSection]     := TFunDelphiObjectNode;
-  NonTerminalClasses[ntFieldSection]      := TFunDelphiFieldNode;
-  NonTerminalClasses[ntEffectSection]     := TFunDelphiEffectNode;
-  NonTerminalClasses[ntToolSection]       := TFunDelphiToolNode;
-  NonTerminalClasses[ntObstacleSection]   := TFunDelphiObstacleNode;
+  NonTerminalClasses[ntConstDecl]          := TDelphiConstantDeclNode;
+  NonTerminalClasses[ntGlobalVar]          := TDelphiVariableDeclNode;
+  NonTerminalClasses[ntActionsSection]     := TFunDelphiActionsNode;
+  NonTerminalClasses[ntAttributesSection]  := TFunDelphiAttributesNode;
+  NonTerminalClasses[ntComponent]          := TFunDelphiComponentDeclNode;
+  NonTerminalClasses[ntComponentParameter] := TFunDelphiComponentParamNode;
+  NonTerminalClasses[ntPluginSection]      := TFunDelphiPluginNode;
+  NonTerminalClasses[ntObjectSection]      := TFunDelphiObjectNode;
+  NonTerminalClasses[ntFieldSection]       := TFunDelphiFieldNode;
+  NonTerminalClasses[ntEffectSection]      := TFunDelphiEffectNode;
+  NonTerminalClasses[ntToolSection]        := TFunDelphiToolNode;
+  NonTerminalClasses[ntObstacleSection]    := TFunDelphiObstacleNode;
 
   NonTerminalClasses[ntParentClass]       := TFunDelphiParentClassNode;
   NonTerminalClasses[ntField]             := TFunDelphiClassFieldNode;
-  NonTerminalClasses[ntConstructor]       := TFunDelphiMethodDeclAndImplNode;
-  NonTerminalClasses[ntConstructorHeader] := TFunDelphiConstructorHeaderNode;
-  NonTerminalClasses[ntDestructor]        := TFunDelphiMethodDeclAndImplNode;
-  NonTerminalClasses[ntDestructorHeader]  := TFunDelphiDestructorHeaderNode;
   NonTerminalClasses[ntAutoOverride]      := TFunDelphiAutoOverrideNode;
+  NonTerminalClasses[ntName]              := TFunDelphiNameNode;
   NonTerminalClasses[ntZIndex]            := TFunDelphiZIndexNode;
   NonTerminalClasses[ntImage]             := TFunDelphiImageNode;
   NonTerminalClasses[ntEvent]             := TFunDelphiMethodDeclAndImplNode;
@@ -1388,13 +1391,14 @@ end;
 procedure TFunDelphiComponentDeclNode.MakeInitialize(
   Compiler: TSepiMethodCompiler; Instructions: TSepiInstructionList);
 var
-  Expression, IDExpr: ISepiExpression;
+  Expression, IDExpr, ComponentExpr: ISepiExpression;
   ComponentClass: TSepiClass;
   TypeExpr: ISepiTypeExpression;
   WantingParams: ISepiWantingParams;
   ParamsNode: TSepiParseTreeNode;
   I: Integer;
   Executable: ISepiExecutable;
+  ComponentVar: TSepiLocalVar;
 begin
   Expression := LanguageRules.ResolveIdentInMethod(Compiler,
     Children[1].AsText);
@@ -1434,14 +1438,64 @@ begin
     MasterName));
   WantingParams.AddParam(IDExpr);
 
-  ParamsNode := Children[2];
-  for I := 0 to ParamsNode.ChildCount-1 do
-    WantingParams.AddParam(
-      (ParamsNode.Children[I] as TSepiExpressionNode).Expression);
-
   WantingParams.CompleteParams;
 
-  Executable := WantingParams as ISepiExecutable;
+  ParamsNode := Children[2];
+  if ParamsNode.ChildCount = 0 then
+  begin
+    Executable := WantingParams as ISepiExecutable;
+    Executable.CompileExecute(Compiler, Instructions);
+  end else
+  begin
+    ComponentVar := Compiler.Locals.AddTempVar(TypeExpr.ExprType);
+    ComponentExpr := TSepiLocalVarValue.MakeValue(Compiler,
+      ComponentVar) as ISepiExpression;
+    ComponentExpr.SourcePos := Children[1].SourcePos;
+
+    ComponentVar.HandleLife;
+    ComponentVar.Life.BeginInstrInterval(Instructions.GetCurrentEndRef);
+
+    Executable := TSepiAssignmentOperation.MakeOperation(
+      ComponentExpr as ISepiWritableValue, WantingParams as ISepiReadableValue);
+    Executable.CompileExecute(Compiler, Instructions);
+
+    for I := 0 to ParamsNode.ChildCount-1 do
+    begin
+      (ParamsNode.Children[I] as TFunDelphiComponentParamNode).MakeParameterize(
+        Compiler, Instructions, ComponentExpr);
+    end;
+
+    ComponentVar.Life.EndInstrInterval(Instructions.GetCurrentEndRef);
+  end;
+end;
+
+{------------------------------------}
+{ TFunDelphiComponentParamNode class }
+{------------------------------------}
+
+{*
+  Construit la paramétrisation du composant
+  @param Compiler         Compilateur
+  @param Instructions     Liste d'instructions
+  @param ComponentValue   Valeur représentant le composant à paramétrer
+*}
+procedure TFunDelphiComponentParamNode.MakeParameterize(
+  Compiler: TSepiMethodCompiler; Instructions: TSepiInstructionList;
+  const ComponentValue: ISepiExpression);
+var
+  LeftExpression, RightExpression, AssignmentExpr: ISepiExpression;
+  Executable: ISepiExecutable;
+begin
+  LeftExpression := LanguageRules.FieldSelection(SepiContext,
+    ComponentValue, Children[0].AsText);
+  RightExpression := (Children[1] as TSepiExpressionNode).Expression;
+
+  if not CheckIdentFound(LeftExpression, Children[0].AsText, Children[0]) then
+    Exit;
+
+  AssignmentExpr := MakeOperation(LeftExpression, RightExpression);
+  Executable := AssignmentExpr as ISepiExecutable;
+
   Executable.CompileExecute(Compiler, Instructions);
 end;
 
@@ -1718,38 +1772,6 @@ begin
   SepiContext.CurrentVisibility := mvPublic;
 end;
 
-{---------------------------------------}
-{ TFunDelphiConstructorHeaderNode class }
-{---------------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-procedure TFunDelphiConstructorHeaderNode.BeginParsing;
-begin
-  inherited;
-
-  Signature.Kind := skConstructor;
-
-  TSepiParam.Create(Signature, 'AMaster', SepiRoot.FindClass(TMaster));
-  TSepiParam.Create(Signature, 'AID',
-    SepiRoot.FindType('FunLabyUtils.TComponentID'), pkConst);
-end;
-
-{--------------------------------------}
-{ TFunDelphiDestructorHeaderNode class }
-{--------------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-procedure TFunDelphiDestructorHeaderNode.BeginParsing;
-begin
-  inherited;
-
-  Signature.Kind := skDestructor;
-end;
-
 {----------------------------------}
 { TFunDelphiAutoOverrideNode class }
 {----------------------------------}
@@ -1778,8 +1800,10 @@ begin
   Previous := (SepiContext as TSepiClass).LookForMember(
     CreateName) as TSepiMethod;
 
+  Assert(Previous.LinkKind = mlkVirtual);
+
   Result := TSepiMethod.Create(SepiContext, CreateName, nil,
-    Previous.Signature);
+    Previous.Signature, mlkOverride);
   Compiler := UnitCompiler.FindMethodCompiler(Result, True);
 
   CompilePureInheritedCall(Compiler);
@@ -1794,13 +1818,56 @@ var
 begin
   inherited;
 
-  SepiConstructor := SepiContext.GetComponent('Create') as TSepiMethod;
+  SepiConstructor := SepiContext.GetComponent(CreateName) as TSepiMethod;
 
   if SepiConstructor = nil then
     SepiConstructor := MakeEmptyConstructor;
 
   FCompiler := UnitCompiler.FindMethodCompiler(SepiConstructor);
   FInstructions := FCompiler.Instructions;
+end;
+
+{--------------------------}
+{ TFunDelphiNameNode class }
+{--------------------------}
+
+{*
+  Spécifie le nom du composant
+  @param NameValue   Valeur du nom
+*}
+procedure TFunDelphiNameNode.SetName(const NameValue: ISepiReadableValue);
+var
+  NameProp: ISepiWritableValue;
+  Executable: ISepiExecutable;
+begin
+  NameProp := LanguageRules.ResolveIdentInMethod(Compiler,
+    'Name') as ISepiWritableValue;
+  (NameProp as ISepiExpression).SourcePos :=
+    (NameValue as ISepiExpression).SourcePos;
+
+  Executable := TSepiAssignmentOperation.MakeOperation(NameProp,
+    NameValue);
+  Executable.CompileExecute(Compiler, Instructions);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiNameNode.ChildBeginParsing(Child: TSepiParseTreeNode);
+begin
+  inherited;
+
+  (Child as TSepiConstExpressionNode).ValueType := SystemUnit.LongString;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiNameNode.ChildEndParsing(Child: TSepiParseTreeNode);
+begin
+  SetName((Child as TSepiConstExpressionNode).AsReadableValue);
+
+  inherited;
 end;
 
 {----------------------------}
@@ -1902,6 +1969,8 @@ end;
   Remplit la signature
 *}
 procedure TFunDelphiEventHeaderNode.FillSignature;
+const
+  ValidKinds = [skObjectProcedure, skObjectFunction, skConstructor];
 var
   InheritedMeta: TSepiComponent;
   InheritedSignature: TSepiSignature;
@@ -1913,7 +1982,7 @@ begin
 
   InheritedSignature := TSepiMethod(InheritedMeta).Signature;
 
-  if not (InheritedSignature.Kind in [skObjectProcedure, skObjectFunction]) then
+  if not (InheritedSignature.Kind in ValidKinds) then
   begin
     MakeError(SMethodNotFoundInBaseClass);
     Signature.Kind := skObjectProcedure;

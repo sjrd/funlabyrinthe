@@ -108,6 +108,7 @@ const
 procedure DissipateNeighbors(Context: TDrawSquareContext;
   const Predicate: TFieldPredicate);
 var
+  ThisField: TField;
   Other: TQualifiedPos;
   Dir: TDirection;
   OtherField: TField;
@@ -116,10 +117,16 @@ var
   OtherContext: TDrawSquareContext;
   Corner: Boolean;
 
+  function TestField(Field: TField): Boolean;
+  begin
+    Result := (Field <> ThisField) and Predicate(Field);
+  end;
+
   procedure CreateOtherBmpAndContext;
   begin
     OtherBmp := TBitmap32.Create;
     OtherBmp.DrawMode := dmBlend;
+    OtherBmp.CombineMode := cmMerge;
     OtherBmp.SetSize(SquareSize, SquareSize);
 
     OtherContext := TDrawSquareContext.Create(OtherBmp);
@@ -130,6 +137,7 @@ begin
   if Context.IsNowhere then
     Exit;
 
+  ThisField := Context.QPos.Field;
   Other.Map := Context.Map;
   DestBmp := Context.Bitmap;
   BaseX := Context.X;
@@ -145,17 +153,17 @@ begin
       Other.Position := PointBehind(Context.Pos, Dir);
       OtherField := Other.Field.GetEffectiveDrawingField;
 
-      if Predicate(OtherField) then
+      if TestField(OtherField) then
         Corner := False
       else
       begin
         Other.Position := PointBehind(Context.Pos, RightDir[Dir]);
-        if Predicate(Other.Field.GetEffectiveDrawingField) then
+        if TestField(Other.Field.GetEffectiveDrawingField) then
           Continue;
 
         Other.Position := PointBehind(Other.Position, Dir);
         OtherField := Other.Field.GetEffectiveDrawingField;
-        if not Predicate(OtherField) then
+        if not TestField(OtherField) then
           Continue;
 
         Corner := True;
@@ -221,7 +229,7 @@ begin
 end;
 
 {*
-  Prédicat de terrain qui renvoie toujours True
+  Prédicat de terrain testant si c'est un sol
 *}
 function FieldIsGround(Field: TField): Boolean;
 begin

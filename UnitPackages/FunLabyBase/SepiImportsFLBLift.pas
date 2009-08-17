@@ -25,7 +25,7 @@ const // don't localize
   UnitName = 'FLBLift';
   ResourceName = 'SepiImportsFLBLift';
   TypeCount = 2;
-  MethodCount = 2;
+  MethodCount = 1;
   VariableCount = 1;
 
 var
@@ -39,11 +39,6 @@ type
     class procedure InitMethodAddresses;
   end;
 
-  TSepiImportsTLift = class(TLift)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
 {---------------------------}
 { TEngagedLiftSquare import }
 {---------------------------}
@@ -51,15 +46,6 @@ type
 class procedure TSepiImportsTEngagedLiftSquare.InitMethodAddresses;
 begin
   MethodAddresses[0] := @TSepiImportsTEngagedLiftSquare.Create;
-end;
-
-{--------------}
-{ TLift import }
-{--------------}
-
-class procedure TSepiImportsTLift.InitMethodAddresses;
-begin
-  MethodAddresses[1] := @TSepiImportsTLift.Create;
 end;
 
 {---------------------}
@@ -135,7 +121,6 @@ end;
 procedure InitMethodAddresses;
 begin
   TSepiImportsTEngagedLiftSquare.InitMethodAddresses;
-  TSepiImportsTLift.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;

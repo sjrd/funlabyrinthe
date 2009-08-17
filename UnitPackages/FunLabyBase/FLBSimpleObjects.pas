@@ -81,8 +81,7 @@ type
   protected
     function GetShownInfos(Player: TPlayer): string; override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     function AbleTo(Player: TPlayer; const Action: TPlayerAction;
       Param: Integer): Boolean; override;
@@ -100,8 +99,7 @@ type
   protected
     function GetShownInfos(Player: TPlayer): string; override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     function AbleTo(Player: TPlayer; const Action: TPlayerAction;
       Param: Integer): Boolean; override;
@@ -119,8 +117,7 @@ type
   protected
     function GetShownInfos(Player: TPlayer): string; override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     function AbleTo(Player: TPlayer; const Action: TPlayerAction;
       Param: Integer): Boolean; override;
@@ -176,15 +173,13 @@ end;
 {---------------}
 
 {*
-  Crée une instance de TBuoys
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du composant
-  @param AName     Nom du composant
+  [@inheritDoc]
 *}
-constructor TBuoys.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TBuoys.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
+
+  Name := SBuoys;
   Painter.ImgNames.Add(fBuoy);
 end;
 
@@ -229,15 +224,13 @@ end;
 {--------------------}
 
 {*
-  Crée une instance de TSilverKeys
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du composant
-  @param AName     Nom du composant
+  [@inheritDoc]
 *}
-constructor TSilverKeys.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TSilverKeys.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
+
+  Name := SSilverKeys;
   Painter.ImgNames.Add(fSilverKey);
 end;
 
@@ -282,15 +275,13 @@ end;
 {--------------------}
 
 {*
-  Crée une instance de TGoldenKeys
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du composant
-  @param AName     Nom du composant
+  [@inheritDoc]
 *}
-constructor TGoldenKeys.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TGoldenKeys.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
+
+  Name := SGoldenKeys;
   Painter.ImgNames.Add(fGoldenKey);
 end;
 

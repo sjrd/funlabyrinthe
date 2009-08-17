@@ -31,7 +31,7 @@ type
     procedure ShowMessage(
       var Context: TPlayerShowMsgMessage); virtual; abstract;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
   end;
 
   {*

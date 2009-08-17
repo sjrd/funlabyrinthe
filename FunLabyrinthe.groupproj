@@ -6,6 +6,7 @@
   <ItemGroup>
     <Projects Include="Packages\FunLabyCore\FunLabyCore.dproj" />
     <Projects Include="Packages\FunLabyEditPlugin\FunLabyEditPlugin.dproj" />
+    <Projects Include="Packages\FunLabyEditTools\FunLabyEditTools.dproj" />
     <Projects Include="Packages\FunLabyTools\FunLabyTools.dproj" />
     <Projects Include="Programs\FunLabyEdit\FunLabyEdit.dproj" />
     <Projects Include="Programs\FunLaby\FunLaby.dproj" />
@@ -55,6 +56,15 @@
   <Target Name="FunLabyEditPlugin:Make">
     <MSBuild Projects="Packages\FunLabyEditPlugin\FunLabyEditPlugin.dproj" Targets="Make" />
   </Target>
+  <Target Name="FunLabyEditTools">
+    <MSBuild Projects="Packages\FunLabyEditTools\FunLabyEditTools.dproj" Targets="" />
+  </Target>
+  <Target Name="FunLabyEditTools:Clean">
+    <MSBuild Projects="Packages\FunLabyEditTools\FunLabyEditTools.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="FunLabyEditTools:Make">
+    <MSBuild Projects="Packages\FunLabyEditTools\FunLabyEditTools.dproj" Targets="Make" />
+  </Target>
   <Target Name="FunLabyEdit">
     <MSBuild Projects="Programs\FunLabyEdit\FunLabyEdit.dproj" Targets="" />
   </Target>
@@ -92,13 +102,13 @@
     <MSBuild Projects="UnitPackages\Compatibility4x\Compatibility4x.dproj" Targets="Make" />
   </Target>
   <Target Name="Build">
-    <CallTarget Targets="FunLabyCore;FunLabyTools;FunLaby;FunLabyEditPlugin;FunLabyEdit;GeneLaby;FunLabyBase;Compatibility4x" />
+    <CallTarget Targets="FunLabyCore;FunLabyTools;FunLaby;FunLabyEditPlugin;FunLabyEditTools;FunLabyEdit;GeneLaby;FunLabyBase;Compatibility4x" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="FunLabyCore:Clean;FunLabyTools:Clean;FunLaby:Clean;FunLabyEditPlugin:Clean;FunLabyEdit:Clean;GeneLaby:Clean;FunLabyBase:Clean;Compatibility4x:Clean" />
+    <CallTarget Targets="FunLabyCore:Clean;FunLabyTools:Clean;FunLaby:Clean;FunLabyEditPlugin:Clean;FunLabyEditTools:Clean;FunLabyEdit:Clean;GeneLaby:Clean;FunLabyBase:Clean;Compatibility4x:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="FunLabyCore:Make;FunLabyTools:Make;FunLaby:Make;FunLabyEditPlugin:Make;FunLabyEdit:Make;GeneLaby:Make;FunLabyBase:Make;Compatibility4x:Make" />
+    <CallTarget Targets="FunLabyCore:Make;FunLabyTools:Make;FunLaby:Make;FunLabyEditPlugin:Make;FunLabyEditTools:Make;FunLabyEdit:Make;GeneLaby:Make;FunLabyBase:Make;Compatibility4x:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>

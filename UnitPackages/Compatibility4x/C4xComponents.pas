@@ -113,8 +113,7 @@ type
 
     procedure DoDraw(Context: TDrawSquareContext); override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Execute(Context: TMoveContext); override;
   end;
@@ -128,8 +127,8 @@ type
   private
     FNumber: Integer; /// Numéro de cette barque
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; ANumber: Integer);
+    constructor CreateNumbered(AMaster: TMaster; const AID: TComponentID;
+      ANumber: Integer);
 
     property Number: Integer read FNumber;
   end;
@@ -147,7 +146,7 @@ type
     function GetCount(Player: TPlayer): Integer; override;
     procedure SetCount(Player: TPlayer; Value: Integer); override;
   public
-    constructor Create(AActions: TActions);
+    constructor Create(AActions: TActions); reintroduce;
 
     property Actions: TActions read FActions;
   end;
@@ -169,7 +168,7 @@ type
 
     property AlternatePainter: TPainter read FAlternatePainter;
   public
-    constructor Create(AActions: TActions);
+    constructor Create(AActions: TActions); reintroduce;
     procedure AfterConstruction; override;
 
     procedure Execute(Context: TMoveContext); override;
@@ -189,7 +188,7 @@ type
   protected
     function GetIsDesignable: Boolean; override;
   public
-    constructor Create(AActions: TActions);
+    constructor Create(AActions: TActions); reintroduce;
 
     procedure Pushing(Context: TMoveContext); override;
 
@@ -215,7 +214,7 @@ type
   public
     constructor Create(AMaster: TMaster; ANumber: Integer;
       AKind: TActionsKind; const AFileName: string; AActions: TStrings;
-      const AID: TComponentID = '');
+      const AID: TComponentID = ''); reintroduce;
     destructor Destroy; override;
 
     procedure Execute(Phase: Integer; Player: TPlayer; KeyPressed: Boolean;
@@ -257,7 +256,8 @@ type
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
   public
-    constructor Create(AMasterFile: TMasterFile; AActions: TObjectList);
+    constructor Create(AMasterFile: TMasterFile;
+      AActions: TObjectList); reintroduce;
 
     property MasterFile: TMasterFile read FMasterFile;
 
@@ -400,16 +400,15 @@ end;
 {----------------}
 
 {*
-  Crée une instance de TOldStairs
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
+  [@inheritDoc]
 *}
-constructor TOldStairs.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TOldStairs.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
+
   FStaticDraw := False;
+
+  Name := SStairs;
 end;
 
 {*
@@ -476,14 +475,14 @@ end;
   Crée une barque numérotée
   @param AMaster   Maître FunLabyrinthe
   @param AID       ID de la barque
-  @param AName     Nom de la barque
   @param ANumber   Numéro de la barque
 *}
-constructor TNumberedBoat.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; ANumber: Integer);
+constructor TNumberedBoat.CreateNumbered(AMaster: TMaster;
+  const AID: TComponentID; ANumber: Integer);
 begin
-  inherited Create(AMaster, AID, AName);
+  Create(AMaster, AID);
 
+  Name := Format(sNumberedBoat, [ANumber]);
   FNumber := ANumber;
 end;
 
@@ -497,11 +496,11 @@ end;
 *}
 constructor TActionsObject.Create(AActions: TActions);
 begin
-  inherited Create(AActions.Master, Format(idActionsObject, [AActions.Number]),
-    AActions.FileName);
+  inherited Create(AActions.Master, Format(idActionsObject, [AActions.Number]));
 
   FActions := AActions;
 
+  Name := Actions.FileName;
   Painter.ImgNames.Add(fCompatibility + Name);
 end;
 
@@ -531,10 +530,11 @@ end;
 *}
 constructor TActionsEffect.Create(AActions: TActions);
 begin
-  inherited Create(AActions.Master, Format(idActionsEffect, [AActions.Number]),
-    Format(sButton, [AActions.Number]));
+  inherited Create(AActions.Master, Format(idActionsEffect, [AActions.Number]));
 
   FActions := AActions;
+
+  Name := Format(sButton, [AActions.Number]);
 
   FAlternatePainter := TPainter.Create(Master.ImagesMaster);
   FAlternatePainter.ImgNames.BeginUpdate;
@@ -677,9 +677,12 @@ end;
 *}
 constructor TActionsObstacle.Create(AActions: TActions);
 begin
-  inherited Create(AActions.Master, Format(idActionsObstacle,
-    [AActions.Number]), Format(sButton, [AActions.Number]));
+  inherited Create(AActions.Master,
+    Format(idActionsObstacle, [AActions.Number]));
+
   FActions := AActions;
+
+  Name := Format(sButton, [AActions.Number]);
 end;
 
 {*

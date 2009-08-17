@@ -64,42 +64,41 @@ begin
   TDefaultShowMessagePlugin.Create(Master, idDefaultShowMessagePlugin);
 
   // Définitions d'objet
-  Buoys := TBuoys.Create(Master, idBuoys, sBuoys);
-  Planks := TPlanks.Create(Master, idPlanks, sPlanks);
-  SilverKeys := TSilverKeys.Create(Master, idSilverKeys, sSilverKeys);
-  GoldenKeys := TGoldenKeys.Create(Master, idGoldenKeys, sGoldenKeys);
+  Buoys := TBuoys.Create(Master, idBuoys);
+  Planks := TPlanks.Create(Master, idPlanks);
+  SilverKeys := TSilverKeys.Create(Master, idSilverKeys);
+  GoldenKeys := TGoldenKeys.Create(Master, idGoldenKeys);
 
   // Terrains
 
-  TGround.Create(Master, idGrass, sGrass, fGrass);
-  TWall.Create(Master, idWall, sWall);
-  TWater.Create(Master, idWater, sWater);
-  THole.Create(Master, idHole, sHole);
-  TSky.Create(Master, idSky, sSky);
-  TOutside.Create(Master, idOutside, sOutside);
+  TGround.CreateGround(Master, idGrass, sGrass, fGrass);
+  TWall.Create(Master, idWall);
+  TWater.Create(Master, idWater);
+  THole.Create(Master, idHole);
+  TSky.Create(Master, idSky);
+  TOutside.Create(Master, idOutside);
 
   // Effets de case
 
-  TArrow.Create(Master, idNorthArrow, sNorthArrow, diNorth);
-  TArrow.Create(Master, idEastArrow , sEastArrow , diEast );
-  TArrow.Create(Master, idSouthArrow, sSouthArrow, diSouth);
-  TArrow.Create(Master, idWestArrow , sWestArrow , diWest );
-  TArrow.Create(Master, idCrossroads, sCrossroads, diNone );
+  TArrow.CreateArrow(Master, idNorthArrow, sNorthArrow, diNorth);
+  TArrow.CreateArrow(Master, idEastArrow , sEastArrow , diEast );
+  TArrow.CreateArrow(Master, idSouthArrow, sSouthArrow, diSouth);
+  TArrow.CreateArrow(Master, idWestArrow , sWestArrow , diWest );
+  TArrow.CreateArrow(Master, idCrossroads, sCrossroads, diNone );
 
-  TInactiveTransporter.Create(Master, idInactiveTransporter,
-    sInactiveTransporter);
+  TInactiveTransporter.Create(Master, idInactiveTransporter);
   TTransporterCreator.Create(Master, idTransporterCreator);
 
-  TStairs.Create(Master, idUpStairs, sUpStairs, True);
-  TStairs.Create(Master, idDownStairs, sDownStairs, False);
-  TLift.Create(Master, idLift, sLift);
+  TStairs.CreateStairs(Master, idUpStairs, True);
+  TStairs.CreateStairs(Master, idDownStairs, False);
+  TLift.Create(Master, idLift);
 
-  TDirectTurnstile.Create(Master, idDirectTurnstile, sDirectTurnstile);
-  TIndirectTurnstile.Create(Master, idIndirectTurnstile, sIndirectTurnstile);
+  TDirectTurnstile.Create(Master, idDirectTurnstile);
+  TIndirectTurnstile.Create(Master, idIndirectTurnstile);
 
-  TTreasure.Create(Master, idTreasure, sTreasure);
+  TTreasure.Create(Master, idTreasure);
 
-  TDecorativeEffect.Create(Master, idSunkenButton,
+  TDecorativeEffect.CreateDeco(Master, idSunkenButton,
     sSunkenButton, fSunkenButton);
 
   TBoatCreator.Create(Master, idBoatCreator);
@@ -108,18 +107,18 @@ begin
 
   // Outils
 
-  TObjectTool.Create(Master, idBuoy, Buoys, sFoundBuoy, sBuoy);
-  TObjectTool.Create(Master, idPlank, Planks, sFoundPlank, sPlank);
-  TObjectTool.Create(Master, idSilverKey, SilverKeys,
+  TObjectTool.CreateTool(Master, idBuoy, Buoys, sFoundBuoy, sBuoy);
+  TPlankTool.CreateTool(Master, idPlank, Planks, sFoundPlank, sPlank);
+  TObjectTool.CreateTool(Master, idSilverKey, SilverKeys,
     sFoundSilverKey, sSilverKey);
-  TObjectTool.Create(Master, idGoldenKey, GoldenKeys,
+  TObjectTool.CreateTool(Master, idGoldenKey, GoldenKeys,
     sFoundGoldenKey, sGoldenKey);
 
   // Obstacles
 
-  TSilverBlock.Create(Master, idSilverBlock, sSilverBlock);
-  TGoldenBlock.Create(Master, idGoldenBlock, sGoldenBlock);
-  TSecretWay.Create(Master, idSecretWay, sSecretWay);
+  TSilverBlock.Create(Master, idSilverBlock);
+  TGoldenBlock.Create(Master, idGoldenBlock);
+  TSecretWay.Create(Master, idSecretWay);
 end;
 
 {*

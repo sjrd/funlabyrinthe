@@ -48,7 +48,7 @@ tkAttributes	attributes
 tkActions	actions
 
 tkConstructor	constructor
-tkDestructor	destructor
+tkName	name
 tkZIndex	zindex
 tkImage	image
 tkAction	action
@@ -392,8 +392,11 @@ ntComponent	Component
 	IdentifierDecl ':'* QualifiedIdent ComponentParameters ';'*
 
 ntComponentParameters	ComponentParameters
-	'('* ExprListOrEmpty ')'*
+	'('* ComponentParameter (','* ComponentParameter)* ')'*
 	@
+
+ntComponentParameter	ComponentParameter
+	Identifier ':'* Expression
 
 ntPluginSection	PluginSection
 	'plugin'* IdentifierDecl ParentClass PluginMembers 'end'* ';'*
@@ -403,8 +406,6 @@ ntPluginMembers	PluginMembers
 
 ntPluginMember	PluginMember	Simplify
 	Fields
-	Constructor
-	Destructor
 	ZIndex
 	Event
 	PluginAction
@@ -417,8 +418,7 @@ ntObjectMembers	ObjectMembers
 
 ntObjectMember	ObjectMember	Simplify
 	Fields
-	Constructor
-	Destructor
+	Name
 	Image
 	Event
 	ObjectAction
@@ -440,8 +440,7 @@ ntSquareCompMembers	SquareCompMembers
 
 ntSquareCompMember	SquareCompMember	Simplify
 	Fields
-	Constructor
-	Destructor
+	Name
 	Image
 	Event
 
@@ -455,20 +454,11 @@ ntFields	Fields	Simplify
 ntField	Field
 	CommaIdentDeclList ':'* TypeName ';'*
 
-ntConstructor	Constructor
-	ConstructorHeader ConstructorBody
-
-ntConstructorHeader	ConstructorHeader
-	'constructor'* IdentifierDecl ConstructorSignature ';'*
-
-ntDestructor	Destructor
-	DestructorHeader DestructorBody
-
-ntDestructorHeader	DestructorHeader
-	'destructor'* IdentifierDecl DestructorSignature AutoOverride ';'*
-
 ntAutoOverride	AutoOverride
 	@
+
+ntName	Name
+	'name'* ConstExpression ';'*
 
 ntZIndex	ZIndex
 	'zindex'* ConstExpression ';'*

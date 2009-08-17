@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'FLBSimpleEffects';
   ResourceName = 'SepiImportsFLBSimpleEffects';
   TypeCount = 9;
-  MethodCount = 8;
+  MethodCount = 2;
   VariableCount = 1;
 
 var
@@ -40,37 +40,7 @@ type
     class procedure InitMethodAddresses;
   end;
 
-  TSepiImportsTTransporter = class(TTransporter)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTInactiveTransporter = class(TInactiveTransporter)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTTransporterCreator = class(TTransporterCreator)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
   TSepiImportsTStairs = class(TStairs)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTDirectTurnstile = class(TDirectTurnstile)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTIndirectTurnstile = class(TIndirectTurnstile)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTTreasure = class(TTreasure)
   private
     class procedure InitMethodAddresses;
   end;
@@ -81,34 +51,7 @@ type
 
 class procedure TSepiImportsTArrow.InitMethodAddresses;
 begin
-  MethodAddresses[0] := @TSepiImportsTArrow.Create;
-end;
-
-{---------------------}
-{ TTransporter import }
-{---------------------}
-
-class procedure TSepiImportsTTransporter.InitMethodAddresses;
-begin
-  MethodAddresses[1] := @TSepiImportsTTransporter.Create;
-end;
-
-{-----------------------------}
-{ TInactiveTransporter import }
-{-----------------------------}
-
-class procedure TSepiImportsTInactiveTransporter.InitMethodAddresses;
-begin
-  MethodAddresses[2] := @TSepiImportsTInactiveTransporter.Create;
-end;
-
-{----------------------------}
-{ TTransporterCreator import }
-{----------------------------}
-
-class procedure TSepiImportsTTransporterCreator.InitMethodAddresses;
-begin
-  MethodAddresses[3] := @TSepiImportsTTransporterCreator.Create;
+  MethodAddresses[0] := @TSepiImportsTArrow.CreateArrow;
 end;
 
 {----------------}
@@ -117,34 +60,7 @@ end;
 
 class procedure TSepiImportsTStairs.InitMethodAddresses;
 begin
-  MethodAddresses[4] := @TSepiImportsTStairs.Create;
-end;
-
-{-------------------------}
-{ TDirectTurnstile import }
-{-------------------------}
-
-class procedure TSepiImportsTDirectTurnstile.InitMethodAddresses;
-begin
-  MethodAddresses[5] := @TSepiImportsTDirectTurnstile.Create;
-end;
-
-{---------------------------}
-{ TIndirectTurnstile import }
-{---------------------------}
-
-class procedure TSepiImportsTIndirectTurnstile.InitMethodAddresses;
-begin
-  MethodAddresses[6] := @TSepiImportsTIndirectTurnstile.Create;
-end;
-
-{------------------}
-{ TTreasure import }
-{------------------}
-
-class procedure TSepiImportsTTreasure.InitMethodAddresses;
-begin
-  MethodAddresses[7] := @TSepiImportsTTreasure.Create;
+  MethodAddresses[1] := @TSepiImportsTStairs.CreateStairs;
 end;
 
 {---------------------}
@@ -227,13 +143,7 @@ end;
 procedure InitMethodAddresses;
 begin
   TSepiImportsTArrow.InitMethodAddresses;
-  TSepiImportsTTransporter.InitMethodAddresses;
-  TSepiImportsTInactiveTransporter.InitMethodAddresses;
-  TSepiImportsTTransporterCreator.InitMethodAddresses;
   TSepiImportsTStairs.InitMethodAddresses;
-  TSepiImportsTDirectTurnstile.InitMethodAddresses;
-  TSepiImportsTIndirectTurnstile.InitMethodAddresses;
-  TSepiImportsTTreasure.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;

@@ -6,8 +6,8 @@ uses
   Types, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
   StrUtils, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils, FilesUtils,
-  FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters, AddMap,
-  BaseMapViewer, MapTools, GR32, ObjectInspector, FunLabyEditTypes;
+  FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters,
+  BaseMapViewer, MapTools, GR32, ObjectInspector, FunLabyEditTypes, EditMap;
 
 type
   {*
@@ -110,6 +110,7 @@ begin
   if FrameInspector.InspectObject is TFunLabyComponent then
     UpdateComponentButton(TFunLabyComponent(FrameInspector.InspectObject));
 
+  InvalidateMap;
   MarkModified;
 end;
 
@@ -521,14 +522,14 @@ end;
 *}
 procedure TFrameMapEditor.AddMap;
 var
-  MapID: TComponentID;
+  NewMap: TMap;
 begin
-  MapID := TFormAddMap.AddMap(MasterFile);
+  NewMap := TFormEditMap.NewMap(Master);
 
-  if MapID <> '' then
+  if NewMap <> nil then
   begin
     MapViewer.UpdateMaps;
-    MapViewer.CurrentMap := Master.Map[MapID];
+    MapViewer.CurrentMap := NewMap;
 
     MarkModified;
   end;

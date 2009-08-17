@@ -67,8 +67,7 @@ type
     procedure EditSquareMap(var Msg: TEditMapSquareMessage);
       message msgEditMapSquare;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Execute(Context: TMoveContext); override;
   end;
@@ -171,10 +170,11 @@ end;
   @param AID       ID de l'effet de case
   @param AName     Nom de la case
 *}
-constructor TLift.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TLift.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
+
+  Name := SLift;
   Painter.ImgNames.Add(fLift);
 end;
 

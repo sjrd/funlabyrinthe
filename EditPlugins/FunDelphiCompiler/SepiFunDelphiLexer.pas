@@ -64,7 +64,7 @@ const
   tkActions = 39;    // actions
 
   tkConstructor = 40; // constructor
-  tkDestructor = 41;  // destructor
+  tkName = 41;        // name
   tkZIndex = 42;      // zindex
   tkImage = 43;       // image
   tkAction = 44;      // action
@@ -187,8 +187,7 @@ begin
           if Key = 'components'     then SymbolClass := tkComponents else
           if Key = 'const'          then SymbolClass := tkConst else
           if Key = 'constructor'    then SymbolClass := tkConstructor;
-    'd' : if Key = 'destructor'     then SymbolClass := tkDestructor else
-          if Key = 'div'            then SymbolClass := tkDiv else
+    'd' : if Key = 'div'            then SymbolClass := tkDiv else
           if Key = 'discards'       then SymbolClass := tkDiscards else
           if Key = 'do'             then SymbolClass := tkDo else
           if Key = 'downto'         then SymbolClass := tkDownto;
@@ -213,7 +212,8 @@ begin
     'm' : if Key = 'mod'            then SymbolClass := tkMod else
           if Key = 'more'           then SymbolClass := tkMore else
           if Key = 'most'           then SymbolClass := tkMost;
-    'n' : if Key = 'nil'            then SymbolClass := tkNil else
+    'n' : if Key = 'name'           then SymbolClass := tkName else
+          if Key = 'nil'            then SymbolClass := tkNil else
           if Key = 'not'            then SymbolClass := tkNot;
     'o' : if Key = 'object'         then SymbolClass := tkObject else
           if Key = 'obstacle'       then SymbolClass := tkObstacle else
@@ -656,7 +656,7 @@ initialization
   SymbolClassNames[tkActions] := 'tkActions';
 
   SymbolClassNames[tkConstructor] := 'tkConstructor';
-  SymbolClassNames[tkDestructor] := 'tkDestructor';
+  SymbolClassNames[tkName] := 'tkName';
   SymbolClassNames[tkZIndex] := 'tkZIndex';
   SymbolClassNames[tkImage] := 'tkImage';
   SymbolClassNames[tkAction] := 'tkAction';

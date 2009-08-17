@@ -169,7 +169,6 @@ object FrameMapEditor: TFrameMapEditor
       inherited Inspector: TJvInspector
         Width = 200
         Height = 267
-        ExplicitTop = 25
         ExplicitWidth = 200
         ExplicitHeight = 267
       end
@@ -193,7 +192,6 @@ object FrameMapEditor: TFrameMapEditor
       end
       inherited PanelInspectorTitle: TPanel
         Width = 200
-        ExplicitTop = 0
         ExplicitWidth = 200
       end
     end

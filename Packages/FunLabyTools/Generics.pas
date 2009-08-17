@@ -51,8 +51,8 @@ type
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; const AImgName: string);
+    constructor CreateGround(AMaster: TMaster; const AID: TComponentID;
+      const AName, AImgName: string);
   end;
 
   {*
@@ -66,7 +66,7 @@ type
   protected
     function GetCategory: string; override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
+    constructor CreateDeco(AMaster: TMaster; const AID: TComponentID;
       const AName, AImgName: string);
   end;
 
@@ -121,10 +121,9 @@ type
 
     property DownPainter: TPainter read FDownPainter;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
-    
+
     procedure AfterConstruction; override;
   end;
 
@@ -145,8 +144,7 @@ type
     property OffPainter: TPainter read FOffPainter;
     property OnPainter: TPainter read FOnPainter;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -165,7 +163,7 @@ type
   *}
   TDecorativeObstacle = class(TObstacle)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
+    constructor CreateDeco(AMaster: TMaster; const AID: TComponentID;
       const AName, AImgName: string);
   end;
 
@@ -181,17 +179,27 @@ type
   private
     FObjectDef: TObjectDef; /// Définition d'objet liée
     FFindMessage: string;   /// Message apparaissant lorsqu'on trouve l'outil
+
+    FDefaultObjectDef: TObjectDef; /// ObjectDef par défaut
+    FDefaultFindMessage: string;   /// FindMessage par défaut
+
+    function IsObjectDefStored: Boolean;
+    function IsFindMessageStored: Boolean;
   protected
+    procedure StoreDefaults; override;
+
     procedure DoDraw(Context: TDrawSquareContext); override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
+    constructor CreateTool(AMaster: TMaster; const AID: TComponentID;
       AObjectDef: TObjectDef; const AFindMessage: string;
       const AName: string = ''; const AImgName: string = '');
 
     procedure Find(Context: TMoveContext); override;
-
-    property ObjectDef: TObjectDef read FObjectDef;
-    property FindMessage: string read FFindMessage;
+  published
+    property ObjectDef: TObjectDef read FObjectDef write FObjectDef
+      stored IsObjectDefStored;
+    property FindMessage: string read FFindMessage write FFindMessage
+      stored IsFindMessageStored;
   end;
 
   {*
@@ -213,8 +221,10 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID;
       AMap: TMap; const APosition: T3DPoint; AField: TField = nil;
       AEffect: TEffect = nil; ATool: TTool = nil;
-      AObstacle: TObstacle = nil);
-    destructor Destroy; override;
+      AObstacle: TObstacle = nil); reintroduce;
+
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
 
     property Map: TMap read FMap;
     property Position: T3DPoint read FPosition;
@@ -235,13 +245,14 @@ uses
   @param AMaster    Maître FunLabyrinthe
   @param AID        ID du terrain
   @param AName      Nom du terrain
-  @param AImgName   Nom de l'image des graphismes (défaut : l'herbe)
+  @param AImgName   Nom de l'image des graphismes
 *}
-constructor TGround.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; const AImgName: string);
+constructor TGround.CreateGround(AMaster: TMaster; const AID: TComponentID;
+  const AName, AImgName: string);
 begin
-  inherited Create(AMaster, AID, AName);
+  Create(AMaster, AID);
 
+  Name := AName;
   if AImgName <> '' then
     Painter.ImgNames.Add(AImgName);
 end;
@@ -275,10 +286,12 @@ end;
   @param AName      Nom de l'effet de case
   @param AImgName   Nom du fichier image
 *}
-constructor TDecorativeEffect.Create(AMaster: TMaster;
+constructor TDecorativeEffect.CreateDeco(AMaster: TMaster;
   const AID: TComponentID; const AName, AImgName: string);
 begin
-  inherited Create(AMaster, AID, AName);
+  Create(AMaster, AID);
+
+  Name := AName;
   Painter.ImgNames.Add(AImgName);
 end;
 
@@ -358,15 +371,11 @@ end;
 {--------------------}
 
 {*
-  Crée une instance de TButton
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du terrain
-  @param AName     Nom du terrain
+  [@inheritDoc]
 *}
-constructor TPushButton.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TPushButton.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
   FStaticDraw := Master.Editing;
 
@@ -413,15 +422,11 @@ end;
 {----------------}
 
 {*
-  Crée une instance de TSwitch
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du terrain
-  @param AName     Nom du terrain
+  [@inheritDoc]
 *}
-constructor TSwitch.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TSwitch.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
   FStaticDraw := Master.Editing;
   FOffPainter := Painter;
@@ -485,10 +490,12 @@ end;
   @param AName      Nom de l'obstacle de case
   @param AImgName   Nom du fichier image
 *}
-constructor TDecorativeObstacle.Create(AMaster: TMaster;
+constructor TDecorativeObstacle.CreateDeco(AMaster: TMaster;
   const AID: TComponentID; const AName, AImgName: string);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
+
+  Name := AName;
   Painter.ImgNames.Add(AImgName);
 end;
 
@@ -507,18 +514,51 @@ end;
   @param AName          Nom de l'outil
   @param AImgName       Nom du fichier image
 *}
-constructor TObjectTool.Create(AMaster: TMaster; const AID: TComponentID;
+constructor TObjectTool.CreateTool(AMaster: TMaster; const AID: TComponentID;
   AObjectDef: TObjectDef; const AFindMessage: string;
   const AName: string = ''; const AImgName: string = '');
 begin
-  inherited Create(AMaster, AID, IIF(AName = '', AObjectDef.Name, AName));
+  Create(AMaster, AID);
+
+  if AName = '' then
+    Name := AObjectDef.Name
+  else
+    Name := AName;
+
   FObjectDef := AObjectDef;
   FFindMessage := AFindMessage;
 
-  if AImgName = '' then
-    FStaticDraw := FObjectDef.StaticDraw
-  else
+  if AImgName <> '' then
     Painter.ImgNames.Add(AImgName);
+end;
+
+{*
+  Teste si la propriété ObjectDef doit être sauvegardée
+  @return True si la propriété ObjectDef doit être sauvegardée, False sinon
+*}
+function TObjectTool.IsObjectDefStored: Boolean;
+begin
+  Result := FObjectDef <> FDefaultObjectDef;
+end;
+
+{*
+  Teste si la propriété FindMessage doit être sauvegardée
+  @return True si la propriété FindMessage doit être sauvegardée, False sinon
+*}
+function TObjectTool.IsFindMessageStored: Boolean;
+begin
+  Result := FFindMessage <> FDefaultFindMessage;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TObjectTool.StoreDefaults;
+begin
+  inherited;
+
+  FDefaultObjectDef := FObjectDef;
+  FDefaultFindMessage := FFindMessage;
 end;
 
 {*
@@ -526,10 +566,10 @@ end;
 *}
 procedure TObjectTool.DoDraw(Context: TDrawSquareContext);
 begin
-  inherited;
-
-  if Painter.ImgNames.Count = 0 then
-    FObjectDef.Draw(Context);
+  if Painter.IsEmpty then
+    FObjectDef.Draw(Context)
+  else
+    inherited;
 end;
 
 {*
@@ -571,27 +611,16 @@ begin
   if AField = nil then
     AField := AOriginalSquare.Field;
 
-  inherited Create(AMaster, AID, AOriginalSquare.Name,
-    AField, AEffect, ATool, AObstacle);
+  CreateConfig(AMaster, AID, AField, AEffect, ATool, AObstacle);
+
+  Name := AOriginalSquare.Name;
 
   if not AOriginalSquare.StaticDraw then
     FStaticDraw := False;
+
   FMap := AMap;
   FPosition := APosition;
   FOriginalSquare := AOriginalSquare;
-
-  Map[Position] := Self;
-end;
-
-{*
-  [@inheritDoc]
-*}
-destructor TOverriddenSquare.Destroy;
-begin
-  if Assigned(OriginalSquare) then
-    Map[Position] := OriginalSquare;
-
-  inherited;
 end;
 
 {*
@@ -600,6 +629,27 @@ end;
 procedure TOverriddenSquare.DoDraw(Context: TDrawSquareContext);
 begin
   OriginalSquare.Draw(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TOverriddenSquare.AfterConstruction;
+begin
+  inherited;
+
+  Map[Position] := Self;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TOverriddenSquare.BeforeDestruction;
+begin
+  inherited;
+
+  if Map[Position] = Self then
+    Map[Position] := OriginalSquare;
 end;
 
 end.

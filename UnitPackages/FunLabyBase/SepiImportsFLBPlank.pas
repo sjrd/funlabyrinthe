@@ -25,8 +25,8 @@ implementation
 const // don't localize
   UnitName = 'FLBPlank';
   ResourceName = 'SepiImportsFLBPlank';
-  TypeCount = 3;
-  MethodCount = 3;
+  TypeCount = 4;
+  MethodCount = 2;
   VariableCount = 1;
 
 var
@@ -58,7 +58,6 @@ end;
 class procedure TSepiImportsTPlanks.InitMethodAddresses;
 begin
   MethodAddresses[0] := @TSepiImportsTPlanks.SetRequiredShift;
-  MethodAddresses[1] := @TSepiImportsTPlanks.Create;
 end;
 
 {---------------------}
@@ -67,7 +66,7 @@ end;
 
 class procedure TSepiImportsTPlankSquare.InitMethodAddresses;
 begin
-  MethodAddresses[2] := @TSepiImportsTPlankSquare.Create;
+  MethodAddresses[1] := @TSepiImportsTPlankSquare.Create;
 end;
 
 {---------------------}
@@ -138,7 +137,8 @@ procedure InitTypeInfoArray;
 begin
   TypeInfoArray[0] := TypeInfo(TPlankPlugin);
   TypeInfoArray[1] := TypeInfo(TPlanks);
-  TypeInfoArray[2] := TypeInfo(TPlankSquare);
+  TypeInfoArray[2] := TypeInfo(TPlankTool);
+  TypeInfoArray[3] := TypeInfo(TPlankSquare);
 end;
 
 procedure InitMethodAddresses;
@@ -176,6 +176,16 @@ type
 {$IFEND}
 
 type
+  TCheckAlignmentForTPlankTool = record
+    Dummy: Byte;
+    Field: TPlankTool;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPlankTool) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPlankTool n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
   TCheckAlignmentForTPlankSquare = record
     Dummy: Byte;
     Field: TPlankSquare;
@@ -202,6 +212,7 @@ begin
   {$ASSERTIONS ON}
   CheckInstanceSize(TPlankPlugin, 44, 40);
   CheckInstanceSize(TPlanks, 56, 52);
+  CheckInstanceSize(TPlankTool, 64, 64);
   CheckInstanceSize(TPlankSquare, 92, 88);
   {$ASSERTIONS OFF}
 end;

@@ -76,6 +76,7 @@ type
 
     property ID: TComponentID read FID;
     property ParentClassName: string read GetParentClassName;
+    property Painter: TPainter read FPainter;
     property CanEditImgNames: Boolean read GetCanEditImgNames;
   published
     property Name: string read FName write FName;
@@ -323,6 +324,7 @@ end;
 *}
 procedure TSimpleSquare.ProduceInnerClass(Code: TStrings);
 begin
+  Code.Add(Format('  name %s;', [StrToStrRepres(Name)]));
   ProduceDefaultImgNames(Code);
 end;
 
@@ -394,7 +396,7 @@ end;
 *}
 procedure TSimpleSquare.ProduceComponents(Code: TStrings);
 const
-  Statement = '  %s: T%0:s(%s);';
+  Statement = '  %s: T%0:s;';
 begin
   Code.Add(Format(Statement, [ID, StrToStrRepres(Name)]));
 end;
@@ -652,8 +654,10 @@ procedure TSimpleObject.ProduceComponents(Code: TStrings);
 begin
   inherited;
 
-  Code.Add(Format('  %sTool: TObjectTool(%0:s,', [ID]));
-  Code.Add(Format('    %s, '''', '''');', [StrToStrRepres(FindMessage)]));
+  Code.Add(Format('  %sTool: TObjectTool(', [ID]));
+  Code.Add(Format('    ObjectDef: %s,', [ID]));
+  Code.Add(Format('    FindMessage: %s', [StrToStrRepres(FindMessage)]));
+  Code.Add('  );');
 end;
 
 {-----------------------}

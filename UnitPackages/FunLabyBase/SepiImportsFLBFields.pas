@@ -26,84 +26,13 @@ const // don't localize
   UnitName = 'FLBFields';
   ResourceName = 'SepiImportsFLBFields';
   TypeCount = 5;
-  MethodCount = 5;
+  MethodCount = 1;
   VariableCount = 1;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
   MethodAddresses: array[0..MethodCount-1] of Pointer;
   VarAddresses: array[0..VariableCount-1] of Pointer;
-
-type
-  TSepiImportsTWall = class(TWall)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTWater = class(TWater)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTHole = class(THole)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTSky = class(TSky)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTOutside = class(TOutside)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-{--------------}
-{ TWall import }
-{--------------}
-
-class procedure TSepiImportsTWall.InitMethodAddresses;
-begin
-  MethodAddresses[0] := @TSepiImportsTWall.Create;
-end;
-
-{---------------}
-{ TWater import }
-{---------------}
-
-class procedure TSepiImportsTWater.InitMethodAddresses;
-begin
-  MethodAddresses[1] := @TSepiImportsTWater.Create;
-end;
-
-{--------------}
-{ THole import }
-{--------------}
-
-class procedure TSepiImportsTHole.InitMethodAddresses;
-begin
-  MethodAddresses[2] := @TSepiImportsTHole.Create;
-end;
-
-{-------------}
-{ TSky import }
-{-------------}
-
-class procedure TSepiImportsTSky.InitMethodAddresses;
-begin
-  MethodAddresses[3] := @TSepiImportsTSky.Create;
-end;
-
-{-----------------}
-{ TOutside import }
-{-----------------}
-
-class procedure TSepiImportsTOutside.InitMethodAddresses;
-begin
-  MethodAddresses[4] := @TSepiImportsTOutside.Create;
-end;
 
 {---------------------}
 { Overloaded routines }
@@ -180,11 +109,6 @@ end;
 
 procedure InitMethodAddresses;
 begin
-  TSepiImportsTWall.InitMethodAddresses;
-  TSepiImportsTWater.InitMethodAddresses;
-  TSepiImportsTHole.InitMethodAddresses;
-  TSepiImportsTSky.InitMethodAddresses;
-  TSepiImportsTOutside.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;

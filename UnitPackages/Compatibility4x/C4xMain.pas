@@ -107,19 +107,18 @@ begin
 
   // Terrains
 
-  TOldWater.Create(Master, idOldWater, sWater);
-  TOldHole.Create(Master, idOldHole, sHole);
+  TOldWater.Create(Master, idOldWater);
+  TOldHole.Create(Master, idOldHole);
 
   // Effets
 
   for I := 1 to 20 do
-    TOldStairs.Create(Master, Format(idOldStairs, [I]), sStairs);
+    TOldStairs.Create(Master, Format(idOldStairs, [I]));
 
   // Outils
 
   for I := 1 to 10 do
-    TNumberedBoat.Create(Master, Format(idNumberedBoat, [I]),
-      Format(sNumberedBoat, [I]), I);
+    TNumberedBoat.CreateNumbered(Master, Format(idNumberedBoat, [I]), I);
 
   // Actions : elles sont stockées dans le fichier donné par FileName
 

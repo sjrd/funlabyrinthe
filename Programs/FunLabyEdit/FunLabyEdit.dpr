@@ -8,8 +8,6 @@ uses
   PlayerPlugins in 'PlayerPlugins.pas' {FormPlugins},
   EditParameters in 'EditParameters.pas' {FormParameters},
   FileProperties in 'FileProperties.pas' {FormFileProperties},
-  AddMap in 'AddMap.pas' {FormAddMap},
-  MapBase in 'MapBase.pas' {FormMapBase},
   MapEditor in 'MapEditor.pas' {FrameMapEditor: TFrame},
   FunLabyEditConsts in 'FunLabyEditConsts.pas',
   EditPluginManager in 'EditPluginManager.pas',
@@ -29,7 +27,6 @@ begin
   Application.Initialize;
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.CreateForm(TFormMain, FormMain);
-  Application.CreateForm(TFormEditMap, FormEditMap);
   Application.Run;
 end.
 

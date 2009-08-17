@@ -98,14 +98,6 @@ object FormMain: TFormMain
         OnClick = MenuExitClick
       end
     end
-    object BigMenuOptions: TMenuItem
-      Caption = '&Options'
-      object MenuViewSize: TMenuItem
-        Caption = 'Taille de la vue'
-        Enabled = False
-        OnClick = MenuViewSizeClick
-      end
-    end
     object BigMenuHelp: TMenuItem
       Caption = '&Aide'
       object MenuHelpTopics: TMenuItem

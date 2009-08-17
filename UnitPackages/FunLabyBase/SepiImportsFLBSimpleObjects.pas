@@ -26,56 +26,13 @@ const // don't localize
   UnitName = 'FLBSimpleObjects';
   ResourceName = 'SepiImportsFLBSimpleObjects';
   TypeCount = 4;
-  MethodCount = 3;
+  MethodCount = 1;
   VariableCount = 1;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
   MethodAddresses: array[0..MethodCount-1] of Pointer;
   VarAddresses: array[0..VariableCount-1] of Pointer;
-
-type
-  TSepiImportsTBuoys = class(TBuoys)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTSilverKeys = class(TSilverKeys)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTGoldenKeys = class(TGoldenKeys)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-{---------------}
-{ TBuoys import }
-{---------------}
-
-class procedure TSepiImportsTBuoys.InitMethodAddresses;
-begin
-  MethodAddresses[0] := @TSepiImportsTBuoys.Create;
-end;
-
-{--------------------}
-{ TSilverKeys import }
-{--------------------}
-
-class procedure TSepiImportsTSilverKeys.InitMethodAddresses;
-begin
-  MethodAddresses[1] := @TSepiImportsTSilverKeys.Create;
-end;
-
-{--------------------}
-{ TGoldenKeys import }
-{--------------------}
-
-class procedure TSepiImportsTGoldenKeys.InitMethodAddresses;
-begin
-  MethodAddresses[2] := @TSepiImportsTGoldenKeys.Create;
-end;
 
 {---------------------}
 { Overloaded routines }
@@ -151,9 +108,6 @@ end;
 
 procedure InitMethodAddresses;
 begin
-  TSepiImportsTBuoys.InitMethodAddresses;
-  TSepiImportsTSilverKeys.InitMethodAddresses;
-  TSepiImportsTGoldenKeys.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;

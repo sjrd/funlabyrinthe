@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, TypInfo, JvExControls, JvInspector, ScDelphiLanguage, FunLabyUtils,
   FunLabyEditConsts, FunLabyEditTypes, SepiReflectionCore, SepiSystemUnit,
-  FilesUtils, StrUtils, StdCtrls, Buttons, ToolWin, ComCtrls, ExtCtrls, ImgList;
+  FilesUtils, StrUtils, StdCtrls, Buttons, ToolWin, ComCtrls, ExtCtrls, ImgList,
+  PainterEditor;
 
 type
   {$M+}
@@ -45,6 +46,41 @@ type
   TJvInspectorFunLabyCollectionItem = class(TJvInspectorClassItem)
   protected
     procedure Edit; override;
+  public
+    constructor Create(const AParent: TJvCustomInspectorItem;
+      const AData: TJvCustomInspectorData); override;
+  end;
+
+  {*
+    Item gérant un TPainter dans un Inspector
+    @author sjrd
+    @version 5.0
+  *}
+  TJvInspectorPainterItem = class(TJvInspectorClassItem)
+  protected
+    procedure Edit; override;
+  public
+    constructor Create(const AParent: TJvCustomInspectorItem;
+      const AData: TJvCustomInspectorData); override;
+  end;
+
+  {*
+    Item gérant un TFunLabyComponent dans un Inspector
+    @author sjrd
+    @version 5.0
+  *}
+  TJvInspectorFunLabyComponentItem = class(TJvCustomInspectorItem)
+  private
+    FMaster: TMaster;                       /// Maître FunLabyrinthe
+    FRequiredClass: TFunLabyComponentClass; /// Classe requise
+  protected
+    function GetDisplayValue: string; override;
+    procedure SetDisplayValue(const Value: string); override;
+
+    procedure DoGetValueList(const Strings: TStrings); override;
+
+    property Master: TMaster read FMaster;
+    property RequiredClass: TFunLabyComponentClass read FRequiredClass;
   public
     constructor Create(const AParent: TJvCustomInspectorItem;
       const AData: TJvCustomInspectorData); override;
@@ -152,6 +188,11 @@ type
       Player: TPlayer): TPlayerData;
   end;
 
+  TJvInspectorDataAccess = class(TJvCustomInspectorData)
+  public
+    procedure InvalidateDataAndItems;
+  end;
+
 function HasAnyProperty(AClass: TClass): Boolean;
 begin
   Result := (AClass.ClassInfo <> nil) and
@@ -172,6 +213,16 @@ class function TPlayerDataAccess.AccessPlayerData(Component: TFunLabyComponent;
   Player: TPlayer): TPlayerData;
 begin
   Result := TPlayerDataAccess(Component).GetPlayerData(Player);
+end;
+
+{------------------------------}
+{ TJvInspectorDataAccess class }
+{------------------------------}
+
+procedure TJvInspectorDataAccess.InvalidateDataAndItems;
+begin
+  InvalidateData;
+  Invalidate;
 end;
 
 {-----------------------------------------}
@@ -222,6 +273,103 @@ begin
 
   if Collection <> nil then
     (Inspector.Owner as TFrameInspector).InspectObject := Collection;
+end;
+
+{-------------------------------}
+{ TJvInspectorPainterItem class }
+{-------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TJvInspectorPainterItem.Create(
+  const AParent: TJvCustomInspectorItem; const AData: TJvCustomInspectorData);
+begin
+  Assert(GetTypeData(AData.TypeInfo).ClassType.InheritsFrom(TPainter));
+
+  inherited;
+
+  Flags := Flags + [iifEditButton];
+  ItemClassFlags := [icfShowClassName];
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorPainterItem.Edit;
+var
+  Painter: TPainter;
+begin
+  Painter := TPainter(Data.AsOrdinal);
+
+  if Painter <> nil then
+  begin
+    if TFormPainterEditor.EditPainter(Painter) then
+      TJvInspectorDataAccess(Data).InvalidateDataAndItems;
+  end;
+end;
+
+{----------------------------------------}
+{ TJvInspectorFunLabyComponentItem class }
+{----------------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TJvInspectorFunLabyComponentItem.Create(
+  const AParent: TJvCustomInspectorItem; const AData: TJvCustomInspectorData);
+begin
+  Assert(GetTypeData(AData.TypeInfo).ClassType.InheritsFrom(
+    TFunLabyComponent));
+
+  inherited;
+
+  Flags := Flags + [iifValueList, iifAllowNonListValues];
+
+  FMaster := (Inspector.Owner as TFrameInspector).Master;
+  FRequiredClass := TFunLabyComponentClass(
+    GetTypeData(Data.TypeInfo).ClassType);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorFunLabyComponentItem.GetDisplayValue: string;
+begin
+  Result := TFunLabyComponent(Data.AsOrdinal).SafeID;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorFunLabyComponentItem.SetDisplayValue(const Value: string);
+var
+  Component: TFunLabyComponent;
+begin
+  if Value = '' then
+    Component := nil
+  else
+    Component := Master.Component[Value] as RequiredClass;
+
+  Data.AsOrdinal := Cardinal(Component);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorFunLabyComponentItem.DoGetValueList(
+  const Strings: TStrings);
+var
+  I: Integer;
+  Component: TFunLabyComponent;
+begin
+  for I := 0 to Master.ComponentCount-1 do
+  begin
+    Component := Master.Components[I];
+
+    if Component is RequiredClass then
+      Strings.AddObject(Component.ID, Component);
+  end;
 end;
 
 {--------------------------------------}
@@ -691,6 +839,12 @@ initialization
 
     Add(TJvInspectorTypeInfoRegItem.Create(TJvInspectorFunLabyCollectionItem,
       TypeInfo(TFunLabyCollection)));
+
+    Add(TJvInspectorTypeInfoRegItem.Create(TJvInspectorPainterItem,
+      TypeInfo(TPainter)));
+
+    Add(TJvInspectorTypeInfoRegItem.Create(TJvInspectorFunLabyComponentItem,
+      TypeInfo(TFunLabyComponent)));
 
     Add(TJvInspectorTypeInfoRegItem.Create(TJvInspectorPlayerDataListItem,
       TypeInfo(TPlayerDataList)));

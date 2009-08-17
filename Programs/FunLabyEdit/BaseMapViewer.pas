@@ -218,6 +218,14 @@ end;
 procedure TFrameBaseMapViewer.InvalidateMap;
 begin
   MapView.InvalidateMap;
+
+  if (CurrentMap <> nil) and
+    (EditFloor.MaxValue <> CurrentMap.Dimensions.Z-1) then
+  begin
+    EditFloor.MaxValue := CurrentMap.Dimensions.Z-1;
+    EditFloor.Enabled := CurrentMap.Dimensions.Z > 1;
+    EditFloor.Value := EditFloor.Value;
+  end;
 end;
 
 {*

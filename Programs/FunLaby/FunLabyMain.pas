@@ -29,6 +29,11 @@ resourcestring
   sExitConfirmTitle = 'Enregistrer la partie';
   sExitConfirm = 'Voulez-vous enregistrer la partie en cours ?';
 
+  sCantPauseTitle = 'Pause impossible';
+  sCantPause =
+    'Impossible de mettre en pause maintenant, car le joueur n''est pas à '+
+    'l''arrêt';
+
 type
   {*
     Classe de la fiche principale
@@ -52,18 +57,15 @@ type
     SaveGameDialog: TSaveDialog;
     Sep1: TMenuItem;
     MenuDescription: TMenuItem;
-    BigMenuOptions: TMenuItem;
     MenuPlayerObjects: TMenuItem;
     MenuReloadGame: TMenuItem;
     LoadGameDialog: TOpenDialog;
     TimerUpdateImage: TTimer;
-    MenuViewSize: TMenuItem;
     PaintBox: TPaintBox32;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure MenuViewSizeClick(Sender: TObject);
     procedure UpdateImage(Sender: TObject);
-    procedure MovePlayer(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure MenuExitClick(Sender: TObject);
     procedure MenuNewGameClick(Sender: TObject);
@@ -94,6 +96,9 @@ type
     procedure NewGame(FileName: TFileName);
     function SaveGame: Boolean;
     function CloseGame(DontSave: Boolean = False): Boolean;
+
+    function TryPause: Boolean;
+    procedure Resume;
 
     procedure AdaptSizeToView;
     procedure ShowStatus;
@@ -183,12 +188,11 @@ begin
   MenuSaveGame.Enabled := True;
   MenuDescription.Enabled := True;
   MenuPlayerObjects.Enabled := True;
-  MenuViewSize.Enabled := True;
   ShowStatus;
 
   AdaptSizeToView;
 
-  OnKeyDown := MovePlayer;
+  OnKeyDown := FormKeyDown;
   TimerUpdateImage.Enabled := True;
 
   if not MasterFile.IsSaveguard then
@@ -203,17 +207,31 @@ end;
   @return True si la partie a effectivement été enregistrée, False sinon
 *}
 function TFormMain.SaveGame: Boolean;
+var
+  WasPaused: Boolean;
 begin
   if MasterFile = nil then
     Result := True
   else
   begin
-    Result := SaveGameDialog.Execute;
-
-    if Result then
+    WasPaused := Master.Paused;
+    if (not WasPaused) and (not TryPause) then
     begin
-      MasterFile.Save(SaveGameDialog.FileName);
-      LastFileName := SaveGameDialog.FileName;
+      Result := False;
+      Exit;
+    end;
+
+    try
+      Result := SaveGameDialog.Execute;
+
+      if Result then
+      begin
+        MasterFile.Save(SaveGameDialog.FileName);
+        LastFileName := SaveGameDialog.FileName;
+      end;
+    finally
+      if not WasPaused then
+        Resume;
     end;
   end;
 end;
@@ -224,6 +242,8 @@ end;
   @return True si la partie a effectivement été terminée, False sinon
 *}
 function TFormMain.CloseGame(DontSave: Boolean = False): Boolean;
+var
+  WasPaused: Boolean;
 begin
   if MasterFile = nil then
   begin
@@ -235,12 +255,24 @@ begin
     Result := True
   else
   begin
-    case ShowDialog(sExitConfirmTitle, sExitConfirm,
-        dtConfirmation, dbYesNoCancel) of
-      drYes: Result := SaveGame;
-      drCancel: Result := False;
-    else
-      Result := True;
+    WasPaused := Master.Paused;
+    if (not WasPaused) and (not TryPause) then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+    try
+      case ShowDialog(sExitConfirmTitle, sExitConfirm,
+          dtConfirmation, dbYesNoCancel) of
+        drYes: Result := SaveGame;
+        drCancel: Result := False;
+      else
+        Result := True;
+      end;
+    finally
+      if not WasPaused then
+        Resume;
     end;
 
     if not Result then
@@ -256,18 +288,42 @@ begin
   MenuSaveGame.Enabled := False;
   MenuDescription.Enabled := False;
   MenuPlayerObjects.Enabled := False;
-  MenuViewSize.Enabled := False;
 
   StatusBar.Panels.Clear;
 
-  Controller.Free;
-  MasterFile.Free;
-
-  Controller := nil;
   Master := nil;
-  MasterFile := nil;
+  try
+    FreeAndNil(Controller);
+  except
+  end;
+  try
+    FreeAndNil(MasterFile);
+  except
+  end;
 
   PaintBox.Invalidate;
+end;
+
+{*
+  Essaye de mettre le jeu en pause
+  Si TryPause renvoie True, vous devez appelez Resume pour redémarrer le jeu.
+  @return True si le jeu a été mis en pause, False sinon
+*}
+function TFormMain.TryPause: Boolean;
+begin
+  Result := Master.TryPause;
+
+  if not Result then
+    ShowDialog(sCantPauseTitle, sCantPause, dtError);
+end;
+
+{*
+  Redémarre le jeu
+  Resume doit être appelé pour redémarrer le jeu après un TryPause réussi.
+*}
+procedure TFormMain.Resume;
+begin
+  Master.Resume;
 end;
 
 {*
@@ -486,15 +542,24 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnKeyDown, qui déplace le joueur
+  Gestionnaire d'événement OnKeyDown
   @param Sender   Objet qui a déclenché l'événement
   @param Key      Touche enfoncée
   @param Shift    État des touches système
 *}
-procedure TFormMain.MovePlayer(Sender: TObject; var Key: Word;
+procedure TFormMain.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  Controller.PressKey(Key, Shift);
+  if Key = VK_PAUSE then
+  begin
+    if Master.Paused then
+      Resume
+    else
+      TryPause;
+  end else
+  begin
+    Controller.PressKey(Key, Shift);
+  end;
 end;
 
 {*
@@ -517,19 +582,6 @@ begin
 
   PaintBox.Invalidate;
   ShowStatus;
-end;
-
-{*
-  Gestionnaire du menu 'Taille de la vue'
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormMain.MenuViewSizeClick(Sender: TObject);
-begin
-  with Controller.Player do
-    ViewBorderSize := QueryNumber(sViewSize, sViewSizePrompt,
-      ViewBorderSize, MinViewSize, Map.MaxViewSize);
-
-  AdaptSizeToView;
 end;
 
 {*

@@ -97,26 +97,6 @@ inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
     inherited PanelCommon: TPanel
       Width = 496
       ExplicitWidth = 496
-      inherited ButtonNewImage: TSpeedButton
-        Left = 464
-        ExplicitLeft = 464
-      end
-      inherited ButtonRemoveImage: TSpeedButton
-        Left = 464
-        ExplicitLeft = 464
-      end
-      inherited ButtonUpImage: TSpeedButton
-        Left = 464
-        ExplicitLeft = 464
-      end
-      inherited ButtonDownImage: TSpeedButton
-        Left = 464
-        ExplicitLeft = 464
-      end
-      inherited ListBoxImages: TListBox
-        Width = 201
-        ExplicitWidth = 201
-      end
     end
   end
   object SquaresImages: TImageList

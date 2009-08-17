@@ -82,8 +82,7 @@ type
   *}
   TBoat = class(TTool)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Find(Context: TMoveContext); override;
 
@@ -102,7 +101,7 @@ type
     function DoCreateComponent(
       const AID: TComponentID): TFunLabyComponent; override;
   public
-    constructor Create(AMaster: TMaster; AID: TComponentID);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
   end;
 
   {*
@@ -286,16 +285,13 @@ end;
 {--------------}
 
 {*
-  Crée une instance de TBoat
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'outil
-  @param AName     Nom de l'outil
+  [@inheritDoc]
 *}
-constructor TBoat.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TBoat.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
+  Name := SBoat;
   Painter.ImgNames.Add(fBoat);
 end;
 
@@ -360,13 +356,11 @@ end;
 {--------------------}
 
 {*
-  Crée un nouveau créateur de barques
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du créateur de barques
+  [@inheritDoc]
 *}
-constructor TBoatCreator.Create(AMaster: TMaster; AID: TComponentID);
+constructor TBoatCreator.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID);
+  inherited;
 
   IconPainter.ImgNames.Add(fBoat);
 end;
@@ -385,7 +379,7 @@ end;
 function TBoatCreator.DoCreateComponent(
   const AID: TComponentID): TFunLabyComponent;
 begin
-  Result := TBoat.Create(Master, AID, sBoat);
+  Result := TBoat.Create(Master, AID);
 end;
 
 {-------------------------}
@@ -414,8 +408,8 @@ begin
   WaterID := Copy(AID, Length(PrefixUnderBoat)+1, MaxInt);
   WaterField := Master.Field[WaterID];
 
-  Result := TGround(TGround.NewDelegateDraw(WaterField)).Create(
-    Master, AID, WaterField.Name, '')
+  Result := TGround(TGround.NewDelegateDraw(WaterField)).CreateGround(
+    Master, AID, WaterField.Name, '');
 end;
 
 end.

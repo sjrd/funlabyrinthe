@@ -46,9 +46,6 @@ type
   protected
     procedure DoDraw(Context: TDrawSquareContext); override;
   published
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
-
     property HideEffectAndTool: Boolean
       read FHideEffectAndTool write FHideEffectAndTool default False;
   end;
@@ -61,8 +58,7 @@ type
   *}
   TSilverBlock = class(TBlock)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Pushing(Context: TMoveContext); override;
   end;
@@ -75,8 +71,7 @@ type
   *}
   TGoldenBlock = class(TBlock)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Pushing(Context: TMoveContext); override;
   end;
@@ -91,8 +86,7 @@ type
   protected
     procedure DoDraw(Context: TDrawSquareContext); override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Pushing(Context: TMoveContext); override;
   end;
@@ -102,20 +96,6 @@ implementation
 {--------------}
 { TBlock class }
 {--------------}
-
-{*
-  Crée une instance de TBlock
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'obstacle
-  @param AName     Nom de l'obstacle
-*}
-constructor TBlock.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
-begin
-  inherited Create(AMaster, AID, AName);
-
-  FStaticDraw := False;
-end;
 
 {*
   [@inheritDoc]
@@ -133,16 +113,13 @@ end;
 {---------------------}
 
 {*
-  Crée une instance de TSilverBlock
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'obstacle
-  @param AName     Nom de l'obstacle
+  [@inheritDoc]
 *}
-constructor TSilverBlock.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TSilverBlock.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
+  Name := SSilverBlock;
   Painter.ImgNames.Add(fSilverBlock);
 end;
 
@@ -170,16 +147,13 @@ end;
 {---------------------}
 
 {*
-  Crée une instance de TGoldenBlock
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'obstacle
-  @param AName     Nom de l'obstacle
+  [@inheritDoc]
 *}
-constructor TGoldenBlock.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TGoldenBlock.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
+  Name := SGoldenBlock;
   Painter.ImgNames.Add(fGoldenBlock);
 end;
 
@@ -207,16 +181,13 @@ end;
 {-------------------}
 
 {*
-  Crée une instance de TSecretWay
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du terrain
-  @param AName     Nom de l'obstacle
+  [@inheritDoc]
 *}
-constructor TSecretWay.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TSecretWay.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
+  Name := SSecretWay;
   Painter.ImgNames.Add(fWall);
 end;
 

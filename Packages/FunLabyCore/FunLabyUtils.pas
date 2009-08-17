@@ -10,8 +10,8 @@ interface
 
 uses
   Windows, Types, SysUtils, Classes, Graphics, Contnrs, RTLConsts, Controls,
-  Dialogs, TypInfo, ScUtils, ScCoroutines, SdDialogs, GR32, FunLabyCoreConsts,
-  FunLabyGraphics, ScIntegerSets;
+  Dialogs, TypInfo, SyncObjs, ScUtils, ScClasses, ScCoroutines, SdDialogs, GR32,
+  FunLabyCoreConsts, FunLabyGraphics, ScIntegerSets;
 
 const {don't localize}
   SquareSize = 30;     /// Taille (en largeur et hauteur) d'une case
@@ -26,6 +26,7 @@ const {don't localize}
 
   msgShowMessage = $01; /// Message pour afficher un message au joueur
   msgGameStarted = $02; /// Message envoyé lorsque le jeu commence
+  msgPressKey = $03;    /// Message envoyé au joueur à l'appui sur une touche
 
   /// Message envoyé aux composants d'une case lorsque celle-ci est éditée
   msgEditMapSquare = $03;
@@ -166,6 +167,20 @@ type
     Answers: TStringDynArray;  /// Réponses possibles (peut être vide)
     Selected: Integer;         /// Index de la réponse choisie par le joueur
     ShowOnlySelected: Boolean; /// Si True n'affiche que l'élément sélectionné
+  end;
+
+  {*
+    Structure du message d'appui sur une touche pour le joueur
+    @author sjrd
+    @version 5.0
+  *}
+  TPlayerPressKeyMessage = record
+    MsgID: Word;               /// ID du message
+    Handled: Boolean;          /// Indique si le message a été géré
+    Reserved: Byte;            /// Réservé
+    Player: TPlayer;           /// Joueur concerné
+    Key: Word;                 /// Touche appuyée
+    Shift: TShiftState;        /// État des touches spéciales
   end;
 
   {*
@@ -487,6 +502,10 @@ type
 
     function AddItem(Item: TFunLabyPersistent): Integer;
     function InsertItem(Index: Integer; Item: TFunLabyPersistent): Integer;
+
+    function ExtractItem(Index: Integer): TFunLabyPersistent; overload;
+    function ExtractItem(
+      Item: TFunLabyPersistent): TFunLabyPersistent; overload;
   public
     constructor Create;
     destructor Destroy; override;
@@ -645,6 +664,9 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure ParseImgName(const ImgName: string; out FileName: TFileName;
+      out SubRect: TRect);
+
     function IndexOf(const ImgName: string): Integer;
 
     procedure Draw(Index: Integer; Context: TDrawSquareContext); overload;
@@ -760,7 +782,7 @@ type
     function GetHint: string; virtual;
     function GetIsDesignable: Boolean; virtual;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); virtual;
     destructor Destroy; override;
 
     class function UsePlayerData: Boolean;
@@ -771,7 +793,6 @@ type
       BackgroundColor: TColor);
 
     property Master: TMaster read FMaster;
-    property ID: TComponentID read FID;
     property SafeID: TComponentID read GetSafeID;
     property Transient: Boolean read FTransient;
 
@@ -779,6 +800,7 @@ type
     property Hint: string read GetHint;
     property IsDesignable: Boolean read GetIsDesignable;
   published
+    property ID: TComponentID read FID;
     property Tag: Integer read FTag write FTag default 0;
   end;
 
@@ -811,8 +833,7 @@ type
 
     procedure DoDraw(Context: TDrawSquareContext); virtual;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
@@ -852,7 +873,7 @@ type
 
     property IconPainter: TPainter read FIconPainter;
   public
-    constructor Create(AMaster: TMaster; AID: TComponentID);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -892,7 +913,7 @@ type
     property PainterBefore: TPainter read FPainterBefore;
     property PainterAfter: TPainter read FPainterAfter;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
     procedure AfterConstruction; override;
 
@@ -948,8 +969,7 @@ type
 
     function GetShownInfos(Player: TPlayer): string; virtual;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     function AbleTo(Player: TPlayer; const Action: TPlayerAction;
       Param: Integer): Boolean; virtual;
@@ -994,8 +1014,7 @@ type
 
     procedure DoDrawCeiling(Context: TDrawSquareContext); virtual;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     class function NewDelegateDraw(ADelegateDrawTo: TField): TField;
 
@@ -1084,10 +1103,14 @@ type
 
     procedure DoDraw(Context: TDrawSquareContext); override;
     procedure DoDrawCeiling(Context: TDrawSquareContext); virtual;
+
+    procedure Configure(AField: TField; AEffect: TEffect = nil;
+      ATool: TTool = nil; AObstacle: TObstacle = nil);
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string; AField: TField; AEffect: TEffect; ATool: TTool;
-      AObstacle: TObstacle);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+    constructor CreateConfig(AMaster: TMaster; const AID: TComponentID;
+      AField: TField; AEffect: TEffect = nil; ATool: TTool = nil;
+      AObstacle: TObstacle = nil);
 
     procedure DefaultHandler(var Msg); override;
 
@@ -1121,6 +1144,9 @@ type
       read GetComponentClasses;
   end;
 
+  /// Tableau dynamique de TSquare
+  TSquareDynArray = array of TSquare;
+
   {*
     Représente la carte du jeu
     TMap gère et représente la carte du jeu. Elle offre des propriétés et
@@ -1133,16 +1159,13 @@ type
     FDimensions: T3DPoint;   /// Dimensions de la carte (en cases)
     FZoneWidth: Integer;     /// Largeur d'une zone de la carte
     FZoneHeight: Integer;    /// Hauteur d'une zone de la carte
-    FMaxViewSize: Integer;   /// Taille maximale d'une vue pour cette carte
-    FMap: array of TSquare;  /// Carte stockée de façon linéaire
+    FMap: TSquareDynArray;   /// Carte stockée de façon linéaire
     FOutsideOffset: Integer; /// Offset de départ de l'extérieur
 
     procedure CreateMap;
 
     procedure LoadMapFromStream(Stream: TStream);
     procedure SaveMapToStream(Stream: TStream);
-
-    procedure SetMaxViewSize(Value: Integer);
 
     function GetMap(const Position: T3DPoint): TSquare;
     procedure SetMap(const Position: T3DPoint; Value: TSquare);
@@ -1155,12 +1178,18 @@ type
     procedure SetLinearMap(Index: Integer; Value: TSquare);
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
+
+    procedure ReplaceMap(const ADimensions: T3DPoint;
+      const AMap: TSquareDynArray);
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID); overload;
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer); overload;
+    constructor CreateSized(AMaster: TMaster; const AID: TComponentID;
+      ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer);
+
+    procedure Assign(Source: TMap);
 
     function InMap(const Position: T3DPoint): Boolean;
+    function InFloors(const Position: T3DPoint): Boolean; overload;
+    function InFloors(Floor: Integer): Boolean; overload;
 
     function PlayersOn(const Position: T3DPoint): Integer;
 
@@ -1177,9 +1206,6 @@ type
     property LinearMapCount: Integer read GetLinearMapCount;
     property LinearMap[Index: Integer]: TSquare
       read GetLinearMap write SetLinearMap;
-  published
-    property MaxViewSize: Integer read FMaxViewSize write SetMaxViewSize
-      default MinViewSize;
   end;
 
   /// Classe de TPlayerMode
@@ -1340,11 +1366,10 @@ type
     /// Verrou global pour le joueur
     FLock: TMultiReadExclusiveWriteSynchronizer;
 
-    FActionCoroutine: TCoroutine;  /// Coroutine d'appui sur touche
-    FActionIsMessage: Boolean;     /// L'action est un message
-    FActionKey: Word;              /// Touche appuyée
-    FActionKeyShift: TShiftState;  /// État des touches spéciales
-    FActionMessagePtr: Pointer;    /// Pointeur sur le message pour l'action
+    FActionLock: TCriticalSection;   /// Verrou pour les actions
+    FInActionLock: TCriticalSection; /// Verrou pour l'interieur des actions
+    FActionCoroutine: TCoroutine;    /// Coroutine d'appui sur touche
+    FActionMessagePtr: Pointer;      /// Pointeur sur le message pour l'action
 
     function GetPluginListStr: string;
     procedure SetPluginListStr(const Value: string);
@@ -1357,9 +1382,14 @@ type
 
     procedure PrivDraw(Context: TDrawSquareContext); override;
 
+    procedure MessagePressKey(var Msg: TPlayerPressKeyMessage);
+      message msgPressKey;
     procedure ActionProc(Coroutine: TCoroutine);
 
     procedure FoundObject(ObjectDef: TObjectDef);
+
+    function TryPause: Boolean;
+    procedure Resume;
 
     function GetVisible: Boolean;
 
@@ -1376,7 +1406,7 @@ type
 
     procedure PositionChanged; virtual;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
 
     procedure Dispatch(var Msg); override;
@@ -1475,6 +1505,91 @@ type
   end;
 
   {*
+    Classe de base pour les timers (événements à déclencher à un moment donné)
+    N'utilisez pas directement TTimerEntry, mais utilisez les méthodes de
+    TTimerList pour programmer des événements à déclencher.
+    @author sjrd
+    @version 5.0
+  *}
+  TTimerEntry = class(TFunLabyPersistent)
+  private
+    FTickCount: Cardinal; /// Tick-count auquel déclencher cet événement
+  public
+    constructor Create(ATickCount: Cardinal);
+    constructor ReCreate; virtual;
+
+    procedure Execute; virtual; abstract;
+  published
+    property TickCount: Cardinal read FTickCount write FTickCount;
+  end;
+
+  /// Classe de TTimerEntry
+  TTimerEntryClass = class of TTimerEntry;
+
+  {*
+    Timer qui envoie un message de notification à un objet
+    Un message de notification est un message sans aucun paramètre en dehors de
+    l'ID du message. Si le destinataire est un TPlayer, le message envoyé est
+    quand même garantit de type TPlayerMessage.
+    @author sjrd
+    @version 5.0
+  *}
+  TNotificationMsgTimerEntry = class(TTimerEntry)
+  private
+    FDestObject: TFunLabyComponent; /// Objet auquel envoyer le message
+    FMsgID: Word;                   /// ID du message
+  public
+    constructor Create(ATickCount: Cardinal;
+      ADestObject: TFunLabyComponent; AMsgID: Word);
+
+    procedure Execute; override;
+  published
+    property DestObject: TFunLabyComponent read FDestObject write FDestObject;
+    property MsgID: Word read FMsgID write FMsgID;
+  end;
+
+  {*
+    Collection de timers (événements déclenchés après un temps donné)
+    @author sjrd
+    @version 5.0
+  *}
+  TTimerCollection = class(TFunLabyCollection)
+  private
+    FMaster: TMaster;              /// Maître FunLabyrinthe
+    FThread: TMethodThread;        /// Thread de déclenchement des timers
+    FAddedEvent: TEvent;           /// Événement déclenché à l'ajout d'un timer
+    FLock: TCriticalSection;       /// Verrou d'accès à la liste des timers
+    FActionLock: TCriticalSection; /// Verrou d'exécution des actions
+
+    procedure ThreadProc(Thread: TMethodThread);
+
+    procedure Start;
+
+    function TryPause: Boolean;
+    procedure Resume;
+  protected
+    procedure BeginState(State: TPersistentState); override;
+    procedure EndState(State: TPersistentState); override;
+
+    procedure Notify(Item: TFunLabyPersistent;
+      Action: TListNotification); override;
+
+    function CreateItem(ItemClass: TFunLabyPersistentClass):
+      TFunLabyPersistent; override;
+  public
+    constructor Create(AMaster: TMaster);
+    destructor Destroy; override;
+
+    procedure BeforeDestruction; override;
+
+    procedure ScheduleNotificationMsg(Delay: Cardinal;
+      DestObject: TFunLabyComponent; MsgID: Word);
+    procedure ScheduleCustom(TimerEntry: TTimerEntry);
+
+    property Master: TMaster read FMaster;
+  end;
+
+  {*
     Maître FunLabyrinthe
     TMaster gère les différents composants de FunLabyrinthe.
     @author sjrd
@@ -1497,7 +1612,11 @@ type
     FEditing: Boolean;            /// Indique si on est en mode édition
     FTemporization: Integer;      /// Temporisation en millisecondes
     FBeginTickCount: Cardinal;    /// Tick count système au lancement
+    FPaused: Boolean;             /// Indique si le jeu est en pause
+    FPauseTickCount: Cardinal;    /// Tick count au moment de la pause
     FTerminated: Boolean;         /// Indique si la partie est terminée
+
+    FTimers: TTimerCollection;    /// Collection des timers
 
     function GetComponent(const ID: TComponentID): TFunLabyComponent;
     function GetSquareComponent(const ID: TComponentID): TSquareComponent;
@@ -1544,12 +1663,13 @@ type
     procedure Terminate;
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
+    procedure EndState(State: TPersistentState); override;
   public
     constructor Create(AEditing: Boolean);
     destructor Destroy; override;
 
     procedure StoreDefaults; override;
-    
+
     procedure Temporize;
 
     function ComponentExists(const ID: TComponentID): Boolean;
@@ -1560,6 +1680,9 @@ type
       Tool: TTool = nil; Obstacle: TObstacle = nil): TSquare; overload;
 
     procedure RegisterComponents(RegisterComponent: TRegisterComponentProc);
+
+    function TryPause: Boolean;
+    procedure Resume;
 
     property ImagesMaster: TImagesMaster read FImagesMaster;
 
@@ -1600,7 +1723,10 @@ type
 
     property Editing: Boolean read FEditing;
     property TickCount: Cardinal read GetTickCount;
+    property Paused: Boolean read FPaused;
     property Terminated: Boolean read FTerminated;
+
+    property Timers: TTimerCollection read FTimers;
   published
     property Temporization: Integer read FTemporization write SetTemporization
       default DefaultTemporization;
@@ -1751,6 +1877,7 @@ begin
     Result.SetSize(SquareSize, SquareSize);
     Result.Clear(clTransparent32);
     Result.DrawMode := dmBlend;
+    Result.CombineMode := cmMerge;
   except
     Result.Free;
     raise;
@@ -2425,25 +2552,17 @@ end;
 function TImagesMaster.LoadImage(const ImgName: string): TBitmap32;
 var
   TempBitmap: TBitmap32;
-  BaseImgName, XYStr, XStr, YStr: string;
   FileName: TFileName;
   SubRect: TRect;
 begin
   Result := nil;
   try
-    SplitToken(ImgName, '@', BaseImgName, XYStr);
+    ParseImgName(ImgName, FileName, SubRect);
 
-    FileName := ResolveImgName(BaseImgName);
     if FileName = '' then
       Exit;
 
     Result := LoadBitmapFromFile(FileName);
-
-    if SplitToken(XYStr, ',', XStr, YStr) then
-      SubRect := SquareRect(SquareSize*StrToInt(XStr),
-        SquareSize*StrToInt(YStr))
-    else
-      SubRect := BaseSquareRect;
 
     if not SameRect(Result.BoundsRect, SubRect) then
     begin
@@ -2452,13 +2571,14 @@ begin
       try
         Result := TBitmap32.Create;
         Result.SetSize(SquareSize, SquareSize);
-        Result.Draw(0, 0, TempBitmap);
+        Result.Draw(0, 0, SubRect, TempBitmap);
       finally
         TempBitmap.Free;
       end;
     end;
 
     Result.DrawMode := dmBlend;
+    Result.CombineMode := cmMerge;
   except
     FreeAndNil(Result);
   end;
@@ -2493,6 +2613,29 @@ begin
   except
     FImgList.Delete(FImgList.Count-1);
   end;
+end;
+
+{*
+  Analyse un nom d'image et en récupère ses différentes composantes
+  @param ImgName    Nom d'image à analyser
+  @param FileName   En sortie : nom du fichier image (ou '' si non trouvé)
+  @param XIndex     En sortie : index de la sous-image en X
+  @param YIndex     En sortie : index de la sous-image en Y
+*}
+procedure TImagesMaster.ParseImgName(const ImgName: string;
+  out FileName: TFileName; out SubRect: TRect);
+var
+  BaseImgName, XYStr, XStr, YStr: string;
+  XIndex, YIndex: Integer;
+begin
+  SplitToken(ImgName, '@', BaseImgName, XYStr);
+  SplitToken(XYStr, ',', XStr, YStr);
+
+  FileName := ResolveImgName(BaseImgName);
+
+  XIndex := StrToIntDef(XStr, 0);
+  YIndex := StrToIntDef(YStr, 0);
+  SubRect := SquareRect(XIndex * SquareSize, YIndex * SquareSize);
 end;
 
 {*
@@ -2636,6 +2779,7 @@ begin
   FCachedImg.SetSize(SquareSize, SquareSize);
   FCachedImg.Clear(clTransparent32);
   FCachedImg.DrawMode := dmBlend;
+  FCachedImg.CombineMode := cmMerge;
 end;
 
 {*
@@ -3180,6 +3324,31 @@ begin
 end;
 
 {*
+  Extrait un élément sans le libérer
+  @param Index   Index de l'élément à extraire
+  @return Élément extrait
+*}
+function TFunLabyCollection.ExtractItem(Index: Integer): TFunLabyPersistent;
+begin
+  Notify(Items[Index], lnExtracted);
+
+  Result := TFunLabyPersistent(FItems.Extract(Items[Index]));
+end;
+
+{*
+  Extrait un élément sans le libérer
+  @param Item   Élément à extraire
+  @return Élément extrait
+*}
+function TFunLabyCollection.ExtractItem(
+  Item: TFunLabyPersistent): TFunLabyPersistent;
+begin
+  Notify(Item, lnExtracted);
+
+  Result := TFunLabyPersistent(FItems.Extract(Item));
+end;
+
+{*
   Efface tous les éléments de la collection
 *}
 procedure TFunLabyCollection.Clear;
@@ -3381,6 +3550,7 @@ end;
 procedure TFunLabyFiler.DefinePublishedProperty(PropInfo: PPropInfo);
 var
   HasData: Boolean;
+  PropClass: TClass;
   SubInstance: TObject;
 begin
   if not Assigned(PropInfo.GetProc) then
@@ -3388,9 +3558,10 @@ begin
 
   if PropInfo.PropType^.Kind = tkClass then
   begin
+    PropClass := GetTypeData(PropInfo.PropType^).ClassType;
     SubInstance := TObject(GetOrdProp(Instance, PropInfo));
 
-    if not (SubInstance is TFunLabyComponent) then
+    if not PropClass.InheritsFrom(TFunLabyComponent) then
     begin
       if SubInstance is TFunLabyPersistent then
         DefinePersistent(PropInfo.Name, TFunLabyPersistent(SubInstance))
@@ -3844,24 +4015,20 @@ end;
 {-------------------------}
 
 {*
-  Crée une instance de TVisualComponent
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du composant
-  @param AName     Nom du composant
+  [@inheritDoc]
 *}
-constructor TVisualComponent.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TVisualComponent.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID);
+  inherited;
 
-  FName := AName;
+  FName := ID;
   FPainter := TPainter.Create(FMaster.ImagesMaster);
   FPainter.ImgNames.BeginUpdate;
   FStaticDraw := True;
 end;
 
 {*
-  Détruit l'instance
+  [@inheritDoc]
 *}
 destructor TVisualComponent.Destroy;
 begin
@@ -3881,9 +4048,7 @@ begin
 end;
 
 {*
-  Exécuté après la construction de l'objet
-  AfterConstruction est appelé après l'exécution du dernier constructeur.
-  N'appelez pas directement AfterConstruction.
+  [@inheritDoc]
 *}
 procedure TVisualComponent.AfterConstruction;
 var
@@ -3894,6 +4059,8 @@ begin
   FPainter.ImgNames.EndUpdate;
   if not FPainter.StaticDraw then
     FStaticDraw := False;
+
+  FStaticDraw := False; // Performance test without any caching
 
   if StaticDraw then
   begin
@@ -3996,9 +4163,9 @@ end;
   Crée une instance de TComponentCreator
   @param AID   ID de ce composant
 *}
-constructor TComponentCreator.Create(AMaster: TMaster; AID: TComponentID);
+constructor TComponentCreator.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID);
+  inherited;
 
   FIconPainter := TPainter.Create(AMaster.ImagesMaster);
   FCreatedComponents := TObjectList.Create(False);
@@ -4135,7 +4302,8 @@ end;
 *}
 constructor TPlugin.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID);
+  inherited;
+
   FPainterBefore := TPainter.Create(FMaster.ImagesMaster);
   FPainterBefore.ImgNames.BeginUpdate;
   FPainterAfter := TPainter.Create(FMaster.ImagesMaster);
@@ -4149,6 +4317,7 @@ destructor TPlugin.Destroy;
 begin
   FPainterAfter.Free;
   FPainterBefore.Free;
+
   inherited;
 end;
 
@@ -4178,6 +4347,7 @@ end;
 procedure TPlugin.AfterConstruction;
 begin
   inherited;
+
   FPainterBefore.ImgNames.EndUpdate;
   FPainterAfter.ImgNames.EndUpdate;
 end;
@@ -4264,10 +4434,9 @@ end;
   @param AID      ID de l'objet
   @param AName    Nom de l'objet
 *}
-constructor TObjectDef.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TObjectDef.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
   FDisplayInObjectList := True;
   FDisplayInStatusBar := True;
@@ -4368,10 +4537,9 @@ end;
   @param AName             Nom du terrain
   @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
 *}
-constructor TField.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TField.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
   if Assigned(FDelegateDrawTo) then
     FStaticDraw := FDelegateDrawTo.StaticDraw;
@@ -4585,34 +4753,31 @@ end;
 {----------------}
 
 {*
-  Crée une instance de TSquare
+  [@inheritDoc]
+*}
+constructor TSquare.Create(AMaster: TMaster; const AID: TComponentID);
+begin
+  inherited;
+
+  FTransient := True;
+end;
+
+{*
+  Crée une instance de TSquare et la configure
   @param AMaster     Maître FunLabyrinthe
   @param AID         ID de la case
-  @param AName       Nom de la case
   @param AField      Terrain
   @param AEffect     Effet
   @param ATool       Outil
   @param AObstacle   Obstacle
 *}
-constructor TSquare.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string; AField: TField; AEffect: TEffect; ATool: TTool;
-  AObstacle: TObstacle);
+constructor TSquare.CreateConfig(AMaster: TMaster; const AID: TComponentID;
+  AField: TField; AEffect: TEffect = nil; ATool: TTool = nil;
+  AObstacle: TObstacle = nil);
 begin
-  inherited Create(AMaster, AID, AName);
+  Create(AMaster, AID);
 
-  FTransient := True;
-
-  FStaticDraw := False;
-  FField := AField;
-  FEffect := AEffect;
-  FTool := ATool;
-  FObstacle := AObstacle;
-
-  FStaticDraw :=
-    ((not Assigned(FField)) or FField.StaticDraw) and
-    ((not Assigned(FEffect)) or FEffect.StaticDraw) and
-    ((not Assigned(FTool)) or FTool.StaticDraw) and
-    ((not Assigned(FObstacle)) or FObstacle.StaticDraw);
+  Configure(AField, AEffect, ATool, AObstacle);
 end;
 
 {*
@@ -4701,6 +4866,28 @@ procedure TSquare.DoDrawCeiling(Context: TDrawSquareContext);
 begin
   if Assigned(Field) then
     Field.DrawCeiling(Context);
+end;
+
+{*
+  Configure la case
+  @param AField      Terrain
+  @param AEffect     Effet
+  @param ATool       Outil
+  @param AObstacle   Obstacle
+*}
+procedure TSquare.Configure(AField: TField; AEffect: TEffect = nil;
+  ATool: TTool = nil; AObstacle: TObstacle = nil);
+begin
+  FField := AField;
+  FEffect := AEffect;
+  FTool := ATool;
+  FObstacle := AObstacle;
+
+  FStaticDraw :=
+    ((not Assigned(FField)) or FField.StaticDraw) and
+    ((not Assigned(FEffect)) or FEffect.StaticDraw) and
+    ((not Assigned(FTool)) or FTool.StaticDraw) and
+    ((not Assigned(FObstacle)) or FObstacle.StaticDraw);
 end;
 
 {*
@@ -4847,25 +5034,14 @@ end;
 {-------------}
 
 {*
-  Crée une instance de TMap vide
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de la carte
-*}
-constructor TMap.Create(AMaster: TMaster; const AID: TComponentID);
-begin
-  inherited Create(AMaster, AID);
-
-  FMaxViewSize := MinViewSize;
-end;
-
-{*
-  Crée une instance de TMap
+  Crée une instance de TMap et lui donne des dimensions
   @param AMaster       Maître FunLabyrinthe
   @param AID           ID de la carte
   @param ADimensions   Dimensions de la carte (en cases)
-  @param AZoneSize     Taille d'une zone de la carte
+  @param AZoneWidth    Largeur d'une zone de la carte
+  @param AZoneHeight   Hauteur d'une zone de la carte
 *}
-constructor TMap.Create(AMaster: TMaster; const AID: TComponentID;
+constructor TMap.CreateSized(AMaster: TMaster; const AID: TComponentID;
   ADimensions: T3DPoint; AZoneWidth, AZoneHeight: Integer);
 begin
   Create(AMaster, AID);
@@ -4992,18 +5168,6 @@ begin
 end;
 
 {*
-  Modifie la taille maximale d'une vue pour cette carte
-  @param Value   Nouvelle taille maximale
-*}
-procedure TMap.SetMaxViewSize(Value: Integer);
-begin
-  if Value < MinViewSize then
-    FMaxViewSize := MinViewSize
-  else
-    FMaxViewSize := Value;
-end;
-
-{*
   Tableau des cases indexé par leur position sur la carte
   @param Position   Position sur la carte
   @return La case à la position spécifiée
@@ -5111,6 +5275,38 @@ begin
 end;
 
 {*
+  Remplace la carte interne
+  @param ADimensions   Dimensions de la nouvelle carte
+  @param AMap          Nouvelle carte interne
+*}
+procedure TMap.ReplaceMap(const ADimensions: T3DPoint;
+  const AMap: TSquareDynArray);
+var
+  AOutsideOffset: Integer;
+begin
+  AOutsideOffset := ADimensions.X * ADimensions.Y * ADimensions.Z;
+
+  Assert(Length(AMap) = AOutsideOffset + ADimensions.Z);
+
+  FMap := AMap;
+  FDimensions := ADimensions;
+  FOutsideOffset := AOutsideOffset;
+end;
+
+{*
+  Assigne une carte à celle-ci
+  @param Source   Carte source
+*}
+procedure TMap.Assign(Source: TMap);
+begin
+  FDimensions := Source.FDimensions;
+  FZoneWidth := Source.FZoneWidth;
+  FZoneHeight := Source.FZoneHeight;
+  FMap := Copy(Source.FMap);
+  FOutsideOffset := Source.FOutsideOffset;
+end;
+
+{*
   Teste si une coordonnée est à l'intérieur de la carte
   @param Position   Coordonnée à tester
   @return True si la coordonnée est dans la carte, False sinon
@@ -5121,6 +5317,26 @@ begin
     (Position.X >= 0) and (Position.X < FDimensions.X) and
     (Position.Y >= 0) and (Position.Y < FDimensions.Y) and
     (Position.Z >= 0) and (Position.Z < FDimensions.Z);
+end;
+
+{*
+  Teste si une position est dans les bornes d'étages de la carte
+  @param Position   Position à tester
+  @return True si la position est dans les bornes d'étages, False sinon
+*}
+function TMap.InFloors(const Position: T3DPoint): Boolean;
+begin
+  Result := (Position.Z >= 0) and (Position.Z < FDimensions.Z);
+end;
+
+{*
+  Teste si un numéro d'étage est dans les bornes d'étages de la carte
+  @param Floor   Numéro d'étage à tester
+  @return True si le numéro est dans les bornes d'étages, False sinon
+*}
+function TMap.InFloors(Floor: Integer): Boolean;
+begin
+  Result := (Floor >= 0) and (Floor < FDimensions.Z);
 end;
 
 {*
@@ -5409,16 +5625,15 @@ end;
 {----------------}
 
 {*
-  Crée une instance de TPlayer
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du joueur
+  [@inheritDoc]
 *}
 constructor TPlayer.Create(AMaster: TMaster; const AID: TComponentID);
 var
   Dir: TDirection;
 begin
-  inherited Create(AMaster, AID, SDefaultPlayerName);
+  inherited;
 
+  Name := SDefaultPlayerName;
   FStaticDraw := False;
   FMode := TLabyrinthPlayerMode.Create(Self);
   FModeStack := TInterfaceList.Create;
@@ -5435,6 +5650,8 @@ begin
 
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
 
+  FActionLock := TCriticalSection.Create;
+  FInActionLock := TCriticalSection.Create;
   FActionCoroutine := TCoroutine.Create(ActionProc, clNextInvoke);
 end;
 
@@ -5446,6 +5663,8 @@ var
   Dir: TDirection;
 begin
   FActionCoroutine.Free;
+  FInActionLock.Free;
+  FActionLock.Free;
 
   FLock.Free;
 
@@ -5650,38 +5869,43 @@ begin
 end;
 
 {*
-  Procédure de la coroutine d'appui sur touche
-  @param Coroutine   Objet coroutine gérant cette procédure
+  Gestionnaire du message msgPressKey
+  @param Msg   Message
 *}
-procedure TPlayer.ActionProc(Coroutine: TCoroutine);
+procedure TPlayer.MessagePressKey(var Msg: TPlayerPressKeyMessage);
 var
   Context: TKeyEventContext;
   Plugins: TPluginDynArray;
   I: Integer;
 begin
-  if FActionIsMessage then
-  begin
+  Context := TKeyEventContext.Create(Self, Msg.Key, Msg.Shift);
+  try
+    GetPluginList(Plugins);
+    for I := 0 to Length(Plugins)-1 do
+    begin
+      Plugins[I].PressKey(Context);
+      if Context.Handled then
+        Exit;
+    end;
+
+    Mode.PressKey(Context);
+  finally
+    Context.Free;
+  end;
+end;
+
+{*
+  Procédure de la coroutine d'appui sur touche
+  @param Coroutine   Objet coroutine gérant cette procédure
+*}
+procedure TPlayer.ActionProc(Coroutine: TCoroutine);
+begin
+  FInActionLock.Acquire;
+  try
     // FActionMessagePtr has been set before this method is called.
     Dispatch(FActionMessagePtr^);
-  end else
-  begin
-    { FKeyPressKey and FKeyPressShift have been set before this method is
-      called. }
-
-    Context := TKeyEventContext.Create(Self, FActionKey, FActionKeyShift);
-    try
-      GetPluginList(Plugins);
-      for I := 0 to Length(Plugins)-1 do
-      begin
-        Plugins[I].PressKey(Context);
-        if Context.Handled then
-          Exit;
-      end;
-
-      Mode.PressKey(Context);
-    finally
-      Context.Free;
-    end;
+  finally
+    FInActionLock.Release;
   end;
 end;
 
@@ -5701,6 +5925,26 @@ begin
   finally
     FLock.EndWrite;
   end;
+end;
+
+{*
+  Essaye de mettre en pause le joueur
+  Si TryPause renvoie True, vous devez appelez Resume pour redémarrer le
+  joueur.
+  @return True si le joueur a été mis en pause, False sinon
+*}
+function TPlayer.TryPause: Boolean;
+begin
+  Result := FInActionLock.TryEnter;
+end;
+
+{*
+  Redémarre le joueur
+  Resume doit être appelé pour redémarrer le joueur après un TryPause réussi.
+*}
+procedure TPlayer.Resume;
+begin
+  FInActionLock.Release;
 end;
 
 {*
@@ -5851,12 +6095,12 @@ end;
 *}
 procedure TPlayer.PositionChanged;
 begin
-  if (Map <> nil) and (ViewBorderSize > Map.MaxViewSize) then
-    ViewBorderSize := Map.MaxViewSize;
 end;
 
 {*
-  [@inheritDoc]
+  Dispatche un message au joueur
+  Cette méthode ne peut *pas* être appelée hors code d'action du joueur !
+  Utilisez SendMessage à la place dans ce cas.
 *}
 procedure TPlayer.Dispatch(var Msg);
 begin
@@ -6643,37 +6887,50 @@ end;
   @param Shift   État des touches spéciales
 *}
 procedure TPlayer.PressKey(Key: Word; Shift: TShiftState);
+var
+  Msg: TPlayerPressKeyMessage;
 begin
-  Assert(not FActionCoroutine.CoroutineRunning);
+  Msg.MsgID := msgPressKey;
+  Msg.Key := Key;
+  Msg.Shift := Shift;
 
-  FActionIsMessage := False;
-  FActionKey := Key;
-  FActionKeyShift := Shift;
-
+  FActionLock.Acquire;
   try
+    Assert(not FActionCoroutine.CoroutineRunning);
+
+    FActionMessagePtr := @Msg;
     FActionCoroutine.Invoke;
-  except
-    FActionCoroutine.Reset;
-    raise;
+  finally
+    FActionLock.Release;
   end;
 end;
 
 {*
   Envoie un message au joueur dans le contexte de ses actions
+  Cette méthode ne peut *pas* être appelée depuis le code d'action du joueur !
+  Utilisez directement Dispatch à la place.
   @param Msg   Message à envoyer
 *}
 procedure TPlayer.SendMessage(var Msg);
+var
+  Acquired: Boolean;
 begin
-  Assert(not FActionCoroutine.CoroutineRunning);
-
-  FActionIsMessage := True;
-  FActionMessagePtr := @Msg;
+  repeat
+    FInActionLock.Acquire;
+    try
+      Acquired := FActionLock.TryEnter;
+    finally
+      FInActionLock.Release;
+    end;
+  until Acquired;
 
   try
+    Assert(not FActionCoroutine.CoroutineRunning);
+
+    FActionMessagePtr := @Msg;
     FActionCoroutine.Invoke;
-  except
-    FActionCoroutine.Reset;
-    raise;
+  finally
+    FActionLock.Release;
   end;
 end;
 
@@ -6684,13 +6941,18 @@ end;
   @param Shift   En sortie : État des touches spéciales lors de l'appui
 *}
 procedure TPlayer.WaitForKey(out Key: Word; out Shift: TShiftState);
+var
+  PressKeyMsg: ^TPlayerPressKeyMessage;
 begin
   Assert(FActionCoroutine.CoroutineRunning);
 
   FActionCoroutine.Yield;
 
-  Key := FActionKey;
-  Shift := FActionKeyShift;
+  PressKeyMsg := FActionMessagePtr;
+  Assert(PressKeyMsg.MsgID = msgPressKey);
+
+  Key := PressKeyMsg.Key;
+  Shift := PressKeyMsg.Shift;
 end;
 
 {*
@@ -6707,6 +6969,277 @@ begin
   repeat
     WaitForKey(AKey, AShift);
   until (AKey = Key) and (AShift = Shift);
+end;
+
+{-------------------}
+{ TTimerEntry class }
+{-------------------}
+
+{*
+  Crée une entrée de timer
+  @param ATickCount   Tick-count auquel déclencher ce timer
+*}
+constructor TTimerEntry.Create(ATickCount: Cardinal);
+begin
+  inherited Create;
+
+  FTickCount := ATickCount;
+end;
+
+{*
+  Recrée une entrée de timer lors du chargement
+*}
+constructor TTimerEntry.ReCreate;
+begin
+  inherited Create;
+end;
+
+{----------------------------}
+{ TNotificationMsgTimerEntry }
+{----------------------------}
+
+{*
+  Crée une entrée de timer de message de notification
+  @param ATickCount    Tick-count auquel déclencher ce timer
+  @param ADestObject   Objet destination
+  @param AMsgID        ID du message
+*}
+constructor TNotificationMsgTimerEntry.Create(ATickCount: Cardinal;
+  ADestObject: TFunLabyComponent; AMsgID: Word);
+begin
+  Assert(ADestObject <> nil);
+
+  inherited Create(ATickCount);
+
+  FDestObject := ADestObject;
+  FMsgID := AMsgID;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TNotificationMsgTimerEntry.Execute;
+var
+  Msg: TPlayerMessage;
+begin
+  Msg.MsgID := MsgID;
+
+  Assert(DestObject <> nil);
+
+  if DestObject is TPlayer then
+    TPlayer(DestObject).SendMessage(Msg)
+  else
+    DestObject.Dispatch(Msg);
+end;
+
+{------------------------}
+{ TTimerCollection class }
+{------------------------}
+
+{*
+  Crée une collection de timers
+*}
+constructor TTimerCollection.Create(AMaster: TMaster);
+begin
+  inherited Create;
+
+  FMaster := AMaster;
+  FThread := TMethodThread.Create(ThreadProc, True);
+  FAddedEvent := TEvent.Create(nil, False, False, '');
+  FLock := TCriticalSection.Create;
+  FActionLock := TCriticalSection.Create;
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TTimerCollection.Destroy;
+begin
+  FThread.Free;
+  FActionLock.Free;
+  FLock.Free;
+  FAddedEvent.Free;
+
+  inherited;
+end;
+
+{*
+  Méthode d'exécution du thread
+*}
+procedure TTimerCollection.ThreadProc(Thread: TMethodThread);
+var
+  Entry: TTimerEntry;
+  Timeout: Cardinal;
+begin
+  Timeout := 0;
+
+  while not Thread.Terminated do
+  begin
+    FActionLock.Acquire;
+    try
+      FLock.Acquire;
+      try
+        // Get entry
+        if Count = 0 then
+        begin
+          Entry := nil;
+          Timeout := INFINITE;
+        end else
+        begin
+          Entry := TTimerEntry(Items[0]);
+
+          if Entry.TickCount > Master.TickCount then
+          begin
+            Timeout := Entry.TickCount - Master.TickCount;
+            Entry := nil;
+          end else
+            ExtractItem(Entry);
+        end;
+      finally
+        FLock.Release;
+      end;
+
+      // If an entry was found, execute it and free it
+      if Entry <> nil then
+      begin
+        try
+          Entry.Execute;
+        finally
+          Entry.Free;
+        end;
+      end;
+    finally
+      FActionLock.Release;
+    end;
+
+    // If no entry was found: wait for a new one
+    if Entry = nil then
+      FAddedEvent.WaitFor(Timeout);
+  end;
+end;
+
+{*
+  Lance le thread d'exécution des timers
+*}
+procedure TTimerCollection.Start;
+begin
+  FThread.Resume;
+end;
+
+{*
+  Essaye de mettre le temps en pause
+  Si TryPause renvoie True, vous devez appelez Resume pour redémarrer le
+  temps.
+  @return True si le temps a été mis en pause, False sinon
+*}
+function TTimerCollection.TryPause: Boolean;
+begin
+  Result := FActionLock.TryEnter;
+end;
+
+{*
+  Redémarre le temps
+  Resume doit être appelé pour redémarrer le temps après un TryPause réussi.
+*}
+procedure TTimerCollection.Resume;
+begin
+  FActionLock.Release;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TTimerCollection.BeginState(State: TPersistentState);
+begin
+  inherited;
+
+  if State * [psReading, psWriting] <> [] then
+    FLock.Acquire;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TTimerCollection.EndState(State: TPersistentState);
+begin
+  if State * [psReading, psWriting] <> [] then
+    FLock.Release;
+
+  inherited;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TTimerCollection.Notify(Item: TFunLabyPersistent;
+  Action: TListNotification);
+begin
+  inherited;
+
+  if Action = lnAdded then
+    FAddedEvent.SetEvent;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TTimerCollection.CreateItem(
+  ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
+begin
+  Result := TTimerEntryClass(ItemClass).ReCreate;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TTimerCollection.BeforeDestruction;
+begin
+  inherited;
+
+  FThread.Terminate;
+  FAddedEvent.SetEvent;
+  if FThread.Suspended then
+    FThread.Resume;
+  FThread.WaitFor;
+end;
+
+{*
+  Programme un événement message de notification
+  @param Delay        Délai en ms avant de déclencher l'événement
+  @param DestObject   Objet destination
+  @param MsgID        ID du message
+*}
+procedure TTimerCollection.ScheduleNotificationMsg(Delay: Cardinal;
+  DestObject: TFunLabyComponent; MsgID: Word);
+begin
+  ScheduleCustom(TNotificationMsgTimerEntry.Create(
+    Master.TickCount + Delay, DestObject, MsgID));
+end;
+
+{*
+  Programme un événement personnalisé
+  @param TimerEntry   Entrée de timer à programmer
+*}
+procedure TTimerCollection.ScheduleCustom(TimerEntry: TTimerEntry);
+var
+  Index: Integer;
+begin
+  try
+    FLock.Acquire;
+    try
+      Index := 0;
+      while (Index < Count) and
+        (TTimerEntry(Items[Index]).TickCount < TimerEntry.TickCount) do
+        Inc(Index);
+
+      InsertItem(Index, TimerEntry);
+    finally
+      FLock.Release;
+    end;
+  except
+    TimerEntry.Free;
+    raise;
+  end;
 end;
 
 {----------------}
@@ -6742,6 +7275,8 @@ begin
   FTemporization := DefaultTemporization;
   FBeginTickCount := Windows.GetTickCount;
   FTerminated := False;
+
+  FTimers := TTimerCollection.Create(Self);
 end;
 
 {*
@@ -6751,6 +7286,8 @@ destructor TMaster.Destroy;
 var
   I: Integer;
 begin
+  FTimers.Free;
+
   if Assigned(FComponents) then
   begin
     for I := FComponents.Count-1 downto 0 do
@@ -6906,39 +7443,38 @@ var
   AObstacle: TObstacle;
   AName: string;
 begin
-  try
-    Result := Component[ID] as TSquare;
-  except
-    on Error: EComponentNotFound do
-    begin
-      Result := nil;
+  if ComponentExists(ID) then
+    Result := Component[ID] as TSquare
+  else
+  begin
+    Result := nil;
 
-      if NberCharInStr(SquareIDDelim, ID) = 3 then
-      try
-        AField    := Field   [GetXToken(ID, SquareIDDelim, 1)];
-        AEffect   := Effect  [GetXToken(ID, SquareIDDelim, 2)];
-        ATool     := Tool    [GetXToken(ID, SquareIDDelim, 3)];
-        AObstacle := Obstacle[GetXToken(ID, SquareIDDelim, 4)];
+    if NberCharInStr(SquareIDDelim, ID) = 3 then
+    try
+      AField    := Field   [GetXToken(ID, SquareIDDelim, 1)];
+      AEffect   := Effect  [GetXToken(ID, SquareIDDelim, 2)];
+      ATool     := Tool    [GetXToken(ID, SquareIDDelim, 3)];
+      AObstacle := Obstacle[GetXToken(ID, SquareIDDelim, 4)];
 
-        if Assigned(AField) then
-          AName := AField.Name
-        else
-          AName := sNothing;
-        if Assigned(AEffect) then
-          AName := Format(sEffectName, [AName, AEffect.Name]);
-        if Assigned(ATool) then
-          AName := Format(sToolName, [AName, ATool.Name]);
-        if Assigned(AObstacle) then
-          AName := Format(sObstacleName, [AName, AObstacle.Name]);
+      if Assigned(AField) then
+        AName := AField.Name
+      else
+        AName := sNothing;
+      if Assigned(AEffect) then
+        AName := Format(sEffectName, [AName, AEffect.Name]);
+      if Assigned(ATool) then
+        AName := Format(sToolName, [AName, ATool.Name]);
+      if Assigned(AObstacle) then
+        AName := Format(sObstacleName, [AName, AObstacle.Name]);
 
-        Result := TSquare.Create(Self, ID, AName,
-          AField, AEffect, ATool, AObstacle);
-      except
-      end;
-
-      if Result = nil then
-        raise;
+      Result := TSquare.CreateConfig(Self, ID,
+        AField, AEffect, ATool, AObstacle);
+      Result.Name := AName;
+    except
     end;
+
+    if Result = nil then
+      Result := Component[ID] as TSquare;
   end;
 end;
 
@@ -7172,7 +7708,10 @@ end;
 *}
 function TMaster.GetTickCount: Cardinal;
 begin
-  Result := Windows.GetTickCount - FBeginTickCount;
+  if Paused then
+    Result := FPauseTickCount
+  else
+    Result := Windows.GetTickCount - FBeginTickCount;
 end;
 
 {*
@@ -7276,6 +7815,19 @@ begin
 
     Inc(I);
   end;
+
+  Filer.DefinePersistent('Timers', Timers);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMaster.EndState(State: TPersistentState);
+begin
+  inherited;
+
+  if (psReading in State) and (not Editing) then
+    Timers.Start;
 end;
 
 {*
@@ -7346,10 +7898,68 @@ begin
       RegisterComponent(Components[I]);
 end;
 
+{*
+  Essaye de mettre le jeu en pause
+  Si TryPause renvoie True, vous devez appelez Resume pour redémarrer le jeu.
+  @return True si le jeu a été mis en pause, False sinon
+*}
+function TMaster.TryPause: Boolean;
+var
+  DonePlayerCount: Integer;
+  I: Integer;
+begin
+  DonePlayerCount := 0;
+
+  Result := Timers.TryPause;
+  if not Result then
+    Exit;
+
+  try
+    for I := 0 to PlayerCount-1 do
+    begin
+      Result := Players[I].TryPause;
+      if not Result then
+        Break;
+
+      Inc(DonePlayerCount);
+    end;
+
+    if Result then
+    begin
+      FPauseTickCount := TickCount;
+      FPaused := True;
+    end;
+  finally
+    if not Result then
+    begin
+      for I := 0 to DonePlayerCount-1 do
+        Players[I].Resume;
+      Timers.Resume;
+    end;
+  end;
+end;
+
+{*
+  Redémarre le jeu
+  Resume doit être appelé pour redémarrer le jeu après un TryPause réussi.
+*}
+procedure TMaster.Resume;
+var
+  I: Integer;
+begin
+  for I := 0 to PlayerCount-1 do
+    Players[I].Resume;
+  Timers.Resume;
+
+  SetTickCount(FPauseTickCount);
+  FPaused := False;
+end;
+
 initialization
   Randomize;
 
   FunLabyRegisterClass(TLabyrinthPlayerMode);
+  FunLabyRegisterClasses([TTimerEntry, TNotificationMsgTimerEntry]);
 
   with TMemIniFile.Create(Dir+fIniFileName) do
   try

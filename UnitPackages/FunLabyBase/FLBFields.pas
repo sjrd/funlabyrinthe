@@ -53,8 +53,7 @@ type
   *}
   TWall = class(TField)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -72,8 +71,7 @@ type
   protected
     procedure DoDraw(Context: TDrawSquareContext); override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Entering(Context: TMoveContext); override;
     procedure Entered(Context: TMoveContext); override;
@@ -92,8 +90,7 @@ type
   protected
     procedure DoDraw(Context: TDrawSquareContext); override;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -106,8 +103,7 @@ type
   *}
   TSky = class(TField)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -121,8 +117,7 @@ type
   *}
   TOutside = class(TGround)
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID;
-      const AName: string);
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Entered(Context: TMoveContext); override;
   end;
@@ -134,15 +129,13 @@ implementation
 {--------------}
 
 {*
-  Crée une instance de TWall
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du terrain
-  @param AName     Nom du terrain
+  [@inheritDoc]
 *}
-constructor TWall.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TWall.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
+
+  Name := SWall;
   Painter.ImgNames.Add(fWall);
 end;
 
@@ -159,18 +152,15 @@ end;
 {---------------}
 
 {*
-  Crée une instance de TWater
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du terrain
-  @param AName     Nom du terrain
+  [@inheritDoc]
 *}
-constructor TWater.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TWater.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
   FStaticDraw := Master.Editing;
 
+  Name := SWater;
   Painter.ImgNames.Add(fWater);
 end;
 
@@ -225,18 +215,15 @@ end;
 {--------------}
 
 {*
-  Crée une instance de THole
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du terrain
-  @param AName     Nom du terrain
+  [@inheritDoc]
 *}
-constructor THole.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor THole.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
 
   FStaticDraw := False;
 
+  Name := SHole;
   Painter.ImgNames.Add(fHole);
 end;
 
@@ -279,15 +266,13 @@ end;
 {-------------}
 
 {*
-  Crée une instance de TSky
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID du terrain
-  @param AName     Nom du terrain
+  [@inheritDoc]
 *}
-constructor TSky.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TSky.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName);
+  inherited;
+
+  Name := SSky;
   Painter.ImgNames.Add(fSky);
 end;
 
@@ -309,15 +294,14 @@ end;
 {-----------------}
 
 {*
-  Crée une instance de TOutside
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de l'effet de case
-  @param AName     Nom de la case
+  [@inheritDoc]
 *}
-constructor TOutside.Create(AMaster: TMaster; const AID: TComponentID;
-  const AName: string);
+constructor TOutside.Create(AMaster: TMaster; const AID: TComponentID);
 begin
-  inherited Create(AMaster, AID, AName, fOutside);
+  inherited;
+
+  Name := SOutside;
+  Painter.ImgNames.Add(fOutside);
 end;
 
 {*

@@ -69,6 +69,14 @@ resourcestring
     'L''ID ne doit contenir que des lettres non accentuées et des chiffres';
   SComponentAlreadyExists = 'Il existe déjà un composant avec cet ID';
 
+  SNoFieldTitle = 'Aucun terrain';
+  SNoField =
+    'Impossible de lancer cette opération car ce labyrinthe ne contient '+
+    'aucun terrain';
+
+  SResizeErrorTitle = 'Erreur de redimensionnement';
+  SCantResizeToEmpty = 'Impossible de rétrécir plus la carte';
+
 implementation
 
 end.
