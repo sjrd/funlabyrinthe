@@ -83,8 +83,6 @@ type
     @version 5.0
   *}
   TSecretWay = class(TObstacle)
-  protected
-    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
@@ -120,7 +118,7 @@ begin
   inherited;
 
   Name := SSilverBlock;
-  Painter.ImgNames.Add(fSilverBlock);
+  Painter.AddImage(fSilverBlock);
 end;
 
 {*
@@ -154,7 +152,7 @@ begin
   inherited;
 
   Name := SGoldenBlock;
-  Painter.ImgNames.Add(fGoldenBlock);
+  Painter.AddImage(fGoldenBlock);
 end;
 
 {*
@@ -188,18 +186,8 @@ begin
   inherited;
 
   Name := SSecretWay;
-  Painter.ImgNames.Add(fWall);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TSecretWay.DoDraw(Context: TDrawSquareContext);
-begin
-  inherited;
-
-  if Master.Editing then
-    DrawSquareText(Context, '!');
+  Painter.AddImage(fWall);
+  EditVisualTag := '!';
 end;
 
 {*

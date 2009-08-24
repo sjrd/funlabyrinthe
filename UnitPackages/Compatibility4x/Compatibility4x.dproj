@@ -42,6 +42,34 @@
       
       
       
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Composants Microsoft Office XP Sample Automation Server Wrapper</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcboffice2k100.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcbofficexp100.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
@@ -53,21 +81,22 @@
     <DelphiCompile Include="Compatibility4x.dpk">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="..\..\Programs\FunLabyEdit\FunLabyBase.dcp" />
-    <DCCReference Include="..\..\Programs\FunLabyEdit\FunLabyCore.dcp" />
-    <DCCReference Include="..\..\Programs\FunLabyEdit\FunLabyTools.dcp" />
-    <DCCReference Include="..\..\Programs\FunLabyEdit\rtl.dcp" />
-    <DCCReference Include="..\..\Programs\FunLabyEdit\SCL110.dcp" />
-    <DCCReference Include="..\..\Programs\FunLabyEdit\SDL110.dcp" />
-    <DCCReference Include="..\..\Programs\FunLabyEdit\SVCL110.dcp" />
-    <DCCReference Include="..\..\Programs\FunLabyEdit\vcl.dcp" />
-    <DCCReference Include="..\..\Programs\FunLabyEdit\VclSmp.dcp" />
-    <DCCReference Include="..\..\Programs\FunLabyEdit\vclx.dcp" />
+    <DCCReference Include="C4xBoat.pas" />
     <DCCReference Include="C4xCommon.pas" />
     <DCCReference Include="C4xComponents.pas" />
     <DCCReference Include="C4xFields.pas" />
     <DCCReference Include="C4xInterpreter.pas" />
     <DCCReference Include="C4xMain.pas" />
     <DCCReference Include="C4xSquaresTable.pas" />
+    <DCCReference Include="FunLabyBase.dcp" />
+    <DCCReference Include="FunLabyCore.dcp" />
+    <DCCReference Include="FunLabyTools.dcp" />
+    <DCCReference Include="rtl.dcp" />
+    <DCCReference Include="SCL110.dcp" />
+    <DCCReference Include="SDL110.dcp" />
+    <DCCReference Include="SVCL110.dcp" />
+    <DCCReference Include="vcl.dcp" />
+    <DCCReference Include="VclSmp.dcp" />
+    <DCCReference Include="vclx.dcp" />
   </ItemGroup>
 </Project>

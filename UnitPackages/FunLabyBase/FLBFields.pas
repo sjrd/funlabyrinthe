@@ -136,7 +136,7 @@ begin
   inherited;
 
   Name := SWall;
-  Painter.ImgNames.Add(fWall);
+  Painter.AddImage(fWall);
 end;
 
 {*
@@ -161,7 +161,7 @@ begin
   FStaticDraw := Master.Editing;
 
   Name := SWater;
-  Painter.ImgNames.Add(fWater);
+  Painter.AddImage(fWater);
 end;
 
 {*
@@ -224,7 +224,7 @@ begin
   FStaticDraw := False;
 
   Name := SHole;
-  Painter.ImgNames.Add(fHole);
+  Painter.AddImage(fHole);
 end;
 
 {*
@@ -273,7 +273,7 @@ begin
   inherited;
 
   Name := SSky;
-  Painter.ImgNames.Add(fSky);
+  Painter.AddImage(fSky);
 end;
 
 {*
@@ -301,7 +301,7 @@ begin
   inherited;
 
   Name := SOutside;
-  Painter.ImgNames.Add(fOutside);
+  Painter.AddImage(fOutside);
 end;
 
 {*

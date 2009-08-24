@@ -292,7 +292,7 @@ begin
   inherited;
 
   Name := SBoat;
-  Painter.ImgNames.Add(fBoat);
+  Painter.AddImage(fBoat);
 end;
 
 {*
@@ -362,7 +362,7 @@ constructor TBoatCreator.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
 
-  IconPainter.ImgNames.Add(fBoat);
+  IconPainter.AddImage(fBoat);
 end;
 
 {*

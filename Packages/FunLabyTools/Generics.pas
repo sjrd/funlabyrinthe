@@ -254,7 +254,7 @@ begin
 
   Name := AName;
   if AImgName <> '' then
-    Painter.ImgNames.Add(AImgName);
+    Painter.AddImage(AImgName);
 end;
 
 {*
@@ -292,7 +292,7 @@ begin
   Create(AMaster, AID);
 
   Name := AName;
-  Painter.ImgNames.Add(AImgName);
+  Painter.AddImage(AImgName);
 end;
 
 {*
@@ -380,10 +380,10 @@ begin
   FStaticDraw := Master.Editing;
 
   FDownPainter := TPainter.Create(Master.ImagesMaster);
-  FDownPainter.ImgNames.BeginUpdate;
+  FDownPainter.BeginUpdate;
 
-  Painter.ImgNames.Add(fButton);
-  DownPainter.ImgNames.Add(fSunkenButton);
+  Painter.AddImage(fButton);
+  DownPainter.AddImage(fSunkenButton);
 end;
 
 {*
@@ -414,7 +414,7 @@ procedure TPushButton.AfterConstruction;
 begin
   inherited;
   
-  FDownPainter.ImgNames.EndUpdate;
+  FDownPainter.EndUpdate;
 end;
 
 {----------------}
@@ -432,10 +432,10 @@ begin
   FOffPainter := Painter;
 
   FOnPainter := TPainter.Create(Master.ImagesMaster);
-  FOnPainter.ImgNames.BeginUpdate;
+  FOnPainter.BeginUpdate;
 
-  OffPainter.ImgNames.Add(fSwitchOff);
-  OnPainter.ImgNames.Add(fSwitchOn);
+  OffPainter.AddImage(fSwitchOff);
+  OnPainter.AddImage(fSwitchOn);
 end;
 
 {*
@@ -466,7 +466,7 @@ procedure TSwitch.AfterConstruction;
 begin
   inherited;
   
-  FOnPainter.ImgNames.EndUpdate;
+  FOnPainter.EndUpdate;
 end;
 
 {*
@@ -496,7 +496,7 @@ begin
   inherited;
 
   Name := AName;
-  Painter.ImgNames.Add(AImgName);
+  Painter.AddImage(AImgName);
 end;
 
 {--------------------}
@@ -529,7 +529,7 @@ begin
   FFindMessage := AFindMessage;
 
   if AImgName <> '' then
-    Painter.ImgNames.Add(AImgName);
+    Painter.AddImage(AImgName);
 end;
 
 {*

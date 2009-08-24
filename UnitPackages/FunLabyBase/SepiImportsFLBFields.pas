@@ -184,11 +184,11 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TWall, 52, 52);
-  CheckInstanceSize(TWater, 52, 52);
-  CheckInstanceSize(THole, 52, 52);
-  CheckInstanceSize(TSky, 52, 52);
-  CheckInstanceSize(TOutside, 52, 52);
+  CheckInstanceSize(TWall, 60, 60);
+  CheckInstanceSize(TWater, 60, 60);
+  CheckInstanceSize(THole, 60, 60);
+  CheckInstanceSize(TSky, 60, 60);
+  CheckInstanceSize(TOutside, 60, 60);
   {$ASSERTIONS OFF}
 end;
 

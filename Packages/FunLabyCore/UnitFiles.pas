@@ -183,12 +183,22 @@ type
   TCreateUnitFileProc = function(BPLHandler: TBPLUnitFile; Master: TMaster;
     Params: TStrings): IUnitFile50;
 var
+  OldCurrentDir: string;
   CreateUnitFile: TCreateUnitFileProc;
 begin
   // TODO Avoid loading the same package again and again
-  FHandle := LoadPackage(FileName);
-  if FHandle = 0 then
-    raise EInOutError.CreateFmt(SCantLoadPackage, [FileName]);
+
+  SetLength(OldCurrentDir, GetCurrentDirectory(0, nil)-1);
+  GetCurrentDirectory(Length(OldCurrentDir)+1, PChar(OldCurrentDir));
+
+  SetCurrentDirectory(PChar(fUnitsDir));
+  try
+    FHandle := LoadPackage(FileName);
+    if FHandle = 0 then
+      raise EInOutError.CreateFmt(SCantLoadPackage, [FileName]);
+  finally
+    SetCurrentDirectory(PChar(OldCurrentDir));
+  end;
 
   CreateUnitFile := TCreateUnitFileProc(
     GetProcAddress(FHandle, CreateUnitFileProc));

@@ -9,15 +9,8 @@ unit C4xFields;
 interface
 
 uses
-  ScUtils, SdDialogs, FunLabyUtils, MapTools, Generics, FLBFields, FLBPlank,
-  FLBCommon, C4xComponents;
-
-const
-  idOldWater = 'OldWater'; /// ID de l'eau ancienne version
-  idOldHole = 'OldHole';   /// ID du trou ancienne version
-
-  /// ID du plug-in de hacks de compatibilité
-  idCompatibilityHacksPlugin = 'CompatibilityHacksPlugin';
+  Windows, ScUtils, SdDialogs, FunLabyUtils, MapTools, Generics,
+  FLBFields, FLBPlank, FLBCommon, C4xComponents;
 
 type
   {*
@@ -31,7 +24,7 @@ type
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   protected
-    function GetIsDesignable: Boolean; override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     procedure Entering(Context: TMoveContext); override;
   end;
@@ -47,20 +40,9 @@ type
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   protected
-    function GetIsDesignable: Boolean; override;
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     procedure Entering(Context: TMoveContext); override;
-  end;
-
-  {*
-    Plug-in effectuant quelques "hacks" pour rester compatible avec la 4.x
-    @author sjrd
-    @version 5.0
-  *}
-  TCompatibilityHacksPlugin = class(TPlugin)
-  public
-    procedure Moving(Context: TMoveContext); override;
-    procedure Moved(Context: TMoveContext); override;
   end;
 
 implementation
@@ -81,9 +63,9 @@ end;
 {*
   [@inheritDoc]
 *}
-function TOldWater.GetIsDesignable: Boolean;
+procedure TOldWater.DoDraw(Context: TDrawSquareContext);
 begin
-  Result := False;
+  Painter.Draw(Context);
 end;
 
 {*
@@ -118,7 +100,8 @@ begin
         if DestObstacle = SrcObstacle then
         begin
           TPlankSquare.Create(Master, Map, Pos, Player);
-          Master.Temporize;
+          UpdateView(Player);
+          Temporize;
           Exit;
         end;
       end;
@@ -146,9 +129,9 @@ end;
 {*
   [@inheritDoc]
 *}
-function TOldHole.GetIsDesignable: Boolean;
+procedure TOldHole.DoDraw(Context: TDrawSquareContext);
 begin
-  Result := False;
+  Painter.Draw(Context);
 end;
 
 {*
@@ -180,15 +163,18 @@ begin
         if DestObstacle = SrcObstacle then
         begin
           TPlankSquare.Create(Master, Map, Pos, Player);
-          Master.Temporize;
+          UpdateView(Player);
+          Temporize;
           Exit;
         end;
       end;
 
-      if (Map[Behind].Field is TOldWater) and (SrcSquare.Field is TOldWater) then
+      if (Map[Behind].Field is TOldWater) and
+        (SrcSquare.Field is TOldWater) then
       begin
         TPlankSquare.Create(Master, Map, Pos, Player);
-        Master.Temporize;
+        UpdateView(Player);
+        Temporize;
         Exit;
       end;
     end;
@@ -196,34 +182,6 @@ begin
     if KeyPressed then
       Player.ShowMessage(sCantGoOnHole);
     Cancel;
-  end;
-end;
-
-{---------------------------------}
-{ TCompatibilityHacksPlugin class }
-{---------------------------------}
-
-{*
-  [@inheritDoc]
-*}
-procedure TCompatibilityHacksPlugin.Moved(Context: TMoveContext);
-begin
-  with Context do
-  begin
-    if Square.Field is TOldWater then
-      Player.DoAction(actGoOnWater);
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TCompatibilityHacksPlugin.Moving(Context: TMoveContext);
-begin
-  with Context do
-  begin
-    if (Square.Field is TWater) and (not (Square.Field is TOldWater)) then
-      Square := ChangeField(Square, idOldWater);
   end;
 end;
 

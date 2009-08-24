@@ -44,10 +44,9 @@ type
   *}
   TSimpleSquare = class(TFunLabyPersistent)
   private
-    FID: TComponentID;   /// ID du composant
-    FName: string;       /// Nom
-    FPainter: TPainter;  /// Peintre
-    FImgNames: TStrings; /// Noms des images
+    FID: TComponentID;  /// ID du composant
+    FName: string;      /// Nom
+    FPainter: TPainter; /// Peintre
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
 
@@ -57,7 +56,7 @@ type
     procedure ProduceDefaultImgNames(Code: TStrings);
     procedure ProduceInnerClass(Code: TStrings); virtual;
 
-    function GetCanEditImgNames: Boolean; virtual;
+    function GetCanEditPainter: Boolean; virtual;
   public
     constructor Create(AImagesMaster: TImagesMaster); overload; virtual;
     constructor Create(AImagesMaster: TImagesMaster; const AID: TComponentID;
@@ -76,11 +75,10 @@ type
 
     property ID: TComponentID read FID;
     property ParentClassName: string read GetParentClassName;
-    property Painter: TPainter read FPainter;
-    property CanEditImgNames: Boolean read GetCanEditImgNames;
+    property CanEditPainter: Boolean read GetCanEditPainter;
   published
     property Name: string read FName write FName;
-    property ImgNames: TStrings read FImgNames stored GetCanEditImgNames;
+    property Painter: TPainter read FPainter;
   end;
 
   /// Classe de TSimpleSquare
@@ -237,6 +235,12 @@ const {don't localize}
 
 implementation
 
+type
+  TPainterAccess = class(TPainter)
+  public
+    property Description;
+  end;
+
 {---------------------}
 { TSimpleSquare class }
 {---------------------}
@@ -250,7 +254,6 @@ begin
   inherited Create;
 
   FPainter := TPainter.Create(AImagesMaster);
-  FImgNames := FPainter.ImgNames;
 end;
 
 {*
@@ -284,6 +287,8 @@ end;
 procedure TSimpleSquare.DefineProperties(Filer: TFunLabyFiler);
 begin
   Filer.DefineFieldProperty('ID', TypeInfo(TComponentID), @FID, True);
+  Filer.DefineStrings('Description', TPainterAccess(Painter).Description,
+    nil, False);
 
   inherited;
 end;
@@ -306,12 +311,13 @@ var
   Line: string;
   I: Integer;
 begin
-  if (not CanEditImgNames) or (ImgNames.Count = 0) then
+  if (not CanEditPainter) or (Painter.IsEmpty) then
     Exit;
 
   Line := '  image';
-  for I := 0 to ImgNames.Count-1 do
-    Line := Line + ' ' + StrToStrRepres(ImgNames[I]) + ',';
+  with TPainterAccess(Painter) do
+    for I := 0 to Description.Count-1 do
+      Line := Line + ' ' + StrToStrRepres(Description[I]) + ',';
   Line[Length(Line)] := ';';
 
   Code.Add(Line);
@@ -332,7 +338,7 @@ end;
   Indique si on peut modifier les noms des images à afficher
   @return True si on peut les modifier, False sinon
 *}
-function TSimpleSquare.GetCanEditImgNames: Boolean;
+function TSimpleSquare.GetCanEditPainter: Boolean;
 begin
   Result := True;
 end;

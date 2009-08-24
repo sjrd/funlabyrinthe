@@ -156,6 +156,7 @@ Name: "regext\flp"; Description: "{cm:RegFLP}"       ; GroupDescription: {cm:Add
 Source: "..\FunLabyCore.bpl";       DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
 Source: "..\FunLabyTools.bpl";      DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
 Source: "..\FunLabyEditPlugin.bpl"; DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
+Source: "..\FunLabyEditTools.bpl";  DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
 Source: "..\FunLaby.exe";           DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
 Source: "..\GeneLaby.exe";          DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
 Source: "..\FunLabyEdit.exe";       DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion

@@ -19,6 +19,8 @@ const {don't localize}
   idGrassSquare = 'Grass---'; /// ID de la case herbe
   idWaterSquare = 'Water---'; /// ID de la case eau
 
+  DefaultSquaresImgName = 'Cases'; /// Fichier Cases par défaut
+
 resourcestring
   SCategoryButtons = 'Boutons'; /// Catégorie des boutons
 

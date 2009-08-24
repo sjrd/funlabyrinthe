@@ -131,7 +131,7 @@ begin
     EditID.Text := CurrentSquare.ID;
     EditName.Text := CurrentSquare.Name;
     EditParentClass.Text := CurrentSquare.ParentClassName;
-    ButtonEditImage.Enabled := CurrentSquare.CanEditImgNames;
+    ButtonEditImage.Enabled := CurrentSquare.CanEditPainter;
 
     EditName.OnChange := EditNameChange;
 
@@ -172,7 +172,7 @@ end;
 *}
 procedure TFrameEditSimpleSquare.ButtonEditImageClick(Sender: TObject);
 begin
-  Assert(CurrentSquare.CanEditImgNames);
+  Assert(CurrentSquare.CanEditPainter);
 
   if TFormPainterEditor.EditPainter(CurrentSquare.Painter) then
     ImageChanged;

@@ -12,8 +12,8 @@ interface
 uses
   SysUtils, Classes, Graphics, StrUtils, Contnrs, ScUtils, ScStrUtils,
   ScWindows, SdDialogs, FunLabyUtils, FilesUtils, MapTools, FLBFields,
-  FLBSimpleObjects, FLBPlank, FLBBoat, FLBCommon, C4xComponents,
-  C4xSquaresTable, C4xCommon, GR32;
+  FLBSimpleObjects, FLBPlank, FLBCommon, C4xComponents,
+  C4xSquaresTable, C4xCommon, C4xBoat, GR32;
 
 resourcestring
   sIfStatCannotMixAndOr = 'Ne peut mélanger les Et et les Ou';
@@ -1022,8 +1022,10 @@ begin
         Count[Player] := TransformValue(Count[Player]);
 
     srColor: Player.Color := TransformValue(Player.Color);
+
     srTemporization:
-      Master.Temporization := TransformValue(Master.Temporization);
+      Player.DefaultTemporization := TransformValue(
+        Player.DefaultTemporization);
 
     srX, srY, srZ:
     begin
@@ -1176,7 +1178,7 @@ begin
   Square := GetSquareParam(Params, Map);
   SquareRef := GetSquareReference(Params, True);
 
-  if AnsiStartsStr(PrefixUnderBoat, Square.ID) then
+  if Square.Field is TOldBoat then
     Replacement := Master.Square[idWaterSquare]
   else
     Replacement := Master.Square[idGrassSquare];
@@ -1490,7 +1492,8 @@ begin
     (Master.ObjectDef[idPlanks].Count[Player] > 0) then
   begin
     TPlankSquare.Create(Master, Map, Position, Player);
-    Master.Temporize;
+    UpdateView(Player);
+    Sleep(Player.DefaultTemporization);
 
     Successful := True;
     DoNextPhase := True;
@@ -1498,7 +1501,7 @@ begin
 
   if HasMoved and (not Same3DPoint(Player.Position, PlayerPos)) then
   begin
-    Master.Temporize;
+    Sleep(Player.DefaultTemporization);
     Player.MoveTo(PlayerPos);
     if DoNextPhase then
       Player.Direction := diNone;
@@ -1526,7 +1529,6 @@ class procedure TActionsInterpreter.Execute(ACounter: PInteger;
   out AHasMoved, AHasShownMsg, ASuccessful: Boolean;
   const AInactive: TComponentID);
 var
-  UsedBoat: TBoat;
   I: Integer;
 begin
   with Create do
@@ -1552,12 +1554,7 @@ begin
       Point3DToString(PointBehind(Position, Player.Direction));
 
     // Détermination du numéro de la barque
-    UsedBoat := (Master.Plugin[idBoatPlugin] as TBoatPlugin).GetUsedBoat(
-      Player);
-    if UsedBoat is TNumberedBoat then
-      Boat := TNumberedBoat(UsedBoat).Number
-    else
-      Boat := 0;
+    Boat := Player.Attribute[attrBoatNumber];
 
     // Construction du tableau des références
     SetLength(ReferencesStrings,

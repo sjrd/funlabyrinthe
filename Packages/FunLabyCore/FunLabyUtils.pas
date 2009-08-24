@@ -378,6 +378,8 @@ type
     FCancelled: Boolean;  /// True si le déplacement a été annulé
     FGoOnMoving: Boolean; /// True s'il faut réitérer le déplacement
 
+    FTemporization: Cardinal; /// Temporisation de ce contexte
+
     procedure SwitchToSrc;
     procedure SwitchToDest;
 
@@ -394,6 +396,8 @@ type
       AKey: Word = 0; AShift: TShiftState = []); overload;
 
     procedure Cancel;
+
+    procedure Temporize;
 
     property Player: TPlayer read FPlayer;
 
@@ -416,6 +420,8 @@ type
 
     property Cancelled: Boolean read FCancelled write FCancelled;
     property GoOnMoving: Boolean read FGoOnMoving write FGoOnMoving;
+
+    property Temporization: Cardinal read FTemporization write FTemporization;
   end;
 
   {*
@@ -657,15 +663,13 @@ type
     FImgList: TObjectList; /// Liste d'images interne
     FImgNames: TStrings;   /// Liste des noms des images
 
-    function ResolveImgName(const BaseImgName: string): TFileName;
     function LoadImage(const ImgName: string): TBitmap32;
     function Add(const ImgName: string): Integer;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure ParseImgName(const ImgName: string; out FileName: TFileName;
-      out SubRect: TRect);
+    function ResolveImgName(const ImgName: string): TFileName;
 
     function IndexOf(const ImgName: string): Integer;
 
@@ -678,7 +682,8 @@ type
     procedure Draw(const ImgName: string; Bitmap: TBitmap32;
       X: Integer = 0; Y: Integer = 0); overload;
 
-    function GetInternalBitmap(Index: Integer): TBitmap32;
+    function GetInternalBitmap(Index: Integer): TBitmap32; overload;
+    function GetInternalBitmap(const ImgName: string): TBitmap32; overload;
   end;
 
   {*
@@ -692,36 +697,49 @@ type
   private
     FMaster: TImagesMaster; /// Maître d'images
 
-    FImgNames: TStrings;           /// Liste des noms des images
-    FDefaultImgNames: TStrings;    /// Noms d'images par défaut
+    FDescription: TStrings;        /// Description de l'image peinte
+    FDefaultDescription: TStrings; /// Description par défaut
     FCachedImgIndex: Integer;      /// Index de l'image dans le maître d'images
-    FCachedImg: TAnimatedBitmap32; /// Copie cache de l'image résultante
+    FCachedImg: TBitmap32;         /// Copie cache de l'image résultante
 
     FStaticDraw: Boolean; /// Indique si ce peintre dessine une image statique
+    FNeedCache: Boolean;  /// Indique si une image cache est nécessaire
+    FSize: TPoint;        /// Taille de ce peintre
 
-    procedure UpdateStaticDraw;
+    procedure Measure;
     procedure NeedCachedImg;
     procedure DrawStatic;
     procedure DrawNotStatic;
 
-    procedure ImgNamesChange(Sender: TObject);
-
-    function IsImgNamesStored: Boolean;
+    procedure DescriptionChange(Sender: TObject);
 
     function GetIsEmpty: Boolean;
   protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
     procedure StoreDefaults; override;
+
+    procedure ParseDescriptionLine(const Description: string;
+      out Bitmap: TBitmap32; out SubRect: TRect);
+
+    property Description: TStrings read FDescription;
   public
     constructor Create(AMaster: TImagesMaster);
     destructor Destroy; override;
+
+    procedure Clear;
+    procedure AddImage(const ImgName: string);
+    procedure AddImageRect(const ImgName: string; const SubRect: TRect);
+    procedure Assign(Source: TPainter);
+
+    procedure BeginUpdate;
+    procedure EndUpdate;
 
     procedure Draw(Context: TDrawSquareContext);
 
     property Master: TImagesMaster read FMaster;
     property StaticDraw: Boolean read FStaticDraw;
+    property Size: TPoint read FSize;
     property IsEmpty: Boolean read GetIsEmpty;
-  published
-    property ImgNames: TStrings read FImgNames stored IsImgNamesStored;
   end;
 
   {*
@@ -816,12 +834,16 @@ type
   *}
   TVisualComponent = class(TFunLabyComponent)
   private
-    FDefaultName: string;  /// Nom par défaut du composant
-    FName: string;         /// Nom du composant
-    FPainter: TPainter;    /// Peintre par défaut
+    FName: string;                 /// Nom du composant
+    FDefaultName: string;          /// Name par défaut
+    FPainter: TPainter;            /// Peintre
+    FEditVisualTag: string;        /// Tag visuel visible uniquement à l'édition
+    FDefaultEditVisualTag: string; /// EditVisualTag par défaut
+
     FCachedImg: TBitmap32; /// Image en cache (pour les dessins invariants)
 
     function IsNameStored: Boolean;
+    function IsEditVisualTagStored: Boolean;
 
     procedure PrivDraw(Context: TDrawSquareContext); virtual;
   protected
@@ -832,6 +854,7 @@ type
     function GetHint: string; override;
 
     procedure DoDraw(Context: TDrawSquareContext); virtual;
+    procedure DoDrawEditVisualTag(Context: TDrawSquareContext); virtual;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
@@ -848,6 +871,8 @@ type
   published
     property Name: string read FName write FName stored IsNameStored;
     property Painter: TPainter read FPainter;
+    property EditVisualTag: string read FEditVisualTag write FEditVisualTag
+      stored IsEditVisualTagStored;
   end;
 
   {*
@@ -1080,8 +1105,8 @@ type
   {*
     Représente une case du jeu
     TSquare représente une case du jeu. Une case possède quatre composantes : le
-    terrain, l'effet, l'outil et l'obstacle. Chacune de ces composantes est
-    optionnelle.
+    terrain, l'effet, l'outil et l'obstacle. Le terrain est obligatoire, tandis
+    que les trois autres composantes sont optionnelles.
     @author sjrd
     @version 5.0
   *}
@@ -1363,6 +1388,8 @@ type
     FDrawMode: TPlayerDrawMode;                  /// Mode de dessin
     FDirPainters: array[TDirection] of TPainter; /// Peintres par direction
 
+    FDefaultTemporization: Cardinal; /// Temporisation par défaut
+
     /// Verrou global pour le joueur
     FLock: TMultiReadExclusiveWriteSynchronizer;
 
@@ -1432,8 +1459,9 @@ type
     function DoAction(const Action: TPlayerAction; Param: Integer = 0): Boolean;
 
     procedure Move(Dir: TDirection; Key: Word; Shift: TShiftState;
-      out Redo: Boolean); overload;
-    procedure Move(Dir: TDirection; out Redo: Boolean); overload;
+      out Redo: Boolean; out RedoDelay: Cardinal); overload;
+    procedure Move(Dir: TDirection; out Redo: Boolean;
+      out RedoDelay: Cardinal); overload;
     procedure Move(Dir: TDirection; Key: Word; Shift: TShiftState); overload;
     procedure Move(Dir: TDirection); overload;
 
@@ -1444,15 +1472,14 @@ type
 
     procedure MoveTo(Context: TMoveContext; Execute: Boolean = True); overload;
     procedure MoveTo(const Dest: T3DPoint; Execute: Boolean;
-      out Redo: Boolean); overload;
+      out Redo: Boolean; out RedoDelay: Cardinal); overload;
     procedure MoveTo(const Dest: T3DPoint; Execute: Boolean = False); overload;
     procedure MoveTo(const Dest: TQualifiedPos; Execute: Boolean;
-      out Redo: Boolean); overload;
+      out Redo: Boolean; out RedoDelay: Cardinal); overload;
     procedure MoveTo(const Dest: TQualifiedPos;
       Execute: Boolean = False); overload;
 
-    procedure Temporize;
-    procedure NaturalMoving;
+    procedure NaturalMoving(Redo: Boolean; RedoDelay: Cardinal);
 
     procedure ChangePosition(AMap: TMap; const APosition: T3DPoint);
 
@@ -1502,6 +1529,10 @@ type
     property EastPainter: TPainter index diEast read GetPainters;
     property SouthPainter: TPainter index diSouth read GetPainters;
     property WestPainter: TPainter index diWest read GetPainters;
+
+    property DefaultTemporization: Cardinal
+      read FDefaultTemporization write FDefaultTemporization
+      default FunLabyUtils.DefaultTemporization;
   end;
 
   {*
@@ -1610,7 +1641,6 @@ type
     FPlayers: TObjectList;        /// Liste des joueurs
 
     FEditing: Boolean;            /// Indique si on est en mode édition
-    FTemporization: Integer;      /// Temporisation en millisecondes
     FBeginTickCount: Cardinal;    /// Tick count système au lancement
     FPaused: Boolean;             /// Indique si le jeu est en pause
     FPauseTickCount: Cardinal;    /// Tick count au moment de la pause
@@ -1652,8 +1682,6 @@ type
     function GetPlayerCount: Integer;
     function GetPlayers(Index: Integer): TPlayer;
 
-    procedure SetTemporization(Value: Integer);
-
     function GetTickCount: Cardinal;
     procedure SetTickCount(Value: Cardinal);
 
@@ -1669,8 +1697,6 @@ type
     destructor Destroy; override;
 
     procedure StoreDefaults; override;
-
-    procedure Temporize;
 
     function ComponentExists(const ID: TComponentID): Boolean;
 
@@ -1727,9 +1753,6 @@ type
     property Terminated: Boolean read FTerminated;
 
     property Timers: TTimerCollection read FTimers;
-  published
-    property Temporization: Integer read FTemporization write SetTemporization
-      default DefaultTemporization;
   end;
 
 const {don't localize}
@@ -1803,8 +1826,8 @@ function FunLabyFindClass(const ClassName: string): TFunLabyPersistentClass;
 implementation
 
 uses
-  IniFiles, StrUtils, Forms, ScStrUtils, ScDelphiLanguage, ScCompilerMagic,
-  GraphicEx;
+  IniFiles, StrUtils, Forms, Math, ScStrUtils, ScDelphiLanguage,
+  ScCompilerMagic, GraphicEx;
 
 const
   /// Code de format d'un flux carte (TMap) (correspond à '.flm')
@@ -2343,11 +2366,25 @@ end;
   Dessine un bitmap de case dans ce contexte
 *}
 procedure TDrawSquareContext.DrawSquareBitmap(SquareBitmap: TBitmap32);
+var
+  SrcRect: TRect;
 begin
+  SrcRect := SquareBitmap.BoundsRect;
+  if (SrcRect.Right > SquareSize) or (SrcRect.Bottom > SquareSize) then
+  begin
+    if IsNowhere then
+      SrcRect := BaseSquareRect
+    else
+      SrcRect := FunLabyUtils.SquareRect(
+        Pos.X mod (SrcRect.Right div SquareSize) * SquareSize,
+        Pos.Y mod (SrcRect.Bottom div SquareSize) * SquareSize);
+  end;
+
   if SquareBitmap is TAnimatedBitmap32 then
-    TAnimatedBitmap32(SquareBitmap).DrawAtTimeTo(TickCount, Bitmap, X, Y)
+    TAnimatedBitmap32(SquareBitmap).DrawAtTimeTo(
+      TickCount, Bitmap, X, Y, SrcRect)
   else
-    SquareBitmap.DrawTo(Bitmap, X, Y);
+    SquareBitmap.DrawTo(Bitmap, X, Y, SrcRect);
 end;
 
 {------------------------}
@@ -2519,31 +2556,6 @@ begin
 end;
 
 {*
-  Résoud un nom d'image (sans indicateur de sous-image) en nom de fichier
-  @param BaseImgName   Nom d'image (sans indicateur de sous-image @x,y)
-  @return Nom de fichier pour cette image, ou '' si non trouvé
-*}
-function TImagesMaster.ResolveImgName(const BaseImgName: string): TFileName;
-var
-  I: Integer;
-begin
-  Result := fSquaresDir + AnsiReplaceStr(BaseImgName, '/', '\');
-  if FileExists(Result) then
-    Exit;
-
-  for I := 0 to FExtensions.Count-1 do
-  begin
-    if FileExists(Result+'.'+FExtensions[I]) then
-    begin
-      Result := Result+'.'+FExtensions[I];
-      Exit;
-    end;
-  end;
-
-  Result := '';
-end;
-
-{*
   Charge une image d'après son nom dans un bitmap
   @param ImgName   Nom de l'image
   @param Bitmap    Bitmap destination
@@ -2551,37 +2563,13 @@ end;
 *}
 function TImagesMaster.LoadImage(const ImgName: string): TBitmap32;
 var
-  TempBitmap: TBitmap32;
   FileName: TFileName;
-  SubRect: TRect;
 begin
-  Result := nil;
-  try
-    ParseImgName(ImgName, FileName, SubRect);
-
-    if FileName = '' then
-      Exit;
-
+  FileName := ResolveImgName(ImgName);
+  if FileName = '' then
+    Result := nil
+  else
     Result := LoadBitmapFromFile(FileName);
-
-    if not SameRect(Result.BoundsRect, SubRect) then
-    begin
-      TempBitmap := Result;
-      Result := nil;
-      try
-        Result := TBitmap32.Create;
-        Result.SetSize(SquareSize, SquareSize);
-        Result.Draw(0, 0, SubRect, TempBitmap);
-      finally
-        TempBitmap.Free;
-      end;
-    end;
-
-    Result.DrawMode := dmBlend;
-    Result.CombineMode := cmMerge;
-  except
-    FreeAndNil(Result);
-  end;
 end;
 
 {*
@@ -2616,26 +2604,28 @@ begin
 end;
 
 {*
-  Analyse un nom d'image et en récupère ses différentes composantes
-  @param ImgName    Nom d'image à analyser
-  @param FileName   En sortie : nom du fichier image (ou '' si non trouvé)
-  @param XIndex     En sortie : index de la sous-image en X
-  @param YIndex     En sortie : index de la sous-image en Y
+  Résoud un nom d'image (sans indicateur de sous-image) en nom de fichier
+  @param BaseImgName   Nom d'image (sans indicateur de sous-image @x,y)
+  @return Nom de fichier pour cette image, ou '' si non trouvé
 *}
-procedure TImagesMaster.ParseImgName(const ImgName: string;
-  out FileName: TFileName; out SubRect: TRect);
+function TImagesMaster.ResolveImgName(const ImgName: string): TFileName;
 var
-  BaseImgName, XYStr, XStr, YStr: string;
-  XIndex, YIndex: Integer;
+  I: Integer;
 begin
-  SplitToken(ImgName, '@', BaseImgName, XYStr);
-  SplitToken(XYStr, ',', XStr, YStr);
+  Result := fSquaresDir + AnsiReplaceStr(ImgName, '/', '\');
+  if FileExists(Result) then
+    Exit;
 
-  FileName := ResolveImgName(BaseImgName);
+  for I := 0 to FExtensions.Count-1 do
+  begin
+    if FileExists(Result+'.'+FExtensions[I]) then
+    begin
+      Result := Result+'.'+FExtensions[I];
+      Exit;
+    end;
+  end;
 
-  XIndex := StrToIntDef(XStr, 0);
-  YIndex := StrToIntDef(YStr, 0);
-  SubRect := SquareRect(XIndex * SquareSize, YIndex * SquareSize);
+  Result := '';
 end;
 
 {*
@@ -2706,13 +2696,23 @@ begin
 end;
 
 {*
-  Obtient le bitmap interne d'après son index
+  Obtient le bitmap interne d'une image d'après son index
   @param Index   Index d'une image
   @return Bitmap interne pour cette image
 *}
 function TImagesMaster.GetInternalBitmap(Index: Integer): TBitmap32;
 begin
   Result := TBitmap32(FImgList[Index]);
+end;
+
+{*
+  Obtient le bitmap interne d'une image d'après son nom
+  @param ImgName   Nom d'une image
+  @return Bitmap interne pour cette image
+*}
+function TImagesMaster.GetInternalBitmap(const ImgName: string): TBitmap32;
+begin
+  Result := GetInternalBitmap(IndexOf(ImgName));
 end;
 
 {-----------------}
@@ -2728,9 +2728,9 @@ begin
   inherited Create;
 
   FMaster := AMaster;
-  FImgNames := TStringList.Create;
-  FDefaultImgNames := TStringList.Create;
-  TStringList(FImgNames).OnChange := ImgNamesChange;
+  FDescription := TStringList.Create;
+  FDefaultDescription := TStringList.Create;
+  TStringList(FDescription).OnChange := DescriptionChange;
 
   FStaticDraw := True;
 end;
@@ -2741,30 +2741,47 @@ end;
 destructor TPainter.Destroy;
 begin
   FCachedImg.Free;
-  FDefaultImgNames.Free;
-  FImgNames.Free;
+  FDefaultDescription.Free;
+  FDescription.Free;
 
   inherited;
 end;
 
 {*
-  Met à jour FStaticDraw
+  Effectue les mesures de ce peintre
+  Après l'appel à Measure, les propriétés FStaticDraw, FNeedCache et FSize sont
+  mises à jour.
 *}
-procedure TPainter.UpdateStaticDraw;
+procedure TPainter.Measure;
 var
   I: Integer;
+  Bitmap: TBitmap32;
+  SubRect: TRect;
 begin
-  for I := 0 to ImgNames.Count-1 do
+  FStaticDraw := True;
+  FNeedCache := Description.Count > 1;
+  FSize := Point(1, 1);
+
+  for I := 0 to Description.Count-1 do
   begin
-    if Master.GetInternalBitmap(Master.IndexOf(
-      ImgNames[I])) is TAnimatedBitmap32 then
-    begin
+    // Parse description line
+    ParseDescriptionLine(Description[I], Bitmap, SubRect);
+
+    // Update FStaticDraw
+    if Bitmap is TAnimatedBitmap32 then
       FStaticDraw := False;
-      Exit;
+
+    // Update FNeedCache
+    if not SameRect(SubRect, Bitmap.BoundsRect) then
+      FNeedCache := True;
+
+    // Update FSize
+    if not IsRectEmpty(SubRect) then
+    begin
+      FSize.X := LCM(FSize.X, SubRect.Right - SubRect.Left);
+      FSize.Y := LCM(FSize.Y, SubRect.Bottom - SubRect.Top);
     end;
   end;
-
-  FStaticDraw := True;
 end;
 
 {*
@@ -2775,9 +2792,11 @@ begin
   if FCachedImg <> nil then
     Exit;
 
-  FCachedImg := TAnimatedBitmap32.Create;
-  FCachedImg.SetSize(SquareSize, SquareSize);
-  FCachedImg.Clear(clTransparent32);
+  if StaticDraw then
+    FCachedImg := TBitmap32.Create
+  else
+    FCachedImg := TAnimatedBitmap32.Create;
+
   FCachedImg.DrawMode := dmBlend;
   FCachedImg.CombineMode := cmMerge;
 end;
@@ -2788,11 +2807,17 @@ end;
 procedure TPainter.DrawStatic;
 var
   I: Integer;
+  Bitmap: TBitmap32;
+  SubRect: TRect;
 begin
-  FCachedImg.FrameCount := 1;
+  FCachedImg.SetSize(Size.X, Size.Y);
   FCachedImg.Clear(clTransparent32);
-  for I := 0 to FImgNames.Count-1 do
-    FMaster.Draw(FImgNames[I], FCachedImg);
+
+  for I := 0 to FDescription.Count-1 do
+  begin
+    ParseDescriptionLine(Description[I], Bitmap, SubRect);
+    DrawRepeat(FCachedImg, Bitmap, FCachedImg.BoundsRect, SubRect);
+  end;
 end;
 
 {*
@@ -2800,19 +2825,24 @@ end;
 *}
 procedure TPainter.DrawNotStatic;
 var
+  CachedImg: TAnimatedBitmap32;
   Count: Integer;
   Images: array of TBitmap32;
+  SubRects: array of TRect;
   I, J, FrameCount, Transition, PreviousTrans: Integer;
   TotalTime, CummulatedDelay: Cardinal;
   Transitions: TScIntegerSet;
   Animated: TAnimatedBitmap32;
   Frame: TBitmap32Frame;
 begin
+  CachedImg := FCachedImg as TAnimatedBitmap32;
+
   // Fetch images
-  Count := ImgNames.Count;
+  Count := Description.Count;
   SetLength(Images, Count);
+  SetLength(SubRects, Count);
   for I := 0 to Count-1 do
-    Images[I] := Master.GetInternalBitmap(Master.IndexOf(ImgNames[I]));
+    ParseDescriptionLine(Description[I], Images[I], SubRects[I]);
 
   // Compute total time - least common multiple of all total times
   TotalTime := 1;
@@ -2853,13 +2883,14 @@ begin
         Inc(FrameCount);
     end;
 
-    FCachedImg.FrameCount := FrameCount;
+    CachedImg.FrameCount := FrameCount;
+    CachedImg.SetSize(Size.X, Size.Y);
 
     I := 0;
     PreviousTrans := 0;
     for Transition in Transitions do
     begin
-      FCachedImg.Frames[I].Delay := Transition - PreviousTrans;
+      CachedImg.Frames[I].Delay := Transition - PreviousTrans;
       PreviousTrans := Transition;
       Inc(I);
     end;
@@ -2871,36 +2902,34 @@ begin
   CummulatedDelay := 0;
   for I := 0 to FrameCount-1 do
   begin
-    Frame := FCachedImg.Frames[I];
+    Frame := CachedImg.Frames[I];
     Frame.Clear(clTransparent32);
 
     for J := 0 to Count-1 do
-    begin
-      if Images[J] is TAnimatedBitmap32 then
-        TAnimatedBitmap32(Images[J]).DrawAtTimeTo(CummulatedDelay, Frame)
-      else
-        Images[J].DrawTo(Frame);
-    end;
+      DrawRepeat(Frame, Images[J], Frame.BoundsRect, SubRects[J],
+        CummulatedDelay);
 
     Inc(CummulatedDelay, Frame.Delay);
   end;
 end;
 
 {*
-  Événement OnChange de la liste des noms des images
-  ImgNamesChange est appelé lorsque la liste des noms des images change.
+  Événement OnChange de la description
+  DescriptionChange est appelé lorsque la description du peintre change.
   Elle actualise l'image cache.
   @param Sender   Objet lançant l'événement
 *}
-procedure TPainter.ImgNamesChange(Sender: TObject);
+procedure TPainter.DescriptionChange(Sender: TObject);
 begin
-  UpdateStaticDraw;
+  Measure;
+  FreeAndNil(FCachedImg);
 
-  if ImgNames.Count <= 1 then
+  if not FNeedCache then
   begin
-    FreeAndNil(FCachedImg);
-    if ImgNames.Count > 0 then
-      FCachedImgIndex := Master.IndexOf(ImgNames[0]);
+    if Description.Count > 0 then
+      FCachedImgIndex := Master.IndexOf(Description[0])
+    else
+      FCachedImgIndex := -1;
   end else
   begin
     NeedCachedImg;
@@ -2913,20 +2942,23 @@ begin
 end;
 
 {*
-  [@inheritDoc]
-*}
-function TPainter.IsImgNamesStored: Boolean;
-begin
-  Result := not FImgNames.Equals(FDefaultImgNames);
-end;
-
-{*
   Indique si ce peintre est vide
   @return True si ce peintre est vide, False sinon
 *}
 function TPainter.GetIsEmpty: Boolean;
 begin
-  Result := ImgNames.Count = 0;
+  Result := Description.Count = 0;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPainter.DefineProperties(Filer: TFunLabyFiler);
+begin
+  inherited;
+
+  Filer.DefineStrings('Description', Description, nil,
+    not FDescription.Equals(FDefaultDescription));
 end;
 
 {*
@@ -2936,24 +2968,115 @@ procedure TPainter.StoreDefaults;
 begin
   inherited;
 
-  FDefaultImgNames.Assign(FImgNames);
+  FDefaultDescription.Assign(FDescription);
 end;
 
 {*
-  Dessine les images sur un canevas
-  La méthode Draw dessine les images de ImgNames sur le canevas, à la
-  position indiquée. Les différentes images sont superposées, celle d'index
-  0 tout au-dessous.
+  Analyse une ligne de description et en récupère ses différentes composantes
+  @param Description   Ligne de description à analyser
+  @param Bitmap        En sortie : Image de base
+  @param SubRect       En sortie : Rectangle de l'image à conserver
+*}
+procedure TPainter.ParseDescriptionLine(const Description: string;
+  out Bitmap: TBitmap32; out SubRect: TRect);
+var
+  ImgName: string;
+  HasSubRect: Boolean;
+  RectStr, TopLeftStr, BottomRightStr: string;
+  LeftStr, TopStr, RightStr, BottomStr: string;
+begin
+  HasSubRect := SplitToken(Description, '@', ImgName, RectStr);
+  Bitmap := Master.GetInternalBitmap(ImgName);
+
+  if HasSubRect then
+  begin
+    SplitToken(RectStr, ':', TopLeftStr, BottomRightStr);
+    SplitToken(TopLeftStr, ',', LeftStr, TopStr);
+    SplitToken(BottomRightStr, ',', RightStr, BottomStr);
+
+    SubRect.Left := StrToIntDef(LeftStr, 0);
+    SubRect.Top := StrToIntDef(TopStr, 0);
+    SubRect.Right := StrToIntDef(RightStr, SubRect.Left + SquareSize);
+    SubRect.Bottom := StrToIntDef(BottomStr, SubRect.Top + SquareSize);
+
+    IntersectRect(SubRect, SubRect, Bitmap.BoundsRect);
+  end else
+  begin
+    SubRect := Bitmap.BoundsRect;
+  end;
+end;
+
+{*
+  Efface le peintre
+*}
+procedure TPainter.Clear;
+begin
+  Description.Clear;
+end;
+
+{*
+  Ajoute une image au peintre
+  @param ImgName   Nom de l'image à ajouter
+*}
+procedure TPainter.AddImage(const ImgName: string);
+begin
+  Description.Add(ImgName);
+end;
+
+{*
+  Ajoute une partie d'une image au peintre
+  @param ImgName   Nom de l'image à ajouter
+  @param SubRect   Rectangle de l'image à conserver
+*}
+procedure TPainter.AddImageRect(const ImgName: string; const SubRect: TRect);
+begin
+  if IsRectEmpty(SubRect) then
+    Exit;
+
+  Description.Add(Format('%s@%d,%d:%d,%d',
+    [ImgName, SubRect.Left, SubRect.Top, SubRect.Right, SubRect.Bottom]));
+end;
+
+{*
+  Assigne un peintre à celui-ci
+  @param Source   Peintre source
+*}
+procedure TPainter.Assign(Source: TPainter);
+begin
+  Description.Assign(Source.Description);
+end;
+
+{*
+  Démarre une modification du peintre
+  Chaque appel à BeginUpdate doit être clôturé par un appel à EndUpdate.
+*}
+procedure TPainter.BeginUpdate;
+begin
+  Description.BeginUpdate;
+end;
+
+{*
+  Termine une modification du peintre
+  Appelez EndUpdate pour balancer chaque appel à BeginUpdate.
+*}
+procedure TPainter.EndUpdate;
+begin
+  Description.EndUpdate;
+end;
+
+{*
+  Dessine les images
+  La méthode Draw dessine les images du peintre dans le contexte de dessin
+  spécifié. Les différentes images sont superposées, celle d'index 0 tout
+  au-dessous.
   @param Context   Contexte de dessin de la case
 *}
 procedure TPainter.Draw(Context: TDrawSquareContext);
 begin
-  case ImgNames.Count of
-    0: ;
-    1: Master.Draw(FCachedImgIndex, Context);
-  else
-    Context.DrawSquareBitmap(FCachedImg);
-  end;
+  if FNeedCache then
+    Context.DrawSquareBitmap(FCachedImg)
+  else if FCachedImgIndex >= 0 then
+    Master.Draw(FCachedImgIndex, Context);
 end;
 
 {--------------------}
@@ -2988,6 +3111,8 @@ begin
 
   FCancelled := False;
   FGoOnMoving := False;
+
+  FTemporization := Player.DefaultTemporization;
 end;
 
 {*
@@ -3086,6 +3211,14 @@ end;
 procedure TMoveContext.Cancel;
 begin
   FCancelled := True;
+end;
+
+{*
+  Temporise (endort le thread pendant Temporization millisecondes
+*}
+procedure TMoveContext.Temporize;
+begin
+  Sleep(Temporization);
 end;
 
 {--------------------------}
@@ -4023,7 +4156,7 @@ begin
 
   FName := ID;
   FPainter := TPainter.Create(FMaster.ImagesMaster);
-  FPainter.ImgNames.BeginUpdate;
+  FPainter.BeginUpdate;
   FStaticDraw := True;
 end;
 
@@ -4039,12 +4172,94 @@ begin
 end;
 
 {*
-  Teste si la propriété Name doit être enregistrée dans un flux
-  @return True si elle doit être enregistrée, False sinon
+  Teste si la propriété Name doit être enregistrée
+  @return True si la propriété Name doit être enregistrée, False sinon
 *}
 function TVisualComponent.IsNameStored: Boolean;
 begin
   Result := FName <> FDefaultName;
+end;
+
+{*
+  Teste si la propriété EditVisualTag doit être enregistrée
+  @return True si la propriété EditVisualTag doit être enregistrée, False sinon
+*}
+function TVisualComponent.IsEditVisualTagStored: Boolean;
+begin
+  Result := FEditVisualTag <> FDefaultEditVisualTag;
+end;
+
+{*
+  Dessine le composant dans le contexte de dessin spécifié
+  PrivDraw dessine le composant dans le contexte de dessin spécifié.
+  @param Context   Contexte de dessin de la case
+*}
+procedure TVisualComponent.PrivDraw(Context: TDrawSquareContext);
+begin
+  DoDraw(Context);
+
+  if Master.Editing and (EditVisualTag <> '') then
+    DoDrawEditVisualTag(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TVisualComponent.StoreDefaults;
+begin
+  inherited;
+
+  FDefaultName := FName;
+  FDefaultEditVisualTag := FEditVisualTag;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TVisualComponent.GetHint: string;
+begin
+  Result := Name;
+end;
+
+{*
+  Dessine le composant
+  DoDraw dessine le composant dans le contexte de dessin spécifié.
+  @param Context   Contexte de dessin de la case
+*}
+procedure TVisualComponent.DoDraw(Context: TDrawSquareContext);
+begin
+  FPainter.Draw(Context);
+end;
+
+{*
+  Dessine le tag visuel d'édition
+  DoDraw dessine le tag visuel d'édition dans le contexte de dessin spécifié.
+  @param Context   Contexte de dessin de la case
+*}
+procedure TVisualComponent.DoDrawEditVisualTag(Context: TDrawSquareContext);
+const {don't localize}
+  FontName = 'Arial';
+  FontSize = 9;
+  FontColor = clBlack32;
+  BackColor = clWhite32;
+var
+  Extent: TSize;
+  TextX, TextY: Integer;
+begin
+  with Context do
+  begin
+    Bitmap.Font.Name := FontName;
+    Bitmap.Font.Size := FontSize;
+
+    Extent := Bitmap.TextExtent(EditVisualTag);
+    TextX := X + (SquareSize - Extent.cx) div 2;
+    TextY := Y + (SquareSize - Extent.cy) div 2;
+
+    Bitmap.FillRectTS(TextX-1, TextY+1, TextX+Extent.cx+1, TextY+Extent.cy-1,
+      BackColor);
+
+    Bitmap.RenderText(TextX, TextY, EditVisualTag, 0, FontColor);
+  end;
 end;
 
 {*
@@ -4056,7 +4271,7 @@ var
 begin
   inherited;
 
-  FPainter.ImgNames.EndUpdate;
+  FPainter.EndUpdate;
   if not FPainter.StaticDraw then
     FStaticDraw := False;
 
@@ -4075,46 +4290,8 @@ begin
 end;
 
 {*
-  Dessine le composant sur un canevas
-  PrivDraw dessine le composant sur un canevas à la position indiquée.
-  @param Context   Contexte de dessin de la case
-*}
-procedure TVisualComponent.PrivDraw(Context: TDrawSquareContext);
-begin
-  DoDraw(Context);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TVisualComponent.StoreDefaults;
-begin
-  inherited;
-
-  FDefaultName := FName;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TVisualComponent.GetHint: string;
-begin
-  Result := Name;
-end;
-
-{*
-  Dessine le composant sur un canevas
-  DoDraw dessine le composant sur un canevas à la position indiquée.
-  @param Context   Contexte de dessin de la case
-*}
-procedure TVisualComponent.DoDraw(Context: TDrawSquareContext);
-begin
-  FPainter.Draw(Context);
-end;
-
-{*
-  Dessine de façon optimisée le composant sur un canevas
-  Draw dessine le composant sur un canevas à la position indiquée.
+  Dessine de façon optimisée le composant
+  Draw dessine le composant dans le contexte de dessin spécifié.
   @param Context   Contexte de dessin de la case
 *}
 procedure TVisualComponent.Draw(Context: TDrawSquareContext);
@@ -4126,8 +4303,8 @@ begin
 end;
 
 {*
-  Dessine de façon optimisée le composant sur un canevas
-  Draw dessine le composant sur un canevas à la position indiquée.
+  Dessine de façon optimisée le composant
+  Draw dessine le composant dans le contexte de dessin spécifié.
   @param QPos     Position qualifiée de l'emplacement de dessin
   @param Bitmap   Bitmap sur lequel dessiner le composant
   @param X        Coordonnée X du point à partir duquel dessiner le composant
@@ -4170,7 +4347,7 @@ begin
   FIconPainter := TPainter.Create(AMaster.ImagesMaster);
   FCreatedComponents := TObjectList.Create(False);
 
-  FIconPainter.ImgNames.BeginUpdate;
+  FIconPainter.Description.BeginUpdate;
 end;
 
 {*
@@ -4257,7 +4434,7 @@ procedure TComponentCreator.AfterConstruction;
 begin
   inherited;
 
-  FIconPainter.ImgNames.EndUpdate;
+  FIconPainter.Description.EndUpdate;
 end;
 
 {*
@@ -4305,9 +4482,9 @@ begin
   inherited;
 
   FPainterBefore := TPainter.Create(FMaster.ImagesMaster);
-  FPainterBefore.ImgNames.BeginUpdate;
+  FPainterBefore.Description.BeginUpdate;
   FPainterAfter := TPainter.Create(FMaster.ImagesMaster);
-  FPainterAfter.ImgNames.BeginUpdate;
+  FPainterAfter.Description.BeginUpdate;
 end;
 
 {*
@@ -4348,8 +4525,8 @@ procedure TPlugin.AfterConstruction;
 begin
   inherited;
 
-  FPainterBefore.ImgNames.EndUpdate;
-  FPainterAfter.ImgNames.EndUpdate;
+  FPainterBefore.Description.EndUpdate;
+  FPainterAfter.Description.EndUpdate;
 end;
 
 {*
@@ -5509,17 +5686,28 @@ end;
 procedure TLabyrinthPlayerMode.DrawPlayers(Context: TDrawViewContext);
 var
   I: Integer;
+  Player: TPlayer;
+  PlayerContext: TDrawSquareContext;
 begin
   for I := 0 to Master.PlayerCount-1 do
   begin
-    with Master.Players[I] do
-    begin
-      if Context.IsSquareVisible(Map, Position) then
-      begin
-        DrawInPlace(Context.Bitmap,
-          (Position.X-Context.Zone.Left) * SquareSize,
-          (Position.Y-Context.Zone.Top) * SquareSize);
+    Player := Master.Players[I];
+    Player.FLock.BeginRead;
+    try
+      if not Context.IsSquareVisible(Player.Map, Player.Position) then
+        Continue;
+
+      PlayerContext := TDrawSquareContext.Create(Context.Bitmap,
+        (Player.Position.X-Context.Zone.Left) * SquareSize,
+        (Player.Position.Y-Context.Zone.Top) * SquareSize);
+      try
+        PlayerContext.SetDrawViewContext(Context);
+        Player.Draw(PlayerContext);
+      finally
+        PlayerContext.Free;
       end;
+    finally
+      Player.Flock.EndRead;
     end;
   end;
 end;
@@ -5647,6 +5835,8 @@ begin
   FDirPainters[diNone] := Painter;
   for Dir := diNorth to diWest do
     FDirPainters[Dir] := TPainter.Create(Master.ImagesMaster);
+
+  FDefaultTemporization := FunLabyUtils.DefaultTemporization;
 
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
 
@@ -6395,13 +6585,14 @@ end;
   Déplace le joueur dans la direction indiquée
   Move déplace le joueur dans la direction indiquée, en appliquant les
   comportements conjugués des cases et plug-in.
-  @param Dir     Direction du déplacement
-  @param Key     Touche qui a été pressée pour le déplacement
-  @param Shift   État des touches spéciales
-  @param Redo    Indique s'il faut réitérer le déplacement
+  @param Dir         Direction du déplacement
+  @param Key         Touche qui a été pressée pour le déplacement
+  @param Shift       État des touches spéciales
+  @param Redo        Indique s'il faut réitérer le déplacement
+  @param RedoDelay   Délai en millisecondes avant de réitérer le déplacement
 *}
 procedure TPlayer.Move(Dir: TDirection; Key: Word; Shift: TShiftState;
-  out Redo: Boolean);
+  out Redo: Boolean; out RedoDelay: Cardinal);
 var
   Context: TMoveContext;
 begin
@@ -6423,6 +6614,7 @@ begin
       MoveTo(Context);
 
     Redo := Context.GoOnMoving;
+    RedoDelay := Context.Temporization;
   finally
     Context.Free;
   end;
@@ -6432,12 +6624,14 @@ end;
   Déplace le joueur dans la direction indiquée
   Move déplace le joueur dans la direction indiquée, en appliquant les
   comportements conjugués des cases et plug-in.
-  @param Dir    Direction du déplacement
-  @param Redo   Indique s'il faut réitérer le déplacement
+  @param Dir         Direction du déplacement
+  @param Redo        Indique s'il faut réitérer le déplacement
+  @param RedoDelay   Délai en millisecondes avant de réitérer le déplacement
 *}
-procedure TPlayer.Move(Dir: TDirection; out Redo: Boolean);
+procedure TPlayer.Move(Dir: TDirection; out Redo: Boolean;
+  out RedoDelay: Cardinal);
 begin
-  Move(Dir, 0, [], Redo);
+  Move(Dir, 0, [], Redo, RedoDelay);
 end;
 
 {*
@@ -6451,10 +6645,10 @@ end;
 procedure TPlayer.Move(Dir: TDirection; Key: Word; Shift: TShiftState);
 var
   Redo: Boolean;
+  RedoDelay: Cardinal;
 begin
-  Move(Dir, Key, Shift, Redo);
-  if Redo then
-    NaturalMoving;
+  Move(Dir, Key, Shift, Redo, RedoDelay);
+  NaturalMoving(Redo, RedoDelay);
 end;
 
 {*
@@ -6466,10 +6660,10 @@ end;
 procedure TPlayer.Move(Dir: TDirection);
 var
   Redo: Boolean;
+  RedoDelay: Cardinal;
 begin
-  Move(Dir, 0, [], Redo);
-  if Redo then
-    NaturalMoving;
+  Move(Dir, 0, [], Redo, RedoDelay);
+  NaturalMoving(Redo, RedoDelay);
 end;
 
 {*
@@ -6597,43 +6791,45 @@ end;
 
 {*
   Déplace le joueur
-  @param Dest      Position de destination
-  @param Execute   Indique s'il faut exécuter la case d'arrivée
-  @param Redo      Indique s'il faut réitérer le déplacement
+  @param Dest        Position de destination
+  @param Execute     Indique s'il faut exécuter la case d'arrivée
+  @param Redo        Indique s'il faut réitérer le déplacement
+  @param RedoDelay   Délai en millisecondes avant de réitérer le déplacement
 *}
 procedure TPlayer.MoveTo(const Dest: T3DPoint; Execute: Boolean;
-  out Redo: Boolean);
+  out Redo: Boolean; out RedoDelay: Cardinal);
 var
   DestQPos: TQualifiedPos;
 begin
   DestQPos.Map := Map;
   DestQPos.Position := Dest;
 
-  MoveTo(DestQPos, Execute, Redo);
+  MoveTo(DestQPos, Execute, Redo, RedoDelay);
 end;
 
 {*
-  Déplace le joueur
-  Cette variante de MoveTo n'exécute pas la case d'arrivée
-  @param Dest   Position de destination
+  Déplace le joueur, et poursuit le déplacement si nécessaire
+  @param Dest      Position de destination
+  @param Execute   Indique s'il faut exécuter la case d'arrivée
 *}
 procedure TPlayer.MoveTo(const Dest: T3DPoint; Execute: Boolean = False);
 var
   Redo: Boolean;
+  RedoDelay: Cardinal;
 begin
-  MoveTo(Dest, Execute, Redo);
-  if Redo then
-    NaturalMoving;
+  MoveTo(Dest, Execute, Redo, RedoDelay);
+  NaturalMoving(Redo, RedoDelay);
 end;
 
 {*
   Déplace le joueur
-  @param Dest      Position de destination
-  @param Execute   Indique s'il faut exécuter la case d'arrivée
-  @param Redo      Indique s'il faut réitérer le déplacement
+  @param Dest        Position de destination
+  @param Execute     Indique s'il faut exécuter la case d'arrivée
+  @param Redo        Indique s'il faut réitérer le déplacement
+  @param RedoDelay   Délai en millisecondes avant de réitérer le déplacement
 *}
 procedure TPlayer.MoveTo(const Dest: TQualifiedPos; Execute: Boolean;
-  out Redo: Boolean);
+  out Redo: Boolean; out RedoDelay: Cardinal);
 var
   Context: TMoveContext;
 begin
@@ -6647,46 +6843,38 @@ begin
   try
     MoveTo(Context, Execute);
     Redo := Context.GoOnMoving;
+    RedoDelay := Context.Temporization;
   finally
     Context.Free;
   end;
 end;
 
 {*
-  Déplace le joueur
-  Cette variante de MoveTo n'exécute pas la case d'arrivée
-  @param Dest   Position de destination
+  Déplace le joueur, et poursuit le déplacement si nécessaire
+  @param Dest      Position de destination
+  @param Execute   Indique s'il faut exécuter la case d'arrivée
 *}
 procedure TPlayer.MoveTo(const Dest: TQualifiedPos; Execute: Boolean = False);
 var
   Redo: Boolean;
+  RedoDelay: Cardinal;
 begin
-  MoveTo(Dest, Execute, Redo);
-  if Redo then
-    NaturalMoving;
-end;
-
-{*
-  Temporise l'exécution
-*}
-procedure TPlayer.Temporize;
-begin
-  Master.Temporize;
+  MoveTo(Dest, Execute, Redo, RedoDelay);
+  NaturalMoving(Redo, RedoDelay);
 end;
 
 {*
   Déplacement naturel, selon le mouvement déjà entamé (sorte d'inertie)
-  Après un mouvement donné expressément, si Redo vaut True, il suffit d'appeler
-  NaturalMoving pour continuer le mouvement normalement.
+  Après un mouvement donné expressément, il suffit d'appeler NaturalMoving pour
+  continuer le mouvement normalement.
 *}
-procedure TPlayer.NaturalMoving;
-var
-  Redo: Boolean;
+procedure TPlayer.NaturalMoving(Redo: Boolean; RedoDelay: Cardinal);
 begin
-  repeat
-    Temporize;
-    Move(Direction, Redo);
-  until not Redo;
+  while Redo do
+  begin
+    Sleep(RedoDelay);
+    Move(Direction, Redo, RedoDelay);
+  end;
 end;
 
 {*
@@ -7272,7 +7460,6 @@ begin
   FPlayers    := TObjectList.Create(False);
 
   FEditing := AEditing;
-  FTemporization := DefaultTemporization;
   FBeginTickCount := Windows.GetTickCount;
   FTerminated := False;
 
@@ -7693,16 +7880,6 @@ begin
 end;
 
 {*
-  Modifie la temporisation
-  @param Value   Nouvelle temporisation en millisecondes
-*}
-procedure TMaster.SetTemporization(Value: Integer);
-begin
-  if Value > 0 then
-    FTemporization := Value;
-end;
-
-{*
   Tick count de la partie
   @return Tick count de la partie
 *}
@@ -7836,14 +8013,6 @@ end;
 procedure TMaster.StoreDefaults;
 begin
   inherited;
-end;
-
-{*
-  Temporise l'exécution
-*}
-procedure TMaster.Temporize;
-begin
-  Sleep(Temporization);
 end;
 
 {*

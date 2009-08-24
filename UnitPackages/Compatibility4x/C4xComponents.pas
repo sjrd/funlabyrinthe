@@ -10,9 +10,9 @@ unit C4xComponents;
 interface
 
 uses
-  SysUtils, Classes, Graphics, Contnrs, StrUtils, Consts, ScUtils, ScLists,
-  FunLabyUtils, FilesUtils, MapTools, FLBFields, FLBSimpleEffects, FLBBoat,
-  C4xCommon;
+  Windows, SysUtils, Classes, Graphics, Contnrs, StrUtils, Consts, ScUtils,
+  ScLists, GR32, FunLabyUtils, FilesUtils, MapTools, FLBFields,
+  FLBSimpleEffects, FLBBoat, C4xCommon;
 
 resourcestring
   sStairs = 'Escalier';             /// Nom de l'escalier
@@ -21,15 +21,15 @@ resourcestring
   sButton = 'Bouton n°%d';          /// Nom du bouton
   sButtonTemplate = 'Bouton';       /// Nom du bouton modèle
 
-const {don't localize}
-  idGameStartedPlugin = 'GameStartedPlugin'; /// ID du plug-in game-started
-  idZonesPlugin = 'ZonesPlugin';             /// ID du plug-in des zones
+const
+  /// ID du plug-in de hacks de compatibilité
+  idCompatibilityHacksPlugin = 'CompatibilityHacksPlugin';
+  /// ID du plug-in des zones
+  idZonesPlugin = 'ZonesPlugin';
 
   idUpStairs = 'UpStairs';                   /// ID de l'escalier montant
   idDownStairs = 'DownStairs';               /// ID de l'escalier descendant
   idOldStairs = 'OldStairs%d';               /// ID des escaliers de la v1.0
-
-  idNumberedBoat = 'Boat%d';                 /// ID d'une barque numérotée
 
   idActionsObject = 'ActionsObject%d';       /// ID de l'objet lié à des actions
   idActionsEffect = 'ActionsEffect%d';       /// ID de l'effet à actions
@@ -64,9 +64,6 @@ resourcestring
   sGotOutsideMaze = 'BRAVO ! Tu as réussi à sortir du labyrinthe !';
   sFoundTreasure = 'BRAVO ! Tu as trouvé le trésor !';
 
-  sButtonTitle = 'Numéro du bouton';
-  sButtonPrompt = 'Numéro du bouton (0 à %d) :';
-
 type
   {*
     Représente le type d'un ensemble d'actions
@@ -80,13 +77,26 @@ type
   TActions = class;
 
   {*
-    Plug-in qui exécute les actions au commencement du jeu
+    Plug-in effectuant quelques "hacks" pour rester compatible avec la 4.x
     @author sjrd
     @version 5.0
   *}
-  TGameStartedPlugin = class(TPlugin)
+  TCompatibilityHacksPlugin = class(TPlugin)
   private
+    FFreezedView: TBitmap32; /// Vue gelée
+    FUpdating: Boolean;      /// Indique si est en train d'être mise à jour
+
     procedure GameStartedMsg(var Msg: TPlayerMessage); message msgGameStarted;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+    destructor Destroy; override;
+
+    procedure Moved(Context: TMoveContext); override;
+
+    procedure DrawView(Context: TDrawViewContext); override;
+    procedure PressKey(Context: TKeyEventContext); override;
+
+    procedure UpdateView(Player: TPlayer);
   end;
 
   {*
@@ -98,6 +108,8 @@ type
   *}
   TZonesPlugin = class(TPlugin)
   public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+
     procedure Moved(Context: TMoveContext); override;
   end;
 
@@ -116,21 +128,6 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Execute(Context: TMoveContext); override;
-  end;
-
-  {*
-    Barque numérotée
-    @author sjrd
-    @version 5.0
-  *}
-  TNumberedBoat = class(TBoat)
-  private
-    FNumber: Integer; /// Numéro de cette barque
-  public
-    constructor CreateNumbered(AMaster: TMaster; const AID: TComponentID;
-      ANumber: Integer);
-
-    property Number: Integer read FNumber;
   end;
 
   {*
@@ -165,8 +162,6 @@ type
     function GetIsDesignable: Boolean; override;
 
     procedure DoDraw(Context: TDrawSquareContext); override;
-
-    property AlternatePainter: TPainter read FAlternatePainter;
   public
     constructor Create(AActions: TActions); reintroduce;
     procedure AfterConstruction; override;
@@ -174,6 +169,8 @@ type
     procedure Execute(Context: TMoveContext); override;
 
     property Actions: TActions read FActions;
+  published
+    property AlternatePainter: TPainter read FAlternatePainter;
   end;
 
   {*
@@ -288,20 +285,56 @@ const {don't localize}
   /// Sous-répertoire des images gardées pour compatibilité
   fCompatibility = 'Compatibility4x/';
 
+procedure UpdateView(Player: TPlayer);
+
 implementation
 
 uses
   C4xInterpreter;
 
-{--------------------------}
-{ TGameStartedPlugin class }
-{--------------------------}
+{*
+  Met à jour la vue du joueur
+  @param Player   Joueur dont mettre à jour la vue
+*}
+procedure UpdateView(Player: TPlayer);
+var
+  Plugin: TPlugin;
+begin
+  Plugin := Player.Master.Plugin[idCompatibilityHacksPlugin];
+  (Plugin as TCompatibilityHacksPlugin).UpdateView(Player);
+end;
+
+{---------------------------------}
+{ TCompatibilityHacksPlugin class }
+{---------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TCompatibilityHacksPlugin.Create(AMaster: TMaster;
+  const AID: TComponentID);
+begin
+  inherited;
+
+  FFreezedView := TBitmap32.Create;
+  FZIndex := 512;
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TCompatibilityHacksPlugin.Destroy;
+begin
+  FFreezedView.Free;
+
+  inherited;
+end;
 
 {*
   Gestionnaire du message msgGameStarted
   @param Msg   Message
 *}
-procedure TGameStartedPlugin.GameStartedMsg(var Msg: TPlayerMessage);
+procedure TCompatibilityHacksPlugin.GameStartedMsg(var Msg: TPlayerMessage);
 var
   Infos: TC4xInfos;
   Player: TPlayer;
@@ -312,39 +345,110 @@ begin
   Infos := Master.Component[idC4xInfos] as TC4xInfos;
   Player := Msg.Player;
 
-  DoNextPhase := False;
-  WereTips := False;
+  try
+    DoNextPhase := False;
+    WereTips := False;
 
-  if not Infos.KnowShowTips then
-  begin
+    if not Infos.KnowShowTips then
+    begin
+      for I := 0 to Infos.ActionsCount-1 do
+      begin
+        if StringsOps.FindText(Infos.Actions[I].Actions, 'Indice') >= 0 then
+        begin
+          WereTips := True;
+          Break;
+        end;
+      end;
+
+      Infos.ShowTips := WereTips and
+        (Player.ShowSelectionMsg(sAskForTips,
+          [AnsiReplaceStr(SMsgDlgYes, '&', ''),
+          AnsiReplaceStr(SMsgDlgNo, '&', '')]) = 0);
+    end;
+
     for I := 0 to Infos.ActionsCount-1 do
     begin
-      if StringsOps.FindText(Infos.Actions[I].Actions, 'Indice') >= 0 then
+      with Infos.Actions[I] do
       begin
-        WereTips := True;
-        Break;
+        if Kind = akGameStarted then
+        begin
+          Execute(phExecute, Player, False, Player.Position,
+            DoNextPhase, HasMoved, HasShownMsg, Successful);
+        end;
       end;
     end;
-
-    Infos.ShowTips := WereTips and
-      (Player.ShowSelectionMsg(sAskForTips,
-        [AnsiReplaceStr(SMsgDlgYes, '&', ''),
-        AnsiReplaceStr(SMsgDlgNo, '&', '')]) = 0);
+  finally
+    UpdateView(Player);
   end;
+end;
 
-  for I := 0 to Infos.ActionsCount-1 do
-  begin
-    with Infos.Actions[I] do
+{*
+  [@inheritDoc]
+*}
+procedure TCompatibilityHacksPlugin.Moved(Context: TMoveContext);
+begin
+  UpdateView(Context.Player);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TCompatibilityHacksPlugin.DrawView(Context: TDrawViewContext);
+begin
+  FFreezedView.Lock;
+  try
+    if not FUpdating then
     begin
-      if Kind = akGameStarted then
+      with Context do
       begin
-        Execute(phExecute, Player, False, Player.Position,
-          DoNextPhase, HasMoved, HasShownMsg, Successful);
+        if (FFreezedView.Width <> Player.Mode.Width) or
+          (FFreezedView.Height <> Player.Mode.Height) then
+        begin
+          FFreezedView.SetSize(Player.Mode.Width, Player.Mode.Height);
+          FFreezedView.Clear(clBlack32);
+        end;
+
+        Bitmap.Draw(0, 0, FFreezedView);
       end;
     end;
+  finally
+    FFreezedView.Unlock;
   end;
+end;
 
-  Player.RemovePlugin(Self);
+{*
+  [@inheritDoc]
+*}
+procedure TCompatibilityHacksPlugin.PressKey(Context: TKeyEventContext);
+begin
+  with Context do
+  begin
+    if Key in [VK_UP, VK_RIGHT, VK_DOWN, VK_LEFT] then
+    begin
+      Player.Mode.PressKey(Context);
+      Handled := True;
+
+      UpdateView(Player);
+    end;
+  end;
+end;
+
+{*
+  Met à jour la vue du joueur
+  @param Player   Joueur dont mettre la vue à jour
+*}
+procedure TCompatibilityHacksPlugin.UpdateView(Player: TPlayer);
+begin
+  FFreezedView.Lock;
+  try
+    FUpdating := True;
+
+    FFreezedView.SetSize(Player.Mode.Width, Player.Mode.Height);
+    Player.DrawView(FFreezedView);
+  finally
+    FUpdating := False;
+    FFreezedView.Unlock;
+  end;
 end;
 
 {---------------------}
@@ -354,12 +458,22 @@ end;
 {*
   [@inheritDoc]
 *}
+constructor TZonesPlugin.Create(AMaster: TMaster; const AID: TComponentID);
+begin
+  inherited;
+
+  FZIndex := -512;
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TZonesPlugin.Moved(Context: TMoveContext);
 var
   Zone: T3DPoint;
   ActionsID: TComponentID;
   Actions: TActions;
-  DoNextPhase, HasMoved, HasShownMsg, Successful, Redo: Boolean;
+  DoNextPhase, HasMoved, HasShownMsg, Successful: Boolean;
 begin
   with Context do
   begin
@@ -386,11 +500,7 @@ begin
       Actions.Execute(phExecute, Player, True, Dest,
         DoNextPhase, HasMoved, HasShownMsg, Successful);
       if DoNextPhase then
-      begin
-        Player.MoveTo(Player.Position, True, Redo);
-        if Redo then
-          Player.NaturalMoving;
-      end;
+        Player.MoveTo(Player.Position, True);
     end;
   end;
 end;
@@ -461,29 +571,10 @@ begin
 
     if not Same3DPoint(Pos, Other) then
     begin
-      Master.Temporize;
+      Temporize;
       Player.MoveTo(Other);
     end;
   end;
-end;
-
-{---------------------}
-{ TNumberedBoat class }
-{---------------------}
-
-{*
-  Crée une barque numérotée
-  @param AMaster   Maître FunLabyrinthe
-  @param AID       ID de la barque
-  @param ANumber   Numéro de la barque
-*}
-constructor TNumberedBoat.CreateNumbered(AMaster: TMaster;
-  const AID: TComponentID; ANumber: Integer);
-begin
-  Create(AMaster, AID);
-
-  Name := Format(sNumberedBoat, [ANumber]);
-  FNumber := ANumber;
 end;
 
 {-----------------------}
@@ -501,7 +592,7 @@ begin
   FActions := AActions;
 
   Name := Actions.FileName;
-  Painter.ImgNames.Add(fCompatibility + Name);
+  Painter.AddImage(fCompatibility + Name);
 end;
 
 {*
@@ -534,34 +625,36 @@ begin
 
   FActions := AActions;
 
-  Name := Format(sButton, [AActions.Number]);
+  Name := Format(sButton, [Actions.Number]);
+  if Actions.Kind in RegisteredActionsKind then
+    EditVisualTag := IntToStr(Actions.Number);
 
   FAlternatePainter := TPainter.Create(Master.ImagesMaster);
-  FAlternatePainter.ImgNames.BeginUpdate;
+  FAlternatePainter.BeginUpdate;
 
   case Actions.Kind of
     akPushButton:
     begin
-      Painter.ImgNames.Add(fButton);
-      AlternatePainter.ImgNames.Add(fSunkenButton);
+      Painter.AddImage(fButton);
+      AlternatePainter.AddImage(fSunkenButton);
       FStaticDraw := False;
     end;
     akSwitch:
     begin
-      Painter.ImgNames.Add(fSwitchOff);
-      AlternatePainter.ImgNames.Add(fSwitchOn);
+      Painter.AddImage(fSwitchOff);
+      AlternatePainter.AddImage(fSwitchOn);
       FStaticDraw := False;
     end;
     akInfoStone:
-      Painter.ImgNames.Add(fInfoStone);
+      Painter.AddImage(fInfoStone);
     akTransporterNext..akTransporterRandom:
-      Painter.ImgNames.Add(fTransporter);
+      Painter.AddImage(fTransporter);
     akOutside:
-      Painter.ImgNames.Add(fOutside);
+      Painter.AddImage(fOutside);
     akTreasure:
-      Painter.ImgNames.Add(fTreasure);
+      Painter.AddImage(fTreasure);
     akCustom..akDirection:
-      Painter.ImgNames.Add(fCompatibility + Actions.FileName);
+      Painter.AddImage(fCompatibility + Actions.FileName);
   end;
 end;
 
@@ -579,7 +672,7 @@ end;
 procedure TActionsEffect.AfterConstruction;
 begin
   inherited;
-  FAlternatePainter.ImgNames.EndUpdate;
+  FAlternatePainter.EndUpdate;
 end;
 
 {*
@@ -627,6 +720,7 @@ begin
       HasMoved, HasShownMsg, Successful);
 
     GoOnMoving := VarGoOnMoving;
+    Temporization := Player.DefaultTemporization;
 
     if Actions.Kind in [akTransporterNext..akTransporterRandom] then
     begin
@@ -646,7 +740,7 @@ begin
         // Si l'on a trouvé une autre case, on déplace le joueur
         if Same3DPoint(Other, Pos) then
           Exit;
-        Master.Temporize;
+        Temporize;
         Player.MoveTo(Other);
       end;
     end else if Actions.Kind in [akOutside..akTreasure] then
@@ -709,6 +803,7 @@ begin
     FActions.Execute(phPushing, Player, KeyPressed, Pos, DoNextPhase,
       HasMoved, HasShownMsg, Successful);
     Cancelled := Same3DPoint(Src, Player.Position) and (not Successful);
+    Temporization := Player.DefaultTemporization;
   end;
 end;
 
@@ -727,6 +822,8 @@ end;
 constructor TActions.Create(AMaster: TMaster; ANumber: Integer;
   AKind: TActionsKind; const AFileName: string; AActions: TStrings;
   const AID: TComponentID = '');
+var
+  IntFileName, XIndex, YIndex: Integer;
 begin
   inherited Create(AMaster, IIF(AID = '', Format(idActions, [ANumber]), AID));
 
@@ -736,6 +833,15 @@ begin
   FActions := TStringList.Create;
   FActions.Assign(AActions);
   FCounter := 0;
+
+  if TryStrToInt(FFileName, IntFileName) then
+  begin
+    XIndex := IntFileName mod 10 - 1;
+    YIndex := IntFileName div 10 - 1;
+    FFileName := Format(DefaultSquaresImgName + '@%d,%d:%d,%d',
+      [XIndex*SquareSize, YIndex*SquareSize, (XIndex+1)*SquareSize,
+      (YIndex+1)*SquareSize]);
+  end;
 
   case Kind of
     akPushButton: FInactive := idSunkenButton;
@@ -785,8 +891,12 @@ procedure TActions.Execute(Phase: Integer; Player: TPlayer;
   out HasMoved, HasShownMsg, Successful: Boolean);
 begin
   Inc(FCounter);
+  if Kind <> akGameStarted then
+    UpdateView(Player);
+
   TActionsInterpreter.Execute(@FCounter, FActions, Master, Phase, Player,
-    KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg, Successful, Inactive);
+    KeyPressed, Pos, DoNextPhase, HasMoved, HasShownMsg, Successful,
+    Inactive);
 end;
 
 {------------------}

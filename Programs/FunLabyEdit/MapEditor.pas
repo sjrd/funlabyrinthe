@@ -314,7 +314,7 @@ begin
   Msg.Component := Component;
   Msg.QPos := QPos;
 
-  // Removing phase
+  // Adding phase
   Msg.Phase := espAdding;
   for I := 0 to QPos.ComponentCount-1 do
   begin
@@ -329,7 +329,7 @@ begin
       Abort;
   end;
 
-  // Remove phase
+  // Add phase
   Msg.Phase := espAdd;
   Msg.Flags := [];
   Component.Dispatch(Msg);
@@ -357,7 +357,7 @@ begin
 
   MarkModified;
 
-  // Removed phase
+  // Added phase
   Msg.Phase := espAdded;
   for I := 0 to QPos.ComponentCount-1 do
   begin

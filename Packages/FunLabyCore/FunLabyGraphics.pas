@@ -8,7 +8,7 @@ unit FunLabyGraphics;
 interface
 
 uses
-  SysUtils, Classes, Contnrs, Graphics, GR32;
+  Types, SysUtils, Classes, Contnrs, Graphics, GR32;
 
 const
   DefaultDelay = 100;
@@ -101,6 +101,16 @@ procedure ReplaceColorInBitmap32(Bitmap: TBitmap32; FromColor: TColor32;
 procedure HandleBmpTransparent(Bitmap: TBitmap32);
 
 function LoadBitmapFromFile(const FileName: TFileName): TBitmap32;
+
+function AnimateBitmap(Bitmap: TBitmap32;
+  const FrameDelays: array of Cardinal): TAnimatedBitmap32; overload;
+function AnimateBitmap(Bitmap: TBitmap32; FrameCount: Integer;
+  FrameDelay: Cardinal): TAnimatedBitmap32; overload;
+function AnimateBitmap(Bitmap: TBitmap32;
+  FrameDelay: Cardinal): TAnimatedBitmap32; overload;
+
+procedure DrawRepeat(Dest, Src: TBitmap32; const DestRect, SrcRect: TRect;
+  TickCount: Cardinal = 0);
 
 implementation
 
@@ -217,6 +227,8 @@ begin
         end else
         begin
           Result := TAnimatedBitmap32.Create;
+          Result.DrawMode := dmBlend;    // need to set those before Assign
+          Result.CombineMode := cmMerge; // sets FrameCount
           Result.Assign(Picture);
         end;
       end else
@@ -230,9 +242,141 @@ begin
     finally
       Picture.Free;
     end;
+
+    Result.DrawMode := dmBlend;
+    Result.CombineMode := cmMerge;
   except
     Result.Free;
     raise;
+  end;
+end;
+
+{*
+  Anime un bitmap
+  AnimateBitmap transforme un bitmap inanimé en un bitmap animé. Le bitmap de
+  base est découpé en frames dans sa largeur.
+  @param Bitmap        Bitmap inanimé de base
+  @param FrameDelays   Tableau des délais d'affichage de chaque frame
+  @return Bitmap animé construit
+*}
+function AnimateBitmap(Bitmap: TBitmap32;
+  const FrameDelays: array of Cardinal): TAnimatedBitmap32;
+var
+  FrameCount, Width, Height, I: Integer;
+  SrcRect: TRect;
+  Frame: TBitmap32Frame;
+begin
+  FrameCount := Length(FrameDelays);
+  Width := Bitmap.Width div FrameCount;
+  Height := Bitmap.Height;
+
+  SrcRect := Rect(0, 0, Width, Height);
+
+  Result := TAnimatedBitmap32.Create;
+  try
+    Result.SetSize(Width, Height);
+    Result.DrawMode := Bitmap.DrawMode;
+    Result.CombineMode := Bitmap.CombineMode;
+    Result.FrameCount := FrameCount;
+
+    for I := 0 to FrameCount-1 do
+    begin
+      Frame := Result.Frames[I];
+      Frame.Delay := FrameDelays[I];
+      Frame.Clear(clTransparent32);
+      Frame.Draw(0, 0, SrcRect, Bitmap);
+
+      OffsetRect(SrcRect, Width, 0);
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+{*
+  Anime un bitmap
+  AnimateBitmap transforme un bitmap inanimé en un bitmap animé. Le bitmap de
+  base est découpé en frames dans sa largeur.
+  @param Bitmap       Bitmap inanimé de base
+  @param FrameCount   Nombre de frames
+  @param FrameDelay   Délai d'affichage, appliqué à toutes les frames
+  @return Bitmap animé construit
+*}
+function AnimateBitmap(Bitmap: TBitmap32; FrameCount: Integer;
+  FrameDelay: Cardinal): TAnimatedBitmap32;
+var
+  FrameDelays: TCardinalDynArray;
+  I: Integer;
+begin
+  SetLength(FrameDelays, FrameCount);
+  for I := 0 to FrameCount-1 do
+    FrameDelays[I] := FrameDelay;
+
+  Result := AnimateBitmap(Bitmap, FrameDelays);
+end;
+
+{*
+  Anime un bitmap
+  AnimateBitmap transforme un bitmap inanimé en un bitmap animé. Le bitmap de
+  base est découpé en frames dans sa largeur.
+  Le nombre de frames est déterminé par formule
+    (Bitmap.Width div Bitmap.Height).
+  @param Bitmap       Bitmap inanimé de base
+  @param FrameDelay   Délai d'affichage, appliqué à toutes les frames
+  @return Bitmap animé construit
+*}
+function AnimateBitmap(Bitmap: TBitmap32;
+  FrameDelay: Cardinal): TAnimatedBitmap32;
+begin
+  Result := AnimateBitmap(Bitmap, Bitmap.Width div Bitmap.Height, FrameDelay);
+end;
+
+{*
+  Dessine un bitmap sur un autre, avec répétition de la source
+  @param Dest        Bitmap destination
+  @param Src         Bitmap source
+  @param DestRect    Rectangle destination
+  @param SrcRect     Rectangle source
+  @param TickCount   Tick count auquel dessiner le bitmap source (si animé)
+*}
+procedure DrawRepeat(Dest, Src: TBitmap32; const DestRect, SrcRect: TRect;
+  TickCount: Cardinal = 0);
+var
+  OldDestClip: TRect;
+  SrcWidth, SrcHeight, X, Y: Integer;
+  SrcAnimated: Boolean;
+begin
+  if IsRectEmpty(DestRect) or IsRectEmpty(SrcRect) then
+    Exit;
+
+  OldDestClip := Dest.ClipRect;
+  Dest.BeginUpdate;
+  try
+    Dest.ClipRect := DestRect;
+    SrcWidth := SrcRect.Right - SrcRect.Left;
+    SrcHeight := SrcRect.Bottom - SrcRect.Top;
+    SrcAnimated := (TickCount <> 0) and (Src is TAnimatedBitmap32);
+
+    X := DestRect.Left;
+    while X < DestRect.Right do
+    begin
+      Y := DestRect.Top;
+      while Y < DestRect.Bottom do
+      begin
+        if SrcAnimated then
+          TAnimatedBitmap32(Src).DrawAtTimeTo(TickCount, Dest, X, Y, SrcRect)
+        else
+          Src.DrawTo(Dest, X, Y, SrcRect);
+
+        Inc(Y, SrcHeight);
+      end;
+      Inc(X, SrcWidth);
+    end;
+  finally
+    Dest.ClipRect := OldDestClip;
+    Dest.EndUpdate;
+    Dest.Changed(DestRect);
   end;
 end;
 
@@ -382,7 +526,12 @@ begin
       Break;
 
     FFrames[I] := TBitmap32Frame.CreateFrame(Self);
-    TBitmap32Frame(FFrames[I]).SetSize(Width, Height);
+    with TBitmap32Frame(FFrames[I]) do
+    begin
+      SetSize(Self.Width, Self.Height);
+      DrawMode := Self.DrawMode;
+      CombineMode := Self.CombineMode;
+    end;
   end;
 
   UpdateTimeToFrame;

@@ -204,7 +204,7 @@ begin
     end;
 
     TPlankSquare.Create(Master, Map, Msg.Pos, Player);
-    Master.Temporize;
+    Temporize;
   end;
 end;
 
@@ -220,7 +220,7 @@ begin
   inherited;
 
   Name := SPlanks;
-  Painter.ImgNames.Add(fPlank);
+  Painter.AddImage(fPlank);
 end;
 
 {*
@@ -327,12 +327,14 @@ end;
 procedure TPlankSquare.Execute(Context: TMoveContext);
 var
   Redo: Boolean;
+  RedoDelay: Cardinal;
 begin
   with Context do
   begin
-    Master.Temporize;
-    Player.MoveTo(PointBehind(Pos, Player.Direction), True, Redo);
+    Temporize;
+    Player.MoveTo(PointBehind(Pos, Player.Direction), True, Redo, RedoDelay);
     GoOnMoving := Redo;
+    Temporization := RedoDelay;
   end;
 end;
 

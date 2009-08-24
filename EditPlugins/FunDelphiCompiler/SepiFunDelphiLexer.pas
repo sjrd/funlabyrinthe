@@ -15,7 +15,7 @@ uses
 
 const
   FirstTerminal = 0;
-  LastTerminal = 97;
+  LastTerminal = 98;
 
   tkEof = SepiLexerUtils.tkEof;         /// Fin de fichier
   tkBlank = SepiLexerUtils.tkBlank;     /// Lexème blanc
@@ -114,18 +114,19 @@ const
   tkFinally = 84;   // finally
   tkRaise = 85;     // raise
   tkInherited = 86; // inherited
+  tkWith = 87;      // with
 
-  tkCan = 87;      // can
-  tkHas = 88;      // has
-  tkAtKw = 89;     // at
-  tkLeast = 90;    // least
-  tkMost = 91;     // most
-  tkMore = 92;     // more
-  tkLess = 93;     // less
-  tkThan = 94;     // than
-  tkExactly = 95;  // exactly
-  tkReceives = 96; // receives
-  tkDiscards = 97; // discards
+  tkCan = 88;      // can
+  tkHas = 89;      // has
+  tkAtKw = 90;     // at
+  tkLeast = 91;    // least
+  tkMost = 92;     // most
+  tkMore = 93;     // more
+  tkLess = 94;     // less
+  tkThan = 95;     // than
+  tkExactly = 96;  // exactly
+  tkReceives = 97; // receives
+  tkDiscards = 98; // discards
 
 type
   {*
@@ -241,7 +242,8 @@ begin
           if Key = 'until'          then SymbolClass := tkUntil else
           if Key = 'uses'           then SymbolClass := tkUses;
     'v' : if Key = 'var'            then SymbolClass := tkVar;
-    'w' : if Key = 'while'          then SymbolClass := tkWhile;
+    'w' : if Key = 'with'           then SymbolClass := tkWith else
+          if Key = 'while'          then SymbolClass := tkWhile;
     'x' : if Key = 'xor'            then SymbolClass := tkXor;
     'z' : if Key = 'zindex'         then SymbolClass := tkZIndex;
   end;
@@ -706,6 +708,7 @@ initialization
   SymbolClassNames[tkFinally] := 'tkFinally';
   SymbolClassNames[tkRaise] := 'tkRaise';
   SymbolClassNames[tkInherited] := 'tkInherited';
+  SymbolClassNames[tkWith] := 'tkWith';
 
   SymbolClassNames[tkCan] := 'tkCan';
   SymbolClassNames[tkHas] := 'tkHas';

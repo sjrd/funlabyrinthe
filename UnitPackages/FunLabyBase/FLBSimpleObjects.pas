@@ -180,7 +180,7 @@ begin
   inherited;
 
   Name := SBuoys;
-  Painter.ImgNames.Add(fBuoy);
+  Painter.AddImage(fBuoy);
 end;
 
 {*
@@ -231,7 +231,7 @@ begin
   inherited;
 
   Name := SSilverKeys;
-  Painter.ImgNames.Add(fSilverKey);
+  Painter.AddImage(fSilverKey);
 end;
 
 {*
@@ -282,7 +282,7 @@ begin
   inherited;
 
   Name := SGoldenKeys;
-  Painter.ImgNames.Add(fGoldenKey);
+  Painter.AddImage(fGoldenKey);
 end;
 
 {*

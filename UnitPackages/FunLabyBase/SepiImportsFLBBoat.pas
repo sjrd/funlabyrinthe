@@ -216,7 +216,7 @@ begin
   {$ASSERTIONS ON}
   CheckInstanceSize(TBoatPluginPlayerData, 20, 16);
   CheckInstanceSize(TBoatPlugin, 40, 40);
-  CheckInstanceSize(TBoat, 48, 48);
+  CheckInstanceSize(TBoat, 56, 56);
   CheckInstanceSize(TBoatCreator, 36, 36);
   CheckInstanceSize(TUnderBoatCreator, 36, 36);
   {$ASSERTIONS OFF}

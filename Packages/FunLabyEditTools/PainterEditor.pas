@@ -15,6 +15,16 @@ resourcestring
 
 type
   {*
+    Peintre en édition
+    @author sjrd
+    @version 5.0
+  *}
+  TEditPainter = class(TPainter)
+  public
+    property Description;
+  end;
+
+  {*
     Boîte de dialogue d'édition de peintre
     @author sjrd
     @version 5.0
@@ -44,7 +54,7 @@ type
       Layer: TCustomLayer);
     procedure FormCreate(Sender: TObject);
   private
-    FPainter: TPainter; /// Peintre à éditer
+    FPainter: TEditPainter; /// Peintre à éditer
 
     procedure UpdateListBoxImgNames;
     procedure UpdateSelectedImage(const ImgName: string);
@@ -52,7 +62,7 @@ type
 
     function DoEditPainter(APainter: TPainter): Boolean;
 
-    property Painter: TPainter read FPainter;
+    property Painter: TEditPainter read FPainter;
   public
     class function EditPainter(Painter: TPainter): Boolean;
   end;
@@ -76,7 +86,7 @@ uses
 *}
 procedure TFormPainterEditor.UpdateListBoxImgNames;
 begin
-  ListBoxImgNames.Items.Assign(Painter.ImgNames);
+  ListBoxImgNames.Items.Assign(Painter.Description);
   PaintBoxPreview.Invalidate;
 end;
 
@@ -85,16 +95,14 @@ end;
 *}
 procedure TFormPainterEditor.UpdateSelectedImage(const ImgName: string);
 var
-  FileName: TFileName;
+  Bitmap: TBitmap32;
   SubRect: TRect;
 begin
-  Painter.Master.ParseImgName(ImgName, FileName, SubRect);
-  if FileName = '' then
-    Exit;
+  Painter.ParseDescriptionLine(ImgName, Bitmap, SubRect);
 
   with ImgViewSelectedImage.Bitmap do
   begin
-    LoadFromFile(FileName);
+    Assign(Bitmap);
 
     if not SameRect(BoundsRect, SubRect) then
     begin
@@ -103,6 +111,9 @@ begin
       FrameRectS(SubRect, clYellow32);
       InflateRect(SubRect, -2, -2);
       FrameRectS(SubRect, clYellow32);
+
+      ImgViewSelectedImage.ScrollToCenter(
+        (SubRect.Left+SubRect.Right) div 2, (SubRect.Top+SubRect.Bottom) div 2);
     end;
   end;
 end;
@@ -132,9 +143,9 @@ end;
 *}
 function TFormPainterEditor.DoEditPainter(APainter: TPainter): Boolean;
 begin
-  FPainter := TPainter.Create(APainter.Master);
+  FPainter := TEditPainter.Create(APainter.Master);
   try
-    FPainter.ImgNames.Assign(APainter.ImgNames);
+    FPainter.Assign(APainter);
 
     UpdateListBoxImgNames;
     if ListBoxImgNames.Items.Count > 0 then
@@ -144,7 +155,7 @@ begin
     Result := ShowModal = mrOK;
 
     if Result then
-      APainter.ImgNames.Assign(FPainter.ImgNames);
+      APainter.Assign(FPainter);
   finally
     FreeAndNil(FPainter);
   end;
@@ -217,7 +228,7 @@ var
 begin
   if OpenImageDialog.Execute then
   begin
-    Painter.ImgNames.BeginUpdate;
+    Painter.Description.BeginUpdate;
     try
       for I := 0 to OpenImageDialog.Files.Count-1 do
       begin
@@ -234,10 +245,10 @@ begin
         FileName := ChangeFileExt(FileName, '');
         FileName := AnsiReplaceStr(FileName, '\', '/');
 
-        Painter.ImgNames.Add(FileName);
+        Painter.Description.Add(FileName);
       end;
     finally
-      Painter.ImgNames.EndUpdate;
+      Painter.Description.EndUpdate;
     end;
   end;
 
@@ -258,10 +269,10 @@ begin
   if Index < 0 then
     Exit;
 
-  Painter.ImgNames.Delete(Index);
+  Painter.Description.Delete(Index);
   UpdateListBoxImgNames;
 
-  if Index < Painter.ImgNames.Count then
+  if Index < Painter.Description.Count then
     ListBoxImgNames.ItemIndex := Index
   else
     ListBoxImgNames.ItemIndex := Index-1;
@@ -281,7 +292,7 @@ begin
   if Index <= 0 then
     Exit;
 
-  Painter.ImgNames.Exchange(Index, Index-1);
+  Painter.Description.Exchange(Index, Index-1);
   UpdateListBoxImgNames;
 
   ListBoxImgNames.ItemIndex := Index-1;
@@ -298,10 +309,10 @@ var
   Index: Integer;
 begin
   Index := ListBoxImgNames.ItemIndex;
-  if Index >= Painter.ImgNames.Count-1 then
+  if Index >= Painter.Description.Count-1 then
     Exit;
 
-  Painter.ImgNames.Exchange(Index, Index+1);
+  Painter.Description.Exchange(Index, Index+1);
   UpdateListBoxImgNames;
 
   ListBoxImgNames.ItemIndex := Index+1;
@@ -323,7 +334,7 @@ procedure TFormPainterEditor.ImgViewSelectedImageMouseDown(Sender: TObject;
 var
   SelectedImage: TBitmap32;
   ImgPoint: TPoint;
-  XIndex, YIndex, SelIndex: Integer;
+  SelIndex: Integer;
   BaseImgName, Dummy: string;
 begin
   SelectedImage := ImgViewSelectedImage.Bitmap;
@@ -334,14 +345,15 @@ begin
   ImgPoint := ImgViewSelectedImage.ControlToBitmap(Point(X, Y));
   if not PtInRect(SelectedImage.BoundsRect, ImgPoint) then
     Exit;
+  Dec(ImgPoint.X, ImgPoint.X mod SquareSize);
+  Dec(ImgPoint.Y, ImgPoint.Y mod SquareSize);
 
-  XIndex := ImgPoint.X div SquareSize;
-  YIndex := ImgPoint.Y div SquareSize;
   SelIndex := ListBoxImgNames.ItemIndex;
 
-  SplitToken(Painter.ImgNames[SelIndex], '@', BaseImgName, Dummy);
-  Painter.ImgNames[SelIndex] := Format('%s@%d,%d',
-    [BaseImgName, XIndex, YIndex]);
+  SplitToken(Painter.Description[SelIndex], '@', BaseImgName, Dummy);
+  Painter.Description[SelIndex] := Format('%s@%d,%d:%d,%d',
+    [BaseImgName, ImgPoint.X, ImgPoint.Y,
+    ImgPoint.X+SquareSize, ImgPoint.Y+SquareSize]);
 
   UpdateListBoxImgNames;
   ListBoxImgNames.ItemIndex := SelIndex;

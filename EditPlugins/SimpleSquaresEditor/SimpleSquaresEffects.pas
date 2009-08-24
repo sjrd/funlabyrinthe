@@ -19,7 +19,7 @@ type
   protected
     function GetParentClassName: string; override;
 
-    function GetCanEditImgNames: Boolean; override;
+    function GetCanEditPainter: Boolean; override;
   public
     constructor Create(AImagesMaster: TImagesMaster); override;
 
@@ -35,7 +35,7 @@ type
   protected
     function GetParentClassName: string; override;
 
-    function GetCanEditImgNames: Boolean; override;
+    function GetCanEditPainter: Boolean; override;
   public
     constructor Create(AImagesMaster: TImagesMaster); override;
 
@@ -55,7 +55,7 @@ constructor TSimpleButton.Create(AImagesMaster: TImagesMaster);
 begin
   inherited;
 
-  ImgNames.Add('Buttons/Button'); {don't localize}
+  Painter.AddImage('Buttons/Button'); {don't localize}
 end;
 
 {*
@@ -69,7 +69,7 @@ end;
 {*
   [@inheritDoc]
 *}
-function TSimpleButton.GetCanEditImgNames: Boolean;
+function TSimpleButton.GetCanEditPainter: Boolean;
 begin
   Result := False;
 end;
@@ -93,7 +93,7 @@ constructor TSimpleSwitch.Create(AImagesMaster: TImagesMaster);
 begin
   inherited;
 
-  ImgNames.Add('Buttons/SwitchOff'); {don't localize}
+  Painter.AddImage('Buttons/SwitchOff'); {don't localize}
 end;
 
 {*
@@ -107,7 +107,7 @@ end;
 {*
   [@inheritDoc]
 *}
-function TSimpleSwitch.GetCanEditImgNames: Boolean;
+function TSimpleSwitch.GetCanEditPainter: Boolean;
 begin
   Result := False;
 end;

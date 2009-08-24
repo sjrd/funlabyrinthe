@@ -97,7 +97,7 @@ begin
   FIsExit := AIsExit;
 
   if Opened then
-    Painter.ImgNames.Add(fOpenedLift);
+    Painter.AddImage(fOpenedLift);
 end;
 
 {*
@@ -175,7 +175,7 @@ begin
   inherited;
 
   Name := SLift;
-  Painter.ImgNames.Add(fLift);
+  Painter.AddImage(fLift);
 end;
 
 {*
@@ -271,7 +271,7 @@ begin
     // Affichage de l'ascenseur ouvert pendant un temps
     with TEngagedLiftSquare.Create(Master, Map, Pos, True) do
     try
-      Master.Temporize;
+      Temporize;
     finally
       Free;
     end;
@@ -288,7 +288,7 @@ begin
     Player.MoveTo(Other);
 
     // Après un temps, ouvrir l'ascenseur et remontrer le joueur
-    Master.Temporize;
+    Temporize;
     Map[Other].Free;
     TEngagedLiftSquare.Create(Master, Map, Other, True, True);
     Player.Show;

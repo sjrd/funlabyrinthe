@@ -11,21 +11,27 @@ unit C4xMain;
 interface
 
 uses
-  Classes, SysUtils, StrUtils, Math, Contnrs, ScUtils, ScLists, ScStrUtils,
-  SdDialogs, FunLabyUtils, FilesUtils, UnitFiles, Generics,
-  FLBFields, FLBSimpleEffects, FLBBoat,
-  C4xCommon, C4xComponents, C4xFields, C4xSquaresTable;
+  Classes, SysUtils, StrUtils, Math, Contnrs, TypInfo, ScUtils, ScLists,
+  ScStrUtils, SdDialogs, FunLabyUtils, FilesUtils, UnitFiles, Generics,
+  FLBFields, FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBLift,
+  FLBObstacles, FLBShowMessage,
+  C4xCommon, C4xComponents, C4xFields, C4xBoat, C4xSquaresTable;
 
 type
   TCompatibility4xUnit = class(TInterfacedUnitFile)
   private
-    FSourceHRef: string;
+    FInfos: TC4xInfos; /// Informations générales
+
+    procedure CreateComponents;
+    procedure LoadActions(const FileName: TFileName);
+    procedure UpdatePainters(const SquaresImgName: string);
+    procedure UpdateSquareCategories;
   protected
     procedure GameStarted; override;
   public
     constructor Create(AMasterFile: TMasterFile; Params: TStrings);
 
-    property SourceHRef: string read FSourceHRef;
+    property Infos: TC4xInfos read FInfos;
   end;
 
 function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
@@ -46,15 +52,115 @@ begin
   Result := TCompatibility4xUnit.Create(BPLHandler.MasterFile, Params);
 end;
 
+{-----------------------}
+{ TPainterAdapter class }
+{-----------------------}
+
+type
+  TPainterAdapter = class(TPainter)
+  private
+    FSquaresImgName: string; /// Nom du fichier Cases
+
+    procedure Adapt;
+  public
+    procedure AdaptPainter(APainter: TPainter);
+    procedure AdaptPainters(Instance: TObject);
+
+    property SquaresImgName: string read FSquaresImgName write FSquaresImgName;
+  end;
+
+procedure TPainterAdapter.Adapt;
+const
+  ImgNamesToAdapt: array[0..30] of string = (
+    fGrass, fWater, fWall, fHole, fSilverBlock,
+    fGoldenBlock, fNorthArrow, fEastArrow, fSouthArrow, fWestArrow,
+    fTransporter, fUpStairs, fDownStairs, fButton, fSunkenButton,
+    fOutside, fBuoy, fPlank, fSilverKey, fGoldenKey,
+    fInfoStone, fLift, fOpenedLift, fSwitchOn, fSwitchOff,
+    fBoat, fTreasure, fCrossroads, fDirectTurnstile, fIndirectTurnstile,
+    fSky
+  );
+var
+  ImgNameFmt, Line, DummyStr, RectStr: string;
+  I, Index, XIndex, YIndex: Integer;
+begin
+  ImgNameFmt := fCompatibility + SquaresImgName + '@%d,%d:%d,%d';
+
+  for I := 0 to Description.Count-1 do
+  begin
+    Line := Description[I];
+
+    if AnsiStartsStr(fCompatibility + DefaultSquaresImgName + '@', Line) then
+    begin
+      if SquaresImgName = DefaultSquaresImgName then
+        Continue;
+
+      SplitToken(Line, '@', DummyStr, RectStr);
+    end else
+    begin
+      Index := AnsiIndexStr(Line, ImgNamesToAdapt);
+      if Index < 0 then
+        Continue;
+
+      XIndex := Index mod 5;
+      YIndex := Index div 5;
+
+      RectStr := Format('%d,%d:%d,%d',
+        [XIndex*SquareSize, YIndex*SquareSize, (XIndex+1)*SquareSize,
+        (YIndex+1)*SquareSize]);
+    end;
+
+    Description[I] := fCompatibility + SquaresImgName + '@' + RectStr;
+  end;
+end;
+
+procedure TPainterAdapter.AdaptPainter(APainter: TPainter);
+begin
+  BeginUpdate;
+  try
+    Assign(APainter);
+    Adapt;
+    APainter.Assign(Self);
+  finally
+    Clear;
+    EndUpdate;
+  end;
+end;
+
+procedure TPainterAdapter.AdaptPainters(Instance: TObject);
+var
+  I, PropCount: Integer;
+  PropList: PPropList;
+  PropInfo: PPropInfo;
+  PropClass: TClass;
+begin
+  PropCount := GetPropList(Instance.ClassInfo, [tkClass], nil);
+  if PropCount = 0 then
+    Exit;
+
+  GetMem(PropList, PropCount * SizeOf(Pointer));
+  try
+    GetPropList(Instance.ClassInfo, [tkClass], PropList, False);
+
+    for I := 0 to PropCount-1 do
+    begin
+      PropInfo := PropList^[I];
+      PropClass := GetTypeData(PropInfo.PropType^).ClassType;
+      if PropClass.InheritsFrom(TPainter) then
+        AdaptPainter(TPainter(GetOrdProp(Instance, PropInfo)));
+    end;
+  finally
+    FreeMem(PropList);
+  end;
+end;
+
 {-----------------------------}
 { Classe TCompatibility4xUnit }
 {-----------------------------}
 
 const {don't localize}
-  attrFileName = 'FileName';   /// Attribut pour le nom de fichier
-  attrCounters = 'Counters';   /// Enregistrement des compteurs
-  attrVariables = 'Variables'; /// Enregistrement des variables
-  attrShowTips = 'ShowTips';   /// Affichage des indices
+  attrFileName = 'FileName';             /// Attribut pour le nom de fichier
+  attrSquaresImgName = 'SquaresImgName'; /// Nom de l'image du fichier Cases
 
 {*
   Charge tous les composants de compatibilité 4.x de FunLabyrinthe
@@ -63,6 +169,110 @@ const {don't localize}
 *}
 constructor TCompatibility4xUnit.Create(AMasterFile: TMasterFile;
   Params: TStrings);
+var
+  ActionsFileName: TFileName;
+  SquaresImgName: string;
+begin
+  inherited Create(AMasterFile);
+
+  try
+    ActionsFileName := MasterFile.ResolveHRef(
+      Params.Values[attrFileName], fUnitsDir);
+  except
+    ActionsFileName := '';
+  end;
+
+  SquaresImgName := Params.Values[attrSquaresImgName];
+  if Master.ImagesMaster.ResolveImgName(fCompatibility+SquaresImgName) = '' then
+    SquaresImgName := DefaultSquaresImgName;
+
+  CreateComponents;
+  LoadActions(ActionsFileName);
+  UpdatePainters(SquaresImgName);
+  UpdateSquareCategories;
+end;
+
+{*
+  Crée les composants de cette unité
+*}
+procedure TCompatibility4xUnit.CreateComponents;
+var
+  I: Integer;
+  Buoys, Planks, SilverKeys, GoldenKeys: TObjectDef;
+begin
+  // Plug-in
+
+  TBuoyPlugin.Create(Master, idBuoyPlugin);
+  TPlankPlugin.Create(Master, idPlankPlugin);
+  TOldBoatPlugin.Create(Master, idOldBoatPlugin);
+
+  TDefaultShowMessagePlugin.Create(Master, idDefaultShowMessagePlugin);
+
+  TCompatibilityHacksPlugin.Create(Master, idCompatibilityHacksPlugin);
+  TZonesPlugin.Create(Master, idZonesPlugin);
+
+  // Définitions d'objet
+
+  Buoys := TBuoys.Create(Master, idBuoys);
+  Planks := TPlanks.Create(Master, idPlanks);
+  SilverKeys := TSilverKeys.Create(Master, idSilverKeys);
+  GoldenKeys := TGoldenKeys.Create(Master, idGoldenKeys);
+
+  // Terrains
+
+  TGround.CreateGround(Master, idGrass, sGrass, fGrass);
+  TWall.Create(Master, idWall);
+  TOldWater.Create(Master, idWater);
+  TOldHole.Create(Master, idHole);
+  TSky.Create(Master, idSky);
+
+  for I := 1 to 10 do
+    TOldBoat.CreateNumbered(Master, Format(fmtidBoat, [I]), I);
+
+  // Effets
+
+  TArrow.CreateArrow(Master, idNorthArrow, sNorthArrow, diNorth);
+  TArrow.CreateArrow(Master, idEastArrow , sEastArrow , diEast );
+  TArrow.CreateArrow(Master, idSouthArrow, sSouthArrow, diSouth);
+  TArrow.CreateArrow(Master, idWestArrow , sWestArrow , diWest );
+  TArrow.CreateArrow(Master, idCrossroads, sCrossroads, diNone );
+
+  TInactiveTransporter.Create(Master, idInactiveTransporter);
+
+  TStairs.CreateStairs(Master, idUpStairs, True);
+  TStairs.CreateStairs(Master, idDownStairs, False);
+  TLift.Create(Master, idLift);
+
+  for I := 1 to 20 do
+    TOldStairs.Create(Master, Format(idOldStairs, [I]));
+
+  TDirectTurnstile.Create(Master, idDirectTurnstile);
+  TIndirectTurnstile.Create(Master, idIndirectTurnstile);
+
+  TDecorativeEffect.CreateDeco(Master, idSunkenButton,
+    sSunkenButton, fSunkenButton);
+
+  // Outils
+
+  TObjectTool.CreateTool(Master, idBuoy, Buoys, sFoundBuoy, sBuoy);
+  TPlankTool.CreateTool(Master, idPlank, Planks, sFoundPlank, sPlank);
+  TObjectTool.CreateTool(Master, idSilverKey, SilverKeys,
+    sFoundSilverKey, sSilverKey);
+  TObjectTool.CreateTool(Master, idGoldenKey, GoldenKeys,
+    sFoundGoldenKey, sGoldenKey);
+
+  // Obstacles
+
+  TSilverBlock.Create(Master, idSilverBlock);
+  TGoldenBlock.Create(Master, idGoldenBlock);
+  TSecretWay.Create(Master, idSecretWay);
+end;
+
+{*
+  Charge les actions depuis le fichier d'actions
+  @param FileName   Nom du fichier d'actions
+*}
+procedure TCompatibility4xUnit.LoadActions(const FileName: TFileName);
 const {don't localize}
   KindStrings: array[0..14] of string = (
     'GameStarted', 'PushButton', 'Switch', 'InfoStone', 'Hidden',
@@ -70,57 +280,16 @@ const {don't localize}
     'Treasure', 'Custom', 'Object', 'Obstacle', 'Direction', 'Zone'
   );
 var
-  FileName: TFileName;
   FileContents, SubContents: TStrings;
   ActionsList: TObjectList;
   Number, FirstLine, LastLine: Integer;
   StrNumber, InfoLine, Graphics: string;
   Kind: TActionsKind;
-  I: Integer;
   Zone: T3DPoint;
   ActionsID: TComponentID;
   Actions: TActions;
-  Infos: TC4xInfos;
 begin
   { Don't localize any of the strings in this procedure. }
-
-  inherited Create(AMasterFile);
-
-  try
-    FileName := MasterFile.ResolveHRef(
-      Params.Values[attrFileName], fUnitsDir);
-    FSourceHRef := Params.Values[attrFileName];
-  except
-    FileName := '';
-  end;
-
-  // Supprimer certains composants de FunLabyBase
-
-  Master.Component[idTransporterCreator].Free;
-  Master.Component[idBoatCreator].Free;
-
-  // Plug-in
-
-  TGameStartedPlugin.Create(Master, idGameStartedPlugin);
-  TZonesPlugin.Create(Master, idZonesPlugin);
-  TCompatibilityHacksPlugin.Create(Master, idCompatibilityHacksPlugin);
-
-  // Terrains
-
-  TOldWater.Create(Master, idOldWater);
-  TOldHole.Create(Master, idOldHole);
-
-  // Effets
-
-  for I := 1 to 20 do
-    TOldStairs.Create(Master, Format(idOldStairs, [I]));
-
-  // Outils
-
-  for I := 1 to 10 do
-    TNumberedBoat.CreateNumbered(Master, Format(idNumberedBoat, [I]), I);
-
-  // Actions : elles sont stockées dans le fichier donné par FileName
 
   FileContents := nil;
   SubContents := nil;
@@ -206,13 +375,41 @@ begin
       Inc(Number);
     end;
 
-    Infos := TC4xInfos.Create(MasterFile, ActionsList);
+    FInfos := TC4xInfos.Create(MasterFile, ActionsList);
   finally
     ActionsList.Free;
     SubContents.Free;
     FileContents.Free;
   end;
+end;
 
+{*
+  Met à jour les peintres des composants standard
+  @param SquaresImgName   Nom de l'image du fichier Cases
+*}
+procedure TCompatibility4xUnit.UpdatePainters(const SquaresImgName: string);
+var
+  PainterAdapter: TPainterAdapter;
+  I: Integer;
+begin
+  PainterAdapter := TPainterAdapter.Create(Master.ImagesMaster);
+  try
+    PainterAdapter.SquaresImgName := SquaresImgName;
+
+    for I := 0 to Master.ComponentCount-1 do
+      PainterAdapter.AdaptPainters(Master.Components[I]);
+  finally
+    PainterAdapter.Free;
+  end;
+end;
+
+{*
+  Met à jour les catégories des cases
+*}
+procedure TCompatibility4xUnit.UpdateSquareCategories;
+var
+  I: Integer;
+begin
   for I := 0 to Infos.ActionsCount-1 do
     if Infos.Actions[I].Kind in RegisteredActionsKind then
       Master.Square[Format(idActionsSquare, [I])].Category := SCategoryButtons;
@@ -223,54 +420,34 @@ end;
 *}
 procedure TCompatibility4xUnit.GameStarted;
 var
-  Infos: TC4xInfos;
   Player: TPlayer;
-  I, J: Integer;
-  idOldOutside, idOldTreasure: TComponentID;
-  OldWater, OldHole, OldOutside, OldTreasure: TSquare;
-  Map: TMap;
+  Infos: TC4xInfos;
+  TestMsg: TPlayerShowMsgMessage;
+  I: Integer;
 begin
-  Infos := Master.Component[idC4xInfos] as TC4xInfos;
   Player := Master.Players[0];
+  Infos := Master.Component[idC4xInfos] as TC4xInfos;
 
-  idOldOutside := idOutside+'---';
-  idOldTreasure := idGrass+'-'+idTreasure+'--';
+  { If no plug-in handles the ShowMessage player message, give the player a
+    default plug-in for his messages. }
+
+  TestMsg.MsgID := msgShowMessage;
+  Player.Dispatch(TestMsg);
+  if not TestMsg.Handled then
+    Player.AddPlugin(Master.Plugin[idDefaultShowMessagePlugin]);
+
+  { Compatibility hacks plug-in. }
+
+  Player.AddPlugin(Master.Plugin[idCompatibilityHacksPlugin]);
+
+  { If there are zone actions, give the player the zone plug-in. }
 
   for I := 0 to Infos.ActionsCount-1 do
   begin
-    case Infos.Actions[I].Kind of
-      akOutside:
-        idOldOutside := Format(idActionsSquare, [I]);
-      akTreasure:
-        idOldTreasure := Format(idActionsSquare, [I]);
-      akZone:
-        Player.AddPlugin(Master.Plugin[idZonesPlugin]);
-    end;
-  end;
-
-  Player.AddPlugin(Master.Plugin[idCompatibilityHacksPlugin]);
-  Player.AddPlugin(Master.Plugin[idGameStartedPlugin]);
-
-  OldWater := Master.Square[idOldWater+'---'];
-  OldHole  := Master.Square[idOldHole+'---'];
-  OldOutside := Master.Square[idOldOutside];
-  OldTreasure := Master.Square[idOldTreasure];
-
-  for I := 0 to Master.MapCount-1 do
-  begin
-    Map := Master.Maps[I];
-
-    for J := 0 to Map.LinearMapCount-1 do
+    if Infos.Actions[I].Kind = akZone then
     begin
-      case AnsiIndexStr(Map.LinearMap[J].Field.ID,
-        [idWater, idHole, idOutside]) of
-        0: Map.LinearMap[J] := OldWater;
-        1: Map.LinearMap[J] := OldHole;
-        2: Map.LinearMap[J] := OldOutside;
-      end;
-
-      if Map.LinearMap[J].Effect.SafeID = idTreasure then
-        Map.LinearMap[J] := OldTreasure;
+      Player.AddPlugin(Master.Plugin[idZonesPlugin]);
+      Break;
     end;
   end;
 end;

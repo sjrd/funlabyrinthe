@@ -259,11 +259,11 @@ begin
   Direction := ADirection;
 
   case Direction of
-    diNone:  Painter.ImgNames.Add(fCrossroads);
-    diNorth: Painter.ImgNames.Add(fNorthArrow);
-    diEast:  Painter.ImgNames.Add(fEastArrow);
-    diSouth: Painter.ImgNames.Add(fSouthArrow);
-    diWest:  Painter.ImgNames.Add(fWestArrow);
+    diNone:  Painter.AddImage(fCrossroads);
+    diNorth: Painter.AddImage(fNorthArrow);
+    diEast:  Painter.AddImage(fEastArrow);
+    diSouth: Painter.AddImage(fSouthArrow);
+    diWest:  Painter.AddImage(fWestArrow);
   end;
 end;
 
@@ -313,7 +313,7 @@ begin
   FKind := tkNext;
 
   Name := STransporter;
-  Painter.ImgNames.Add(fTransporter);
+  Painter.AddImage(fTransporter);
 end;
 
 {*
@@ -339,7 +339,7 @@ begin
     // Si l'on a trouvé une autre case, on déplace le joueur
     if Same3DPoint(Other, Pos) then
       Exit;
-    Master.Temporize;
+    Temporize;
     Player.MoveTo(Other);
   end;
 end;
@@ -379,7 +379,7 @@ constructor TTransporterCreator.Create(AMaster: TMaster;
 begin
   inherited;
 
-  IconPainter.ImgNames.Add(fTransporter);
+  IconPainter.AddImage(fTransporter);
 end;
 
 {*
@@ -420,11 +420,11 @@ begin
   if Up then
   begin
     Name := SUpStairs;
-    Painter.ImgNames.Add(fUpStairs);
+    Painter.AddImage(fUpStairs);
   end else
   begin
     Name := SDownStairs;
-    Painter.ImgNames.Add(fDownStairs);
+    Painter.AddImage(fDownStairs);
   end;
 end;
 
@@ -496,14 +496,17 @@ procedure TStairs.Execute(Context: TMoveContext);
 var
   Other: T3DPoint;
 begin
-  Other := Context.Pos;
-  if Up then
-    Inc(Other.Z)
-  else
-    Dec(Other.Z);
+  with Context do
+  begin
+    Other := Pos;
+    if Up then
+      Inc(Other.Z)
+    else
+      Dec(Other.Z);
 
-  Master.Temporize;
-  Context.Player.MoveTo(Other);
+    Temporize;
+    Player.MoveTo(Other);
+  end;
 end;
 
 {-------------------------}
@@ -518,7 +521,7 @@ begin
   inherited;
 
   Name := SDirectTurnstile;
-  Painter.ImgNames.Add(fDirectTurnstile);
+  Painter.AddImage(fDirectTurnstile);
 end;
 
 {*
@@ -537,16 +540,18 @@ procedure TDirectTurnstile.Execute(Context: TMoveContext);
 var
   Dir: TDirection;
   Redo: Boolean;
+  RedoDelay: Cardinal;
 begin
   with Context do
   begin
-    Player.Temporize;
+    Temporize;
 
     Dir := RightDir[Player.Direction];
 
     repeat
-      Player.Move(Dir, Redo);
+      Player.Move(Dir, Redo, RedoDelay);
       GoOnMoving := Redo;
+      Temporization := RedoDelay;
 
       Dir := LeftDir[Player.Direction];
     until not Same3DPoint(Player.Position, Pos);
@@ -566,7 +571,7 @@ begin
   inherited;
 
   Name := SIndirectTurnstile;
-  Painter.ImgNames.Add(fIndirectTurnstile);
+  Painter.AddImage(fIndirectTurnstile);
 end;
 
 {*
@@ -585,16 +590,18 @@ procedure TIndirectTurnstile.Execute(Context: TMoveContext);
 var
   Dir: TDirection;
   Redo: Boolean;
+  RedoDelay: Cardinal;
 begin
   with Context do
   begin
-    Player.Temporize;
+    Temporize;
 
     Dir := LeftDir[Player.Direction];
 
     repeat
-      Player.Move(Dir, Redo);
+      Player.Move(Dir, Redo, RedoDelay);
       GoOnMoving := Redo;
+      Temporization := RedoDelay;
 
       Dir := RightDir[Player.Direction];
     until not Same3DPoint(Player.Position, Pos);
@@ -613,7 +620,7 @@ begin
   inherited;
 
   Name := STreasure;
-  Painter.ImgNames.Add(fTreasure);
+  Painter.AddImage(fTreasure);
 end;
 
 {*

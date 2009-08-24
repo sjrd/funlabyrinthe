@@ -523,7 +523,7 @@ procedure TSimpleMethodAction.ProduceFunDelphiCode(Code: TStrings;
 const {don't localize}
   Statements: array[TSimpleMethodKind] of string = (
     'Player.Show;', 'Player.Hide;', 'Player.Win;', 'Player.Lose;',
-    'Player.Temporize;', 'GoOnMoving := True;'
+    'Temporize;', 'GoOnMoving := True;'
   );
 begin
   Code.Add(Indent + Statements[Kind]);

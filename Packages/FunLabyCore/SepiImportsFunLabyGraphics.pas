@@ -8,8 +8,8 @@ unit SepiImportsFunLabyGraphics;
 interface
 
 uses
-  Windows, SysUtils, Classes, TypInfo, SepiReflectionCore, SepiMembers, GR32, 
-  FunLabyGraphics;
+  Windows, SysUtils, Classes, TypInfo, SepiReflectionCore, SepiMembers, Types, 
+  GR32, FunLabyGraphics;
 
 var
   SepiImportsFunLabyGraphicsLazyLoad: Boolean = False;
@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'FunLabyGraphics';
   ResourceName = 'SepiImportsFunLabyGraphics';
   TypeCount = 2;
-  MethodCount = 18;
+  MethodCount = 22;
   VariableCount = 1;
 
 var
@@ -132,6 +132,21 @@ end;
 { Overloaded routines }
 {---------------------}
 
+function AnimateBitmap_0(Bitmap: TBitmap32; const FrameDelays: array of Cardinal): TAnimatedBitmap32;
+begin
+  Result := AnimateBitmap(Bitmap, FrameDelays);
+end;
+
+function AnimateBitmap_1(Bitmap: TBitmap32; FrameCount: Integer; FrameDelay: Cardinal): TAnimatedBitmap32;
+begin
+  Result := AnimateBitmap(Bitmap, FrameCount, FrameDelay);
+end;
+
+function AnimateBitmap_2(Bitmap: TBitmap32; FrameDelay: Cardinal): TAnimatedBitmap32;
+begin
+  Result := AnimateBitmap(Bitmap, FrameDelay);
+end;
+
 {-------------}
 { Unit import }
 {-------------}
@@ -207,6 +222,10 @@ begin
   MethodAddresses[15] := @ReplaceColorInBitmap32;
   MethodAddresses[16] := @HandleBmpTransparent;
   MethodAddresses[17] := @LoadBitmapFromFile;
+  MethodAddresses[18] := @AnimateBitmap_0;
+  MethodAddresses[19] := @AnimateBitmap_1;
+  MethodAddresses[20] := @AnimateBitmap_2;
+  MethodAddresses[21] := @DrawRepeat;
 end;
 
 procedure InitVarAddresses;
