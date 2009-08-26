@@ -171,15 +171,21 @@ begin
     end;
   end;
 
-  // Dessin des joueurs
-  for I := 0 to Map.Master.PlayerCount-1 do
+  // Dessin des composants avec position
+  for I := 0 to Map.Master.PosComponentCount-1 do
   begin
-    with Map.Master.Players[I] do
+    with Map.Master.PosComponents[I] do
     begin
       if (Map = Self.Map) and (Position.Z = Floor) then
       begin
-        DrawInPlace(Buffer, (BorderSize+Position.X) * SquareSize,
-          (BorderSize+Position.Y) * SquareSize);
+        Context := TDrawSquareContext.Create(Buffer,
+          (BorderSize+Position.X) * SquareSize,
+          (BorderSize+Position.Y) * SquareSize, QPos);
+        try
+          Draw(Context);
+        finally
+          Context.free;
+        end;
       end;
     end;
   end;

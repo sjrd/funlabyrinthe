@@ -551,10 +551,10 @@ begin
     dtConfirmation, dbOKCancel, 2) <> drOK then
     Exit;
 
-  for I := 0 to Master.PlayerCount-1 do
+  for I := 0 to Master.PosComponentCount-1 do
   begin
-    if Master.Players[I].Map = Map then
-      Master.Players[I].ChangePosition(nil, No3DPoint);
+    if Master.PosComponents[I].Map = Map then
+      Master.PosComponents[I].ChangePosition(NoQPos);
   end;
 
   MapViewer.Master := nil;
@@ -637,9 +637,9 @@ begin
     Exit;
 
   try
-    if Component is TPlayer then
+    if Component is TPosComponent then
     begin
-      TPlayer(Component).ChangePosition(QPos.Map, QPos.Position);
+      TPosComponent(Component).ChangePosition(QPos);
       MarkModified;
     end else if Component is TSquareComponent then
     begin

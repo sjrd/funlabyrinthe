@@ -999,6 +999,12 @@ var
 begin
   for I := 0 to UnitFiles.Count-1 do
     UnitFiles[I].GameStarted;
+
+  with Master do
+  begin
+    for I := 0 to MobileComponentCount-1 do
+      Timers.ScheduleNotificationMsg(0, MobileComponents[I], msgGameStarted);
+  end;
 end;
 
 {*

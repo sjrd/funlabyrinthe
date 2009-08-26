@@ -1329,7 +1329,7 @@ type
   TLabyrinthPlayerMode = class(TPlayerMode)
   protected
     procedure DrawSquares(Context: TDrawViewContext; Ceiling: Boolean);
-    procedure DrawPlayers(Context: TDrawViewContext);
+    procedure DrawPosComponents(Context: TDrawViewContext);
 
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
@@ -1340,6 +1340,65 @@ type
   end;
 
   {*
+    Classe représentant un composant qui a une position sur une carte
+    TPosComponent est la classe de base pour les composants qui doivent avoir
+    une position sur la carte. Au contraire des composants de case, qui peuvent
+    être placés à plusieurs endroits, les instances de TPosComponent sont
+    "uniques" en ce qu'elles ne sont positionnées qu'à un seul endroit à la
+    fois.
+    @author sjrd
+    @version 5.0
+  *}
+  TPosComponent = class(TVisualComponent)
+  private
+    FQPos: TQualifiedPos;   /// Position qualifiée
+    FDirection: TDirection; /// Direction
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
+    procedure PositionChanged; virtual;
+  public
+    procedure ChangePosition(const AQPos: TQualifiedPos); overload; virtual;
+    procedure ChangePosition(AMap: TMap; const APosition: T3DPoint); overload;
+    procedure ChangePosition(const APosition: T3DPoint); overload;
+
+    property QPos: TQualifiedPos read FQPos;
+    property Map: TMap read FQPos.Map;
+    property Position: T3DPoint read FQPos.Position;
+  published
+    property Direction: TDirection read FDirection write FDirection
+      default diNone;
+  end;
+
+  {*
+    Composant mobile, qui a des actions propres et autonomes
+    TMobileComponent est la classe de base pour les composants qui doivent
+    se déplacer de façon autonome, ou avoir un quelconque comportement
+    autonome.
+    Chaque instance de TMobileComponent a son propre thread d'exécution de ses
+    actions.
+    @author sjrd
+    @version 5.0
+  *}
+  TMobileComponent = class(TPosComponent)
+  private
+    FActionLock: TCriticalSection;   /// Verrou pour les actions
+    FInActionLock: TCriticalSection; /// Verrou pour l'intérieur des actions
+    FActionCoroutine: TCoroutine;    /// Coroutine d'exécution des actions
+    FActionMessagePtr: Pointer;      /// Pointeur sur le message pour l'action
+
+    procedure ActionProc(Coroutine: TCoroutine);
+
+    function TryPause: Boolean;
+    procedure Resume;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+    destructor Destroy; override;
+
+    procedure SendMessage(var Msg);
+  end;
+
+  {*
     Classe représentant un joueur
     TPlayer représente un joueur. Elle possède de nombreuses propriétés et
     méthodes permettant d'afficher le joueur, de le déplacer, de lui greffer
@@ -1347,11 +1406,8 @@ type
     @author sjrd
     @version 5.0
   *}
-  TPlayer = class(TVisualComponent)
+  TPlayer = class(TMobileComponent)
   private
-    FMap: TMap;                 /// Carte
-    FPosition: T3DPoint;        /// Position
-    FDirection: TDirection;     /// Direction
     FMode: IPlayerMode;         /// Mode principal
     FModeStack: IInterfaceList; /// Pile des modes sauvegardés
     FShowCounter: Integer;      /// Compteur de visibilité
@@ -1370,11 +1426,6 @@ type
     /// Verrou global pour le joueur
     FLock: TMultiReadExclusiveWriteSynchronizer;
 
-    FActionLock: TCriticalSection;   /// Verrou pour les actions
-    FInActionLock: TCriticalSection; /// Verrou pour l'interieur des actions
-    FActionCoroutine: TCoroutine;    /// Coroutine d'appui sur touche
-    FActionMessagePtr: Pointer;      /// Pointeur sur le message pour l'action
-
     function GetPluginListStr: string;
     procedure SetPluginListStr(const Value: string);
     function GetModeListStr: string;
@@ -1388,12 +1439,8 @@ type
 
     procedure MessagePressKey(var Msg: TPlayerPressKeyMessage);
       message msgPressKey;
-    procedure ActionProc(Coroutine: TCoroutine);
 
     procedure FoundObject(ObjectDef: TObjectDef);
-
-    function TryPause: Boolean;
-    procedure Resume;
 
     function GetVisible: Boolean;
 
@@ -1407,8 +1454,6 @@ type
     function GetCategory: string; override;
 
     procedure DoDraw(Context: TDrawSquareContext); override;
-
-    procedure PositionChanged; virtual;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
@@ -1420,9 +1465,6 @@ type
     procedure GetPluginIDs(PluginIDs: TStrings);
 
     procedure GetFoundObjects(ObjectDefs: TObjectList);
-
-    procedure DrawInPlace(Bitmap: TBitmap32; X: Integer = 0;
-      Y: Integer = 0);
 
     procedure ChangeMode(ModeClass: TPlayerModeClass);
     procedure BeginTempMode(ModeClass: TPlayerModeClass);
@@ -1458,7 +1500,7 @@ type
 
     procedure NaturalMoving(Redo: Boolean; RedoDelay: Cardinal);
 
-    procedure ChangePosition(AMap: TMap; const APosition: T3DPoint);
+    procedure ChangePosition(const AQPos: TQualifiedPos); override;
 
     procedure Show;
     procedure Hide;
@@ -1480,21 +1522,16 @@ type
 
     procedure DrawView(Bitmap: TBitmap32); virtual;
     procedure PressKey(Key: Word; Shift: TShiftState);
-    procedure SendMessage(var Msg);
 
     procedure WaitForKey(out Key: Word; out Shift: TShiftState);
     procedure WaitForSpecificKey(Key: Word; Shift: TShiftState = []);
 
-    property Map: TMap read FMap;
-    property Position: T3DPoint read FPosition;
     property Mode: IPlayerMode read FMode;
     property Visible: Boolean read GetVisible;
     property Attribute[const AttrName: string]: Integer
       read GetAttribute write SetAttribute;
     property PlayState: TPlayState read FPlayState;
   published
-    property Direction: TDirection read FDirection write FDirection
-      default diNone;
     property Color: TColor32 read FColor write FColor
       default DefaultPlayerColor;
     property ViewBorderSize: Integer read FViewBorderSize write FViewBorderSize
@@ -1605,17 +1642,19 @@ type
   *}
   TMaster = class(TFunLabyPersistent)
   private
-    FImagesMaster: TImagesMaster; /// Maître d'images
-    FComponents: TStrings;        /// Table de hashage ID -> composant
-    FPlugins: TObjectList;        /// Liste des plug-in
-    FObjectDefs: TObjectList;     /// Liste des définitions d'objet
-    FFields: TObjectList;         /// Liste des terrains
-    FEffects: TObjectList;        /// Liste des effets
-    FTools: TObjectList;          /// Liste des outils
-    FObstacles: TObjectList;      /// Liste des obstacles
-    FSquares: TObjectList;        /// Liste des cases
-    FMaps: TObjectList;           /// Liste des cartes
-    FPlayers: TObjectList;        /// Liste des joueurs
+    FImagesMaster: TImagesMaster;   /// Maître d'images
+    FComponents: TStrings;          /// Table de hashage ID -> composant
+    FPlugins: TObjectList;          /// Liste des plug-in
+    FObjectDefs: TObjectList;       /// Liste des définitions d'objet
+    FFields: TObjectList;           /// Liste des terrains
+    FEffects: TObjectList;          /// Liste des effets
+    FTools: TObjectList;            /// Liste des outils
+    FObstacles: TObjectList;        /// Liste des obstacles
+    FSquares: TObjectList;          /// Liste des cases
+    FMaps: TObjectList;             /// Liste des cartes
+    FPosComponents: TObjectList;    /// Liste des objets avec position
+    FMobileComponents: TObjectList; /// Liste des objets mobiles (autonomes)
+    FPlayers: TObjectList;          /// Liste des joueurs
 
     FEditing: Boolean;            /// Indique si on est en mode édition
     FBeginTickCount: Cardinal;    /// Tick count système au lancement
@@ -1656,6 +1695,10 @@ type
     function GetSquares(Index: Integer): TSquare;
     function GetMapCount: Integer;
     function GetMaps(Index: Integer): TMap;
+    function GetPosComponentCount: Integer;
+    function GetPosComponents(Index: Integer): TPosComponent;
+    function GetMobileComponentCount: Integer;
+    function GetMobileComponents(Index: Integer): TMobileComponent;
     function GetPlayerCount: Integer;
     function GetPlayers(Index: Integer): TPlayer;
 
@@ -1672,6 +1715,8 @@ type
   public
     constructor Create(AEditing: Boolean);
     destructor Destroy; override;
+
+    procedure BeforeDestruction; override;
 
     procedure StoreDefaults; override;
 
@@ -1721,6 +1766,11 @@ type
     property Squares[Index: Integer]: TSquare read GetSquares;
     property MapCount: Integer read GetMapCount;
     property Maps[Index: Integer]: TMap read GetMaps;
+    property PosComponentCount: Integer read GetPosComponentCount;
+    property PosComponents[Index: Integer]: TPosComponent read GetPosComponents;
+    property MobileComponentCount: Integer read GetMobileComponentCount;
+    property MobileComponents[Index: Integer]: TMobileComponent
+      read GetMobileComponents;
     property PlayerCount: Integer read GetPlayerCount;
     property Players[Index: Integer]: TPlayer read GetPlayers;
 
@@ -5560,31 +5610,34 @@ end;
   Dessine les joueurs
   @param Context   Contexte de dessin de la vue
 *}
-procedure TLabyrinthPlayerMode.DrawPlayers(Context: TDrawViewContext);
+procedure TLabyrinthPlayerMode.DrawPosComponents(Context: TDrawViewContext);
 var
   I: Integer;
-  Player: TPlayer;
-  PlayerContext: TDrawSquareContext;
+  PosComponent: TPosComponent;
+  PosComponentContext: TDrawSquareContext;
 begin
-  for I := 0 to Master.PlayerCount-1 do
+  for I := 0 to Master.PosComponentCount-1 do
   begin
-    Player := Master.Players[I];
-    Player.FLock.BeginRead;
+    PosComponent := Master.PosComponents[I];
+
+    if PosComponent is TPlayer then
+      TPlayer(PosComponent).FLock.BeginRead;
     try
-      if not Context.IsSquareVisible(Player.Map, Player.Position) then
+      if not Context.IsSquareVisible(PosComponent.QPos) then
         Continue;
 
-      PlayerContext := TDrawSquareContext.Create(Context.Bitmap,
-        (Player.Position.X-Context.Zone.Left) * SquareSize,
-        (Player.Position.Y-Context.Zone.Top) * SquareSize);
+      PosComponentContext := TDrawSquareContext.Create(Context.Bitmap,
+        (PosComponent.Position.X-Context.Zone.Left) * SquareSize,
+        (PosComponent.Position.Y-Context.Zone.Top) * SquareSize);
       try
-        PlayerContext.SetDrawViewContext(Context);
-        Player.Draw(PlayerContext);
+        PosComponentContext.SetDrawViewContext(Context);
+        PosComponent.Draw(PosComponentContext);
       finally
-        PlayerContext.Free;
+        PosComponentContext.Free;
       end;
     finally
-      Player.Flock.EndRead;
+      if PosComponent is TPlayer then
+        TPlayer(PosComponent).Flock.EndRead;
     end;
   end;
 end;
@@ -5621,7 +5674,7 @@ end;
 procedure TLabyrinthPlayerMode.DrawView(Context: TDrawViewContext);
 begin
   DrawSquares(Context, False);
-  DrawPlayers(Context);
+  DrawPosComponents(Context);
   DrawSquares(Context, True);
 end;
 
@@ -5644,6 +5697,164 @@ begin
   Context.Handled := True;
 
   Player.Move(Dir, Context.Key, Context.Shift);
+end;
+
+{---------------------}
+{ TPosComponent class }
+{---------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TPosComponent.DefineProperties(Filer: TFunLabyFiler);
+var
+  HasData: Boolean;
+begin
+  inherited;
+
+  HasData := not IsNoQPos(QPos);
+
+  Filer.DefineFieldProperty('Map', TypeInfo(TMap), @FQPos.Map, HasData);
+
+  Filer.DefineFieldProperty('Position.X', TypeInfo(Integer),
+    @FQPos.Position.X, HasData);
+  Filer.DefineFieldProperty('Position.Y', TypeInfo(Integer),
+    @FQPos.Position.Y, HasData);
+  Filer.DefineFieldProperty('Position.Z', TypeInfo(Integer),
+    @FQPos.Position.Z, HasData);
+end;
+
+{*
+  Méthode de notification que la position de ce composant à changé
+*}
+procedure TPosComponent.PositionChanged;
+begin
+end;
+
+{*
+  Change la position de ce composant
+  @param AQPos   Nouvelle position qualifiée
+*}
+procedure TPosComponent.ChangePosition(const AQPos: TQualifiedPos);
+begin
+  FQPos := AQPos;
+  PositionChanged;
+end;
+
+{*
+  Change la position de ce composant
+  @param AMap        Nouvelle carte
+  @param APosition   Nouvelle position
+*}
+procedure TPosComponent.ChangePosition(AMap: TMap; const APosition: T3DPoint);
+var
+  AQPos: TQualifiedPos;
+begin
+  AQPos.Map := AMap;
+  AQPos.Position := APosition;
+
+  ChangePosition(AQPos);
+end;
+
+{*
+  Change la position de ce composant
+  @param APosition   Nouvelle position
+*}
+procedure TPosComponent.ChangePosition(const APosition: T3DPoint);
+begin
+  ChangePosition(Map, APosition);
+end;
+
+{-------------------------}
+{ Classe TMobileComponent }
+{-------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TMobileComponent.Create(AMaster: TMaster; const AID: TComponentID);
+begin
+  inherited;
+
+  FActionLock := TCriticalSection.Create;
+  FInActionLock := TCriticalSection.Create;
+  FActionCoroutine := TCoroutine.Create(ActionProc, clNextInvoke);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TMobileComponent.Destroy;
+begin
+  FActionCoroutine.Free;
+  FInActionLock.Free;
+  FActionLock.Free;
+
+  inherited;
+end;
+
+{*
+  Procédure de la coroutine d'exécution des actions
+  @param Coroutine   Objet coroutine gérant cette procédure
+*}
+procedure TMobileComponent.ActionProc(Coroutine: TCoroutine);
+begin
+  FInActionLock.Acquire;
+  try
+    // FActionMessagePtr has been set before this method is called.
+    Dispatch(FActionMessagePtr^);
+  finally
+    FInActionLock.Release;
+  end;
+end;
+
+{*
+  Essaye de mettre en pause les actions de ce composant
+  Si TryPause renvoie True, vous devez appelez Resume pour redémarrer les
+  actions.
+  @return True si les actions ont été mises en pause, False sinon
+*}
+function TMobileComponent.TryPause: Boolean;
+begin
+  Result := FInActionLock.TryEnter;
+end;
+
+{*
+  Redémarre les actions de ce composant
+  Resume doit être appelé pour redémarrer les actions après un TryPause réussi.
+*}
+procedure TMobileComponent.Resume;
+begin
+  FInActionLock.Release;
+end;
+
+{*
+  Envoie un message au joueur dans le contexte de ses actions
+  Cette méthode ne peut *pas* être appelée depuis le code d'action du
+  composant ! Utilisez directement Dispatch à la place.
+  @param Msg   Message à envoyer
+*}
+procedure TMobileComponent.SendMessage(var Msg);
+var
+  Acquired: Boolean;
+begin
+  repeat
+    FInActionLock.Acquire;
+    try
+      Acquired := FActionLock.TryEnter;
+    finally
+      FInActionLock.Release;
+    end;
+  until Acquired;
+
+  try
+    Assert(not FActionCoroutine.CoroutineRunning);
+
+    FActionMessagePtr := @Msg;
+    FActionCoroutine.Invoke;
+  finally
+    FActionLock.Release;
+  end;
 end;
 
 {----------------}
@@ -5676,10 +5887,6 @@ begin
   FDefaultTemporization := FunLabyUtils.DefaultTemporization;
 
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
-
-  FActionLock := TCriticalSection.Create;
-  FInActionLock := TCriticalSection.Create;
-  FActionCoroutine := TCoroutine.Create(ActionProc, clNextInvoke);
 end;
 
 {*
@@ -5689,10 +5896,6 @@ destructor TPlayer.Destroy;
 var
   Dir: TDirection;
 begin
-  FActionCoroutine.Free;
-  FInActionLock.Free;
-  FActionLock.Free;
-
   FLock.Free;
 
   for Dir := diNorth to diWest do
@@ -5922,21 +6125,6 @@ begin
 end;
 
 {*
-  Procédure de la coroutine d'appui sur touche
-  @param Coroutine   Objet coroutine gérant cette procédure
-*}
-procedure TPlayer.ActionProc(Coroutine: TCoroutine);
-begin
-  FInActionLock.Acquire;
-  try
-    // FActionMessagePtr has been set before this method is called.
-    Dispatch(FActionMessagePtr^);
-  finally
-    FInActionLock.Release;
-  end;
-end;
-
-{*
   Indique que ce joueur a trouvé un objet
   @param ObjectDef   Définition de l'objet trouvé
 *}
@@ -5952,26 +6140,6 @@ begin
   finally
     FLock.EndWrite;
   end;
-end;
-
-{*
-  Essaye de mettre en pause le joueur
-  Si TryPause renvoie True, vous devez appelez Resume pour redémarrer le
-  joueur.
-  @return True si le joueur a été mis en pause, False sinon
-*}
-function TPlayer.TryPause: Boolean;
-begin
-  Result := FInActionLock.TryEnter;
-end;
-
-{*
-  Redémarre le joueur
-  Resume doit être appelé pour redémarrer le joueur après un TryPause réussi.
-*}
-procedure TPlayer.Resume;
-begin
-  FInActionLock.Release;
 end;
 
 {*
@@ -6049,15 +6217,6 @@ procedure TPlayer.DefineProperties(Filer: TFunLabyFiler);
 begin
   inherited;
 
-  Filer.DefineFieldProperty('Map', TypeInfo(TMap), @FMap, FMap <> nil);
-
-  Filer.DefineFieldProperty('Position.X', TypeInfo(Integer),
-    @FPosition.X, FMap <> nil);
-  Filer.DefineFieldProperty('Position.Y', TypeInfo(Integer),
-    @FPosition.Y, FMap <> nil);
-  Filer.DefineFieldProperty('Position.Z', TypeInfo(Integer),
-    @FPosition.Z, FMap <> nil);
-
   Filer.DefineFieldProperty('ShowCounter', TypeInfo(Integer),
     @FShowCounter, FShowCounter <> 0);
 
@@ -6115,13 +6274,6 @@ begin
     dmDirPainter:
       FDirPainters[Direction].Draw(Context);
   end;
-end;
-
-{*
-  Notification que la position a changé
-*}
-procedure TPlayer.PositionChanged;
-begin
 end;
 
 {*
@@ -6195,30 +6347,6 @@ begin
   finally
     FLock.EndRead;
   end;
-end;
-
-{*
-  Dessine le joueur sur un canevas
-  DrawInPlace dessine le joueur sur un canevas à la position indiquée, avec pour
-  position qualifiée sa position actuelle.
-  @param Bitmap   Bitmap sur lequel dessiner le joueur
-  @param X        Coordonnée X du point à partir duquel dessiner le joueur
-  @param Y        Coordonnée Y du point à partir duquel dessiner le joueur
-*}
-procedure TPlayer.DrawInPlace(Bitmap: TBitmap32; X: Integer = 0;
-  Y: Integer = 0);
-var
-  QPos: TQualifiedPos;
-begin
-  FLock.BeginRead;
-  try
-    QPos.Map := Map;
-    QPos.Position := Position;
-  finally
-    FLock.EndRead;
-  end;
-
-  Draw(QPos, Bitmap, X, Y);
 end;
 
 {*
@@ -6594,14 +6722,7 @@ var
   Plugins: TPluginDynArray;
   I: Integer;
 begin
-  FLock.BeginWrite;
-  try
-    FMap := Context.DestMap;
-    FPosition := Context.Dest;
-    PositionChanged;
-  finally
-    FLock.EndWrite;
-  end;
+  ChangePosition(Context.DestMap, Context.Dest);
 
   with Context do
   begin
@@ -6719,12 +6840,11 @@ end;
   ChangePosition ne doit être utilisée qu'en mode édition, ou sous réserve
   d'être certain de ce qu'on fait.
 *}
-procedure TPlayer.ChangePosition(AMap: TMap; const APosition: T3DPoint);
+procedure TPlayer.ChangePosition(const AQPos: TQualifiedPos);
 begin
   FLock.BeginWrite;
   try
-    FMap := AMap;
-    FPosition := APosition;
+    inherited;
   finally
     FLock.EndWrite;
   end;
@@ -6931,35 +7051,6 @@ begin
 end;
 
 {*
-  Envoie un message au joueur dans le contexte de ses actions
-  Cette méthode ne peut *pas* être appelée depuis le code d'action du joueur !
-  Utilisez directement Dispatch à la place.
-  @param Msg   Message à envoyer
-*}
-procedure TPlayer.SendMessage(var Msg);
-var
-  Acquired: Boolean;
-begin
-  repeat
-    FInActionLock.Acquire;
-    try
-      Acquired := FActionLock.TryEnter;
-    finally
-      FInActionLock.Release;
-    end;
-  until Acquired;
-
-  try
-    Assert(not FActionCoroutine.CoroutineRunning);
-
-    FActionMessagePtr := @Msg;
-    FActionCoroutine.Invoke;
-  finally
-    FActionLock.Release;
-  end;
-end;
-
-{*
   Attend qu'une touche soit pressée par le joueur
   Cette méthode ne peut être appelée que depuis le code d'action du joueur !
   @param Key     En sortie : Touche appuyée
@@ -7051,8 +7142,8 @@ begin
 
   Assert(DestObject <> nil);
 
-  if DestObject is TPlayer then
-    TPlayer(DestObject).SendMessage(Msg)
+  if DestObject is TMobileComponent then
+    TMobileComponent(DestObject).SendMessage(Msg)
   else
     DestObject.Dispatch(Msg);
 end;
@@ -7286,15 +7377,17 @@ begin
     Duplicates := dupError;
   end;
 
-  FPlugins    := TObjectList.Create(False);
-  FObjectDefs := TObjectList.Create(False);
-  FFields     := TObjectList.Create(False);
-  FEffects    := TObjectList.Create(False);
-  FTools      := TObjectList.Create(False);
-  FObstacles  := TObjectList.Create(False);
-  FSquares    := TObjectList.Create(False);
-  FMaps       := TObjectList.Create(False);
-  FPlayers    := TObjectList.Create(False);
+  FPlugins          := TObjectList.Create(False);
+  FObjectDefs       := TObjectList.Create(False);
+  FFields           := TObjectList.Create(False);
+  FEffects          := TObjectList.Create(False);
+  FTools            := TObjectList.Create(False);
+  FObstacles        := TObjectList.Create(False);
+  FSquares          := TObjectList.Create(False);
+  FMaps             := TObjectList.Create(False);
+  FPosComponents    := TObjectList.Create(False);
+  FMobileComponents := TObjectList.Create(False);
+  FPlayers          := TObjectList.Create(False);
 
   FEditing := AEditing;
   FBeginTickCount := Windows.GetTickCount;
@@ -7319,6 +7412,8 @@ begin
   end;
 
   FPlayers.Free;
+  FMobileComponents.Free;
+  FPosComponents.Free;
   FMaps.Free;
   FSquares.Free;
   FObstacles.Free;
@@ -7717,6 +7812,44 @@ begin
 end;
 
 {*
+  Nombre de composants avec position
+  @return Nombre de composants avec position
+*}
+function TMaster.GetPosComponentCount: Integer;
+begin
+  Result := FPosComponents.Count;
+end;
+
+{*
+  Tableau zero-based des composants avec position
+  @param Index   Index du composant
+  @return Le composant à la position spécifiée
+*}
+function TMaster.GetPosComponents(Index: Integer): TPosComponent;
+begin
+  Result := TPosComponent(FPosComponents[Index]);
+end;
+
+{*
+  Nombre de composants mobiles (autonomes)
+  @return Nombre de composants mobiles (autonomes)
+*}
+function TMaster.GetMobileComponentCount: Integer;
+begin
+  Result := FMobileComponents.Count;
+end;
+
+{*
+  Tableau zero-based des composants mobiles (autonomes)
+  @param Index   Index du composant
+  @return Le composant à la position spécifiée
+*}
+function TMaster.GetMobileComponents(Index: Integer): TMobileComponent;
+begin
+  Result := TMobileComponent(FMobileComponents[Index]);
+end;
+
+{*
   Tick count de la partie
   @return Tick count de la partie
 *}
@@ -7761,8 +7894,14 @@ begin
     FSquares.Add(Component)
   else if Component is TMap then
     FMaps.Add(Component)
-  else if Component is TPlayer then
-    FPlayers.Add(Component);
+  else if Component is TPosComponent then
+  begin
+    FPosComponents.Add(Component);
+    if Component is TMobileComponent then
+      FMobileComponents.Add(Component);
+    if Component is TPlayer then
+      FPlayers.Add(Component);
+  end;
 end;
 
 {*
@@ -7787,8 +7926,14 @@ begin
     FSquares.Remove(Component)
   else if Component is TMap then
     FMaps.Remove(Component)
-  else if Component is TPlayer then
-    FPlayers.Remove(Component);
+  else if Component is TPosComponent then
+  begin
+    FPosComponents.Remove(Component);
+    if Component is TMobileComponent then
+      FMobileComponents.Remove(Component);
+    if Component is TPlayer then
+      FPlayers.Remove(Component);
+  end;
 
   FComponents.Delete(FComponents.IndexOf(Component.ID));
 end;
@@ -7842,6 +7987,17 @@ begin
 
   if (psReading in State) and (not Editing) then
     Timers.Start;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMaster.BeforeDestruction;
+begin
+  inherited;
+
+  if Paused then
+    Resume;
 end;
 
 {*
@@ -7911,23 +8067,23 @@ end;
 *}
 function TMaster.TryPause: Boolean;
 var
-  DonePlayerCount: Integer;
+  DoneMobCount: Integer;
   I: Integer;
 begin
-  DonePlayerCount := 0;
+  DoneMobCount := 0;
 
   Result := Timers.TryPause;
   if not Result then
     Exit;
 
   try
-    for I := 0 to PlayerCount-1 do
+    for I := 0 to MobileComponentCount-1 do
     begin
-      Result := Players[I].TryPause;
+      Result := MobileComponents[I].TryPause;
       if not Result then
         Break;
 
-      Inc(DonePlayerCount);
+      Inc(DoneMobCount);
     end;
 
     if Result then
@@ -7938,8 +8094,8 @@ begin
   finally
     if not Result then
     begin
-      for I := 0 to DonePlayerCount-1 do
-        Players[I].Resume;
+      for I := 0 to DoneMobCount-1 do
+        MobileComponents[I].Resume;
       Timers.Resume;
     end;
   end;
@@ -7953,8 +8109,8 @@ procedure TMaster.Resume;
 var
   I: Integer;
 begin
-  for I := 0 to PlayerCount-1 do
-    Players[I].Resume;
+  for I := 0 to MobileComponentCount-1 do
+    MobileComponents[I].Resume;
   Timers.Resume;
 
   SetTickCount(FPauseTickCount);
