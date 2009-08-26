@@ -361,15 +361,15 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TGround, 60, 60);
-  CheckInstanceSize(TDecorativeEffect, 56, 56);
+  CheckInstanceSize(TGround, 52, 52);
+  CheckInstanceSize(TDecorativeEffect, 48, 48);
   CheckInstanceSize(TCounterEffectPlayerData, 20, 16);
-  CheckInstanceSize(TCounterEffect, 60, 56);
-  CheckInstanceSize(TPushButton, 64, 60);
-  CheckInstanceSize(TSwitch, 72, 60);
-  CheckInstanceSize(TDecorativeObstacle, 56, 56);
-  CheckInstanceSize(TObjectTool, 72, 56);
-  CheckInstanceSize(TOverriddenSquare, 96, 76);
+  CheckInstanceSize(TCounterEffect, 52, 48);
+  CheckInstanceSize(TPushButton, 56, 52);
+  CheckInstanceSize(TSwitch, 64, 52);
+  CheckInstanceSize(TDecorativeObstacle, 48, 48);
+  CheckInstanceSize(TObjectTool, 64, 48);
+  CheckInstanceSize(TOverriddenSquare, 88, 68);
   {$ASSERTIONS OFF}
 end;
 

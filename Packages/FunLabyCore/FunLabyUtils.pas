@@ -840,15 +840,11 @@ type
     FEditVisualTag: string;        /// Tag visuel visible uniquement à l'édition
     FDefaultEditVisualTag: string; /// EditVisualTag par défaut
 
-    FCachedImg: TBitmap32; /// Image en cache (pour les dessins invariants)
-
     function IsNameStored: Boolean;
     function IsEditVisualTagStored: Boolean;
 
     procedure PrivDraw(Context: TDrawSquareContext); virtual;
   protected
-    FStaticDraw: Boolean; /// Indique si le dessin du composant est invariant
-
     procedure StoreDefaults; override;
 
     function GetHint: string; override;
@@ -866,8 +862,6 @@ type
 
     procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
       Y: Integer = 0); override;
-
-    property StaticDraw: Boolean read FStaticDraw;
   published
     property Name: string read FName write FName stored IsNameStored;
     property Painter: TPainter read FPainter;
@@ -1039,8 +1033,6 @@ type
 
     procedure DoDrawCeiling(Context: TDrawSquareContext); virtual;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
-
     class function NewDelegateDraw(ADelegateDrawTo: TField): TField;
 
     procedure DrawCeiling(Context: TDrawSquareContext);
@@ -1335,29 +1327,14 @@ type
     @version 5.0
   *}
   TLabyrinthPlayerMode = class(TPlayerMode)
-  private
-    FCacheBitmap: TBitmap32; /// Bitmap cache
-
-    FOldMap: TMap;              /// Ancienne carte
-    FOldFloor: Integer;         /// Ancien étage
-    FOldZone: TRect;            /// Ancienne zone
-    FOldView: array of TSquare; /// Ancienne vue
   protected
-    procedure InvalidateCache(Context: TDrawViewContext);
-    procedure InvalidateCacheIfNeeded(Context: TDrawViewContext);
-    procedure UpdateCache(Context: TDrawViewContext);
+    procedure DrawSquares(Context: TDrawViewContext; Ceiling: Boolean);
     procedure DrawPlayers(Context: TDrawViewContext);
-    procedure DrawCeiling(Context: TDrawViewContext);
 
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
     function GetUseZone: Boolean; override;
-
-    property CacheBitmap: TBitmap32 read FCacheBitmap;
   public
-    constructor Create(APlayer: TPlayer); override;
-    destructor Destroy; override;
-
     procedure DrawView(Context: TDrawViewContext); override;
     procedure PressKey(Context: TKeyEventContext); override;
   end;
@@ -4157,7 +4134,6 @@ begin
   FName := ID;
   FPainter := TPainter.Create(FMaster.ImagesMaster);
   FPainter.BeginUpdate;
-  FStaticDraw := True;
 end;
 
 {*
@@ -4165,7 +4141,6 @@ end;
 *}
 destructor TVisualComponent.Destroy;
 begin
-  FCachedImg.Free;
   FPainter.Free;
 
   inherited;
@@ -4266,44 +4241,24 @@ end;
   [@inheritDoc]
 *}
 procedure TVisualComponent.AfterConstruction;
-var
-  Context: TDrawSquareContext;
 begin
   inherited;
 
   FPainter.EndUpdate;
-  if not FPainter.StaticDraw then
-    FStaticDraw := False;
-
-  FStaticDraw := False; // Performance test without any caching
-
-  if StaticDraw then
-  begin
-    FCachedImg := CreateEmptySquareBitmap;
-    Context := TDrawSquareContext.Create(FCachedImg);
-    try
-      PrivDraw(Context);
-    finally
-      Context.Free;
-    end;
-  end;
 end;
 
 {*
-  Dessine de façon optimisée le composant
+  Dessine le composant
   Draw dessine le composant dans le contexte de dessin spécifié.
   @param Context   Contexte de dessin de la case
 *}
 procedure TVisualComponent.Draw(Context: TDrawSquareContext);
 begin
-  if StaticDraw then
-    Context.DrawSquareBitmap(FCachedImg)
-  else
-    PrivDraw(Context);
+  PrivDraw(Context);
 end;
 
 {*
-  Dessine de façon optimisée le composant
+  Dessine le composant
   Draw dessine le composant dans le contexte de dessin spécifié.
   @param QPos     Position qualifiée de l'emplacement de dessin
   @param Bitmap   Bitmap sur lequel dessiner le composant
@@ -4708,21 +4663,6 @@ end;
 {---------------}
 
 {*
-  Crée une instance de TField
-  @param AMaster           Maître FunLabyrinthe
-  @param AID               ID du terrain
-  @param AName             Nom du terrain
-  @param ADelegateDrawTo   Un autre terrain auquel déléguer l'affichage
-*}
-constructor TField.Create(AMaster: TMaster; const AID: TComponentID);
-begin
-  inherited;
-
-  if Assigned(FDelegateDrawTo) then
-    FStaticDraw := FDelegateDrawTo.StaticDraw;
-end;
-
-{*
   [@inheritDoc]
 *}
 procedure TField.PrivDraw(Context: TDrawSquareContext);
@@ -5059,12 +4999,6 @@ begin
   FEffect := AEffect;
   FTool := ATool;
   FObstacle := AObstacle;
-
-  FStaticDraw :=
-    ((not Assigned(FField)) or FField.StaticDraw) and
-    ((not Assigned(FEffect)) or FEffect.StaticDraw) and
-    ((not Assigned(FTool)) or FTool.StaticDraw) and
-    ((not Assigned(FObstacle)) or FObstacle.StaticDraw);
 end;
 
 {*
@@ -5581,70 +5515,17 @@ end;
 {----------------------------}
 
 {*
-  [@inheritDoc]
-*}
-constructor TLabyrinthPlayerMode.Create(APlayer: TPlayer);
-begin
-  inherited;
-
-  FCacheBitmap := TBitmap32.Create;
-end;
-
-{*
-  [@inheritDoc]
-*}
-destructor TLabyrinthPlayerMode.Destroy;
-begin
-  FCacheBitmap.Free;
-
-  inherited;
-end;
-
-{*
-  Invalide entièrement la cache
-*}
-procedure TLabyrinthPlayerMode.InvalidateCache(Context: TDrawViewContext);
-begin
-  with Context do
-  begin
-    FOldMap := Map;
-    FOldFloor := Floor;
-    FOldZone := Zone;
-
-    SetLength(FOldView, ZoneWidth * ZoneHeight);
-    FillChar(FOldView[0], SizeOf(TSquare) * Length(FOldView), 0);
-
-    FCacheBitmap.SetSize(ZoneWidth * SquareSize, ZoneHeight * SquareSize);
-  end;
-end;
-
-{*
-  Invalide entièrement la cache si nécessaire
+  Dessine les cases
   @param Context   Contexte de dessin de la vue
 *}
-procedure TLabyrinthPlayerMode.InvalidateCacheIfNeeded(
-  Context: TDrawViewContext);
-begin
-  if (FOldMap <> Context.Map) or (FOldFloor <> Context.Floor) or
-    (not SameRect(FOldZone, Context.Zone)) then
-  begin
-    InvalidateCache(Context);
-  end;
-end;
-
-{*
-  Met à jour la cache
-  @param Context   Contexte de dessin de la vue
-*}
-procedure TLabyrinthPlayerMode.UpdateCache(Context: TDrawViewContext);
+procedure TLabyrinthPlayerMode.DrawSquares(Context: TDrawViewContext;
+  Ceiling: Boolean);
 var
   QPos: TQualifiedPos;
   X, Y: Integer;
   Square: TSquare;
   DrawSquareContext: TDrawSquareContext;
 begin
-  InvalidateCacheIfNeeded(Context);
-
   with Context do
   begin
     QPos.Map := Map;
@@ -5658,21 +5539,17 @@ begin
         QPos.Position.Y := Zone.Top + Y;
         Square := Map[QPos.Position];
 
-        if Square <> FOldView[Y*ZoneWidth + X] then
-        begin
-          DrawSquareContext := TDrawSquareContext.Create(FCacheBitmap,
-            X*SquareSize, Y*SquareSize, QPos);
-          try
-            DrawSquareContext.SetDrawViewContext(Context);
-            Square.Draw(DrawSquareContext);
-          finally
-            DrawSquareContext.Free;
-          end;
+        DrawSquareContext := TDrawSquareContext.Create(Bitmap,
+          X*SquareSize, Y*SquareSize, QPos);
+        try
+          DrawSquareContext.SetDrawViewContext(Context);
 
-          if Square.StaticDraw then
-            FOldView[Y*Width + X] := Square
+          if Ceiling then
+            Square.DrawCeiling(DrawSquareContext)
           else
-            FOldView[Y*Width + X] := nil;
+            Square.Draw(DrawSquareContext);
+        finally
+          DrawSquareContext.Free;
         end;
       end;
     end;
@@ -5713,43 +5590,6 @@ begin
 end;
 
 {*
-  Dessine le plafond
-  @param Context   Contexte de dessin de la vue
-*}
-procedure TLabyrinthPlayerMode.DrawCeiling(Context: TDrawViewContext);
-var
-  QPos: TQualifiedPos;
-  X, Y: Integer;
-  Square: TSquare;
-  DrawSquareContext: TDrawSquareContext;
-begin
-  with Context do
-  begin
-    QPos.Map := Map;
-    QPos.Position.Z := Floor;
-
-    for X := 0 to ZoneWidth-1 do
-    begin
-      for Y := 0 to ZoneHeight-1 do
-      begin
-        QPos.Position.X := Zone.Left + X;
-        QPos.Position.Y := Zone.Top + Y;
-        Square := Map[QPos.Position];
-
-        DrawSquareContext := TDrawSquareContext.Create(Bitmap,
-          X*SquareSize, Y*SquareSize, QPos);
-        try
-          DrawSquareContext.SetDrawViewContext(Context);
-          Square.DrawCeiling(DrawSquareContext);
-        finally
-          DrawSquareContext.Free;
-        end;
-      end;
-    end;
-  end;
-end;
-
-{*
   [@inheritDoc]
 *}
 function TLabyrinthPlayerMode.GetWidth: Integer;
@@ -5780,11 +5620,9 @@ end;
 *}
 procedure TLabyrinthPlayerMode.DrawView(Context: TDrawViewContext);
 begin
-  UpdateCache(Context);
-  Context.Bitmap.Draw(0, 0, FCacheBitmap);
-
+  DrawSquares(Context, False);
   DrawPlayers(Context);
-  DrawCeiling(Context);
+  DrawSquares(Context, True);
 end;
 
 {*
@@ -5822,7 +5660,6 @@ begin
   inherited;
 
   Name := SDefaultPlayerName;
-  FStaticDraw := False;
   FMode := TLabyrinthPlayerMode.Create(Self);
   FModeStack := TInterfaceList.Create;
   FColor := DefaultPlayerColor;

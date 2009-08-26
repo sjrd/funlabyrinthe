@@ -158,8 +158,6 @@ constructor TWater.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
 
-  FStaticDraw := Master.Editing;
-
   Name := SWater;
   Painter.AddImage(fWater);
 end;
@@ -220,8 +218,6 @@ end;
 constructor THole.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
-
-  FStaticDraw := False;
 
   Name := SHole;
   Painter.AddImage(fHole);

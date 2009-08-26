@@ -516,8 +516,6 @@ constructor TOldStairs.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
 
-  FStaticDraw := False;
-
   Name := SStairs;
 end;
 
@@ -637,13 +635,11 @@ begin
     begin
       Painter.AddImage(fButton);
       AlternatePainter.AddImage(fSunkenButton);
-      FStaticDraw := False;
     end;
     akSwitch:
     begin
       Painter.AddImage(fSwitchOff);
       AlternatePainter.AddImage(fSwitchOn);
-      FStaticDraw := False;
     end;
     akInfoStone:
       Painter.AddImage(fInfoStone);

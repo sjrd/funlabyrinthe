@@ -377,8 +377,6 @@ constructor TPushButton.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
 
-  FStaticDraw := Master.Editing;
-
   FDownPainter := TPainter.Create(Master.ImagesMaster);
   FDownPainter.BeginUpdate;
 
@@ -428,7 +426,6 @@ constructor TSwitch.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
 
-  FStaticDraw := Master.Editing;
   FOffPainter := Painter;
 
   FOnPainter := TPainter.Create(Master.ImagesMaster);
@@ -614,9 +611,6 @@ begin
   CreateConfig(AMaster, AID, AField, AEffect, ATool, AObstacle);
 
   Name := AOriginalSquare.Name;
-
-  if not AOriginalSquare.StaticDraw then
-    FStaticDraw := False;
 
   FMap := AMap;
   FPosition := APosition;
