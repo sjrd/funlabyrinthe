@@ -27,9 +27,10 @@ const {don't localize}
   msgShowMessage = $01; /// Message pour afficher un message au joueur
   msgGameStarted = $02; /// Message envoyé lorsque le jeu commence
   msgPressKey = $03;    /// Message envoyé au joueur à l'appui sur une touche
+  msgSquareEvent = $04; /// Message envoyé lors d'un événement de case
 
   /// Message envoyé aux composants d'une case lorsque celle-ci est éditée
-  msgEditMapSquare = $03;
+  msgEditMapSquare = $05;
 
   SquareIDDelim = '-';            /// Délimiteur des parties d'un ID de case
   SquareIDFormat = '%s-%s-%s-%s'; /// Format d'un ID de case
@@ -53,6 +54,9 @@ type
   /// Type représentant une direction cardinale
   TDirection = (diNone, diNorth, diEast, diSouth, diWest);
 
+  /// Ensemble de directions
+  TDirections = set of TDirection;
+
   /// Type représentant une action
   TPlayerAction = type string;
 
@@ -75,6 +79,7 @@ type
   EBadSquareDefException = class(EFunLabyException);
 
   TDrawViewContext = class;
+  TMoveContext = class;
   TFunLabyFiler = class;
   TPlayerData = class;
   TFunLabyComponent = class;
@@ -85,6 +90,8 @@ type
   TObstacle = class;
   TSquare = class;
   TMap = class;
+  TPosComponent = class;
+  TVehicle = class;
   IPlayerMode = interface;
   TPlayerMode = class;
   TPlayer = class;
@@ -175,12 +182,34 @@ type
     @version 5.0
   *}
   TPlayerPressKeyMessage = record
-    MsgID: Word;               /// ID du message
-    Handled: Boolean;          /// Indique si le message a été géré
-    Reserved: Byte;            /// Réservé
-    Player: TPlayer;           /// Joueur concerné
-    Key: Word;                 /// Touche appuyée
-    Shift: TShiftState;        /// État des touches spéciales
+    MsgID: Word;        /// ID du message
+    Handled: Boolean;   /// Indique si le message a été géré
+    Reserved: Byte;     /// Réservé
+    Player: TPlayer;    /// Joueur concerné
+    Key: Word;          /// Touche appuyée
+    Shift: TShiftState; /// État des touches spéciales
+  end;
+
+  {*
+    Type d'événement de case
+  *}
+  TSquareEventKind = (
+    sekEntering, sekExiting, sekEntered, sekExited, sekExecute, sekPushing
+  );
+
+  /// Ensemble de TSquareEventKind
+  TSquareEventKinds = set of TSquareEventKind;
+
+  {*
+    Message envoyé aux composants avec position lors d'un événement de case
+    @author sjrd
+    @version 5.0
+  *}
+  TSquareEventMessage = record
+    MsgID: Word;            /// ID du message
+    Kind: TSquareEventKind; /// Type d'événement
+    Reserved: Byte;         /// Réservé
+    Context: TMoveContext;  /// Contexte du mouvement
   end;
 
   {*
@@ -363,12 +392,9 @@ type
   private
     FPlayer: TPlayer; /// Joueur qui se déplace
 
-    FSrcMap: TMap;   /// Carte source
-    FSrc: T3DPoint;  /// Case source
-    FDestMap: TMap;  /// Carte destination
-    FDest: T3DPoint; /// Case destination
-    FMap: TMap;      /// Carte courante
-    FPos: T3DPoint;  /// Position courante
+    FSrcQPos: TQualifiedPos;  /// Source qualifiée
+    FDestQPos: TQualifiedPos; /// Destination qualifiée
+    FQPos: TQualifiedPos;     /// Position qualifiée courante
 
     FOldDirection: TDirection; /// Ancienne direction du joueur
     FKeyPressed: Boolean;      /// True si une touche a été pressée
@@ -401,16 +427,19 @@ type
 
     property Player: TPlayer read FPlayer;
 
-    property SrcMap: TMap read FSrcMap;
-    property Src: T3DPoint read FSrc;
+    property SrcQPos: TQualifiedPos read FSrcQPos;
+    property SrcMap: TMap read FSrcQPos.Map;
+    property Src: T3DPoint read FSrcQPos.Position;
     property SrcSquare: TSquare read GetSrcSquare write SetSrcSquare;
 
-    property DestMap: TMap read FDestMap;
-    property Dest: T3DPoint read FDest;
+    property DestQPos: TQualifiedPos read FDestQPos;
+    property DestMap: TMap read FDestQPos.Map;
+    property Dest: T3DPoint read FDestQPos.Position;
     property DestSquare: TSquare read GetDestSquare write SetDestSquare;
 
-    property Map: TMap read FMap;
-    property Pos: T3DPoint read FPos;
+    property QPos: TQualifiedPos read FQPos;
+    property Map: TMap read FQPos.Map;
+    property Pos: T3DPoint read FQPos.Position;
     property Square: TSquare read GetSquare write SetSquare;
 
     property OldDirection: TDirection read FOldDirection;
@@ -423,6 +452,12 @@ type
 
     property Temporization: Cardinal read FTemporization write FTemporization;
   end;
+
+  {*
+    Méthode avec contexte de déplacement
+    @param Context   Contexte du déplacement
+  *}
+  TMoveContextMethod = procedure(Context: TMoveContext) of object;
 
   {*
     Élément de l'état d'un objet persistant
@@ -1111,6 +1146,11 @@ type
     FTool: TTool;         /// Outil
     FObstacle: TObstacle; /// Obstacle
 
+    procedure HookEventTo(Context: TMoveContext; EventKind: TSquareEventKind;
+      HookComponent: TPosComponent);
+    function HookEvent(Context: TMoveContext;
+      EventKind: TSquareEventKind): Boolean;
+
     function GetComponentCount: Integer;
     function GetComponents(Index: Integer): TSquareComponent;
     function GetComponentClasses(Index: Integer): TSquareComponentClass;
@@ -1120,6 +1160,13 @@ type
 
     procedure DoDraw(Context: TDrawSquareContext); override;
     procedure DoDrawCeiling(Context: TDrawSquareContext); virtual;
+
+    procedure DoEntering(Context: TMoveContext); virtual;
+    procedure DoExiting(Context: TMoveContext); virtual;
+    procedure DoEntered(Context: TMoveContext); virtual;
+    procedure DoExited(Context: TMoveContext); virtual;
+    procedure DoExecute(Context: TMoveContext); virtual;
+    procedure DoPushing(Context: TMoveContext); virtual;
 
     procedure Configure(AField: TField; AEffect: TEffect = nil;
       ATool: TTool = nil; AObstacle: TObstacle = nil);
@@ -1138,15 +1185,12 @@ type
     procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
       Y: Integer = 0); override;
 
-    procedure Entering(Context: TMoveContext); virtual;
-    procedure Exiting(Context: TMoveContext); virtual;
-
-    procedure Entered(Context: TMoveContext); virtual;
-    procedure Exited(Context: TMoveContext); virtual;
-
-    procedure Execute(Context: TMoveContext); virtual;
-
-    procedure Pushing(Context: TMoveContext); virtual;
+    procedure Entering(Context: TMoveContext);
+    procedure Exiting(Context: TMoveContext);
+    procedure Entered(Context: TMoveContext);
+    procedure Exited(Context: TMoveContext);
+    procedure Execute(Context: TMoveContext);
+    procedure Pushing(Context: TMoveContext); 
 
     property Category: string read GetCategory write SetCategory;
 
@@ -1223,6 +1267,176 @@ type
     property LinearMapCount: Integer read GetLinearMapCount;
     property LinearMap[Index: Integer]: TSquare
       read GetLinearMap write SetLinearMap;
+  end;
+
+  {*
+    Classe représentant un composant qui a une position sur une carte
+    TPosComponent est la classe de base pour les composants qui doivent avoir
+    une position sur la carte. Au contraire des composants de case, qui peuvent
+    être placés à plusieurs endroits, les instances de TPosComponent sont
+    "uniques" en ce qu'elles ne sont positionnées qu'à un seul endroit à la
+    fois.
+    Les descendants de TPosComponent peuvent aussi intercepter les événements
+    de la case où il se trouve. Ils doivent pour ce faire sélectionner les
+    événements à intercepter via la méthode SetWantedSquareEvents dans leur
+    constructeur. Ils sont alors envoyé au composant par un message
+    msgSquareEvent de type TSquareEventMessage.
+    @author sjrd
+    @version 5.0
+  *}
+  TPosComponent = class(TVisualComponent)
+  private
+    FQPos: TQualifiedPos;   /// Position qualifiée
+    FDirection: TDirection; /// Direction
+
+    /// Types d'événements de case que ce composant désire attraper
+    FWantedSquareEvents: TSquareEventKinds;
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
+    procedure SetWantedSquareEvents(Value: TSquareEventKinds);
+
+    procedure PositionChanged; virtual;
+  public
+    procedure ChangePosition(const AQPos: TQualifiedPos); overload; virtual;
+    procedure ChangePosition(AMap: TMap; const APosition: T3DPoint); overload;
+    procedure ChangePosition(const APosition: T3DPoint); overload;
+
+    property QPos: TQualifiedPos read FQPos;
+    property Map: TMap read FQPos.Map;
+    property Position: T3DPoint read FQPos.Position;
+
+    property WantedSquareEvents: TSquareEventKinds read FWantedSquareEvents;
+  published
+    property Direction: TDirection read FDirection write FDirection
+      default diNone;
+  end;
+
+  {*
+    Modificateur de case
+    TSquareModifier est une classe de base abstraite facilitant la création
+    d'un composant qui modifie le comportement de la case où il se trouve.
+    TSquareModifier se charge d'appeler SetWantedSquareEvents, et de dispatcher
+    les événements de message
+    @author sjrd
+    @version 5.0
+  *}
+  TSquareModifier = class(TPosComponent)
+  private
+    /// Gestionnaires des événements
+    FEventHandlers: array[TSquareEventKind] of TMoveContextMethod;
+
+    procedure MessageSquareEvent(var Msg: TSquareEventMessage);
+      message msgSquareEvent;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+
+    procedure Entering(Context: TMoveContext); virtual;
+    procedure Exiting(Context: TMoveContext); virtual;
+    procedure Entered(Context: TMoveContext); virtual;
+    procedure Exited(Context: TMoveContext); virtual;
+    procedure Execute(Context: TMoveContext); virtual;
+    procedure Pushing(Context: TMoveContext); virtual;
+  end;
+
+  {*
+    Plugin lié à un véhicule
+    @author sjrd
+    @version 5.0
+  *}
+  TVehiclePlugin = class(TPlugin)
+  private
+    FVehicle: TVehicle; /// Véhicule lié à ce plugin
+  protected
+    function GetIsDesignable: Boolean; override;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+
+    procedure DrawBefore(Context: TDrawSquareContext); override;
+    procedure DrawAfter(Context: TDrawSquareContext); override;
+
+    procedure Moving(Context: TMoveContext); override;
+    procedure Moved(Context: TMoveContext); override;
+
+    function AbleTo(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer): Boolean; override;
+
+    property Vehicle: TVehicle read FVehicle;
+  end;
+
+  {*
+    Véhicule
+    @author sjrd
+    @version 5.0
+  *}
+  TVehicle = class(TSquareModifier)
+  private
+    FPlugin: TVehiclePlugin; /// Plugin lié
+
+    FDirPainters: array[TDirection] of TPainter; /// Peintres par direction
+
+    FController: TPlayer; /// Joueur qui contrôle actuellement ce véhicule
+
+    function GetPainters(Dir: TDirection): TPainter;
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
+    function GetCategory: string; override;
+
+    property Plugin: TVehiclePlugin read FPlugin;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+    destructor Destroy; override;
+
+    procedure AttachController(AController: TPlayer); virtual;
+    procedure DetachController(const AQPos: TQualifiedPos); overload; virtual;
+    procedure DetachController; overload;
+
+    procedure DrawBefore(Context: TDrawSquareContext); virtual;
+    procedure DrawAfter(Context: TDrawSquareContext); virtual;
+
+    procedure Moving(Context: TMoveContext); virtual;
+    procedure Moved(Context: TMoveContext); virtual;
+
+    function AbleTo(Player: TPlayer; const Action: TPlayerAction;
+      Param: Integer): Boolean; virtual;
+
+    property DirPainters[Dir: TDirection]: TPainter read GetPainters;
+
+    property Controller: TPlayer read FController;
+  published
+    property NorthPainter: TPainter index diNorth read GetPainters;
+    property EastPainter: TPainter index diEast read GetPainters;
+    property SouthPainter: TPainter index diSouth read GetPainters;
+    property WestPainter: TPainter index diWest read GetPainters;
+  end;
+
+  {*
+    Composant mobile, qui a des actions propres et autonomes
+    TMobileComponent est la classe de base pour les composants qui doivent
+    se déplacer de façon autonome, ou avoir un quelconque comportement
+    autonome.
+    Chaque instance de TMobileComponent a son propre thread d'exécution de ses
+    actions.
+    @author sjrd
+    @version 5.0
+  *}
+  TMobileComponent = class(TPosComponent)
+  private
+    FActionLock: TCriticalSection;   /// Verrou pour les actions
+    FInActionLock: TCriticalSection; /// Verrou pour l'intérieur des actions
+    FActionCoroutine: TCoroutine;    /// Coroutine d'exécution des actions
+    FActionMessagePtr: Pointer;      /// Pointeur sur le message pour l'action
+
+    procedure ActionProc(Coroutine: TCoroutine);
+
+    function TryPause: Boolean;
+    procedure Resume;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+    destructor Destroy; override;
+
+    procedure SendMessage(var Msg);
   end;
 
   /// Classe de TPlayerMode
@@ -1337,65 +1551,6 @@ type
   public
     procedure DrawView(Context: TDrawViewContext); override;
     procedure PressKey(Context: TKeyEventContext); override;
-  end;
-
-  {*
-    Classe représentant un composant qui a une position sur une carte
-    TPosComponent est la classe de base pour les composants qui doivent avoir
-    une position sur la carte. Au contraire des composants de case, qui peuvent
-    être placés à plusieurs endroits, les instances de TPosComponent sont
-    "uniques" en ce qu'elles ne sont positionnées qu'à un seul endroit à la
-    fois.
-    @author sjrd
-    @version 5.0
-  *}
-  TPosComponent = class(TVisualComponent)
-  private
-    FQPos: TQualifiedPos;   /// Position qualifiée
-    FDirection: TDirection; /// Direction
-  protected
-    procedure DefineProperties(Filer: TFunLabyFiler); override;
-
-    procedure PositionChanged; virtual;
-  public
-    procedure ChangePosition(const AQPos: TQualifiedPos); overload; virtual;
-    procedure ChangePosition(AMap: TMap; const APosition: T3DPoint); overload;
-    procedure ChangePosition(const APosition: T3DPoint); overload;
-
-    property QPos: TQualifiedPos read FQPos;
-    property Map: TMap read FQPos.Map;
-    property Position: T3DPoint read FQPos.Position;
-  published
-    property Direction: TDirection read FDirection write FDirection
-      default diNone;
-  end;
-
-  {*
-    Composant mobile, qui a des actions propres et autonomes
-    TMobileComponent est la classe de base pour les composants qui doivent
-    se déplacer de façon autonome, ou avoir un quelconque comportement
-    autonome.
-    Chaque instance de TMobileComponent a son propre thread d'exécution de ses
-    actions.
-    @author sjrd
-    @version 5.0
-  *}
-  TMobileComponent = class(TPosComponent)
-  private
-    FActionLock: TCriticalSection;   /// Verrou pour les actions
-    FInActionLock: TCriticalSection; /// Verrou pour l'intérieur des actions
-    FActionCoroutine: TCoroutine;    /// Coroutine d'exécution des actions
-    FActionMessagePtr: Pointer;      /// Pointeur sur le message pour l'action
-
-    procedure ActionProc(Coroutine: TCoroutine);
-
-    function TryPause: Boolean;
-    procedure Resume;
-  public
-    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
-    destructor Destroy; override;
-
-    procedure SendMessage(var Msg);
   end;
 
   {*
@@ -1643,7 +1798,7 @@ type
   TMaster = class(TFunLabyPersistent)
   private
     FImagesMaster: TImagesMaster;   /// Maître d'images
-    FComponents: TStrings;          /// Table de hashage ID -> composant
+    FComponents: TObjectList;       /// Liste de tous les composants
     FPlugins: TObjectList;          /// Liste des plug-in
     FObjectDefs: TObjectList;       /// Liste des définitions d'objet
     FFields: TObjectList;           /// Liste des terrains
@@ -1655,6 +1810,7 @@ type
     FPosComponents: TObjectList;    /// Liste des objets avec position
     FMobileComponents: TObjectList; /// Liste des objets mobiles (autonomes)
     FPlayers: TObjectList;          /// Liste des joueurs
+    FComponentsByID: TStrings;      /// Table de hashage ID -> composant
 
     FEditing: Boolean;            /// Indique si on est en mode édition
     FBeginTickCount: Cardinal;    /// Tick count système au lancement
@@ -1664,6 +1820,8 @@ type
 
     FTimers: TTimerCollection;    /// Collection des timers
 
+    function GetComponentAs(const ID: TComponentID;
+      RequiredClass: TFunLabyComponentClass = nil): TFunLabyComponent;
     function GetComponent(const ID: TComponentID): TFunLabyComponent;
     function GetSquareComponent(const ID: TComponentID): TSquareComponent;
 
@@ -3124,10 +3282,8 @@ begin
 
   FPlayer := APlayer;
 
-  FSrcMap := Player.Map;
-  FSrc := Player.Position;
-  FDestMap := ADest.Map;
-  FDest := ADest.Position;
+  FSrcQPos := Player.QPos;
+  FDestQPos := ADest;
 
   SwitchToSrc;
 
@@ -3165,8 +3321,7 @@ end;
 *}
 procedure TMoveContext.SwitchToSrc;
 begin
-  FMap := SrcMap;
-  FPos := Src;
+  FQPos := FSrcQPos;
 end;
 
 {*
@@ -3174,8 +3329,7 @@ end;
 *}
 procedure TMoveContext.SwitchToDest;
 begin
-  FMap := DestMap;
-  FPos := Dest;
+  FQPos := FDestQPos;
 end;
 
 {*
@@ -4125,7 +4279,7 @@ end;
 *}
 function TFunLabyComponent.GetIsDesignable: Boolean;
 begin
-  Result := Category <> '';
+  Result := (ID <> '') and (Category <> '');
 end;
 
 {*
@@ -4948,6 +5102,53 @@ begin
 end;
 
 {*
+  Détourne un événement vers un composant à position
+  @param Context         Contexte du mouvement
+  @param EventKind       Type d'événement
+  @param HookComponent   Composant qui prend en charge le détournement
+*}
+procedure TSquare.HookEventTo(Context: TMoveContext;
+  EventKind: TSquareEventKind; HookComponent: TPosComponent);
+var
+  Msg: TSquareEventMessage;
+begin
+  Msg.MsgID := msgSquareEvent;
+  Msg.Kind := EventKind;
+  Msg.Context := Context;
+
+  HookComponent.Dispatch(Msg);
+end;
+
+{*
+  Détourne un événement vers un composant à position qui le demanderait
+  @param Context     Contexte du mouvement
+  @param EventKind   Type d'événement
+  @return True si l'événement a été détourné, False sinon
+*}
+function TSquare.HookEvent(Context: TMoveContext;
+  EventKind: TSquareEventKind): Boolean;
+var
+  I: Integer;
+  PosComponent: TPosComponent;
+begin
+  for I := 0 to Master.PosComponentCount-1 do
+  begin
+    PosComponent := Master.PosComponents[I];
+
+    if (EventKind in PosComponent.WantedSquareEvents) and
+      (PosComponent.Map = Context.Map) and
+      Same3DPoint(PosComponent.Position, Context.Pos) then
+    begin
+      HookEventTo(Context, EventKind, PosComponent);
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  Result := False;
+end;
+
+{*
   Nombre de composants
   @return Nombre de composants
 *}
@@ -5033,6 +5234,80 @@ procedure TSquare.DoDrawCeiling(Context: TDrawSquareContext);
 begin
   if Assigned(Field) then
     Field.DrawCeiling(Context);
+end;
+
+{*
+  Exécuté lorsque le joueur tente de venir sur la case
+  Entering est exécuté lorsque le joueur tente de venir sur la case. Pour
+  annuler le déplacement, il faut positionner Cancel à True.
+  @param Context   Contexte du déplacement
+*}
+procedure TSquare.DoEntering(Context: TMoveContext);
+begin
+  if Assigned(Field) then
+    Field.Entering(Context);
+end;
+
+{*
+  Exécuté lorsque le joueur tente de sortir de la case
+  Exiting est exécuté lorsque le joueur tente de sortir de la case. Pour
+  annuler le déplacement, il faut positionner Cancel à True.
+  @param Context   Contexte du déplacement
+*}
+procedure TSquare.DoExiting(Context: TMoveContext);
+begin
+  if Assigned(Field) then
+    Field.Exiting(Context);
+end;
+
+{*
+  Exécuté lorsque le joueur est arrivé sur la case
+  @param Context   Contexte du déplacement
+*}
+procedure TSquare.DoEntered(Context: TMoveContext);
+begin
+  if Assigned(Field) then
+    Field.Entered(Context);
+  if Assigned(Effect) then
+    Effect.Entered(Context);
+end;
+
+{*
+  Exécuté lorsque le joueur est sorti de la case
+  @param Context   Contexte du déplacement
+*}
+procedure TSquare.DoExited(Context: TMoveContext);
+begin
+  if Assigned(Field) then
+    Field.Exited(Context);
+  if Assigned(Effect) then
+    Effect.Exited(Context);
+end;
+
+{*
+  Trouve l'objet et exécute l'effet
+  @param Context   Contexte du déplacement
+*}
+procedure TSquare.DoExecute(Context: TMoveContext);
+begin
+  if Assigned(Tool) then
+    Tool.Find(Context);
+  if Assigned(Effect) then
+    Effect.Execute(Context);
+end;
+
+{*
+  Exécuté lorsque le joueur pousse sur l'obstacle
+  Pushing est exécuté lorsque le joueur pousse sur l'obstacle. Pour
+  annuler le déplacement, il faut positionner Cancel à True. Pour éviter que
+  la méthode Entered de la case ne soit exécutée, il faut positionner
+  AbortEntered à True.
+  @param Context   Contexte du déplacement
+*}
+procedure TSquare.DoPushing(Context: TMoveContext);
+begin
+  if Assigned(Obstacle) then
+    Obstacle.Pushing(Context);
 end;
 
 {*
@@ -5124,8 +5399,8 @@ end;
 *}
 procedure TSquare.Entering(Context: TMoveContext);
 begin
-  if Assigned(Field) then
-    Field.Entering(Context);
+  if not HookEvent(Context, sekEntering) then
+    DoEntering(Context);
 end;
 
 {*
@@ -5136,8 +5411,8 @@ end;
 *}
 procedure TSquare.Exiting(Context: TMoveContext);
 begin
-  if Assigned(Field) then
-    Field.Exiting(Context);
+  if not HookEvent(Context, sekExiting) then
+    DoExiting(Context);
 end;
 
 {*
@@ -5146,10 +5421,8 @@ end;
 *}
 procedure TSquare.Entered(Context: TMoveContext);
 begin
-  if Assigned(Field) then
-    Field.Entered(Context);
-  if Assigned(Effect) then
-    Effect.Entered(Context);
+  if not HookEvent(Context, sekEntered) then
+    DoEntered(Context);
 end;
 
 {*
@@ -5158,10 +5431,8 @@ end;
 *}
 procedure TSquare.Exited(Context: TMoveContext);
 begin
-  if Assigned(Field) then
-    Field.Exited(Context);
-  if Assigned(Effect) then
-    Effect.Exited(Context);
+  if not HookEvent(Context, sekExited) then
+    DoExited(Context);
 end;
 
 {*
@@ -5170,10 +5441,8 @@ end;
 *}
 procedure TSquare.Execute(Context: TMoveContext);
 begin
-  if Assigned(Tool) then
-    Tool.Find(Context);
-  if Assigned(Effect) then
-    Effect.Execute(Context);
+  if not HookEvent(Context, sekExecute) then
+    DoExecute(Context);
 end;
 
 {*
@@ -5186,8 +5455,8 @@ end;
 *}
 procedure TSquare.Pushing(Context: TMoveContext);
 begin
-  if Assigned(Obstacle) then
-    Obstacle.Pushing(Context);
+  if not HookEvent(Context, sekPushing) then
+    DoPushing(Context);
 end;
 
 {-------------}
@@ -5725,6 +5994,18 @@ begin
 end;
 
 {*
+  Spécifie les types d'événements de case à intercepter
+  Cette méthode ne peut être appelée que dans le constructeur.
+  @param Value   Types d'événements de case à intercepter
+*}
+procedure TPosComponent.SetWantedSquareEvents(Value: TSquareEventKinds);
+begin
+  Assert(psCreating in PersistentState);
+
+  FWantedSquareEvents := Value;
+end;
+
+{*
   Méthode de notification que la position de ce composant à changé
 *}
 procedure TPosComponent.PositionChanged;
@@ -5763,6 +6044,325 @@ end;
 procedure TPosComponent.ChangePosition(const APosition: T3DPoint);
 begin
   ChangePosition(Map, APosition);
+end;
+
+{-----------------------}
+{ TSquareModifier class }
+{-----------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TSquareModifier.Create(AMaster: TMaster; const AID: TComponentID);
+var
+  AWantedEventKinds: TSquareEventKinds;
+begin
+  inherited;
+
+  AWantedEventKinds := [];
+
+  FEventHandlers[sekEntering] := Entering;
+  if @FEventHandlers[sekEntering] <> @TSquareModifier.Entering then
+    Include(AWantedEventKinds, sekEntering);
+
+  FEventHandlers[sekExiting] := Exiting;
+  if @FEventHandlers[sekExiting] <> @TSquareModifier.Exiting then
+    Include(AWantedEventKinds, sekExiting);
+
+  FEventHandlers[sekEntered] := Entered;
+  if @FEventHandlers[sekEntered] <> @TSquareModifier.Entered then
+    Include(AWantedEventKinds, sekEntered);
+
+  FEventHandlers[sekExited] := Exited;
+  if @FEventHandlers[sekExited] <> @TSquareModifier.Exited then
+    Include(AWantedEventKinds, sekExited);
+
+  FEventHandlers[sekExecute] := Execute;
+  if @FEventHandlers[sekExecute] <> @TSquareModifier.Execute then
+    Include(AWantedEventKinds, sekExecute);
+
+  FEventHandlers[sekPushing] := Pushing;
+  if @FEventHandlers[sekPushing] <> @TSquareModifier.Pushing then
+    Include(AWantedEventKinds, sekPushing);
+
+  SetWantedSquareEvents(AWantedEventKinds);
+end;
+
+{*
+  Gestionnaire d'événement SquareEvent
+  @param Msg   Message
+*}
+procedure TSquareModifier.MessageSquareEvent(var Msg: TSquareEventMessage);
+begin
+  FEventHandlers[Msg.Kind](Msg.Context);
+end;
+
+{*
+  Gestionnaire de l'événement de case Entering
+  @param Context   Contexte du déplacement
+*}
+procedure TSquareModifier.Entering(Context: TMoveContext);
+begin
+  Context.Square.DoEntering(Context);
+end;
+
+{*
+  Gestionnaire de l'événement de case Exiting
+  @param Context   Contexte du déplacement
+*}
+procedure TSquareModifier.Exiting(Context: TMoveContext);
+begin
+  Context.Square.DoExiting(Context);
+end;
+
+{*
+  Gestionnaire de l'événement de case Entered
+  @param Context   Contexte du déplacement
+*}
+procedure TSquareModifier.Entered(Context: TMoveContext);
+begin
+  Context.Square.DoEntered(Context);
+end;
+
+{*
+  Gestionnaire de l'événement de case Exited
+  @param Context   Contexte du déplacement
+*}
+procedure TSquareModifier.Exited(Context: TMoveContext);
+begin
+  Context.Square.DoExited(Context);
+end;
+
+{*
+  Gestionnaire de l'événement de case Execute
+  @param Context   Contexte du déplacement
+*}
+procedure TSquareModifier.Execute(Context: TMoveContext);
+begin
+  Context.Square.DoExecute(Context);
+end;
+
+{*
+  Gestionnaire de l'événement de case Pushing
+  @param Context   Contexte du déplacement
+*}
+procedure TSquareModifier.Pushing(Context: TMoveContext);
+begin
+  Context.Square.DoPushing(Context);
+end;
+
+{----------------------}
+{ TVehiclePlugin class }
+{----------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TVehiclePlugin.Create(AMaster: TMaster; const AID: TComponentID);
+begin
+  Assert(FVehicle <> nil);
+
+  inherited;
+
+  FTransient := True;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TVehiclePlugin.GetIsDesignable: Boolean;
+begin
+  Result := False;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TVehiclePlugin.DrawBefore(Context: TDrawSquareContext);
+begin
+  Vehicle.DrawBefore(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TVehiclePlugin.DrawAfter(Context: TDrawSquareContext);
+begin
+  Vehicle.DrawAfter(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TVehiclePlugin.Moving(Context: TMoveContext);
+begin
+  Vehicle.Moving(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TVehiclePlugin.Moved(Context: TMoveContext);
+begin
+  Vehicle.Moved(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TVehiclePlugin.AbleTo(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer): Boolean;
+begin
+  Result := Vehicle.AbleTo(Player, Action, Param);
+end;
+
+{----------------}
+{ TVehicle class }
+{----------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TVehicle.Create(AMaster: TMaster; const AID: TComponentID);
+var
+  Dir: TDirection;
+begin
+  inherited;
+
+  FPlugin := TVehiclePlugin(TVehiclePlugin.NewInstance);
+  FPlugin.FVehicle := Self;
+  FPlugin.Create(Master, ID+'Plugin'); {don't localize}
+
+  FDirPainters[diNone] := Painter;
+  for Dir := diNorth to diWest do
+    FDirPainters[Dir] := TPainter.Create(Master.ImagesMaster);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TVehicle.Destroy;
+var
+  Dir: TDirection;
+begin
+  for Dir := diNorth to diWest do
+    FDirPainters[Dir].Free;
+
+  inherited;
+end;
+
+{*
+  Peintres de ce véhicule par direction
+  @param Dir   Direction
+  @return Peintre de ce véhicule pour la direction Dir
+*}
+function TVehicle.GetPainters(Dir: TDirection): TPainter;
+begin
+  Result := FDirPainters[Dir];
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TVehicle.DefineProperties(Filer: TFunLabyFiler);
+begin
+  inherited;
+
+  Filer.DefineFieldProperty('Controller', TypeInfo(TPlayer),
+    @FController, FController <> nil);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TVehicle.GetCategory: string;
+begin
+  Result := SCategoryVehicles;
+end;
+
+{*
+  Attache à un contrôleur et retire le véhicule de la carte
+  @param AController   Contrôleur
+*}
+procedure TVehicle.AttachController(AController: TPlayer);
+begin
+  ChangePosition(NoQPos);
+  FController := AController;
+  FController.AddPlugin(Plugin);
+end;
+
+{*
+  Détache le véhicule de son contrôleur et repositionne le véhicule
+  @param AQPos   Position à laquelle repositionner le véhicule
+*}
+procedure TVehicle.DetachController(const AQPos: TQualifiedPos);
+begin
+  FController.RemovePlugin(Plugin);
+  FController := nil;
+  ChangePosition(AQPos);
+end;
+
+{*
+  Détache le véhicule de son contrôleur et repositionne le véhicule
+  Le véhicule est repositionné à la position actuelle de son contrôleur
+*}
+procedure TVehicle.DetachController;
+begin
+  DetachController(Controller.QPos);
+end;
+
+{*
+  Dessine sous le joueur
+  DrawBefore est exécuté lors du dessin du joueur, avant celui-ci. Le dessin
+  effectué dans DrawBefore se retrouve donc sous le joueur.
+  @param Context   Contexte de dessin de la case
+*}
+procedure TVehicle.DrawBefore(Context: TDrawSquareContext);
+begin
+  DirPainters[Context.Player.Direction].Draw(Context);
+end;
+
+{*
+  Dessine sur le joueur
+  DrawAfter est exécuté lors du dessin du joueur, après celui-ci. Le dessin
+  effectué dans DrawAfter se retrouve donc sur le joueur.
+  @param Context   Contexte de dessin de la case
+*}
+procedure TVehicle.DrawAfter(Context: TDrawSquareContext);
+begin
+end;
+
+{*
+  Un joueur se déplace
+  Moving est exécuté lorsqu'un joueur se déplace d'une case à une autre.
+  @param Context   Contexte du déplacement
+*}
+procedure TVehicle.Moving(Context: TMoveContext);
+begin
+end;
+
+{*
+  Un joueur s'est déplacé
+  Moved est exécuté lorsqu'un joueur s'est déplacé d'une case à une autre.
+  @param Context   Contexte du déplacement
+*}
+procedure TVehicle.Moved(Context: TMoveContext);
+begin
+end;
+
+{*
+  Indique si le plug-in permet au joueur d'effectuer une action donnée
+  CanYou doit renvoyer True si le plug-in permet au joueur d'effectuer
+  l'action donnée en paramètre.
+  @param Player   Joueur concerné
+  @param Action   Action à tester
+  @param Param    Paramètre de l'action
+  @return True si le joueur est capable d'effectuer l'action, False sinon
+*}
+function TVehicle.AbleTo(Player: TPlayer; const Action: TPlayerAction;
+  Param: Integer): Boolean;
+begin
+  Result := False;
 end;
 
 {-------------------------}
@@ -7370,13 +7970,8 @@ begin
   inherited Create;
 
   FImagesMaster := TImagesMaster.Create;
-  FComponents := THashedStringList.Create;
-  with TStringList(FComponents) do
-  begin
-    CaseSensitive := True;
-    Duplicates := dupError;
-  end;
 
+  FComponents       := TObjectList.Create(True);
   FPlugins          := TObjectList.Create(False);
   FObjectDefs       := TObjectList.Create(False);
   FFields           := TObjectList.Create(False);
@@ -7389,6 +7984,14 @@ begin
   FMobileComponents := TObjectList.Create(False);
   FPlayers          := TObjectList.Create(False);
 
+  FComponentsByID := THashedStringList.Create;
+  with TStringList(FComponentsByID) do
+  begin
+    CaseSensitive := True;
+    Sorted := True;
+    Duplicates := dupError;
+  end;
+
   FEditing := AEditing;
   FBeginTickCount := Windows.GetTickCount;
   FTerminated := False;
@@ -7400,16 +8003,10 @@ end;
   Détruit l'instance
 *}
 destructor TMaster.Destroy;
-var
-  I: Integer;
 begin
   FTimers.Free;
 
-  if Assigned(FComponents) then
-  begin
-    for I := FComponents.Count-1 downto 0 do
-      FComponents.Objects[I].Free;
-  end;
+  FComponentsByID.Free;
 
   FPlayers.Free;
   FMobileComponents.Free;
@@ -7422,11 +8019,64 @@ begin
   FFields.Free;
   FObjectDefs.Free;
   FPlugins.Free;
-
   FComponents.Free;
+
   FImagesMaster.Free;
 
   inherited;
+end;
+
+{*
+  Trouve un composant d'une classe particulière par son ID
+  @param ID              ID du composant à trouver
+  @param RequiredClass   Classe requise pour ce composant
+  @return Le composant dont l'ID a été spécifié, ou nil si ID était vide
+  @throws EComponentNotFound : Aucun composant ne correspond à l'ID spécifié
+  @throws EClassCastException : Le composant n'est pas du type requis
+*}
+function TMaster.GetComponentAs(const ID: TComponentID;
+  RequiredClass: TFunLabyComponentClass = nil): TFunLabyComponent;
+var
+  Index: Integer;
+  ErrorMsg: string;
+begin
+  if ID = '' then
+    Result := nil
+  else
+  begin
+    Index := FComponentsByID.IndexOf(ID);
+
+    if Index >= 0 then
+    begin
+      Result := TFunLabyComponent(FComponentsByID.Objects[Index]);
+
+      if (RequiredClass <> nil) and (Result <> nil) and
+        (not Result.InheritsFrom(RequiredClass)) then
+      begin
+        if Editing and (ShowDialog(SInvalidComponentTitle,
+          Format(SInvalidComponent, [ID])+#10+SRepareComponentError,
+          dtError, dbOKCancel) = drOK) then
+        begin
+          Result := nil;
+          if psReading in PersistentState then
+            FComponentsByID.Objects[Index] := nil;
+        end else
+          Result := Result as RequiredClass;
+      end;
+    end else
+    begin
+      ErrorMsg := Format(SComponentNotFound, [ID]);
+
+      if Editing and (ShowDialog(SComponentNotFoundTitle,
+        ErrorMsg+#10+SRepareComponentError, dtError, dbOKCancel) = drOK) then
+      begin
+        Result := nil;
+        if psReading in PersistentState then
+          FComponentsByID.AddObject(ID, nil);
+      end else
+        raise EComponentNotFound.Create(ErrorMsg);
+    end;
+  end;
 end;
 
 {*
@@ -7436,19 +8086,8 @@ end;
   @throws EComponentNotFound : Aucun composant ne correspond à l'ID spécifié
 *}
 function TMaster.GetComponent(const ID: TComponentID): TFunLabyComponent;
-var
-  Index: Integer;
 begin
-  if ID = '' then
-    Result := nil
-  else
-  begin
-    Index := FComponents.IndexOf(ID);
-    if Index >= 0 then
-      Result := TFunLabyComponent(FComponents.Objects[Index])
-    else
-      raise EComponentNotFound.CreateFmt(sComponentNotFound, [ID]);
-  end;
+  Result := GetComponentAs(ID);
 end;
 
 {*
@@ -7461,7 +8100,7 @@ end;
 function TMaster.GetSquareComponent(const ID: TComponentID): TSquareComponent;
 begin
   try
-    Result := Component[ID] as TSquareComponent;
+    Result := TSquareComponent(GetComponentAs(ID, TSquareComponent));
   except
     on Error: EComponentNotFound do
     begin
@@ -7482,7 +8121,7 @@ end;
 *}
 function TMaster.GetPlugin(const ID: TComponentID): TPlugin;
 begin
-  Result := Component[ID] as TPlugin;
+  Result := TPlugin(GetComponentAs(ID, TPlugin));
 end;
 
 {*
@@ -7494,7 +8133,7 @@ end;
 *}
 function TMaster.GetObjectDef(const ID: TComponentID): TObjectDef;
 begin
-  Result := Component[ID] as TObjectDef;
+  Result := TObjectDef(GetComponentAs(ID, TObjectDef));
 end;
 
 {*
@@ -7506,7 +8145,10 @@ end;
 *}
 function TMaster.GetField(const ID: TComponentID): TField;
 begin
-  Result := Component[ID] as TField;
+  Result := TField(GetComponentAs(ID, TField));
+
+  if (Result = nil) and (ID <> '') and (FieldCount > 0) then
+    Result := Fields[0];
 end;
 
 {*
@@ -7518,7 +8160,7 @@ end;
 *}
 function TMaster.GetEffect(const ID: TComponentID): TEffect;
 begin
-  Result := Component[ID] as TEffect;
+  Result := TEffect(GetComponentAs(ID, TEffect));
 end;
 
 {*
@@ -7530,7 +8172,7 @@ end;
 *}
 function TMaster.GetTool(const ID: TComponentID): TTool;
 begin
-  Result := Component[ID] as TTool;
+  Result := TTool(GetComponentAs(ID, TTool));
 end;
 
 {*
@@ -7542,7 +8184,7 @@ end;
 *}
 function TMaster.GetObstacle(const ID: TComponentID): TObstacle;
 begin
-  Result := Component[ID] as TObstacle;
+  Result := TObstacle(GetComponentAs(ID, TObstacle));
 end;
 
 {*
@@ -7560,10 +8202,11 @@ var
   AEffect: TEffect;
   ATool: TTool;
   AObstacle: TObstacle;
+  AID: TComponentID;
   AName: string;
 begin
   if ComponentExists(ID) then
-    Result := Component[ID] as TSquare
+    Result := TSquare(GetComponentAs(ID, TSquare))
   else
   begin
     Result := nil;
@@ -7574,6 +8217,14 @@ begin
       AEffect   := Effect  [GetXToken(ID, SquareIDDelim, 2)];
       ATool     := Tool    [GetXToken(ID, SquareIDDelim, 3)];
       AObstacle := Obstacle[GetXToken(ID, SquareIDDelim, 4)];
+
+      AID := Format(SquareIDFormat,
+        [AField.SafeID, AEffect.SafeID, ATool.SafeID, AObstacle.SafeID]);
+      if (AID <> ID) and ComponentExists(AID) then
+      begin
+        Result := TSquare(GetComponentAs(AID, TSquare));
+        Exit;
+      end;
 
       if Assigned(AField) then
         AName := AField.Name
@@ -7586,14 +8237,14 @@ begin
       if Assigned(AObstacle) then
         AName := Format(sObstacleName, [AName, AObstacle.Name]);
 
-      Result := TSquare.CreateConfig(Self, ID,
+      Result := TSquare.CreateConfig(Self, AID,
         AField, AEffect, ATool, AObstacle);
       Result.Name := AName;
     except
     end;
 
     if Result = nil then
-      Result := Component[ID] as TSquare;
+      raise EComponentNotFound.CreateFmt(SComponentNotFound, [ID]);
   end;
 end;
 
@@ -7606,7 +8257,7 @@ end;
 *}
 function TMaster.GetMap(const ID: TComponentID): TMap;
 begin
-  Result := Component[ID] as TMap;
+  Result := TMap(GetComponentAs(ID, TMap));
 end;
 
 {*
@@ -7618,7 +8269,7 @@ end;
 *}
 function TMaster.GetPlayer(const ID: TComponentID): TPlayer;
 begin
-  Result := Component[ID] as TPlayer;
+  Result := TPlayer(GetComponentAs(ID, TPlayer));
 end;
 
 {*
@@ -7637,7 +8288,7 @@ end;
 *}
 function TMaster.GetComponents(Index: Integer): TFunLabyComponent;
 begin
-  Result := TFunLabyComponent(FComponents.Objects[Index]);
+  Result := TFunLabyComponent(FComponents[Index]);
 end;
 
 {*
@@ -7876,7 +8527,7 @@ end;
 *}
 procedure TMaster.AddComponent(Component: TFunLabyComponent);
 begin
-  FComponents.AddObject(Component.ID, Component);
+  FComponents.Add(Component);
 
   if Component is TPlugin then
     FPlugins.Add(Component)
@@ -7902,6 +8553,9 @@ begin
     if Component is TPlayer then
       FPlayers.Add(Component);
   end;
+
+  if Component.ID <> '' then
+    FComponentsByID.AddObject(Component.ID, Component);
 end;
 
 {*
@@ -7909,7 +8563,16 @@ end;
   @param Component   Le composant à retirer
 *}
 procedure TMaster.RemoveComponent(Component: TFunLabyComponent);
+var
+  Index: Integer;
 begin
+  if psDestroying in PersistentState then
+    Exit;
+
+  Index := FComponentsByID.IndexOfObject(Component);
+  if Index >= 0 then
+    FComponentsByID.Delete(Index);
+
   if Component is TPlugin then
     FPlugins.Remove(Component)
   else if Component is TObjectDef then
@@ -7935,7 +8598,7 @@ begin
       FPlayers.Remove(Component);
   end;
 
-  FComponents.Delete(FComponents.IndexOf(Component.ID));
+  FComponents.Extract(Component);
 end;
 
 {*
@@ -7982,8 +8645,31 @@ end;
   [@inheritDoc]
 *}
 procedure TMaster.EndState(State: TPersistentState);
+var
+  I, J: Integer;
 begin
   inherited;
+
+  if psReading in State then
+  begin
+    for I := FComponentsByID.Count-1 downto 0 do
+    begin
+      if FComponentsByID.Objects[I] <> nil then
+        Continue;
+
+      for J := 0 to ComponentCount-1 do
+      begin
+        if Components[J].ID = FComponentsByID[I] then
+        begin
+          FComponentsByID.Objects[I] := Components[J];
+          Break;
+        end;
+      end;
+
+      if FComponentsByID.Objects[I] = nil then
+        FComponentsByID.Delete(I);
+    end;
+  end;
 
   if (psReading in State) and (not Editing) then
     Timers.Start;
@@ -8015,7 +8701,7 @@ end;
 *}
 function TMaster.ComponentExists(const ID: TComponentID): Boolean;
 begin
-  Result := FComponents.IndexOf(ID) >= 0;
+  Result := FComponentsByID.IndexOf(ID) >= 0;
 end;
 
 {*

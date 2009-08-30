@@ -96,15 +96,13 @@ type
   TPlankSquare = class(TOverriddenSquare)
   private
     FPlayer: TPlayer; /// Joueur qui passe sur la case
+  protected
+    procedure DoEntering(Context: TMoveContext); override;
+    procedure DoExited(Context: TMoveContext); override;
+    procedure DoExecute(Context: TMoveContext); override;
   public
     constructor Create(AMaster: TMaster; AMap: TMap;
       const APosition: T3DPoint; APlayer: TPlayer);
-
-    procedure Entering(Context: TMoveContext); override;
-
-    procedure Exited(Context: TMoveContext); override;
-
-    procedure Execute(Context: TMoveContext); override;
 
     property Player: TPlayer read FPlayer;
   end;
@@ -306,7 +304,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankSquare.Entering(Context: TMoveContext);
+procedure TPlankSquare.DoEntering(Context: TMoveContext);
 begin
   if Context.Player <> Player then
     Context.Cancel;
@@ -315,7 +313,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankSquare.Exited(Context: TMoveContext);
+procedure TPlankSquare.DoExited(Context: TMoveContext);
 begin
   FPlayer.Attribute[attrUsePlank] := 0;
   Free;
@@ -324,7 +322,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TPlankSquare.Execute(Context: TMoveContext);
+procedure TPlankSquare.DoExecute(Context: TMoveContext);
 var
   Redo: Boolean;
   RedoDelay: Cardinal;

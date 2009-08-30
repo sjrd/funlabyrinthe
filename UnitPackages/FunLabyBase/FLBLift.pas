@@ -42,16 +42,14 @@ type
   TEngagedLiftSquare = class(TOverriddenSquare)
   private
     FIsExit: Boolean; /// Indique si c'est là que sort le joueur
+  protected
+    procedure DoEntering(Context: TMoveContext); override;
+    procedure DoExited(Context: TMoveContext); override;
+    procedure DoPushing(Context: TMoveContext); override;
   public
     constructor Create(AMaster: TMaster; AMap: TMap;
       const APosition: T3DPoint; Opened: Boolean = False;
       AIsExit: Boolean = False);
-
-    procedure Entering(Context: TMoveContext); override;
-
-    procedure Exited(Context: TMoveContext); override;
-
-    procedure Pushing(Context: TMoveContext); override;
 
     property IsExit: Boolean read FIsExit;
   end;
@@ -103,7 +101,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftSquare.Entering(Context: TMoveContext);
+procedure TEngagedLiftSquare.DoEntering(Context: TMoveContext);
 begin
   OriginalSquare.Entering(Context);
 end;
@@ -111,7 +109,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftSquare.Exited(Context: TMoveContext);
+procedure TEngagedLiftSquare.DoExited(Context: TMoveContext);
 var
   Other: T3DPoint;
 begin
@@ -146,7 +144,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TEngagedLiftSquare.Pushing(Context: TMoveContext);
+procedure TEngagedLiftSquare.DoPushing(Context: TMoveContext);
 begin
   with Context do
   begin

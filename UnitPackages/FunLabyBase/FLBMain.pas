@@ -60,7 +60,6 @@ begin
   // Plug-in
   TBuoyPlugin.Create(Master, idBuoyPlugin);
   TPlankPlugin.Create(Master, idPlankPlugin);
-  TBoatPlugin.Create(Master, idBoatPlugin);
   TDefaultShowMessagePlugin.Create(Master, idDefaultShowMessagePlugin);
 
   // Définitions d'objet
@@ -102,8 +101,6 @@ begin
     sSunkenButton, fSunkenButton);
 
   TBoatCreator.Create(Master, idBoatCreator);
-  if not Master.Editing then
-    TUnderBoatCreator.Create(Master, idUnderBoatCreator);
 
   // Outils
 
@@ -128,10 +125,8 @@ procedure TFunLabyBaseUnit.GameStarted;
 var
   TestMsg: TPlayerShowMsgMessage;
   DefaultShowMessagePlugin: TPlugin;
-  I, J, X, Y, Z: Integer;
+  I: Integer;
   Player: TPlayer;
-  Map: TMap;
-  Pos: T3DPoint;
 begin
   { For each player, if no plug-in handles the ShowMessage player message, give
     him a default plug-in for his messages. }
@@ -146,35 +141,6 @@ begin
 
     if not TestMsg.Handled then
       Player.AddPlugin(DefaultShowMessagePlugin);
-  end;
-
-  { If there is at least a TBoat component, look for every TBoat in every map
-    and put there a special under-boat water. }
-  for I := 0 to Master.ToolCount-1 do
-  begin
-    if Master.Tools[I] is TBoat then
-    begin
-      for J := 0 to Master.MapCount-1 do
-      begin
-        Map := Master.Maps[J];
-
-        for X := 0 to Map.Dimensions.X-1 do
-        begin
-          for Y := 0 to Map.Dimensions.Y-1 do
-          begin
-            for Z := 0 to Map.Dimensions.Z-1 do
-            begin
-              Pos := Point3D(X, Y, Z);
-
-              if Map[Pos].Tool is TBoat then
-                Map[Pos] := TBoat.ToUnderBoatWater(Map[Pos]);
-            end;
-          end;
-        end;
-      end;
-
-      Break;
-    end;
   end;
 end;
 

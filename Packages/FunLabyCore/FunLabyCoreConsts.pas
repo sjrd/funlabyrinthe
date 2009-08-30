@@ -30,13 +30,19 @@ resourcestring
   SCategoryTools = 'Outils';
   SCategoryObstacles = 'Obstacles';
   SCategoryNeutrals = 'Neutres';
+  SCategoryVehicles = 'Véhicules';
   SCategoryPlayers = 'Joueurs';
   SCategoryObjects = 'Objets';
   SCategoryPlugins = 'Plug-in';
   SCategoryComponentCreators = 'Composants supplémentaires';
 
   // Erreurs de composants
+  SComponentNotFoundTitle = 'Composant non trouvé';
   SComponentNotFound = 'Le composant d''ID %s n''existe pas';
+  SInvalidComponentTitle = 'Composant invalide';
+  SInvalidComponent = 'Le composant d''ID %s n''est pas valide';
+  SRepareComponentError =
+    'Voulez-vous ignorer cette erreur et tenter de continuer ?';
   SUnsupportedCommand = 'La commande %s n''est pas supportée';
   sTemporaryStatedMap =
     'La carte d''ID %s est dans un état temporaire qui ne peut être enregistré';

@@ -24,43 +24,14 @@ implementation
 const // don't localize
   UnitName = 'FLBBoat';
   ResourceName = 'SepiImportsFLBBoat';
-  TypeCount = 5;
-  MethodCount = 2;
+  TypeCount = 2;
+  MethodCount = 1;
   VariableCount = 1;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
   MethodAddresses: array[0..MethodCount-1] of Pointer;
   VarAddresses: array[0..VariableCount-1] of Pointer;
-
-type
-  TSepiImportsTBoatPlugin = class(TBoatPlugin)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-  TSepiImportsTBoat = class(TBoat)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
-{--------------------}
-{ TBoatPlugin import }
-{--------------------}
-
-class procedure TSepiImportsTBoatPlugin.InitMethodAddresses;
-begin
-  MethodAddresses[0] := @TSepiImportsTBoatPlugin.GetUsedBoat;
-end;
-
-{--------------}
-{ TBoat import }
-{--------------}
-
-class procedure TSepiImportsTBoat.InitMethodAddresses;
-begin
-  MethodAddresses[1] := @TSepiImportsTBoat.ToUnderBoatWater;
-end;
 
 {---------------------}
 { Overloaded routines }
@@ -128,46 +99,22 @@ end;
 
 procedure InitTypeInfoArray;
 begin
-  TypeInfoArray[0] := TypeInfo(TBoatPluginPlayerData);
-  TypeInfoArray[1] := TypeInfo(TBoatPlugin);
-  TypeInfoArray[2] := TypeInfo(TBoat);
-  TypeInfoArray[3] := TypeInfo(TBoatCreator);
-  TypeInfoArray[4] := TypeInfo(TUnderBoatCreator);
+  TypeInfoArray[0] := TypeInfo(TBoat);
+  TypeInfoArray[1] := TypeInfo(TBoatCreator);
 end;
 
 procedure InitMethodAddresses;
 begin
-  TSepiImportsTBoatPlugin.InitMethodAddresses;
-  TSepiImportsTBoat.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;
 begin
+  VarAddresses[0] := @fBoatByDir;
 end;
 
 {------------------------------------}
 { Delphi-Sepi consistency assertions }
 {------------------------------------}
-
-type
-  TCheckAlignmentForTBoatPluginPlayerData = record
-    Dummy: Byte;
-    Field: TBoatPluginPlayerData;
-  end;
-
-{$IF SizeOf(TCheckAlignmentForTBoatPluginPlayerData) <> (4 + 4)}
-  {$MESSAGE WARN 'Le type TBoatPluginPlayerData n''a pas l''alignement calculé par Sepi'}
-{$IFEND}
-
-type
-  TCheckAlignmentForTBoatPlugin = record
-    Dummy: Byte;
-    Field: TBoatPlugin;
-  end;
-
-{$IF SizeOf(TCheckAlignmentForTBoatPlugin) <> (4 + 4)}
-  {$MESSAGE WARN 'Le type TBoatPlugin n''a pas l''alignement calculé par Sepi'}
-{$IFEND}
 
 type
   TCheckAlignmentForTBoat = record
@@ -189,16 +136,6 @@ type
   {$MESSAGE WARN 'Le type TBoatCreator n''a pas l''alignement calculé par Sepi'}
 {$IFEND}
 
-type
-  TCheckAlignmentForTUnderBoatCreator = record
-    Dummy: Byte;
-    Field: TUnderBoatCreator;
-  end;
-
-{$IF SizeOf(TCheckAlignmentForTUnderBoatCreator) <> (4 + 4)}
-  {$MESSAGE WARN 'Le type TUnderBoatCreator n''a pas l''alignement calculé par Sepi'}
-{$IFEND}
-
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
@@ -214,11 +151,8 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TBoatPluginPlayerData, 20, 16);
-  CheckInstanceSize(TBoatPlugin, 40, 40);
-  CheckInstanceSize(TBoat, 48, 48);
+  CheckInstanceSize(TBoat, 148, 148);
   CheckInstanceSize(TBoatCreator, 36, 36);
-  CheckInstanceSize(TUnderBoatCreator, 36, 36);
   {$ASSERTIONS OFF}
 end;
 
