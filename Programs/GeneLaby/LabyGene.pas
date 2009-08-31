@@ -11,7 +11,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, Spin, Math, ExtCtrls, ComCtrls, IniFiles, ScUtils, FunLabyUtils,
-  FilesUtils, UnitFiles, SepiReflectionCore;
+  FilesUtils, UnitFiles, SepiReflectionCore,
+  SepiImportsFunLaby, SepiImportsFunLabyTools;
 
 type
   {*
@@ -106,7 +107,6 @@ implementation
 procedure CreeSortie(Labyrinthe: TStrings; const MasterFileName: TFileName;
   DimX, DimY, DimZ: Integer);
 var
-  UnitFileDescs: TUnitFileDescs;
   MasterFile: TMasterFile;
   Master: TMaster;
   Player: TPlayer;
@@ -115,14 +115,11 @@ var
   X, Y, Z: Integer;
   Pos: T3DPoint;
 begin
-  SetLength(UnitFileDescs, 1);
-  UnitFileDescs[0].HRef := 'FunLabyBase.bpl';
-
   MasterFile := nil;
   try
-    MasterFile := TMasterFile.CreateNew(nil, UnitFileDescs);
+    MasterFile := TMasterFile.CreateNew(nil);
     Master := MasterFile.Master;
-    Player := TPlayer.Create(Master, 'Player');
+    Player := Master.CreateAdditionnalComponent(TPlayer, 'Player') as TPlayer;
     Map := TMap.CreateSized(Master, 'MainMap', Point3D(DimX, DimY, DimZ), 7, 7);
 
     with MasterFile do

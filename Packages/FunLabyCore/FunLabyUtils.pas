@@ -5479,6 +5479,8 @@ constructor TMap.CreateSized(AMaster: TMaster; const AID: TComponentID;
 begin
   Create(AMaster, AID);
 
+  FIsAdditionnal := True;
+
   FDimensions := ADimensions;
   FZoneWidth := AZoneWidth;
   FZoneHeight := AZoneHeight;
