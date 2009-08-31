@@ -623,6 +623,7 @@ end;
 procedure TOverriddenSquare.DoDraw(Context: TDrawSquareContext);
 begin
   OriginalSquare.Draw(Context);
+  Painter.Draw(Context);
 end;
 
 {*
