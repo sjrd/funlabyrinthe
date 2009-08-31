@@ -151,18 +151,18 @@ begin
     for Dir := diNorth to diWest do
     begin
       Other.Position := PointBehind(Context.Pos, Dir);
-      OtherField := Other.Field.GetEffectiveDrawingField;
+      OtherField := Other.Field;
 
       if TestField(OtherField) then
         Corner := False
       else
       begin
         Other.Position := PointBehind(Context.Pos, RightDir[Dir]);
-        if TestField(Other.Field.GetEffectiveDrawingField) then
+        if TestField(Other.Field) then
           Continue;
 
         Other.Position := PointBehind(Other.Position, Dir);
-        OtherField := Other.Field.GetEffectiveDrawingField;
+        OtherField := Other.Field;
         if not TestField(OtherField) then
           Continue;
 

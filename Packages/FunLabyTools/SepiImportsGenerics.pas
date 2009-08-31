@@ -361,7 +361,7 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TGround, 56, 56);
+  CheckInstanceSize(TGround, 52, 52);
   CheckInstanceSize(TDecorativeEffect, 52, 52);
   CheckInstanceSize(TCounterEffectPlayerData, 20, 16);
   CheckInstanceSize(TCounterEffect, 56, 52);

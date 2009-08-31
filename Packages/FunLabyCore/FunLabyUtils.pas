@@ -1060,24 +1060,15 @@ type
     @version 5.0
   *}
   TField = class(TSquareComponent)
-  private
-    FDelegateDrawTo: TField; /// Terrain délégué pour l'affichage
-
-    procedure PrivDraw(Context: TDrawSquareContext); override;
   protected
     function GetCategory: string; override;
-    function GetIsDesignable: Boolean; override;
 
     procedure DoDrawCeiling(Context: TDrawSquareContext); virtual;
   public
-    class function NewDelegateDraw(ADelegateDrawTo: TField): TField;
-
     procedure DrawCeiling(Context: TDrawSquareContext);
 
     procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
       Y: Integer = 0); override;
-
-    function GetEffectiveDrawingField: TField;
 
     procedure Entering(Context: TMoveContext); virtual;
     procedure Exiting(Context: TMoveContext); virtual;
@@ -4872,28 +4863,9 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TField.PrivDraw(Context: TDrawSquareContext);
-begin
-  if FDelegateDrawTo = nil then
-    inherited
-  else
-    FDelegateDrawTo.Draw(Context);
-end;
-
-{*
-  [@inheritDoc]
-*}
 function TField.GetCategory: string;
 begin
   Result := SCategoryFields;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TField.GetIsDesignable: Boolean;
-begin
-  Result := (inherited GetIsDesignable) and (not Assigned(FDelegateDrawTo));
 end;
 
 {*
@@ -4902,17 +4874,6 @@ end;
 *}
 procedure TField.DoDrawCeiling(Context: TDrawSquareContext);
 begin
-end;
-
-{*
-  Alloue une nouvelle instance qui délègera son affichage à un autre terrain
-  @param ADelegateDrawTo   Terrain à qui déléguer l'affichage
-  @return Instance allouée (non créée)
-*}
-class function TField.NewDelegateDraw(ADelegateDrawTo: TField): TField;
-begin
-  Result := TField(NewInstance);
-  Result.FDelegateDrawTo := ADelegateDrawTo;
 end;
 
 {*
@@ -4939,18 +4900,6 @@ begin
   finally
     Context.Free;
   end;
-end;
-
-{*
-  Trouve le terrain qui se charge effectivement de l'affichage de ce terrain
-  @return Terrain chargé de l'affichage de ce terrain
-*}
-function TField.GetEffectiveDrawingField: TField;
-begin
-  Result := Self;
-
-  while Result.FDelegateDrawTo <> nil do
-    Result := Result.FDelegateDrawTo;
 end;
 
 {*
