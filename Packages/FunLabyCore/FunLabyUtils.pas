@@ -810,8 +810,9 @@ type
   *}
   TFunLabyComponent = class(TFunLabyPersistent)
   private
-    FMaster: TMaster;  /// Maître FunLabyrinthe
-    FID: TComponentID; /// ID du composant
+    FMaster: TMaster;        /// Maître FunLabyrinthe
+    FID: TComponentID;       /// ID du composant
+    FIsAdditionnal: Boolean; /// Indique si ce composant est additionnel
 
     {*
       Stocke une valeur entière dans un composant
@@ -847,6 +848,7 @@ type
 
     property Master: TMaster read FMaster;
     property SafeID: TComponentID read GetSafeID;
+    property IsAdditionnal: Boolean read FIsAdditionnal;
     property Transient: Boolean read FTransient;
 
     property Category: string read GetCategory;
@@ -1886,6 +1888,9 @@ type
       Tool: TTool = nil; Obstacle: TObstacle = nil): TSquare; overload;
 
     procedure RegisterComponents(RegisterComponent: TRegisterComponentProc);
+
+    function CreateAdditionnalComponent(ComponentClass: TFunLabyComponentClass;
+      const ID: TComponentID): TFunLabyComponent;
 
     function TryPause: Boolean;
     procedure Resume;
@@ -4550,23 +4555,20 @@ var
 begin
   inherited;
 
-  ComponentIDs := TStringList.Create;
-  try
-    if psWriting in PersistentState then
-    begin
-      for I := 0 to CreatedComponentCount-1 do
-        ComponentIDs.Add(CreatedComponents[I].ID);
-    end;
+  if psReading in PersistentState then
+  begin
+    ComponentIDs := TStringList.Create;
+    try
+      Filer.DefineStrings('CreatedComponents', ComponentIDs);
 
-    Filer.DefineStrings('CreatedComponents', ComponentIDs);
-
-    if psReading in PersistentState then
-    begin
-      for I := 0 to ComponentIDs.Count-1 do
-        CreateComponent(ComponentIDs[I]);
+      if psReading in PersistentState then
+      begin
+        for I := 0 to ComponentIDs.Count-1 do
+          CreateComponent(ComponentIDs[I]);
+      end;
+    finally
+      ComponentIDs.Free;
     end;
-  finally
-    ComponentIDs.Free;
   end;
 end;
 
@@ -4624,6 +4626,7 @@ function TComponentCreator.CreateComponent(
   const AID: TComponentID): TFunLabyComponent;
 begin
   Result := DoCreateComponent(AID);
+  Result.FIsAdditionnal := True;
   FCreatedComponents.Add(Result);
 end;
 
@@ -8744,6 +8747,20 @@ begin
   for I := 0 to ComponentCount-1 do
     if Components[I].IsDesignable then
       RegisterComponent(Components[I]);
+end;
+
+{*
+  Crée un composant additionnel (non créé de base par une unité utilisée)
+  @param ComponentClass   Class du composant à créer
+  @param ID               ID du composant à créer
+  @return Composant créé
+*}
+function TMaster.CreateAdditionnalComponent(
+  ComponentClass: TFunLabyComponentClass;
+  const ID: TComponentID): TFunLabyComponent;
+begin
+  Result := ComponentClass.Create(Self, ID);
+  Result.FIsAdditionnal := True;
 end;
 
 {*

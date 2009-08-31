@@ -12,7 +12,8 @@ interface
 
 uses
   SysUtils, Classes, Contnrs, ScUtils, ScLists, ScXML, SepiReflectionCore,
-  SepiRuntime, FunLabyUtils, FunLabyFilers, FunLabyCoreConsts, GraphicEx;
+  SepiMembers, SepiRuntime, FunLabyUtils, FunLabyFilers, FunLabyCoreConsts,
+  GraphicEx;
 
 type
   /// Mode d'ouverture d'un fichier FunLabyrinthe
@@ -671,6 +672,7 @@ begin
   FSourceFiles := TSourceFileList.Create(Self);
 
   FSepiRoot.OnLoadUnit := LoadSepiUnit;
+  FSepiRoot.LoadUnit('FunLabyUtils');
 end;
 
 {*
@@ -885,8 +887,12 @@ end;
 *}
 procedure TMasterFile.DefineProperties(Filer: TFunLabyFiler);
 var
-  Maps, Players: TStrings;
+  Maps, Players, Additionnal: TStrings;
   I: Integer;
+  Component: TFunLabyComponent;
+  ID: TComponentID;
+  CompClassName: string;
+  CompClass: TSepiClass;
 begin
   inherited;
 
@@ -898,36 +904,62 @@ begin
   if Mode <> fmPlay then
     Filer.DefinePersistent('SourceFiles', SourceFiles);
 
-  // Read/write map and player list
-  Maps := nil;
-  Players := nil;
+  // Legacy read map and player list
+  if psReading in PersistentState then
+  begin
+    Maps := nil;
+    Players := nil;
+    try
+      Maps := TStringList.Create;
+      Players := TStringList.Create;
+
+      Filer.DefineStrings('Maps', Maps);
+      Filer.DefineStrings('Players', Players);
+
+      for I := 0 to Maps.Count-1 do
+        Master.CreateAdditionnalComponent(TMap, Maps[I]);
+
+      for I := 0 to Players.Count-1 do
+        Master.CreateAdditionnalComponent(TPlayer,
+          GetFirstToken(Players[I], '='));
+    finally
+      Maps.Free;
+      Players.Free;
+    end;
+  end;
+
+  // Create additionnal components
+  Additionnal := TStringList.Create;
   try
-    Maps := TStringList.Create;
-    Players := TStringList.Create;
+    Additionnal.NameValueSeparator := ':';
 
     if psWriting in PersistentState then
     begin
-      for I := 0 to Master.MapCount-1 do
-        Maps.Add(Master.Maps[I].ID);
-
-      for I := 0 to Master.PlayerCount-1 do
-        Players.Add(Master.Players[I].ID);
+      for I := 0 to Master.ComponentCount-1 do
+      begin
+        Component := Master.Components[I];
+        if Component.IsAdditionnal then
+          Additionnal.Values[Component.ID] := Component.ClassName;
+      end;
     end;
 
-    Filer.DefineStrings('Maps', Maps);
-    Filer.DefineStrings('Players', Players);
+    Filer.DefineStrings('AdditionnalComponents', Additionnal,
+      nil, Additionnal.Count > 0);
 
     if psReading in PersistentState then
     begin
-      for I := 0 to Maps.Count-1 do
-        TMap.Create(Master, Maps[I]);
-
-      for I := 0 to Players.Count-1 do
-        TPlayer.Create(Master, GetFirstToken(Players[I], '='));
+      for I := 0 to Additionnal.Count-1 do
+      begin
+        ID := Additionnal.Names[I];
+        CompClassName := Additionnal.ValueFromIndex[I];
+        CompClass := SepiRoot.FindType(CompClassName) as TSepiClass;
+        Assert(CompClass.DelphiClass.InheritsFrom(TFunLabyComponent));
+        Master.CreateAdditionnalComponent(
+          TFunLabyComponentClass(CompClass.DelphiClass), ID);
+      end;
     end;
   finally
-    Maps.Free;
-    Players.Free;
+    Additionnal.Free;
   end;
 
   if psReading in PersistentState then

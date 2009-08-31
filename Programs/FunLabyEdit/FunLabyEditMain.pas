@@ -489,7 +489,7 @@ begin
   try
     if TFormFileProperties.ManageProperties(MasterFile) then
     begin
-      TPlayer.Create(MasterFile.Master, idPlayer);
+      MasterFile.Master.CreateAdditionnalComponent(TPlayer, idPlayer);
       LoadFile;
     end else
     begin

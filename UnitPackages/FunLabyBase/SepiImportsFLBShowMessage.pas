@@ -180,9 +180,9 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TCustomShowMessagePlugin, 40, 40);
+  CheckInstanceSize(TCustomShowMessagePlugin, 44, 44);
   CheckInstanceSize(TDefaultShowMessagePluginPlayerData, 100, 16);
-  CheckInstanceSize(TDefaultShowMessagePlugin, 40, 40);
+  CheckInstanceSize(TDefaultShowMessagePlugin, 44, 44);
   {$ASSERTIONS OFF}
 end;
 

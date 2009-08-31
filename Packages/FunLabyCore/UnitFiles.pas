@@ -78,6 +78,10 @@ type
   private
     FHandle: HMODULE;           /// Module du package chargé
     FUnitFileIntf: IUnitFile50; /// Interface vers le fichier unité
+
+    procedure LoadUnitPackage;
+    procedure LoadSepiUnits;
+    procedure CreateUnitFileIntf;
   protected
     procedure Load; override;
   public
@@ -176,15 +180,11 @@ begin
 end;
 
 {*
-  [@inheritDoc]
+  Charge le package de l'unité
 *}
-procedure TBPLUnitFile.Load;
-type
-  TCreateUnitFileProc = function(BPLHandler: TBPLUnitFile; Master: TMaster;
-    Params: TStrings): IUnitFile50;
+procedure TBPLUnitFile.LoadUnitPackage;
 var
   OldCurrentDir: string;
-  CreateUnitFile: TCreateUnitFileProc;
 begin
   // TODO Avoid loading the same package again and again
 
@@ -199,12 +199,57 @@ begin
   finally
     SetCurrentDirectory(PChar(OldCurrentDir));
   end;
+end;
 
+{*
+  Routine de call-back pour GetPackageInfo utilisée par LoadSepiUnits
+  @param Name       Nom de l'élément de package
+  @param NameType   Type d'élément
+  @param Flags      Flags
+  @param Param      Pointer(SepiRoot)
+*}
+procedure PackageInfoCallback(const Name: string; NameType: TNameType;
+  Flags: Byte; Param: Pointer);
+begin
+  if (NameType = ntContainsUnit) and Assigned(SepiImportedUnit(Name)) then
+    TSepiRoot(Param).LoadUnit(Name);
+end;
+
+{*
+  Charge les unités Sepi fournies par le package
+*}
+procedure TBPLUnitFile.LoadSepiUnits;
+var
+  Flags: Integer;
+begin
+  GetPackageInfo(FHandle, MasterFile.SepiRoot, Flags, PackageInfoCallback);
+end;
+
+{*
+  Crée l'interface de fichier unité
+*}
+procedure TBPLUnitFile.CreateUnitFileIntf;
+type
+  TCreateUnitFileProc = function(BPLHandler: TBPLUnitFile; Master: TMaster;
+    Params: TStrings): IUnitFile50;
+var
+  CreateUnitFile: TCreateUnitFileProc;
+begin
   CreateUnitFile := TCreateUnitFileProc(
     GetProcAddress(FHandle, CreateUnitFileProc));
 
   if Assigned(CreateUnitFile) then
     FUnitFileIntf := CreateUnitFile(Self, Master, CreationParams);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TBPLUnitFile.Load;
+begin
+  LoadUnitPackage;
+  LoadSepiUnits;
+  CreateUnitFileIntf;
 
   inherited;
 end;

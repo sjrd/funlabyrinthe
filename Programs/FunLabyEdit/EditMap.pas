@@ -611,7 +611,7 @@ begin
 
     if ShowModal = mrOK then
     begin
-      Result := TMap.Create(Master, EditMapID.Text);
+      Result := Master.CreateAdditionnalComponent(TMap, EditMapID.Text) as TMap;
       Result.Assign(FMap);
     end;
   finally
