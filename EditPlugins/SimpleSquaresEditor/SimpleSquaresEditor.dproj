@@ -51,6 +51,38 @@
       
       
       
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Composants Microsoft Office XP Sample Automation Server Wrapper</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcboffice2k100.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\bcbofficexp100.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
@@ -62,27 +94,25 @@
     <DelphiCompile Include="SimpleSquaresEditor.dpk">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\FunDelphiCompiler.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\FunLabyCore.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\FunLabyEditPlugin.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\FunLabyEditPluginUtils.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\FunLabyEditTools.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\FunLabyTools.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\rtl.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SCL110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SDL110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiCompiler110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SepiReflection110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\SVCL110.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\vcl.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\VclSmp.dcp" />
-    <DCCReference Include="C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Dcp\vclx.dcp" />
+    <DCCReference Include="FunDelphiCompiler.dcp" />
+    <DCCReference Include="FunLabyCore.dcp" />
+    <DCCReference Include="FunLabyEditPlugin.dcp" />
+    <DCCReference Include="FunLabyEditPluginUtils.dcp" />
+    <DCCReference Include="FunLabyEditTools.dcp" />
+    <DCCReference Include="FunLabyTools.dcp" />
+    <DCCReference Include="rtl.dcp" />
+    <DCCReference Include="SCL110.dcp" />
+    <DCCReference Include="SDL110.dcp" />
+    <DCCReference Include="SepiCompiler110.dcp" />
+    <DCCReference Include="SepiReflection110.dcp" />
     <DCCReference Include="SimpleSquareEdit.pas" />
     <DCCReference Include="SimpleSquareNew.pas" />
     <DCCReference Include="SimpleSquaresActionEditor.pas" />
     <DCCReference Include="SimpleSquaresActions.pas" />
+    <DCCReference Include="SimpleSquaresChangeEffectEnabledActionEditor.pas">
+      <Form>FrameChangeEffectEnabledActionEditor</Form>
+    </DCCReference>
     <DCCReference Include="SimpleSquaresConsts.pas" />
-    <DCCReference Include="SimpleSquaresDeactivateEffectActionEditor.pas" />
     <DCCReference Include="SimpleSquaresEditorMain.pas" />
     <DCCReference Include="SimpleSquaresEditorPart.pas" />
     <DCCReference Include="SimpleSquaresEffectEditor.pas" />
@@ -94,5 +124,9 @@
     <DCCReference Include="SimpleSquaresReplaceSquareActionEditor.pas" />
     <DCCReference Include="SimpleSquaresSimpleMethodActionEditor.pas" />
     <DCCReference Include="SimpleSquaresUtils.pas" />
+    <DCCReference Include="SVCL110.dcp" />
+    <DCCReference Include="vcl.dcp" />
+    <DCCReference Include="VclSmp.dcp" />
+    <DCCReference Include="vclx.dcp" />
   </ItemGroup>
 </Project>

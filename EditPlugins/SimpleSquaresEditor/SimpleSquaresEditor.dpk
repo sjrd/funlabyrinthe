@@ -50,7 +50,7 @@ contains
   SimpleSquaresActionEditor in 'SimpleSquaresActionEditor.pas',
   SimpleSquaresActions in 'SimpleSquaresActions.pas',
   SimpleSquaresConsts in 'SimpleSquaresConsts.pas',
-  SimpleSquaresDeactivateEffectActionEditor in 'SimpleSquaresDeactivateEffectActionEditor.pas',
+  SimpleSquaresChangeEffectEnabledActionEditor in 'SimpleSquaresChangeEffectEnabledActionEditor.pas' {FrameChangeEffectEnabledActionEditor},
   SimpleSquaresEditorMain in 'SimpleSquaresEditorMain.pas',
   SimpleSquaresEditorPart in 'SimpleSquaresEditorPart.pas',
   SimpleSquaresEffectEditor in 'SimpleSquaresEffectEditor.pas',

@@ -487,6 +487,28 @@ begin
         Code.Add('  '+Strings[I] + IIF(I = Strings.Count-1, ';', ','));
       Code.Add('');
     end;
+
+    // ID de composants utilisés
+
+    Strings.Clear;
+    Strings.Add('');
+    for I := 0 to SimpleSquares.Count-1 do
+      SimpleSquares[I].RegisterComponentIDs(Strings);
+    Strings.Delete(Strings.IndexOf(''));
+    for I := Strings.Count-1 downto 0 do
+      if SimpleSquares.FindByID(Strings[I]) <> nil then
+        Strings.Delete(I);
+
+    if Strings.Count > 0 then
+    begin
+      Code.Add(
+        '{ You should add the relevant units to the uses clause instead of');
+      Code.Add('  relying on this artificial ID list. }');
+      Code.Add('const');
+      for I := 0 to Strings.Count-1 do
+        Code.Add(Format('  id%s = ''%0:s'';', [Strings[I]]));
+      Code.Add('');
+    end;
   finally
     Strings.Free;
   end;

@@ -2,6 +2,8 @@ inherited FrameEffectEditor: TFrameEffectEditor
   Width = 451
   Height = 304
   Align = alClient
+  ExplicitWidth = 451
+  ExplicitHeight = 304
   object SplitterActionList: TSplitter
     Left = 241
     Top = 0

@@ -7,8 +7,11 @@ uses
   FunLabyUtils, SimpleSquaresUtils, FunLabyCoreConsts, GR32;
 
 resourcestring
-  SReplaceSquareActionTitle = 'Remplacer la case (%d, %d, %d)';
-  SDeactivateEffectActionTitle = 'Désactiver';
+  SCurrent = 'courante';
+
+  SReplaceSquareActionTitle = 'Modifier la case %s';
+  SEnableEffectActionTitle = 'Activer l''effet %s';
+  SDisableEffectActionTitle = 'Désactiver l''effet %s';
   SMessageActionTitle = 'Afficher %s';
   SPlayerColorActionTitle = 'Changer la couleur du pion en %s';
   SPlayerShowTitle = 'Montrer le joueur';
@@ -20,14 +23,22 @@ resourcestring
 
 type
   {*
+    Origine d'une position de case
+    - poCurrent : case courante (TMoveContext.Pos)
+    - poAbsolute : position absolue
+  *}
+  TSquarePosOrigin = (poCurrent, poAbsolute);
+
+  {*
     Position concernée par une action
     @author sjrd
     @version 5.0
   *}
   TSquarePos = class(TFunLabyPersistent)
   private
-    FMapID: TComponentID; /// ID de la carte (chaîne vide = carte courante)
-    FPosition: T3DPoint;  /// Position sur la carte
+    FOrigin: TSquarePosOrigin; /// Origine de la case
+    FMapID: TComponentID;      /// ID de la carte (chaîne vide = carte courante)
+    FOffset: T3DPoint;         /// Offset par rapport à l'origine
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
   public
@@ -36,10 +47,12 @@ type
 
     function GetQPos(Master: TMaster): TQualifiedPos;
 
+    function GetText: string;
     function GetFunDelphiCode: string;
 
-    property Position: T3DPoint read FPosition write FPosition;
+    property Offset: T3DPoint read FOffset write FOffset;
   published
+    property Origin: TSquarePosOrigin read FOrigin write FOrigin;
     property MapID: TComponentID read FMapID write FMapID;
   end;
 
@@ -81,40 +94,85 @@ type
   end;
 
   {*
+    Remplacement d'un composant d'une case
+    @author sjrd
+    @version 5.0
+  *}
+  TReplaceSquareComponent = class(TFunLabyPersistent)
+  private
+    FName: string;              /// Nom du remplacement
+    FIsReplaced: Boolean;       /// Indique si ce composant est modifié
+    FComponentID: TComponentID; /// ID du composant à mettre à la place
+
+    procedure SetIsReplaced(Value: Boolean);
+    procedure SetComponentID(const Value: TComponentID);
+  public
+    constructor Create(const AName: string);
+
+    function GetComponentFunDelphiCode: string;
+
+    property Name: string read FName;
+  published
+    property IsReplaced: Boolean read FIsReplaced write SetIsReplaced
+      default False;
+    property ComponentID: TComponentID read FComponentID write SetComponentID;
+  end;
+
+  {*
     Action qui remplace une case du labyrinthe par une autre
     @author sjrd
     @version 5.0
   *}
   TReplaceSquareAction = class(TSimpleActionWithSquare)
   private
-    FReplaceBy: TSquareDef; /// Case à mettre à la place
+    /// Changements de composants
+    FComponents: array[0..3] of TReplaceSquareComponent;
+
+    function GetComponentCount: Integer;
+    function GetComponents(Index: Integer): TReplaceSquareComponent;
   protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
     function GetTitle: string; override;
+
+    procedure RegisterComponentIDs(ComponentIDs: TStrings); override;
   public
     constructor Create; override;
     destructor Destroy; override;
 
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); override;
+
+    property ComponentCount: Integer read GetComponentCount;
+    property Components[Index: Integer]: TReplaceSquareComponent
+      read GetComponents;
   published
-    property ReplaceBy: TSquareDef read FReplaceBy;
+    property Field: TReplaceSquareComponent index 0 read GetComponents;
+    property Effect: TReplaceSquareComponent index 1 read GetComponents;
+    property Tool: TReplaceSquareComponent index 2 read GetComponents;
+    property Obstacle: TReplaceSquareComponent index 3 read GetComponents;
   end;
 
   {*
-    Action qui désactive l'effet courant (ou le remplace par un autre)
+    Action qui active ou désactive un effet
     @author sjrd
     @version 5.0
   *}
-  TDeactivateEffectAction = class(TSimpleAction)
+  TChangeEffectEnabledAction = class(TSimpleAction)
   private
-    FEffectID: TComponentID; /// ID de l'effet à mettre à la place
+    FEffectID: TComponentID; /// ID de l'effet à activer ou désactiver
+    FEnabledValue: Boolean;  /// Valeur à donner à sa propriété Enabled
   protected
     function GetTitle: string; override;
+
+    procedure RegisterComponentIDs(ComponentIDs: TStrings); override;
   public
     procedure ProduceFunDelphiCode(Code: TStrings;
       const Indent: string); override;
   published
     property EffectID: TComponentID read FEffectID write FEffectID;
+    property EnabledValue: Boolean read FEnabledValue write FEnabledValue
+      default False;
   end;
 
   {*
@@ -242,14 +300,26 @@ end;
 *}
 procedure TSquarePos.DefineProperties(Filer: TFunLabyFiler);
 begin
+  if psReading in PersistentState then
+  begin {compatibility}
+    FOrigin := poAbsolute;
+
+    Filer.DefineFieldProperty('Position.X', TypeInfo(Integer),
+      @FOffset.X, False);
+    Filer.DefineFieldProperty('Position.Y', TypeInfo(Integer),
+      @FOffset.Y, False);
+    Filer.DefineFieldProperty('Position.Z', TypeInfo(Integer),
+      @FOffset.Z, False);
+  end; {compatibility}
+
   inherited;
 
-  Filer.DefineFieldProperty('Position.X', TypeInfo(Integer),
-    @FPosition.X, True);
-  Filer.DefineFieldProperty('Position.Y', TypeInfo(Integer),
-    @FPosition.Y, True);
-  Filer.DefineFieldProperty('Position.Z', TypeInfo(Integer),
-    @FPosition.Z, True);
+  Filer.DefineFieldProperty('Offset.X', TypeInfo(Integer),
+    @FOffset.X, FOffset.X <> 0);
+  Filer.DefineFieldProperty('Offset.Y', TypeInfo(Integer),
+    @FOffset.Y, FOffset.X <> 0);
+  Filer.DefineFieldProperty('Offset.Z', TypeInfo(Integer),
+    @FOffset.Z, FOffset.X <> 0);
 end;
 
 {*
@@ -258,8 +328,9 @@ end;
 *}
 procedure TSquarePos.SetToPosition(const APosition: T3DPoint);
 begin
+  FOrigin := poAbsolute;
   FMapID := '';
-  FPosition := APosition;
+  FOffset := APosition;
 end;
 
 {*
@@ -268,19 +339,47 @@ end;
 *}
 procedure TSquarePos.SetToQPos(const QPos: TQualifiedPos);
 begin
+  FOrigin := poAbsolute;
   FMapID := QPos.Map.ID;
-  FPosition := QPos.Position;
+  FOffset := QPos.Position;
 end;
 
 {*
   Obtient une position qualifiée pour un maître donné
+  Cette méthode ne doit être appelée que si Origin = poAbsolute.
   @param Master   Maître FunLabyrinthe
   @return Position qualifiée
 *}
 function TSquarePos.GetQPos(Master: TMaster): TQualifiedPos;
 begin
+  Assert(Origin = poAbsolute);
   Result.Map := Master.Map[MapID];
-  Result.Position := Position;
+  Result.Position := Offset;
+end;
+
+{*
+  Texte représentant la case à la position indiquée
+  @return Texte représentant la case à la position indiquée
+*}
+function TSquarePos.GetText: string;
+begin
+  case Origin of
+    poCurrent:
+    begin
+      Result := SCurrent;
+      if not Same3DPoint(Offset, Point3D(0, 0, 0)) then
+        Result := Result + Format('+(%d, %d, %d)',
+          [Offset.X, Offset.Y, Offset.Z]);
+    end;
+
+    poAbsolute:
+    begin
+      Result := Format('%s(%d, %d, %d)',
+        [MapID, Offset.X, Offset.Y, Offset.Z]);
+    end;
+  else
+    Assert(False);
+  end;
 end;
 
 {*
@@ -290,13 +389,29 @@ end;
 function TSquarePos.GetFunDelphiCode: string;
 begin
   // don't localize
-  if MapID = '' then
-    Result := 'Map'
-  else
-    Result := Format('Master.Map[''%s''].Map', [MapID]);
+  case Origin of
+    poCurrent:
+    begin
+      if Same3DPoint(Offset, Point3D(0, 0, 0)) then
+        Result := 'Square'
+      else
+        Result := Format('Map[Point3DAdd(Pos, %d, %d, %d)]',
+          [Offset.X, Offset.Y, Offset.Z]);
+    end;
 
-  Result := Result + Format('[%d, %d, %d]',
-    [Position.X, Position.Y, Position.Z]);
+    poAbsolute:
+    begin
+      if MapID = '' then
+        Result := 'Map'
+      else
+        Result := Format('Master.Map[''%s''].Map', [MapID]);
+
+      Result := Result + Format('[%d, %d, %d]',
+        [Offset.X, Offset.Y, Offset.Z]);
+    end;
+  else
+    Assert(False);
+  end;
 end;
 
 {------------------}
@@ -348,6 +463,56 @@ begin
   inherited;
 end;
 
+{-------------------------------}
+{ TReplaceSquareComponent class }
+{-------------------------------}
+
+{*
+  Crée une instance de TReplaceSquareComponent
+  @param AName   Nom du remplacement
+*}
+constructor TReplaceSquareComponent.Create(const AName: string);
+begin
+  inherited Create;
+
+  FName := AName;
+end;
+
+{*
+  Spécifie si ce composant doit être modifié
+  @param Value   True s'il doit être modifié, False sinon
+*}
+procedure TReplaceSquareComponent.SetIsReplaced(Value: Boolean);
+begin
+  FIsReplaced := Value;
+  if not Value then
+    FComponentID := '';
+end;
+
+{*
+  Modifie l'ID du composant à mettre à la place
+  @param Value   Nouvel ID
+*}
+procedure TReplaceSquareComponent.SetComponentID(const Value: TComponentID);
+begin
+  FIsReplaced := True;
+  FComponentID := Value;
+end;
+
+{*
+  Obtient le code FunDelphi représentant le composant de replacement
+  Cette méthode ne doit être appelée que si IsReplaced = True
+  @return Code FunDelphi représentant le composant de replacement
+*}
+function TReplaceSquareComponent.GetComponentFunDelphiCode: string;
+begin
+  Assert(IsReplaced);
+  if ComponentID = '' then
+    Result := 'nil'
+  else
+    Result := ComponentID;
+end;
+
 {----------------------------}
 { TReplaceSquareAction class }
 {----------------------------}
@@ -358,15 +523,71 @@ end;
 constructor TReplaceSquareAction.Create;
 begin
   inherited;
-  FReplaceBy := TSquareDef.Create;
+
+  FComponents[0] := TReplaceSquareComponent.Create('Field');
+  FComponents[1] := TReplaceSquareComponent.Create('Effect');
+  FComponents[2] := TReplaceSquareComponent.Create('Tool');
+  FComponents[3] := TReplaceSquareComponent.Create('Obstacle');
 end;
 
 {*
   [@inheritDoc]
 *}
 destructor TReplaceSquareAction.Destroy;
+var
+  I: Integer;
 begin
-  FReplaceBy.Free;
+  for I := 0 to Length(FComponents)-1 do
+    FComponents[I].Free;
+
+  inherited;
+end;
+
+{*
+  Nombre de composants
+  @return Nombre de composants
+*}
+function TReplaceSquareAction.GetComponentCount: Integer;
+begin
+  Result := Length(FComponents);
+end;
+
+{*
+  Tableau zero-based des composants
+  @param Index   Index compris entre 0 inclus et ComponentCount exclu
+  @return Composant à l'index spécifié
+*}
+function TReplaceSquareAction.GetComponents(
+  Index: Integer): TReplaceSquareComponent;
+begin
+  Result := FComponents[Index];
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TReplaceSquareAction.DefineProperties(Filer: TFunLabyFiler);
+var
+  SquareDef: TSquareDef;
+begin
+  if psReading in PersistentState then
+  begin {compatibility}
+    SquareDef := TSquareDef.Create;
+    try
+      Filer.DefinePersistent('ReplaceBy', SquareDef);
+
+      if SquareDef.FieldID <> '' then // good indicator that ReplaceBy was there
+      begin
+        Field.ComponentID := SquareDef.FieldID;
+        Effect.ComponentID := SquareDef.EffectID;
+        Tool.ComponentID := SquareDef.ToolID;
+        Obstacle.ComponentID := SquareDef.ObstacleID;
+      end;
+    finally
+      SquareDef.Free;
+    end;
+  end; {compatibility}
+
   inherited;
 end;
 
@@ -375,8 +596,20 @@ end;
 *}
 function TReplaceSquareAction.GetTitle: string;
 begin
-  Result := Format(SReplaceSquareActionTitle,
-    [SquarePos.Position.X, SquarePos.Position.Y, SquarePos.Position.Z]);
+  Result := Format(SReplaceSquareActionTitle, [SquarePos.GetText]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TReplaceSquareAction.RegisterComponentIDs(ComponentIDs: TStrings);
+var
+  I: Integer;
+begin
+  inherited;
+
+  for I := 0 to ComponentCount-1 do
+    ComponentIDs.Add(Components[I].ComponentID);
 end;
 
 {*
@@ -384,39 +617,99 @@ end;
 *}
 procedure TReplaceSquareAction.ProduceFunDelphiCode(Code: TStrings;
   const Indent: string);
+var
+  I: Integer;
+  StrSquarePos, Line: string;
+  Modified: TIntegerSet;
 begin
-  Code.Add(Indent + Format('%s := ', [SquarePos.GetFunDelphiCode]));
-  Code.Add(Indent + Format('  %s;', [ReplaceBy.GetFunDelphiCode]));
+  Assert((not Field.IsReplaced) or (Field.ComponentID <> ''),
+    'Impossible de supprimer le terrain d''une case');
+
+  StrSquarePos := SquarePos.GetFunDelphiCode;
+
+  Modified := [];
+  for I := 0 to ComponentCount-1 do
+    if Components[I].IsReplaced then
+      Include(Modified, I);
+
+  // No modification
+  if Modified = [] then
+    Exit;
+
+  // One component modified
+  for I := 0 to ComponentCount-1 do
+  begin
+    if Modified <> [I] then
+      Continue;
+
+    with Components[I] do
+      Code.Add(Indent + Format('%s.%s := %s;',
+        [StrSquarePos, Name, GetComponentFunDelphiCode]));
+    Exit;
+  end;
+
+  // At least two components modified
+  Line := StrSquarePos + ' := ';
+
+  for I := 0 to ComponentCount-1 do
+  begin
+    with Components[I] do
+    begin
+      if not IsReplaced then
+        Line := Line + 'TSquareComponent(' + StrSquarePos + '.' + Name + ')+'
+      else if ComponentID <> '' then
+        Line := Line + GetComponentFunDelphiCode + '+';
+    end;
+  end;
+
+  Line[Length(Line)] := ';';
+  Code.Add(Indent + Line);
 end;
 
-{-------------------------------}
-{ TDeactivateEffectAction class }
-{-------------------------------}
+{----------------------------------}
+{ TChangeEffectEnabledAction class }
+{----------------------------------}
 
 {*
   [@inheritDoc]
 *}
-function TDeactivateEffectAction.GetTitle: string;
+function TChangeEffectEnabledAction.GetTitle: string;
 begin
-  Result := SDeactivateEffectActionTitle;
+  if EnabledValue then
+    Result := Format(SEnableEffectActionTitle, [EffectID])
+  else
+    Result := Format(SDisableEffectActionTitle, [EffectID]);
 end;
 
 {*
   [@inheritDoc]
 *}
-procedure TDeactivateEffectAction.ProduceFunDelphiCode(Code: TStrings;
+procedure TChangeEffectEnabledAction.RegisterComponentIDs(
+  ComponentIDs: TStrings);
+begin
+  inherited;
+
+  ComponentIDs.Add(EffectID);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TChangeEffectEnabledAction.ProduceFunDelphiCode(Code: TStrings;
   const Indent: string);
 const
-  StatementFormat = 'Square.Effect := %s;';
+  SelfStatementFormat = 'Enabled := %1:s;';
+  OtherStatementFormat = 'SetOrdProp(%s, ''Enabled'', Byte(%s));';
 var
-  NewEffect: string;
+  StatementFormat: string;
 begin
   if EffectID = '' then
-    NewEffect := 'nil'
+    StatementFormat := SelfStatementFormat
   else
-    NewEffect := Format('Master.Effect[%s]', [StrToStrRepres(EffectID)]);
+    StatementFormat := OtherStatementFormat;
 
-  Code.Add(Indent + Format(StatementFormat, [NewEffect]));
+  Code.Add(Indent + Format(StatementFormat,
+    [EffectID, BooleanIdents[EnabledValue]]));
 end;
 
 {----------------------}
@@ -531,12 +824,12 @@ end;
 
 initialization
   FunLabyRegisterClasses([
-    TReplaceSquareAction, TDeactivateEffectAction, TMessageAction,
+    TReplaceSquareAction, TChangeEffectEnabledAction, TMessageAction,
     TPlayerColorAction, TSimpleMethodAction
   ]);
 finalization
   FunLabyUnRegisterClasses([
-    TReplaceSquareAction, TDeactivateEffectAction, TMessageAction,
+    TReplaceSquareAction, TChangeEffectEnabledAction, TMessageAction,
     TPlayerColorAction, TSimpleMethodAction
   ]);
 end.

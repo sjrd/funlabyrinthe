@@ -7,7 +7,7 @@ uses
   Dialogs, Contnrs, StdCtrls, ExtCtrls, Buttons, FunLabyUtils, FunLabyEditOTA,
   SimpleSquaresUtils, SimpleSquaresEditorPart, SimpleSquaresActions,
   SimpleSquaresReplaceSquareActionEditor, SimpleSquaresMessageActionEditor,
-  SimpleSquaresDeactivateEffectActionEditor,
+  SimpleSquaresChangeEffectEnabledActionEditor,
   SimpleSquaresPlayerColorActionEditor, SimpleSquaresActionEditor,
   SimpleSquaresSimpleMethodActionEditor;
 
@@ -86,7 +86,7 @@ begin
   ActionEditors := TObjectList.Create(False);
 
   AddActionEditor(TFrameReplaceSquareActionEditor.Create(Self));
-  AddActionEditor(TFrameDeactivateEffectActionEditor.Create(Self));
+  AddActionEditor(TFrameChangeEffectEnabledActionEditor.Create(Self));
   AddActionEditor(TFrameMessageActionEditor.Create(Self));
   AddActionEditor(TFramePlayerColorActionEditor.Create(Self));
   AddActionEditor(TFrameSimpleMethodActionEditor.Create(Self));
@@ -196,6 +196,9 @@ end;
   @param Value   Nouvelle action
 *}
 procedure TFrameEffectEditor.SetCurrentAction(Value: TSimpleAction);
+var
+  SquarePos: TSquarePos;
+  Master: TMaster;
 begin
   if CurrentActionEditor <> nil then
     CurrentActionEditor.CurrentAction := nil;
@@ -204,10 +207,15 @@ begin
 
   if CurrentAction is TSimpleActionWithSquare then
   begin
-    MapViewer.SelectedSquare :=
-      TSimpleActionWithSquare(CurrentAction).SquarePos.GetQPos(
-        Self.FunLabyEditMainForm.MasterFile.Master);
-    MapViewer.ShowPosition(MapViewer.SelectedSquare);
+    SquarePos := TSimpleActionWithSquare(CurrentAction).SquarePos;
+    Master := FunLabyEditMainForm.MasterFile.Master;
+
+    if (SquarePos.Origin = poAbsolute) and
+      Master.ComponentExists(SquarePos.MapID) then
+    begin
+      MapViewer.SelectedSquare := SquarePos.GetQPos(Master);
+      MapViewer.ShowPosition(MapViewer.SelectedSquare);
+    end;
   end;
 
   CurrentActionEditor := GetActionEditor(CurrentAction);
@@ -224,9 +232,9 @@ begin
 
   with ComboBoxNewAction.Items do
   begin
-    AddObject('Remplacer la case sélectionnée par...',
-      TObject(TReplaceSquareAction));
-    AddObject('Désactiver l''effet', TObject(TDeactivateEffectAction));
+    AddObject('Modifier une case', TObject(TReplaceSquareAction));
+    AddObject('Activer/désactiver un effet',
+      TObject(TChangeEffectEnabledAction));
     AddObject('Afficher un message', TObject(TMessageAction));
     AddObject('Changer la couleur du pion', TObject(TPlayerColorAction));
     AddObject('Action simple', TObject(TSimpleMethodAction));
@@ -272,7 +280,6 @@ end;
 procedure TFrameEffectEditor.ComboBoxNewActionChange(Sender: TObject);
 var
   ActionClass: TSimpleActionClass;
-  Action: TSimpleAction;
 begin
   ActionClass := TSimpleActionClass(
     ComboBoxNewAction.Items.Objects[ComboBoxNewAction.ItemIndex]);
@@ -281,26 +288,11 @@ begin
   begin
     ComboBoxNewAction.ItemIndex := 0;
 
-    if ActionClass.InheritsFrom(TSimpleActionWithSquare) and
-      ((not MapViewer.Visible) or (MapViewer.SelectedMap = nil)) then
-    begin
-      MapViewer.Visible := True;
-      Exit;
-    end;
-
-    Action := Actions.AddNew(ActionClass);
-    ListBoxActions.Count := Actions.Count;
-
-    if Action is TSimpleActionWithSquare then
-    begin
-      TSimpleActionWithSquare(Action).SquarePos.SetToQPos(
-        MapViewer.SelectedSquare);
-    end;
-
-    MarkModified;
-
+    Actions.AddNew(ActionClass);
     ListBoxActions.Count := Actions.Count;
     ListBoxActions.ItemIndex := Actions.Count-1;
+
+    MarkModified;
 
     UpdateActions;
   end;

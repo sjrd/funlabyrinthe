@@ -3,10 +3,10 @@ unit SimpleSquaresReplaceSquareActionEditor;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ImgList, StdCtrls, ComCtrls, ScUtils, FunLabyUtils, FilesUtils,
-  FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresActions,
-  SimpleSquaresConsts, SimpleSquaresActionEditor, GR32;
+  Windows, Messages, SysUtils, StrUtils, Classes, Graphics, Controls, Forms,
+  Dialogs, ImgList, StdCtrls, ComCtrls, Spin, ScUtils, ScStrUtils, SdDialogs,
+  GR32, FunLabyUtils, FilesUtils, FunLabyEditOTA, SimpleSquaresUtils,
+  SimpleSquaresActions, SimpleSquaresConsts, SimpleSquaresActionEditor;
 
 type
   {*
@@ -15,22 +15,41 @@ type
     @version 5.0
   *}
   TFrameReplaceSquareActionEditor = class(TFrameActionEditor)
-    ButtonResetSquarePos: TButton;
     GroupBoxReplaceBy: TGroupBox;
-    LabelFieldID: TLabel;
-    LabelEffectID: TLabel;
     EditEffectID: TComboBoxEx;
     SquaresImages: TImageList;
     EditFieldID: TComboBoxEx;
-    LabelToolID: TLabel;
     EditToolID: TComboBoxEx;
-    LabelObstacleID: TLabel;
     EditObstacleID: TComboBoxEx;
     ButtonCopySelectedSquare: TButton;
+    GroupBoxSquarePos: TGroupBox;
+    ButtonCurrentSquare: TRadioButton;
+    ButtonAbsolutePos: TRadioButton;
+    ButtonResetSquarePos: TButton;
+    LabelMap: TLabel;
+    EditMapID: TComboBox;
+    LabelAbsolutePosX: TLabel;
+    CheckBoxReplaceField: TCheckBox;
+    CheckBoxReplaceEffect: TCheckBox;
+    CheckBoxReplaceTool: TCheckBox;
+    CheckBoxReplaceObstacle: TCheckBox;
+    EditAbsolutePosX: TSpinEdit;
+    EditAbsolutePosY: TSpinEdit;
+    EditAbsolutePosZ: TSpinEdit;
+    LabelAbsolutePosY: TLabel;
+    LabelAbolutePosZ: TLabel;
+    procedure ButtonCurrentSquareClick(Sender: TObject);
+    procedure ButtonAbsolutePosClick(Sender: TObject);
     procedure ButtonResetSquarePosClick(Sender: TObject);
-    procedure ButtonCopySelectedSquareClick(Sender: TObject);
+    procedure CheckBoxReplaceComponentClick(Sender: TObject);
     procedure EditComponentIDChange(Sender: TObject);
+    procedure ButtonCopySelectedSquareClick(Sender: TObject);
+    procedure EditAbsolutePosEnter(Sender: TObject);
+    procedure EditAbsolutePosChange(Sender: TObject);
   private
+    CheckBoxReplaceComponent: array[0..3] of TCheckBox;
+    EditComponentID: array[0..3] of TComboBoxEx;
+
     MasterFile: TMasterFile;    /// Fichier maître
     MapViewer: IOTAMapViewer50; /// Visualisateur de cartes
 
@@ -38,10 +57,16 @@ type
 
     procedure RegisterComponent(Component: TFunLabyComponent);
 
+    procedure FillSquarePosControls;
+
+    procedure FillIDEdit(CheckBox: TCheckBox; Edit: TComboBoxEx;
+      ReplaceBy: TReplaceSquareComponent);
     procedure FillIDEdits;
   protected
     procedure ActivateAction; override;
     procedure DeactivateAction; override;
+  public
+    procedure AfterConstruction; override;
   published
     property CurrentAction: TReplaceSquareAction
       read FCurrentAction write FCurrentAction;
@@ -84,10 +109,9 @@ begin
   try
     SquareBmp.SetSize(SquareSize, SquareSize);
     Component.DrawIconToCanvas(SquareBmp.Canvas, BaseSquareRect,
-      WinColor(clBmpTransparent32));
+      EditFieldID.Color);
 
-    ImageIndex := SquaresImages.AddMasked(SquareBmp,
-      WinColor(clBmpTransparent32));
+    ImageIndex := SquaresImages.Add(SquareBmp, nil);
   finally
     SquareBmp.Free;
   end;
@@ -99,38 +123,89 @@ begin
 end;
 
 {*
+  Renseigne les contrôles qui commande la position de la case à modifier
+*}
+procedure TFrameReplaceSquareActionEditor.FillSquarePosControls;
+begin
+  ButtonCurrentSquare.OnClick := nil;
+  ButtonAbsolutePos.OnClick := nil;
+  EditMapID.OnChange := nil;
+  EditAbsolutePosX.OnChange := nil;
+  EditAbsolutePosY.OnChange := nil;
+  EditAbsolutePosZ.OnChange := nil;
+
+  with CurrentAction.SquarePos do
+  begin
+    case Origin of
+      poCurrent: ButtonCurrentSquare.Checked := True;
+      poAbsolute: ButtonAbsolutePos.Checked := True;
+    else
+      Assert(False);
+    end;
+
+    EditMapID.Text := MapID;
+    EditAbsolutePosX.Value := Offset.X;
+    EditAbsolutePosY.Value := Offset.Y;
+    EditAbsolutePosZ.Value := Offset.Z;
+  end;
+
+  ButtonCurrentSquare.OnClick := ButtonCurrentSquareClick;
+  ButtonAbsolutePos.OnClick := ButtonAbsolutePosClick;
+  EditMapID.OnChange := EditAbsolutePosChange;
+  EditAbsolutePosX.OnChange := EditAbsolutePosChange;
+  EditAbsolutePosY.OnChange := EditAbsolutePosChange;
+  EditAbsolutePosZ.OnChange := EditAbsolutePosChange;
+end;
+
+{*
+  Renseigne un éditeur d'ID de composant
+  @param Edit        Éditeur à renseigner
+  @param ReplaceBy   Remplacement à renseigner dans cet éditeur
+*}
+procedure TFrameReplaceSquareActionEditor.FillIDEdit(CheckBox: TCheckBox;
+  Edit: TComboBoxEx; ReplaceBy: TReplaceSquareComponent);
+begin
+  CheckBox.Checked := ReplaceBy.IsReplaced;
+  Edit.Enabled := ReplaceBy.IsReplaced;
+
+  if ReplaceBy.IsReplaced then
+  begin
+    Edit.Text := IIF(ReplaceBy.ComponentID = '', SNone, ReplaceBy.ComponentID);
+    Edit.ItemIndex := Edit.Items.IndexOf(Edit.Text);
+    Edit.OnChange := EditComponentIDChange;
+  end else
+  begin
+    Edit.Text := '';
+    Edit.ItemIndex := -1;
+  end;
+
+  CheckBox.OnClick := CheckBoxReplaceComponentClick;
+end;
+
+{*
   Renseigne les éditeurs ID de composant d'après l'action courante
 *}
 procedure TFrameReplaceSquareActionEditor.FillIDEdits;
+var
+  I: Integer;
 begin
-  with CurrentAction.ReplaceBy do
-  begin
-    EditFieldID.Text := FieldID;
-    EditFieldID.ItemIndex := EditFieldID.Items.IndexOf(EditFieldID.Text);
-
-    EditEffectID.Text := IIF(EffectID = '', SNone, EffectID);
-    EditEffectID.ItemIndex := EditEffectID.Items.IndexOf(EditEffectID.Text);
-
-    EditToolID.Text := IIF(ToolID = '', SNone, ToolID);
-    EditToolID.ItemIndex := EditToolID.Items.IndexOf(EditToolID.Text);
-
-    EditObstacleID.Text := IIF(ObstacleID = '', SNone, ObstacleID);
-    EditObstacleID.ItemIndex :=
-      EditObstacleID.Items.IndexOf(EditObstacleID.Text);
-  end;
+  for I := 0 to 3 do
+    FillIDEdit(CheckBoxReplaceComponent[I], EditComponentID[I],
+      CurrentAction.Components[I]);
 end;
 
 {*
   [@inheritDoc]
 *}
 procedure TFrameReplaceSquareActionEditor.ActivateAction;
+var
+  I: Integer;
 begin
   // Initialize
   if MasterFile = nil then // first time
   begin
-    EditEffectID.ItemsEx.Add.Caption := SNone;
-    EditToolID.ItemsEx.Add.Caption := SNone;
-    EditObstacleID.ItemsEx.Add.Caption := SNone;
+    for I := 1 to 3 do
+      EditComponentID[I].ItemsEx.Add.Caption := SNone;
 
     MasterFile := GetFunLabyEditMainForm.MasterFile;
     MasterFile.Master.RegisterComponents(RegisterComponent);
@@ -138,36 +213,90 @@ begin
     MapViewer := GetFunLabyEditMainForm.MapViewer;
   end;
 
-  // Never have an action with FieldID = ''
-  with CurrentAction do
+  // Activate action
+
+  with MasterFile.Master, EditMapID.Items do
   begin
-    if ReplaceBy.FieldID = '' then
-    begin
-      // Just created - use selected square as base
-      ReplaceBy.SetToSquare(
-        MasterFile.Master.Map[SquarePos.MapID].Map[SquarePos.Position]);
-    end;
+    Clear;
+    for I := 0 to MapCount-1 do
+      Add(Maps[I].ID);
   end;
 
-  // Activate action
-  
+  FillSquarePosControls;
   FillIDEdits;
-
-  EditFieldID.OnChange := EditComponentIDChange;
-  EditEffectID.OnChange := EditComponentIDChange;
-  EditToolID.OnChange := EditComponentIDChange;
-  EditObstacleID.OnChange := EditComponentIDChange;
 end;
 
 {*
   [@inheritDoc]
 *}
 procedure TFrameReplaceSquareActionEditor.DeactivateAction;
+var
+  I: Integer;
 begin
-  EditFieldID.OnChange := nil;
-  EditEffectID.OnChange := nil;
-  EditToolID.OnChange := nil;
-  EditObstacleID.OnChange := nil;
+  for I := 0 to 3 do
+  begin
+    CheckBoxReplaceComponent[I].OnClick := nil;
+    EditComponentID[I].OnChange := nil;
+  end;
+
+  ButtonCurrentSquare.OnClick := nil;
+  ButtonAbsolutePos.OnClick := nil;
+  EditMapID.OnChange := nil;
+  EditAbsolutePosX.OnChange := nil;
+  EditAbsolutePosY.OnChange := nil;
+  EditAbsolutePosZ.OnChange := nil;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFrameReplaceSquareActionEditor.AfterConstruction;
+begin
+  inherited;
+
+  CheckBoxReplaceComponent[0] := CheckBoxReplaceField;
+  CheckBoxReplaceComponent[1] := CheckBoxReplaceEffect;
+  CheckBoxReplaceComponent[2] := CheckBoxReplaceTool;
+  CheckBoxReplaceComponent[3] := CheckBoxReplaceObstacle;
+
+  EditComponentID[0] := EditFieldID;
+  EditComponentID[1] := EditEffectID;
+  EditComponentID[2] := EditToolID;
+  EditComponentID[3] := EditObstacleID;
+end;
+
+{*
+  Gestionnaire d'événement OnClick du bouton Case courante
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameReplaceSquareActionEditor.ButtonCurrentSquareClick(
+  Sender: TObject);
+begin
+  EditMapID.Text := '';
+  EditAbsolutePosX.Value := 0;
+  EditAbsolutePosY.Value := 0;
+  EditAbsolutePosZ.Value := 0;
+
+  with CurrentAction.SquarePos do
+  begin
+    Origin := poCurrent;
+    MapID := '';
+    Offset := Point3D(0, 0, 0);
+  end;
+
+  MarkModified;
+end;
+
+{*
+  Gestionnaire d'événement OnClick du bouton Position absolue
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameReplaceSquareActionEditor.ButtonAbsolutePosClick(
+  Sender: TObject);
+begin
+  CurrentAction.SquarePos.Origin := poAbsolute;
+
+  MarkModified;
 end;
 
 {*
@@ -181,30 +310,32 @@ begin
   begin
     // Nothing selected
     MapViewer.Visible := True;
+    ShowDialog(SNoSquareSelectedTitle, SNoSquareSelected, dtError);
     Exit;
   end;
 
   CurrentAction.SquarePos.SetToQPos(MapViewer.SelectedSquare);
+  FillSquarePosControls;
   MarkModified;
 end;
 
 {*
-  Gestionnaire d'événement OnClick du bouton Imiter la case sélectionnée
+  Gestionnaire d'événement OnClick d'une des check box de remplacement
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFrameReplaceSquareActionEditor.ButtonCopySelectedSquareClick(
+procedure TFrameReplaceSquareActionEditor.CheckBoxReplaceComponentClick(
   Sender: TObject);
+var
+  Index: Integer;
+  Checked: Boolean;
 begin
-  if (not MapViewer.Visible) or (MapViewer.SelectedMap = nil) then
-  begin
-    // Nothing selected
-    MapViewer.Visible := True;
-    Exit;
-  end;
+  Index := (Sender as TCheckBox).Tag;
+  Checked := (Sender as TCheckBox).Checked;
 
-  CurrentAction.ReplaceBy.SetToSquare(
-    MapViewer.SelectedMap[MapViewer.SelectedPos]);
-  FillIDEdits;
+  EditComponentID[Index].Text := '';
+  EditComponentID[Index].Enabled := Checked;
+  CurrentAction.Components[Index].IsReplaced := Checked;
+
   MarkModified;
 end;
 
@@ -215,24 +346,69 @@ end;
 procedure TFrameReplaceSquareActionEditor.EditComponentIDChange(
   Sender: TObject);
 var
+  Index: Integer;
   NewID: TComponentID;
 begin
+  Index := (Sender as TComboBoxEx).Tag;
   NewID := (Sender as TComboBoxEx).Text;
   if NewID = SNone then
     NewID := '';
 
-  with CurrentAction.ReplaceBy do
+  CurrentAction.Components[Index].ComponentID := NewID;
+
+  MarkModified;
+end;
+
+{*
+  Gestionnaire d'événement OnEnter des contrôles de position absolue
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameReplaceSquareActionEditor.EditAbsolutePosEnter(Sender: TObject);
+begin
+  ButtonAbsolutePos.Checked := True;
+end;
+
+{*
+  Gestionnaire d'événement OnChange des contrôles de position absolue
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameReplaceSquareActionEditor.EditAbsolutePosChange(
+  Sender: TObject);
+begin
+  with CurrentAction.SquarePos do
   begin
-    if Sender = EditFieldID then
-      FieldID := NewID
-    else if Sender = EditEffectID then
-      EffectID := NewID
-    else if Sender = EditToolID then
-      ToolID := NewID
-    else
-      ObstacleID := NewID;
+    MapID := EditMapID.Text;
+
+    Offset := Point3D(EditAbsolutePosX.Value, EditAbsolutePosY.Value,
+      EditAbsolutePosZ.Value);
   end;
 
+  MarkModified;
+end;
+
+{*
+  Gestionnaire d'événement OnClick du bouton Imiter la case sélectionnée
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameReplaceSquareActionEditor.ButtonCopySelectedSquareClick(
+  Sender: TObject);
+var
+  Square: TSquare;
+  I: Integer;
+begin
+  if (not MapViewer.Visible) or (MapViewer.SelectedMap = nil) then
+  begin
+    // Nothing selected
+    MapViewer.Visible := True;
+    ShowDialog(SNoSquareSelectedTitle, SNoSquareSelected, dtError);
+    Exit;
+  end;
+
+  Square := MapViewer.SelectedSquare.Square;
+  for I := 0 to 3 do
+    CurrentAction.Components[I].ComponentID := Square.Components[I].SafeID;
+
+  FillIDEdits;
   MarkModified;
 end;
 

@@ -9,11 +9,6 @@ uses
   SimpleSquaresObjectEditor, SimpleSquaresObstacleEditor, FunLabyCoreConsts,
   GraphicEx, PainterEditor;
 
-resourcestring
-  SInvalidImageFileName =
-    'Les images doivent être sélectionnée dans le dossier d''images de '+
-    'FunLabyrinthe';
-
 type
   {*
     Cadre d'édition d'un composant de case simple

@@ -70,6 +70,7 @@ type
 
     procedure RegisterActions(Actions: TStrings); virtual;
     procedure RegisterAttributes(Attributes: TStrings); virtual;
+    procedure RegisterComponentIDs(ComponentIDs: TStrings); virtual;
     procedure ProduceComponents(Code: TStrings); virtual;
     procedure ProduceClass(Code: TStrings);
 
@@ -92,6 +93,8 @@ type
   TSimpleAction = class(TFunLabyPersistent)
   protected
     function GetTitle: string; virtual; abstract;
+
+    procedure RegisterComponentIDs(ComponentIDs: TStrings); virtual;
   public
     constructor Create; virtual;
 
@@ -150,6 +153,8 @@ type
     constructor Create(AImagesMaster: TImagesMaster); override;
     destructor Destroy; override;
 
+    procedure RegisterComponentIDs(ComponentIDs: TStrings); override;
+    
     class function ClassTitle: string; override;
   published
     property Actions: TSimpleActionList read FActions;
@@ -397,6 +402,14 @@ begin
 end;
 
 {*
+  Recense les ID de composants utilisés
+  @param Attributs   Liste de tous les ID de composants utilisés
+*}
+procedure TSimpleSquare.RegisterComponentIDs(ComponentIDs: TStrings);
+begin
+end;
+
+{*
   Produit la définition des composants
   @param Code   Code produit
 *}
@@ -439,6 +452,14 @@ end;
 constructor TSimpleAction.Create;
 begin
   inherited Create;
+end;
+
+{*
+  Recense les ID de composants utilisés
+  @param Attributs   Liste de tous les ID de composants utilisés
+*}
+procedure TSimpleAction.RegisterComponentIDs(ComponentIDs: TStrings);
+begin
 end;
 
 {*
@@ -547,6 +568,19 @@ end;
 function TSimpleEffect.GetParentClassName: string;
 begin
   Result := 'TCounterEffect'; {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleEffect.RegisterComponentIDs(ComponentIDs: TStrings);
+var
+  I: Integer;
+begin
+  inherited;
+
+  for I := 0 to Actions.Count-1 do
+    Actions[I].RegisterComponentIDs(ComponentIDs);
 end;
 
 {*
