@@ -67,6 +67,8 @@ const {don't localize}
   fCrossroads = 'Arrows/Crossroads'; /// Fichier du carrefour
 
   fTransporter = 'Miscellaneous/Transporter'; /// Fichier du téléporteur
+  /// Fichier du téléporteur désactivé
+  fDisabledTransporter = 'Miscellaneous/DisabledTransporter';
 
   fUpStairs = 'Stairs/UpStairs';     /// Fichier de l'escalier montant
   fDownStairs = 'Stairs/DownStairs'; /// Fichier de l'escalier descendant
@@ -133,12 +135,21 @@ type
   *}
   TTransporter = class(TEffect)
   private
-    FKind: TTransporterKind; /// Type de téléporteur
+    FDisabledPainter: TPainter; /// Peintre désactivé
+    FKind: TTransporterKind;    /// Type de téléporteur
+  protected
+    procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+    destructor Destroy; override;
+
+    procedure AfterConstruction; override;
 
     procedure Execute(Context: TMoveContext); override;
   published
+    property Enabled;
+    property DisabledPainter: TPainter read FDisabledPainter;
+
     property Kind: TTransporterKind read FKind write FKind default tkNext;
   end;
 
@@ -310,10 +321,45 @@ constructor TTransporter.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
 
+  FDisabledPainter := TPainter.Create(Master.ImagesMaster);
+  FDisabledPainter.BeginUpdate;
+
   FKind := tkNext;
 
   Name := STransporter;
   Painter.AddImage(fTransporter);
+  DisabledPainter.AddImage(fDisabledTransporter);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TTransporter.Destroy;
+begin
+  FDisabledPainter.Free;
+
+  inherited;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TTransporter.DoDraw(Context: TDrawSquareContext);
+begin
+  if Enabled then
+    Painter.Draw(Context)
+  else
+    DisabledPainter.Draw(Context);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TTransporter.AfterConstruction;
+begin
+  inherited;
+
+  FDisabledPainter.EndUpdate;
 end;
 
 {*

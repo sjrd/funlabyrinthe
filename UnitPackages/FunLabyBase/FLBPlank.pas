@@ -31,9 +31,6 @@ const {don't localize}
 const {don't localize}
   fPlank = 'Objects/Plank'; /// Fichier de la planche
 
-const {don't localize}
-  attrUsePlank = 'UsePlank'; /// Attribut indiquant l'usage de la planche
-
 resourcestring
   SFoundPlank = 'Tu as trouvé une planche.'+#10+
     'Tu peux franchir certains obstacles.';
@@ -111,6 +108,9 @@ const
   clPlank = $00004080; /// Couleur de la planche
 
 implementation
+
+const {don't localize}
+  attrUsePlank = 'UsePlank'; /// Attribut indiquant l'usage de la planche
 
 {---------------------}
 { Classe TPlankPlugin }

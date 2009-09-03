@@ -2249,7 +2249,7 @@ begin
   CheckInstanceSize(TObjectDef, 56, 52);
   CheckInstanceSize(TSquareComponent, 52, 52);
   CheckInstanceSize(TField, 52, 52);
-  CheckInstanceSize(TEffect, 52, 52);
+  CheckInstanceSize(TEffect, 56, 52);
   CheckInstanceSize(TTool, 52, 52);
   CheckInstanceSize(TObstacle, 52, 52);
   CheckInstanceSize(TSquare, 72, 52);

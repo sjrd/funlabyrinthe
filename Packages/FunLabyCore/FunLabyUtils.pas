@@ -1085,9 +1085,17 @@ type
     @version 5.0
   *}
   TEffect = class(TSquareComponent)
+  private
+    FEnabled: Boolean; /// Indique si cet effet est activé
   protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
     function GetCategory: string; override;
+
+    property Enabled: Boolean read FEnabled write FEnabled default True;
   public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+
     procedure Entered(Context: TMoveContext); virtual;
     procedure Exited(Context: TMoveContext); virtual;
 
@@ -4759,10 +4767,7 @@ end;
 {-------------------}
 
 {*
-  Crée une instance de TObjectDef
-  @param Master   Maître FunLabyrinthe
-  @param AID      ID de l'objet
-  @param AName    Nom de l'objet
+  [@inheritDoc]
 *}
 constructor TObjectDef.Create(AMaster: TMaster; const AID: TComponentID);
 begin
@@ -4945,6 +4950,28 @@ end;
 {*
   [@inheritDoc]
 *}
+constructor TEffect.Create(AMaster: TMaster; const AID: TComponentID);
+begin
+  inherited;
+
+  FEnabled := True;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TEffect.DefineProperties(Filer: TFunLabyFiler);
+begin
+  inherited;
+
+  if not IsPublishedProp(Self, 'Enabled') then
+    Filer.DefineFieldProperty('Enabled', TypeInfo(Boolean),
+      @FEnabled, not Enabled);
+end;
+
+{*
+  [@inheritDoc]
+*}
 function TEffect.GetCategory: string;
 begin
   Result := SCategoryEffects;
@@ -4968,6 +4995,7 @@ end;
 
 {*
   Exécute l'effet
+  Execute ne devrait être appelé que lorsque Enabled vaut True.
   @param Context   Contexte du déplacement
 *}
 procedure TEffect.Execute(Context: TMoveContext);
@@ -5244,7 +5272,7 @@ procedure TSquare.DoExecute(Context: TMoveContext);
 begin
   if Assigned(Tool) then
     Tool.Find(Context);
-  if Assigned(Effect) then
+  if Assigned(Effect) and Effect.Enabled then
     Effect.Execute(Context);
 end;
 

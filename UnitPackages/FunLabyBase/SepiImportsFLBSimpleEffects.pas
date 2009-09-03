@@ -259,14 +259,14 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TArrow, 56, 52);
-  CheckInstanceSize(TTransporter, 56, 52);
-  CheckInstanceSize(TInactiveTransporter, 56, 56);
+  CheckInstanceSize(TArrow, 60, 56);
+  CheckInstanceSize(TTransporter, 64, 56);
+  CheckInstanceSize(TInactiveTransporter, 64, 64);
   CheckInstanceSize(TTransporterCreator, 40, 40);
-  CheckInstanceSize(TStairs, 56, 52);
-  CheckInstanceSize(TDirectTurnstile, 52, 52);
-  CheckInstanceSize(TIndirectTurnstile, 52, 52);
-  CheckInstanceSize(TTreasure, 52, 52);
+  CheckInstanceSize(TStairs, 60, 56);
+  CheckInstanceSize(TDirectTurnstile, 56, 56);
+  CheckInstanceSize(TIndirectTurnstile, 56, 56);
+  CheckInstanceSize(TTreasure, 56, 56);
   {$ASSERTIONS OFF}
 end;
 

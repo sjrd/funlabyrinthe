@@ -125,6 +125,8 @@ type
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
+  published
+    property Enabled;
   end;
 
   {*
@@ -399,7 +401,9 @@ end;
 *}
 procedure TPushButton.DoDraw(Context: TDrawSquareContext);
 begin
-  if Context.IsNowhere or (Context.Map.PlayersOn(Context.Pos) = 0) then
+  if not Enabled then
+    DownPainter.Draw(Context)
+  else if Context.IsNowhere or (Context.Map.PlayersOn(Context.Pos) = 0) then
     Painter.Draw(Context)
   else
     DownPainter.Draw(Context);
