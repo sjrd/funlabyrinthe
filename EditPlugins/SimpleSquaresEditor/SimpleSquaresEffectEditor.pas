@@ -26,6 +26,9 @@ type
     ButtonDeleteAction: TSpeedButton;
     ButtonUpAction: TSpeedButton;
     ButtonDownAction: TSpeedButton;
+    PanelEvent: TPanel;
+    LabelEvent: TLabel;
+    ComboEvent: TComboBox;
     procedure ListBoxActionsData(Control: TWinControl; Index: Integer;
       var Data: string);
     procedure ListBoxActionsClick(Sender: TObject);
@@ -33,9 +36,10 @@ type
     procedure ButtonDownActionClick(Sender: TObject);
     procedure ButtonUpActionClick(Sender: TObject);
     procedure ButtonDeleteActionClick(Sender: TObject);
+    procedure ComboEventChange(Sender: TObject);
   private
     FCurrentEffect: TSimpleEffect; /// Effet en cours d'édition
-    Actions: TSimpleActionList;    /// Actions de l'effet en cours d'édition
+    Actions: TSimpleActionList;    /// Actions de l'événement en cours d'édition
     FCurrentAction: TSimpleAction; /// Action courante
 
     MapViewer: IOTAMapViewer50; /// Visualisateur de cartes
@@ -107,11 +111,16 @@ end;
 *}
 procedure TFrameEffectEditor.UpdateActions;
 var
-  Index: Integer;
+  Index, ActionCount: Integer;
 begin
   Index := ListBoxActions.ItemIndex;
 
-  if (Index < 0) and (Actions.Count > 0) then
+  if Actions = nil then
+    ActionCount := 0
+  else
+    ActionCount := Actions.Count;
+
+  if (Index < 0) and (ActionCount > 0) then
   begin
     ListBoxActions.ItemIndex := 0;
     Index := 0;
@@ -119,7 +128,7 @@ begin
 
   ButtonDeleteAction.Enabled := Index >= 0;
   ButtonUpAction.Enabled := Index > 0;
-  ButtonDownAction.Enabled := Index < Actions.Count-1;
+  ButtonDownAction.Enabled := Index < ActionCount-1;
 
   if Index < 0 then
     CurrentAction := nil
@@ -172,8 +181,9 @@ begin
     Visible := False;
 
     CurrentAction := nil;
-    ListBoxActions.Count := 0;
-    Actions := nil;
+    ComboEvent.ItemIndex := -1;
+    ComboEventChange(nil);
+    ComboEvent.Items.Clear;
   end;
 
   FCurrentEffect := Value;
@@ -184,8 +194,10 @@ begin
     if MapViewer = nil then
       MapViewer := GetFunLabyEditMainForm.MapViewer;
 
-    Actions := CurrentEffect.Actions;
-    ListBoxActions.Count := Actions.Count;
+    CurrentEffect.GetEventsAndActions(ComboEvent.Items);
+    ComboEvent.ItemIndex := ComboEvent.Items.IndexOf(
+      CurrentEffect.DefaultEvent);
+    ComboEventChange(nil);
 
     Visible := True;
   end;
@@ -252,6 +264,25 @@ begin
 end;
 
 {*
+  Gestionnaire d'événement OnChange de la liste des événements
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameEffectEditor.ComboEventChange(Sender: TObject);
+begin
+  if ComboEvent.ItemIndex < 0 then
+  begin
+    ListBoxActions.Count := 0;
+    Actions := nil;
+  end else
+  begin
+    Actions := CurrentEffect.EventActions[ComboEvent.ItemIndex];
+    ListBoxActions.Count := Actions.Count;
+  end;
+
+  UpdateActions;
+end;
+
+{*
   Gestionnaire d'événement OnData de la liste des actions
   @param Control   Contrôle qui a déclenché l'événement
   @param Index     Index de la chaîne demandée
@@ -260,8 +291,8 @@ end;
 procedure TFrameEffectEditor.ListBoxActionsData(Control: TWinControl;
   Index: Integer; var Data: string);
 begin
-  Assert(CurrentEffect <> nil);
-  Data := CurrentEffect.Actions[Index].Title;
+  Assert(Actions <> nil);
+  Data := Actions[Index].Title;
 end;
 
 {*

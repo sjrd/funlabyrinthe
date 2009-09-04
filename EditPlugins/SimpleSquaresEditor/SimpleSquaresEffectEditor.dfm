@@ -6,19 +6,23 @@ inherited FrameEffectEditor: TFrameEffectEditor
   ExplicitHeight = 304
   object SplitterActionList: TSplitter
     Left = 241
-    Top = 0
-    Height = 304
+    Top = 33
+    Height = 271
+    ExplicitTop = 0
+    ExplicitHeight = 304
   end
   object PanelActionList: TPanel
     Left = 0
-    Top = 0
+    Top = 33
     Width = 241
-    Height = 304
+    Height = 271
     Align = alLeft
     TabOrder = 0
+    ExplicitTop = 0
+    ExplicitHeight = 304
     DesignSize = (
       241
-      304)
+      271)
     object LabelActionList: TLabel
       Left = 16
       Top = 16
@@ -214,17 +218,18 @@ inherited FrameEffectEditor: TFrameEffectEditor
       Left = 16
       Top = 32
       Width = 185
-      Height = 217
+      Height = 184
       Style = lbVirtual
       Anchors = [akLeft, akTop, akRight, akBottom]
       ItemHeight = 16
       TabOrder = 0
       OnClick = ListBoxActionsClick
       OnData = ListBoxActionsData
+      ExplicitHeight = 217
     end
     object ComboBoxNewAction: TComboBox
       Left = 16
-      Top = 259
+      Top = 226
       Width = 185
       Height = 21
       Style = csDropDownList
@@ -236,6 +241,35 @@ inherited FrameEffectEditor: TFrameEffectEditor
       OnChange = ComboBoxNewActionChange
       Items.Strings = (
         '(Ajouter une action...)')
+      ExplicitTop = 259
+    end
+  end
+  object PanelEvent: TPanel
+    Left = 0
+    Top = 0
+    Width = 451
+    Height = 33
+    Align = alTop
+    TabOrder = 1
+    ExplicitLeft = 264
+    ExplicitTop = 72
+    ExplicitWidth = 65
+    object LabelEvent: TLabel
+      Left = 16
+      Top = 10
+      Width = 61
+      Height = 13
+      Caption = #201'v'#233'nement :'
+    end
+    object ComboEvent: TComboBox
+      Left = 80
+      Top = 6
+      Width = 161
+      Height = 21
+      Style = csDropDownList
+      ItemHeight = 13
+      TabOrder = 0
+      OnChange = ComboEventChange
     end
   end
 end

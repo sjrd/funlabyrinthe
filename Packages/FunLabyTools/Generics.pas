@@ -125,6 +125,13 @@ type
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
+
+    procedure Entered(Context: TMoveContext); override;
+    procedure Execute(Context: TMoveContext); override;
+    procedure Exited(Context: TMoveContext); override;
+
+    procedure ButtonDown(Context: TMoveContext); virtual;
+    procedure ButtonUp(Context: TMoveContext); virtual;
   published
     property Enabled;
   end;
@@ -152,6 +159,9 @@ type
     procedure AfterConstruction; override;
 
     procedure Execute(Context: TMoveContext); override;
+
+    procedure SwitchOn(Context: TMoveContext); virtual;
+    procedure SwitchOff(Context: TMoveContext); virtual;
   published
     property IsOn: Boolean read FIsOn write FIsOn default False;
   end;
@@ -419,6 +429,56 @@ begin
   FDownPainter.EndUpdate;
 end;
 
+{*
+  [@inheritDoc]
+*}
+procedure TPushButton.Entered(Context: TMoveContext);
+begin
+  inherited;
+
+  if Enabled then
+  begin
+    inherited Execute(Context);
+
+    if Context.Map.PlayersOn(Context.Pos) = 1 then
+      ButtonDown(Context);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPushButton.Execute(Context: TMoveContext);
+begin
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPushButton.Exited(Context: TMoveContext);
+begin
+  if Enabled and (Context.Map.PlayersOn(Context.Pos) = 0) then
+    ButtonUp(Context);
+
+  inherited;
+end;
+
+{*
+  Déclenché lorsque le bouton est enfoncé
+  @param Context   Contexte du mouvement
+*}
+procedure TPushButton.ButtonDown(Context: TMoveContext);
+begin
+end;
+
+{*
+  Déclenché lorsque le bouton est relâché
+  @param Context   Contexte du mouvement
+*}
+procedure TPushButton.ButtonUp(Context: TMoveContext);
+begin
+end;
+
 {----------------}
 { Classe TSwitch }
 {----------------}
@@ -478,6 +538,27 @@ begin
   inherited;
 
   IsOn := not IsOn;
+
+  if IsOn then
+    SwitchOn(Context)
+  else
+    SwitchOff(Context);
+end;
+
+{*
+  Déclenché lorsque l'interrupteur passe en position ON
+  @param Context   Contexte du mouvement
+*}
+procedure TSwitch.SwitchOn(Context: TMoveContext);
+begin
+end;
+
+{*
+  Déclenché lorsque l'interrupteur passe en position OFF
+  @param Context   Contexte du mouvement
+*}
+procedure TSwitch.SwitchOff(Context: TMoveContext);
+begin
 end;
 
 {----------------------------}

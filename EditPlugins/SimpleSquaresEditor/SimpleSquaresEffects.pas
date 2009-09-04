@@ -20,6 +20,9 @@ type
     function GetParentClassName: string; override;
 
     function GetCanEditPainter: Boolean; override;
+
+    procedure EnumEvents(AEvents: TStrings); override;
+    function GetDefaultEvent: string; override;
   public
     constructor Create(AImagesMaster: TImagesMaster); override;
 
@@ -36,6 +39,9 @@ type
     function GetParentClassName: string; override;
 
     function GetCanEditPainter: Boolean; override;
+
+    procedure EnumEvents(AEvents: TStrings); override;
+    function GetDefaultEvent: string; override;
   public
     constructor Create(AImagesMaster: TImagesMaster); override;
 
@@ -77,6 +83,23 @@ end;
 {*
   [@inheritDoc]
 *}
+procedure TSimpleButton.EnumEvents(AEvents: TStrings);
+begin
+  AEvents.Add('ButtonDown'); {don't localize}
+  AEvents.Add('ButtonUp'); {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSimpleButton.GetDefaultEvent: string;
+begin
+  Result := 'ButtonDown'; {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
 class function TSimpleButton.ClassTitle: string;
 begin
   Result := SSimpleButtonTitle;
@@ -110,6 +133,23 @@ end;
 function TSimpleSwitch.GetCanEditPainter: Boolean;
 begin
   Result := False;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleSwitch.EnumEvents(AEvents: TStrings);
+begin
+  AEvents.Add('SwitchOn'); {don't localize}
+  AEvents.Add('SwitchOff'); {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSimpleSwitch.GetDefaultEvent: string;
+begin
+  Result := 'SwitchOn'; {don't localize}
 end;
 
 {*

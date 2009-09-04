@@ -143,10 +143,19 @@ type
   *}
   TSimpleEffect = class(TSimpleSquare)
   private
-    FActions: TSimpleActionList; /// Actions de l'effet
+    FEvents: TStrings; /// Événements interceptés
+
+    function GetEventCount: Integer;
+    function GetEvents(Index: Integer): string;
+    function GetEventActions(Index: Integer): TSimpleActionList;
   protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
     function GetComponentType: string; override;
     function GetParentClassName: string; override;
+
+    procedure EnumEvents(AEvents: TStrings); virtual;
+    function GetDefaultEvent: string; virtual;
 
     procedure ProduceInnerClass(Code: TStrings); override;
   public
@@ -154,10 +163,16 @@ type
     destructor Destroy; override;
 
     procedure RegisterComponentIDs(ComponentIDs: TStrings); override;
-    
+
     class function ClassTitle: string; override;
-  published
-    property Actions: TSimpleActionList read FActions;
+
+    procedure GetEventsAndActions(EventList: TStrings);
+
+    property EventCount: Integer read GetEventCount;
+    property Events[Index: Integer]: string read GetEvents;
+    property EventActions[Index: Integer]: TSimpleActionList
+      read GetEventActions;
+    property DefaultEvent: string read GetDefaultEvent;
   end;
 
   {*
@@ -538,20 +553,87 @@ end;
   [@inheritDoc]
 *}
 constructor TSimpleEffect.Create(AImagesMaster: TImagesMaster);
+var
+  I: Integer;
 begin
   inherited;
 
-  FActions := TSimpleActionList.Create;
+  FEvents := TStringList.Create;
+  with TStringList(FEvents) do
+  begin
+    Sorted := True;
+    Duplicates := dupIgnore;
+  end;
+
+  EnumEvents(FEvents);
+  for I := 0 to FEvents.Count-1 do
+    FEvents.Objects[I] := TSimpleActionList.Create;
 end;
 
 {*
   [@inheritDoc]
 *}
 destructor TSimpleEffect.Destroy;
+var
+  I: Integer;
 begin
-  FActions.Free;
-  
+  if Assigned(FEvents) then
+  begin
+    for I := 0 to FEvents.Count-1 do
+      FEvents.Objects[I].Free;
+    FEvents.Free;
+  end;
+
   inherited;
+end;
+
+{*
+  Nombre d'événements
+  @return Nombre d'événements
+*}
+function TSimpleEffect.GetEventCount: Integer;
+begin
+  Result := FEvents.Count;
+end;
+
+{*
+  Tableau zero-based des noms des événements
+  @param Index   Index compris entre 0 inclus et EventCount exclu
+  @return Nom de l'événement spécifié
+*}
+function TSimpleEffect.GetEvents(Index: Integer): string;
+begin
+  Result := FEvents[Index];
+end;
+
+{*
+  Tableau zero-based des actions correspondant aux événements
+  @param Index   Index compris entre 0 inclus et EventCount exclu
+  @return Action de l'événement spécifié
+*}
+function TSimpleEffect.GetEventActions(Index: Integer): TSimpleActionList;
+begin
+  Result := TSimpleActionList(FEvents.Objects[Index]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleEffect.DefineProperties(Filer: TFunLabyFiler);
+var
+  I: Integer;
+begin
+  inherited;
+
+  if psReading in PersistentState then
+  begin {compatibility}
+    I := FEvents.IndexOf(DefaultEvent);
+    if I >= 0 then
+      Filer.DefinePersistent('Actions', EventActions[I]);
+  end; {compatibility}
+
+  for I := 0 to EventCount-1 do
+    Filer.DefinePersistent('On'+Events[I], EventActions[I]);
 end;
 
 {*
@@ -560,6 +642,22 @@ end;
 function TSimpleEffect.GetComponentType: string;
 begin
   Result := 'effect'; {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleEffect.EnumEvents(AEvents: TStrings);
+begin
+  AEvents.Add('Execute'); {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSimpleEffect.GetDefaultEvent: string;
+begin
+  Result := 'Execute'; {don't localize}
 end;
 
 {*
@@ -575,30 +673,44 @@ end;
 *}
 procedure TSimpleEffect.RegisterComponentIDs(ComponentIDs: TStrings);
 var
-  I: Integer;
+  I, J: Integer;
+  Actions: TSimpleActionList;
 begin
   inherited;
 
-  for I := 0 to Actions.Count-1 do
-    Actions[I].RegisterComponentIDs(ComponentIDs);
+  for I := 0 to EventCount-1 do
+  begin
+    Actions := EventActions[I];
+
+    for J := 0 to Actions.Count-1 do
+      Actions[J].RegisterComponentIDs(ComponentIDs);
+  end;
 end;
 
 {*
   [@inheritDoc]
 *}
 procedure TSimpleEffect.ProduceInnerClass(Code: TStrings);
+var
+  I: Integer;
+  Actions: TSimpleActionList;
 begin
   inherited;
 
-  if Actions.Count > 0 then
+  for I := 0 to EventCount-1 do
   begin
-    Code.Add('  on Execute do');
-    Code.Add('  begin');
-    Code.Add('    inherited;');
-    Code.Add('');
-    Actions.ProduceFunDelphiCode(Code);
-    Code.Add('  end;');
-    Code.Add('');
+    Actions := EventActions[I];
+
+    if Actions.Count > 0 then
+    begin
+      Code.Add(Format('  on %s do', [Events[I]]));
+      Code.Add('  begin');
+      Code.Add('    inherited;');
+      Code.Add('');
+      Actions.ProduceFunDelphiCode(Code);
+      Code.Add('  end;');
+      Code.Add('');
+    end;
   end;
 end;
 
@@ -608,6 +720,15 @@ end;
 class function TSimpleEffect.ClassTitle: string;
 begin
   Result := SSimpleEffectTitle;
+end;
+
+{*
+  Récupère une liste des événements et leurs actions
+  @param EventList   Remplie avec les noms des événements et leurs actions
+*}
+procedure TSimpleEffect.GetEventsAndActions(EventList: TStrings);
+begin
+  EventList.Assign(FEvents);
 end;
 
 {---------------------}
