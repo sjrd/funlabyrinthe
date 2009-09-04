@@ -143,6 +143,9 @@ type
     procedure DrawView(Context: TDrawViewContext); override;
   end;
 
+var { FunDelphi codegen }
+  compDefaultShowMessagePlugin: TDefaultShowMessagePlugin;
+
 implementation
 
 {*

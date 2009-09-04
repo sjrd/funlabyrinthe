@@ -125,6 +125,7 @@ end;
 
 procedure InitVarAddresses;
 begin
+  VarAddresses[0] := @compLift;
 end;
 
 {------------------------------------}

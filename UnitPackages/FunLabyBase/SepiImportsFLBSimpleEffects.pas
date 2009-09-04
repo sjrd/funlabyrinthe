@@ -27,7 +27,7 @@ const // don't localize
   ResourceName = 'SepiImportsFLBSimpleEffects';
   TypeCount = 9;
   MethodCount = 2;
-  VariableCount = 1;
+  VariableCount = 13;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -148,6 +148,19 @@ end;
 
 procedure InitVarAddresses;
 begin
+  VarAddresses[0] := @compNorthArrow;
+  VarAddresses[1] := @compEastArrow;
+  VarAddresses[2] := @compSouthArrow;
+  VarAddresses[3] := @compWestArrow;
+  VarAddresses[4] := @compCrossroads;
+  VarAddresses[5] := @compInactiveTransporter;
+  VarAddresses[6] := @compTransporterCreator;
+  VarAddresses[7] := @compUpStairs;
+  VarAddresses[8] := @compDownStairs;
+  VarAddresses[9] := @compDirectTurnstile;
+  VarAddresses[10] := @compIndirectTurnstile;
+  VarAddresses[11] := @compTreasure;
+  VarAddresses[12] := @compSunkenButton;
 end;
 
 {------------------------------------}

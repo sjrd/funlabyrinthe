@@ -27,7 +27,7 @@ const // don't localize
   ResourceName = 'SepiImportsFLBSimpleObjects';
   TypeCount = 4;
   MethodCount = 1;
-  VariableCount = 1;
+  VariableCount = 7;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -112,6 +112,13 @@ end;
 
 procedure InitVarAddresses;
 begin
+  VarAddresses[0] := @compBuoyPlugin;
+  VarAddresses[1] := @compBuoys;
+  VarAddresses[2] := @compSilverKeys;
+  VarAddresses[3] := @compGoldenKeys;
+  VarAddresses[4] := @compBuoy;
+  VarAddresses[5] := @compSilverKey;
+  VarAddresses[6] := @compGoldenKey;
 end;
 
 {------------------------------------}

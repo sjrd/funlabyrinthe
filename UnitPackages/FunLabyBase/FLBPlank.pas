@@ -104,6 +104,11 @@ type
     property Player: TPlayer read FPlayer;
   end;
 
+var { FunDelphi codegen }
+  compPlankPlugin: TPlankPlugin;
+  compPlanks: TPlanks;
+  compPlank: TPlankTool;
+
 const
   clPlank = $00004080; /// Couleur de la planche
 

@@ -129,6 +129,7 @@ end;
 
 procedure InitVarAddresses;
 begin
+  VarAddresses[0] := @compDefaultShowMessagePlugin;
 end;
 
 {------------------------------------}

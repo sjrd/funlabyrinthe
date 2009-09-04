@@ -70,6 +70,9 @@ type
     procedure Execute(Context: TMoveContext); override;
   end;
 
+var { FunDelphi codegen }
+  compLift: TLift;
+
 implementation
 
 uses

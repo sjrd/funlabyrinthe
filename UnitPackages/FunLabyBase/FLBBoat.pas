@@ -70,6 +70,9 @@ type
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
   end;
 
+var { FunDelphi codegen }
+  compBoatCreator: TBoatCreator;
+
 implementation
 
 {--------------}

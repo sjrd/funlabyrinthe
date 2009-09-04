@@ -13,7 +13,7 @@ uses
   SepiSystemUnit,
   SepiOpCodes, SepiCompiler, SepiExpressions, SepiInstructions,
   SepiAsmInstructions, SepiCompilerConsts, SepiDelphiLikeCompilerUtils,
-  SepiFunDelphiCompilerConsts;
+  SepiFunDelphiCompilerConsts, SepiCompilerErrors;
 
 type
   {*
@@ -38,6 +38,7 @@ type
     FMasterExpr: ISepiExpression; /// Valeur Master
     FIDConstant: TSepiConstant;   /// Constante représentant l'ID du composant
     FFunLabyUtilsUnit: TSepiUnit; /// Unité FunLabyUtils
+    FIsTypeKnown: Boolean;        /// Indique si le type est connu
 
     FMakeSquareValue: ISepiMakeSquareValue; /// Valeur constructeur de case
   protected
@@ -66,8 +67,6 @@ type
   private
     FComponents: IInterfaceList; /// Liste des composants
   protected
-    function CheckComponentType(const AComponent: ISepiReadableValue): Boolean;
-
     procedure AddComponent(const AComponent: ISepiReadableValue);
 
     procedure CompileParams(CallInstr: TSepiAsmCall;
@@ -146,6 +145,7 @@ const {don't localize}
   ComponentIDPrefix = 'id';
   ActionPrefix = 'act';
   AttributePrefix = 'attr';
+  ComponentTypePrefix = 'comp';
 
   MasterName = 'Master';
   CreateName = 'Create';
@@ -153,19 +153,9 @@ const {don't localize}
   UseForName = 'UseFor';
   ActionName = 'Action';
   ContextName = 'Context';
+  ComponentPropName = 'Component';
 
 implementation
-
-const {don't localize}
-  ComponentClassNames: array[0..10] of string = (
-    'TFunLabyComponent', 'TSquareComponent', 'TPlugin', 'TObjectDef',
-    'TField', 'TEffect', 'TTool', 'TObstacle', 'TSquare', 'TMap', 'TPlayer'
-  );
-
-  MasterPropNames: array[0..10] of string = (
-    'Component', 'SquareComponent', 'Plugin', 'ObjectDef',
-    'Field', 'Effect', 'Tool', 'Obstacle', 'Square', 'Map', 'Player'
-  );
 
 {---------------------------}
 { TSepiComponentValue class }
@@ -178,6 +168,10 @@ const {don't localize}
 *}
 constructor TSepiComponentValue.Create(const AMasterExpr: ISepiExpression;
   AIDConstant: TSepiConstant);
+var
+  StrID: string;
+  CompVarComponent: TSepiComponent;
+  CompVar: TSepiVariable;
 begin
   inherited Create;
 
@@ -187,6 +181,18 @@ begin
     FunLabyUtilsUnitName) as TSepiUnit;
 
   SetValueType(FunLabyUtilsUnit.FindClass(TFunLabyComponent));
+
+  StrID := string(IDConstant.ValuePtr^);
+  CompVarComponent := IDConstant.LookFor(ComponentTypePrefix+StrID);
+  if CompVarComponent is TSepiVariable then
+  begin
+    CompVar := TSepiVariable(CompVarComponent);
+    Assert((CompVar.VarType is TSepiClass) and (CompVar.VarType.IsForward or
+      TSepiClass(CompVar.VarType).ClassInheritsFrom(ValueType as TSepiClass)));
+
+    SetValueType(CompVar.VarType);
+    FIsTypeKnown := True;
+  end;
 end;
 
 {*
@@ -194,12 +200,33 @@ end;
 *}
 function TSepiComponentValue.CanForceType(AValueType: TSepiType;
   Explicit: Boolean = False): Boolean;
+var
+  ClassType, AClassType: TSepiClass;
 begin
-  Result := (AValueType is TSepiClass) and
-    TSepiClass(AValueType).ClassInheritsFrom(ValueType as TSepiClass) and
-    (AValueType.Owner = FunLabyUtilsUnit) and
-    AnsiMatchStr(AValueType.Name, ComponentClassNames) and
-    (FMakeSquareValue = nil);
+  if (not (AValueType is TSepiClass)) or (FMakeSquareValue <> nil) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  ClassType := TSepiClass(ValueType);
+  AClassType := TSepiClass(AValueType);
+
+  if FIsTypeKnown then
+  begin
+    Result := ClassType.IsForward and
+      (AClassType.DelphiClass.InheritsFrom(TFunLabyComponent) or
+      TFunLabyComponent.InheritsFrom(AClassType.DelphiClass));
+
+    if not Result then
+    begin
+      Result := (AClassType.DelphiClass = TSquare) and
+        ClassType.DelphiClass.InheritsFrom(TSquareComponent);
+    end;
+  end else
+  begin
+    Result := AClassType.ClassInheritsFrom(ClassType);
+  end;
 end;
 
 {*
@@ -211,6 +238,14 @@ var
 begin
   Assert(CanForceType(AValueType));
 
+  if AValueType = ValueType then
+    Exit;
+
+  if FIsTypeKnown and ValueType.IsForward and (not AValueType.IsForward) then
+  begin
+    { TODO 1 : Keep track of forward typecasts }
+  end;
+
   SetValueType(AValueType);
 
   if (AValueType as TSepiClass).DelphiClass = TSquare then
@@ -218,9 +253,13 @@ begin
     SubComponentValue := TSepiComponentValue.Create(MasterExpr, IDConstant);
     SubComponentValue.AttachToExpression(TSepiExpression.Create(Expression));
 
+    (SubComponentValue as ISepiExpression).SourcePos := Expression.SourcePos;
+
     FMakeSquareValue := TSepiMakeSquareValue.Create(SepiRoot);
     FMakeSquareValue.AttachToExpression(TSepiExpression.Create(Expression));
     FMakeSquareValue.AddComponent(SubComponentValue);
+
+    (FMakeSquareValue as ISepiExpression).SourcePos := Expression.SourcePos;
   end;
 end;
 
@@ -231,8 +270,6 @@ procedure TSepiComponentValue.CompileCompute(Compiler: TSepiMethodCompiler;
   Instructions: TSepiInstructionList; var Destination: TSepiMemoryReference;
   TempVars: TSepiTempVarsLifeManager);
 var
-  Index: Integer;
-  PropName: string;
   Expression: ISepiExpression;
   Prop: ISepiProperty;
 begin
@@ -242,11 +279,8 @@ begin
     Exit;
   end;
 
-  Index := AnsiIndexStr(ValueType.Name, ComponentClassNames);
-  Assert(Index >= 0);
-  PropName := MasterPropNames[Index];
-
-  Expression := LanguageRules.FieldSelection(Compiler.SepiMethod, MasterExpr, PropName);
+  Expression := LanguageRules.FieldSelection(Compiler.SepiMethod, MasterExpr,
+    ComponentPropName);
   Prop := Expression as ISepiProperty;
 
   Expression := TSepiExpression.Create(Expression);
@@ -278,41 +312,32 @@ begin
 end;
 
 {*
-  Vérifie le type d'un composant
-  @param AComponent   Composant à vérifier
-  @return True si le type est valide, False sinon
-*}
-function TSepiMakeSquareValue.CheckComponentType(
-  const AComponent: ISepiReadableValue): Boolean;
-var
-  TSquareComponentType: TSepiType;
-  TypeForceable: ISepiTypeForceableValue;
-begin
-  Result := True;
-  TSquareComponentType := SepiRoot.FindClass(TSquareComponent);
-
-  if TSquareComponentType.CompatibleWith(AComponent.ValueType) then
-    Exit;
-
-  if Supports(AComponent, ISepiTypeForceableValue, TypeForceable) and
-    TypeForceable.CanForceType(TSquareComponentType) then
-  begin
-    TypeForceable.ForceType(TSquareComponentType);
-    Exit;
-  end;
-
-  (AComponent as ISepiExpression).MakeError(SSquareComponentValueRequired);
-  Result := False;
-end;
-
-{*
   [@inheritDoc]
 *}
 procedure TSepiMakeSquareValue.AddComponent(
   const AComponent: ISepiReadableValue);
+var
+  TSquareComponentType: TSepiType;
+  Component: ISepiReadableValue;
 begin
-  if CheckComponentType(AComponent) then
-    FComponents.Add(AComponent);
+  TSquareComponentType := SepiRoot.FindClass(TSquareComponent);
+  Component := AComponent;
+
+  if not Component.ValueType.Equals(TSquareComponentType) then
+  begin
+    if TSepiConvertOperation.ConvertionExists(TSquareComponentType,
+      Component) then
+    begin
+      Component := TSepiConvertOperation.ConvertValue(
+        TSquareComponentType, Component);
+    end else
+    begin
+      (AComponent as ISepiExpression).MakeError(SSquareComponentValueRequired);
+      Exit;
+    end;
+  end;
+
+  FComponents.Add(Component);
 end;
 
 {*
@@ -627,12 +652,14 @@ function TSepiFunDelphiLanguageRules.ObjectCountSelection(
   SepiContext: TSepiComponent; const BaseExpression: ISepiExpression;
   const ObjectID: string): ISepiExpression;
 var
-  TPlayerType: TSepiType;
+  TPlayerType, TObjectDefType: TSepiType;
   ReadableBase: ISepiReadableValue;
   ObjectExpr, CountExpr: ISepiExpression;
+  TypeForceableObjectExpr: ISepiTypeForceableValue;
   CountProp: ISepiProperty;
 begin
   TPlayerType := SepiContext.Root.FindClass(TPlayer);
+  TObjectDefType := SepiContext.Root.FindClass(TObjectDef);
 
   if not Supports(BaseExpression, ISepiReadableValue, ReadableBase) then
     Exit;
@@ -644,8 +671,17 @@ begin
     ObjectID, ObjectExpr) then
     Exit;
 
-  ((ObjectExpr as ISepiReadableValue) as ISepiTypeForceableValue).ForceType(
-    SepiContext.Root.FindClass(TObjectDef));
+  if not TObjectDefType.CompatibleWith(
+    (ObjectExpr as ISepiReadableValue).ValueType) then
+  begin
+    TypeForceableObjectExpr :=
+      ((ObjectExpr as ISepiReadableValue) as ISepiTypeForceableValue);
+
+    if not TypeForceableObjectExpr.CanForceType(
+      SepiContext.Root.FindClass(TObjectDef)) then
+      Exit;
+    TypeForceableObjectExpr.ForceType(SepiContext.Root.FindClass(TObjectDef));
+  end;
 
   CountExpr := inherited FieldSelection(SepiContext, ObjectExpr, 'Count');
 

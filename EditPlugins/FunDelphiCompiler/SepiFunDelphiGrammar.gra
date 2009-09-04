@@ -128,7 +128,6 @@ ntImplSection	ImplSection	Simplify
 	ToolSection
 	ObstacleSection
 	ConstSection
-	VarSection
 	RoutineImpl
 
 ntIdentifier	Identifier
@@ -372,16 +371,6 @@ ntConstDecl	ConstDecl
 ntInnerConstDecl	InnerConstDecl	Simplify
 	':'* TypeName '='* InitializationExpression
 	'='* ConstExpression
-
-ntVarSection	VarSection
-	'var'* (GlobalVar)+
-
-ntGlobalVar	GlobalVar
-	IdentifierDecl InnerGlobalVar ';'*
-
-ntInnerGlobalVar	InnerGlobalVar	Simplify
-	':'* TypeName ('='* InitializationExpression)?
-	(','* Identifier)+ ':'* TypeName
 
 ntActionsSection	ActionsSection
 	'actions'* CommaIdentDeclList ';'*

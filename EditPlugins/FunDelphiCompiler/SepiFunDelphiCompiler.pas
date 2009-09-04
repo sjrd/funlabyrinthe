@@ -187,7 +187,7 @@ type
     FInitializeUnitCompiler: TSepiMethodCompiler; /// Compilateur InitializeUnit
 
     FIDConstant: TSepiConstant; /// Constante représentant l'ID du composant
-    FRegisterable: Boolean;     /// True si peut être recensé
+    FComponentType: TSepiClass; /// Type du composant
   protected
     procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
   public
@@ -200,6 +200,7 @@ type
       Instructions: TSepiInstructionList);
 
     property IDConstant: TSepiConstant read FIDConstant;
+    property ComponentType: TSepiClass read FComponentType;
   end;
 
   {*
@@ -616,7 +617,6 @@ begin
   NonTerminalClasses[ntFieldSelection]  := TSepiFieldSelectionModifierNode;
 
   NonTerminalClasses[ntConstDecl]          := TDelphiConstantDeclNode;
-  NonTerminalClasses[ntGlobalVar]          := TDelphiVariableDeclNode;
   NonTerminalClasses[ntActionsSection]     := TFunDelphiActionsNode;
   NonTerminalClasses[ntAttributesSection]  := TFunDelphiAttributesNode;
   NonTerminalClasses[ntComponent]          := TFunDelphiComponentDeclNode;
@@ -945,6 +945,7 @@ begin
   end;
 
   Result := MakeExpression;
+  Result.SourcePos := SourcePos;
   LeftMakeSquareValue := TSepiMakeSquareValue.Create(SepiRoot);
   LeftMakeSquareValue.AttachToExpression(Result);
   LeftMakeSquareValue.AddComponent(LeftValue);
@@ -1063,6 +1064,7 @@ begin
       begin
         LeftValue := LanguageRules.FieldSelection(SepiContext,
           LeftValue as ISepiExpression, SqCompFields[I]) as ISepiReadableValue;
+        LeftClass := LeftValue.ValueType as TSepiClass;
         Break;
       end;
     end;
@@ -1080,6 +1082,7 @@ begin
   begin
     WantingParams := LanguageRules.FieldSelection(SepiContext,
       LeftValue as ISepiExpression, 'Contains') as ISepiWantingParams;
+    Assert(WantingParams <> nil);
     WantingParams.AddParam(RightValue as ISepiExpression);
     WantingParams.CompleteParams;
 
@@ -1358,12 +1361,39 @@ procedure TFunDelphiComponentDeclNode.ChildEndParsing(
   Child: TSepiParseTreeNode);
 var
   ComponentID: string;
+  ComponentClass: TSepiClass;
+  Component: TSepiComponent;
 begin
   if Child is TSepiIdentifierDeclarationNode then
   begin
     ComponentID := TSepiIdentifierDeclarationNode(Child).Identifier;
     FIDConstant := TSepiConstant.Create(SepiContext,
       ComponentIDPrefix+ComponentID, ComponentID);
+  end else if Child is TSepiQualifiedIdentNode then
+  begin
+    ComponentClass := TSepiClass(SepiRoot.FindClass(TFunLabyComponent));
+    Component := LookFor(Child);
+
+    if (Component = nil) and IsValidIdent(Child.AsText) then
+    begin
+      FComponentType := TSepiClass.ForwardDecl(SepiContext, Child.AsText);
+    end else
+    begin
+      if (Component is TSepiClass) and (Component.IsForward or
+        TSepiClass(Component).ClassInheritsFrom(ComponentClass)) then
+      begin
+        FComponentType := TSepiClass(Component);
+      end else
+      begin
+        if CheckIdentFound(Component, Child.AsText, Child) then
+          Child.MakeError(Format(SClassOfRequired, [ComponentClass.Name]));
+
+        FComponentType := ComponentClass;
+      end;
+    end;
+
+    TSepiVariable.Create(SepiContext, ComponentTypePrefix+Children[0].AsText,
+      FComponentType);
   end;
 
   inherited;
@@ -1397,37 +1427,33 @@ end;
 procedure TFunDelphiComponentDeclNode.MakeInitialize(
   Compiler: TSepiMethodCompiler; Instructions: TSepiInstructionList);
 var
-  Expression, IDExpr, ComponentExpr: ISepiExpression;
   ComponentClass: TSepiClass;
-  TypeExpr: ISepiTypeExpression;
+  Expression, IDExpr, ComponentExpr: ISepiExpression;
   WantingParams: ISepiWantingParams;
   ParamsNode: TSepiParseTreeNode;
   I: Integer;
   Executable: ISepiExecutable;
   ComponentVar: TSepiLocalVar;
 begin
-  Expression := LanguageRules.ResolveIdentInMethod(Compiler,
-    Children[1].AsText);
-  if not CheckIdentFound(Expression, Children[1].AsText, Children[1]) then
-    Exit;
-  Expression.SourcePos := Children[1].SourcePos;
-
   ComponentClass := TSepiClass(SepiRoot.FindClass(TFunLabyComponent));
 
-  if (not Supports(Expression, ISepiTypeExpression, TypeExpr)) or
-    (not (TypeExpr.ExprType is TSepiClass)) or
-    (not TSepiClass(TypeExpr.ExprType).ClassInheritsFrom(ComponentClass)) then
+  // Last-minute check of ComponentType
+  if ComponentType.IsForward then
   begin
-    Expression.MakeError(Format(SClassOfRequired, [ComponentClass.Name]));
-    Exit;
+    CheckIdentFound(nil, Children[1].AsText, Children[1]);
+    FComponentType := ComponentClass;
+  end else if not ComponentType.ClassInheritsFrom(ComponentClass) then
+  begin
+    Children[1].MakeError(Format(SClassOfRequired, [ComponentClass.Name]));
+    FComponentType := ComponentClass;
   end;
 
-  if TSepiClass(TypeExpr.ExprType).ClassInheritsFrom(
-    TSepiClass(SepiRoot.FindClass(TSquareComponent))) then
-  begin
-    FRegisterable := True;
-  end;
+  // Make expression for ComponentType
+  Expression := LanguageRules.ResolveIdentInMethod(
+    Compiler, ComponentType.Name);
+  Expression.SourcePos := Children[1].SourcePos;
 
+  // Make expression for Create call
   Expression := LanguageRules.FieldSelection(Compiler.SepiMethod, Expression,
     CreateName);
   Assert(Expression <> nil);
@@ -1435,17 +1461,20 @@ begin
 
   WantingParams := Expression as ISepiWantingParams;
 
+  // Make expression for ID parameter
   IDExpr := TSepiExpression.Create(Compiler);
   IDExpr.SourcePos := Children[0].SourcePos;
   ISepiExpressionPart(TSepiTrueConstValue.Create(
     IDConstant)).AttachToExpression(IDExpr);
 
+  // Make parameters of Create call
   WantingParams.AddParam(LanguageRules.ResolveIdentInMethod(Compiler,
     MasterName));
   WantingParams.AddParam(IDExpr);
 
   WantingParams.CompleteParams;
 
+  // Handle initialization parameters
   ParamsNode := Children[2];
   if ParamsNode.ChildCount = 0 then
   begin
@@ -1453,7 +1482,7 @@ begin
     Executable.CompileExecute(Compiler, Instructions);
   end else
   begin
-    ComponentVar := Compiler.Locals.AddTempVar(TypeExpr.ExprType);
+    ComponentVar := Compiler.Locals.AddTempVar(ComponentType);
     ComponentExpr := TSepiLocalVarValue.MakeValue(Compiler,
       ComponentVar) as ISepiExpression;
     ComponentExpr.SourcePos := Children[1].SourcePos;
@@ -1559,14 +1588,20 @@ procedure TFunDelphiClassDefNode.ChildEndParsing(Child: TSepiParseTreeNode);
 var
   ClassName: string;
   ParentClass: TSepiClass;
+  AContext: TSepiComponent;
 begin
   if Child is TFunDelphiParentClassNode then
   begin
     ClassName := Children[0].AsText;
     ParentClass := TFunDelphiParentClassNode(Child).CompileParentClass(
       MasterClass);
+    AContext := SepiContext;
 
-    FSepiClass := TSepiClass.Create(SepiContext, ClassName, ParentClass);
+    FSepiClass := SepiContext.GetComponent(ClassName) as TSepiClass;
+    if FSepiClass = nil then
+      FSepiClass := TSepiClass.Create(AContext, ClassName, ParentClass)
+    else
+      FSepiClass.Create(AContext, ClassName, ParentClass);
   end;
 
   inherited;

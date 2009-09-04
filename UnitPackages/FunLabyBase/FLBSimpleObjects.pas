@@ -12,7 +12,8 @@ unit FLBSimpleObjects;
 interface
 
 uses
-  SysUtils, Graphics, ScUtils, FunLabyUtils, FLBCommon, FLBFields, GR32;
+  SysUtils, Graphics, ScUtils, FunLabyUtils, Generics, FLBCommon, FLBFields,
+  GR32;
 
 const {don't localize}
   idBuoyPlugin = 'BuoyPlugin'; /// ID du plug-in bouée
@@ -124,6 +125,16 @@ type
     procedure UseFor(Player: TPlayer; const Action: TPlayerAction;
       Param: Integer); override;
   end;
+
+var { FunDelphi codegen }
+  compBuoyPlugin: TBuoyPlugin;
+  compBuoys: TBuoys;
+  compSilverKeys: TSilverKeys;
+  compGoldenKeys: TGoldenKeys;
+
+  compBuoy: TObjectTool;
+  compSilverKey: TObjectTool;
+  compGoldenKey: TObjectTool;
 
 implementation
 

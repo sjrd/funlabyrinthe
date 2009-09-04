@@ -27,7 +27,7 @@ const // don't localize
   ResourceName = 'SepiImportsFLBFields';
   TypeCount = 5;
   MethodCount = 1;
-  VariableCount = 1;
+  VariableCount = 6;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -113,6 +113,12 @@ end;
 
 procedure InitVarAddresses;
 begin
+  VarAddresses[0] := @compGrass;
+  VarAddresses[1] := @compWall;
+  VarAddresses[2] := @compWater;
+  VarAddresses[3] := @compHole;
+  VarAddresses[4] := @compSky;
+  VarAddresses[5] := @compOutside;
 end;
 
 {------------------------------------}

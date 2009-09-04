@@ -27,7 +27,7 @@ const // don't localize
   ResourceName = 'SepiImportsFLBObstacles';
   TypeCount = 4;
   MethodCount = 1;
-  VariableCount = 1;
+  VariableCount = 3;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -112,6 +112,9 @@ end;
 
 procedure InitVarAddresses;
 begin
+  VarAddresses[0] := @compSilverBlock;
+  VarAddresses[1] := @compGoldenBlock;
+  VarAddresses[2] := @compSecretWay;
 end;
 
 {------------------------------------}

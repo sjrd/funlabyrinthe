@@ -26,7 +26,7 @@ const // don't localize
   ResourceName = 'SepiImportsFLBBoat';
   TypeCount = 2;
   MethodCount = 1;
-  VariableCount = 1;
+  VariableCount = 2;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -110,6 +110,7 @@ end;
 procedure InitVarAddresses;
 begin
   VarAddresses[0] := @fBoatByDir;
+  VarAddresses[1] := @compBoatCreator;
 end;
 
 {------------------------------------}

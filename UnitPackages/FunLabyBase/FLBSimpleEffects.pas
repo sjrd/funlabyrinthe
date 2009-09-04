@@ -12,7 +12,7 @@ interface
 
 uses
   SysUtils, Graphics, ScUtils, SdDialogs, FunLabyUtils, FunLabyCoreConsts,
-  MapTools, GraphicsTools, FLBCommon, FLBFields, GR32;
+  Generics, MapTools, GraphicsTools, FLBCommon, FLBFields, GR32;
 
 resourcestring
   SNorthArrow = 'Flèche nord';                /// Nom de la flèche nord
@@ -247,6 +247,27 @@ type
 
     procedure Execute(Context: TMoveContext); override;
   end;
+
+var { FunDelphi codegen }
+  compNorthArrow: TArrow;
+  compEastArrow: TArrow;
+  compSouthArrow: TArrow;
+  compWestArrow: TArrow;
+  compCrossroads: TArrow;
+
+  compInactiveTransporter: TInactiveTransporter;
+
+  compTransporterCreator: TTransporterCreator;
+
+  compUpStairs: TStairs;
+  compDownStairs: TStairs;
+
+  compDirectTurnstile: TDirectTurnstile;
+  compIndirectTurnstile: TIndirectTurnstile;
+
+  compTreasure: TTreasure;
+
+  compSunkenButton: TDecorativeEffect;
 
 implementation
 

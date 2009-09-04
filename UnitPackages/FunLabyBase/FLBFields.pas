@@ -122,6 +122,14 @@ type
     procedure Entered(Context: TMoveContext); override;
   end;
 
+var { FunDelphi codegen }
+  compGrass: TGround;
+  compWall: TWall;
+  compWater: TWater;
+  compHole: THole;
+  compSky: TSky;
+  compOutside: TOutside;
+
 implementation
 
 {--------------}

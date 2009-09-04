@@ -89,6 +89,11 @@ type
     procedure Pushing(Context: TMoveContext); override;
   end;
 
+var { FunDelphi codegen }
+  compSilverBlock: TSilverBlock;
+  compGoldenBlock: TGoldenBlock;
+  compSecretWay: TSecretWay;
+
 implementation
 
 {--------------}
