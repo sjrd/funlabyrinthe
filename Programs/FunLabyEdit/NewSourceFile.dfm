@@ -68,6 +68,7 @@ object FormCreateNewSourceFile: TFormCreateNewSourceFile
   object SaveSourceFileDialog: TSaveDialog
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing, ofDontAddToRecent]
     Title = 'Veuillez choisir un nom de fichier source'
+    OnCanClose = SaveSourceFileDialogCanClose
     Left = 16
     Top = 208
   end

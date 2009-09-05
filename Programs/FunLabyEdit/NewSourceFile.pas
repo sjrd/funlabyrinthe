@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, SdDialogs, FilesUtils, SourceEditors,
+  Dialogs, StdCtrls, Buttons, ScStrUtils, SdDialogs, FilesUtils, SourceEditors,
   FunLabyUtils, FunLabyEditConsts;
 
 type
@@ -18,9 +18,13 @@ type
     SaveSourceFileDialog: TSaveDialog;
     procedure ListBoxSourceFileTypeClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure SaveSourceFileDialogCanClose(Sender: TObject;
+      var CanClose: Boolean);
   private
     { Déclarations privées }
     procedure AddCreator(const CreateProc, Info; var Continue: Boolean);
+
+    function ValidateFileName(const FileName: TFileName): Boolean;
   public
     { Déclarations publiques }
     class function NewSourceFile(out FileName: TFileName): Boolean;
@@ -44,6 +48,10 @@ type
     Info: TSourceFileCreatorInfo;
   end;
 
+{--------------------------------}
+{ TFormCreateNewSourceFile class }
+{--------------------------------}
+
 {*
   Méthode de call-back pour UnitCreators.ForEach qui ajoute le créateur
   @param CreateProc   Routine de call-back de création d'unité
@@ -60,6 +68,54 @@ begin
   Creator.Info := TSourceFileCreatorInfo(Info);
 
   ListBoxSourceFileType.Items.AddObject(Creator.Info.Title, TObject(Creator));
+end;
+
+{*
+  Vérifie qu'un nom de fichier est valide
+  @param FileName   Nom du fichier à valider
+  @return True si le nom de fichier est valide, False sinon
+*}
+function TFormCreateNewSourceFile.ValidateFileName(
+  const FileName: TFileName): Boolean;
+var
+  UnitName, Extension, Filter, Temp, FilterMask, SubMask: string;
+begin
+  // Parse file name
+  Extension := ExtractFileExt(FileName);
+  UnitName := ExtractFileName(FileName);
+  SetLength(UnitName, Length(UnitName) - Length(Extension));
+
+  // Check unit name
+  if not IsValidIdent(UnitName) then
+  begin
+    ShowDialog(SInvalidFileNameTitle, Format(SInvalidUnitName, [UnitName]),
+      dtError);
+    Result := False;
+    Exit;
+  end;
+
+  // Check extension
+  Filter := SaveSourceFileDialog.Filter;
+  while SplitToken(Filter, '|', FilterMask, Temp) do
+  begin
+    SplitToken(Temp, '|', FilterMask, Filter);
+
+    while FilterMask <> '' do
+    begin
+      SplitToken(FilterMask, ';', SubMask, Temp);
+      FilterMask := Temp;
+
+      if (SubMask = '*'+Extension) or (SubMask = '*.*') or (SubMask = '*') then
+      begin
+        Result := True;
+        Exit;
+      end;
+    end;
+  end;
+
+  ShowDialog(SInvalidFileNameTitle, Format(SInvalidExtension, [Extension]),
+    dtError);
+  Result := False;
 end;
 
 {*
@@ -113,16 +169,6 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnClick de la list box des types d'unités
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormCreateNewSourceFile.ListBoxSourceFileTypeClick(Sender: TObject);
-begin
-  with ListBoxSourceFileType, PSourceFileCreator(Items.Objects[ItemIndex])^ do
-    MemoDescription.Text := Info.Description;
-end;
-
-{*
   Gestionnaire d'événement OnDestroy de la fiche
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -136,6 +182,33 @@ begin
     Creator := PSourceFileCreator(ListBoxSourceFileType.Items.Objects[I]);
     Dispose(Creator);
   end;
+end;
+
+{*
+  Gestionnaire d'événement OnClick de la list box des types d'unités
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormCreateNewSourceFile.ListBoxSourceFileTypeClick(Sender: TObject);
+begin
+  with ListBoxSourceFileType, PSourceFileCreator(Items.Objects[ItemIndex])^ do
+    MemoDescription.Text := Info.Description;
+end;
+
+{*
+  Gestionnaire d'événement OnCanClose de la boîte de dialogue Enregistrer
+  @param Sender     Objet qui a déclenché l'événement
+  @param CanClose   En sortie : indique si la boîte peut être fermée
+*}
+procedure TFormCreateNewSourceFile.SaveSourceFileDialogCanClose(Sender: TObject;
+  var CanClose: Boolean);
+var
+  I: Integer;
+begin
+  CanClose := False;
+  for I := 0 to SaveSourceFileDialog.Files.Count-1 do
+    if not ValidateFileName(SaveSourceFileDialog.Files[I]) then
+      Exit;
+  CanClose := True;
 end;
 
 end.

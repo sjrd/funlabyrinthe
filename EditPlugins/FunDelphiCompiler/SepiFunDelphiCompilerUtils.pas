@@ -724,7 +724,8 @@ function TSepiFunDelphiLanguageRules.ResolveIdentInMethod(
   Compiler: TSepiMethodCompiler; const Identifier: string): ISepiExpression;
 var
   LocalVar: TSepiLocalVar;
-  ContextExpression, FieldExpression: ISepiExpression;
+  ContextExpression, FieldExpression, StdResult: ISepiExpression;
+  ComponentExpr: ISepiComponentExpression;
 begin
   // Field selection on the Context parameter
   if (Compiler.SepiMethod.Signature.GetParam(ContextName) <> nil) and
@@ -747,9 +748,14 @@ begin
   end;
 
   // Standart Delphi expression
-  Result := inherited ResolveIdentInMethod(Compiler, Identifier);
-  if Result <> nil then
+  StdResult := inherited ResolveIdentInMethod(Compiler, Identifier);
+  if (StdResult <> nil) and
+    (not (Supports(StdResult, ISepiComponentExpression, ComponentExpr) and
+    (ComponentExpr.Component is TSepiUnit))) then
+  begin
+    Result := StdResult;
     Exit;
+  end;
 
   // Special FunDelphi expression
   Result := TSepiExpression.Create(Compiler);
@@ -758,7 +764,7 @@ begin
   if ResolveAction(Compiler.SepiMethod, Identifier, Result) then
     Exit;
 
-  Result := nil;
+  Result := StdResult;
 end;
 
 {*

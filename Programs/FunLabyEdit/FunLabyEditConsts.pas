@@ -3,6 +3,7 @@ unit FunLabyEditConsts;
 interface
 
 resourcestring
+  SErrorTitle = 'Erreur';
   SFatalErrorTitle = 'Erreur fatale';
 
   SBaseSepiRootLoadError =
@@ -44,6 +45,9 @@ resourcestring
   SRemoveSourceTitle = 'Retirer un fichier source';
   SRemoveSource =
     'Êtes-vous certain de vouloir retirer ce fichier source du projet ?';
+  SErrorWhileOpeningSourceFile =
+    'Une erreur est survenu lors de l''ouverture du fichier avec le message '+
+    '"%s". Voulez-vous retirer ce fichier source du projet ?';
 
   SAllUnitTypes = 'Tous les types d''unité';
 
@@ -68,6 +72,13 @@ resourcestring
   SBadComponentID =
     'L''ID ne doit contenir que des lettres non accentuées et des chiffres';
   SComponentAlreadyExists = 'Il existe déjà un composant avec cet ID';
+
+  SInvalidFileNameTitle = 'Nom de fichier invalide';
+  SInvalidUnitName =
+    '%s n''est pas un nom d''unité valide, il ne doit contenir que des '+
+    'lettres non accentuées et des chiffres, et commencer par une lettre';
+  SInvalidExtension =
+    'L''extension %s n''est pas valide pour ce type de fichier';
 
   SNoFieldTitle = 'Aucun terrain';
   SNoField =

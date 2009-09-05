@@ -440,7 +440,10 @@ end;
 *}
 function TDependantFile.ResolveHRef: TFileName;
 begin
-  Result := MasterFile.ResolveHRef(HRef, fUnitsDir);
+  if FileExists(HRef) then
+    Result := HRef
+  else
+    Result := fUnitsDir + AnsiReplaceStr(HRef, HRefDelim, PathDelim);
 end;
 
 {--------------------------}
@@ -523,7 +526,11 @@ begin
   inherited;
 
   if (psReading in State) and (not IsLoaded) and (HRef <> '') then
+  begin
+    if not FileExists(FileName) then
+      FFileName := MasterFile.ResolveHRef(HRef, fUnitsDir);
     Load;
+  end;
 end;
 
 {*

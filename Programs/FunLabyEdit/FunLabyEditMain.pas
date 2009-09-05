@@ -425,7 +425,20 @@ var
   Tab: TJvTabBarItem;
 begin
   // Créer l'éditeur
-  Editor := SourceFileEditors.CreateEditor(SourceFile);
+  try
+    Editor := SourceFileEditors.CreateEditor(SourceFile);
+  except
+    on Error: Exception do
+    begin
+      if ShowDialog(SErrorTitle, Format(SErrorWhileOpeningSourceFile,
+        [Error.Message]), dtError, dbYesNo, 2) = drYes then
+      begin
+        RemoveSourceFile(SourceFile);
+      end;
+
+      Exit;
+    end;
+  end;
 
   // Set OTA main form
   if Supports(Editor, ISourceEditorUsingOTA50, EditorUsingOTA) then
@@ -764,7 +777,6 @@ begin
     ActionList := ActionManager;
     Caption := ExtractFileName(SourceFile.FileName);
     Tag := Integer(SourceFile);
-    Enabled := SourceFileEditors.ExistsEditor(SourceFile);
     OnExecute := ActionViewSourceExecute;
   end;
 end;
