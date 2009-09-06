@@ -317,6 +317,26 @@ type
   end;
 
   {*
+    Noeud définition de composant à position
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiPosComponentNode = class(TFunDelphiClassDefNode)
+  protected
+    function GetMasterClass: TSepiClass; override;
+  end;
+
+  {*
+    Noeud définition de véhicule
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiVehicleNode = class(TFunDelphiClassDefNode)
+  protected
+    function GetMasterClass: TSepiClass; override;
+  end;
+
+  {*
     Noeud classe parent
     @author sjrd
     @version 5.0
@@ -671,18 +691,20 @@ begin
   NonTerminalClasses[ntArrayIndices]    := TFunDelphiArrayIndicesModifierNode;
   NonTerminalClasses[ntFieldSelection]  := TSepiFieldSelectionModifierNode;
 
-  NonTerminalClasses[ntConstDecl]          := TDelphiConstantDeclNode;
-  NonTerminalClasses[ntActionsSection]     := TFunDelphiActionsNode;
-  NonTerminalClasses[ntAttributesSection]  := TFunDelphiAttributesNode;
-  NonTerminalClasses[ntMessageDecl]        := TFunDelphiMessageDeclNode;
-  NonTerminalClasses[ntComponent]          := TFunDelphiComponentDeclNode;
-  NonTerminalClasses[ntComponentParameter] := TFunDelphiComponentParamNode;
-  NonTerminalClasses[ntPluginSection]      := TFunDelphiPluginNode;
-  NonTerminalClasses[ntObjectSection]      := TFunDelphiObjectNode;
-  NonTerminalClasses[ntFieldSection]       := TFunDelphiFieldNode;
-  NonTerminalClasses[ntEffectSection]      := TFunDelphiEffectNode;
-  NonTerminalClasses[ntToolSection]        := TFunDelphiToolNode;
-  NonTerminalClasses[ntObstacleSection]    := TFunDelphiObstacleNode;
+  NonTerminalClasses[ntConstDecl]           := TDelphiConstantDeclNode;
+  NonTerminalClasses[ntActionsSection]      := TFunDelphiActionsNode;
+  NonTerminalClasses[ntAttributesSection]   := TFunDelphiAttributesNode;
+  NonTerminalClasses[ntMessageDecl]         := TFunDelphiMessageDeclNode;
+  NonTerminalClasses[ntComponent]           := TFunDelphiComponentDeclNode;
+  NonTerminalClasses[ntComponentParameter]  := TFunDelphiComponentParamNode;
+  NonTerminalClasses[ntPluginSection]       := TFunDelphiPluginNode;
+  NonTerminalClasses[ntObjectSection]       := TFunDelphiObjectNode;
+  NonTerminalClasses[ntFieldSection]        := TFunDelphiFieldNode;
+  NonTerminalClasses[ntEffectSection]       := TFunDelphiEffectNode;
+  NonTerminalClasses[ntToolSection]         := TFunDelphiToolNode;
+  NonTerminalClasses[ntObstacleSection]     := TFunDelphiObstacleNode;
+  NonTerminalClasses[ntPosComponentSection] := TFunDelphiPosComponentNode;
+  NonTerminalClasses[ntVehicleSection]      := TFunDelphiVehicleNode;
 
   NonTerminalClasses[ntParentClass]          := TFunDelphiParentClassNode;
   NonTerminalClasses[ntField]                := TFunDelphiClassFieldNode;
@@ -1808,6 +1830,30 @@ end;
 function TFunDelphiObstacleNode.GetMasterClass: TSepiClass;
 begin
   Result := TSepiClass(SepiRoot.FindClass(TObstacle));
+end;
+
+{----------------------------------}
+{ TFunDelphiPosComponentNode class }
+{----------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiPosComponentNode.GetMasterClass: TSepiClass;
+begin
+  Result := TSepiClass(SepiRoot.FindClass(TPosComponent));
+end;
+
+{-----------------------------}
+{ TFunDelphiVehicleNode class }
+{-----------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiVehicleNode.GetMasterClass: TSepiClass;
+begin
+  Result := TSepiClass(SepiRoot.FindClass(TVehicle));
 end;
 
 {---------------------------------}

@@ -176,6 +176,9 @@ type
     ShowOnlySelected: Boolean; /// Si True n'affiche que l'élément sélectionné
   end;
 
+  /// Structure du message envoyé au démarrage du jeu
+  TGameStartedMessage = TPlayerMessage;
+
   {*
     Structure du message d'appui sur une touche pour le joueur
     @author sjrd

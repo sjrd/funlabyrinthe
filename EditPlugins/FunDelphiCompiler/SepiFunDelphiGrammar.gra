@@ -43,6 +43,8 @@ tkField	field
 tkEffect	effect
 tkTool	tool
 tkObstacle	obstacle
+tkPosComponent	poscomponent
+tkVehicle	vehicle
 tkComponents	components
 tkAttributes	attributes
 tkActions	actions
@@ -129,6 +131,8 @@ ntImplSection	ImplSection	Simplify
 	EffectSection
 	ToolSection
 	ObstacleSection
+	PosComponentSection
+	VehicleSection
 	ConstSection
 	RoutineImpl
 
@@ -406,7 +410,6 @@ ntPluginMembers	PluginMembers
 	(PluginMember)*
 
 ntPluginMember	PluginMember	Simplify
-	Fields
 	ZIndex
 	Event
 	PluginAction
@@ -418,7 +421,6 @@ ntObjectMembers	ObjectMembers
 	(ObjectMember)*
 
 ntObjectMember	ObjectMember	Simplify
-	Fields
 	Name
 	Image
 	Event
@@ -440,7 +442,20 @@ ntSquareCompMembers	SquareCompMembers
 	(SquareCompMember)*
 
 ntSquareCompMember	SquareCompMember	Simplify
-	Fields
+	Name
+	Image
+	Event
+
+ntPosComponentSection	PosComponentSection
+	'poscomponent'* IdentifierDecl ParentClass PosCompMembers 'end'* ';'*
+
+ntVehicleSection	VehicleSection
+	'vehicle'* IdentifierDecl ParentClass PosCompMembers 'end'* ';'*
+
+ntPosCompMembers	PosCompMembers
+	(PosCompMember)*
+
+ntPosCompMember	PosCompMember	Simplify
 	Name
 	Image
 	Event

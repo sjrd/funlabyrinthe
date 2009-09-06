@@ -32,6 +32,8 @@ field
 effect
 tool
 obstacle
+poscomponent
+vehicle
 components
 attributes
 actions
