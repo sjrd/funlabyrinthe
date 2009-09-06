@@ -46,8 +46,9 @@ tkObstacle	obstacle
 tkComponents	components
 tkAttributes	attributes
 tkActions	actions
+tkMessages	messages
 
-tkConstructor	constructor
+tkMessage	message
 tkName	name
 tkZIndex	zindex
 tkImage	image
@@ -120,6 +121,7 @@ ntSource	Source
 ntImplSection	ImplSection	Simplify
 	ActionsSection
 	AttributesSection
+	MessagesSection
 	ComponentsSection
 	PluginSection
 	ObjectSection
@@ -378,6 +380,12 @@ ntActionsSection	ActionsSection
 ntAttributesSection	AttributesSection
 	'attributes'* CommaIdentDeclList ';'*
 
+ntMessagesSection	MessagesSection
+	'messages'* (MessageDecl)+
+
+ntMessageDecl	MessageDecl
+	IdentifierDecl ':'* TypeName '='* InitializationExpression ';'*
+
 ntComponentsSection	ComponentsSection
 	'components'* (Component)+
 
@@ -462,8 +470,24 @@ ntImage	Image
 ntEvent	Event
 	EventHeader MethodBody
 
-ntEventHeader	EventHeader
-	'on'* IdentifierDecl AutoOverride 'do'*
+ntEventHeader	EventHeader	Simplify
+	'on'* InnerEventHeader 'do'*
+
+ntInnerEventHeader	InnerEventHeader	Simplify
+	MethodEventHeader
+	MessageEventHeader
+
+ntMethodEventHeader	MethodEventHeader
+	IdentifierDecl AutoOverride
+
+ntMessageEventHeader	MessageEventHeader
+	'message'* MessageMethodName MessageEventLinkKind
+
+ntMessageMethodName	MessageMethodName
+	Identifier
+
+ntMessageEventLinkKind	MessageEventLinkKind
+	@
 
 ntPluginAction	PluginAction
 	'action'* ActionList ActionCondition ';'*
@@ -507,12 +531,6 @@ ntForwardOrMethodBody	ForwardOrMethodBody	Simplify
 ntForwardMarker	ForwardMarker
 	'forward' ';'*
 
-ntConstructorSignature	ConstructorSignature
-	('('* ParamList ')'*)?
-
-ntDestructorSignature	DestructorSignature
-	@
-
 ntRoutineSignature	RoutineSignature
 	('('* ParamList ')'*)? ReturnType
 
@@ -541,12 +559,6 @@ ntParamName	ParamName
 
 ntParamType	ParamType	Simplify
 	':'* TypeName
-
-ntConstructorBody	ConstructorBody
-	CommonMethodBody
-
-ntDestructorBody	DestructorBody
-	CommonMethodBody
 
 ntMethodBody	MethodBody
 	CommonMethodBody

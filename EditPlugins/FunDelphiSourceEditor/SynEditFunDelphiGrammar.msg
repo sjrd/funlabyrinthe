@@ -35,8 +35,9 @@ obstacle
 components
 attributes
 actions
+messages
 
-constructor
+message
 name
 zindex
 image

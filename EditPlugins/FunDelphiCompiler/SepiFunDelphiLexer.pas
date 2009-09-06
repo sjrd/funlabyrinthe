@@ -15,7 +15,7 @@ uses
 
 const
   FirstTerminal = 0;
-  LastTerminal = 98;
+  LastTerminal = 99;
 
   tkEof = SepiLexerUtils.tkEof;         /// Fin de fichier
   tkBlank = SepiLexerUtils.tkBlank;     /// Lexème blanc
@@ -62,71 +62,72 @@ const
   tkComponents = 37; // components
   tkAttributes = 38; // attributes
   tkActions = 39;    // actions
+  tkMessages = 40;   // messages
 
-  tkConstructor = 40; // constructor
-  tkName = 41;        // name
-  tkZIndex = 42;      // zindex
-  tkImage = 43;       // image
-  tkAction = 44;      // action
+  tkMessage = 41; // message
+  tkName = 42;    // name
+  tkZIndex = 43;  // zindex
+  tkImage = 44;   // image
+  tkAction = 45;  // action
 
-  tkPlus = 45;        // +
-  tkMinus = 46;       // -
-  tkTimes = 47;       // *
-  tkDivide = 48;      // /
-  tkDiv = 49;         // div
-  tkMod = 50;         // mod
-  tkShl = 51;         // shl
-  tkShr = 52;         // shr
-  tkOr = 53;          // or
-  tkAnd = 54;         // and
-  tkXor = 55;         // xor
-  tkNot = 56;         // not
-  tkLowerThan = 57;   // <
-  tkLowerEq = 58;     // <=
-  tkGreaterThan = 59; // >
-  tkGreaterEq = 60;   // >=
-  tkNotEqual = 61;    // <>
-  tkIn = 62;          // in
-  tkIs = 63;          // is
-  tkAs = 64;          // as
+  tkPlus = 46;        // +
+  tkMinus = 47;       // -
+  tkTimes = 48;       // *
+  tkDivide = 49;      // /
+  tkDiv = 50;         // div
+  tkMod = 51;         // mod
+  tkShl = 52;         // shl
+  tkShr = 53;         // shr
+  tkOr = 54;          // or
+  tkAnd = 55;         // and
+  tkXor = 56;         // xor
+  tkNot = 57;         // not
+  tkLowerThan = 58;   // <
+  tkLowerEq = 59;     // <=
+  tkGreaterThan = 60; // >
+  tkGreaterEq = 61;   // >=
+  tkNotEqual = 62;    // <>
+  tkIn = 63;          // in
+  tkIs = 64;          // is
+  tkAs = 65;          // as
 
-  tkBegin = 65; // begin
-  tkEnd = 66;   // end
+  tkBegin = 66; // begin
+  tkEnd = 67;   // end
 
-  tkString = 67; // string
-  tkNil = 68;    // nil
+  tkString = 68; // string
+  tkNil = 69;    // nil
 
-  tkIf = 69;        // if
-  tkThen = 70;      // then
-  tkElse = 71;      // else
-  tkWhile = 72;     // while
-  tkDo = 73;        // do
-  tkRepeat = 74;    // repeat
-  tkUntil = 75;     // until
-  tkFor = 76;       // for
-  tkTo = 77;        // to
-  tkDownTo = 78;    // downto
-  tkCase = 79;      // case
-  tkOf = 80;        // of
-  tkTry = 81;       // try
-  tkExcept = 82;    // except
-  tkOn = 83;        // on
-  tkFinally = 84;   // finally
-  tkRaise = 85;     // raise
-  tkInherited = 86; // inherited
-  tkWith = 87;      // with
+  tkIf = 70;        // if
+  tkThen = 71;      // then
+  tkElse = 72;      // else
+  tkWhile = 73;     // while
+  tkDo = 74;        // do
+  tkRepeat = 75;    // repeat
+  tkUntil = 76;     // until
+  tkFor = 77;       // for
+  tkTo = 78;        // to
+  tkDownTo = 79;    // downto
+  tkCase = 80;      // case
+  tkOf = 81;        // of
+  tkTry = 82;       // try
+  tkExcept = 83;    // except
+  tkOn = 84;        // on
+  tkFinally = 85;   // finally
+  tkRaise = 86;     // raise
+  tkInherited = 87; // inherited
+  tkWith = 88;      // with
 
-  tkCan = 88;      // can
-  tkHas = 89;      // has
-  tkAtKw = 90;     // at
-  tkLeast = 91;    // least
-  tkMost = 92;     // most
-  tkMore = 93;     // more
-  tkLess = 94;     // less
-  tkThan = 95;     // than
-  tkExactly = 96;  // exactly
-  tkReceives = 97; // receives
-  tkDiscards = 98; // discards
+  tkCan = 89;      // can
+  tkHas = 90;      // has
+  tkAtKw = 91;     // at
+  tkLeast = 92;    // least
+  tkMost = 93;     // most
+  tkMore = 94;     // more
+  tkLess = 95;     // less
+  tkThan = 96;     // than
+  tkExactly = 97;  // exactly
+  tkReceives = 98; // receives
+  tkDiscards = 99; // discards
 
 type
   {*
@@ -186,8 +187,7 @@ begin
     'c' : if Key = 'can'            then SymbolClass := tkCan else
           if Key = 'case'           then SymbolClass := tkCase else
           if Key = 'components'     then SymbolClass := tkComponents else
-          if Key = 'const'          then SymbolClass := tkConst else
-          if Key = 'constructor'    then SymbolClass := tkConstructor;
+          if Key = 'const'          then SymbolClass := tkConst;
     'd' : if Key = 'div'            then SymbolClass := tkDiv else
           if Key = 'discards'       then SymbolClass := tkDiscards else
           if Key = 'do'             then SymbolClass := tkDo else
@@ -210,7 +210,9 @@ begin
           if Key = 'is'             then SymbolClass := tkIs;
     'l' : if Key = 'least'          then SymbolClass := tkLeast else
           if Key = 'less'           then SymbolClass := tkLess;
-    'm' : if Key = 'mod'            then SymbolClass := tkMod else
+    'm' : if Key = 'message'        then SymbolClass := tkMessage else
+          if Key = 'messages'       then SymbolClass := tkMessages else
+          if Key = 'mod'            then SymbolClass := tkMod else
           if Key = 'more'           then SymbolClass := tkMore else
           if Key = 'most'           then SymbolClass := tkMost;
     'n' : if Key = 'name'           then SymbolClass := tkName else
@@ -656,8 +658,9 @@ initialization
   SymbolClassNames[tkComponents] := 'tkComponents';
   SymbolClassNames[tkAttributes] := 'tkAttributes';
   SymbolClassNames[tkActions] := 'tkActions';
+  SymbolClassNames[tkMessages] := 'tkMessages';
 
-  SymbolClassNames[tkConstructor] := 'tkConstructor';
+  SymbolClassNames[tkMessage] := 'tkMessage';
   SymbolClassNames[tkName] := 'tkName';
   SymbolClassNames[tkZIndex] := 'tkZIndex';
   SymbolClassNames[tkImage] := 'tkImage';

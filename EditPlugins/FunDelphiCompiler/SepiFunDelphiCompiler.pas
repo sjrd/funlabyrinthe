@@ -178,6 +178,22 @@ type
   end;
 
   {*
+    Noeud déclaration de messages
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiMessageDeclNode = class(TSepiNonTerminal)
+  private
+    FMsgName: string;            /// Nom du message
+    FMsgConstant: TSepiConstant; /// Constante de message
+  protected
+    procedure ChildBeginParsing(Child: TSepiParseTreeNode); override;
+    procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
+
+    property MsgName: string read FMsgName;
+  end;
+
+  {*
     Noeud déclaration d'un composant
     @author sjrd
     @version 5.0
@@ -418,15 +434,54 @@ type
   end;
 
   {*
-    Noeud en-tête d'événement
+    Noeud en-tête d'événement par méthode surchargée
     @author sjrd
     @version 5.0
   *}
-  TFunDelphiEventHeaderNode = class(TFunDelphiMethodDeclNode)
+  TFunDelphiMethodEventHeaderNode = class(TFunDelphiMethodDeclNode)
   private
     procedure FillSignature;
   protected
     procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
+  end;
+
+  {*
+    Noeud en-tête d'événement par message
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiMessageEventHeaderNode = class(TFunDelphiMethodDeclNode)
+  private
+    procedure FillSignature;
+  protected
+    procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
+  end;
+
+  {*
+    Noeud nom d'une méthode de message
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiMsgMethodNameNode = class(TSepiIdentifierDeclarationNode)
+  private
+    FMsgID: Integer;           /// Identifiant du message
+    FMsgType: TSepiRecordType; /// Type du message
+  public
+    procedure EndParsing; override;
+
+    property MsgID: Integer read FMsgID;
+    property MsgType: TSepiRecordType read FMsgType;
+  end;
+
+  {*
+    Noeud représentant le type de liaison d'une méthode
+    @author sjrd
+    @version 1.0
+  *}
+  TFunDelphiMsgMethodLinkKindNode = class(TSepiMethodLinkKindNode)
+  protected
+    function GetLinkKind: TMethodLinkKind; override;
+    function GetMessageID: Integer; override;
   end;
 
   {*
@@ -619,6 +674,7 @@ begin
   NonTerminalClasses[ntConstDecl]          := TDelphiConstantDeclNode;
   NonTerminalClasses[ntActionsSection]     := TFunDelphiActionsNode;
   NonTerminalClasses[ntAttributesSection]  := TFunDelphiAttributesNode;
+  NonTerminalClasses[ntMessageDecl]        := TFunDelphiMessageDeclNode;
   NonTerminalClasses[ntComponent]          := TFunDelphiComponentDeclNode;
   NonTerminalClasses[ntComponentParameter] := TFunDelphiComponentParamNode;
   NonTerminalClasses[ntPluginSection]      := TFunDelphiPluginNode;
@@ -628,17 +684,21 @@ begin
   NonTerminalClasses[ntToolSection]        := TFunDelphiToolNode;
   NonTerminalClasses[ntObstacleSection]    := TFunDelphiObstacleNode;
 
-  NonTerminalClasses[ntParentClass]       := TFunDelphiParentClassNode;
-  NonTerminalClasses[ntField]             := TFunDelphiClassFieldNode;
-  NonTerminalClasses[ntAutoOverride]      := TFunDelphiAutoOverrideNode;
-  NonTerminalClasses[ntName]              := TFunDelphiNameNode;
-  NonTerminalClasses[ntZIndex]            := TFunDelphiZIndexNode;
-  NonTerminalClasses[ntImage]             := TFunDelphiImageNode;
-  NonTerminalClasses[ntEvent]             := TFunDelphiMethodDeclAndImplNode;
-  NonTerminalClasses[ntEventHeader]       := TFunDelphiEventHeaderNode;
-  NonTerminalClasses[ntPluginAction]      := TFunDelphiPluginActionNode;
-  NonTerminalClasses[ntObjectAction]      := TFunDelphiObjectActionNode;
-  NonTerminalClasses[ntActionCondition]   := TFunDelphiActionConditionNode;
+  NonTerminalClasses[ntParentClass]          := TFunDelphiParentClassNode;
+  NonTerminalClasses[ntField]                := TFunDelphiClassFieldNode;
+  NonTerminalClasses[ntAutoOverride]         := TFunDelphiAutoOverrideNode;
+  NonTerminalClasses[ntName]                 := TFunDelphiNameNode;
+  NonTerminalClasses[ntZIndex]               := TFunDelphiZIndexNode;
+  NonTerminalClasses[ntImage]                := TFunDelphiImageNode;
+  NonTerminalClasses[ntEvent]                := TFunDelphiMethodDeclAndImplNode;
+  NonTerminalClasses[ntMethodEventHeader]    := TFunDelphiMethodEventHeaderNode;
+  NonTerminalClasses[ntMessageEventHeader] :=
+    TFunDelphiMessageEventHeaderNode;
+  NonTerminalClasses[ntMessageMethodName]    := TFunDelphiMsgMethodNameNode;
+  NonTerminalClasses[ntMessageEventLinkKind] := TFunDelphiMsgMethodLinkKindNode;
+  NonTerminalClasses[ntPluginAction]         := TFunDelphiPluginActionNode;
+  NonTerminalClasses[ntObjectAction]         := TFunDelphiObjectActionNode;
+  NonTerminalClasses[ntActionCondition]      := TFunDelphiActionConditionNode;
 
   NonTerminalClasses[ntRoutineImpl]       := TFunDelphiRoutineNode;
   NonTerminalClasses[ntRoutineImplHeader] := TSepiMethodImplHeaderNode;
@@ -646,8 +706,6 @@ begin
   NonTerminalClasses[ntRoutineName]       := TSepiQualifiedIdentNode;
   NonTerminalClasses[ntRoutineVisibility] := TSepiChangeVisibilityNode;
 
-  NonTerminalClasses[ntConstructorSignature] := TSepiSignatureBuilderNode;
-  NonTerminalClasses[ntDestructorSignature]  := TSepiSignatureBuilderNode;
   NonTerminalClasses[ntRoutineSignature]     := TSepiSignatureBuilderNode;
   NonTerminalClasses[ntParam]                := TSepiParamNode;
   NonTerminalClasses[ntParamKind]            := TSepiParamKindNode;
@@ -1337,6 +1395,56 @@ begin
   inherited;
 end;
 
+{---------------------------------}
+{ TFunDelphiMessageDeclNode class }
+{---------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiMessageDeclNode.ChildBeginParsing(
+  Child: TSepiParseTreeNode);
+begin
+  inherited;
+
+  if Child is TSepiInitializationExpressionNode then
+  begin
+    with TSepiInitializationExpressionNode(Child) do
+      SetValueTypeAndPtr(FMsgConstant.ConstType, FMsgConstant.ValuePtr);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiMessageDeclNode.ChildEndParsing(Child: TSepiParseTreeNode);
+var
+  MsgType: TSepiType;
+begin
+  if Child is TSepiIdentifierDeclarationNode then
+  begin
+    FMsgName := TSepiIdentifierDeclarationNode(Child).Identifier;
+    FMsgConstant := TSepiConstant.Create(SepiContext, 'msg'+MsgName,
+      SystemUnit.Word);
+  end else if Child is TSepiTypeNode then
+  begin
+    with TSepiTypeNode(Child) do
+    begin
+      if SepiType is TSepiRecordType then
+        MsgType := SepiType
+      else
+      begin
+        Child.MakeError(SRecordTypeRequired);
+        MsgType := SepiRoot.FindType('FunLabyUtils.TPlayerMessage');
+      end;
+
+      TSepiTypeAlias.Create(SepiContext, 'T'+MsgName+'Message', MsgType);
+    end;
+  end;
+
+  inherited;
+end;
+
 {-----------------------------------}
 { TFunDelphiComponentDeclNode class }
 {-----------------------------------}
@@ -2001,14 +2109,14 @@ begin
   inherited;
 end;
 
-{---------------------------------}
-{ TFunDelphiEventHeaderNode class }
-{---------------------------------}
+{---------------------------------------}
+{ TFunDelphiMethodEventHeaderNode class }
+{---------------------------------------}
 
 {*
   Remplit la signature
 *}
-procedure TFunDelphiEventHeaderNode.FillSignature;
+procedure TFunDelphiMethodEventHeaderNode.FillSignature;
 const
   ValidKinds = [skObjectProcedure, skObjectFunction, skConstructor];
 var
@@ -2042,12 +2150,119 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TFunDelphiEventHeaderNode.ChildEndParsing(Child: TSepiParseTreeNode);
+procedure TFunDelphiMethodEventHeaderNode.ChildEndParsing(Child: TSepiParseTreeNode);
 begin
   inherited;
 
   if Child is TSepiIdentifierDeclarationNode then
     FillSignature;
+end;
+
+{----------------------------------------}
+{ TFunDelphiMessageEventHeaderNode class }
+{----------------------------------------}
+
+{*
+  Remplit la signature
+*}
+procedure TFunDelphiMessageEventHeaderNode.FillSignature;
+begin
+  Signature.Kind := skObjectProcedure;
+  TSepiParam.Create(Signature, ContextName,
+    (Children[0] as TFunDelphiMsgMethodNameNode).MsgType, pkVar);
+
+  SepiContext.CurrentVisibility := mvPrivate;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiMessageEventHeaderNode.ChildEndParsing(
+  Child: TSepiParseTreeNode);
+begin
+  inherited;
+
+  if Child is TSepiIdentifierDeclarationNode then
+    FillSignature;
+end;
+
+{-----------------------------------}
+{ TFunDelphiMsgMethodNameNode class }
+{-----------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiMsgMethodNameNode.EndParsing;
+var
+  MsgName, MsgConstName, MsgTypeName: string;
+  Component: TSepiComponent;
+  MsgConstant: TSepiConstant;
+begin
+  MsgName := AsText;
+
+  // don't localize
+  SetIdentifier(MsgName+'Msg');
+  MsgConstName := 'msg'+MsgName;
+  MsgTypeName := 'T'+MsgName+'Message';
+
+  // Find message constant
+  Component := SepiContext.LookFor(MsgConstName);
+  if (not (Component is TSepiConstant)) or
+    (not (TSepiConstant(Component).ConstType is TSepiIntegerType)) then
+    Component := nil;
+
+  // Extract message ID from message constant
+  if CheckIdentFound(Component, 'message '+MsgName, Self) then
+  begin
+    MsgConstant := TSepiConstant(Component);
+    FMsgID := TSepiIntegerType(MsgConstant.ConstType).ValueAsCardinal(
+      MsgConstant.ValuePtr^);
+  end else
+  begin
+    MsgConstant := nil;
+    FMsgID := 0;
+  end;
+
+  // Find message type
+  Component := SepiContext.LookFor(MsgTypeName);
+  if not (Component is TSepiRecordType) then
+    Component := nil;
+
+  // Check message type
+  if Component <> nil then
+  begin
+    FMsgType := TSepiRecordType(Component);
+  end else
+  begin
+    if MsgConstant <> nil then
+      MakeError(Format(SMessageTypeUnknown, [MsgName]));
+
+    FMsgType := SepiRoot.FindType(
+      'FunLabyUtils.TPlayerMessage') as TSepiRecordType;
+  end;
+
+  inherited;
+end;
+
+{---------------------------------------}
+{ TFunDelphiMsgMethodLinkKindNode class }
+{---------------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiMsgMethodLinkKindNode.GetLinkKind: TMethodLinkKind;
+begin
+  Result := mlkMessage;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiMsgMethodLinkKindNode.GetMessageID: Integer;
+begin
+  Result := (Parent.Children[0] as TFunDelphiMsgMethodNameNode).MsgID;
 end;
 
 {----------------------------------}
