@@ -82,21 +82,6 @@ begin
     // Don't localize
     Add(Format('unit %s;', [UnitName]));
     Add('');
-    Add('// Modèle de définition d''un type d''action');
-    Add('actions');
-    Add('  Dive;');
-    Add('');
-    Add('// Modèle de définition d''un terrain');
-    Add('field TFieldName');
-    Add('  image ''Grass'';');
-    Add('');
-    Add('  on Entering do');
-    Add('  begin');
-    Add('    if not (Player can Dive) then');
-    Add('      Cancel;');
-    Add('  end;');
-    Add('end;');
-    Add('');
     Add('end.');
 
     SaveToFile(FileName);
