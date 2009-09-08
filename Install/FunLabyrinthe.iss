@@ -163,7 +163,7 @@ Source: "..\FunLabyEdit.exe";       DestDir: "{app}"; Components: programs\funla
 
 Source: "..\EditPlugins\*.bpl"; DestDir: "{app}\EditPlugins"; Components: programs\runtime; Flags: ignoreversion
 
-Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile
+Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile replacesameversion
 
 Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 
