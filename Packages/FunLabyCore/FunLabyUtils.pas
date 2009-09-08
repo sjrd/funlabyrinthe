@@ -1578,6 +1578,7 @@ type
     FFoundObjects: TObjectList; /// Objets trouvés (dans l'ordre)
 
     FDrawMode: TPlayerDrawMode;                  /// Mode de dessin
+    FCircleBitmap: TBitmap32;                    /// Bitmap de dessin circle
     FDirPainters: array[TDirection] of TPainter; /// Peintres par direction
 
     FDefaultTemporization: Cardinal; /// Temporisation par défaut
@@ -1602,6 +1603,8 @@ type
     procedure FoundObject(ObjectDef: TObjectDef);
 
     function GetVisible: Boolean;
+
+    procedure SetColor(Value: TColor32);
 
     function GetAttribute(const AttrName: string): Integer;
     procedure SetAttribute(const AttrName: string; Value: Integer);
@@ -1691,7 +1694,7 @@ type
       read GetAttribute write SetAttribute;
     property PlayState: TPlayState read FPlayState;
   published
-    property Color: TColor32 read FColor write FColor
+    property Color: TColor32 read FColor write SetColor
       default DefaultPlayerColor;
     property ViewBorderSize: Integer read FViewBorderSize write FViewBorderSize
       default DefaultViewBorderSize;
@@ -6465,6 +6468,7 @@ begin
   TStringList(FAttributes).CaseSensitive := True;
   FFoundObjects := TObjectList.Create(False);
 
+  FCircleBitmap := CreateEmptySquareBitmap;
   FDirPainters[diNone] := Painter;
   for Dir := diNorth to diWest do
     FDirPainters[Dir] := TPainter.Create(Master.ImagesMaster);
@@ -6472,6 +6476,8 @@ begin
   FDefaultTemporization := FunLabyUtils.DefaultTemporization;
 
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
+
+  SetColor(FColor);
 end;
 
 {*
@@ -6485,6 +6491,7 @@ begin
 
   for Dir := diNorth to diWest do
     FDirPainters[Dir].Free;
+  FCircleBitmap.Free;
 
   FFoundObjects.Free;
   FAttributes.Free;
@@ -6737,6 +6744,41 @@ begin
 end;
 
 {*
+  Modifie la couleur du joueur
+  @param Value   Nouvelle couleur
+*}
+procedure TPlayer.SetColor(Value: TColor32);
+const
+  EllipseColor = $00000001;
+var
+  Alpha: Integer;
+begin
+  FLock.BeginWrite;
+  try
+    FColor := Value;
+    Alpha := AlphaComponent(Value);
+
+    FCircleBitmap.Clear(clTransparent32);
+
+    if Alpha <> 0 then
+    begin
+      with FCircleBitmap.Canvas do
+      begin
+        Brush.Color := WinColor(EllipseColor);
+        Brush.Style := bsSolid;
+        Pen.Style := psClear;
+        Ellipse(6, 6, SquareSize-6, SquareSize-6);
+      end;
+
+      FunLabyGraphics.ReplaceColorInBitmap32(FCircleBitmap,
+        EllipseColor, Color);
+    end;
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+{*
   Tableau indexé par chaîne des attributs du joueur
   @param AttrName   Nom de l'attribut à récupérer
   @return Attribut dont le nom a été spécifié
@@ -6833,25 +6875,10 @@ end;
   [@inheritDoc]
 *}
 procedure TPlayer.DoDraw(Context: TDrawSquareContext);
-var
-  Color: TColor32;
 begin
   case DrawMode of
     dmCircle:
-    begin
-      Color := FColor;
-
-      if Color <> clTransparent32 then
-      begin
-        with Context, Bitmap.Canvas do
-        begin
-          Brush.Color := WinColor(Color);
-          Brush.Style := bsSolid;
-          Pen.Style := psClear;
-          Ellipse(X+6, Y+6, X+SquareSize-6, Y+SquareSize-6);
-        end;
-      end;
-    end;
+      FCircleBitmap.DrawTo(Context.Bitmap, Context.X, Context.Y);
 
     dmPainter:
       Painter.Draw(Context);
