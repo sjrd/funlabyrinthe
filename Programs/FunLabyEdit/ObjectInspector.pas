@@ -7,7 +7,7 @@ uses
   Dialogs, TypInfo, JvExControls, JvInspector, ScDelphiLanguage, FunLabyUtils,
   FunLabyEditConsts, FunLabyEditTypes, SepiReflectionCore, SepiSystemUnit,
   FilesUtils, StrUtils, StdCtrls, Buttons, ToolWin, ComCtrls, ExtCtrls, ImgList,
-  PainterEditor;
+  PainterEditor, GR32;
 
 type
   {$M+}
@@ -26,6 +26,22 @@ type
   end;
 
   {$M-}
+
+  {*
+    Item gérant un TColor32 dans un Inspector
+    @author sjrd
+    @version 5.0
+  *}
+  TJvInspectorColor32Item = class(TJvCustomInspectorItem)
+  protected
+    function GetDisplayValue: string; override;
+    procedure SetDisplayValue(const Value: string); override;
+
+    procedure Edit; override;
+  public
+    constructor Create(const AParent: TJvCustomInspectorItem;
+      const AData: TJvCustomInspectorData); override;
+  end;
 
   {*
     Item gérant un TFunLabyPersistent dans un Inspector
@@ -223,6 +239,61 @@ procedure TJvInspectorDataAccess.InvalidateDataAndItems;
 begin
   InvalidateData;
   Invalidate;
+end;
+
+{-------------------------------}
+{ TJvInspectorColor32Item class }
+{-------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TJvInspectorColor32Item.Create(
+  const AParent: TJvCustomInspectorItem; const AData: TJvCustomInspectorData);
+begin
+  inherited;
+
+  Flags := Flags + [iifEditButton];
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32Item.GetDisplayValue: string;
+begin
+  Result := '$' + IntToHex(Data.AsOrdinal, 8);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32Item.SetDisplayValue(const Value: string);
+begin
+  Data.AsOrdinal := StrToInt64(Value);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32Item.Edit;
+var
+  FromColor: TColor32;
+  AColor: TColor;
+begin
+  FromColor := Data.AsOrdinal;
+  AColor := WinColor(FromColor);
+
+  with TColorDialog.Create(nil) do
+  try
+    Color := AColor;
+    if not Execute then
+      Exit;
+    AColor := Color;
+  finally
+    Free;
+  end;
+
+  Data.AsOrdinal := SetAlpha(Color32(AColor), AlphaComponent(FromColor));
 end;
 
 {-----------------------------------------}
@@ -834,6 +905,9 @@ end;
 initialization
   with TJvCustomInspectorData.ItemRegister do
   begin
+    Add(TJvInspectorTypeInfoRegItem.Create(TJvInspectorColor32Item,
+      TypeInfo(TColor32)));
+
     Add(TJvInspectorTypeInfoRegItem.Create(TJvInspectorFunLabyPersistentItem,
       TypeInfo(TFunLabyPersistent)));
 
