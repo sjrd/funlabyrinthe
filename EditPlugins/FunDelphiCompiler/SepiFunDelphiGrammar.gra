@@ -397,7 +397,7 @@ ntComponent	Component
 	IdentifierDecl ':'* QualifiedIdent ComponentParameters ';'*
 
 ntComponentParameters	ComponentParameters
-	'('* ComponentParameter (','* ComponentParameter)* ')'*
+	(ComponentParameter ';'*)* 'end'*
 	@
 
 ntComponentParameter	ComponentParameter

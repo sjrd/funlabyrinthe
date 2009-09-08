@@ -815,10 +815,10 @@ procedure TSimpleObject.ProduceComponents(Code: TStrings);
 begin
   inherited;
 
-  Code.Add(Format('  %sTool: TObjectTool(', [ID]));
-  Code.Add(Format('    ObjectDef: %s,', [ID]));
-  Code.Add(Format('    FindMessage: %s', [StrToStrRepres(FindMessage)]));
-  Code.Add('  );');
+  Code.Add(Format('  %sTool: TObjectTool', [ID]));
+  Code.Add(Format('    ObjectDef: %s;', [ID]));
+  Code.Add(Format('    FindMessage: %s;', [StrToStrRepres(FindMessage)]));
+  Code.Add('  end;');
 end;
 
 {-----------------------}
