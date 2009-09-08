@@ -98,6 +98,7 @@ begin
   with EditSource do
   begin
     Align := alClient;
+    TabWidth := 2;
     Gutter.ShowLineNumbers := True;
     Options := Options + [eoAltSetsColumnMode, eoTrimTrailingSpaces];
 
