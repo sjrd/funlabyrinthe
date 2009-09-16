@@ -688,6 +688,7 @@ begin
   NonTerminalClasses[ntUnaryOpModifier] := TSepiUnaryOpModifierNode;
   NonTerminalClasses[ntDereferenceOp]   := TSepiDereferenceOpNode;
   NonTerminalClasses[ntParameters]      := TDelphiParametersNode;
+  NonTerminalClasses[ntSetOrOpenArrayBuilder] := TSepiSetOrOpenArrayBuilderNode;
   NonTerminalClasses[ntArrayIndices]    := TFunDelphiArrayIndicesModifierNode;
   NonTerminalClasses[ntFieldSelection]  := TSepiFieldSelectionModifierNode;
 

@@ -229,7 +229,22 @@ ntDereferenceOp	DereferenceOp
 	'^'
 
 ntParameters	Parameters
-	'('* ExprListOrEmpty ')'*
+	'('* InnerParameters ')'*
+
+ntInnerParameters	InnerParameters	Simplify
+	Parameter (','* Parameter)*
+	@
+
+ntParameter	Parameter	Simplify
+	Expression
+	1 '['* SetOrOpenArrayBuilder ']'*
+
+ntSetOrOpenArrayBuilder	SetOrOpenArrayBuilder
+	SetOrOpenArrayRange (','* SetOrOpenArrayRange)*
+	@
+
+ntSetOrOpenArrayRange	SetOrOpenArrayRange
+	Expression ('..'* Expression)?
 
 ntExprListOrEmpty	ExprListOrEmpty	Simplify
 	ExprList
