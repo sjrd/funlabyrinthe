@@ -28,19 +28,19 @@ package FunDelphiCompiler;
 
 requires
   rtl,
-  SCL110,
+  SCL120,
   vcl,
-  SepiCore110,
-  SDL110,
-  SVCL110,
+  SepiCore120,
+  SDL120,
+  SVCL120,
   vclx,
   VclSmp,
   FunLabyEditPluginUtils,
   FunLabyTools,
-  SepiCompiler110,
-  SepiDelphiCompiler110,
-  SepiInterpreter110,
-  SepiReflection110,
+  SepiCompiler120,
+  SepiDelphiCompiler120,
+  SepiInterpreter120,
+  SepiReflection120,
   FunLabyCore,
   FunLabyEditPlugin;
 

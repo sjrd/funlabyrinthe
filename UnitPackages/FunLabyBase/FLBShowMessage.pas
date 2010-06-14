@@ -315,7 +315,8 @@ begin
     Index := 1;
     while Index <= Length(Text) do
     begin
-      while (Index <= Length(Text)) and (not (Text[Index] in BreakChars)) do
+      while (Index <= Length(Text)) and
+        (not CharInSet(Text[Index], BreakChars)) do
         Inc(Index);
 
       CurWidth := WorkCanvas.TextWidth(Copy(
@@ -324,7 +325,7 @@ begin
       if (CurWidth <= MaxLineWidth) or (LastGoodIndex = 0) then
         LastGoodIndex := Index;
 
-      if (Index >= Length(Text)) or (Text[Index] in [#10..#13]) or
+      if (Index >= Length(Text)) or CharInSet(Text[Index], [#10..#13]) or
         (CurWidth > MaxLineWidth) then
       begin
         Index := LastGoodIndex;
@@ -334,7 +335,7 @@ begin
         LastGoodIndex := 0;
       end;
 
-      if Text[Index] in [#11, #12] then
+      if CharInSet(Text[Index], [#11, #12]) then
         while Lines.Count mod MaxLineCount <> 0 do
           Lines.Add('');
 

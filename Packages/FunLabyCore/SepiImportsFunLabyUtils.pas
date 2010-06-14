@@ -2230,10 +2230,10 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(EFunLabyException, 12, 12);
-  CheckInstanceSize(EComponentNotFound, 12, 12);
-  CheckInstanceSize(EUnsupportedCommand, 12, 12);
-  CheckInstanceSize(EBadSquareDefException, 12, 12);
+  CheckInstanceSize(EFunLabyException, 24, 24);
+  CheckInstanceSize(EComponentNotFound, 24, 24);
+  CheckInstanceSize(EUnsupportedCommand, 24, 24);
+  CheckInstanceSize(EBadSquareDefException, 24, 24);
   CheckInstanceSize(TDrawSquareContext, 64, 4);
   CheckInstanceSize(TDrawViewContext, 72, 4);
   CheckInstanceSize(TKeyEventContext, 12, 4);

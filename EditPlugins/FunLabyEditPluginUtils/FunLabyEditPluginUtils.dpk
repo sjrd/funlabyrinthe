@@ -29,16 +29,16 @@ package FunLabyEditPluginUtils;
 requires
   rtl,
   vcl,
-  SDL110,
-  SCL110,
-  SVCL110,
+  SDL120,
+  SCL120,
+  SVCL120,
   vclx,
   VclSmp,
-  SepiCore110,
-  SynEdit_R2007,
-  SepiReflection110,
+  SepiCore120,
+  SynEdit_R2009,
+  SepiReflection120,
   FunLabyEditPlugin,
-  SepiInterpreter110,
+  SepiInterpreter120,
   FunLabyCore;
 
 contains

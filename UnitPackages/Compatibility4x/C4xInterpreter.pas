@@ -719,7 +719,8 @@ procedure TActionsInterpreter.TreatVariables(var Line: string);
         Break;
 
       IDPos := ExprStart+Len+1;
-      while (IDPos <= Length(Line)) and (Line[IDPos] in [' ', '[', ']']) do
+      while (IDPos <= Length(Line)) and
+        CharInSet(Line[IDPos], [' ', '[', ']']) do
         Inc(IDPos);
 
       if IDPos > Length(Line) then

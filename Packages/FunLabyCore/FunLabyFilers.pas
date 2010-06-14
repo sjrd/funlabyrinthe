@@ -155,7 +155,7 @@ begin
       SetOrdProp(Instance, PropInfo, GetEnumValue(PropType, Text));
     tkFloat:
       SetFloatProp(Instance, PropInfo, StrToFloat(Text));
-    tkString, tkLString, tkWString:
+    tkString, tkLString, tkWString, tkUString:
       SetStrProp(Instance, PropInfo, Text);
     tkSet:
       SetSetProp(Instance, PropInfo, Text);
@@ -195,15 +195,25 @@ end;
 *}
 procedure TFunLabyXMLReader.HandleProperty(PropInfo: PPropInfo;
   HasData: Boolean);
+const
+  TypeIsAnyStringPredicate =
+    '@type="tkString" or @type="tkLString" or @type="tkWString" or '+
+    '@type="tkUString"';
 var
-  TypeKindName: string;
+  TypeKind: TTypeKInd;
+  TypeKindName, TypeKindPredicate: string;
   PropNode: IXMLDOMElement;
 begin
-  TypeKindName := GetEnumName(TypeInfo(TTypeKind),
-    Byte(PropInfo.PropType^.Kind));
+  TypeKind := PropInfo.PropType^.Kind;
+  TypeKindName := GetEnumName(TypeInfo(TTypeKind), Byte(TypeKind));
+
+  if TypeKind in [tkString, tkLString, tkWString, tkUString] then
+    TypeKindPredicate := TypeIsAnyStringPredicate
+  else
+    TypeKindPredicate := Format('@type="%s"', [TypeKindName]);
 
   PropNode := Node.selectSingleNode(
-    Format('property[@name="%s"][@type="%s"]', [PropInfo.Name, TypeKindName])
+    Format('property[@name="%s"][%s]', [PropInfo.Name, TypeKindPredicate])
     ) as IXMLDOMElement;
 
   if PropNode <> nil then
@@ -429,7 +439,7 @@ begin
       Text := GetEnumName(PropType, GetOrdProp(Instance, PropInfo));
     tkFloat:
       Text := FloatToStr(GetFloatProp(Instance, PropInfo));
-    tkString, tkLString, tkWString:
+    tkString, tkLString, tkWString, tkUString:
       Text := GetStrProp(Instance, PropInfo);
     tkSet:
       Text := GetSetProp(Instance, PropInfo, True);

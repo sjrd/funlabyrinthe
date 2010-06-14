@@ -29,9 +29,9 @@ package Compatibility4x;
 requires
   rtl,
   vcl,
-  SCL110,
-  SDL110,
-  SVCL110,
+  SCL120,
+  SDL120,
+  SVCL120,
   vclx,
   VclSmp,
   FunLabyBase,

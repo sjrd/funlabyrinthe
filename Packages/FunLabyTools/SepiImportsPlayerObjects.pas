@@ -157,7 +157,7 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TFormObjects, 868, 852);
+  CheckInstanceSize(TFormObjects, 896, 880);
   {$ASSERTIONS OFF}
 end;
 

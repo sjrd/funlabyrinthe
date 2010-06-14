@@ -33,33 +33,41 @@ object FormMain: TFormMain
   TextHeight = 13
   object ToolBarFile: TActionToolBar
     Left = 0
-    Top = 24
+    Top = 23
     Width = 728
     Height = 26
     ActionManager = ActionManager
     Caption = 'File'
-    ColorMap.HighlightColor = 15660791
+    ColorMap.HighlightColor = clWhite
     ColorMap.BtnSelectedColor = clBtnFace
-    ColorMap.UnusedColor = 15660791
+    ColorMap.UnusedColor = clWhite
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     Spacing = 0
+    ExplicitTop = 24
   end
   object MainMenuBar: TActionMainMenuBar
     Left = 0
     Top = 0
     Width = 728
-    Height = 24
+    Height = 23
     UseSystemFont = False
     ActionManager = ActionManager
     Caption = 'MainMenuBar'
-    ColorMap.HighlightColor = 15660791
+    ColorMap.HighlightColor = clWhite
     ColorMap.BtnSelectedColor = clBtnFace
-    ColorMap.UnusedColor = 15660791
+    ColorMap.UnusedColor = clWhite
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
     Spacing = 0
+    ExplicitHeight = 24
   end
   object StatusBar: TStatusBar
     Left = 0
@@ -73,12 +81,14 @@ object FormMain: TFormMain
   end
   object PanelEditors: TPanel
     Left = 0
-    Top = 50
+    Top = 49
     Width = 728
-    Height = 439
+    Height = 440
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 3
+    ExplicitTop = 50
+    ExplicitHeight = 439
     object TabBarEditors: TJvTabBar
       Left = 0
       Top = 0
@@ -98,7 +108,7 @@ object FormMain: TFormMain
     Left = 16
     Top = 88
     Bitmap = {
-      494C01010B000E00040010001000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E00080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -498,7 +508,8 @@ object FormMain: TFormMain
       C003000180038FF3C0030001800387E7C00300018003C3CFC00300008003F11F
       C00300008003F83FC00300008003FC7FC00300018003F83FC00300008003F19F
       C00380038003E3CFC003C3C78003C7E7C007FF8780038FFBC00FFF8F80031FFF
-      C01FFE1FC0073FFFC03FF87FFFFFFFFF}
+      C01FFE1FC0073FFFC03FF87FFFFFFFFF00000000000000000000000000000000
+      000000000000}
   end
   object ActionManager: TActionManager
     ActionBars = <

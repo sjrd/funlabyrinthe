@@ -382,7 +382,7 @@ begin
   for I := 0 to FComponents.Count-1 do
   begin
     OpenArrayItemValue := TSepiArrayItemValue.MakeArrayItemValue(
-      OpenArrayValue, TSepiTrueConstValue.MakeIntegerLiteral(
+      OpenArrayValue, TSepiIntegerLiteralValue.MakeValue(
       Compiler, I)) as ISepiWritableValue;
 
     OpenArrayItemValue.CompileWrite(Compiler, Instructions,

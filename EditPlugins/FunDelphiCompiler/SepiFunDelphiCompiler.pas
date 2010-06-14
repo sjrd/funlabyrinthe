@@ -1235,7 +1235,7 @@ begin
   RightValue := TSepiConvertOperation.ConvertValue(
     SystemUnit.LongString, RightValue);
 
-  ZeroValue := TSepiTrueConstValue.Create(SepiRoot, 0);
+  ZeroValue := TSepiIntegerLiteralValue.Create(SepiRoot, 0);
   ISepiExpressionPart(ZeroValue).AttachToExpression(MakeExpression);
 
   WantingParams := LanguageRules.FieldSelection(SepiContext,
@@ -2485,7 +2485,7 @@ begin
     CountProp.Params[0] := ResolveIdent('Player');
     CountProp.CompleteParams;
 
-    Zero := TSepiTrueConstValue.Create(SystemUnit.Integer, 0);
+    Zero := TSepiIntegerLiteralValue.Create(SepiRoot, 0);
     Zero.AttachToExpression(TSepiExpression.Create(CountProp.Params[0]));
 
     ActualExpression := TSepiBinaryOperation.MakeOperation(opCmpGT,

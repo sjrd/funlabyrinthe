@@ -29,11 +29,11 @@ package FunLabyEditPlugin;
 requires
   rtl,
   vcl,
-  SCL110,
+  SCL120,
   FunLabyTools,
-  SepiReflection110,
+  SepiReflection120,
   FunLabyCore,
-  SepiCompiler110;
+  SepiCompiler120;
 
 contains
   FunLabyEditOTA in 'FunLabyEditOTA.pas',

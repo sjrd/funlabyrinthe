@@ -29,9 +29,9 @@ package SimpleSquaresEditor;
 requires
   rtl,
   vcl,
-  SCL110,
-  SDL110,
-  SVCL110,
+  SCL120,
+  SDL120,
+  SVCL120,
   vclx,
   VclSmp,
   FunDelphiCompiler,
@@ -39,8 +39,8 @@ requires
   FunLabyEditPlugin,
   FunLabyEditPluginUtils,
   FunLabyTools,
-  SepiCompiler110,
-  SepiReflection110,
+  SepiCompiler120,
+  SepiReflection120,
   FunLabyEditTools;
 
 contains

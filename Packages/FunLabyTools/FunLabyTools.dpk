@@ -29,8 +29,8 @@ package FunLabyTools;
 requires
   rtl,
   vcl,
-  SCL110,
-  SepiReflection110,
+  SCL120,
+  SepiReflection120,
   FunLabyCore;
 
 contains

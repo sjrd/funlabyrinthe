@@ -2022,7 +2022,7 @@ implementation
 
 uses
   IniFiles, StrUtils, Forms, Math, ScStrUtils, ScDelphiLanguage,
-  ScCompilerMagic, GraphicEx;
+  ScCompilerMagic, ScTypInfo, GraphicEx;
 
 const
   /// Code de format d'un flux carte (TMap) (correspond à '.flm')
@@ -2196,7 +2196,7 @@ begin
         (GetOrdProp(Instance, PropInfo) = PropInfo.Default);
     tkFloat:
       Result := GetFloatProp(Instance, PropInfo) = 0.0;
-    tkString, tkLString, tkWString:
+    tkString, tkLString, tkWString, tkUString:
       Result := GetStrProp(Instance, PropInfo) = '';
     tkClass:
       Result := GetOrdProp(Instance, PropInfo) = 0;
@@ -3888,10 +3888,14 @@ begin
     if not PropClass.InheritsFrom(TFunLabyComponent) then
     begin
       if SubInstance is TFunLabyPersistent then
-        DefinePersistent(PropInfo.Name, TFunLabyPersistent(SubInstance))
-      else if SubInstance is TStrings then
-        DefineStrings(PropInfo.Name, TStrings(SubInstance), nil,
+      begin
+        DefinePersistent(TypeInfoDecode(PropInfo.Name),
+          TFunLabyPersistent(SubInstance));
+      end else if SubInstance is TStrings then
+      begin
+        DefineStrings(TypeInfoDecode(PropInfo.Name), TStrings(SubInstance), nil,
           IsStoredProp(Instance, PropInfo));
+      end;
 
       Exit;
     end;
@@ -3926,7 +3930,7 @@ begin
   PropInfo.Index := Integer($80000000);
   PropInfo.Default := Integer($80000000);
   PropInfo.NameIndex := 0;
-  PropInfo.Name := Name;
+  PropInfo.Name := TypeInfoEncode(Name);
 
   HandleProperty(@PropInfo, HasData);
 end;
@@ -5512,7 +5516,7 @@ begin
   Stream.ReadBuffer(Count, 4);
   SetLength(Palette, Count);
   for I := 0 to Count-1 do
-    Palette[I] := Master.Square[ReadStrFromStream(Stream)];
+    Palette[I] := Master.Square[ReadStrFromStream(Stream, TEncoding.UTF8)];
 
   // Lecture de la carte
   if Count <= 256 then
@@ -5562,7 +5566,7 @@ begin
       if Tag < 0 then
       begin
         Tag := Count;
-        WriteStrToStream(Stream, ID);
+        WriteStrToStream(Stream, ID, TEncoding.UTF8);
         Inc(Count);
       end;
     end;

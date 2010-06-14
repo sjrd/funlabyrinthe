@@ -496,8 +496,8 @@ end;
 procedure TFormPrincipale.BQuitterClick(Sender: TObject);
 begin
   if FileExists(Dir+'FunLaby.exe') then
-    WinExec(PChar('"'+Dir+'FunLaby.exe" "'+
-      fLabyrinthsDir+NomLabyrinthe+'.flp"'),
+    WinExec(PAnsiChar(AnsiString('"'+Dir+'FunLaby.exe" "'+
+      fLabyrinthsDir+NomLabyrinthe+'.flp"')),
       SW_ShowNormal);
   Close;
 end;
