@@ -2,8 +2,19 @@ unit C4xSquaresTable;
 
 interface
 
+uses
+  SysUtils, StrUtils, FunLabyUtils;
+
+function GetSquaresTable(C: Char): TComponentID;
+function SquareToInteger(const ID: TComponentID): Integer;
+
+implementation
+
 const
-  SquaresTable: array[#33..#255] of string = (
+  SquaresTable: array[AnsiChar] of string = (
+    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+    '',
     'Grass-ActionsEffect1--ActionsObstacle1',
     'Grass-ActionsEffect2--ActionsObstacle2',
     'Grass-ActionsEffect3--ActionsObstacle3',
@@ -229,7 +240,28 @@ const
     ''
   );
 
-implementation
+{*
+  Lit la table des cases
+  @param C   Caractère représentant une case
+  @return ID de la case correspondante
+*}
+function GetSquaresTable(C: Char): TComponentID;
+var
+  AnsiStr: AnsiString;
+begin
+  AnsiStr := AnsiString(string(C));
+  Result := SquaresTable[AnsiStr[1]];
+end;
+
+{*
+  Calcule la valeur entière d'une case
+  @param ID   ID de la case
+  @return Valeur entière représentant la case
+*}
+function SquareToInteger(const ID: TComponentID): Integer;
+begin
+  Result := AnsiIndexStr(ID, SquaresTable);
+end;
 
 end.
 

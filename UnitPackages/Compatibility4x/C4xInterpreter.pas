@@ -644,7 +644,7 @@ begin
     EndIndex := ToNextChar(Params, StartIndex, ']');
     Param := Copy(Params, StartIndex, EndIndex-StartIndex);
     if Length(Param) = 1 then
-      Result := Master.Square[SquaresTable[Param[1]]]
+      Result := Master.Square[GetSquaresTable(Param[1])]
     else
       Result := Map[GetSquareReference(Param)];
     Delete(Params, 1, EndIndex);
@@ -652,7 +652,7 @@ begin
   begin
     // Case donnée par son caractère
     try
-      Result := Master.Square[SquaresTable[Params[StartIndex]]];
+      Result := Master.Square[GetSquaresTable(Params[StartIndex])];
       Delete(Params, 1, StartIndex);
     except
       on Error: EComponentNotFound do
@@ -726,7 +726,7 @@ procedure TActionsInterpreter.TreatVariables(var Line: string);
       if IDPos > Length(Line) then
         raise EInvalidAction.CreateFmt(sBadNextPreviousRandom, [Kind]);
 
-      ID := SquaresTable[Line[IDPos]];
+      ID := GetSquaresTable(Line[IDPos]);
       Dest := Position;
       FindProc(Map, Dest, Master.SquareComponent[ID]);
 
@@ -849,7 +849,7 @@ begin
   try
     IntOp1 := GetIntParam(Condition);
   except
-    IntOp1 := AnsiIndexText(GetSquareParam(Condition, Map).ID, SquaresTable);
+    IntOp1 := SquareToInteger(GetSquareParam(Condition, Map).ID);
   end;
 
   Operation := GetCommandIndex(Condition,
@@ -858,7 +858,7 @@ begin
   try
     IntOp2 := GetIntParam(Condition);
   except
-    IntOp2 := AnsiIndexText(GetSquareParam(Condition, Map).ID, SquaresTable);
+    IntOp2 := SquareToInteger(GetSquareParam(Condition, Map).ID);
   end;
 
   case Operation of
