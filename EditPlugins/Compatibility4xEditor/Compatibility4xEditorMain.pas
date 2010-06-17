@@ -20,6 +20,8 @@ type
     @version 5.0
   *}
   TFrameCompatibility4xEditor = class(TFrameFunLabySynEditSourceEditor)
+  protected
+    class function GetEncoding: TEncoding; override;
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -56,6 +58,14 @@ begin
   inherited;
 
   SourceHighlighter := TCompatibility4xSyntax.Create(Self);
+end;
+
+{*
+  [@inheritDoc]
+*}
+class function TFrameCompatibility4xEditor.GetEncoding: TEncoding;
+begin
+  Result := TEncoding.Default;
 end;
 
 initialization

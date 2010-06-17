@@ -1995,6 +1995,8 @@ var {don't localize}
 
 procedure ShowFunLabyAbout;
 
+function FunLabyEncoding: TEncoding;
+
 function PointBehind(const Src: T3DPoint; Dir: TDirection): T3DPoint;
 function PointBefore(const Src: T3DPoint; Dir: TDirection): T3DPoint;
 
@@ -2024,6 +2026,12 @@ uses
   IniFiles, StrUtils, Forms, Math, ScStrUtils, ScDelphiLanguage,
   ScCompilerMagic, ScTypInfo, GraphicEx;
 
+type
+  TFunLabyEncoding = class(TUTF8Encoding)
+  public
+    function GetPreamble: TBytes; override;
+  end;
+
 const
   /// Code de format d'un flux carte (TMap) (correspond à '.flm')
   MapStreamFormatCode: Longint = $6D6C662E;
@@ -2032,6 +2040,7 @@ const
   MapStreamVersion = 1;
 
 var
+  FFunLabyEncoding: TEncoding = nil;
   FunLabyRegisteredClasses: TStrings = nil;
 
 {*
@@ -2054,6 +2063,25 @@ begin
   finally
     Free;
   end;
+end;
+
+{*
+  Crée la variable contenant l'encodage de FunLabyrinthe
+*}
+procedure CreateFunLabyEncoding;
+begin
+  FFunLabyEncoding := TFunLabyEncoding.Create;
+end;
+
+{*
+  Encodage des fichiers FunLabyrinthe
+  Il s'agit d'un encodage UTF-8 sans préambule. Cet encodage devrait être
+  utilisé par la plupart des opérations sur les fichiers textes.
+  @return Encodage des fichiers FunLabyrinthe
+*}
+function FunLabyEncoding: TEncoding;
+begin
+  Result := FFunLabyEncoding;
 end;
 
 {*
@@ -2295,6 +2323,18 @@ begin
   Result := FunLabyGetClass(ClassName);
   if Result = nil then
     raise EClassNotFound.CreateFmt(SClassNotFound, [ClassName]);
+end;
+
+{------------------------}
+{ TFunLabyEncoding class }
+{------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunLabyEncoding.GetPreamble: TBytes;
+begin
+  SetLength(Result, 0);
 end;
 
 {----------------------}
@@ -8835,6 +8875,8 @@ end;
 
 initialization
   Randomize;
+
+  CreateFunLabyEncoding;
 
   FunLabyRegisterClass(TLabyrinthPlayerMode);
   FunLabyRegisterClasses([TTimerEntry, TNotificationMsgTimerEntry]);

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, SynEdit, SynEditHighlighter, SepiCompilerErrors, FilesUtils,
-  FunLabySynEdit, FunLabySourceEditorFrame;
+  FunLabyUtils, FunLabySynEdit, FunLabySourceEditorFrame;
 
 type
   {*
@@ -25,6 +25,8 @@ type
 
     procedure CMVisibleChanged(var Msg: TMessage); message CM_VISIBLECHANGED;
   protected
+    class function GetEncoding: TEncoding; virtual;
+
     procedure EditSourceChange(Sender: TObject); dynamic;
 
     procedure SetupEditSource; dynamic;
@@ -79,6 +81,15 @@ begin
 end;
 
 {*
+  Encodage utilisé par cet éditeur
+  @return Encodage utilisé par cet éditeur
+*}
+class function TFrameFunLabySynEditSourceEditor.GetEncoding: TEncoding;
+begin
+  Result := FunLabyEncoding;
+end;
+
+{*
   Gestionnaire d'événement OnChange de l'éditeur
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -130,7 +141,7 @@ procedure TFrameFunLabySynEditSourceEditor.LoadFile(ASourceFile: TSourceFile);
 begin
   inherited;
 
-  EditSource.Lines.LoadFromFile(SourceFile.FileName);
+  EditSource.Lines.LoadFromFile(SourceFile.FileName, GetEncoding);
   EditSource.Modified := False;
 end;
 
@@ -139,7 +150,7 @@ end;
 *}
 function TFrameFunLabySynEditSourceEditor.SaveFile: Boolean;
 begin
-  EditSource.Lines.SaveToFile(SourceFile.FileName);
+  EditSource.Lines.SaveToFile(SourceFile.FileName, GetEncoding);
   EditSource.Modified := False;
 
   Result := inherited SaveFile;

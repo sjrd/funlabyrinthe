@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'FunLabyUtils';
   ResourceName = 'SepiImportsFunLabyUtils';
   TypeCount = 60;
-  MethodCount = 230;
+  MethodCount = 231;
   VariableCount = 12;
 
 var
@@ -1388,21 +1388,22 @@ begin
   TSepiImportsTTimerCollection.InitMethodAddresses;
   TSepiImportsTMaster.InitMethodAddresses;
   MethodAddresses[214] := @ShowFunLabyAbout;
-  MethodAddresses[215] := @PointBehind;
-  MethodAddresses[216] := @PointBefore;
-  MethodAddresses[217] := @CreateEmptySquareBitmap;
-  MethodAddresses[218] := @SquareRect;
-  MethodAddresses[219] := @EmptyRect;
-  MethodAddresses[220] := @EmptySquareRect;
-  MethodAddresses[221] := @DrawBitmap32ToCanvas;
-  MethodAddresses[222] := @SameRect;
-  MethodAddresses[223] := @IsNoQPos;
-  MethodAddresses[224] := @FunLabyRegisterClass;
-  MethodAddresses[225] := @FunLabyUnregisterClass;
-  MethodAddresses[226] := @FunLabyRegisterClasses;
-  MethodAddresses[227] := @FunLabyUnregisterClasses;
-  MethodAddresses[228] := @FunLabyGetClass;
-  MethodAddresses[229] := @FunLabyFindClass;
+  MethodAddresses[215] := @FunLabyEncoding;
+  MethodAddresses[216] := @PointBehind;
+  MethodAddresses[217] := @PointBefore;
+  MethodAddresses[218] := @CreateEmptySquareBitmap;
+  MethodAddresses[219] := @SquareRect;
+  MethodAddresses[220] := @EmptyRect;
+  MethodAddresses[221] := @EmptySquareRect;
+  MethodAddresses[222] := @DrawBitmap32ToCanvas;
+  MethodAddresses[223] := @SameRect;
+  MethodAddresses[224] := @IsNoQPos;
+  MethodAddresses[225] := @FunLabyRegisterClass;
+  MethodAddresses[226] := @FunLabyUnregisterClass;
+  MethodAddresses[227] := @FunLabyRegisterClasses;
+  MethodAddresses[228] := @FunLabyUnregisterClasses;
+  MethodAddresses[229] := @FunLabyGetClass;
+  MethodAddresses[230] := @FunLabyFindClass;
 end;
 
 procedure InitVarAddresses;
