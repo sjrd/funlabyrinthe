@@ -95,7 +95,7 @@
 						<VersionInfoKeys Name="FileDescription">Vérification des nouvelles versions de FunLabyrinthe</VersionInfoKeys>
 						<VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">FunLabyVersionCheck</VersionInfoKeys>
-						<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2007 (c) SJRDoeraene</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2010 (c) SJRDoeraene</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">FunLabyVersionCheck.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>

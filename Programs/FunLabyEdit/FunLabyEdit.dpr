@@ -4,6 +4,7 @@ uses
   XPMan,
   Forms,
   FunLabyUtils,
+  FilesUtils,
   FunLabyEditMain in 'FunLabyEditMain.pas' {FormMain},
   PlayerPlugins in 'PlayerPlugins.pas' {FormPlugins},
   EditParameters in 'EditParameters.pas' {FormParameters},
@@ -24,7 +25,10 @@ uses
 {$R *.res}
 
 begin
+  RunAutoVersionCheck;
+
   Application.Initialize;
+  Application.MainFormOnTaskbar := True;
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.CreateForm(TFormMain, FormMain);
   Application.Run;

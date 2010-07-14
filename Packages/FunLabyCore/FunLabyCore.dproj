@@ -19,7 +19,7 @@
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 						<Parameters Name="HostApplication">C:\Projets\FunLabyrinthe\FunLabyEdit.exe</Parameters>
-						<Parameters Name="DebugSourceDirs">C:\Projets\Sepi\source\run\SepiReflection\</Parameters>
+						<Parameters Name="DebugSourceDirs">C:\Projets\Sepi\source\run\SepiReflection\;C:\Projets\Sepi\source\run\SepiInterpreter\</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
@@ -61,6 +61,9 @@
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>
+		<PropertyGroup/>
+		<PropertyGroup/>
+		<PropertyGroup/>
 		<PropertyGroup/>
 		<PropertyGroup/>
 		<PropertyGroup/>

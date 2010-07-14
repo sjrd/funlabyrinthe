@@ -287,6 +287,8 @@ function HRefToFileName(const HRef: string;
 function FileNameToHRef(const FileName: TFileName;
   const BaseDirs: array of TFileName): string;
 
+procedure RunAutoVersionCheck;
+
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
 
@@ -360,6 +362,14 @@ begin
   {$IF HRefDelim <> PathDelim}
   Result := StringReplace(Result, PathDelim, HRefDelim, [rfReplaceAll]);
   {$IFEND}
+end;
+
+{*
+  Déclenche la vérification automatique d'une nouvelle version de FunLabyrinthe
+*}
+procedure RunAutoVersionCheck;
+begin
+  RunURL(Dir + 'FunLabyVersionCheck.exe -autocheck');
 end;
 
 {-----------------------}

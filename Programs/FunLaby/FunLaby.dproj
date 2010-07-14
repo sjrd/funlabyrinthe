@@ -56,10 +56,6 @@
 			<DelphiCompile Include="FunLaby.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="FunLabyMain.pas">
-				<Form>FormMain</Form>
-			</DCCReference>
-			<DCCReference Include="PlayUtils.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -103,7 +99,7 @@
 						<VersionInfoKeys Name="FileDescription">Jeu de labyrinthe</VersionInfoKeys>
 						<VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">Labyrinthe</VersionInfoKeys>
-						<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2007 (c) SJRDoeraene</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2010 (c) SJRDoeraene</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">Labyrinthe.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>

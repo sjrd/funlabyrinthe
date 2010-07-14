@@ -60,52 +60,6 @@
 			<DelphiCompile Include="FunLabyEdit.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="FunLabyEditMain.pas">
-				<Form>FormMain</Form>
-			</DCCReference>
-			<DCCReference Include="PlayerPlugins.pas">
-				<Form>FormPlugins</Form>
-			</DCCReference>
-			<DCCReference Include="EditParameters.pas">
-				<Form>FormParameters</Form>
-			</DCCReference>
-			<DCCReference Include="FileProperties.pas">
-				<Form>FormFileProperties</Form>
-			</DCCReference>
-			<DCCReference Include="MapEditor.pas">
-				<Form>FrameMapEditor</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="FunLabyEditConsts.pas"/>
-			<DCCReference Include="EditPluginManager.pas"/>
-			<DCCReference Include="NewSourceFile.pas">
-				<Form>FormCreateNewSourceFile</Form>
-			</DCCReference>
-			<DCCReference Include="EditUnits.pas">
-				<Form>FormEditUnits</Form>
-			</DCCReference>
-			<DCCReference Include="CompilerMessages.pas">
-				<Form>FormCompilerMessages</Form>
-			</DCCReference>
-			<DCCReference Include="MapViewer.pas">
-				<Form>FormMapViewer</Form>
-			</DCCReference>
-			<DCCReference Include="BaseMapViewer.pas">
-				<Form>FrameBaseMapViewer</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="ObjectInspector.pas">
-				<Form>FrameInspector</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="FunLabyEditTypes.pas"/>
-			<DCCReference Include="EditMap.pas">
-				<Form>FormEditMap</Form>
-			</DCCReference>
-			<DCCReference Include="MapImage.pas">
-				<Form>FrameMapImage</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -149,7 +103,7 @@
 						<VersionInfoKeys Name="FileDescription">Editeur FunLabyrinthe</VersionInfoKeys>
 						<VersionInfoKeys Name="FileVersion">5.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">FunLabyEdit</VersionInfoKeys>
-						<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2007 (c) SJRDoeraene</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2010 (c) SJRDoeraene</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">FunLabyEdit.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
@@ -157,6 +111,7 @@
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>
+						<Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\6.0\Bpl\GR32_BDS2006.bpl">Graphics32</Excluded_Packages>
 						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k120.bpl">Composants Microsoft Office 2000 Sample Automation Server Wrapper</Excluded_Packages>
 						<Excluded_Packages Name="$(BDS)\bin\dclofficexp120.bpl">Composants Microsoft Office XP Sample Automation Server Wrapper</Excluded_Packages>
 					</Excluded_Packages>
