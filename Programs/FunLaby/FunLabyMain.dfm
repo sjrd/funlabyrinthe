@@ -108,6 +108,10 @@ object FormMain: TFormMain
       object Sep3: TMenuItem
         Caption = '-'
       end
+      object MenuVersionCheck: TMenuItem
+        Caption = 'Mise '#224' jour automatique'
+        OnClick = MenuVersionCheckClick
+      end
       object MenuAbout: TMenuItem
         Caption = #192' propos...'
         OnClick = MenuAboutClick

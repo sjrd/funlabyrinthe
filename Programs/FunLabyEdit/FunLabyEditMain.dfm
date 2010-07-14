@@ -48,7 +48,6 @@ object FormMain: TFormMain
     Font.Style = []
     ParentFont = False
     Spacing = 0
-    ExplicitTop = 24
   end
   object MainMenuBar: TActionMainMenuBar
     Left = 0
@@ -67,7 +66,6 @@ object FormMain: TFormMain
     Font.Name = 'Tahoma'
     Font.Style = []
     Spacing = 0
-    ExplicitHeight = 24
   end
   object StatusBar: TStatusBar
     Left = 0
@@ -87,8 +85,6 @@ object FormMain: TFormMain
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 3
-    ExplicitTop = 50
-    ExplicitHeight = 439
     object TabBarEditors: TJvTabBar
       Left = 0
       Top = 0
@@ -108,7 +104,7 @@ object FormMain: TFormMain
     Left = 16
     Top = 88
     Bitmap = {
-      494C01010B000E00080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -745,6 +741,9 @@ object FormMain: TFormMain
                 Caption = '-'
               end
               item
+                Action = ActionVersionCheck
+              end
+              item
                 Action = ActionAbout
                 Caption = #192' &propos...'
               end>
@@ -870,6 +869,14 @@ object FormMain: TFormMain
       ImageIndex = 7
       ShortCut = 112
       OnExecute = ActionHelpTopicsExecute
+    end
+    object ActionVersionCheck: TAction
+      Category = 'Help'
+      Caption = 'Mise '#224' jour automatique'
+      Hint = 
+        'Options de mise '#224' jour automatique|Options de mise '#224' jour automa' +
+        'tique'
+      OnExecute = ActionVersionCheckExecute
     end
     object ActionAbout: TAction
       Category = 'Help'

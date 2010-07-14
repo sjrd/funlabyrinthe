@@ -288,6 +288,7 @@ function FileNameToHRef(const FileName: TFileName;
   const BaseDirs: array of TFileName): string;
 
 procedure RunAutoVersionCheck;
+procedure EditVersionCheckOptions;
 
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
@@ -370,6 +371,14 @@ end;
 procedure RunAutoVersionCheck;
 begin
   RunURL(Dir + 'FunLabyVersionCheck.exe -autocheck');
+end;
+
+{*
+  Déclenche l'édition des options pour la vérification de nouvelles versions
+*}
+procedure EditVersionCheckOptions;
+begin
+  RunURL(Dir + 'FunLabyVersionCheck.exe');
 end;
 
 {-----------------------}

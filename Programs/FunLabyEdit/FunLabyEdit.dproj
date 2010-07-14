@@ -60,6 +60,52 @@
 			<DelphiCompile Include="FunLabyEdit.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
+			<DCCReference Include="FunLabyEditMain.pas">
+				<Form>FormMain</Form>
+			</DCCReference>
+			<DCCReference Include="PlayerPlugins.pas">
+				<Form>FormPlugins</Form>
+			</DCCReference>
+			<DCCReference Include="EditParameters.pas">
+				<Form>FormParameters</Form>
+			</DCCReference>
+			<DCCReference Include="FileProperties.pas">
+				<Form>FormFileProperties</Form>
+			</DCCReference>
+			<DCCReference Include="MapEditor.pas">
+				<Form>FrameMapEditor</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="FunLabyEditConsts.pas"/>
+			<DCCReference Include="EditPluginManager.pas"/>
+			<DCCReference Include="NewSourceFile.pas">
+				<Form>FormCreateNewSourceFile</Form>
+			</DCCReference>
+			<DCCReference Include="EditUnits.pas">
+				<Form>FormEditUnits</Form>
+			</DCCReference>
+			<DCCReference Include="CompilerMessages.pas">
+				<Form>FormCompilerMessages</Form>
+			</DCCReference>
+			<DCCReference Include="MapViewer.pas">
+				<Form>FormMapViewer</Form>
+			</DCCReference>
+			<DCCReference Include="BaseMapViewer.pas">
+				<Form>FrameBaseMapViewer</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="ObjectInspector.pas">
+				<Form>FrameInspector</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="FunLabyEditTypes.pas"/>
+			<DCCReference Include="EditMap.pas">
+				<Form>FormEditMap</Form>
+			</DCCReference>
+			<DCCReference Include="MapImage.pas">
+				<Form>FrameMapImage</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

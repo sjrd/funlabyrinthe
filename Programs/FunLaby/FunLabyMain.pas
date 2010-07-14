@@ -62,6 +62,7 @@ type
     LoadGameDialog: TOpenDialog;
     TimerUpdateImage: TTimer;
     PaintBox: TPaintBox32;
+    MenuVersionCheck: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure UpdateImage(Sender: TObject);
@@ -71,6 +72,7 @@ type
     procedure MenuNewGameClick(Sender: TObject);
     procedure MenuLoadGameClick(Sender: TObject);
     procedure MenuHelpTopicsClick(Sender: TObject);
+    procedure MenuVersionCheckClick(Sender: TObject);
     procedure MenuAboutClick(Sender: TObject);
     procedure MenuSaveGameClick(Sender: TObject);
     procedure MenuDescriptionClick(Sender: TObject);
@@ -479,6 +481,15 @@ end;
 procedure TFormMain.MenuHelpTopicsClick(Sender: TObject);
 begin
   Application.HelpContext(1);
+end;
+
+{*
+  Gestionnaire d'événement OnClick du menu Mise à jour automatique
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.MenuVersionCheckClick(Sender: TObject);
+begin
+  EditVersionCheckOptions;
 end;
 
 {*

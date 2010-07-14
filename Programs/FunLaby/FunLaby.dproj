@@ -56,6 +56,10 @@
 			<DelphiCompile Include="FunLaby.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
+			<DCCReference Include="FunLabyMain.pas">
+				<Form>FormMain</Form>
+			</DCCReference>
+			<DCCReference Include="PlayUtils.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

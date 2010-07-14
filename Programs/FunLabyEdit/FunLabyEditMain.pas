@@ -60,6 +60,7 @@ type
     ActionViewMapViewer: TAction;
     ActionCompileAndReload: TAction;
     ActionEditMap: TAction;
+    ActionVersionCheck: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -96,6 +97,7 @@ type
     procedure TabBarEditorsTabClosed(Sender: TObject; Item: TJvTabBarItem);
     procedure EditorStateChange(const Sender: ISourceEditor50);
     procedure MessagesShowError(Sender: TObject; Error: TSepiCompilerError);
+    procedure ActionVersionCheckExecute(Sender: TObject);
   private
     BackgroundTasks: TScTaskQueue; /// Tâches d'arrière-plan
 
@@ -1337,6 +1339,15 @@ end;
 procedure TFormMain.ActionHelpTopicsExecute(Sender: TObject);
 begin
 // Don't delete this comment
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Mise à jour automatique
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionVersionCheckExecute(Sender: TObject);
+begin
+  EditVersionCheckOptions;
 end;
 
 {*
