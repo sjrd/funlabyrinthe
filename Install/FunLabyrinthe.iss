@@ -7,13 +7,13 @@ AppVerName={cm:AppVerName}
 AppComments={cm:Description}
 AppContact=sjrd@redaction-developpez.com
 AppPublisher=SJRDoeraene
-AppPublisherURL=http://sjrd.developpez.com/programmes/funlaby/
-AppSupportURL=http://sjrd.developpez.com/programmes/funlaby/
-AppUpdatesURL=http://sjrd.developpez.com/programmes/funlaby/
+AppPublisherURL=http://funlabyrinthe.game-host.org/
+AppSupportURL=http://funlabyrinthe.game-host.org/
+AppUpdatesURL=http://funlabyrinthe.game-host.org/
 AppVersion=5.0
 
 VersionInfoDescription=Setup of FunLabyrinthe 5.0
-VersionInfoTextVersion=FunLabyrinthe v5.0, copyright 2000-2009 SJRDoeraene
+VersionInfoTextVersion=FunLabyrinthe v5.0, copyright 2000-2010 SJRDoeraene
 VersionInfoVersion=5.0
 
 DefaultDirName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,InstallLocation|{pf}\SJRDoeraene\{cm:AppName}}
@@ -153,13 +153,14 @@ Name: "regext"    ; Description: "{cm:RegExtensions}"; GroupDescription: {cm:Add
 Name: "regext\flp"; Description: "{cm:RegFLP}"       ; GroupDescription: {cm:AdditionalTasks}
 
 [Files]
-Source: "..\FunLabyCore.bpl";       DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
-Source: "..\FunLabyTools.bpl";      DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
-Source: "..\FunLabyEditPlugin.bpl"; DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
-Source: "..\FunLabyEditTools.bpl";  DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
-Source: "..\FunLaby.exe";           DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
-Source: "..\GeneLaby.exe";          DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
-Source: "..\FunLabyEdit.exe";       DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
+Source: "..\FunLabyCore.bpl";         DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
+Source: "..\FunLabyTools.bpl";        DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
+Source: "..\FunLabyEditPlugin.bpl";   DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
+Source: "..\FunLabyEditTools.bpl";    DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
+Source: "..\FunLaby.exe";             DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
+Source: "..\GeneLaby.exe";            DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
+Source: "..\FunLabyEdit.exe";         DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
+Source: "..\FunLabyVersionCheck.exe"; DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
 
 Source: "..\EditPlugins\*.bpl"; DestDir: "{app}\EditPlugins"; Components: programs\runtime; Flags: ignoreversion
 
@@ -700,7 +701,7 @@ begin
     ExpandConstants('{cm:PageImportingOldDescription}'));
 end;
 
-function ImportLabyrinth(FileName, AppData: PChar): Boolean;
+function ImportLabyrinth(FileName, AppData: PAnsiChar): Boolean;
   external 'ImportLabyrinth@files:Import4x.dll stdcall delayload setuponly';
 
 procedure ImportOld;
@@ -717,8 +718,8 @@ begin
         ExpandConstants('{cm:ImportingOld}'), FileName);
       PageImportingOld.SetProgress(I, LabyrinthsToImport.Count);
 
-      ImportLabyrinth(PChar(ImportDir + 'Labyrinthes\' + FileName),
-        PChar(FunLabyAppData));
+      ImportLabyrinth(PAnsiChar(AnsiString(ImportDir + 'Labyrinthes\' + FileName)),
+        PAnsiChar(AnsiString(FunLabyAppData)));
     end;
   finally
     PageImportingOld.Hide;
@@ -807,4 +808,5 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
+
 
