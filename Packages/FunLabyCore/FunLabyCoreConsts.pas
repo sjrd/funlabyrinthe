@@ -11,7 +11,7 @@ const {don't localize}
   CurrentVersion = '5.0'; /// Version courante de FunLabyrinthe
   FunLabyAuthorName = 'Sébastien Jean Robert Doeraene'; /// Auteur
   FunLabyAuthorEMail = 'sjrd@redaction-developpez.com'; /// E-mail de l'auteur
-  FunLabyWebSite = 'http://sjrd.developpez.com/programmes/funlaby/'; /// Site
+  FunLabyWebSite = 'http://funlabyrinthe.game-host.org/'; /// Site
 
 resourcestring
   // Noms de composants
