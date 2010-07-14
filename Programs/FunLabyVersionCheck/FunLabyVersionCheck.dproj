@@ -20,7 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UsePackage>vcl;rtl;vclx;dbrtl;vcldb;VclSmp;SCL120</DCC_UsePackage>
+			<DCC_UsePackage>vcl;rtl;vclx;dbrtl;vcldb;VclSmp;SCL120;SVCL120;SDL120</DCC_UsePackage>
 			<DCC_ExeOutput>.\..\..\</DCC_ExeOutput>
 			<UsePackages>true</UsePackages>
 			<DCC_DependencyCheckOutputName>..\..\FunLabyVersionCheck.exe</DCC_DependencyCheckOutputName>
