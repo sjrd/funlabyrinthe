@@ -302,31 +302,6 @@ uses
   StrUtils, ScStrUtils, IniFiles, Variants, MSXML, ActiveX;
 
 {*
-  Compare deux numéros de versions représentés textuellement
-  @param Version1   Premier numéro de version
-  @param Version2   Second numéro de version
-  @return 0 si les versions sont égales, 1 si la première est supérieure à la
-          seconde, et -1 dans le cas contraire
-*}
-function CompareVersions(const Version1, Version2: string): Integer;
-var
-  SubVer1, SubVer2, MajVer1, MajVer2: string;
-begin
-  SubVer1 := Version1;
-  SubVer2 := Version2;
-
-  repeat
-    MajVer1 := GetFirstToken(Version1, '.');
-    Delete(SubVer1, 1, Length(MajVer1)+1);
-
-    MajVer2 := GetFirstToken(Version2, '.');
-    Delete(SubVer2, 1, Length(MajVer2)+1);
-
-    Result := StrToIntDef(MajVer1, 0) - StrToIntDef(MajVer2, 0);
-  until (Result <> 0) or ((SubVer1 = '') and (SubVer2 = ''));
-end;
-
-{*
   Convertit un HRef en nom de fichier
   @param HRef       HRef à convertir
   @param BaseDirs   Liste de répertoires de base à tester avant l'absolu
@@ -860,7 +835,7 @@ begin
     FVersion := getAttribute('version');
     if FVersion = '' then
       InvalidFormat;
-    if CompareVersions(FVersion, CurrentVersion) > 0 then
+    if CompareVersion(FVersion, CurrentVersion) > 0 then
       raise EInOutError.CreateFmt(SVersionTooHigh, [FVersion]);
 
     // Attributs du fichier
