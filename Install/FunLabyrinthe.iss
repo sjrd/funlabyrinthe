@@ -48,9 +48,6 @@ fr.CompGeneLaby=GeneLaby, un générateur de labyrinthes
 fr.CompFunLabyEdit=FunLabyEdit, l'éditeur de labyrinthes
 
 fr.CompHelp=Fichiers d'aide
-fr.CompRules=Règles du jeu
-fr.CompEditHelp=Aide de l'éditeur de labyrinthes
-fr.CompMasteringEdit=Maîtriser l'édition de labyrinthes sous toutes ses formes
 
 fr.CompAppData=Fichiers de labyrinthe, cartes, sons, graphismes, etc.
 
@@ -136,10 +133,7 @@ Name: "programs\funlaby"    ; Description: {cm:CompFunLaby}    ; Types: full pla
 Name: "programs\genelaby"   ; Description: {cm:CompGeneLaby}   ; Types: full playonly custom
 Name: "programs\funlabyedit"; Description: {cm:CompFunLabyEdit}; Types: full custom
 
-Name: "help"              ; Description: {cm:CompHelp}         ; Types: full playonly custom
-Name: "help\rules"        ; Description: {cm:CompRules}        ; Types: full playonly custom
-Name: "help\funlabyedit"  ; Description: {cm:CompEditHelp}     ; Types: full custom
-Name: "help\masteringedit"; Description: {cm:CompMasteringEdit}; Types: full
+Name: "help"; Description: {cm:CompHelp}; Types: full playonly custom; Flags: fixed
 
 Name: "appdata"; Description: {cm:CompAppData}; Types: full playonly custom; Flags: fixed
 
@@ -165,6 +159,8 @@ Source: "..\FunLabyVersionCheck.exe"; DestDir: "{app}"; Components: programs\fun
 Source: "..\EditPlugins\*.bpl"; DestDir: "{app}\EditPlugins"; Components: programs\runtime; Flags: ignoreversion
 
 Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile replacesameversion
+
+Source: "..\FunLabyrinthe.chm"; DestDir: "{app}"; Components: help; Flags: ignoreversion
 
 Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 
@@ -808,5 +804,6 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
+
 
 

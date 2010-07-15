@@ -480,7 +480,7 @@ end;
 *}
 procedure TFormMain.MenuHelpTopicsClick(Sender: TObject);
 begin
-  Application.HelpContext(1);
+  RunURL(Application.HelpFile);
 end;
 
 {*

@@ -1338,7 +1338,7 @@ end;
 *}
 procedure TFormMain.ActionHelpTopicsExecute(Sender: TObject);
 begin
-// Don't delete this comment
+  RunURL(Application.HelpFile);
 end;
 
 {*

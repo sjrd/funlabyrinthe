@@ -2054,7 +2054,8 @@ begin
   try
     ProgramIcon := Application.Icon;
     ProgramName := Application.Title;
-    ProgramVersion := CurrentVersion;
+    ProgramVersion := Format(SFullVersionNumber,
+      [CurrentVersion, CurrentMinorVersion]);
     AuthorName := FunLabyAuthorName;
     AuthorEMail := FunLabyAuthorEMail;
     WebSite := FunLabyWebSite;

@@ -15,6 +15,10 @@ resourcestring
   SNewVersionAvailable =
     'Une nouvelle version de FunLabyrinthe (%s) est disponible sur Internet';
 
+  SNewMinorVersionAvailableTitle = 'Nouvelle version disponible';
+  SNewMinorVersionAvailable =
+    'Une amélioration mineure de FunLabyrinthe %s est disponible sur Internet';
+
 type
   TFormMain = class(TForm)
     VersionInfoGrabber: TIdHTTP;
@@ -137,18 +141,35 @@ function TFormMain.CheckVersion(MsgOnNewVersion: Boolean = True): Boolean;
 var
   VersionInfo: IXMLDOMDocument;
   AvailableVersion: string;
+  AvailMinorVersion, Diff: Integer;
 begin
   VersionInfo := LoadVersionInfo;
 
   AvailableVersion := VersionInfo.selectSingleNode('/versioninfo/version').text;
-  TextAvailableVersion.Caption := AvailableVersion;
+  AvailMinorVersion := StrToInt(VersionInfo.selectSingleNode(
+    '/versioninfo/minorversion').text);
 
-  Result := CompareVersion(AvailableVersion, CurrentVersion) > 0;
+  TextAvailableVersion.Caption := Format(SFullVersionNumber,
+    [AvailableVersion, AvailMinorVersion]);
 
+  Diff := CompareVersion(AvailableVersion, CurrentVersion);
+
+  Result := Diff > 0;
   if Result and MsgOnNewVersion then
   begin
     ShowDialog(SNewVersionAvailableTitle,
       Format(SNewVersionAvailable, [AvailableVersion]));
+  end;
+
+  if Diff = 0 then
+  begin
+    Result := AvailMinorVersion > CurrentMinorVersion;
+
+    if Result and MsgOnNewVersion then
+    begin
+    ShowDialog(SNewMinorVersionAvailableTitle,
+      Format(SNewMinorVersionAvailable, [AvailableVersion]));
+    end;
   end;
 
   OptionsStorage.WriteDateTime('checks/lastcheck', Now);
@@ -199,7 +220,8 @@ end;
 *}
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  TextCurrentVersion.Caption := CurrentVersion;
+  TextCurrentVersion.Caption := Format(SFullVersionNumber,
+    [CurrentVersion, CurrentMinorVersion]);
 
   LoadOptions;
 end;

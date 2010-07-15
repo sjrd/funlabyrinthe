@@ -3,6 +3,7 @@ program FunLabyEdit;
 uses
   XPMan,
   Forms,
+  ScUtils,
   FunLabyUtils,
   FilesUtils,
   FunLabyEditMain in 'FunLabyEditMain.pas' {FormMain},
@@ -30,6 +31,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Éditeur FunLabyrinthe';
+  Application.HelpFile := Dir+'FunLabyrinthe.chm';
   Application.CreateForm(TFormMain, FormMain);
   Application.Run;
 end.
