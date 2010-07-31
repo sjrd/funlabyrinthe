@@ -65,7 +65,7 @@ implementation
 
 const
   VersionInfoURL =
-    'http://funlabyrinthe.game-host.org/download/currentversion.xml';
+    'http://www.funlabyrinthe.com/download/currentversion.xml';
 
 {*
   Charge les options
