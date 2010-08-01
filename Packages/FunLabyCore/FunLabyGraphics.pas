@@ -112,6 +112,17 @@ function AnimateBitmap(Bitmap: TBitmap32;
 procedure DrawRepeat(Dest, Src: TBitmap32; const DestRect, SrcRect: TRect;
   TickCount: Cardinal = 0);
 
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32); overload;
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32; DstX, DstY: Integer; const SrcRect: TRect); overload;
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32; DstX, DstY: Integer); overload;
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32; const DstRect: TRect); overload;
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32; const DstRect, SrcRect: TRect); overload;
+
 implementation
 
 uses
@@ -378,6 +389,91 @@ begin
     Dest.EndUpdate;
     Dest.Changed(DestRect);
   end;
+end;
+
+{*
+  Dessine un bitmap sur un autre à un temps donné
+  Si le bitmap source est un bitmap animé (TAnimatedBitmap32), alors sa méthode
+  DrawAtTimeTo est utilisée. Sinon, sa méthode DrawTo est utilisée.
+  @param Src         Bitmap source
+  @param TickCount   Tick-count
+  @param Dst         Bitmap destination
+*}
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32);
+begin
+  if (TickCount <> 0) and (Src is TAnimatedBitmap32) then
+    TAnimatedBitmap32(Src).DrawAtTimeTo(TickCount, Dst)
+  else
+    Src.DrawTo(Dst);
+end;
+
+{*
+  Dessine un bitmap sur un autre à un temps donné
+  Si le bitmap source est un bitmap animé (TAnimatedBitmap32), alors sa méthode
+  DrawAtTimeTo est utilisée. Sinon, sa méthode DrawTo est utilisée.
+  @param Src         Bitmap source
+  @param TickCount   Tick-count
+  @param Dst         Bitmap destination
+*}
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32; DstX, DstY: Integer; const SrcRect: TRect);
+begin
+  if (TickCount <> 0) and (Src is TAnimatedBitmap32) then
+    TAnimatedBitmap32(Src).DrawAtTimeTo(TickCount, Dst, DstX, DstY, SrcRect)
+  else
+    Src.DrawTo(Dst, DstX, DstY, SrcRect);
+end;
+
+{*
+  Dessine un bitmap sur un autre à un temps donné
+  Si le bitmap source est un bitmap animé (TAnimatedBitmap32), alors sa méthode
+  DrawAtTimeTo est utilisée. Sinon, sa méthode DrawTo est utilisée.
+  @param Src         Bitmap source
+  @param TickCount   Tick-count
+  @param Dst         Bitmap destination
+*}
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32; DstX, DstY: Integer);
+begin
+  if (TickCount <> 0) and (Src is TAnimatedBitmap32) then
+    TAnimatedBitmap32(Src).DrawAtTimeTo(TickCount, Dst, DstX, DstY)
+  else
+    Src.DrawTo(Dst, DstX, DstY);
+end;
+
+{*
+  Dessine un bitmap sur un autre à un temps donné
+  Si le bitmap source est un bitmap animé (TAnimatedBitmap32), alors sa méthode
+  DrawAtTimeTo est utilisée. Sinon, sa méthode DrawTo est utilisée.
+  @param Src         Bitmap source
+  @param TickCount   Tick-count
+  @param Dst         Bitmap destination
+*}
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32; const DstRect: TRect);
+begin
+  if (TickCount <> 0) and (Src is TAnimatedBitmap32) then
+    TAnimatedBitmap32(Src).DrawAtTimeTo(TickCount, Dst, DstRect)
+  else
+    Src.DrawTo(Dst, DstRect);
+end;
+
+{*
+  Dessine un bitmap sur un autre à un temps donné
+  Si le bitmap source est un bitmap animé (TAnimatedBitmap32), alors sa méthode
+  DrawAtTimeTo est utilisée. Sinon, sa méthode DrawTo est utilisée.
+  @param Src         Bitmap source
+  @param TickCount   Tick-count
+  @param Dst         Bitmap destination
+*}
+procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
+  Dst: TBitmap32; const DstRect, SrcRect: TRect);
+begin
+  if (TickCount <> 0) and (Src is TAnimatedBitmap32) then
+    TAnimatedBitmap32(Src).DrawAtTimeTo(TickCount, Dst, DstRect, SrcRect)
+  else
+    Src.DrawTo(Dst, DstRect, SrcRect);
 end;
 
 {----------------------}

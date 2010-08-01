@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'FunLabyGraphics';
   ResourceName = 'SepiImportsFunLabyGraphics';
   TypeCount = 2;
-  MethodCount = 22;
+  MethodCount = 27;
   VariableCount = 1;
 
 var
@@ -147,6 +147,31 @@ begin
   Result := AnimateBitmap(Bitmap, FrameDelay);
 end;
 
+procedure DrawBitmapAtTimeTo_0(Src: TBitmap32; TickCount: Cardinal; Dst: TBitmap32);
+begin
+  DrawBitmapAtTimeTo(Src, TickCount, Dst);
+end;
+
+procedure DrawBitmapAtTimeTo_1(Src: TBitmap32; TickCount: Cardinal; Dst: TBitmap32; DstX: Integer; DstY: Integer; const SrcRect: TRect);
+begin
+  DrawBitmapAtTimeTo(Src, TickCount, Dst, DstX, DstY, SrcRect);
+end;
+
+procedure DrawBitmapAtTimeTo_2(Src: TBitmap32; TickCount: Cardinal; Dst: TBitmap32; DstX: Integer; DstY: Integer);
+begin
+  DrawBitmapAtTimeTo(Src, TickCount, Dst, DstX, DstY);
+end;
+
+procedure DrawBitmapAtTimeTo_3(Src: TBitmap32; TickCount: Cardinal; Dst: TBitmap32; const DstRect: TRect);
+begin
+  DrawBitmapAtTimeTo(Src, TickCount, Dst, DstRect);
+end;
+
+procedure DrawBitmapAtTimeTo_4(Src: TBitmap32; TickCount: Cardinal; Dst: TBitmap32; const DstRect: TRect; const SrcRect: TRect);
+begin
+  DrawBitmapAtTimeTo(Src, TickCount, Dst, DstRect, SrcRect);
+end;
+
 {-------------}
 { Unit import }
 {-------------}
@@ -226,6 +251,11 @@ begin
   MethodAddresses[19] := @AnimateBitmap_1;
   MethodAddresses[20] := @AnimateBitmap_2;
   MethodAddresses[21] := @DrawRepeat;
+  MethodAddresses[22] := @DrawBitmapAtTimeTo_0;
+  MethodAddresses[23] := @DrawBitmapAtTimeTo_1;
+  MethodAddresses[24] := @DrawBitmapAtTimeTo_2;
+  MethodAddresses[25] := @DrawBitmapAtTimeTo_3;
+  MethodAddresses[26] := @DrawBitmapAtTimeTo_4;
 end;
 
 procedure InitVarAddresses;

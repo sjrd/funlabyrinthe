@@ -772,7 +772,14 @@ type
     procedure BeginUpdate;
     procedure EndUpdate;
 
+    function GetBitmap: TBitmap32;
+
     procedure Draw(Context: TDrawSquareContext);
+
+    procedure DrawTo(Dest: TBitmap32; X: Integer = 0; Y: Integer = 0);
+
+    procedure DrawAtTimeTo(TickCount: Cardinal; Dest: TBitmap32; X: Integer = 0;
+      Y: Integer = 0);
 
     property Master: TImagesMaster read FMaster;
     property StaticDraw: Boolean read FStaticDraw;
@@ -3301,10 +3308,27 @@ begin
 end;
 
 {*
-  Dessine les images
-  La méthode Draw dessine les images du peintre dans le contexte de dessin
-  spécifié. Les différentes images sont superposées, celle d'index 0 tout
-  au-dessous.
+  Récupère le bitmap complet pour ce peintre
+  La valeur renvoyée peut être nil, si le peintre est vide. Elle est valide
+  uniquement tant que le peintre n'est pas modifié.
+  Il est préférable d'utiliser les méthodes de dessin du peintre plutôt que de
+  récupérer le bitmap complet lorsque c'est possible.
+  @return Bitmap complet pour ce peintre (peut être nil)
+*}
+function TPainter.GetBitmap: TBitmap32;
+begin
+  if FNeedCache then
+    Result := FCachedImg
+  else if FCachedImgIndex >= 0 then
+    Result := FMaster.GetInternalBitmap(FCachedImgIndex)
+  else
+    Result := nil;
+end;
+
+{*
+  Dessine le peintre dans un contexte de case
+  La méthode Draw dessine le peintre dans le contexte de dessin spécifié. Les
+  différentes images sont superposées, celle d'index 0 tout au-dessous.
   @param Context   Contexte de dessin de la case
 *}
 procedure TPainter.Draw(Context: TDrawSquareContext);
@@ -3313,6 +3337,38 @@ begin
     Context.DrawSquareBitmap(FCachedImg)
   else if FCachedImgIndex >= 0 then
     Master.Draw(FCachedImgIndex, Context);
+end;
+
+{*
+  Dessine le peintre sur un bitmap quelconque
+  @param Dest   Bitmap destination
+  @param X      Abscisse de destination
+  @param Y      Ordonnée de destination
+*}
+procedure TPainter.DrawTo(Dest: TBitmap32; X: Integer = 0; Y: Integer = 0);
+var
+  Source: TBitmap32;
+begin
+  Source := GetBitmap;
+  if Source <> nil then
+    Source.DrawTo(Dest, X, Y);
+end;
+
+{*
+  Dessine le peintre sur un bitmap quelconque à un temps donné
+  @param TickCount   Tick-count
+  @param Dest        Bitmap destination
+  @param X           Abscisse de destination
+  @param Y           Ordonnée de destination
+*}
+procedure TPainter.DrawAtTimeTo(TickCount: Cardinal; Dest: TBitmap32;
+  X: Integer = 0; Y: Integer = 0);
+var
+  Source: TBitmap32;
+begin
+  Source := GetBitmap;
+  if Source <> nil then
+    DrawBitmapAtTimeTo(Source, TickCount, Dest, X, Y);
 end;
 
 {--------------------}
