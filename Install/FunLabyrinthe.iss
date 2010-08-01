@@ -7,9 +7,9 @@ AppVerName={cm:AppVerName}
 AppComments={cm:Description}
 AppContact=sjrd@redaction-developpez.com
 AppPublisher=SJRDoeraene
-AppPublisherURL=http://funlabyrinthe.game-host.org/
-AppSupportURL=http://funlabyrinthe.game-host.org/
-AppUpdatesURL=http://funlabyrinthe.game-host.org/
+AppPublisherURL=http://www.funlabyrinthe.com/
+AppSupportURL=http://www.funlabyrinthe.com/
+AppUpdatesURL=http://www.funlabyrinthe.com/
 AppVersion=5.0
 
 VersionInfoDescription=Setup of FunLabyrinthe 5.0
@@ -207,6 +207,9 @@ const
   OldVersionRegKey =
     'Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\';
 
+  ThisVersionRegKey =
+    'Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyrinthe_is1\';
+
   InfoBitmapFileName = 'Info.bmp';
 
   DoNotImportLabsFile = 'DoNotImportLabs.txt';
@@ -218,6 +221,8 @@ var
   OldVersionDisplayVersion: string;
   OldVersionInstallDir: string;
   OldVersionUninstallString: string;
+
+  IsReinstall: Boolean;
 
   PageWidth: Integer;
   DirEdits: TStrings;
@@ -287,6 +292,11 @@ begin
     RegQueryStringValue(HKLM, OldVersionRegKey, 'QuietUninstallString',
       OldVersionUninstallString);
   end;
+end;
+
+procedure CheckIsReinstall;
+begin
+  IsReinstall := RegKeyExists(HKLM, ThisVersionRegKey);
 end;
 
 function ExpandConstants(const Str: string): string;
@@ -467,6 +477,7 @@ procedure AddImportOldPage;
 var
   Surface: TNewNotebookPage;
   Bottom: Integer;
+  Checked: Boolean;
 begin
   // Ajouter la page d'import d'anciens labyrinthes
 
@@ -493,9 +504,10 @@ begin
       ExpandConstants('{cm:ImportOldLabyrinthsPrompt}'));
   end;
 
+  Checked := HasOldVersion and (not IsReinstall);
   CheckBoxImportOld := AddCheckBox(Surface, Bottom,
     ExpandConstants('{cm:ImportOldLabyrinths}'),
-    HasOldVersion);
+    Checked);
   if not HasOldVersion then
     CheckBoxImportOld.OnClick := @CheckBoxImportOldClick;
 
@@ -738,6 +750,7 @@ begin
   LabyrinthsToImport := nil;
 
   CheckOldVersion;
+  CheckIsReinstall;
 
   Result := True;
 end;
@@ -764,7 +777,9 @@ end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
-  if PageID = PageSelectImports.ID then
+  if PageID = PageImportOld.ID then
+    Result := IsReinstall
+  else if PageID = PageSelectImports.ID then
     Result := ImportDir = ''
   else
     Result := False;
@@ -791,9 +806,9 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   case CurStep of
-    {ssInstall:
+    ssInstall:
       if HasOldVersion then
-        UninstallOldVersion;}
+        UninstallOldVersion;
     ssPostInstall:
       if ImportDir <> '' then
         ImportOld;
@@ -804,6 +819,4 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
-
-
 
