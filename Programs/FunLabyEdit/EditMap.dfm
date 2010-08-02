@@ -796,7 +796,7 @@ object FormEditMap: TFormEditMap
       Width = 137
       Height = 21
       Style = csDropDownList
-      ItemHeight = 0
+      ItemHeight = 13
       TabOrder = 0
     end
     object ComboBoxZoneGrid: TComboBox
@@ -882,8 +882,7 @@ object FormEditMap: TFormEditMap
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
-    TabOrder = 3
-    OnClick = ButtonOKClick
+    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -902,6 +901,9 @@ object FormEditMap: TFormEditMap
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 3
+    OnClick = ButtonOKClick
   end
   object ButtonCancel: TBitBtn
     Left = 512
@@ -909,8 +911,10 @@ object FormEditMap: TFormEditMap
     Width = 89
     Height = 25
     Anchors = [akRight, akBottom]
-    TabOrder = 4
+    DoubleBuffered = True
     Kind = bkCancel
+    ParentDoubleBuffered = False
+    TabOrder = 4
   end
   object GroupBoxFloors: TGroupBox
     Left = 16
@@ -1293,7 +1297,7 @@ object FormEditMap: TFormEditMap
       Width = 137
       Height = 21
       Style = csDropDownList
-      ItemHeight = 0
+      ItemHeight = 13
       TabOrder = 0
       OnChange = ComboBoxOutsideChange
     end

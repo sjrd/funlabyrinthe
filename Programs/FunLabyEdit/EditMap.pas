@@ -94,6 +94,8 @@ type
     FMap: TResizableMap; /// Carte en édition
     FIsNewMap: Boolean;  /// Indique si on créée une nouvelle carte
 
+    FTotalOrigOffset: T3DPoint; /// Offset total de l'origine
+
     FSelectedZones: TScIntegerSet; /// Liste des zones sélectionnées
     FLastSelectedZone: TPoint;     /// Dernière zone sélectionnée
 
@@ -105,6 +107,8 @@ type
 
     procedure ResizeMap(const NewDims, OrigOffset: T3DPoint); overload;
     procedure ResizeMap(Dir: TResizeDirection; IsShrink: Boolean); overload;
+
+    procedure UpdatePosComponents(AMap: TMap);
 
     function ZoneToInt(const Zone: TPoint): Integer;
     function IntToZone(ZoneInt: Integer): TPoint;
@@ -325,6 +329,10 @@ begin
   // TODO Warn the user about dangerous changes
 
   Map.Resize(NewDims, OrigOffset);
+
+  Inc(FTotalOrigOffset.X, OrigOffset.X);
+  Inc(FTotalOrigOffset.Y, OrigOffset.Y);
+  Inc(FTotalOrigOffset.Z, OrigOffset.Z);
 end;
 
 {*
@@ -398,6 +406,27 @@ begin
       EditFloor.Value := Map.Dimensions.Z-1;
     rdDown:
       EditFloor.Value := 0;
+  end;
+end;
+
+{*
+  Déplace les composants à position (TPosComponent) selon l'offset total
+  @param AMap   Carte dont il faut déplacer les composants à position
+*}
+procedure TFormEditMap.UpdatePosComponents(AMap: TMap);
+var
+  I: Integer;
+  PosComponent: TPosComponent;
+begin
+  for I := 0 to Master.PosComponentCount-1 do
+  begin
+    PosComponent := Master.PosComponents[I];
+
+    if PosComponent.Map = AMap then
+    begin
+      PosComponent.ChangePosition(Point3DAdd(
+        PosComponent.Position, FTotalOrigOffset));
+    end;
   end;
 end;
 
@@ -607,6 +636,8 @@ begin
     if Master.ComponentExists(DefaultOutsideID) then
       FMap.Outside[0] := Master.SquareByComps(DefaultOutsideID, '', '', '');
 
+    FTotalOrigOffset := Point3D(0, 0, 0);
+
     Prepare(DefaultMapID);
 
     if ShowModal = mrOK then
@@ -636,11 +667,15 @@ begin
   FMap := TResizableMap.Create(Master, '');
   try
     FMap.Assign(AMap);
+    FTotalOrigOffset := Point3D(0, 0, 0);
+
     Prepare(AMap.ID);
 
     if ShowModal = mrOK then
     begin
       AMap.Assign(FMap);
+      UpdatePosComponents(AMap);
+
       Result := True;
     end;
   finally
