@@ -69,14 +69,14 @@ end;
 *}
 function CreateDelphiSource(var FileName: TFileName): Boolean;
 var
-  UnitName: string;
+  AUnitName: string;
 begin
-  UnitName := ChangeFileExt(ExtractFileName(FileName), '');
+  AUnitName := ChangeFileExt(ExtractFileName(FileName), '');
 
   with TStringList.Create do
   try
     // Don't localize
-    Add(Format('unit %s;', [UnitName]));
+    Add(Format('unit %s;', [AUnitName]));
     Add('');
     Add('interface');
     Add('');
