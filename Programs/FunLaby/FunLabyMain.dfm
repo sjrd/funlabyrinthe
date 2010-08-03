@@ -149,4 +149,15 @@ object FormMain: TFormMain
     Left = 168
     Top = 120
   end
+  object OptionsStorage: TJvAppXMLFileStorage
+    StorageOptions.BooleanStringTrueValues = 'true, yes, y'
+    StorageOptions.BooleanStringFalseValues = 'false, no, n'
+    StorageOptions.InvalidCharReplacement = '_'
+    FileName = 'FunLabyrinthe\FunLabyrinthe.xml'
+    Location = flUserFolder
+    RootNodeName = 'configuration'
+    SubStorages = <>
+    Left = 40
+    Top = 184
+  end
 end

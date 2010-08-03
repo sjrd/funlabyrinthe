@@ -11,6 +11,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Contnrs, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, ExtCtrls, ShellAPI,
+  JvComponentBase, JvAppStorage, JvAppXMLStorage,
   ScUtils, ScStrUtils, ScSyncObjs, SdDialogs,
   FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
   UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts,
@@ -33,6 +34,13 @@ resourcestring
   sCantPause =
     'Impossible de mettre en pause maintenant, car le joueur n''est pas à '+
     'l''arrêt';
+
+  SAskForTutorialTitle = 'Didacticiel';
+  SAskForTutorial =
+    'Vous n''avez pas encore fait le didacticiel. Celui-ci vous apprendra à '+
+    'jouer à FunLabyrinthe en vous expliquant pas-à-pas. Voulez-vous le '+
+    'démarrer maintenant ? (Répondez Annuler si vous ne voulez pas que je '+
+    'vous redemande la prochaine fois.)';
 
 type
   {*
@@ -63,6 +71,7 @@ type
     TimerUpdateImage: TTimer;
     PaintBox: TPaintBox32;
     MenuVersionCheck: TMenuItem;
+    OptionsStorage: TJvAppXMLFileStorage;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure UpdateImage(Sender: TObject);
@@ -104,6 +113,8 @@ type
 
     procedure AdaptSizeToView;
     procedure ShowStatus;
+
+    procedure AskForTutorialIfNeeded;
   end;
 
 var
@@ -380,6 +391,33 @@ begin
 end;
 
 {*
+  Demande à l'utilisateur s'il veut jouer au didacticiel, si nécessaire
+*}
+procedure TFormMain.AskForTutorialIfNeeded;
+const {don't localize}
+  Path = 'game/tutorialdone';
+  TutorialFileName = 'Didacticiel.flp';
+var
+  AlreadyDone: Boolean;
+  Answer: TDialogResult;
+begin
+  if MasterFile <> nil then
+    Exit;
+
+  AlreadyDone := OptionsStorage.ReadBoolean(Path, False);
+  if AlreadyDone then
+    Exit;
+
+  Answer := ShowDialog(SAskForTutorialTitle, SAskForTutorial, dtConfirmation,
+    dbYesNoCancel);
+
+  OptionsStorage.WriteBoolean(Path, Answer <> drNo);
+
+  if Answer = drYes then
+    NewGame(fLabyrinthsDir+TutorialFileName);
+end;
+
+{*
   Gestionnaire d'événement OnCreate
   @param Sender   Object qui a déclenché l'événement
 *}
@@ -402,6 +440,8 @@ begin
 
   if ParamCount > 0 then
     NewGame(ParamStr(1));
+
+  AskForTutorialIfNeeded;
 end;
 
 {*
