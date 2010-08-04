@@ -526,6 +526,10 @@ procedure TFormMain.OpenFile(const FileName: TFileName);
 begin
   NeedBaseSepiRoot;
 
+  // Try not to look for trouble more than necessary
+  while not BackgroundTasks.Ready do
+    Sleep(50);
+
   MasterFile := TMasterFile.Create(BaseSepiRoot, FileName, fmEdit);
   try
     LoadFile;
@@ -615,7 +619,10 @@ begin
   begin
     Tab := Tabs[I];
     if IsEditor(Tab) and (not CloseTab(Tab)) then
+    begin
+      Result := False;
       Exit;
+    end;
   end;
 
   // Demander de sauvegarder le projet, s'il est modifié
@@ -655,19 +662,26 @@ begin
   FileName := MasterFile.FileName;
   OpenSources := TStringList.Create;
   try
+    // Save the list of open tabs
     for I := 0 to TabCount-1 do
     begin
       if IsEditor(I) then
         OpenSources.Add(Editors[I].SourceFile.FileName);
     end;
 
+    // Actual reload
     if not CloseFile then
       Exit;
     OpenFile(FileName);
 
+    // Restore open tabs
     for I := 0 to MasterFile.SourceFiles.Count-1 do
       if OpenSources.IndexOf(MasterFile.SourceFiles[I].FileName) >= 0 then
         OpenTab(MasterFile.SourceFiles[I]);
+
+    { Usually we reload to have the component appear in the palette, so go to
+      the tab that shows this palette. }
+    TabBarEditors.SelectedTab := TabMapEditor;
   finally
     OpenSources.Free;
   end;
@@ -1010,6 +1024,8 @@ begin
   Application.OnHint := nil;
 
   FrameMapEditor.Free;
+
+  NeedBaseSepiRoot;
 
   BackgroundDiscard(BaseSepiRoot);
   BackgroundDiscard(BaseSepiRootLoadTask);

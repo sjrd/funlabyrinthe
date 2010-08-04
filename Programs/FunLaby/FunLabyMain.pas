@@ -190,6 +190,10 @@ procedure TFormMain.NewGame(FileName: TFileName);
 begin
   NeedBaseSepiRoot;
 
+  // Try not to look for trouble more than necessary
+  while not BackgroundTasks.Ready do
+    Sleep(50);
+
   MasterFile := TMasterFile.Create(BaseSepiRoot, FileName, fmPlay);
   Master := MasterFile.Master;
   Controller := TPlayerController.Create(Master.Players[0]);
@@ -453,6 +457,8 @@ var
   TriesLeft: Integer;
 begin
   CloseGame(True);
+
+  NeedBaseSepiRoot;
 
   BackgroundDiscard(BaseSepiRoot);
   BackgroundDiscard(BaseSepiRootLoadTask);
