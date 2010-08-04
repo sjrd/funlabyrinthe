@@ -383,7 +383,8 @@ begin
 
     AnswerRowCount := DivRoundUp(Answers.Count, AnswerColCount);
 
-    while DivRoundUp(Answers.Count, AnswerColCount-1) = AnswerRowCount do
+    while (AnswerColCount > 1) and
+      (DivRoundUp(Answers.Count, AnswerColCount-1) = AnswerRowCount) do
       AnswerColCount := AnswerColCount-1;
   end;
 end;
