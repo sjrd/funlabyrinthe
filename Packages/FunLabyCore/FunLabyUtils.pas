@@ -32,6 +32,9 @@ const {don't localize}
   /// Message envoyé aux composants d'une case lorsque celle-ci est éditée
   msgEditMapSquare = $05;
 
+  /// Message demandant l'exécution d'une méthode au sein des actions
+  msgRunMethod = $06;
+
   SquareIDDelim = '-';            /// Délimiteur des parties d'un ID de case
   SquareIDFormat = '%s-%s-%s-%s'; /// Format d'un ID de case
 
@@ -92,6 +95,7 @@ type
   TMap = class;
   TPosComponent = class;
   TVehicle = class;
+  TMobileComponent = class;
   IPlayerMode = interface;
   TPlayerMode = class;
   TPlayer = class;
@@ -176,6 +180,9 @@ type
     ShowOnlySelected: Boolean; /// Si True n'affiche que l'élément sélectionné
   end;
 
+  /// Alias de TPlayerShowMsgMessage (FunDelphi codegen)
+  TShowMessageMessage = TPlayerShowMsgMessage;
+
   /// Structure du message envoyé au démarrage du jeu
   TGameStartedMessage = TPlayerMessage;
 
@@ -254,6 +261,19 @@ type
     Flags: TEditMapSquareFlags;   /// Flags du message
     Component: TFunLabyComponent; /// Composant qui va être placé/retiré
     QPos: TQualifiedPos;          /// Position qualifiée de la case éditée
+  end;
+
+  {*
+    Structure du message d'appel de méthode
+    @author sjrd
+    @version 5.0
+  *}
+  TRunMethodMessage = record
+    MsgID: Word;                 /// ID du message
+    Handled: Boolean;            /// Indique si le message a été géré
+    Reserved: Byte;              /// Réservé
+    Component: TMobileComponent; /// Composant concerné
+    Method: TThreadMethod;       /// Méthode à appeler
   end;
 
   {*
@@ -1439,6 +1459,9 @@ type
     FActionCoroutine: TCoroutine;    /// Coroutine d'exécution des actions
     FActionMessagePtr: Pointer;      /// Pointeur sur le message pour l'action
 
+    procedure MessageRunMethod(var Msg: TRunMethodMessage);
+      message msgRunMethod;
+
     procedure ActionProc(Coroutine: TCoroutine);
 
     function TryPause: Boolean;
@@ -1448,6 +1471,7 @@ type
     destructor Destroy; override;
 
     procedure SendMessage(var Msg);
+    procedure RunMethod(const Method: TThreadMethod);
   end;
 
   /// Classe de TPlayerMode
@@ -1728,11 +1752,17 @@ type
   TTimerEntry = class(TFunLabyPersistent)
   private
     FTickCount: Cardinal; /// Tick-count auquel déclencher cet événement
+
+    procedure InternalExecuteAndFree;
+  protected
+    function GetHostComponent: TMobileComponent; virtual;
+
+    procedure Execute; virtual; abstract;
   public
     constructor Create(ATickCount: Cardinal);
     constructor ReCreate; virtual;
 
-    procedure Execute; virtual; abstract;
+    procedure ExecuteAndFree;
   published
     property TickCount: Cardinal read FTickCount write FTickCount;
   end;
@@ -1752,11 +1782,13 @@ type
   private
     FDestObject: TFunLabyComponent; /// Objet auquel envoyer le message
     FMsgID: Word;                   /// ID du message
+  protected
+    function GetHostComponent: TMobileComponent; override;
+
+    procedure Execute; override;
   public
     constructor Create(ATickCount: Cardinal;
       ADestObject: TFunLabyComponent; AMsgID: Word);
-
-    procedure Execute; override;
   published
     property DestObject: TFunLabyComponent read FDestObject write FDestObject;
     property MsgID: Word read FMsgID write FMsgID;
@@ -6483,6 +6515,15 @@ begin
 end;
 
 {*
+  Gestionnaire du message msgRunMethod
+  @param Msg   Message à traiter
+*}
+procedure TMobileComponent.MessageRunMethod(var Msg: TRunMethodMessage);
+begin
+  Msg.Method;
+end;
+
+{*
   Procédure de la coroutine d'exécution des actions
   @param Coroutine   Objet coroutine gérant cette procédure
 *}
@@ -6544,6 +6585,25 @@ begin
   finally
     FActionLock.Release;
   end;
+end;
+
+{*
+  Exécute une méthode dans le contexte des actions de ce composant
+  Cette méthode ne peut *pas* être appelée depuis le code d'action du
+  composant ! Appelez directement la méthode en question à la place.
+  @param Method   Méthode à exécuter
+*}
+procedure TMobileComponent.RunMethod(const Method: TThreadMethod);
+var
+  Msg: TRunMethodMessage;
+begin
+  Msg.MsgID := msgRunMethod;
+  Msg.Handled := False;
+  Msg.Reserved := 0;
+  Msg.Component := Self;
+  Msg.Method := Method;
+
+  SendMessage(Msg);
 end;
 
 {----------------}
@@ -7823,6 +7883,46 @@ begin
   inherited Create;
 end;
 
+{*
+  Exécute cette entrée de timer puis la libère
+*}
+procedure TTimerEntry.InternalExecuteAndFree;
+begin
+  try
+    Execute;
+  finally
+    Free;
+  end;
+end;
+
+{*
+  Retourne le composant mobile qui doit être l'hôte de cette entrée de timer
+  Si GetHostComponent renvoie une valeur non nil, la méthode Execute sera
+  appelée au sein des actions de ce composant.
+  Sinon, la méthode Execute est appelée au sein du thread général de gestion des
+  timers.
+  @return Composant hôte
+*}
+function TTimerEntry.GetHostComponent: TMobileComponent;
+begin
+  Result := nil;
+end;
+
+{*
+  Exécute cette entrée de timer puis la libère
+*}
+procedure TTimerEntry.ExecuteAndFree;
+var
+  HostComponent: TMobileComponent;
+begin
+  HostComponent := GetHostComponent;
+
+  if HostComponent = nil then
+    InternalExecuteAndFree
+  else
+    HostComponent.RunMethod(InternalExecuteAndFree);
+end;
+
 {----------------------------}
 { TNotificationMsgTimerEntry }
 {----------------------------}
@@ -7847,18 +7947,26 @@ end;
 {*
   [@inheritDoc]
 *}
+function TNotificationMsgTimerEntry.GetHostComponent: TMobileComponent;
+begin
+  if DestObject is TMobileComponent then
+    Result := TMobileComponent(DestObject)
+  else
+    Result := nil;
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TNotificationMsgTimerEntry.Execute;
 var
   Msg: TPlayerMessage;
 begin
-  Msg.MsgID := MsgID;
-
   Assert(DestObject <> nil);
 
-  if DestObject is TMobileComponent then
-    TMobileComponent(DestObject).SendMessage(Msg)
-  else
-    DestObject.Dispatch(Msg);
+  Msg.MsgID := MsgID;
+
+  DestObject.Dispatch(Msg);
 end;
 
 {------------------------}
@@ -7930,13 +8038,7 @@ begin
 
       // If an entry was found, execute it and free it
       if Entry <> nil then
-      begin
-        try
-          Entry.Execute;
-        finally
-          Entry.Free;
-        end;
-      end;
+        Entry.ExecuteAndFree;
     finally
       FActionLock.Release;
     end;
