@@ -202,27 +202,16 @@ begin
 end;
 
 {*
-  Routine de call-back pour GetPackageInfo utilisée par LoadSepiUnits
-  @param Name       Nom de l'élément de package
-  @param NameType   Type d'élément
-  @param Flags      Flags
-  @param Param      Pointer(SepiRoot)
-*}
-procedure PackageInfoCallback(const Name: string; NameType: TNameType;
-  Flags: Byte; Param: Pointer);
-begin
-  if (NameType = ntContainsUnit) and Assigned(SepiImportedUnit(Name)) then
-    TSepiRoot(Param).LoadUnit(Name);
-end;
-
-{*
   Charge les unités Sepi fournies par le package
 *}
 procedure TBPLUnitFile.LoadSepiUnits;
 var
-  Flags: Integer;
+  UnitName: string;
 begin
-  GetPackageInfo(FHandle, MasterFile.SepiRoot, Flags, PackageInfoCallback);
+  UnitName := ChangeFileExt(ExtractFileName(FileName), '');
+
+  if Assigned(SepiImportedUnit(UnitName)) then
+    MasterFile.SepiRoot.LoadUnit(UnitName);
 end;
 
 {*

@@ -12,7 +12,7 @@ interface
 uses
   SysUtils, Classes, ScUtils, FunLabyUtils, FilesUtils, UnitFiles, Generics,
   FLBCommon, FLBFields, FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBBoat,
-  FLBLift, FLBObstacles, FLBShowMessage;
+  FLBLift, FLBObstacles, FLBShowMessage, SepiReflectionCore;
 
 type
   TFunLabyBaseUnit = class(TInterfacedUnitFile)
@@ -144,10 +144,31 @@ begin
   end;
 end;
 
+{---------------------}
+{ ImportUnit function }
+{---------------------}
+
+{*
+  Importe l'alias d'unité FunLabyBase
+  @param Root   Racine Sepi
+  @return Alias d'unité créé
+*}
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
+begin
+  Result := TSepiUnitAlias.Create(Root, 'FunLabyBase',
+    ['FLBBoat', 'FLBCommon', 'FLBFields', 'FLBLift', 'FLBObstacles', 'FLBPlank',
+    'FLBShowMessage', 'FLBSimpleEffects', 'FLBSimpleObjects']);
+  Result.Complete;
+end;
+
 {$IFNDEF DCTD}
 exports
   CreateUnitFile name 'CreateUnitFile';
 {$ENDIF}
 
+initialization
+  SepiRegisterImportedUnit('FunLabyBase', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('FunLabyBase');
 end.
 

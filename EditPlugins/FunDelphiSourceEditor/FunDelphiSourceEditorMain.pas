@@ -82,6 +82,9 @@ begin
     // Don't localize
     Add(Format('unit %s;', [AUnitName]));
     Add('');
+    Add('uses');
+    Add('  FunLabyBase;');
+    Add('');
     Add('end.');
 
     SaveToFile(FileName);
