@@ -2048,6 +2048,7 @@ procedure DrawBitmap32ToCanvas(Canvas: TCanvas; const DestRect: TRect;
 
 function SameRect(const Left, Right: TRect): Boolean;
 
+function SameQPos(const Left, Right: TQualifiedPos): Boolean;
 function IsNoQPos(const QPos: TQualifiedPos): Boolean;
 
 procedure FunLabyRegisterClass(PersistentClass: TFunLabyPersistentClass);
@@ -2238,6 +2239,18 @@ function SameRect(const Left, Right: TRect): Boolean;
 begin
   Result := (Left.Left = Right.Left) and (Left.Top = Right.Top) and
     (Left.Right = Right.Right) and (Left.Bottom = Right.Bottom);
+end;
+
+{*
+  Teste si deux positions qualifiées sont égales
+  @param Left    Position de gauche
+  @param Right   Position de droite
+  @return True si les positions sont égales, False sinon
+*}
+function SameQPos(const Left, Right: TQualifiedPos): Boolean;
+begin
+  Result := (Left.Map = Right.Map) and
+    Same3DPoint(Left.Position, Right.Position);
 end;
 
 {*
