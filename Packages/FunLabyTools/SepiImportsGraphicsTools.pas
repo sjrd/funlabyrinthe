@@ -110,6 +110,7 @@ end;
 
 procedure InitTypeInfoArray;
 begin
+  TypeInfoArray[0] := TypeInfo(TAvoidInfiniteRecursionBitmap32);
 end;
 
 procedure InitMethodAddresses;
@@ -139,6 +140,16 @@ type
   {$MESSAGE WARN 'Le type TFieldPredicate n''a pas l''alignement calculé par Sepi'}
 {$IFEND}
 
+type
+  TCheckAlignmentForTAvoidInfiniteRecursionBitmap32 = record
+    Dummy: Byte;
+    Field: TAvoidInfiniteRecursionBitmap32;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTAvoidInfiniteRecursionBitmap32) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TAvoidInfiniteRecursionBitmap32 n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
@@ -154,6 +165,7 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
+  CheckInstanceSize(TAvoidInfiniteRecursionBitmap32, 268, 268);
   {$ASSERTIONS OFF}
 end;
 

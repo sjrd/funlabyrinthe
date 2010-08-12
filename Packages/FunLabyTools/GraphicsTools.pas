@@ -16,6 +16,20 @@ uses
 type
   TFieldPredicate = function(Field: TField): Boolean;
 
+  {*
+    Bitmap 32 spécialisé permettant d'éviter des récursions infinies
+    Utilisez TAvoidInfiniteRecursionBitmap32 comme classe pour des bitmaps
+    intermédiaires auxquels vous appliquez des traitements qui sont susceptibles
+    de partir en récursion infinie.
+    Dans un tel traitement, testez d'abord si le bitmap de destination est une
+    instance de TAvoidInfiniteRecursionBitmap32. Si c'est le cas, appliquez un
+    cas de base forcé de la récursion.
+    @author sjrd
+    @version 5.0.1
+  *}
+  TAvoidInfiniteRecursionBitmap32 = class(TBitmap32)
+  end;
+
 procedure DrawSquareText(Context: TDrawSquareContext; const Text: string;
   FontColor: TColor32 = clBlack32; BackColor: TColor32 = clWhite32);
 
@@ -124,17 +138,21 @@ var
 
   procedure CreateOtherBmpAndContext;
   begin
-    OtherBmp := TBitmap32.Create;
+    OtherBmp := TAvoidInfiniteRecursionBitmap32.Create;
     OtherBmp.DrawMode := dmBlend;
     OtherBmp.CombineMode := cmMerge;
     OtherBmp.SetSize(SquareSize, SquareSize);
 
-    OtherContext := TDrawSquareContext.Create(OtherBmp);
+    OtherContext := TDrawSquareContext.Create(OtherBmp, 0, 0, Context.QPos);
     OtherContext.Assign(Context);
   end;
 
 begin
   if Context.IsNowhere then
+    Exit;
+
+  // Avoid infinite recursion
+  if Context.Bitmap is TAvoidInfiniteRecursionBitmap32 then
     Exit;
 
   ThisField := Context.QPos.Field;
