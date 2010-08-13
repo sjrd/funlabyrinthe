@@ -842,7 +842,7 @@ type
   private
     FMaster: TMaster;        /// Maître FunLabyrinthe
     FID: TComponentID;       /// ID du composant
-    FIsAdditionnal: Boolean; /// Indique si ce composant est additionnel
+    FIconPainter: TPainter;  /// Peintre de l'icône
 
     {*
       Stocke une valeur entière dans un composant
@@ -856,7 +856,12 @@ type
     function GetSafeID: TComponentID;
   protected
     FTransient: Boolean; /// Indique si ce composant est transitoire
-
+  private
+    { This trick allowed the addition of FIconPainter without changing the
+      instance size. It should be rearranged when we can publish a scu-breaking
+      release. }
+    FIsAdditionnal: Boolean; /// Indique si ce composant est additionnel
+  protected
     class function GetPlayerDataClass: TPlayerDataClass; virtual;
 
     function HasPlayerData(Player: TPlayer): Boolean;
@@ -865,6 +870,8 @@ type
     function GetCategory: string; virtual;
     function GetHint: string; virtual;
     function GetIsDesignable: Boolean; virtual;
+
+    property IconPainter: TPainter read FIconPainter;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); virtual;
     destructor Destroy; override;
@@ -943,15 +950,13 @@ type
   *}
   TComponentCreator = class(TFunLabyComponent)
   private
-    FIconPainter: TPainter; /// Peintre de l'icône
+    FOldIconPainter: TPainter; /// To be removed on a scu-breaking release
   protected
     function GetCategory: string; override;
     function GetHint: string; override;
 
     function DoCreateComponent(
       const AID: TComponentID): TFunLabyComponent; virtual; abstract;
-
-    property IconPainter: TPainter read FIconPainter;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
@@ -4309,6 +4314,11 @@ begin
   FID := AID;
   if FID <> '' then
     Master.AddComponent(Self);
+
+  FIconPainter := TPainter.Create(Master.ImagesMaster);
+  // TODO When we can publish a scu-breaking release:
+  //FIconPainter.BeginUpdate;
+  // because we need to add an AfterConstruction method, then.
 end;
 
 {*
@@ -4445,7 +4455,18 @@ end;
 *}
 procedure TFunLabyComponent.DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
   Y: Integer = 0);
+var
+  Context: TDrawSquareContext;
 begin
+  if IconPainter.IsEmpty then
+    Exit;
+
+  Context := TDrawSquareContext.Create(Bitmap, X, Y, NoQPos);
+  try
+    IconPainter.Draw(Context);
+  finally
+    Context.Free;
+  end;
 end;
 
 {*
@@ -4649,8 +4670,7 @@ constructor TComponentCreator.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
 
-  FIconPainter := TPainter.Create(AMaster.ImagesMaster);
-  FIconPainter.BeginUpdate;
+  FOldIconPainter := IconPainter;
 end;
 
 {*
@@ -4658,8 +4678,6 @@ end;
 *}
 destructor TComponentCreator.Destroy;
 begin
-  FIconPainter.Free;
-
   inherited;
 end;
 
@@ -4685,8 +4703,6 @@ end;
 procedure TComponentCreator.AfterConstruction;
 begin
   inherited;
-
-  FIconPainter.EndUpdate;
 end;
 
 {*
@@ -4694,18 +4710,8 @@ end;
 *}
 procedure TComponentCreator.DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
   Y: Integer = 0);
-var
-  Context: TDrawSquareContext;
 begin
-  if IconPainter.IsEmpty then
-    Exit;
-
-  Context := TDrawSquareContext.Create(Bitmap, X, Y, NoQPos);
-  try
-    IconPainter.Draw(Context);
-  finally
-    Context.Free;
-  end;
+  inherited;
 end;
 
 {*
@@ -4730,6 +4736,8 @@ end;
   @param AID       ID du plug-in
 *}
 constructor TPlugin.Create(AMaster: TMaster; const AID: TComponentID);
+const
+  DefaultPluginIcon = 'Miscellaneous/Plugin'; {don't localize}
 begin
   inherited;
 
@@ -4737,6 +4745,8 @@ begin
   FPainterBefore.Description.BeginUpdate;
   FPainterAfter := TPainter.Create(FMaster.ImagesMaster);
   FPainterAfter.Description.BeginUpdate;
+
+  IconPainter.AddImage(DefaultPluginIcon);
 end;
 
 {*
