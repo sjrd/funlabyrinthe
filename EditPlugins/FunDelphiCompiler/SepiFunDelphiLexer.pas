@@ -15,7 +15,7 @@ uses
 
 const
   FirstTerminal = 0;
-  LastTerminal = 101;
+  LastTerminal = 102;
 
   tkEof = SepiLexerUtils.tkEof;         /// Fin de fichier
   tkBlank = SepiLexerUtils.tkBlank;     /// Lexème blanc
@@ -120,16 +120,17 @@ const
   tkWith = 90;      // with
 
   tkCan = 91;       // can
-  tkHas = 92;       // has
-  tkAtKw = 93;      // at
-  tkLeast = 94;     // least
-  tkMost = 95;      // most
-  tkMore = 96;      // more
-  tkLess = 97;      // less
-  tkThan = 98;      // than
-  tkExactly = 99;   // exactly
-  tkReceives = 100; // receives
-  tkDiscards = 101; // discards
+  tkCannot = 92;    // cannot
+  tkHas = 93;       // has
+  tkAtKw = 94;      // at
+  tkLeast = 95;     // least
+  tkMost = 96;      // most
+  tkMore = 97;      // more
+  tkLess = 98;      // less
+  tkThan = 99;      // than
+  tkExactly = 100;  // exactly
+  tkReceives = 101; // receives
+  tkDiscards = 102; // discards
 
 type
   {*
@@ -187,6 +188,7 @@ begin
           if Key = 'as'             then SymbolClass := tkAs;
     'b' : if Key = 'begin'          then SymbolClass := tkBegin;
     'c' : if Key = 'can'            then SymbolClass := tkCan else
+          if Key = 'cannot'         then SymbolClass := tkCannot else
           if Key = 'case'           then SymbolClass := tkCase else
           if Key = 'components'     then SymbolClass := tkComponents else
           if Key = 'const'          then SymbolClass := tkConst;

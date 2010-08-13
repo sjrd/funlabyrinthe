@@ -1246,6 +1246,12 @@ begin
 
   Result := WantingParams as ISepiExpression;
   Result.SourcePos := SourcePos;
+
+  if Children[0].SymbolClass = tkCannot then
+  begin
+    Result := TSepiOperator.MakeUnaryOperation(opNot,
+      Result as ISepiReadableValue) as ISepiExpression;
+  end;
 end;
 
 {---------------------------}

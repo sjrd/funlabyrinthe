@@ -104,6 +104,7 @@ tkInherited	inherited
 tkWith	with
 
 tkCan	can
+tkCannot	cannot
 tkHas	has
 tkAtKw	at
 tkLeast	least
@@ -341,6 +342,7 @@ AsOperation
 
 CanOp
 	'can'
+	'cannot'
 
 HasOp
 	'has'* HasComparison SingleExpr

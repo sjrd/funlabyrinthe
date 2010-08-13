@@ -58,6 +58,7 @@ type
     function FuncAttributes(Index: Integer): TtkTokenKind;
     function FuncBegin(Index: Integer): TtkTokenKind;
     function FuncCan(Index: Integer): TtkTokenKind;
+    function FuncCannot(Index: Integer): TtkTokenKind;
     function FuncCase(Index: Integer): TtkTokenKind;
     function FuncComponents(Index: Integer): TtkTokenKind;
     function FuncConst(Index: Integer): TtkTokenKind;
@@ -120,6 +121,7 @@ type
     function FuncVar(Index: Integer): TtkTokenKind;
     function FuncVehicle(Index: Integer): TtkTokenKind;
     function FuncWhile(Index: Integer): TtkTokenKind;
+    function FuncWith(Index: Integer): TtkTokenKind;
     function FuncXor(Index: Integer): TtkTokenKind;
     function FuncZindex(Index: Integer): TtkTokenKind;
     procedure IdentProc;
@@ -178,31 +180,32 @@ resourcestring
   SYNS_FriendlyLangFunDelphi = 'FunDelphi';
 
 const
-  KeyWords: array[0..71] of UnicodeString = (
+  KeyWords: array[0..73] of UnicodeString = (
     'action', 'actions', 'and', 'as', 'at', 'attributes', 'begin', 'can', 
-    'case', 'components', 'const', 'discards', 'div', 'do', 'downto', 'effect', 
-    'else', 'end', 'exactly', 'except', 'field', 'finally', 'for', 'forward', 
-    'function', 'has', 'if', 'image', 'in', 'inherited', 'is', 'least', 'less', 
-    'message', 'messages', 'mod', 'more', 'most', 'name', 'nil', 'not', 
-    'object', 'obstacle', 'of', 'on', 'or', 'out', 'plugin', 'poscomponent', 
-    'private', 'procedure', 'public', 'raise', 'receives', 'repeat', 
-    'resourcestring', 'shl', 'shr', 'string', 'than', 'then', 'to', 'tool', 
-    'try', 'unit', 'until', 'uses', 'var', 'vehicle', 'while', 'xor', 'zindex' 
+    'cannot', 'case', 'components', 'const', 'discards', 'div', 'do', 'downto', 
+    'effect', 'else', 'end', 'exactly', 'except', 'field', 'finally', 'for', 
+    'forward', 'function', 'has', 'if', 'image', 'in', 'inherited', 'is', 
+    'least', 'less', 'message', 'messages', 'mod', 'more', 'most', 'name', 
+    'nil', 'not', 'object', 'obstacle', 'of', 'on', 'or', 'out', 'plugin', 
+    'poscomponent', 'private', 'procedure', 'public', 'raise', 'receives', 
+    'repeat', 'resourcestring', 'shl', 'shr', 'string', 'than', 'then', 'to', 
+    'tool', 'try', 'unit', 'until', 'uses', 'var', 'vehicle', 'while', 'with', 
+    'xor', 'zindex' 
   );
 
   KeyIndices: array[0..226] of Integer = (
-    37, -1, -1, 0, -1, -1, 40, -1, -1, -1, -1, -1, -1, -1, 9, 10, 70, 21, 16, 4, 
-    -1, 20, -1, 47, -1, 29, -1, 24, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, 
-    -1, -1, -1, 14, -1, -1, 39, -1, 53, 61, -1, -1, 58, -1, -1, -1, -1, -1, 44, 
-    -1, -1, -1, 22, 57, -1, -1, -1, -1, 38, -1, -1, -1, 33, -1, -1, -1, 42, -1, 
-    50, -1, -1, -1, -1, -1, -1, -1, -1, 23, -1, 67, -1, -1, -1, 7, -1, 11, -1, 
-    26, -1, -1, -1, -1, -1, -1, 52, 31, 6, 34, -1, -1, -1, -1, -1, -1, 65, -1, 
-    -1, -1, 60, -1, -1, -1, 15, 12, -1, 64, -1, 68, -1, -1, -1, 71, -1, -1, -1, 
-    18, -1, -1, 51, 48, -1, 8, 41, -1, -1, -1, -1, 54, -1, -1, -1, 3, -1, -1, 
-    -1, 1, -1, -1, 13, -1, -1, -1, -1, 55, -1, -1, -1, -1, 56, -1, -1, 36, -1, 
-    32, 27, -1, 35, -1, -1, -1, -1, -1, 63, 5, 28, -1, -1, -1, 49, 69, -1, -1, 
-    -1, -1, -1, -1, -1, -1, 43, -1, -1, -1, 59, -1, -1, -1, -1, -1, -1, -1, 30, 
-    -1, -1, -1, 66, 45, -1, 17, -1, 46, 25, -1, -1, 19, -1, -1, -1, 2 
+    30, -1, 31, 5, -1, 49, -1, -1, 48, -1, 63, 46, -1, -1, -1, 73, -1, -1, 64, 
+    -1, -1, -1, -1, 10, -1, 29, 71, -1, -1, -1, 23, -1, -1, -1, 24, -1, -1, -1, 
+    -1, -1, -1, -1, -1, 42, -1, -1, 2, 14, -1, -1, -1, 21, -1, -1, -1, -1, 33, 
+    -1, -1, 16, 60, 6, -1, -1, -1, -1, -1, -1, -1, 18, -1, 72, -1, -1, -1, -1, 
+    -1, -1, 12, 50, 11, -1, 19, 39, -1, -1, -1, -1, 59, 62, -1, -1, -1, -1, -1, 
+    -1, -1, 0, -1, -1, 67, -1, 20, 8, -1, 17, -1, 51, 43, 58, -1, 47, -1, -1, 
+    -1, 28, -1, -1, -1, -1, 52, -1, -1, -1, -1, 26, -1, -1, -1, -1, -1, -1, -1, 
+    -1, 69, -1, -1, 55, -1, 53, -1, 22, -1, -1, -1, -1, 36, -1, -1, -1, 1, -1, 
+    -1, -1, -1, -1, -1, 44, 4, -1, -1, -1, -1, 32, -1, -1, -1, 35, -1, -1, -1, 
+    -1, 38, 34, -1, 66, 7, -1, -1, -1, -1, -1, 57, -1, 61, -1, -1, -1, -1, -1, 
+    40, -1, -1, 68, -1, -1, 56, 70, 27, -1, 13, -1, 65, 41, 54, -1, 25, -1, 3, 
+    -1, 37, 45, -1, -1, -1, -1, -1, -1, -1, -1, 15, -1, 9, -1, -1, -1, -1 
   );
 
 procedure TSynFunDelphiSyn.InitIdent;
@@ -213,78 +216,80 @@ begin
     if KeyIndices[i] = -1 then
       fIdentFuncTable[i] := AltFunc;
 
-  fIdentFuncTable[3] := FuncAction;
-  fIdentFuncTable[154] := FuncActions;
-  fIdentFuncTable[226] := FuncAnd;
-  fIdentFuncTable[150] := FuncAs;
-  fIdentFuncTable[19] := FuncAt;
-  fIdentFuncTable[182] := FuncAttributes;
-  fIdentFuncTable[105] := FuncBegin;
-  fIdentFuncTable[92] := FuncCan;
-  fIdentFuncTable[140] := FuncCase;
-  fIdentFuncTable[14] := FuncComponents;
-  fIdentFuncTable[15] := FuncConst;
-  fIdentFuncTable[94] := FuncDiscards;
-  fIdentFuncTable[122] := FuncDiv;
-  fIdentFuncTable[157] := FuncDo;
-  fIdentFuncTable[42] := FuncDownto;
-  fIdentFuncTable[121] := FuncEffect;
-  fIdentFuncTable[18] := FuncElse;
-  fIdentFuncTable[216] := FuncEnd;
-  fIdentFuncTable[134] := FuncExactly;
-  fIdentFuncTable[222] := FuncExcept;
-  fIdentFuncTable[21] := FuncField;
-  fIdentFuncTable[17] := FuncFinally;
-  fIdentFuncTable[61] := FuncFor;
-  fIdentFuncTable[86] := FuncForward;
-  fIdentFuncTable[27] := FuncFunction;
-  fIdentFuncTable[219] := FuncHas;
-  fIdentFuncTable[96] := FuncIf;
-  fIdentFuncTable[173] := FuncImage;
-  fIdentFuncTable[183] := FuncIn;
-  fIdentFuncTable[25] := FuncInherited;
-  fIdentFuncTable[209] := FuncIs;
-  fIdentFuncTable[104] := FuncLeast;
-  fIdentFuncTable[172] := FuncLess;
-  fIdentFuncTable[71] := FuncMessage;
-  fIdentFuncTable[106] := FuncMessages;
-  fIdentFuncTable[175] := FuncMod;
-  fIdentFuncTable[170] := FuncMore;
-  fIdentFuncTable[0] := FuncMost;
-  fIdentFuncTable[67] := FuncName;
-  fIdentFuncTable[45] := FuncNil;
-  fIdentFuncTable[6] := FuncNot;
-  fIdentFuncTable[141] := FuncObject;
-  fIdentFuncTable[75] := FuncObstacle;
-  fIdentFuncTable[197] := FuncOf;
-  fIdentFuncTable[57] := FuncOn;
-  fIdentFuncTable[214] := FuncOr;
-  fIdentFuncTable[218] := FuncOut;
-  fIdentFuncTable[23] := FuncPlugin;
-  fIdentFuncTable[138] := FuncPoscomponent;
-  fIdentFuncTable[187] := FuncPrivate;
-  fIdentFuncTable[77] := FuncProcedure;
-  fIdentFuncTable[137] := FuncPublic;
-  fIdentFuncTable[103] := FuncRaise;
-  fIdentFuncTable[47] := FuncReceives;
-  fIdentFuncTable[146] := FuncRepeat;
-  fIdentFuncTable[162] := FuncResourcestring;
-  fIdentFuncTable[167] := FuncShl;
-  fIdentFuncTable[62] := FuncShr;
-  fIdentFuncTable[51] := FuncString;
-  fIdentFuncTable[201] := FuncThan;
-  fIdentFuncTable[117] := FuncThen;
-  fIdentFuncTable[48] := FuncTo;
-  fIdentFuncTable[38] := FuncTool;
-  fIdentFuncTable[181] := FuncTry;
-  fIdentFuncTable[124] := FuncUnit;
-  fIdentFuncTable[113] := FuncUntil;
-  fIdentFuncTable[213] := FuncUses;
-  fIdentFuncTable[88] := FuncVar;
-  fIdentFuncTable[126] := FuncVehicle;
-  fIdentFuncTable[188] := FuncWhile;
-  fIdentFuncTable[16] := FuncXor;
-  fIdentFuncTable[130] := FuncZindex;
+  fIdentFuncTable[97] := FuncAction;
+  fIdentFuncTable[150] := FuncActions;
+  fIdentFuncTable[46] := FuncAnd;
+  fIdentFuncTable[208] := FuncAs;
+  fIdentFuncTable[158] := FuncAt;
+  fIdentFuncTable[3] := FuncAttributes;
+  fIdentFuncTable[61] := FuncBegin;
+  fIdentFuncTable[176] := FuncCan;
+  fIdentFuncTable[103] := FuncCannot;
+  fIdentFuncTable[222] := FuncCase;
+  fIdentFuncTable[23] := FuncComponents;
+  fIdentFuncTable[80] := FuncConst;
+  fIdentFuncTable[78] := FuncDiscards;
+  fIdentFuncTable[200] := FuncDiv;
+  fIdentFuncTable[47] := FuncDo;
+  fIdentFuncTable[220] := FuncDownto;
+  fIdentFuncTable[59] := FuncEffect;
+  fIdentFuncTable[105] := FuncElse;
+  fIdentFuncTable[69] := FuncEnd;
+  fIdentFuncTable[82] := FuncExactly;
+  fIdentFuncTable[102] := FuncExcept;
+  fIdentFuncTable[51] := FuncField;
+  fIdentFuncTable[141] := FuncFinally;
+  fIdentFuncTable[30] := FuncFor;
+  fIdentFuncTable[34] := FuncForward;
+  fIdentFuncTable[206] := FuncFunction;
+  fIdentFuncTable[125] := FuncHas;
+  fIdentFuncTable[198] := FuncIf;
+  fIdentFuncTable[115] := FuncImage;
+  fIdentFuncTable[25] := FuncIn;
+  fIdentFuncTable[0] := FuncInherited;
+  fIdentFuncTable[2] := FuncIs;
+  fIdentFuncTable[163] := FuncLeast;
+  fIdentFuncTable[56] := FuncLess;
+  fIdentFuncTable[173] := FuncMessage;
+  fIdentFuncTable[167] := FuncMessages;
+  fIdentFuncTable[146] := FuncMod;
+  fIdentFuncTable[210] := FuncMore;
+  fIdentFuncTable[172] := FuncMost;
+  fIdentFuncTable[83] := FuncName;
+  fIdentFuncTable[190] := FuncNil;
+  fIdentFuncTable[203] := FuncNot;
+  fIdentFuncTable[43] := FuncObject;
+  fIdentFuncTable[108] := FuncObstacle;
+  fIdentFuncTable[157] := FuncOf;
+  fIdentFuncTable[211] := FuncOn;
+  fIdentFuncTable[11] := FuncOr;
+  fIdentFuncTable[111] := FuncOut;
+  fIdentFuncTable[8] := FuncPlugin;
+  fIdentFuncTable[5] := FuncPoscomponent;
+  fIdentFuncTable[79] := FuncPrivate;
+  fIdentFuncTable[107] := FuncProcedure;
+  fIdentFuncTable[120] := FuncPublic;
+  fIdentFuncTable[139] := FuncRaise;
+  fIdentFuncTable[204] := FuncReceives;
+  fIdentFuncTable[137] := FuncRepeat;
+  fIdentFuncTable[196] := FuncResourcestring;
+  fIdentFuncTable[182] := FuncShl;
+  fIdentFuncTable[109] := FuncShr;
+  fIdentFuncTable[88] := FuncString;
+  fIdentFuncTable[60] := FuncThan;
+  fIdentFuncTable[184] := FuncThen;
+  fIdentFuncTable[89] := FuncTo;
+  fIdentFuncTable[10] := FuncTool;
+  fIdentFuncTable[18] := FuncTry;
+  fIdentFuncTable[202] := FuncUnit;
+  fIdentFuncTable[175] := FuncUntil;
+  fIdentFuncTable[100] := FuncUses;
+  fIdentFuncTable[193] := FuncVar;
+  fIdentFuncTable[134] := FuncVehicle;
+  fIdentFuncTable[197] := FuncWhile;
+  fIdentFuncTable[26] := FuncWith;
+  fIdentFuncTable[71] := FuncXor;
+  fIdentFuncTable[15] := FuncZindex;
 end;
 
 {$Q-}
@@ -293,7 +298,7 @@ begin
   Result := 0;
   while IsIdentChar(Str^) do
   begin
-    Result := Result * 1000 + Ord(Str^) * 96;
+    Result := Result * 467 + Ord(Str^) * 177;
     inc(Str);
   end;
   Result := Result mod 227;
@@ -358,6 +363,14 @@ begin
 end;
 
 function TSynFunDelphiSyn.FuncCan(Index: Integer): TtkTokenKind;
+begin
+  if IsCurrentToken(KeyWords[Index]) then
+    Result := tkKey
+  else
+    Result := tkIdentifier;
+end;
+
+function TSynFunDelphiSyn.FuncCannot(Index: Integer): TtkTokenKind;
 begin
   if IsCurrentToken(KeyWords[Index]) then
     Result := tkKey
@@ -861,6 +874,14 @@ begin
     Result := tkIdentifier;
 end;
 
+function TSynFunDelphiSyn.FuncWith(Index: Integer): TtkTokenKind;
+begin
+  if IsCurrentToken(KeyWords[Index]) then
+    Result := tkKey
+  else
+    Result := tkIdentifier;
+end;
+
 function TSynFunDelphiSyn.FuncXor(Index: Integer): TtkTokenKind;
 begin
   if IsCurrentToken(KeyWords[Index]) then
@@ -969,7 +990,7 @@ procedure TSynFunDelphiSyn.LineCommentProc;
 begin
   fTokenID := tkComment;
   while not IsLineEnd(Run) do
-    Inc(Run);
+      Inc(Run);
 end;
 
 procedure TSynFunDelphiSyn.StringOpenProc;
@@ -1083,13 +1104,13 @@ end;
 function TSynFunDelphiSyn.GetKeyWords(TokenKind: Integer): UnicodeString;
 begin
   Result := 
-    'action,actions,and,as,at,attributes,begin,can,case,components,const,d' +
-    'iscards,div,do,downto,effect,else,end,exactly,except,field,finally,for' +
-    ',forward,function,has,if,image,in,inherited,is,least,less,message,mess' +
-    'ages,mod,more,most,name,nil,not,object,obstacle,of,on,or,out,plugin,po' +
-    'scomponent,private,procedure,public,raise,receives,repeat,resourcestri' +
-    'ng,shl,shr,string,than,then,to,tool,try,unit,until,uses,var,vehicle,wh' +
-    'ile,xor,zindex';
+    'action,actions,and,as,at,attributes,begin,can,cannot,case,components,' +
+    'const,discards,div,do,downto,effect,else,end,exactly,except,field,fina' +
+    'lly,for,forward,function,has,if,image,in,inherited,is,least,less,messa' +
+    'ge,messages,mod,more,most,name,nil,not,object,obstacle,of,on,or,out,pl' +
+    'ugin,poscomponent,private,procedure,public,raise,receives,repeat,resou' +
+    'rcestring,shl,shr,string,than,then,to,tool,try,unit,until,uses,var,veh' +
+    'icle,while,with,xor,zindex';
 end;
 
 function TSynFunDelphiSyn.GetTokenID: TtkTokenKind;
