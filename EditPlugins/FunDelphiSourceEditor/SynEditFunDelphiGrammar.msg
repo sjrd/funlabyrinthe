@@ -34,6 +34,8 @@ tool
 obstacle
 poscomponent
 vehicle
+creator
+class
 components
 attributes
 actions
@@ -41,6 +43,8 @@ messages
 
 message
 name
+hint
+category
 zindex
 image
 action

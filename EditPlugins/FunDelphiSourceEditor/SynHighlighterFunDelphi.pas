@@ -60,8 +60,11 @@ type
     function FuncCan(Index: Integer): TtkTokenKind;
     function FuncCannot(Index: Integer): TtkTokenKind;
     function FuncCase(Index: Integer): TtkTokenKind;
+    function FuncCategory(Index: Integer): TtkTokenKind;
+    function FuncClass(Index: Integer): TtkTokenKind;
     function FuncComponents(Index: Integer): TtkTokenKind;
     function FuncConst(Index: Integer): TtkTokenKind;
+    function FuncCreator(Index: Integer): TtkTokenKind;
     function FuncDiscards(Index: Integer): TtkTokenKind;
     function FuncDiv(Index: Integer): TtkTokenKind;
     function FuncDo(Index: Integer): TtkTokenKind;
@@ -77,6 +80,7 @@ type
     function FuncForward(Index: Integer): TtkTokenKind;
     function FuncFunction(Index: Integer): TtkTokenKind;
     function FuncHas(Index: Integer): TtkTokenKind;
+    function FuncHint(Index: Integer): TtkTokenKind;
     function FuncIf(Index: Integer): TtkTokenKind;
     function FuncImage(Index: Integer): TtkTokenKind;
     function FuncIn(Index: Integer): TtkTokenKind;
@@ -180,32 +184,32 @@ resourcestring
   SYNS_FriendlyLangFunDelphi = 'FunDelphi';
 
 const
-  KeyWords: array[0..73] of UnicodeString = (
+  KeyWords: array[0..77] of UnicodeString = (
     'action', 'actions', 'and', 'as', 'at', 'attributes', 'begin', 'can', 
-    'cannot', 'case', 'components', 'const', 'discards', 'div', 'do', 'downto', 
-    'effect', 'else', 'end', 'exactly', 'except', 'field', 'finally', 'for', 
-    'forward', 'function', 'has', 'if', 'image', 'in', 'inherited', 'is', 
-    'least', 'less', 'message', 'messages', 'mod', 'more', 'most', 'name', 
-    'nil', 'not', 'object', 'obstacle', 'of', 'on', 'or', 'out', 'plugin', 
-    'poscomponent', 'private', 'procedure', 'public', 'raise', 'receives', 
-    'repeat', 'resourcestring', 'shl', 'shr', 'string', 'than', 'then', 'to', 
-    'tool', 'try', 'unit', 'until', 'uses', 'var', 'vehicle', 'while', 'with', 
-    'xor', 'zindex' 
+    'cannot', 'case', 'category', 'class', 'components', 'const', 'creator', 
+    'discards', 'div', 'do', 'downto', 'effect', 'else', 'end', 'exactly', 
+    'except', 'field', 'finally', 'for', 'forward', 'function', 'has', 'hint', 
+    'if', 'image', 'in', 'inherited', 'is', 'least', 'less', 'message', 
+    'messages', 'mod', 'more', 'most', 'name', 'nil', 'not', 'object', 
+    'obstacle', 'of', 'on', 'or', 'out', 'plugin', 'poscomponent', 'private', 
+    'procedure', 'public', 'raise', 'receives', 'repeat', 'resourcestring', 
+    'shl', 'shr', 'string', 'than', 'then', 'to', 'tool', 'try', 'unit', 
+    'until', 'uses', 'var', 'vehicle', 'while', 'with', 'xor', 'zindex' 
   );
 
   KeyIndices: array[0..226] of Integer = (
-    30, -1, 31, 5, -1, 49, -1, -1, 48, -1, 63, 46, -1, -1, -1, 73, -1, -1, 64, 
-    -1, -1, -1, -1, 10, -1, 29, 71, -1, -1, -1, 23, -1, -1, -1, 24, -1, -1, -1, 
-    -1, -1, -1, -1, -1, 42, -1, -1, 2, 14, -1, -1, -1, 21, -1, -1, -1, -1, 33, 
-    -1, -1, 16, 60, 6, -1, -1, -1, -1, -1, -1, -1, 18, -1, 72, -1, -1, -1, -1, 
-    -1, -1, 12, 50, 11, -1, 19, 39, -1, -1, -1, -1, 59, 62, -1, -1, -1, -1, -1, 
-    -1, -1, 0, -1, -1, 67, -1, 20, 8, -1, 17, -1, 51, 43, 58, -1, 47, -1, -1, 
-    -1, 28, -1, -1, -1, -1, 52, -1, -1, -1, -1, 26, -1, -1, -1, -1, -1, -1, -1, 
-    -1, 69, -1, -1, 55, -1, 53, -1, 22, -1, -1, -1, -1, 36, -1, -1, -1, 1, -1, 
-    -1, -1, -1, -1, -1, 44, 4, -1, -1, -1, -1, 32, -1, -1, -1, 35, -1, -1, -1, 
-    -1, 38, 34, -1, 66, 7, -1, -1, -1, -1, -1, 57, -1, 61, -1, -1, -1, -1, -1, 
-    40, -1, -1, 68, -1, -1, 56, 70, 27, -1, 13, -1, 65, 41, 54, -1, 25, -1, 3, 
-    -1, 37, 45, -1, -1, -1, -1, -1, -1, -1, -1, 15, -1, 9, -1, -1, -1, -1 
+    34, -1, 35, 5, -1, 53, -1, -1, 52, -1, 67, 50, -1, -1, -1, 77, -1, -1, 68, 
+    -1, -1, -1, -1, 12, -1, 33, 75, -1, -1, -1, 26, -1, -1, -1, 27, -1, -1, -1, 
+    -1, -1, -1, -1, -1, 46, -1, -1, 2, 17, -1, -1, -1, 24, -1, -1, -1, -1, 37, 
+    -1, -1, 19, 64, 6, -1, -1, -1, -1, -1, -1, -1, 21, 30, 76, -1, -1, -1, -1, 
+    -1, -1, 15, 54, 13, -1, 22, 43, -1, -1, -1, -1, 63, 66, -1, -1, -1, -1, -1, 
+    -1, -1, 0, -1, -1, 71, -1, 23, 8, -1, 20, -1, 55, 47, 62, -1, 51, -1, -1, 
+    -1, 32, -1, -1, -1, -1, 56, -1, -1, -1, -1, 29, -1, 11, -1, -1, -1, -1, -1, 
+    -1, 73, -1, -1, 59, -1, 57, -1, 25, -1, -1, -1, -1, 40, -1, -1, -1, 1, -1, 
+    -1, -1, -1, -1, -1, 48, 4, -1, -1, -1, -1, 36, -1, 10, -1, 39, -1, -1, -1, 
+    -1, 42, 38, -1, 70, 7, -1, -1, -1, -1, -1, 61, -1, 65, -1, -1, 14, -1, -1, 
+    44, -1, -1, 72, -1, -1, 60, 74, 31, -1, 16, -1, 69, 45, 58, -1, 28, -1, 3, 
+    -1, 41, 49, -1, -1, -1, -1, -1, -1, -1, -1, 18, -1, 9, -1, -1, -1, -1 
   );
 
 procedure TSynFunDelphiSyn.InitIdent;
@@ -226,8 +230,11 @@ begin
   fIdentFuncTable[176] := FuncCan;
   fIdentFuncTable[103] := FuncCannot;
   fIdentFuncTable[222] := FuncCase;
+  fIdentFuncTable[165] := FuncCategory;
+  fIdentFuncTable[127] := FuncClass;
   fIdentFuncTable[23] := FuncComponents;
   fIdentFuncTable[80] := FuncConst;
+  fIdentFuncTable[187] := FuncCreator;
   fIdentFuncTable[78] := FuncDiscards;
   fIdentFuncTable[200] := FuncDiv;
   fIdentFuncTable[47] := FuncDo;
@@ -243,6 +250,7 @@ begin
   fIdentFuncTable[34] := FuncForward;
   fIdentFuncTable[206] := FuncFunction;
   fIdentFuncTable[125] := FuncHas;
+  fIdentFuncTable[70] := FuncHint;
   fIdentFuncTable[198] := FuncIf;
   fIdentFuncTable[115] := FuncImage;
   fIdentFuncTable[25] := FuncIn;
@@ -386,6 +394,22 @@ begin
     Result := tkIdentifier;
 end;
 
+function TSynFunDelphiSyn.FuncCategory(Index: Integer): TtkTokenKind;
+begin
+  if IsCurrentToken(KeyWords[Index]) then
+    Result := tkKey
+  else
+    Result := tkIdentifier;
+end;
+
+function TSynFunDelphiSyn.FuncClass(Index: Integer): TtkTokenKind;
+begin
+  if IsCurrentToken(KeyWords[Index]) then
+    Result := tkKey
+  else
+    Result := tkIdentifier;
+end;
+
 function TSynFunDelphiSyn.FuncComponents(Index: Integer): TtkTokenKind;
 begin
   if IsCurrentToken(KeyWords[Index]) then
@@ -395,6 +419,14 @@ begin
 end;
 
 function TSynFunDelphiSyn.FuncConst(Index: Integer): TtkTokenKind;
+begin
+  if IsCurrentToken(KeyWords[Index]) then
+    Result := tkKey
+  else
+    Result := tkIdentifier;
+end;
+
+function TSynFunDelphiSyn.FuncCreator(Index: Integer): TtkTokenKind;
 begin
   if IsCurrentToken(KeyWords[Index]) then
     Result := tkKey
@@ -515,6 +547,14 @@ begin
 end;
 
 function TSynFunDelphiSyn.FuncHas(Index: Integer): TtkTokenKind;
+begin
+  if IsCurrentToken(KeyWords[Index]) then
+    Result := tkKey
+  else
+    Result := tkIdentifier;
+end;
+
+function TSynFunDelphiSyn.FuncHint(Index: Integer): TtkTokenKind;
 begin
   if IsCurrentToken(KeyWords[Index]) then
     Result := tkKey
@@ -1104,13 +1144,13 @@ end;
 function TSynFunDelphiSyn.GetKeyWords(TokenKind: Integer): UnicodeString;
 begin
   Result := 
-    'action,actions,and,as,at,attributes,begin,can,cannot,case,components,' +
-    'const,discards,div,do,downto,effect,else,end,exactly,except,field,fina' +
-    'lly,for,forward,function,has,if,image,in,inherited,is,least,less,messa' +
-    'ge,messages,mod,more,most,name,nil,not,object,obstacle,of,on,or,out,pl' +
-    'ugin,poscomponent,private,procedure,public,raise,receives,repeat,resou' +
-    'rcestring,shl,shr,string,than,then,to,tool,try,unit,until,uses,var,veh' +
-    'icle,while,with,xor,zindex';
+    'action,actions,and,as,at,attributes,begin,can,cannot,case,category,cl' +
+    'ass,components,const,creator,discards,div,do,downto,effect,else,end,ex' +
+    'actly,except,field,finally,for,forward,function,has,hint,if,image,in,i' +
+    'nherited,is,least,less,message,messages,mod,more,most,name,nil,not,obj' +
+    'ect,obstacle,of,on,or,out,plugin,poscomponent,private,procedure,public' +
+    ',raise,receives,repeat,resourcestring,shl,shr,string,than,then,to,tool' +
+    ',try,unit,until,uses,var,vehicle,while,with,xor,zindex';
 end;
 
 function TSynFunDelphiSyn.GetTokenID: TtkTokenKind;

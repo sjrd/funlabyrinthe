@@ -45,6 +45,8 @@ tkTool	tool
 tkObstacle	obstacle
 tkPosComponent	poscomponent
 tkVehicle	vehicle
+tkCreator	creator
+tkClass	class
 tkComponents	components
 tkAttributes	attributes
 tkActions	actions
@@ -52,6 +54,8 @@ tkMessages	messages
 
 tkMessage	message
 tkName	name
+tkHint	hint
+tkCategory	category
 tkZIndex	zindex
 tkImage	image
 tkAction	action
@@ -134,6 +138,8 @@ ImplSection	Simplify
 	ObstacleSection
 	PosComponentSection
 	VehicleSection
+	CreatorSection
+	ClassSection
 	ConstSection
 	RoutineImpl
 
@@ -427,6 +433,8 @@ PluginMembers
 	(PluginMember)*
 
 PluginMember	Simplify
+	Hint
+	Category
 	ZIndex
 	Event
 	PluginAction
@@ -439,6 +447,7 @@ ObjectMembers
 
 ObjectMember	Simplify
 	Name
+	Category
 	Image
 	Event
 	ObjectAction
@@ -460,6 +469,7 @@ SquareCompMembers
 
 SquareCompMember	Simplify
 	Name
+	Category
 	Image
 	Event
 
@@ -474,7 +484,32 @@ PosCompMembers
 
 PosCompMember	Simplify
 	Name
+	Category
 	Image
+	Event
+
+CreatorSection
+	'creator'* IdentifierDecl ParentClass CreatorItemClass CreatorMembers 'end'* ';'*
+
+CreatorItemClass
+	'for'* TypeName
+
+CreatorMembers
+	(CreatorMember)*
+
+CreatorMember	Simplify
+	Hint
+	Category
+	Image
+	Event
+
+ClassSection
+	'class'* IdentifierDecl ParentClass ClassMembers 'end'* ';'*
+
+ClassMembers
+	(ClassMember)*
+
+ClassMember	Simplify
 	Event
 
 ParentClass
@@ -492,6 +527,12 @@ AutoOverride
 
 Name
 	'name'* ConstExpression ';'*
+
+Hint
+	'hint'* ConstExpression ';'*
+
+Category
+	'category'* ConstExpression ';'*
 
 ZIndex
 	'zindex'* ConstExpression ';'*

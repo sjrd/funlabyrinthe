@@ -337,6 +337,32 @@ type
   end;
 
   {*
+    Noeud définition de créateur de composant
+    @author sjrd
+    @version 5.0.1
+  *}
+  TFunDelphiCreatorNode = class(TFunDelphiClassDefNode)
+  protected
+    function GetMasterClass: TSepiClass; override;
+  end;
+
+  {*
+    Noeud spécifiant le type de composants créés par un créateur de composants
+    @author sjrd
+    @version 5.0.1
+  *}
+  TFunDelphiCreatorItemClassNode = class(TSepiNonTerminal)
+  private
+    FInheritedMethod: TSepiMethod; /// Méthode héritée à surcharger
+
+    procedure BuildMethod(ItemClass: TSepiClass);
+  protected
+    procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
+  public
+    procedure BeginParsing; override;
+  end;
+
+  {*
     Noeud classe parent
     @author sjrd
     @version 5.0
@@ -425,6 +451,45 @@ type
   protected
     procedure ChildBeginParsing(Child: TSepiParseTreeNode); override;
     procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
+  end;
+
+  {*
+    Classe de base pour les noeuds qui représentent une méthode GetSomething
+    @author sjrd
+    @version 5.0.1
+  *}
+  TFunDelphiGetMethodNode = class(TSepiNonTerminal)
+  private
+    FInheritedMethod: TSepiMethod; /// Méthode héritée à surcharger
+
+    procedure BuildMethod(const Value: ISepiReadableValue);
+  protected
+    procedure ChildBeginParsing(Child: TSepiParseTreeNode); override;
+    procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
+
+    function GetMethodName: string; virtual; abstract;
+  public
+    procedure BeginParsing; override;
+  end;
+
+  {*
+    Noeud hint d'un composant
+    @author sjrd
+    @version 5.0.1
+  *}
+  TFunDelphiHintNode = class(TFunDelphiGetMethodNode)
+  protected
+    function GetMethodName: string; override;
+  end;
+
+  {*
+    Noeud category d'un composant
+    @author sjrd
+    @version 5.0.1
+  *}
+  TFunDelphiCategoryNode = class(TFunDelphiGetMethodNode)
+  protected
+    function GetMethodName: string; override;
   end;
 
   {*
@@ -706,11 +771,16 @@ begin
   NonTerminalClasses[ntObstacleSection]     := TFunDelphiObstacleNode;
   NonTerminalClasses[ntPosComponentSection] := TFunDelphiPosComponentNode;
   NonTerminalClasses[ntVehicleSection]      := TFunDelphiVehicleNode;
+  NonTerminalClasses[ntCreatorSection]      := TFunDelphiCreatorNode;
+  NonTerminalClasses[ntClassSection]        := TFunDelphiClassDefNode;
 
+  NonTerminalClasses[ntCreatorItemClass]     := TFunDelphiCreatorItemClassNode;
   NonTerminalClasses[ntParentClass]          := TFunDelphiParentClassNode;
   NonTerminalClasses[ntField]                := TFunDelphiClassFieldNode;
   NonTerminalClasses[ntAutoOverride]         := TFunDelphiAutoOverrideNode;
   NonTerminalClasses[ntName]                 := TFunDelphiNameNode;
+  NonTerminalClasses[ntHint]                 := TFunDelphiHintNode;
+  NonTerminalClasses[ntCategory]             := TFunDelphiCategoryNode;
   NonTerminalClasses[ntZIndex]               := TFunDelphiZIndexNode;
   NonTerminalClasses[ntImage]                := TFunDelphiImageNode;
   NonTerminalClasses[ntEvent]                := TFunDelphiMethodDeclAndImplNode;
@@ -1863,6 +1933,108 @@ begin
   Result := TSepiClass(SepiRoot.FindClass(TVehicle));
 end;
 
+{-----------------------------}
+{ TFunDelphiCreatorNode class }
+{-----------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiCreatorNode.GetMasterClass: TSepiClass;
+begin
+  Result := TSepiClass(SepiRoot.FindClass(TComponentCreator));
+end;
+
+{--------------------------------------}
+{ TFunDelphiCreatorItemClassNode class }
+{--------------------------------------}
+
+{*
+  Construit la méthode
+  @param ItemClass   Classe de composants à créer
+*}
+procedure TFunDelphiCreatorItemClassNode.BuildMethod(ItemClass: TSepiClass);
+var
+  SepiMethod: TSepiMethod;
+  Compiler: TSepiMethodCompiler;
+  ResultValue: ISepiWritableValue;
+  Expression: ISepiExpression;
+  WantingParams: ISepiWantingParams;
+  RightValue: ISepiReadableValue;
+begin
+  SepiMethod := TSepiMethod.Create(SepiContext, 'DoCreateComponent', nil,
+    FInheritedMethod.Signature, mlkOverride);
+
+  Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
+
+  ResultValue := LanguageRules.ResolveIdentInMethod(Compiler,
+    'Result') as ISepiWritableValue;
+  (ResultValue as ISepiExpression).SourcePos := SourcePos;
+
+  Expression := TSepiMetaClassValue.MakeValue(Compiler,
+    ItemClass) as ISepiExpression;
+  Expression.SourcePos := SourcePos;
+
+  Expression := LanguageRules.FieldSelection(SepiContext, Expression, 'Create');
+
+  Assert(Expression <> nil);
+
+  WantingParams := Expression as ISepiWantingParams;
+  WantingParams.AddParam(LanguageRules.ResolveIdentInMethod(
+    Compiler, 'Master'));
+  WantingParams.AddParam(LanguageRules.ResolveIdentInMethod(
+    Compiler, SepiMethod.Signature.Params[0].Name));
+  WantingParams.CompleteParams;
+  WantingParams.AttachToExpression(Expression);
+
+  RightValue := Expression as ISepiReadableValue;
+  RightValue := TSepiConvertOperation.ConvertValue(ResultValue.ValueType,
+    RightValue);
+
+  ResultValue.CompileWrite(Compiler, Compiler.Instructions, RightValue);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiCreatorItemClassNode.BeginParsing;
+begin
+  inherited;
+
+  FInheritedMethod := (SepiContext as TSepiClass).LookForMember(
+    'DoCreateComponent') as TSepiMethod;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiCreatorItemClassNode.ChildEndParsing(
+  Child: TSepiParseTreeNode);
+var
+  TFunLabyComponentClass, ItemClass: TSepiClass;
+begin
+  with Child as TSepiTypeNode do
+  begin
+    if SepiType is TSepiClass then
+      ItemClass := TSepiClass(SepiType)
+    else
+      ItemClass := nil;
+
+    TFunLabyComponentClass := TSepiClass(SepiRoot.FindClass(TFunLabyComponent));
+
+    if (ItemClass = nil) or
+      (not ItemClass.ClassInheritsFrom(TFunLabyComponentClass)) then
+    begin
+      MakeError(Format(SClassOfRequired, [TFunLabyComponentClass.DisplayName]));
+      ItemClass := TFunLabyComponentClass;
+    end;
+  end;
+
+  BuildMethod(ItemClass);
+
+  inherited;
+end;
+
 {---------------------------------}
 { TFunDelphiParentClassNode class }
 {---------------------------------}
@@ -2072,6 +2244,87 @@ begin
   inherited;
 end;
 
+{-------------------------------}
+{ TFunDelphiGetMethodNode class }
+{-------------------------------}
+
+{*
+  Construit la méthode
+  @param Value   Valeur que la méthode doit renvoyer
+*}
+procedure TFunDelphiGetMethodNode.BuildMethod(const Value: ISepiReadableValue);
+var
+  SepiMethod: TSepiMethod;
+  Compiler: TSepiMethodCompiler;
+  ResultValue: ISepiWritableValue;
+begin
+  SepiMethod := TSepiMethod.Create(SepiContext, GetMethodName, nil,
+    FInheritedMethod.Signature, mlkOverride);
+
+  Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
+
+  ResultValue := LanguageRules.ResolveIdentInMethod(Compiler,
+    'Result') as ISepiWritableValue;
+
+  ResultValue.CompileWrite(Compiler, Compiler.Instructions, Value);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiGetMethodNode.BeginParsing;
+begin
+  inherited;
+
+  FInheritedMethod := (SepiContext as TSepiClass).LookForMember(
+    GetMethodName) as TSepiMethod;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiGetMethodNode.ChildBeginParsing(Child: TSepiParseTreeNode);
+begin
+  inherited;
+
+  (Child as TSepiConstExpressionNode).ValueType :=
+    FInheritedMethod.Signature.ReturnType;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiGetMethodNode.ChildEndParsing(Child: TSepiParseTreeNode);
+begin
+  BuildMethod((Child as TSepiConstExpressionNode).AsReadableValue);
+
+  inherited;
+end;
+
+{--------------------------}
+{ TFunDelphiHintNode class }
+{--------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiHintNode.GetMethodName: string;
+begin
+  Result := 'GetHint';
+end;
+
+{------------------------------}
+{ TFunDelphiCategoryNode class }
+{------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiCategoryNode.GetMethodName: string;
+begin
+  Result := 'GetCategory';
+end;
+
 {----------------------------}
 { TFunDelphiZIndexNode class }
 {----------------------------}
@@ -2130,8 +2383,15 @@ var
   Executable: ISepiExecutable;
 begin
   Expression := LanguageRules.ResolveIdentInMethod(Compiler, 'Painter');
+  if Expression = nil then
+    Expression := LanguageRules.ResolveIdentInMethod(Compiler, 'IconPainter');
+
+  Assert(Expression <> nil);
+
   Expression := LanguageRules.FieldSelection(SepiContext, Expression,
     'AddImage');
+
+  Assert(Expression <> nil);
 
   WantingParams := Expression as ISepiWantingParams;
   WantingParams.AddParam(ImageValue as ISepiExpression);
