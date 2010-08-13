@@ -26,6 +26,7 @@ private
 public
 forward
 
+component
 plugin
 object
 field
@@ -47,6 +48,7 @@ hint
 category
 zindex
 image
+property
 action
 
 div

@@ -37,6 +37,7 @@ tkPrivate	private
 tkPublic	public
 tkForward	forward
 
+tkComponent	component
 tkPlugin	plugin
 tkObject	object
 tkField	field
@@ -58,6 +59,7 @@ tkHint	hint
 tkCategory	category
 tkZIndex	zindex
 tkImage	image
+tkProperty	property
 tkAction	action
 
 tkPlus	+
@@ -130,6 +132,7 @@ ImplSection	Simplify
 	AttributesSection
 	MessagesSection
 	ComponentsSection
+	ComponentSection
 	PluginSection
 	ObjectSection
 	FieldSection
@@ -426,6 +429,19 @@ ComponentParameters
 ComponentParameter
 	Identifier ':'* Expression
 
+ComponentSection
+	'component'* IdentifierDecl ParentClass ComponentMembers 'end'* ';'*
+
+ComponentMembers
+	(ComponentMember)*
+
+ComponentMember	Simplify
+	Hint
+	Category
+	Image
+	Property
+	Event
+
 PluginSection
 	'plugin'* IdentifierDecl ParentClass PluginMembers 'end'* ';'*
 
@@ -435,7 +451,9 @@ PluginMembers
 PluginMember	Simplify
 	Hint
 	Category
+	Image
 	ZIndex
+	Property
 	Event
 	PluginAction
 
@@ -449,6 +467,7 @@ ObjectMember	Simplify
 	Name
 	Category
 	Image
+	Property
 	Event
 	ObjectAction
 
@@ -471,6 +490,7 @@ SquareCompMember	Simplify
 	Name
 	Category
 	Image
+	Property
 	Event
 
 PosComponentSection
@@ -486,6 +506,7 @@ PosCompMember	Simplify
 	Name
 	Category
 	Image
+	Property
 	Event
 
 CreatorSection
@@ -501,6 +522,7 @@ CreatorMember	Simplify
 	Hint
 	Category
 	Image
+	Property
 	Event
 
 ClassSection
@@ -510,6 +532,7 @@ ClassMembers
 	(ClassMember)*
 
 ClassMember	Simplify
+	Property
 	Event
 
 ParentClass
@@ -539,6 +562,9 @@ ZIndex
 
 Image
 	'image'* ConstExpression (','* ConstExpression)* ';'*
+
+Property
+	'property'* IdentifierDecl ':'* TypeName ';'*
 
 Event
 	EventHeader MethodBody

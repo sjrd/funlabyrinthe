@@ -257,6 +257,16 @@ type
   end;
 
   {*
+    Noeud définition de composant
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiComponentNode = class(TFunDelphiClassDefNode)
+  protected
+    function GetMasterClass: TSepiClass; override;
+  end;
+
+  {*
     Noeud définition de plug-in
     @author sjrd
     @version 5.0
@@ -519,6 +529,42 @@ type
   end;
 
   {*
+    Noeud propriété
+    @author sjrd
+    @version 5.0
+  *}
+  TFunDelphiPropertyNode = class(TSepiNonTerminal)
+  private
+    FSepiClass: TSepiClass; /// Classe contenante
+
+    FPropName: string;           /// Nom de la propriété
+    FFieldName: string;          /// Nom du champ associé
+    FDefaultFieldName: string;   /// Nom du champ de valeur par défaut associé
+    FIsStoredMethodName: string; /// Nom de la méthode IsPropStored
+    FPropType: TSepiType;        /// Type de la propriété
+
+    procedure CreateFields;
+    procedure CreateIsStoredMethod;
+    procedure CreateStoreDefaultsMethod;
+    procedure CreateProperty;
+
+    procedure BuildProperty;
+  protected
+    procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
+
+    property SepiClass: TSepiClass read FSepiClass;
+  public
+    procedure BeginParsing; override;
+    procedure EndParsing; override;
+
+    property PropName: string read FPropName;
+    property FieldName: string read FFieldName;
+    property DefaultFieldName: string read FDefaultFieldName;
+    property IsStoredMethodName: string read FIsStoredMethodName;
+    property PropType: TSepiType read FPropType;
+  end;
+
+  {*
     Noeud en-tête d'événement par méthode surchargée
     @author sjrd
     @version 5.0
@@ -763,6 +809,7 @@ begin
   NonTerminalClasses[ntMessageDecl]         := TFunDelphiMessageDeclNode;
   NonTerminalClasses[ntComponent]           := TFunDelphiComponentDeclNode;
   NonTerminalClasses[ntComponentParameter]  := TFunDelphiComponentParamNode;
+  NonTerminalClasses[ntComponentSection]    := TFunDelphiComponentNode;
   NonTerminalClasses[ntPluginSection]       := TFunDelphiPluginNode;
   NonTerminalClasses[ntObjectSection]       := TFunDelphiObjectNode;
   NonTerminalClasses[ntFieldSection]        := TFunDelphiFieldNode;
@@ -783,6 +830,7 @@ begin
   NonTerminalClasses[ntCategory]             := TFunDelphiCategoryNode;
   NonTerminalClasses[ntZIndex]               := TFunDelphiZIndexNode;
   NonTerminalClasses[ntImage]                := TFunDelphiImageNode;
+  NonTerminalClasses[ntProperty]             := TFunDelphiPropertyNode;
   NonTerminalClasses[ntEvent]                := TFunDelphiMethodDeclAndImplNode;
   NonTerminalClasses[ntMethodEventHeader]    := TFunDelphiMethodEventHeaderNode;
   NonTerminalClasses[ntMessageEventHeader] :=
@@ -858,6 +906,23 @@ begin
   Instruction := TSepiExecuteExpression.Create(Compiler);
   Instruction.Executable := Executable;
   Compiler.Instructions.Add(Instruction);
+end;
+
+{*
+  Copie une signature vers une autre
+  @param Dest     Signature destination
+  @param Source   Signature source
+*}
+procedure CopySignature(Dest, Source: TSepiSignature);
+var
+  I: Integer;
+begin
+  Dest.Kind := Source.Kind;
+  Dest.ReturnType := Source.ReturnType;
+  Dest.CallingConvention := Source.CallingConvention;
+
+  for I := 0 to Source.ParamCount-1 do
+    TSepiParam.Clone(Dest, Source.Params[I]);
 end;
 
 {--------------------------}
@@ -1837,6 +1902,18 @@ begin
     Result := inherited ResolveIdent(Identifier);
 end;
 
+{-------------------------------}
+{ TFunDelphiComponentNode class }
+{-------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TFunDelphiComponentNode.GetMasterClass: TSepiClass;
+begin
+  Result := TSepiClass(SepiRoot.FindClass(TFunLabyComponent));
+end;
+
 {----------------------------}
 { TFunDelphiPluginNode class }
 {----------------------------}
@@ -2422,6 +2499,198 @@ begin
   inherited;
 end;
 
+{------------------------------}
+{ TFunDelphiPropertyNode class }
+{------------------------------}
+
+{*
+  Crée les champs
+*}
+procedure TFunDelphiPropertyNode.CreateFields;
+begin
+  SepiClass.CurrentVisibility := mvStrictPrivate;
+  SepiClass.AddField(FieldName, PropType);
+  SepiClass.AddField(DefaultFieldName, PropType);
+end;
+
+{*
+  Crée la méthode IsPropStored
+*}
+procedure TFunDelphiPropertyNode.CreateIsStoredMethod;
+var
+  Signature: TSepiSignature;
+  SepiMethod: TSepiMethod;
+  Compiler: TSepiMethodCompiler;
+  ResultValue: ISepiWritableValue;
+  FieldValue, DefaultFieldValue, RightValue: ISepiReadableValue;
+begin
+  SepiClass.CurrentVisibility := mvStrictPrivate;
+
+  Signature := TSepiSignature.CreateConstructing(SepiUnit, SepiClass);
+  try
+    Signature.Kind := skObjectFunction;
+    Signature.ReturnType := SystemUnit.Boolean;
+    Signature.Complete;
+
+    SepiMethod := SepiClass.AddMethod(IsStoredMethodName, nil, Signature);
+  finally
+    Signature.Free;
+  end;
+
+  Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
+
+  ResultValue := LanguageRules.ResolveIdentInMethod(Compiler,
+    'Result') as ISepiWritableValue;
+
+  FieldValue := LanguageRules.ResolveIdentInMethod(Compiler,
+    FieldName) as ISepiReadableValue;
+  DefaultFieldValue := LanguageRules.ResolveIdentInMethod(Compiler,
+    DefaultFieldName) as ISepiReadableValue;
+
+  RightValue := TSepiOperator.MakeBinaryOperation(opCmpNE,
+    FieldValue, DefaultFieldValue);
+
+  ResultValue.CompileWrite(Compiler, Compiler.Instructions, RightValue);
+end;
+
+{*
+  Crée la méthode StoreDefaults
+*}
+procedure TFunDelphiPropertyNode.CreateStoreDefaultsMethod;
+var
+  SepiMethod: TSepiMethod;
+  Compiler: TSepiMethodCompiler;
+  Signature: TSepiSignature;
+  DefaultFieldValue: ISepiWritableValue;
+  FieldValue: ISepiReadableValue;
+begin
+  SepiMethod := SepiClass.LookForMember('StoreDefaults') as TSepiMethod;
+
+  if SepiMethod.Owner = SepiClass then
+    Compiler := UnitCompiler.FindMethodCompiler(SepiMethod)
+  else
+  begin
+    SepiClass.CurrentVisibility := mvProtected;
+    Signature := TSepiSignature.CreateConstructing(SepiUnit, SepiClass);
+    try
+      CopySignature(Signature, SepiMethod.Signature);
+      Signature.Complete;
+
+      SepiMethod := SepiClass.AddMethod('StoreDefaults', nil,
+        Signature, mlkOverride);
+    finally
+      Signature.Free;
+    end;
+
+    Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
+    CompilePureInheritedCall(Compiler);
+  end;
+
+  DefaultFieldValue := LanguageRules.ResolveIdentInMethod(Compiler,
+    DefaultFieldName) as ISepiWritableValue;
+  FieldValue := LanguageRules.ResolveIdentInMethod(Compiler,
+    FieldName) as ISepiReadableValue;
+
+  DefaultFieldValue.CompileWrite(Compiler, Compiler.Instructions, FieldValue);
+end;
+
+{*
+  Crée la propriété
+*}
+procedure TFunDelphiPropertyNode.CreateProperty;
+var
+  Field: TSepiField;
+  Storage: TSepiPropertyStorage;
+  Signature: TSepiSignature;
+begin
+  Field := SepiClass.FindComponent(FieldName) as TSepiField;
+  Storage.Kind := pskMethod;
+  Storage.Method := SepiClass.FindComponent(IsStoredMethodName) as TSepiMethod;
+
+  Signature := TSepiSignature.CreateConstructing(SepiUnit, SepiClass);
+  try
+    Signature.Kind := skProperty;
+    Signature.ReturnType := PropType;
+
+    SepiClass.CurrentVisibility := mvPublished;
+    SepiClass.AddProperty(PropName, Signature, Field, Field, NoIndex,
+      NoDefaultValue, Storage, False);
+  finally
+    Signature.Free;
+  end;
+end;
+
+{*
+  Construit la propriété
+*}
+procedure TFunDelphiPropertyNode.BuildProperty;
+var
+  SavedVisibility: TMemberVisibility;
+begin
+  SavedVisibility := SepiClass.CurrentVisibility;
+  try
+    CreateFields;
+    CreateIsStoredMethod;
+    CreateStoreDefaultsMethod;
+    CreateProperty;
+  finally
+    SepiClass.CurrentVisibility := SavedVisibility;
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiPropertyNode.BeginParsing;
+begin
+  inherited;
+
+  FSepiClass := SepiContext as TSepiClass;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiPropertyNode.ChildEndParsing(Child: TSepiParseTreeNode);
+const
+  AlwaysGoodKinds = [TypInfo.tkInteger, tkChar, tkEnumeration, TypInfo.tkFloat,
+    tkSet, tkWChar, tkLString, tkWString, tkInt64, tkUString];
+begin
+  if Child is TSepiIdentifierDeclarationNode then
+  begin
+    FPropName := TSepiIdentifierDeclarationNode(Child).Identifier;
+    FFieldName := 'F' + FPropName;
+    FDefaultFieldName := 'FDefault' + FPropName;
+    FIsStoredMethodName := 'Is' + FPropName + 'Stored';
+  end else if Child is TSepiTypeNode then
+  begin
+    FPropType := TSepiTypeNode(Child).SepiType;
+
+    if FPropType.Kind in AlwaysGoodKinds then
+      // OK
+    else if (FPropType is TSepiClass) and
+      TSepiClass(FPropType).DelphiClass.InheritsFrom(TFunLabyComponent) then
+      // OK
+    else
+    begin
+      Child.MakeError(Format(SInvalidPropertyType, [FPropType.DisplayName]));
+      FPropType := SystemUnit.Integer;
+    end;
+  end;
+
+  inherited;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunDelphiPropertyNode.EndParsing;
+begin
+  BuildProperty;
+
+  inherited;
+end;
+
 {---------------------------------------}
 { TFunDelphiMethodEventHeaderNode class }
 {---------------------------------------}
@@ -2435,7 +2704,6 @@ const
 var
   InheritedMeta: TSepiComponent;
   InheritedSignature: TSepiSignature;
-  I: Integer;
 begin
   InheritedMeta := (SepiContext as TSepiClass).LookForMember(Name);
   if not (InheritedMeta is TSepiMethod) then
@@ -2450,12 +2718,7 @@ begin
     Exit;
   end;
 
-  Signature.Kind := InheritedSignature.Kind;
-  Signature.ReturnType := InheritedSignature.ReturnType;
-  Signature.CallingConvention := InheritedSignature.CallingConvention;
-
-  for I := 0 to InheritedSignature.ParamCount-1 do
-    TSepiParam.Clone(Signature, InheritedSignature.Params[I]);
+  CopySignature(Signature, InheritedSignature);
 
   SepiContext.CurrentVisibility := InheritedMeta.Visibility;
 end;
