@@ -888,7 +888,7 @@ end;
 *}
 procedure TMasterFile.DefineProperties(Filer: TFunLabyFiler);
 var
-  Maps, Players, Additionnal: TStrings;
+  Additionnal: TStrings;
   I: Integer;
   Component: TFunLabyComponent;
   ID: TComponentID;
@@ -904,30 +904,6 @@ begin
 
   if Mode <> fmPlay then
     Filer.DefinePersistent('SourceFiles', SourceFiles);
-
-  // Legacy read map and player list
-  if psReading in PersistentState then
-  begin
-    Maps := nil;
-    Players := nil;
-    try
-      Maps := TStringList.Create;
-      Players := TStringList.Create;
-
-      Filer.DefineStrings('Maps', Maps);
-      Filer.DefineStrings('Players', Players);
-
-      for I := 0 to Maps.Count-1 do
-        Master.CreateAdditionnalComponent(TMap, Maps[I]);
-
-      for I := 0 to Players.Count-1 do
-        Master.CreateAdditionnalComponent(TPlayer,
-          GetFirstToken(Players[I], '='));
-    finally
-      Maps.Free;
-      Players.Free;
-    end;
-  end;
 
   // Create additionnal components
   Additionnal := TStringList.Create;

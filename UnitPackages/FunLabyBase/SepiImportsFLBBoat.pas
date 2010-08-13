@@ -153,7 +153,7 @@ procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
   CheckInstanceSize(TBoat, 148, 148);
-  CheckInstanceSize(TBoatCreator, 40, 40);
+  CheckInstanceSize(TBoatCreator, 36, 36);
   {$ASSERTIONS OFF}
 end;
 

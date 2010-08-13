@@ -275,7 +275,7 @@ begin
   CheckInstanceSize(TArrow, 60, 56);
   CheckInstanceSize(TTransporter, 64, 56);
   CheckInstanceSize(TInactiveTransporter, 64, 64);
-  CheckInstanceSize(TTransporterCreator, 40, 40);
+  CheckInstanceSize(TTransporterCreator, 36, 36);
   CheckInstanceSize(TStairs, 60, 56);
   CheckInstanceSize(TDirectTurnstile, 56, 56);
   CheckInstanceSize(TIndirectTurnstile, 56, 56);

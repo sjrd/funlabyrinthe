@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'FunLabyUtils';
   ResourceName = 'SepiImportsFunLabyUtils';
   TypeCount = 60;
-  MethodCount = 237;
+  MethodCount = 235;
   VariableCount = 12;
 
 var
@@ -133,8 +133,6 @@ type
 
   TSepiImportsTComponentCreator = class(TComponentCreator)
   private
-    function GetCreatedComponentCount: Integer;
-    function GetCreatedComponents(Index: Integer): TFunLabyComponent;
     class procedure InitMethodAddresses;
   end;
 
@@ -626,21 +624,9 @@ end;
 { TComponentCreator import }
 {--------------------------}
 
-function TSepiImportsTComponentCreator.GetCreatedComponentCount: Integer;
-begin
-  Result := CreatedComponentCount;
-end;
-
-function TSepiImportsTComponentCreator.GetCreatedComponents(Index: Integer): TFunLabyComponent;
-begin
-  Result := CreatedComponents[Index];
-end;
-
 class procedure TSepiImportsTComponentCreator.InitMethodAddresses;
 begin
-  MethodAddresses[88] := @TSepiImportsTComponentCreator.GetCreatedComponentCount;
-  MethodAddresses[89] := @TSepiImportsTComponentCreator.GetCreatedComponents;
-  MethodAddresses[90] := @TSepiImportsTComponentCreator.CreateComponent;
+  MethodAddresses[88] := @TSepiImportsTComponentCreator.CreateComponent;
 end;
 
 {---------------}
@@ -649,7 +635,7 @@ end;
 
 class procedure TSepiImportsTField.InitMethodAddresses;
 begin
-  MethodAddresses[91] := @TSepiImportsTField.DrawCeiling;
+  MethodAddresses[89] := @TSepiImportsTField.DrawCeiling;
 end;
 
 {----------------}
@@ -673,19 +659,19 @@ end;
 
 class procedure TSepiImportsTSquare.InitMethodAddresses;
 begin
-  MethodAddresses[92] := @TSepiImportsTSquare.GetComponentCount;
-  MethodAddresses[93] := @TSepiImportsTSquare.GetComponents;
-  MethodAddresses[94] := @TSepiImportsTSquare.GetComponentClasses;
-  MethodAddresses[95] := @TSepiImportsTSquare.Configure;
-  MethodAddresses[96] := @TSepiImportsTSquare.CreateConfig;
-  MethodAddresses[97] := @TSepiImportsTSquare.Contains;
-  MethodAddresses[98] := @TSepiImportsTSquare.DrawCeiling;
-  MethodAddresses[99] := @TSepiImportsTSquare.Entering;
-  MethodAddresses[100] := @TSepiImportsTSquare.Exiting;
-  MethodAddresses[101] := @TSepiImportsTSquare.Entered;
-  MethodAddresses[102] := @TSepiImportsTSquare.Exited;
-  MethodAddresses[103] := @TSepiImportsTSquare.Execute;
-  MethodAddresses[104] := @TSepiImportsTSquare.Pushing;
+  MethodAddresses[90] := @TSepiImportsTSquare.GetComponentCount;
+  MethodAddresses[91] := @TSepiImportsTSquare.GetComponents;
+  MethodAddresses[92] := @TSepiImportsTSquare.GetComponentClasses;
+  MethodAddresses[93] := @TSepiImportsTSquare.Configure;
+  MethodAddresses[94] := @TSepiImportsTSquare.CreateConfig;
+  MethodAddresses[95] := @TSepiImportsTSquare.Contains;
+  MethodAddresses[96] := @TSepiImportsTSquare.DrawCeiling;
+  MethodAddresses[97] := @TSepiImportsTSquare.Entering;
+  MethodAddresses[98] := @TSepiImportsTSquare.Exiting;
+  MethodAddresses[99] := @TSepiImportsTSquare.Entered;
+  MethodAddresses[100] := @TSepiImportsTSquare.Exited;
+  MethodAddresses[101] := @TSepiImportsTSquare.Execute;
+  MethodAddresses[102] := @TSepiImportsTSquare.Pushing;
 end;
 
 {-------------}
@@ -739,20 +725,20 @@ end;
 
 class procedure TSepiImportsTMap.InitMethodAddresses;
 begin
-  MethodAddresses[105] := @TSepiImportsTMap.GetMap;
-  MethodAddresses[106] := @TSepiImportsTMap.SetMap;
-  MethodAddresses[107] := @TSepiImportsTMap.GetOutside;
-  MethodAddresses[108] := @TSepiImportsTMap.SetOutside;
-  MethodAddresses[109] := @TSepiImportsTMap.GetLinearMapCount;
-  MethodAddresses[110] := @TSepiImportsTMap.GetLinearMap;
-  MethodAddresses[111] := @TSepiImportsTMap.SetLinearMap;
-  MethodAddresses[112] := @TSepiImportsTMap.ReplaceMap;
-  MethodAddresses[113] := @TSepiImportsTMap.CreateSized;
-  MethodAddresses[114] := @TSepiImportsTMap.Assign;
-  MethodAddresses[115] := @TSepiImportsTMap.InMap;
-  MethodAddresses[116] := @TSepiImportsTMap.InFloors_0;
-  MethodAddresses[117] := @TSepiImportsTMap.InFloors_1;
-  MethodAddresses[118] := @TSepiImportsTMap.PlayersOn;
+  MethodAddresses[103] := @TSepiImportsTMap.GetMap;
+  MethodAddresses[104] := @TSepiImportsTMap.SetMap;
+  MethodAddresses[105] := @TSepiImportsTMap.GetOutside;
+  MethodAddresses[106] := @TSepiImportsTMap.SetOutside;
+  MethodAddresses[107] := @TSepiImportsTMap.GetLinearMapCount;
+  MethodAddresses[108] := @TSepiImportsTMap.GetLinearMap;
+  MethodAddresses[109] := @TSepiImportsTMap.SetLinearMap;
+  MethodAddresses[110] := @TSepiImportsTMap.ReplaceMap;
+  MethodAddresses[111] := @TSepiImportsTMap.CreateSized;
+  MethodAddresses[112] := @TSepiImportsTMap.Assign;
+  MethodAddresses[113] := @TSepiImportsTMap.InMap;
+  MethodAddresses[114] := @TSepiImportsTMap.InFloors_0;
+  MethodAddresses[115] := @TSepiImportsTMap.InFloors_1;
+  MethodAddresses[116] := @TSepiImportsTMap.PlayersOn;
 end;
 
 {----------------------}
@@ -771,9 +757,9 @@ end;
 
 class procedure TSepiImportsTPosComponent.InitMethodAddresses;
 begin
-  MethodAddresses[119] := @TSepiImportsTPosComponent.SetWantedSquareEvents;
-  MethodAddresses[120] := @TSepiImportsTPosComponent.ChangePosition_1;
-  MethodAddresses[121] := @TSepiImportsTPosComponent.ChangePosition_2;
+  MethodAddresses[117] := @TSepiImportsTPosComponent.SetWantedSquareEvents;
+  MethodAddresses[118] := @TSepiImportsTPosComponent.ChangePosition_1;
+  MethodAddresses[119] := @TSepiImportsTPosComponent.ChangePosition_2;
 end;
 
 {-----------------}
@@ -792,8 +778,8 @@ end;
 
 class procedure TSepiImportsTVehicle.InitMethodAddresses;
 begin
-  MethodAddresses[122] := @TSepiImportsTVehicle.GetPainters;
-  MethodAddresses[123] := @TSepiImportsTVehicle.DetachController_1;
+  MethodAddresses[120] := @TSepiImportsTVehicle.GetPainters;
+  MethodAddresses[121] := @TSepiImportsTVehicle.DetachController_1;
 end;
 
 {-------------------------}
@@ -802,8 +788,8 @@ end;
 
 class procedure TSepiImportsTMobileComponent.InitMethodAddresses;
 begin
-  MethodAddresses[124] := @TSepiImportsTMobileComponent.SendMessage;
-  MethodAddresses[125] := @TSepiImportsTMobileComponent.RunMethod;
+  MethodAddresses[122] := @TSepiImportsTMobileComponent.SendMessage;
+  MethodAddresses[123] := @TSepiImportsTMobileComponent.RunMethod;
 end;
 
 {--------------------}
@@ -812,8 +798,8 @@ end;
 
 class procedure TSepiImportsTPlayerMode.InitMethodAddresses;
 begin
-  MethodAddresses[126] := @TSepiImportsTPlayerMode.GetModeClass;
-  MethodAddresses[127] := @TSepiImportsTPlayerMode.GetPlayer;
+  MethodAddresses[124] := @TSepiImportsTPlayerMode.GetModeClass;
+  MethodAddresses[125] := @TSepiImportsTPlayerMode.GetPlayer;
 end;
 
 {-----------------------------}
@@ -822,8 +808,8 @@ end;
 
 class procedure TSepiImportsTLabyrinthPlayerMode.InitMethodAddresses;
 begin
-  MethodAddresses[128] := @TSepiImportsTLabyrinthPlayerMode.DrawSquares;
-  MethodAddresses[129] := @TSepiImportsTLabyrinthPlayerMode.DrawPosComponents;
+  MethodAddresses[126] := @TSepiImportsTLabyrinthPlayerMode.DrawSquares;
+  MethodAddresses[127] := @TSepiImportsTLabyrinthPlayerMode.DrawPosComponents;
 end;
 
 {----------------}
@@ -922,45 +908,45 @@ end;
 
 class procedure TSepiImportsTPlayer.InitMethodAddresses;
 begin
-  MethodAddresses[130] := @TSepiImportsTPlayer.GetVisible;
-  MethodAddresses[131] := @TSepiImportsTPlayer.SetColor;
-  MethodAddresses[132] := @TSepiImportsTPlayer.GetAttribute;
-  MethodAddresses[133] := @TSepiImportsTPlayer.SetAttribute;
-  MethodAddresses[134] := @TSepiImportsTPlayer.GetAttributes;
-  MethodAddresses[135] := @TSepiImportsTPlayer.GetPluginIDs;
-  MethodAddresses[136] := @TSepiImportsTPlayer.GetFoundObjects;
-  MethodAddresses[137] := @TSepiImportsTPlayer.ChangeMode;
-  MethodAddresses[138] := @TSepiImportsTPlayer.BeginTempMode;
-  MethodAddresses[139] := @TSepiImportsTPlayer.EndTempMode;
-  MethodAddresses[140] := @TSepiImportsTPlayer.AddPlugin;
-  MethodAddresses[141] := @TSepiImportsTPlayer.RemovePlugin;
-  MethodAddresses[142] := @TSepiImportsTPlayer.HasPlugin;
-  MethodAddresses[143] := @TSepiImportsTPlayer.AbleTo;
-  MethodAddresses[144] := @TSepiImportsTPlayer.DoAction;
-  MethodAddresses[145] := @TSepiImportsTPlayer.Move_0;
-  MethodAddresses[146] := @TSepiImportsTPlayer.Move_1;
-  MethodAddresses[147] := @TSepiImportsTPlayer.Move_2;
-  MethodAddresses[148] := @TSepiImportsTPlayer.Move_3;
-  MethodAddresses[149] := @TSepiImportsTPlayer.IsMoveAllowed_0;
-  MethodAddresses[150] := @TSepiImportsTPlayer.IsMoveAllowed_1;
-  MethodAddresses[151] := @TSepiImportsTPlayer.IsMoveAllowed_2;
-  MethodAddresses[152] := @TSepiImportsTPlayer.MoveTo_0;
-  MethodAddresses[153] := @TSepiImportsTPlayer.MoveTo_1;
-  MethodAddresses[154] := @TSepiImportsTPlayer.MoveTo_2;
-  MethodAddresses[155] := @TSepiImportsTPlayer.MoveTo_3;
-  MethodAddresses[156] := @TSepiImportsTPlayer.MoveTo_4;
-  MethodAddresses[157] := @TSepiImportsTPlayer.NaturalMoving;
-  MethodAddresses[158] := @TSepiImportsTPlayer.Show;
-  MethodAddresses[159] := @TSepiImportsTPlayer.Hide;
-  MethodAddresses[160] := @TSepiImportsTPlayer.ShowMessage;
-  MethodAddresses[161] := @TSepiImportsTPlayer.ShowSelectionMsg_0;
-  MethodAddresses[162] := @TSepiImportsTPlayer.ShowSelectionMsg_1;
-  MethodAddresses[163] := @TSepiImportsTPlayer.ShowSelectNumberMsg;
-  MethodAddresses[164] := @TSepiImportsTPlayer.Win;
-  MethodAddresses[165] := @TSepiImportsTPlayer.Lose;
-  MethodAddresses[166] := @TSepiImportsTPlayer.PressKey;
-  MethodAddresses[167] := @TSepiImportsTPlayer.WaitForKey;
-  MethodAddresses[168] := @TSepiImportsTPlayer.WaitForSpecificKey;
+  MethodAddresses[128] := @TSepiImportsTPlayer.GetVisible;
+  MethodAddresses[129] := @TSepiImportsTPlayer.SetColor;
+  MethodAddresses[130] := @TSepiImportsTPlayer.GetAttribute;
+  MethodAddresses[131] := @TSepiImportsTPlayer.SetAttribute;
+  MethodAddresses[132] := @TSepiImportsTPlayer.GetAttributes;
+  MethodAddresses[133] := @TSepiImportsTPlayer.GetPluginIDs;
+  MethodAddresses[134] := @TSepiImportsTPlayer.GetFoundObjects;
+  MethodAddresses[135] := @TSepiImportsTPlayer.ChangeMode;
+  MethodAddresses[136] := @TSepiImportsTPlayer.BeginTempMode;
+  MethodAddresses[137] := @TSepiImportsTPlayer.EndTempMode;
+  MethodAddresses[138] := @TSepiImportsTPlayer.AddPlugin;
+  MethodAddresses[139] := @TSepiImportsTPlayer.RemovePlugin;
+  MethodAddresses[140] := @TSepiImportsTPlayer.HasPlugin;
+  MethodAddresses[141] := @TSepiImportsTPlayer.AbleTo;
+  MethodAddresses[142] := @TSepiImportsTPlayer.DoAction;
+  MethodAddresses[143] := @TSepiImportsTPlayer.Move_0;
+  MethodAddresses[144] := @TSepiImportsTPlayer.Move_1;
+  MethodAddresses[145] := @TSepiImportsTPlayer.Move_2;
+  MethodAddresses[146] := @TSepiImportsTPlayer.Move_3;
+  MethodAddresses[147] := @TSepiImportsTPlayer.IsMoveAllowed_0;
+  MethodAddresses[148] := @TSepiImportsTPlayer.IsMoveAllowed_1;
+  MethodAddresses[149] := @TSepiImportsTPlayer.IsMoveAllowed_2;
+  MethodAddresses[150] := @TSepiImportsTPlayer.MoveTo_0;
+  MethodAddresses[151] := @TSepiImportsTPlayer.MoveTo_1;
+  MethodAddresses[152] := @TSepiImportsTPlayer.MoveTo_2;
+  MethodAddresses[153] := @TSepiImportsTPlayer.MoveTo_3;
+  MethodAddresses[154] := @TSepiImportsTPlayer.MoveTo_4;
+  MethodAddresses[155] := @TSepiImportsTPlayer.NaturalMoving;
+  MethodAddresses[156] := @TSepiImportsTPlayer.Show;
+  MethodAddresses[157] := @TSepiImportsTPlayer.Hide;
+  MethodAddresses[158] := @TSepiImportsTPlayer.ShowMessage;
+  MethodAddresses[159] := @TSepiImportsTPlayer.ShowSelectionMsg_0;
+  MethodAddresses[160] := @TSepiImportsTPlayer.ShowSelectionMsg_1;
+  MethodAddresses[161] := @TSepiImportsTPlayer.ShowSelectNumberMsg;
+  MethodAddresses[162] := @TSepiImportsTPlayer.Win;
+  MethodAddresses[163] := @TSepiImportsTPlayer.Lose;
+  MethodAddresses[164] := @TSepiImportsTPlayer.PressKey;
+  MethodAddresses[165] := @TSepiImportsTPlayer.WaitForKey;
+  MethodAddresses[166] := @TSepiImportsTPlayer.WaitForSpecificKey;
 end;
 
 {--------------------}
@@ -969,8 +955,8 @@ end;
 
 class procedure TSepiImportsTTimerEntry.InitMethodAddresses;
 begin
-  MethodAddresses[169] := @TSepiImportsTTimerEntry.Create;
-  MethodAddresses[170] := @TSepiImportsTTimerEntry.ExecuteAndFree;
+  MethodAddresses[167] := @TSepiImportsTTimerEntry.Create;
+  MethodAddresses[168] := @TSepiImportsTTimerEntry.ExecuteAndFree;
 end;
 
 {-----------------------------------}
@@ -979,7 +965,7 @@ end;
 
 class procedure TSepiImportsTNotificationMsgTimerEntry.InitMethodAddresses;
 begin
-  MethodAddresses[171] := @TSepiImportsTNotificationMsgTimerEntry.Create;
+  MethodAddresses[169] := @TSepiImportsTNotificationMsgTimerEntry.Create;
 end;
 
 {-------------------------}
@@ -988,9 +974,9 @@ end;
 
 class procedure TSepiImportsTTimerCollection.InitMethodAddresses;
 begin
-  MethodAddresses[172] := @TSepiImportsTTimerCollection.Create;
-  MethodAddresses[173] := @TSepiImportsTTimerCollection.ScheduleNotificationMsg;
-  MethodAddresses[174] := @TSepiImportsTTimerCollection.ScheduleCustom;
+  MethodAddresses[170] := @TSepiImportsTTimerCollection.Create;
+  MethodAddresses[171] := @TSepiImportsTTimerCollection.ScheduleNotificationMsg;
+  MethodAddresses[172] := @TSepiImportsTTimerCollection.ScheduleCustom;
 end;
 
 {----------------}
@@ -1189,50 +1175,50 @@ end;
 
 class procedure TSepiImportsTMaster.InitMethodAddresses;
 begin
-  MethodAddresses[175] := @TSepiImportsTMaster.GetComponent;
-  MethodAddresses[176] := @TSepiImportsTMaster.GetSquareComponent;
-  MethodAddresses[177] := @TSepiImportsTMaster.GetPlugin;
-  MethodAddresses[178] := @TSepiImportsTMaster.GetObjectDef;
-  MethodAddresses[179] := @TSepiImportsTMaster.GetField;
-  MethodAddresses[180] := @TSepiImportsTMaster.GetEffect;
-  MethodAddresses[181] := @TSepiImportsTMaster.GetTool;
-  MethodAddresses[182] := @TSepiImportsTMaster.GetObstacle;
-  MethodAddresses[183] := @TSepiImportsTMaster.GetSquare;
-  MethodAddresses[184] := @TSepiImportsTMaster.GetMap;
-  MethodAddresses[185] := @TSepiImportsTMaster.GetPlayer;
-  MethodAddresses[186] := @TSepiImportsTMaster.GetComponentCount;
-  MethodAddresses[187] := @TSepiImportsTMaster.GetComponents;
-  MethodAddresses[188] := @TSepiImportsTMaster.GetPluginCount;
-  MethodAddresses[189] := @TSepiImportsTMaster.GetPlugins;
-  MethodAddresses[190] := @TSepiImportsTMaster.GetObjectDefCount;
-  MethodAddresses[191] := @TSepiImportsTMaster.GetObjectDefs;
-  MethodAddresses[192] := @TSepiImportsTMaster.GetFieldCount;
-  MethodAddresses[193] := @TSepiImportsTMaster.GetFields;
-  MethodAddresses[194] := @TSepiImportsTMaster.GetEffectCount;
-  MethodAddresses[195] := @TSepiImportsTMaster.GetEffects;
-  MethodAddresses[196] := @TSepiImportsTMaster.GetToolCount;
-  MethodAddresses[197] := @TSepiImportsTMaster.GetTools;
-  MethodAddresses[198] := @TSepiImportsTMaster.GetObstacleCount;
-  MethodAddresses[199] := @TSepiImportsTMaster.GetObstacles;
-  MethodAddresses[200] := @TSepiImportsTMaster.GetSquareCount;
-  MethodAddresses[201] := @TSepiImportsTMaster.GetSquares;
-  MethodAddresses[202] := @TSepiImportsTMaster.GetMapCount;
-  MethodAddresses[203] := @TSepiImportsTMaster.GetMaps;
-  MethodAddresses[204] := @TSepiImportsTMaster.GetPosComponentCount;
-  MethodAddresses[205] := @TSepiImportsTMaster.GetPosComponents;
-  MethodAddresses[206] := @TSepiImportsTMaster.GetMobileComponentCount;
-  MethodAddresses[207] := @TSepiImportsTMaster.GetMobileComponents;
-  MethodAddresses[208] := @TSepiImportsTMaster.GetPlayerCount;
-  MethodAddresses[209] := @TSepiImportsTMaster.GetPlayers;
-  MethodAddresses[210] := @TSepiImportsTMaster.GetTickCount;
-  MethodAddresses[211] := @TSepiImportsTMaster.Create;
-  MethodAddresses[212] := @TSepiImportsTMaster.ComponentExists;
-  MethodAddresses[213] := @TSepiImportsTMaster.SquareByComps_0;
-  MethodAddresses[214] := @TSepiImportsTMaster.SquareByComps_1;
-  MethodAddresses[215] := @TSepiImportsTMaster.RegisterComponents;
-  MethodAddresses[216] := @TSepiImportsTMaster.CreateAdditionnalComponent;
-  MethodAddresses[217] := @TSepiImportsTMaster.TryPause;
-  MethodAddresses[218] := @TSepiImportsTMaster.Resume;
+  MethodAddresses[173] := @TSepiImportsTMaster.GetComponent;
+  MethodAddresses[174] := @TSepiImportsTMaster.GetSquareComponent;
+  MethodAddresses[175] := @TSepiImportsTMaster.GetPlugin;
+  MethodAddresses[176] := @TSepiImportsTMaster.GetObjectDef;
+  MethodAddresses[177] := @TSepiImportsTMaster.GetField;
+  MethodAddresses[178] := @TSepiImportsTMaster.GetEffect;
+  MethodAddresses[179] := @TSepiImportsTMaster.GetTool;
+  MethodAddresses[180] := @TSepiImportsTMaster.GetObstacle;
+  MethodAddresses[181] := @TSepiImportsTMaster.GetSquare;
+  MethodAddresses[182] := @TSepiImportsTMaster.GetMap;
+  MethodAddresses[183] := @TSepiImportsTMaster.GetPlayer;
+  MethodAddresses[184] := @TSepiImportsTMaster.GetComponentCount;
+  MethodAddresses[185] := @TSepiImportsTMaster.GetComponents;
+  MethodAddresses[186] := @TSepiImportsTMaster.GetPluginCount;
+  MethodAddresses[187] := @TSepiImportsTMaster.GetPlugins;
+  MethodAddresses[188] := @TSepiImportsTMaster.GetObjectDefCount;
+  MethodAddresses[189] := @TSepiImportsTMaster.GetObjectDefs;
+  MethodAddresses[190] := @TSepiImportsTMaster.GetFieldCount;
+  MethodAddresses[191] := @TSepiImportsTMaster.GetFields;
+  MethodAddresses[192] := @TSepiImportsTMaster.GetEffectCount;
+  MethodAddresses[193] := @TSepiImportsTMaster.GetEffects;
+  MethodAddresses[194] := @TSepiImportsTMaster.GetToolCount;
+  MethodAddresses[195] := @TSepiImportsTMaster.GetTools;
+  MethodAddresses[196] := @TSepiImportsTMaster.GetObstacleCount;
+  MethodAddresses[197] := @TSepiImportsTMaster.GetObstacles;
+  MethodAddresses[198] := @TSepiImportsTMaster.GetSquareCount;
+  MethodAddresses[199] := @TSepiImportsTMaster.GetSquares;
+  MethodAddresses[200] := @TSepiImportsTMaster.GetMapCount;
+  MethodAddresses[201] := @TSepiImportsTMaster.GetMaps;
+  MethodAddresses[202] := @TSepiImportsTMaster.GetPosComponentCount;
+  MethodAddresses[203] := @TSepiImportsTMaster.GetPosComponents;
+  MethodAddresses[204] := @TSepiImportsTMaster.GetMobileComponentCount;
+  MethodAddresses[205] := @TSepiImportsTMaster.GetMobileComponents;
+  MethodAddresses[206] := @TSepiImportsTMaster.GetPlayerCount;
+  MethodAddresses[207] := @TSepiImportsTMaster.GetPlayers;
+  MethodAddresses[208] := @TSepiImportsTMaster.GetTickCount;
+  MethodAddresses[209] := @TSepiImportsTMaster.Create;
+  MethodAddresses[210] := @TSepiImportsTMaster.ComponentExists;
+  MethodAddresses[211] := @TSepiImportsTMaster.SquareByComps_0;
+  MethodAddresses[212] := @TSepiImportsTMaster.SquareByComps_1;
+  MethodAddresses[213] := @TSepiImportsTMaster.RegisterComponents;
+  MethodAddresses[214] := @TSepiImportsTMaster.CreateAdditionnalComponent;
+  MethodAddresses[215] := @TSepiImportsTMaster.TryPause;
+  MethodAddresses[216] := @TSepiImportsTMaster.Resume;
 end;
 
 {---------------------}
@@ -1392,24 +1378,24 @@ begin
   TSepiImportsTNotificationMsgTimerEntry.InitMethodAddresses;
   TSepiImportsTTimerCollection.InitMethodAddresses;
   TSepiImportsTMaster.InitMethodAddresses;
-  MethodAddresses[219] := @ShowFunLabyAbout;
-  MethodAddresses[220] := @FunLabyEncoding;
-  MethodAddresses[221] := @PointBehind;
-  MethodAddresses[222] := @PointBefore;
-  MethodAddresses[223] := @CreateEmptySquareBitmap;
-  MethodAddresses[224] := @SquareRect;
-  MethodAddresses[225] := @EmptyRect;
-  MethodAddresses[226] := @EmptySquareRect;
-  MethodAddresses[227] := @DrawBitmap32ToCanvas;
-  MethodAddresses[228] := @SameRect;
-  MethodAddresses[229] := @SameQPos;
-  MethodAddresses[230] := @IsNoQPos;
-  MethodAddresses[231] := @FunLabyRegisterClass;
-  MethodAddresses[232] := @FunLabyUnregisterClass;
-  MethodAddresses[233] := @FunLabyRegisterClasses;
-  MethodAddresses[234] := @FunLabyUnregisterClasses;
-  MethodAddresses[235] := @FunLabyGetClass;
-  MethodAddresses[236] := @FunLabyFindClass;
+  MethodAddresses[217] := @ShowFunLabyAbout;
+  MethodAddresses[218] := @FunLabyEncoding;
+  MethodAddresses[219] := @PointBehind;
+  MethodAddresses[220] := @PointBefore;
+  MethodAddresses[221] := @CreateEmptySquareBitmap;
+  MethodAddresses[222] := @SquareRect;
+  MethodAddresses[223] := @EmptyRect;
+  MethodAddresses[224] := @EmptySquareRect;
+  MethodAddresses[225] := @DrawBitmap32ToCanvas;
+  MethodAddresses[226] := @SameRect;
+  MethodAddresses[227] := @SameQPos;
+  MethodAddresses[228] := @IsNoQPos;
+  MethodAddresses[229] := @FunLabyRegisterClass;
+  MethodAddresses[230] := @FunLabyUnregisterClass;
+  MethodAddresses[231] := @FunLabyRegisterClasses;
+  MethodAddresses[232] := @FunLabyUnregisterClasses;
+  MethodAddresses[233] := @FunLabyGetClass;
+  MethodAddresses[234] := @FunLabyFindClass;
 end;
 
 procedure InitVarAddresses;
@@ -2273,7 +2259,7 @@ begin
   CheckInstanceSize(TPlayerData, 16, 8);
   CheckInstanceSize(TFunLabyComponent, 32, 8);
   CheckInstanceSize(TVisualComponent, 52, 32);
-  CheckInstanceSize(TComponentCreator, 40, 32);
+  CheckInstanceSize(TComponentCreator, 36, 32);
   CheckInstanceSize(TPlugin, 44, 32);
   CheckInstanceSize(TObjectDefPlayerData, 20, 16);
   CheckInstanceSize(TObjectDef, 56, 52);

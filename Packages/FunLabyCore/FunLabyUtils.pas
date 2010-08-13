@@ -943,14 +943,8 @@ type
   *}
   TComponentCreator = class(TFunLabyComponent)
   private
-    FIconPainter: TPainter;          /// Peintre de l'icône
-    FCreatedComponents: TObjectList; /// Composants créés
-
-    function GetCreatedComponentCount: Integer;
-    function GetCreatedComponents(Index: Integer): TFunLabyComponent;
+    FIconPainter: TPainter; /// Peintre de l'icône
   protected
-    procedure DefineProperties(Filer: TFunLabyFiler); override;
-
     function GetCategory: string; override;
     function GetHint: string; override;
 
@@ -968,10 +962,6 @@ type
       Y: Integer = 0); override;
 
     function CreateComponent(const AID: TComponentID): TFunLabyComponent;
-
-    property CreatedComponentCount: Integer read GetCreatedComponentCount;
-    property CreatedComponents[Index: Integer]: TFunLabyComponent
-      read GetCreatedComponents;
   end;
 
   {*
@@ -4660,9 +4650,7 @@ begin
   inherited;
 
   FIconPainter := TPainter.Create(AMaster.ImagesMaster);
-  FCreatedComponents := TObjectList.Create(False);
-
-  FIconPainter.Description.BeginUpdate;
+  FIconPainter.BeginUpdate;
 end;
 
 {*
@@ -4670,57 +4658,9 @@ end;
 *}
 destructor TComponentCreator.Destroy;
 begin
-  FCreatedComponents.Free;
   FIconPainter.Free;
 
   inherited;
-end;
-
-{*
-  Nombre de composants créés
-  @return Nombre de composants créés
-*}
-function TComponentCreator.GetCreatedComponentCount: Integer;
-begin
-  Result := FCreatedComponents.Count;
-end;
-
-{*
-  Tableau zero-based des composants créés
-  @param Index   Index d'un composant
-  @return Composant créé à l'index spécifié
-*}
-function TComponentCreator.GetCreatedComponents(
-  Index: Integer): TFunLabyComponent;
-begin
-  Result := TFunLabyComponent(FCreatedComponents[Index]);
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TComponentCreator.DefineProperties(Filer: TFunLabyFiler);
-var
-  ComponentIDs: TStrings;
-  I: Integer;
-begin
-  inherited;
-
-  if psReading in PersistentState then
-  begin
-    ComponentIDs := TStringList.Create;
-    try
-      Filer.DefineStrings('CreatedComponents', ComponentIDs);
-
-      if psReading in PersistentState then
-      begin
-        for I := 0 to ComponentIDs.Count-1 do
-          CreateComponent(ComponentIDs[I]);
-      end;
-    finally
-      ComponentIDs.Free;
-    end;
-  end;
 end;
 
 {*
@@ -4746,7 +4686,7 @@ procedure TComponentCreator.AfterConstruction;
 begin
   inherited;
 
-  FIconPainter.Description.EndUpdate;
+  FIconPainter.EndUpdate;
 end;
 
 {*
@@ -4778,7 +4718,6 @@ function TComponentCreator.CreateComponent(
 begin
   Result := DoCreateComponent(AID);
   Result.FIsAdditionnal := True;
-  FCreatedComponents.Add(Result);
 end;
 
 {----------------}
@@ -8853,17 +8792,12 @@ begin
   Filer.DefineFieldProperty('Terminated', TypeInfo(Boolean),
     @FTerminated, Terminated);
 
-  { We need a while here, because reading component creators may increment
-    ComponentCount. }
-  I := 0;
-  while I < ComponentCount do
+  for I := 0 to ComponentCount-1 do
   begin
     Component := Components[I];
 
     if not Component.Transient then
       Filer.DefinePersistent(Component.ID, Component);
-
-    Inc(I);
   end;
 
   Filer.DefinePersistent('Timers', Timers);
