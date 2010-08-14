@@ -885,7 +885,7 @@ begin
     begin
       Action := SourceActions[Index];
       Move(SourceActions[Index+1], SourceActions[Index],
-        Length(SourceActions)-Index-1);
+        (Length(SourceActions)-Index-1) * SizeOf(TAction));
       Break;
     end;
   end;
