@@ -1574,6 +1574,8 @@ type
   protected
     procedure DrawSquares(Context: TDrawViewContext; Ceiling: Boolean);
     procedure DrawPosComponents(Context: TDrawViewContext);
+    procedure DrawPosComponent(Context: TDrawViewContext;
+      PosComponent: TPosComponent);
 
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
@@ -5959,38 +5961,59 @@ begin
 end;
 
 {*
-  Dessine les joueurs
+  Dessine les joueurs et autres composants à position
   @param Context   Contexte de dessin de la vue
 *}
 procedure TLabyrinthPlayerMode.DrawPosComponents(Context: TDrawViewContext);
 var
   I: Integer;
   PosComponent: TPosComponent;
-  PosComponentContext: TDrawSquareContext;
+  Player: TPlayer;
 begin
+  // Draw non-player pos-components
   for I := 0 to Master.PosComponentCount-1 do
   begin
     PosComponent := Master.PosComponents[I];
 
-    if PosComponent is TPlayer then
-      TPlayer(PosComponent).FLock.BeginRead;
-    try
-      if not Context.IsSquareVisible(PosComponent.QPos) then
-        Continue;
+    if not (PosComponent is TPlayer) then
+      DrawPosComponent(Context, PosComponent);
+  end;
 
-      PosComponentContext := TDrawSquareContext.Create(Context.Bitmap,
-        (PosComponent.Position.X-Context.Zone.Left) * SquareSize,
-        (PosComponent.Position.Y-Context.Zone.Top) * SquareSize);
-      try
-        PosComponentContext.SetDrawViewContext(Context);
-        PosComponent.Draw(PosComponentContext);
-      finally
-        PosComponentContext.Free;
-      end;
+  // Draw players
+  for I := 0 to Master.PlayerCount-1 do
+  begin
+    Player := Master.Players[I];
+
+    Player.FLock.BeginRead;
+    try
+      DrawPosComponent(Context, Player);
     finally
-      if PosComponent is TPlayer then
-        TPlayer(PosComponent).Flock.EndRead;
+      Player.Flock.EndRead;
     end;
+  end;
+end;
+
+{*
+  Dessine un composant à position
+  @param Context        Contexte de dessin de la vue
+  @param PosComponent   Composant à dessiner
+*}
+procedure TLabyrinthPlayerMode.DrawPosComponent(Context: TDrawViewContext;
+  PosComponent: TPosComponent);
+var
+  PosComponentContext: TDrawSquareContext;
+begin
+  if not Context.IsSquareVisible(PosComponent.QPos) then
+    Exit;
+
+  PosComponentContext := TDrawSquareContext.Create(Context.Bitmap,
+    (PosComponent.Position.X-Context.Zone.Left) * SquareSize,
+    (PosComponent.Position.Y-Context.Zone.Top) * SquareSize);
+  try
+    PosComponentContext.SetDrawViewContext(Context);
+    PosComponent.Draw(PosComponentContext);
+  finally
+    PosComponentContext.Free;
   end;
 end;
 
