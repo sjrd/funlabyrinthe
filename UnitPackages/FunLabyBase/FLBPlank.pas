@@ -168,6 +168,7 @@ end;
 procedure TPlankPlugin.Moving(Context: TMoveContext);
 var
   Behind: T3DPoint;
+  BehindQPos: TQualifiedPos;
   Msg: TPlankMessage;
 begin
   with Context do
@@ -190,18 +191,21 @@ begin
     Msg.Dest := Behind;
 
     // On vérifie que la case du milieu peut être survolée
-    DestSquare.Field.Dispatch(Msg);
+    DestSquare.DispatchAt(Msg, DestQPos);
     if not Msg.Result then
       Exit;
 
     // On vérifie que la case de départ ou d'arrivée autorise le déplacement
     Msg.Kind := pmkLeaveFrom;
     Msg.Result := False;
-    SrcSquare.Field.Dispatch(Msg);
+    SrcSquare.DispatchAt(Msg, SrcQPos);
     if not Msg.Result then
     begin
+      BehindQPos.Map := Map;
+      BehindQPos.Position := Msg.Dest;
+
       Msg.Kind := pmkArriveAt;
-      Map[Msg.Dest].Field.Dispatch(Msg);
+      Map[Msg.Dest].DispatchAt(Msg, BehindQPos);
       if not Msg.Result then
         Exit;
     end;

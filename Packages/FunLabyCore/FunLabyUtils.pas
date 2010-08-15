@@ -1204,6 +1204,8 @@ type
 
     procedure DefaultHandler(var Msg); override;
 
+    procedure DispatchAt(var Msg; const QPos: TQualifiedPos);
+
     function Contains(Component: TSquareComponent): Boolean;
 
     procedure DrawCeiling(Context: TDrawSquareContext);
@@ -1317,10 +1319,14 @@ type
 
     /// Types d'événements de case que ce composant désire attraper
     FWantedSquareEvents: TSquareEventKinds;
+
+    /// Indique si le composant désire attraper les messages de la case
+    FWantMessages: Boolean;
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
 
     procedure SetWantedSquareEvents(Value: TSquareEventKinds);
+    procedure SetWantMessages(Value: Boolean);
 
     procedure PositionChanged; virtual;
   public
@@ -1333,6 +1339,7 @@ type
     property Position: T3DPoint read FQPos.Position;
 
     property WantedSquareEvents: TSquareEventKinds read FWantedSquareEvents;
+    property WantMessages: Boolean read FWantMessages;
   published
     property Direction: TDirection read FDirection write FDirection
       default diNone;
@@ -5410,6 +5417,38 @@ begin
 end;
 
 {*
+  Dispatche un message à cette case à un endroit particulier
+  @param Msg    Message à dispatcher
+  @param QPos   Position qualifiée où dispatcher le message
+*}
+procedure TSquare.DispatchAt(var Msg; const QPos: TQualifiedPos);
+var
+  SavedMsgID: Word;
+  I: Integer;
+  PosComponent: TPosComponent;
+begin
+  SavedMsgID := TDispatchMessage(Msg).MsgID;
+
+  for I := 0 to Master.PosComponentCount-1 do
+  begin
+    PosComponent := Master.PosComponents[I];
+
+    if PosComponent.WantMessages and SameQPos(QPos, PosComponent.QPos) then
+    begin
+      PosComponent.Dispatch(Msg);
+
+      if TDispatchMessage(Msg).MsgID = 0 then
+      begin
+        TDispatchMessage(Msg).MsgID := SavedMsgID;
+        Exit;
+      end;
+    end;
+  end;
+
+  Dispatch(Msg);
+end;
+
+{*
   [@inheritDoc]
 *}
 procedure TSquare.DefaultHandler(var Msg);
@@ -6109,6 +6148,18 @@ begin
   Assert(psCreating in PersistentState);
 
   FWantedSquareEvents := Value;
+end;
+
+{*
+  Spécifie si le composant veut attraper les messages de la case
+  Cette méthode ne peut être appelée que dans le constructeur.
+  @param Value   True pour intercepter les messages, False sinon
+*}
+procedure TPosComponent.SetWantMessages(Value: Boolean);
+begin
+  Assert(psCreating in PersistentState);
+
+  FWantMessages := Value;
 end;
 
 {*

@@ -42,6 +42,8 @@ type
     @version 5.0
   *}
   TBoat = class(TVehicle)
+  private
+    procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
@@ -89,9 +91,36 @@ begin
   inherited;
 
   Name := SBoat;
+  SetWantMessages(True);
 
   for Dir := diNone to diWest do
     DirPainters[Dir].AddImage(fBoatByDir[Dir]);
+end;
+
+{*
+  Gestionnaire de message msgPlank
+  Fonctionne comme un TGround.
+  @param Msg   Message
+*}
+procedure TBoat.PlankMessage(var Msg: TPlankMessage);
+begin
+  with Msg, Player do
+  begin
+    MsgID := 0; // Prevent the square to act as it wants
+
+    if Kind = pmkPassOver then
+    begin
+      Result := False;
+    end else if Kind = pmkLeaveFrom then
+    begin
+      Result := (Map[Dest].Field is TGround) and
+        (Map[Src].Obstacle = nil) and (Map[Dest].Obstacle = nil);
+    end else if Kind = pmkArriveAt then
+    begin
+      Result := (Map[Src].Field is TGround) and
+        (Map[Src].Obstacle = nil) and (Map[Dest].Obstacle = nil);
+    end;
+  end;
 end;
 
 {*
