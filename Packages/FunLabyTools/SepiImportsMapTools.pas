@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'MapTools';
   ResourceName = 'SepiImportsMapTools';
   TypeCount = 1;
-  MethodCount = 17;
+  MethodCount = 20;
   VariableCount = 1;
 
 var
@@ -86,6 +86,16 @@ end;
 function ChangeComp_1(Square: TSquare; const NewComp: TComponentID): TSquare;
 begin
   Result := ChangeComp(Square, NewComp);
+end;
+
+function IsAnyPosComponent_0(const QPos: TQualifiedPos; Predicate: TPosComponentPredicate): Boolean;
+begin
+  Result := IsAnyPosComponent(QPos, Predicate);
+end;
+
+function IsAnyPosComponent_1(const QPos: TQualifiedPos): Boolean;
+begin
+  Result := IsAnyPosComponent(QPos);
 end;
 
 {-------------}
@@ -171,6 +181,9 @@ begin
   MethodAddresses[14] := @FindNextSquare;
   MethodAddresses[15] := @FindPreviousSquare;
   MethodAddresses[16] := @FindSquareAtRandom;
+  MethodAddresses[17] := @IsAnyPosComponent_0;
+  MethodAddresses[18] := @IsAnyPosComponent_1;
+  MethodAddresses[19] := @IsAnySquareModifier;
 end;
 
 procedure InitVarAddresses;
@@ -189,6 +202,16 @@ type
 
 {$IF SizeOf(TCheckAlignmentForTFindSquareProc) <> (4 + 4)}
   {$MESSAGE WARN 'Le type TFindSquareProc n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTPosComponentPredicate = record
+    Dummy: Byte;
+    Field: TPosComponentPredicate;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPosComponentPredicate) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPosComponentPredicate n''a pas l''alignement calculé par Sepi'}
 {$IFEND}
 
 procedure CheckInstanceSize(AClass: TClass;

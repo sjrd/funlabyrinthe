@@ -25,6 +25,8 @@ type
   TFindSquareProc = procedure(Map: TMap; var Pos: T3DPoint;
     Component: TSquareComponent);
 
+  TPosComponentPredicate = function(PosComponent: TPosComponent): Boolean;
+
 function ChangeField(Square: TSquare; NewField: TField): TSquare; overload;
 function ChangeField(Square: TSquare;
   const NewField: TComponentID): TSquare; overload;
@@ -58,6 +60,11 @@ procedure FindPreviousSquare(Map: TMap; var Pos: T3DPoint;
   Component: TSquareComponent);
 procedure FindSquareAtRandom(Map: TMap; var Pos: T3DPoint;
   Component: TSquareComponent);
+
+function IsAnyPosComponent(const QPos: TQualifiedPos;
+  Predicate: TPosComponentPredicate): Boolean; overload;
+function IsAnyPosComponent(const QPos: TQualifiedPos): Boolean; overload;
+function IsAnySquareModifier(const QPos: TQualifiedPos): Boolean;
 
 implementation
 
@@ -428,6 +435,77 @@ begin
   // À moins que la liste soit vide, on en pêche un au hasard
   if Count > 0 then
     Pos := Others[Random(Count)];
+end;
+
+{*
+  Teste s'il y a un composant à position à un endroit donné de la carte
+  @param QPos        Position où tester
+  @param Predicate   Prédicat qui filtre les composants pris en compte
+  @return True si au moins un composant a été trouvé, False sinon
+*}
+function IsAnyPosComponent(const QPos: TQualifiedPos;
+  Predicate: TPosComponentPredicate): Boolean;
+var
+  Master: TMaster;
+  I: Integer;
+  PosComponent: TPosComponent;
+begin
+  if QPos.IsNoQPos then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  Master := QPos.Map.Master;
+
+  for I := 0 to Master.PosComponentCount-1 do
+  begin
+    PosComponent := Master.PosComponents[I];
+
+    if SameQPos(PosComponent.QPos, QPos) and Predicate(PosComponent) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  Result := False;
+end;
+
+{*
+  Prédicat qui vaut toujours True
+*}
+function PosComponentAlwaysTrue(PosComponent: TPosComponent): Boolean;
+begin
+  Result := True;
+end;
+
+{*
+  Teste s'il y a un composant à position à un endroit donné de la carte
+  @param QPos   Position où tester
+  @return True si au moins un composant a été trouvé, False sinon
+*}
+function IsAnyPosComponent(const QPos: TQualifiedPos): Boolean;
+begin
+  Result := IsAnyPosComponent(QPos, PosComponentAlwaysTrue);
+end;
+
+{*
+  Prédicat qui vaut True pour les modificateurs de case
+*}
+function IsSquareModifier(PosComponent: TPosComponent): Boolean;
+begin
+  Result := PosComponent is TSquareModifier;
+end;
+
+{*
+  Teste s'il y a un modificateur de case à un endroit donné de la carte
+  @param QPos   Position où tester
+  @return True si au moins un modificateur a été trouvé, False sinon
+*}
+function IsAnySquareModifier(const QPos: TQualifiedPos): Boolean;
+begin
+  Result := IsAnyPosComponent(QPos, IsSquareModifier);
 end;
 
 end.
