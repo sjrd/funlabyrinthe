@@ -177,7 +177,7 @@ begin
     Add('<?xml version="1.0" encoding="UTF-8"?>');
     Add(Format('<simplesquares version="%s">', [CurrentVersion]));
     Add('</simplesquares>');
-    SaveToFile(FileName);
+    SaveToFile(FileName, FunLabyEncoding);
   finally
     Free;
   end;
@@ -696,7 +696,7 @@ begin
     Output := TStringList.Create;
     try
       ProduceFunDelphiCode(Output);
-      Output.SaveToFile(SaveSourceDialog.FileName);
+      Output.SaveToFile(SaveSourceDialog.FileName, FunLabyEncoding);
     finally
       Output.Free;
     end;
