@@ -2700,16 +2700,33 @@ end;
 *}
 procedure TFunDelphiMethodEventHeaderNode.FillSignature;
 const
-  ValidKinds = [skObjectProcedure, skObjectFunction, skConstructor];
+  ValidKinds = [skObjectProcedure, skObjectFunction];
 var
-  InheritedMeta: TSepiComponent;
+  I: Integer;
+  InheritedComp: TSepiComponent;
   InheritedSignature: TSepiSignature;
 begin
-  InheritedMeta := (SepiContext as TSepiClass).LookForMember(Name);
-  if not (InheritedMeta is TSepiMethod) then
+  InheritedComp := (SepiContext as TSepiClass).LookForMember(Name);
+
+  if InheritedComp is TSepiOverloadedMethod then
+  begin
+    with TSepiOverloadedMethod(InheritedComp) do
+    begin
+      for I := 0 to MethodCount-1 do
+      begin
+        if Methods[I].LinkKind in [mlkVirtual, mlkDynamic] then
+        begin
+          InheritedComp := Methods[I];
+          Break;
+        end;
+      end;
+    end;
+  end;
+
+  if not (InheritedComp is TSepiMethod) then
     Exit; // Error message will be produced by TSepiMethodDeclarationNode
 
-  InheritedSignature := TSepiMethod(InheritedMeta).Signature;
+  InheritedSignature := TSepiMethod(InheritedComp).Signature;
 
   if not (InheritedSignature.Kind in ValidKinds) then
   begin
@@ -2720,7 +2737,7 @@ begin
 
   CopySignature(Signature, InheritedSignature);
 
-  SepiContext.CurrentVisibility := InheritedMeta.Visibility;
+  SepiContext.CurrentVisibility := InheritedComp.Visibility;
 end;
 
 {*
