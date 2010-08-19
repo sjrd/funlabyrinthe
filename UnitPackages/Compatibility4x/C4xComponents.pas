@@ -252,6 +252,7 @@ type
     procedure SetVariables(Index, Value: Integer);
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
+    procedure StoreDefaults; override;
   public
     constructor Create(AMasterFile: TMasterFile;
       AActions: TObjectList); reintroduce;
@@ -973,6 +974,32 @@ begin
   for I := 1 to MaxVar do
     Filer.DefineFieldProperty(Format('Variable%d', [I]), TypeInfo(Integer),
       @FVariables[I], FVariables[I] <> 0);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TC4xInfos.StoreDefaults;
+var
+  I: Integer;
+begin
+  inherited;
+
+  { Big fat hack to give the player the compatibility painter, after it is
+    created, but before its own StoreDefaults method is called. }
+  for I := 0 to Master.PlayerCount-1 do
+  begin
+    with Master.Players[I].Painter do
+    begin
+      BeginUpdate;
+      try
+        Clear;
+        AddImage(fCompatibility4xPlayer);
+      finally
+        EndUpdate;
+      end;
+    end;
+  end;
 end;
 
 end.

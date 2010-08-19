@@ -100,6 +100,8 @@ procedure ReplaceColorInBitmap32(Bitmap: TBitmap32; FromColor: TColor32;
   ToColor: TColor32);
 procedure HandleBmpTransparent(Bitmap: TBitmap32);
 
+function MultiplyComponents(Left, Right: TColor32): TColor32;
+
 function LoadBitmapFromFile(const FileName: TFileName): TBitmap32;
 
 function AnimateBitmap(Bitmap: TBitmap32;
@@ -188,6 +190,24 @@ end;
 procedure HandleBmpTransparent(Bitmap: TBitmap32);
 begin
   ReplaceColorInBitmap32(Bitmap, clBmpTransparent32, clTransparent32);
+end;
+
+{*
+  Multiplie les composantes de deux couleurs deux à deux
+  @param Left    Première couleur
+  @param Right   Seconde couleur
+  @return Résultat de la multiplication deux à deux des composantes
+*}
+function MultiplyComponents(Left, Right: TColor32): TColor32;
+var
+  A: TColor32Entry absolute Left;
+  B: TColor32Entry absolute Right;
+  R: TColor32Entry absolute Result;
+begin
+  R.B := Word(A.B) * Word(B.B) div 255;
+  R.G := Word(A.G) * Word(B.G) div 255;
+  R.R := Word(A.R) * Word(B.R) div 255;
+  R.A := Word(A.A) * Word(B.A) div 255;
 end;
 
 {*

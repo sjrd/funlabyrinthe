@@ -67,7 +67,7 @@ type
   TPlayState = (psPlaying, psWon, psLost);
 
   /// Mode de dessin d'un joueur
-  TPlayerDrawMode = (dmCircle, dmPainter, dmDirPainter);
+  TPlayerDrawMode = (dmColoredPainter, dmPainter, dmDirPainter);
 
   /// Classe de base des exceptions FunLabyrinthe
   EFunLabyException = class(Exception);
@@ -1615,7 +1615,7 @@ type
     FFoundObjects: TObjectList; /// Objets trouvés (dans l'ordre)
 
     FDrawMode: TPlayerDrawMode;                  /// Mode de dessin
-    FCircleBitmap: TBitmap32;                    /// Bitmap de dessin circle
+    FColoredPainterCache: TBitmap32;             /// Cache du peintre coloré
     FDirPainters: array[TDirection] of TPainter; /// Peintres par direction
 
     FDefaultTemporization: Cardinal; /// Temporisation par défaut
@@ -1631,6 +1631,8 @@ type
     procedure SetFoundObjectsStr(const Value: string);
 
     procedure GetPluginList(out PluginList: TPluginDynArray);
+
+    procedure UpdateColoredPainterCache;
 
     procedure PrivDraw(Context: TDrawSquareContext); override;
 
@@ -1737,7 +1739,7 @@ type
       default DefaultViewBorderSize;
 
     property DrawMode: TPlayerDrawMode read FDrawMode write FDrawMode
-      default dmCircle;
+      default dmColoredPainter;
     property NorthPainter: TPainter index diNorth read GetPainters;
     property EastPainter: TPainter index diEast read GetPainters;
     property SouthPainter: TPainter index diSouth read GetPainters;
@@ -2078,12 +2080,31 @@ type
     function GetPreamble: TBytes; override;
   end;
 
+  {*
+    Peintre d'un TPlayer
+    TPlayer utilise un peintre spécialisé pour recalculer son image
+    FColoredPainterCache à chaque fois que l'image du peintre change.
+    @author sjrd
+    @version 5.0
+  *}
+  TPlayerPainter = class(TPainter)
+  private
+    FPlayer: TPlayer; /// Joueur propriétaire
+
+    procedure DescriptionChange(Sender: TObject);
+  public
+    constructor Create(AMaster: TImagesMaster; APlayer: TPlayer);
+  end;
+
 const
   /// Code de format d'un flux carte (TMap) (correspond à '.flm')
   MapStreamFormatCode: Longint = $6D6C662E;
 
   /// Version courante du format d'un flux carte (TMap)
   MapStreamVersion = 1;
+
+  /// Fichier de l'image du joueur
+  fPlayer = 'Pawns/Player';
 
 var
   FFunLabyEncoding: TEncoding = nil;
@@ -2394,6 +2415,33 @@ end;
 function TFunLabyEncoding.GetPreamble: TBytes;
 begin
   SetLength(Result, 0);
+end;
+
+{----------------------}
+{ TPlayerPainter class }
+{----------------------}
+
+{*
+  Crée une instance de TPlayerPainter
+  @param AMaster   Maître d'images
+  @param APlayer   Joueur propriétaire
+*}
+constructor TPlayerPainter.Create(AMaster: TImagesMaster; APlayer: TPlayer);
+begin
+  inherited Create(AMaster);
+
+  TStringList(FDescription).OnChange := DescriptionChange;
+  FPlayer := APlayer;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPlayerPainter.DescriptionChange(Sender: TObject);
+begin
+  inherited DescriptionChange(Sender);
+
+  FPlayer.UpdateColoredPainterCache;
 end;
 
 {----------------------}
@@ -6663,6 +6711,10 @@ var
 begin
   inherited;
 
+  FreeAndNil(FPainter);
+  FPainter := TPlayerPainter.Create(Master.ImagesMaster, Self);
+  FPainter.BeginUpdate;
+
   Name := SDefaultPlayerName;
   FMode := TLabyrinthPlayerMode.Create(Self);
   FModeStack := TInterfaceList.Create;
@@ -6673,7 +6725,7 @@ begin
   TStringList(FAttributes).CaseSensitive := True;
   FFoundObjects := TObjectList.Create(False);
 
-  FCircleBitmap := CreateEmptySquareBitmap;
+  FColoredPainterCache := CreateEmptySquareBitmap;
   FDirPainters[diNone] := Painter;
   for Dir := diNorth to diWest do
     FDirPainters[Dir] := TPainter.Create(Master.ImagesMaster);
@@ -6682,7 +6734,7 @@ begin
 
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
 
-  SetColor(FColor);
+  Painter.AddImage(fPlayer);
 end;
 
 {*
@@ -6696,7 +6748,7 @@ begin
 
   for Dir := diNorth to diWest do
     FDirPainters[Dir].Free;
-  FCircleBitmap.Free;
+  FColoredPainterCache.Free;
 
   FFoundObjects.Free;
   FAttributes.Free;
@@ -6866,6 +6918,30 @@ begin
 end;
 
 {*
+  Met à jour le bitmap FColoredPainterCache
+*}
+procedure TPlayer.UpdateColoredPainterCache;
+var
+  X, Y: Integer;
+  Line: PColor32Array;
+begin
+  FColoredPainterCache.Clear(clTransparent32);
+
+  if (AlphaComponent(FColor) <> 0) and (not Painter.IsEmpty) then
+  begin
+    Painter.DrawTo(FColoredPainterCache);
+
+    for Y := 0 to FColoredPainterCache.Height-1 do
+    begin
+      Line := FColoredPainterCache.ScanLine[Y];
+
+      for X := 0 to FColoredPainterCache.Width-1 do
+        Line[X] := MultiplyComponents(Line[X], FColor);
+    end;
+  end;
+end;
+
+{*
   [@inheritDoc]
 *}
 procedure TPlayer.PrivDraw(Context: TDrawSquareContext);
@@ -6953,31 +7029,11 @@ end;
   @param Value   Nouvelle couleur
 *}
 procedure TPlayer.SetColor(Value: TColor32);
-const
-  EllipseColor = $00000001;
-var
-  Alpha: Integer;
 begin
   FLock.BeginWrite;
   try
     FColor := Value;
-    Alpha := AlphaComponent(Value);
-
-    FCircleBitmap.Clear(clTransparent32);
-
-    if Alpha <> 0 then
-    begin
-      with FCircleBitmap.Canvas do
-      begin
-        Brush.Color := WinColor(EllipseColor);
-        Brush.Style := bsSolid;
-        Pen.Style := psClear;
-        Ellipse(6, 6, SquareSize-6, SquareSize-6);
-      end;
-
-      FunLabyGraphics.ReplaceColorInBitmap32(FCircleBitmap,
-        EllipseColor, Color);
-    end;
+    UpdateColoredPainterCache;
   finally
     FLock.EndWrite;
   end;
@@ -7082,8 +7138,8 @@ end;
 procedure TPlayer.DoDraw(Context: TDrawSquareContext);
 begin
   case DrawMode of
-    dmCircle:
-      FCircleBitmap.DrawTo(Context.Bitmap, Context.X, Context.Y);
+    dmColoredPainter:
+      FColoredPainterCache.DrawTo(Context.Bitmap, Context.X, Context.Y);
 
     dmPainter:
       Painter.Draw(Context);
