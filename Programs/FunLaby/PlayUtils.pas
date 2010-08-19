@@ -22,6 +22,7 @@ type
   private
     FPlayer: TPlayer; /// Joueur contrôlé
 
+    FPressKeyTickCount: Cardinal; /// Tick-count d'appui sur une touche
     FNextKey: Word;               /// Prochaine touche à presser
     FNextShift: TShiftState;      /// Prochain état des touches spéciales
     FNextNotificationMsgID: Word; /// Prochain ID de message de notification
@@ -48,6 +49,9 @@ type
   end;
 
 implementation
+
+const
+  MaxKeyValidity = 150; {ms}
 
 {--------------------------}
 { Classe TPlayerController }
@@ -110,11 +114,16 @@ begin
         Player.SendMessage(Msg);
       end else if FNextKey <> 0 then
       begin
-        // Press key
-        Key := FNextKey;
-        Shift := FNextShift;
-        FNextKey := 0;
-        Player.PressKey(Key, Shift);
+        if GetTickCount - FPressKeyTickCount > MaxKeyValidity then
+          FNextKey := 0
+        else
+        begin
+          // Press key
+          Key := FNextKey;
+          Shift := FNextShift;
+          FNextKey := 0;
+          Player.PressKey(Key, Shift);
+        end;
       end else
       begin
         // Nothing to do
@@ -146,9 +155,9 @@ end;
 *}
 procedure TPlayerController.PressKey(Key: Word; Shift: TShiftState);
 begin
-  if FNextKey <> 0 then
-    Exit;
+  FNextKey := 0;
 
+  FPressKeyTickCount := GetTickCount;
   FNextShift := Shift;
   FNextKey := Key;
 end;
