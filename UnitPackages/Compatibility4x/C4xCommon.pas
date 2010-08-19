@@ -24,6 +24,9 @@ const {don't localize}
 resourcestring
   SCategoryButtons = 'Boutons'; /// Catégorie des boutons
 
+const {don't localize}
+  fCompatibility4xBuoyPlugin = 'Compatibility4x/BuoyPlugin';
+
 implementation
 
 end.

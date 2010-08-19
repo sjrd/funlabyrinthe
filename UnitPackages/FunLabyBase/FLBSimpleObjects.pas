@@ -43,6 +43,7 @@ const {don't localize}
   idGoldenKey = 'GoldenKey';   /// ID de la clef d'or
 
 const {don't localize}
+  fBuoyPlugin = 'Plugins/Buoy';     /// Fichier de la bouée sous le joueur
   fBuoy = 'Objects/Buoy';           /// Fichier de la bouée
   fSilverKey = 'Objects/SilverKey'; /// Fichier de la clef d'argent
   fGoldenKey = 'Objects/GoldenKey'; /// Fichier de la clef d'or
@@ -64,12 +65,14 @@ type
   *}
   TBuoyPlugin = class(TPlugin)
   public
-    procedure DrawBefore(Context: TDrawSquareContext); override;
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
     procedure Moved(Context: TMoveContext); override;
 
     function AbleTo(Player: TPlayer; const Action: TPlayerAction;
       Param: Integer): Boolean; override;
+  published
+    property PainterBefore;
   end;
 
   {*
@@ -145,17 +148,11 @@ implementation
 {*
   [@inheritDoc]
 *}
-procedure TBuoyPlugin.DrawBefore(Context: TDrawSquareContext);
+constructor TBuoyPlugin.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
 
-  with Context.Bitmap.Canvas, Context.SquareRect do
-  begin
-    Brush.Color := clYellow;
-    Brush.Style := bsSolid;
-    Pen.Style := psClear;
-    Ellipse(Left+1, Top+1, Right-1, Bottom-1);
-  end;
+  PainterBefore.AddImage(fBuoyPlugin);
 end;
 
 {*

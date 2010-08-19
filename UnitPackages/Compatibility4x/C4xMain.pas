@@ -200,9 +200,14 @@ var
   I: Integer;
   Buoys, Planks, SilverKeys, GoldenKeys: TObjectDef;
 begin
-  // Plug-in
+  // Plugins
 
-  TBuoyPlugin.Create(Master, idBuoyPlugin);
+  with TBuoyPlugin.Create(Master, idBuoyPlugin) do
+  begin
+    PainterBefore.Clear;
+    PainterBefore.AddImage(fCompatibility4xBuoyPlugin);
+  end;
+
   TPlankPlugin.Create(Master, idPlankPlugin);
   TOldBoatPlugin.Create(Master, idOldBoatPlugin);
 
