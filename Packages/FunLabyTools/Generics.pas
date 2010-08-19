@@ -118,8 +118,6 @@ type
     FDownPainter: TPainter; /// Peintre pour le bouton enfoncé
   protected
     procedure DoDraw(Context: TDrawSquareContext); override;
-
-    property DownPainter: TPainter read FDownPainter;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
@@ -134,6 +132,8 @@ type
     procedure ButtonUp(Context: TMoveContext); virtual;
   published
     property Enabled;
+
+    property DownPainter: TPainter read FDownPainter;
   end;
 
   {*
@@ -149,9 +149,6 @@ type
     FOnPainter: TPainter;  /// Peintre pour la position On
   protected
     procedure DoDraw(Context: TDrawSquareContext); override;
-
-    property OffPainter: TPainter read FOffPainter;
-    property OnPainter: TPainter read FOnPainter;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
@@ -162,8 +159,12 @@ type
 
     procedure SwitchOn(Context: TMoveContext); virtual;
     procedure SwitchOff(Context: TMoveContext); virtual;
+
+    property OffPainter: TPainter read FOffPainter;
   published
     property IsOn: Boolean read FIsOn write FIsOn default False;
+
+    property OnPainter: TPainter read FOnPainter;
   end;
 
   {*
