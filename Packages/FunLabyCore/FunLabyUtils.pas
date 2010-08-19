@@ -426,6 +426,7 @@ type
 
     FCancelled: Boolean;  /// True si le déplacement a été annulé
     FGoOnMoving: Boolean; /// True s'il faut réitérer le déplacement
+    FHooked: Boolean;     /// True si intercepté par un TPosComponent
 
     FTemporization: Cardinal; /// Temporisation de ce contexte
 
@@ -472,6 +473,7 @@ type
 
     property Cancelled: Boolean read FCancelled write FCancelled;
     property GoOnMoving: Boolean read FGoOnMoving write FGoOnMoving;
+    property Hooked: Boolean read FHooked write FHooked;
 
     property Temporization: Cardinal read FTemporization write FTemporization;
   end;
@@ -5221,7 +5223,7 @@ var
   I: Integer;
   PosComponent: TPosComponent;
 begin
-  for I := 0 to Master.PosComponentCount-1 do
+  for I := Master.PosComponentCount-1 downto 0 do
   begin
     PosComponent := Master.PosComponents[I];
 
@@ -5229,9 +5231,15 @@ begin
       (PosComponent.Map = Context.Map) and
       Same3DPoint(PosComponent.Position, Context.Pos) then
     begin
+      Context.Hooked := True;
       HookEventTo(Context, EventKind, PosComponent);
-      Result := True;
-      Exit;
+
+      if Context.Hooked then
+      begin
+        Context.Hooked := False;
+        Result := True;
+        Exit;
+      end;
     end;
   end;
 
@@ -5429,7 +5437,7 @@ var
 begin
   SavedMsgID := TDispatchMessage(Msg).MsgID;
 
-  for I := 0 to Master.PosComponentCount-1 do
+  for I := Master.PosComponentCount-1 downto 0 do
   begin
     PosComponent := Master.PosComponents[I];
 
