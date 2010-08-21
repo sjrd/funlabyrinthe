@@ -11,7 +11,7 @@ interface
 
 uses
   SysUtils, Graphics, StrUtils, ScUtils, FunLabyUtils, Generics, GraphicsTools,
-  MapTools, FLBCommon, FLBFields, GR32;
+  MapTools, FLBCommon, FLBFields, FLBSimpleObjects, GR32;
 
 const {don't localize}
   idBoatPlugin = 'BoatPlugin'; /// ID du plug-in barque
@@ -136,6 +136,10 @@ end;
 procedure TBoat.Entered(Context: TMoveContext);
 begin
   AttachController(Context.Player);
+
+  // Hack to have the buoy disappear
+  // TODO This should be implemented in a better, more generic, way!
+  Context.Player.RemovePlugin(Master.Plugin[idBuoyPlugin]);
 
   inherited;
 end;
