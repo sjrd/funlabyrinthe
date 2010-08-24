@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, TypInfo, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ImgList, ScUtils, FunLabyUtils, FilesUtils,
   FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresActions, SimpleSquaresConsts,
-  SimpleSquaresActionEditor, GR32, ExtCtrls;
+  SimpleSquaresActionEditor, GR32, ExtCtrls, FunLabyControls;
 
 type
   {*
@@ -17,21 +17,20 @@ type
   TFrameChangeEffectEnabledActionEditor = class(TFrameActionEditor)
     RadioGroupEnabledValue: TRadioGroup;
     GroupBoxEffect: TGroupBox;
-    EditEffectID: TComboBoxEx;
-    SquaresImages: TImageList;
     ButtonCurrentEffect: TRadioButton;
     ButtonAnyEffect: TRadioButton;
-    procedure EditEffectIDChange(Sender: TObject);
-    procedure EditEffectIDEnter(Sender: TObject);
+    ComboBoxEffect: TFLComponentComboBox;
+    procedure ComboBoxEffectChange(Sender: TObject);
+    procedure ComboBoxEffectEnter(Sender: TObject);
     procedure RadioGroupEnabledValueClick(Sender: TObject);
     procedure ButtonCurrentEffectClick(Sender: TObject);
     procedure ButtonAnyEffectClick(Sender: TObject);
+    procedure ComboBoxEffectFilterComponent(Sender: TObject;
+      Component: TFunLabyComponent; var Accept: Boolean);
   private
     MasterFile: TMasterFile; /// Fichier maître
 
     FCurrentAction: TChangeEffectEnabledAction; /// Action courante
-
-    procedure RegisterComponent(Component: TFunLabyComponent);
   protected
     procedure ActivateAction; override;
     procedure DeactivateAction; override;
@@ -44,44 +43,9 @@ implementation
 
 {$R *.dfm}
 
-{------------------------------------------}
-{ TFrameDeactivateEffectActionEditor class }
-{------------------------------------------}
-
-{*
-  Enregistre un composant
-  @param Component   Le composant à enregistrer
-*}
-procedure TFrameChangeEffectEnabledActionEditor.RegisterComponent(
-  Component: TFunLabyComponent);
-var
-  SquareBmp: TBitmap;
-  ImageIndex: Integer;
-  Category: TComboExItems;
-  Item: TComboExItem;
-begin
-  if not ((Component is TEffect) and IsPublishedProp(Component, 'Enabled')) then
-    Exit;
-
-  Category := EditEffectID.ItemsEx;
-
-  // Ajout de l'image du composant dans la liste d'images
-  SquareBmp := TBitmap.Create;
-  try
-    SquareBmp.SetSize(SquareSize, SquareSize);
-    Component.DrawIconToCanvas(SquareBmp.Canvas, BaseSquareRect,
-      EditEffectID.Color);
-
-    ImageIndex := SquaresImages.Add(SquareBmp, nil);
-  finally
-    SquareBmp.Free;
-  end;
-
-  // Ajout du bouton
-  Item := Category.Add;
-  Item.Caption := Component.ID;
-  Item.ImageIndex := ImageIndex;
-end;
+{---------------------------------------------}
+{ TFrameChangeEffectEnabledActionEditor class }
+{---------------------------------------------}
 
 {*
   [@inheritDoc]
@@ -90,10 +54,7 @@ procedure TFrameChangeEffectEnabledActionEditor.ActivateAction;
 begin
   // Initialize
   if MasterFile = nil then // first time
-  begin
     MasterFile := GetFunLabyEditMainForm.MasterFile;
-    MasterFile.Master.RegisterComponents(RegisterComponent);
-  end;
 
   // Activate action
 
@@ -103,13 +64,14 @@ begin
   else
     ButtonAnyEffect.Checked := True;
 
-  EditEffectID.Text := CurrentAction.EffectID;
-  EditEffectID.ItemIndex := EditEffectID.Items.IndexOf(EditEffectID.Text);
+  ComboBoxEffect.ComponentClass := TEffect;
+  ComboBoxEffect.Master := MasterFile.Master;
+  ComboBoxEffect.Selected := MasterFile.Master.Effect[CurrentAction.EffectID];
 
   RadioGroupEnabledValue.OnClick := RadioGroupEnabledValueClick;
   ButtonCurrentEffect.OnClick := ButtonCurrentEffectClick;
   ButtonAnyEffect.OnClick := ButtonAnyEffectClick;
-  EditEffectID.OnChange := EditEffectIDChange;
+  ComboBoxEffect.OnChange := ComboBoxEffectChange;
 end;
 
 {*
@@ -120,7 +82,7 @@ begin
   RadioGroupEnabledValue.OnClick := nil;
   ButtonCurrentEffect.OnClick := nil;
   ButtonAnyEffect.OnClick := nil;
-  EditEffectID.OnChange := nil;
+  ComboBoxEffect.OnChange := nil;
 end;
 
 {*
@@ -142,8 +104,7 @@ end;
 procedure TFrameChangeEffectEnabledActionEditor.ButtonCurrentEffectClick(
   Sender: TObject);
 begin
-  EditEffectID.Text := '';
-  EditEffectID.ItemIndex := -1;
+  ComboBoxEffect.Selected := nil;
   CurrentAction.EffectID := '';
 
   MarkModified;
@@ -160,13 +121,23 @@ begin
 end;
 
 {*
+  Gestionnaire d'événement OnFilterComponent de la combobox d'effet
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameChangeEffectEnabledActionEditor.ComboBoxEffectFilterComponent(
+  Sender: TObject; Component: TFunLabyComponent; var Accept: Boolean);
+begin
+  Accept := IsPublishedProp(Component, 'Enabled');
+end;
+
+{*
   Gestionnaire d'événement OnChange d'un des edit d'ID de composant
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFrameChangeEffectEnabledActionEditor.EditEffectIDChange(
+procedure TFrameChangeEffectEnabledActionEditor.ComboBoxEffectChange(
   Sender: TObject);
 begin
-  CurrentAction.EffectID := (Sender as TComboBoxEx).Text;
+  CurrentAction.EffectID := ComboBoxEffect.Selected.SafeID;
 
   MarkModified;
 end;
@@ -175,7 +146,7 @@ end;
   Gestionnaire d'événement OnEnter de l'éditeur d'ID de l'effet
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFrameChangeEffectEnabledActionEditor.EditEffectIDEnter(
+procedure TFrameChangeEffectEnabledActionEditor.ComboBoxEffectEnter(
   Sender: TObject);
 begin
   ButtonAnyEffect.Checked := True;

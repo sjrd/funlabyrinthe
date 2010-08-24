@@ -3,12 +3,10 @@ unit SimpleSquaresConsts;
 interface
 
 resourcestring
-  SNone = '(aucun)';
-
   SNoSquareSelectedTitle = 'Aucune case sélectionnée';
   SNoSquareSelected =
-    'Veuillez sélectionnez une case dans la fenêtre Cartes avant d''effectuer '+
-    'cette opération';
+    'Veuillez d''abord sélectionner une case dans la fenêtre Cartes, puis, '+
+    'sans fermer cette fenêtre, recliquer sur ce bouton.';
 
 implementation
 

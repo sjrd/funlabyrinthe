@@ -78,6 +78,8 @@
 			<DCCReference Include="FunLabySourceEditorFrame.pas"/>
 			<DCCReference Include="FunLabySourceSynEditEditorFrame.pas"/>
 			<DCCReference Include="FunLabySynEdit.pas"/>
+			<DCCReference Include="FunLabyControls.pas"/>
+			<DCCReference Include="FunLabyEditPluginConsts.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

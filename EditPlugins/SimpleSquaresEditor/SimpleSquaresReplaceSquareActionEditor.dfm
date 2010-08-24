@@ -24,7 +24,7 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
       Width = 193
       Height = 17
       Caption = 'Modifier l'#39'obstacle :'
-      TabOrder = 8
+      TabOrder = 6
     end
     object CheckBoxReplaceTool: TCheckBox
       Tag = 2
@@ -33,7 +33,7 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
       Width = 193
       Height = 17
       Caption = 'Modifier l'#39'outil :'
-      TabOrder = 7
+      TabOrder = 4
     end
     object CheckBoxReplaceEffect: TCheckBox
       Tag = 1
@@ -42,7 +42,7 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
       Width = 193
       Height = 17
       Caption = 'Modifier l'#39'effet :'
-      TabOrder = 6
+      TabOrder = 2
     end
     object CheckBoxReplaceField: TCheckBox
       Left = 16
@@ -50,58 +50,7 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
       Width = 193
       Height = 17
       Caption = 'Modifier le terrain :'
-      TabOrder = 5
-    end
-    object EditEffectID: TComboBoxEx
-      Tag = 1
-      Left = 16
-      Top = 104
-      Width = 193
-      Height = 36
-      ItemsEx = <>
-      Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 16
-      TabOrder = 2
-      Images = SquaresImages
-      DropDownCount = 24
-    end
-    object EditFieldID: TComboBoxEx
-      Left = 16
-      Top = 40
-      Width = 193
-      Height = 36
-      ItemsEx = <>
-      Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 16
-      TabOrder = 1
-      Images = SquaresImages
-      DropDownCount = 24
-    end
-    object EditToolID: TComboBoxEx
-      Tag = 2
-      Left = 16
-      Top = 168
-      Width = 193
-      Height = 36
-      ItemsEx = <>
-      Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 16
-      TabOrder = 3
-      Images = SquaresImages
-      DropDownCount = 24
-    end
-    object EditObstacleID: TComboBoxEx
-      Tag = 3
-      Left = 16
-      Top = 232
-      Width = 193
-      Height = 36
-      ItemsEx = <>
-      Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 16
-      TabOrder = 4
-      Images = SquaresImages
-      DropDownCount = 24
+      TabOrder = 0
     end
     object ButtonCopySelectedSquare: TButton
       Left = 16
@@ -112,9 +61,43 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
       Caption = 
         'Imiter la case s'#233'lectionn'#233'e dans la fen'#234'tre Cartes (menu Voir|Ca' +
         'rtes)'
-      TabOrder = 0
+      TabOrder = 8
       WordWrap = True
       OnClick = ButtonCopySelectedSquareClick
+    end
+    object ComboBoxField: TFLComponentComboBox
+      Left = 16
+      Top = 40
+      Width = 193
+      Height = 38
+      TabOrder = 1
+    end
+    object ComboBoxEffect: TFLComponentComboBox
+      Tag = 1
+      Left = 16
+      Top = 104
+      Width = 193
+      Height = 38
+      TabOrder = 3
+      UseNil = True
+    end
+    object ComboBoxTool: TFLComponentComboBox
+      Tag = 2
+      Left = 16
+      Top = 168
+      Width = 193
+      Height = 38
+      TabOrder = 5
+      UseNil = True
+    end
+    object ComboBoxObstacle: TFLComponentComboBox
+      Tag = 3
+      Left = 16
+      Top = 232
+      Width = 193
+      Height = 38
+      TabOrder = 7
+      UseNil = True
     end
   end
   object GroupBoxSquarePos: TGroupBox
@@ -178,7 +161,7 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
         'Cartes)'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 2
+      TabOrder = 6
       WordWrap = True
       OnClick = ButtonResetSquarePosClick
     end
@@ -188,7 +171,7 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
       Width = 129
       Height = 21
       ItemHeight = 13
-      TabOrder = 3
+      TabOrder = 2
       OnEnter = EditAbsolutePosEnter
     end
     object EditAbsolutePosX: TSpinEdit
@@ -198,7 +181,7 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
       Height = 22
       MaxValue = 0
       MinValue = 0
-      TabOrder = 4
+      TabOrder = 3
       Value = 0
       OnEnter = EditAbsolutePosEnter
     end
@@ -209,7 +192,7 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
       Height = 22
       MaxValue = 0
       MinValue = 0
-      TabOrder = 5
+      TabOrder = 4
       Value = 0
       OnEnter = EditAbsolutePosEnter
     end
@@ -220,15 +203,9 @@ inherited FrameReplaceSquareActionEditor: TFrameReplaceSquareActionEditor
       Height = 22
       MaxValue = 0
       MinValue = 0
-      TabOrder = 6
+      TabOrder = 5
       Value = 0
       OnEnter = EditAbsolutePosEnter
     end
-  end
-  object SquaresImages: TImageList
-    Height = 30
-    Width = 30
-    Left = 352
-    Top = 128
   end
 end

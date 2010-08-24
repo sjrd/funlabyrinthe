@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, StrUtils, Classes, Graphics, Controls, Forms,
   Dialogs, ImgList, StdCtrls, ComCtrls, Spin, ScUtils, ScStrUtils, SdDialogs,
   GR32, FunLabyUtils, FilesUtils, FunLabyEditOTA, SimpleSquaresUtils,
-  SimpleSquaresActions, SimpleSquaresConsts, SimpleSquaresActionEditor;
+  SimpleSquaresActions, SimpleSquaresConsts, SimpleSquaresActionEditor,
+  FunLabyControls;
 
 type
   {*
@@ -16,11 +17,6 @@ type
   *}
   TFrameReplaceSquareActionEditor = class(TFrameActionEditor)
     GroupBoxReplaceBy: TGroupBox;
-    EditEffectID: TComboBoxEx;
-    SquaresImages: TImageList;
-    EditFieldID: TComboBoxEx;
-    EditToolID: TComboBoxEx;
-    EditObstacleID: TComboBoxEx;
     ButtonCopySelectedSquare: TButton;
     GroupBoxSquarePos: TGroupBox;
     ButtonCurrentSquare: TRadioButton;
@@ -38,6 +34,10 @@ type
     EditAbsolutePosZ: TSpinEdit;
     LabelAbsolutePosY: TLabel;
     LabelAbolutePosZ: TLabel;
+    ComboBoxField: TFLComponentComboBox;
+    ComboBoxEffect: TFLComponentComboBox;
+    ComboBoxTool: TFLComponentComboBox;
+    ComboBoxObstacle: TFLComponentComboBox;
     procedure ButtonCurrentSquareClick(Sender: TObject);
     procedure ButtonAbsolutePosClick(Sender: TObject);
     procedure ButtonResetSquarePosClick(Sender: TObject);
@@ -48,18 +48,16 @@ type
     procedure EditAbsolutePosChange(Sender: TObject);
   private
     CheckBoxReplaceComponent: array[0..3] of TCheckBox;
-    EditComponentID: array[0..3] of TComboBoxEx;
+    EditComponentID: array[0..3] of TFLComponentComboBox;
 
     MasterFile: TMasterFile;    /// Fichier maître
     MapViewer: IOTAMapViewer50; /// Visualisateur de cartes
 
     FCurrentAction: TReplaceSquareAction; /// Action courante
 
-    procedure RegisterComponent(Component: TFunLabyComponent);
-
     procedure FillSquarePosControls;
 
-    procedure FillIDEdit(CheckBox: TCheckBox; Edit: TComboBoxEx;
+    procedure FillIDEdit(CheckBox: TCheckBox; Edit: TFLComponentComboBox;
       ReplaceBy: TReplaceSquareComponent);
     procedure FillIDEdits;
   protected
@@ -79,48 +77,6 @@ implementation
 {---------------------------------------}
 { TFrameReplaceSquareActionEditor class }
 {---------------------------------------}
-
-{*
-  Enregistre un composant
-  @param Component   Le composant à enregistrer
-*}
-procedure TFrameReplaceSquareActionEditor.RegisterComponent(
-  Component: TFunLabyComponent);
-var
-  SquareBmp: TBitmap;
-  ImageIndex: Integer;
-  Category: TComboExItems;
-  Item: TComboExItem;
-begin
-  // Choix de la catégorie
-  if Component is TField then
-    Category := EditFieldID.ItemsEx
-  else if Component is TEffect then
-    Category := EditEffectID.ItemsEx
-  else if Component is TTool then
-    Category := EditToolID.ItemsEx
-  else if Component is TObstacle then
-    Category := EditObstacleID.ItemsEx
-  else
-    Exit; // ignore
-
-  // Ajout de l'image du composant dans la liste d'images
-  SquareBmp := TBitmap.Create;
-  try
-    SquareBmp.SetSize(SquareSize, SquareSize);
-    Component.DrawIconToCanvas(SquareBmp.Canvas, BaseSquareRect,
-      EditFieldID.Color);
-
-    ImageIndex := SquaresImages.Add(SquareBmp, nil);
-  finally
-    SquareBmp.Free;
-  end;
-
-  // Ajout du bouton
-  Item := Category.Add;
-  Item.Caption := Component.ID;
-  Item.ImageIndex := ImageIndex;
-end;
 
 {*
   Renseigne les contrôles qui commande la position de la case à modifier
@@ -163,23 +119,21 @@ end;
   @param ReplaceBy   Remplacement à renseigner dans cet éditeur
 *}
 procedure TFrameReplaceSquareActionEditor.FillIDEdit(CheckBox: TCheckBox;
-  Edit: TComboBoxEx; ReplaceBy: TReplaceSquareComponent);
+  Edit: TFLComponentComboBox; ReplaceBy: TReplaceSquareComponent);
 begin
   CheckBox.Checked := ReplaceBy.IsReplaced;
   Edit.Enabled := ReplaceBy.IsReplaced;
 
   if ReplaceBy.IsReplaced then
   begin
-    Edit.Text := IIF(ReplaceBy.ComponentID = '', SNone, ReplaceBy.ComponentID);
-    Edit.ItemIndex := Edit.Items.IndexOf(Edit.Text);
-    Edit.OnChange := EditComponentIDChange;
+    Edit.Selected := MasterFile.Master.Component[ReplaceBy.ComponentID];
   end else
   begin
-    Edit.Text := '';
     Edit.ItemIndex := -1;
   end;
 
   CheckBox.OnClick := CheckBoxReplaceComponentClick;
+  Edit.OnChange := EditComponentIDChange;
 end;
 
 {*
@@ -204,11 +158,10 @@ begin
   // Initialize
   if MasterFile = nil then // first time
   begin
-    for I := 1 to 3 do
-      EditComponentID[I].ItemsEx.Add.Caption := SNone;
-
     MasterFile := GetFunLabyEditMainForm.MasterFile;
-    MasterFile.Master.RegisterComponents(RegisterComponent);
+
+    for I := 0 to 3 do
+      EditComponentID[I].Master := MasterFile.Master;
 
     MapViewer := GetFunLabyEditMainForm.MapViewer;
   end;
@@ -259,10 +212,15 @@ begin
   CheckBoxReplaceComponent[2] := CheckBoxReplaceTool;
   CheckBoxReplaceComponent[3] := CheckBoxReplaceObstacle;
 
-  EditComponentID[0] := EditFieldID;
-  EditComponentID[1] := EditEffectID;
-  EditComponentID[2] := EditToolID;
-  EditComponentID[3] := EditObstacleID;
+  EditComponentID[0] := ComboBoxField;
+  EditComponentID[1] := ComboBoxEffect;
+  EditComponentID[2] := ComboBoxTool;
+  EditComponentID[3] := ComboBoxObstacle;
+
+  ComboBoxField.ComponentClass := TField;
+  ComboBoxEffect.ComponentClass := TEffect;
+  ComboBoxTool.ComponentClass := TTool;
+  ComboBoxObstacle.ComponentClass := TObstacle;
 end;
 
 {*
@@ -332,9 +290,12 @@ begin
   Index := (Sender as TCheckBox).Tag;
   Checked := (Sender as TCheckBox).Checked;
 
-  EditComponentID[Index].Text := '';
+  EditComponentID[Index].ItemIndex := IIF(Checked, 0, -1);
   EditComponentID[Index].Enabled := Checked;
   CurrentAction.Components[Index].IsReplaced := Checked;
+
+  if Checked then
+    EditComponentIDChange(EditComponentID[Index]);
 
   MarkModified;
 end;
@@ -347,14 +308,12 @@ procedure TFrameReplaceSquareActionEditor.EditComponentIDChange(
   Sender: TObject);
 var
   Index: Integer;
-  NewID: TComponentID;
+  Component: TFunLabyComponent;
 begin
-  Index := (Sender as TComboBoxEx).Tag;
-  NewID := (Sender as TComboBoxEx).Text;
-  if NewID = SNone then
-    NewID := '';
+  Index := (Sender as TFLComponentComboBox).Tag;
+  Component := (Sender as TFLComponentComboBox).Selected;
 
-  CurrentAction.Components[Index].ComponentID := NewID;
+  CurrentAction.Components[Index].ComponentID := Component.SafeID;
 
   MarkModified;
 end;

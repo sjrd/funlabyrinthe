@@ -21,25 +21,13 @@ inherited FrameChangeEffectEnabledActionEditor: TFrameChangeEffectEnabledActionE
     Height = 121
     Caption = 'Effet '#224' activer ou d'#233'sactiver'
     TabOrder = 1
-    object EditEffectID: TComboBoxEx
-      Left = 32
-      Top = 67
-      Width = 193
-      Height = 36
-      ItemsEx = <>
-      ItemHeight = 16
-      TabOrder = 0
-      OnEnter = EditEffectIDEnter
-      Images = SquaresImages
-      DropDownCount = 24
-    end
     object ButtonCurrentEffect: TRadioButton
       Left = 16
       Top = 24
       Width = 209
       Height = 17
       Caption = 'Cet effet'
-      TabOrder = 1
+      TabOrder = 0
     end
     object ButtonAnyEffect: TRadioButton
       Left = 16
@@ -47,13 +35,17 @@ inherited FrameChangeEffectEnabledActionEditor: TFrameChangeEffectEnabledActionE
       Width = 209
       Height = 17
       Caption = 'Un autre effet :'
-      TabOrder = 2
+      TabOrder = 1
     end
-  end
-  object SquaresImages: TImageList
-    Height = 30
-    Width = 30
-    Left = 152
-    Top = 168
+    object ComboBoxEffect: TFLComponentComboBox
+      Left = 32
+      Top = 67
+      Width = 193
+      Height = 38
+      TabOrder = 2
+      OnChange = ComboBoxEffectChange
+      OnEnter = ComboBoxEffectEnter
+      OnFilterComponent = ComboBoxEffectFilterComponent
+    end
   end
 end

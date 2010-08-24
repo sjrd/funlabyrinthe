@@ -45,7 +45,9 @@ contains
   FunLabyEdit in 'FunLabyEdit.pas',
   FunLabySourceEditorFrame in 'FunLabySourceEditorFrame.pas',
   FunLabySourceSynEditEditorFrame in 'FunLabySourceSynEditEditorFrame.pas',
-  FunLabySynEdit in 'FunLabySynEdit.pas';
+  FunLabySynEdit in 'FunLabySynEdit.pas',
+  FunLabyControls in 'FunLabyControls.pas',
+  FunLabyEditPluginConsts in 'FunLabyEditPluginConsts.pas';
 
 end.
 

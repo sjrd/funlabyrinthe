@@ -1,84 +1,110 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <ProjectGuid>{601b62e9-ca23-4ea2-ba29-63b57781b271}</ProjectGuid>
-  </PropertyGroup>
-  <ItemGroup />
-  <ItemGroup>
-    <Projects Include="EditPlugins\Compatibility4xEditor\Compatibility4xEditor.dproj" />
-    <Projects Include="EditPlugins\DelphiSourceEditor\DelphiSourceEditor.dproj" />
-    <Projects Include="EditPlugins\FunDelphiCompiler\FunDelphiCompiler.dproj" />
-    <Projects Include="EditPlugins\FunDelphiSourceEditor\FunDelphiSourceEditor.dproj" />
-    <Projects Include="EditPlugins\FunLabyEditPluginUtils\FunLabyEditPluginUtils.dproj" />
-    <Projects Include="EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.dproj" />
-  </ItemGroup>
-  <ProjectExtensions>
-    <Borland.Personality>Default.Personality</Borland.Personality>
-    <Borland.ProjectType />
-    <BorlandProject>
-<BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
-  </ProjectExtensions>
-  <Target Name="FunLabyEditPluginUtils">
-    <MSBuild Projects="EditPlugins\FunLabyEditPluginUtils\FunLabyEditPluginUtils.dproj" Targets="" />
-  </Target>
-  <Target Name="FunLabyEditPluginUtils:Clean">
-    <MSBuild Projects="EditPlugins\FunLabyEditPluginUtils\FunLabyEditPluginUtils.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="FunLabyEditPluginUtils:Make">
-    <MSBuild Projects="EditPlugins\FunLabyEditPluginUtils\FunLabyEditPluginUtils.dproj" Targets="Make" />
-  </Target>
-  <Target Name="DelphiSourceEditor">
-    <MSBuild Projects="EditPlugins\DelphiSourceEditor\DelphiSourceEditor.dproj" Targets="" />
-  </Target>
-  <Target Name="DelphiSourceEditor:Clean">
-    <MSBuild Projects="EditPlugins\DelphiSourceEditor\DelphiSourceEditor.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="DelphiSourceEditor:Make">
-    <MSBuild Projects="EditPlugins\DelphiSourceEditor\DelphiSourceEditor.dproj" Targets="Make" />
-  </Target>
-  <Target Name="FunDelphiCompiler">
-    <MSBuild Projects="EditPlugins\FunDelphiCompiler\FunDelphiCompiler.dproj" Targets="" />
-  </Target>
-  <Target Name="FunDelphiCompiler:Clean">
-    <MSBuild Projects="EditPlugins\FunDelphiCompiler\FunDelphiCompiler.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="FunDelphiCompiler:Make">
-    <MSBuild Projects="EditPlugins\FunDelphiCompiler\FunDelphiCompiler.dproj" Targets="Make" />
-  </Target>
-  <Target Name="FunDelphiSourceEditor">
-    <MSBuild Projects="EditPlugins\FunDelphiSourceEditor\FunDelphiSourceEditor.dproj" Targets="" />
-  </Target>
-  <Target Name="FunDelphiSourceEditor:Clean">
-    <MSBuild Projects="EditPlugins\FunDelphiSourceEditor\FunDelphiSourceEditor.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="FunDelphiSourceEditor:Make">
-    <MSBuild Projects="EditPlugins\FunDelphiSourceEditor\FunDelphiSourceEditor.dproj" Targets="Make" />
-  </Target>
-  <Target Name="SimpleSquaresEditor">
-    <MSBuild Projects="EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.dproj" Targets="" />
-  </Target>
-  <Target Name="SimpleSquaresEditor:Clean">
-    <MSBuild Projects="EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="SimpleSquaresEditor:Make">
-    <MSBuild Projects="EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.dproj" Targets="Make" />
-  </Target>
-  <Target Name="Compatibility4xEditor">
-    <MSBuild Projects="EditPlugins\Compatibility4xEditor\Compatibility4xEditor.dproj" Targets="" />
-  </Target>
-  <Target Name="Compatibility4xEditor:Clean">
-    <MSBuild Projects="EditPlugins\Compatibility4xEditor\Compatibility4xEditor.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="Compatibility4xEditor:Make">
-    <MSBuild Projects="EditPlugins\Compatibility4xEditor\Compatibility4xEditor.dproj" Targets="Make" />
-  </Target>
-  <Target Name="Build">
-    <CallTarget Targets="FunLabyEditPluginUtils;DelphiSourceEditor;FunDelphiCompiler;FunDelphiSourceEditor;SimpleSquaresEditor;Compatibility4xEditor" />
-  </Target>
-  <Target Name="Clean">
-    <CallTarget Targets="FunLabyEditPluginUtils:Clean;DelphiSourceEditor:Clean;FunDelphiCompiler:Clean;FunDelphiSourceEditor:Clean;SimpleSquaresEditor:Clean;Compatibility4xEditor:Clean" />
-  </Target>
-  <Target Name="Make">
-    <CallTarget Targets="FunLabyEditPluginUtils:Make;DelphiSourceEditor:Make;FunDelphiCompiler:Make;FunDelphiSourceEditor:Make;SimpleSquaresEditor:Make;Compatibility4xEditor:Make" />
-  </Target>
-  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
-</Project>
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{601b62e9-ca23-4ea2-ba29-63b57781b271}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="EditPlugins\FunLabyEditPluginUtils\FunLabyEditPluginUtils.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="DesignPackages\DclFunLabyEditPluginUtils\DclFunLabyEditPluginUtils.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="EditPlugins\DelphiSourceEditor\DelphiSourceEditor.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="EditPlugins\FunDelphiCompiler\FunDelphiCompiler.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="EditPlugins\FunDelphiSourceEditor\FunDelphiSourceEditor.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="EditPlugins\Compatibility4xEditor\Compatibility4xEditor.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<BorlandProject>
+					<Default.Personality/>
+				</BorlandProject>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="FunLabyEditPluginUtils">
+			<MSBuild Projects="EditPlugins\FunLabyEditPluginUtils\FunLabyEditPluginUtils.dproj"/>
+		</Target>
+		<Target Name="FunLabyEditPluginUtils:Clean">
+			<MSBuild Targets="Clean" Projects="EditPlugins\FunLabyEditPluginUtils\FunLabyEditPluginUtils.dproj"/>
+		</Target>
+		<Target Name="FunLabyEditPluginUtils:Make">
+			<MSBuild Targets="Make" Projects="EditPlugins\FunLabyEditPluginUtils\FunLabyEditPluginUtils.dproj"/>
+		</Target>
+		<Target Name="DclFunLabyEditPluginUtils">
+			<MSBuild Projects="DesignPackages\DclFunLabyEditPluginUtils\DclFunLabyEditPluginUtils.dproj"/>
+		</Target>
+		<Target Name="DclFunLabyEditPluginUtils:Clean">
+			<MSBuild Targets="Clean" Projects="DesignPackages\DclFunLabyEditPluginUtils\DclFunLabyEditPluginUtils.dproj"/>
+		</Target>
+		<Target Name="DclFunLabyEditPluginUtils:Make">
+			<MSBuild Targets="Make" Projects="DesignPackages\DclFunLabyEditPluginUtils\DclFunLabyEditPluginUtils.dproj"/>
+		</Target>
+		<Target Name="DelphiSourceEditor">
+			<MSBuild Projects="EditPlugins\DelphiSourceEditor\DelphiSourceEditor.dproj"/>
+		</Target>
+		<Target Name="DelphiSourceEditor:Clean">
+			<MSBuild Targets="Clean" Projects="EditPlugins\DelphiSourceEditor\DelphiSourceEditor.dproj"/>
+		</Target>
+		<Target Name="DelphiSourceEditor:Make">
+			<MSBuild Targets="Make" Projects="EditPlugins\DelphiSourceEditor\DelphiSourceEditor.dproj"/>
+		</Target>
+		<Target Name="FunDelphiCompiler">
+			<MSBuild Projects="EditPlugins\FunDelphiCompiler\FunDelphiCompiler.dproj"/>
+		</Target>
+		<Target Name="FunDelphiCompiler:Clean">
+			<MSBuild Targets="Clean" Projects="EditPlugins\FunDelphiCompiler\FunDelphiCompiler.dproj"/>
+		</Target>
+		<Target Name="FunDelphiCompiler:Make">
+			<MSBuild Targets="Make" Projects="EditPlugins\FunDelphiCompiler\FunDelphiCompiler.dproj"/>
+		</Target>
+		<Target Name="FunDelphiSourceEditor">
+			<MSBuild Projects="EditPlugins\FunDelphiSourceEditor\FunDelphiSourceEditor.dproj"/>
+		</Target>
+		<Target Name="FunDelphiSourceEditor:Clean">
+			<MSBuild Targets="Clean" Projects="EditPlugins\FunDelphiSourceEditor\FunDelphiSourceEditor.dproj"/>
+		</Target>
+		<Target Name="FunDelphiSourceEditor:Make">
+			<MSBuild Targets="Make" Projects="EditPlugins\FunDelphiSourceEditor\FunDelphiSourceEditor.dproj"/>
+		</Target>
+		<Target Name="SimpleSquaresEditor">
+			<MSBuild Projects="EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.dproj"/>
+		</Target>
+		<Target Name="SimpleSquaresEditor:Clean">
+			<MSBuild Targets="Clean" Projects="EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.dproj"/>
+		</Target>
+		<Target Name="SimpleSquaresEditor:Make">
+			<MSBuild Targets="Make" Projects="EditPlugins\SimpleSquaresEditor\SimpleSquaresEditor.dproj"/>
+		</Target>
+		<Target Name="Compatibility4xEditor">
+			<MSBuild Projects="EditPlugins\Compatibility4xEditor\Compatibility4xEditor.dproj"/>
+		</Target>
+		<Target Name="Compatibility4xEditor:Clean">
+			<MSBuild Targets="Clean" Projects="EditPlugins\Compatibility4xEditor\Compatibility4xEditor.dproj"/>
+		</Target>
+		<Target Name="Compatibility4xEditor:Make">
+			<MSBuild Targets="Make" Projects="EditPlugins\Compatibility4xEditor\Compatibility4xEditor.dproj"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="FunLabyEditPluginUtils;DclFunLabyEditPluginUtils;DelphiSourceEditor;FunDelphiCompiler;FunDelphiSourceEditor;SimpleSquaresEditor;Compatibility4xEditor"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="FunLabyEditPluginUtils:Clean;DclFunLabyEditPluginUtils:Clean;DelphiSourceEditor:Clean;FunDelphiCompiler:Clean;FunDelphiSourceEditor:Clean;SimpleSquaresEditor:Clean;Compatibility4xEditor:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="FunLabyEditPluginUtils:Make;DclFunLabyEditPluginUtils:Make;DelphiSourceEditor:Make;FunDelphiCompiler:Make;FunDelphiSourceEditor:Make;SimpleSquaresEditor:Make;Compatibility4xEditor:Make"/>
+		</Target>
+		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+	</Project>
