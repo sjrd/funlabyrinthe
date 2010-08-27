@@ -1,4 +1,4 @@
-; Installation de FunLabyrinthe 5.0
+; Installation de FunLabyrinthe 5.0.1
 
 [Setup]
 AppID=FunLabyrinthe
@@ -12,15 +12,15 @@ AppSupportURL=http://www.funlabyrinthe.com/
 AppUpdatesURL=http://www.funlabyrinthe.com/
 AppVersion=5.0
 
-VersionInfoDescription=Setup of FunLabyrinthe 5.0
-VersionInfoTextVersion=FunLabyrinthe v5.0, copyright 2000-2010 SJRDoeraene
-VersionInfoVersion=5.0
+VersionInfoDescription=Setup of FunLabyrinthe 5.0.1
+VersionInfoTextVersion=FunLabyrinthe v5.0.1, copyright 2000-2010 SJRDoeraene
+VersionInfoVersion=5.0.1
 
 DefaultDirName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,InstallLocation|{pf}\SJRDoeraene\{cm:AppName}}
 DefaultGroupName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,Inno Setup: Icon Group|{cm:AppName}}
 
 OutputDir=.\
-OutputBaseFilename=funlabyrinthe_5_0
+OutputBaseFilename=funlabyrinthe_5_0_1
 
 Compression=lzma
 SolidCompression=yes
@@ -30,7 +30,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 
 [CustomMessages]
 fr.AppName=FunLabyrinthe
-fr.AppVerName=FunLabyrinthe 5.0
+fr.AppVerName=FunLabyrinthe 5.0.1
 fr.Description=Jeu de labyrinthe très fun avec toutes sortes de gadgets
 
 ; Types d'installation
@@ -819,4 +819,5 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
+
 
