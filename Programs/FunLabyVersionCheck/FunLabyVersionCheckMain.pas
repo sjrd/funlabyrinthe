@@ -167,8 +167,8 @@ begin
 
     if Result and MsgOnNewVersion then
     begin
-    ShowDialog(SNewMinorVersionAvailableTitle,
-      Format(SNewMinorVersionAvailable, [AvailableVersion]));
+      ShowDialog(SNewMinorVersionAvailableTitle,
+        Format(SNewMinorVersionAvailable, [AvailableVersion]));
     end;
   end;
 
