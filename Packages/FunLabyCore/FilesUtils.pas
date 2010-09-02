@@ -370,7 +370,7 @@ end;
 *}
 procedure RunAutoVersionCheck;
 begin
-  RunURL(Dir + 'FunLabyVersionCheck.exe -autocheck');
+  RunURL(Dir + 'FunLabyVersionCheck.exe', DefaultRunURLVerb, '-autocheck');
 end;
 
 {*
