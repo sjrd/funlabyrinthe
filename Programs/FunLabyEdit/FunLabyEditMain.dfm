@@ -101,10 +101,10 @@ object FormMain: TFormMain
     end
   end
   object Images: TImageList
-    Left = 16
+    Left = 32
     Top = 88
     Bitmap = {
-      494C01010B000E00100010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E001C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -753,7 +753,7 @@ object FormMain: TFormMain
         ActionBar = MainMenuBar
       end>
     Images = Images
-    Left = 48
+    Left = 112
     Top = 88
     StyleName = 'XP Style'
     object ActionNewFile: TAction
@@ -964,43 +964,29 @@ object FormMain: TFormMain
   object SquaresImages: TImageList
     Height = 30
     Width = 30
-    Left = 16
-    Top = 152
+    Left = 72
+    Top = 200
   end
   object OpenDialog: TOpenDialog
     DefaultExt = 'flp'
     Filter = 'Projet FunLabyrinthe (*.flp)|*.flp'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofNoReadOnlyReturn, ofEnableSizing]
     Title = 'Ouvrir un fichier existant'
-    Left = 16
-    Top = 120
+    Left = 32
+    Top = 144
   end
   object SaveDialog: TSaveDialog
     DefaultExt = 'flp'
     Filter = 'Projet FunLabyrinthe (*.flp)|*.flp'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
     Title = 'Enregistrer le fichier'
-    Left = 48
-    Top = 120
-  end
-  object SaveMapDialog: TSaveDialog
-    DefaultExt = 'flm'
-    Filter = 'Cartes FunLabyrinthe (*.flm)|*.flm'
-    Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing, ofDontAddToRecent]
-    Title = 'Enregistrer la carte'
-    Left = 80
-    Top = 120
-  end
-  object OpenUnitDialog: TOpenDialog
-    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing, ofDontAddToRecent]
-    Title = 'Ajouter une unit'#233' existante'
-    Left = 16
-    Top = 184
+    Left = 112
+    Top = 144
   end
   object OpenSourceFileDialog: TOpenDialog
-    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofNoReadOnlyReturn, ofEnableSizing, ofDontAddToRecent]
+    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofNoReadOnlyReturn, ofEnableSizing, ofDontAddToRecent]
     Title = 'Ajouter un fichier source existant'
-    Left = 48
-    Top = 184
+    Left = 72
+    Top = 256
   end
 end

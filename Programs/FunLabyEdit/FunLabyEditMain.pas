@@ -39,14 +39,12 @@ type
     OpenDialog: TOpenDialog;
     SaveDialog: TSaveDialog;
     ActionFileProperties: TAction;
-    SaveMapDialog: TSaveDialog;
     ActionAddMap: TAction;
     ActionRemoveMap: TAction;
     ActionHelpTopics: TAction;
     ActionAbout: TAction;
     ActionTest: TAction;
     ActionViewAllSources: TAction;
-    OpenUnitDialog: TOpenDialog;
     ActionEditUnits: TAction;
     ActionAddExistingSource: TAction;
     ActionAddNewSource: TAction;
@@ -1222,9 +1220,14 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.ActionAddExistingSourceExecute(Sender: TObject);
+var
+  I: Integer;
 begin
   if OpenSourceFileDialog.Execute then
-    AddSourceFile(OpenSourceFileDialog.FileName);
+  begin
+    for I := 0 to OpenSourceFileDialog.Files.Count-1 do
+      AddSourceFile(OpenSourceFileDialog.Files[I]);
+  end;
 end;
 
 {*
