@@ -949,7 +949,7 @@ begin
   SepiContext.CurrentVisibility := mvPrivate;
 
   SepiMethod := TSepiMethod.Create(SepiContext, 'InitializeUnit', nil,
-    'procedure(Master: FunLabyUtils.TMaster; Params: Classes.TStrings)');
+    'static procedure(Master: FunLabyUtils.TMaster; Params: Classes.TStrings)');
   UnitCompiler.FindMethodCompiler(SepiMethod, True);
 
   SepiContext.CurrentVisibility := mvPublic;
@@ -2526,7 +2526,7 @@ var
 begin
   SepiClass.CurrentVisibility := mvStrictPrivate;
 
-  Signature := TSepiSignature.CreateConstructing(SepiUnit, SepiClass);
+  Signature := TSepiSignature.CreateConstructing(SepiClass);
   try
     Signature.Kind := skObjectFunction;
     Signature.ReturnType := SystemUnit.Boolean;
@@ -2571,7 +2571,7 @@ begin
   else
   begin
     SepiClass.CurrentVisibility := mvProtected;
-    Signature := TSepiSignature.CreateConstructing(SepiUnit, SepiClass);
+    Signature := TSepiSignature.CreateConstructing(SepiClass);
     try
       CopySignature(Signature, SepiMethod.Signature);
       Signature.Complete;
@@ -2607,7 +2607,7 @@ begin
   Storage.Kind := pskMethod;
   Storage.Method := SepiClass.FindComponent(IsStoredMethodName) as TSepiMethod;
 
-  Signature := TSepiSignature.CreateConstructing(SepiUnit, SepiClass);
+  Signature := TSepiSignature.CreateConstructing(SepiClass);
   try
     Signature.Kind := skProperty;
     Signature.ReturnType := PropType;
