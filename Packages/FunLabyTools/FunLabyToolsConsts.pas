@@ -14,6 +14,8 @@ resourcestring
   SDuplicateTool = 'Outil dupliqué';
   SDuplicateObstacle = 'Obstacle dupliqué';
 
+  SObjectDefIsNil = 'Erreur : ObjectDef n''a pas été renseigné pour cet outil.';
+
 implementation
 
 end.

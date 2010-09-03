@@ -3,7 +3,7 @@ unit Generics;
 interface
 
 uses
-  Graphics, ScUtils, FunLabyUtils, FunLabyCoreConsts;
+  Graphics, ScUtils, FunLabyUtils, FunLabyCoreConsts, FunLabyToolsConsts;
 
 const
   fButton = 'Buttons/Button';             /// Image du bouton
@@ -649,7 +649,7 @@ end;
 *}
 procedure TObjectTool.DoDraw(Context: TDrawSquareContext);
 begin
-  if Painter.IsEmpty then
+  if Painter.IsEmpty and (FObjectDef <> nil) then
     FObjectDef.Draw(Context)
   else
     inherited;
@@ -663,7 +663,12 @@ begin
   with Context do
   begin
     Square := RemoveTool(Square);
-    ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1;
+
+    if ObjectDef <> nil then
+      ObjectDef.Count[Player] := ObjectDef.Count[Player] + 1
+    else
+      Player.ShowMessage(SObjectDefIsNil);
+
     if FindMessage <> '' then
       Player.ShowMessage(FindMessage);
   end;
