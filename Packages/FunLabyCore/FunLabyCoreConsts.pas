@@ -23,7 +23,7 @@ resourcestring
   SObstacleName = '%s obstrué par %s';
   SWhichObject = 'Quel objet voulez-vous utiliser ?';
   SDefaultPlayerName = 'Joueur';
-  SComponentCreatorHint = 'Créer un nouveau composant de ce type';
+  SComponentCreatorHint = 'Créer un nouveau composant de type %s';
 
   // Noms des catégories standard
   SCategoryFields = 'Terrains';

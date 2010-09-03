@@ -167,8 +167,8 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TEngagedLiftSquare, 96, 92);
-  CheckInstanceSize(TLift, 56, 56);
+  CheckInstanceSize(TEngagedLiftSquare, 100, 96);
+  CheckInstanceSize(TLift, 60, 60);
   {$ASSERTIONS OFF}
 end;
 

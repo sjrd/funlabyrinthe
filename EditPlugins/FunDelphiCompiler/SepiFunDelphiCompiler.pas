@@ -2035,11 +2035,9 @@ var
   SepiMethod: TSepiMethod;
   Compiler: TSepiMethodCompiler;
   ResultValue: ISepiWritableValue;
-  Expression: ISepiExpression;
-  WantingParams: ISepiWantingParams;
   RightValue: ISepiReadableValue;
 begin
-  SepiMethod := TSepiMethod.Create(SepiContext, 'DoCreateComponent', nil,
+  SepiMethod := TSepiMethod.Create(SepiContext, 'GetComponentClass', nil,
     FInheritedMethod.Signature, mlkOverride);
 
   Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
@@ -2048,23 +2046,9 @@ begin
     'Result') as ISepiWritableValue;
   (ResultValue as ISepiExpression).SourcePos := SourcePos;
 
-  Expression := TSepiMetaClassValue.MakeValue(Compiler,
-    ItemClass) as ISepiExpression;
-  Expression.SourcePos := SourcePos;
+  RightValue := TSepiMetaClassValue.MakeValue(Compiler, ItemClass);
+  (RightValue as ISepiExpression).SourcePos := SourcePos;
 
-  Expression := LanguageRules.FieldSelection(SepiContext, Expression, 'Create');
-
-  Assert(Expression <> nil);
-
-  WantingParams := Expression as ISepiWantingParams;
-  WantingParams.AddParam(LanguageRules.ResolveIdentInMethod(
-    Compiler, 'Master'));
-  WantingParams.AddParam(LanguageRules.ResolveIdentInMethod(
-    Compiler, SepiMethod.Signature.Params[0].Name));
-  WantingParams.CompleteParams;
-  WantingParams.AttachToExpression(Expression);
-
-  RightValue := Expression as ISepiReadableValue;
   RightValue := TSepiConvertOperation.ConvertValue(ResultValue.ValueType,
     RightValue);
 
@@ -2079,7 +2063,7 @@ begin
   inherited;
 
   FInheritedMethod := (SepiContext as TSepiClass).LookForMember(
-    'DoCreateComponent') as TSepiMethod;
+    'GetComponentClass') as TSepiMethod;
 end;
 
 {*

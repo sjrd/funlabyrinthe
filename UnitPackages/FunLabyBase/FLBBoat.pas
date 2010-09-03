@@ -66,8 +66,7 @@ type
   protected
     function GetHint: string; override;
 
-    function DoCreateComponent(
-      const AID: TComponentID): TFunLabyComponent; override;
+    function GetComponentClass: TFunLabyComponentClass; override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
   end;
@@ -202,10 +201,9 @@ end;
 {*
   [@inheritDoc]
 *}
-function TBoatCreator.DoCreateComponent(
-  const AID: TComponentID): TFunLabyComponent;
+function TBoatCreator.GetComponentClass: TFunLabyComponentClass;
 begin
-  Result := TBoat.Create(Master, AID);
+  Result := TBoat;
 end;
 
 end.

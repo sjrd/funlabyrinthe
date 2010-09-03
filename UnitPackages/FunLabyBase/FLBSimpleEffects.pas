@@ -176,8 +176,7 @@ type
   protected
     function GetHint: string; override;
 
-    function DoCreateComponent(
-      const AID: TComponentID): TFunLabyComponent; override;
+    function GetComponentClass: TFunLabyComponentClass; override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
   end;
@@ -460,10 +459,9 @@ end;
 {*
   [@inheritDoc]
 *}
-function TTransporterCreator.DoCreateComponent(
-  const AID: TComponentID): TFunLabyComponent;
+function TTransporterCreator.GetComponentClass: TFunLabyComponentClass;
 begin
-  Result := TTransporter.Create(Master, AID);
+  Result := TTransporter;
 end;
 
 {----------------}

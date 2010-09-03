@@ -180,10 +180,10 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TBuoyPlugin, 44, 44);
-  CheckInstanceSize(TBuoys, 56, 56);
-  CheckInstanceSize(TSilverKeys, 56, 56);
-  CheckInstanceSize(TGoldenKeys, 56, 56);
+  CheckInstanceSize(TBuoyPlugin, 48, 48);
+  CheckInstanceSize(TBuoys, 60, 60);
+  CheckInstanceSize(TSilverKeys, 60, 60);
+  CheckInstanceSize(TGoldenKeys, 60, 60);
   {$ASSERTIONS OFF}
 end;
 

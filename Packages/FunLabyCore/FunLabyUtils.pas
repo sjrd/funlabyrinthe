@@ -844,6 +844,7 @@ type
   private
     FMaster: TMaster;        /// Maître FunLabyrinthe
     FID: TComponentID;       /// ID du composant
+    FIsAdditionnal: Boolean; /// Indique si ce composant est additionnel
     FIconPainter: TPainter;  /// Peintre de l'icône
 
     {*
@@ -858,11 +859,6 @@ type
     function GetSafeID: TComponentID;
   protected
     FTransient: Boolean; /// Indique si ce composant est transitoire
-  private
-    { This trick allowed the addition of FIconPainter without changing the
-      instance size. It should be rearranged when we can publish a scu-breaking
-      release. }
-    FIsAdditionnal: Boolean; /// Indique si ce composant est additionnel
   protected
     class function GetPlayerDataClass: TPlayerDataClass; virtual;
 
@@ -877,6 +873,8 @@ type
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); virtual;
     destructor Destroy; override;
+
+    procedure AfterConstruction; override;
 
     class function UsePlayerData: Boolean;
 
@@ -951,24 +949,15 @@ type
     @version 5.0
   *}
   TComponentCreator = class(TFunLabyComponent)
-  private
-    FOldIconPainter: TPainter; /// To be removed on a scu-breaking release
   protected
     function GetCategory: string; override;
     function GetHint: string; override;
 
-    function DoCreateComponent(
-      const AID: TComponentID): TFunLabyComponent; virtual; abstract;
+    function GetComponentClass: TFunLabyComponentClass; virtual; abstract;
   public
-    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
-    destructor Destroy; override;
-
-    procedure AfterConstruction; override;
-
-    procedure DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
-      Y: Integer = 0); override;
-
     function CreateComponent(const AID: TComponentID): TFunLabyComponent;
+
+    property ComponentClass: TFunLabyComponentClass read GetComponentClass;
   end;
 
   {*
@@ -4375,9 +4364,7 @@ begin
     Master.AddComponent(Self);
 
   FIconPainter := TPainter.Create(Master.ImagesMaster);
-  // TODO When we can publish a scu-breaking release:
-  //FIconPainter.BeginUpdate;
-  // because we need to add an AfterConstruction method, then.
+  FIconPainter.BeginUpdate;
 end;
 
 {*
@@ -4495,6 +4482,16 @@ end;
 function TFunLabyComponent.GetIsDesignable: Boolean;
 begin
   Result := (ID <> '') and (Category <> '');
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyComponent.AfterConstruction;
+begin
+  inherited;
+
+  FIconPainter.EndUpdate;
 end;
 
 {*
@@ -4722,25 +4719,6 @@ end;
 {-------------------------}
 
 {*
-  Crée une instance de TComponentCreator
-  @param AID   ID de ce composant
-*}
-constructor TComponentCreator.Create(AMaster: TMaster; const AID: TComponentID);
-begin
-  inherited;
-
-  FOldIconPainter := IconPainter;
-end;
-
-{*
-  [@inheritDoc]
-*}
-destructor TComponentCreator.Destroy;
-begin
-  inherited;
-end;
-
-{*
   [@inheritDoc]
 *}
 function TComponentCreator.GetCategory: string;
@@ -4753,24 +4731,7 @@ end;
 *}
 function TComponentCreator.GetHint: string;
 begin
-  Result := SComponentCreatorHint;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TComponentCreator.AfterConstruction;
-begin
-  inherited;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TComponentCreator.DrawIcon(Bitmap: TBitmap32; X: Integer = 0;
-  Y: Integer = 0);
-begin
-  inherited;
+  Result := Format(SComponentCreatorHint, [ComponentClass.ClassName]);
 end;
 
 {*
@@ -4781,8 +4742,7 @@ end;
 function TComponentCreator.CreateComponent(
   const AID: TComponentID): TFunLabyComponent;
 begin
-  Result := DoCreateComponent(AID);
-  Result.FIsAdditionnal := True;
+  Result := Master.CreateAdditionnalComponent(ComponentClass, AID);
 end;
 
 {----------------}

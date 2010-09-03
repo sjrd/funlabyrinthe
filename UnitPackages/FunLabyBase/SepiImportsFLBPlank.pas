@@ -213,10 +213,10 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TPlankPlugin, 48, 44);
-  CheckInstanceSize(TPlanks, 60, 56);
-  CheckInstanceSize(TPlankTool, 68, 68);
-  CheckInstanceSize(TPlankSquare, 96, 92);
+  CheckInstanceSize(TPlankPlugin, 52, 48);
+  CheckInstanceSize(TPlanks, 64, 60);
+  CheckInstanceSize(TPlankTool, 72, 72);
+  CheckInstanceSize(TPlankSquare, 100, 96);
   {$ASSERTIONS OFF}
 end;
 
