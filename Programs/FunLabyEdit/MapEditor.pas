@@ -414,6 +414,11 @@ begin
 
   if (Value <> nil) and (not (Value is TSquare)) then
     FrameInspector.InspectObject := Value;
+
+  InvalidateMap;
+
+  if Value is TPosComponent then
+    MapViewer.ShowPosition(TPosComponent(Value).QPos);
 end;
 
 {*
@@ -514,6 +519,11 @@ end;
 *}
 procedure TFrameMapEditor.InvalidateMap;
 begin
+  if Component is TPosComponent then
+    MapViewer.SelectedPos := TPosComponent(Component).QPos
+  else
+    MapViewer.SelectedPos := NoQPos;
+
   MapViewer.InvalidateMap;
 end;
 

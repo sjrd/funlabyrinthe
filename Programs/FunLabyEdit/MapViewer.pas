@@ -14,12 +14,8 @@ type
   *}
   TFormMapViewer = class(TForm, IOTAMapViewer50)
     MapViewer: TFrameBaseMapViewer;
-    procedure MapViewerAfterPaintMap(Sender: TObject; Bitmap: TBitmap32;
-      Map: TMap; Floor: Integer);
     procedure MapViewerClickSquare(Sender: TObject; const QPos: TQualifiedPos);
   private
-    FSelectedSquare: TQualifiedPos; /// Case sélectionnée
-
     function GetMaster: TMaster;
     procedure SetMaster(Value: TMaster);
 
@@ -41,11 +37,11 @@ type
     property Master: TMaster read GetMaster write SetMaster;
 
     property SelectedSquare: TQualifiedPos
-      read FSelectedSquare write SetSelectedSquare;
+      read GetSelectedSquare write SetSelectedSquare;
     property SelectedMap: TMap
-      read FSelectedSquare.Map write SetSelectedMap;
+      read GetSelectedMap write SetSelectedMap;
     property SelectedPos: T3DPoint
-      read FSelectedSquare.Position write SetSelectedPos;
+      read GetSelectedPos write SetSelectedPos;
   end;
 
 implementation
@@ -63,7 +59,6 @@ constructor TFormMapViewer.Create(AOwner: TComponent);
 begin
   inherited;
 
-  MapViewer.OnAfterPaintMap := MapViewerAfterPaintMap;
   MapViewer.OnClickSquare := MapViewerClickSquare;
 end;
 
@@ -82,7 +77,7 @@ end;
 *}
 procedure TFormMapViewer.SetMaster(Value: TMaster);
 begin
-  FSelectedSquare := NoQPos;
+  SelectedSquare := NoQPos;
   MapViewer.Master := Value;
 end;
 
@@ -107,7 +102,7 @@ end;
 *}
 function TFormMapViewer.GetSelectedSquare: TQualifiedPos;
 begin
-  Result := FSelectedSquare;
+  Result := MapViewer.SelectedPos;
 end;
 
 {*
@@ -115,7 +110,7 @@ end;
 *}
 function TFormMapViewer.GetSelectedMap: TMap;
 begin
-  Result := FSelectedSquare.Map;
+  Result := SelectedSquare.Map;
 end;
 
 {*
@@ -123,7 +118,7 @@ end;
 *}
 function TFormMapViewer.GetSelectedPos: T3DPoint;
 begin
-  Result := FSelectedSquare.Position;
+  Result := SelectedSquare.Position;
 end;
 
 {*
@@ -132,8 +127,7 @@ end;
 *}
 procedure TFormMapViewer.SetSelectedSquare(const Value: TQualifiedPos);
 begin
-  FSelectedSquare := Value;
-  MapViewer.InvalidateMap;
+  MapViewer.SelectedPos := Value;
 end;
 
 {*
@@ -141,9 +135,12 @@ end;
   @param Value   Nouvelle carte sélectionnée
 *}
 procedure TFormMapViewer.SetSelectedMap(Value: TMap);
+var
+  ASelectedPos: TQualifiedPos;
 begin
-  FSelectedSquare.Map := Value;
-  MapViewer.InvalidateMap;
+  ASelectedPos := SelectedSquare;
+  ASelectedPos.Map := Value;
+  SelectedSquare := ASelectedPos;
 end;
 
 {*
@@ -151,9 +148,12 @@ end;
   @param Value   Nouvelle position sélectionnée
 *}
 procedure TFormMapViewer.SetSelectedPos(const Value: T3DPoint);
+var
+  ASelectedPos: TQualifiedPos;
 begin
-  FSelectedSquare.Position := Value;
-  MapViewer.InvalidateMap;
+  ASelectedPos := SelectedSquare;
+  ASelectedPos.Position := Value;
+  SelectedSquare := ASelectedPos;
 end;
 
 {*
@@ -162,29 +162,6 @@ end;
 procedure TFormMapViewer.ShowPosition(const QPos: TQualifiedPos);
 begin
   MapViewer.ShowPosition(QPos);
-end;
-
-{*
-  Gestionnaire d'événement OnAfterPaintMap du visualisateur de cartes
-  @param Sender   Objet qui a déclenché l'événement
-  @param Bitmap   Bitmap
-*}
-procedure TFormMapViewer.MapViewerAfterPaintMap(Sender: TObject;
-  Bitmap: TBitmap32; Map: TMap; Floor: Integer);
-var
-  SelPoint: TPoint;
-  I: Integer;
-begin
-  SelPoint := Point(SelectedPos.X, SelectedPos.Y);
-
-  if (SelectedMap = Map) and (SelectedPos.Z = Floor) then
-  begin
-    // Draw the selection rectangle
-    for I := -1 to 1 do
-      with SelPoint do
-        Bitmap.FrameRectS((X+1) * SquareSize - I, (Y+1) * SquareSize - I,
-          (X+2) * SquareSize + I, (Y+2) * SquareSize + I, clYellow32);
-  end;
 end;
 
 {*

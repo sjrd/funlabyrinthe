@@ -47,6 +47,9 @@ type
     function GetCurrentFloor: Integer;
     procedure SetCurrentFloor(Value: Integer);
 
+    function GetSelectedPos: TQualifiedPos;
+    procedure SetSelectedPos(const Value: TQualifiedPos);
+
     function GetOnAfterPaintMap: TPaintMapEvent;
     procedure SetOnAfterPaintMap(Value: TPaintMapEvent);
   protected
@@ -63,6 +66,9 @@ type
     property CurrentMap: TMap read GetCurrentMap write SetCurrentMap;
     property CurrentFloor: Integer read GetCurrentFloor write SetCurrentFloor;
   published
+    property SelectedPos: TQualifiedPos
+      read GetSelectedPos write SetSelectedPos;
+
     property OnAfterPaintMap: TPaintMapEvent
       read GetOnAfterPaintMap write SetOnAfterPaintMap;
 
@@ -151,6 +157,24 @@ begin
 end;
 
 {*
+  Position sélectionnée
+  @return Position sélectionnée
+*}
+function TFrameBaseMapViewer.GetSelectedPos: TQualifiedPos;
+begin
+  Result := MapView.SelectedPos;
+end;
+
+{*
+  Modifie la position sélectionnée
+  @param Value   Nouvelle position sélectionnée
+*}
+procedure TFrameBaseMapViewer.SetSelectedPos(const Value: TQualifiedPos);
+begin
+  MapView.SelectedPos := Value;
+end;
+
+{*
   Dessine par-dessus la carte
   @return Gestionnaire d'événement OnAfterPaintMap
 *}
@@ -195,6 +219,9 @@ end;
 *}
 procedure TFrameBaseMapViewer.ShowPosition(Map: TMap; const Position: T3DPoint);
 begin
+  if Map = nil then
+    Exit;
+
   CurrentMap := Map;
   CurrentFloor := Position.Z;
   MapView.ShowPosition(Position);

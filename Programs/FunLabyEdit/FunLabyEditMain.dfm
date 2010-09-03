@@ -104,7 +104,7 @@ object FormMain: TFormMain
     Left = 32
     Top = 88
     Bitmap = {
-      494C01010B000E001C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E00200010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -961,12 +961,6 @@ object FormMain: TFormMain
       OnExecute = ActionEditMapExecute
     end
   end
-  object SquaresImages: TImageList
-    Height = 30
-    Width = 30
-    Left = 72
-    Top = 200
-  end
   object OpenDialog: TOpenDialog
     DefaultExt = 'flp'
     Filter = 'Projet FunLabyrinthe (*.flp)|*.flp'
@@ -987,6 +981,6 @@ object FormMain: TFormMain
     Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofNoReadOnlyReturn, ofEnableSizing, ofDontAddToRecent]
     Title = 'Ajouter un fichier source existant'
     Left = 72
-    Top = 256
+    Top = 208
   end
 end

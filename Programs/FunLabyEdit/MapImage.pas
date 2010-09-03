@@ -36,6 +36,8 @@ type
     FMap: TMap;      /// Carte affichée
     FFloor: Integer; /// Étage de la carte affiché
 
+    FSelectedPos: TQualifiedPos; /// Position sélectionnée
+
     FOnAfterPaintMap: TPaintMapEvent; /// Dessine au-dessus de la carte
 
     /// Déclenché lorsque l'utilisateur a cliqué sur une case
@@ -52,10 +54,13 @@ type
 
     procedure DoPaintMap(Buffer: TBitmap32);
     procedure DoDrawZoneLimits(Buffer: TBitmap32);
+    procedure DoDrawSelectedPos(Buffer: TBitmap32);
     procedure DoAfterPaintMap(Buffer: TBitmap32);
 
     procedure SetMap(Value: TMap);
     procedure SetFloor(Value: Integer);
+
+    procedure SetSelectedPos(const Value: TQualifiedPos);
 
     function GetScale: Single;
     procedure SetScale(Value: Single);
@@ -68,6 +73,8 @@ type
 
     property Map: TMap read FMap write SetMap;
     property Floor: Integer read FFloor write SetFloor;
+
+    property SelectedPos: TQualifiedPos read FSelectedPos write SetSelectedPos;
 
     property Scale: Single read GetScale write SetScale;
 
@@ -239,6 +246,27 @@ begin
 end;
 
 {*
+  Dessine la case sélectionnée
+  @param Buffer   Buffer sur lequel dessiner la case sélectionnée
+*}
+procedure TFrameMapImage.DoDrawSelectedPos(Buffer: TBitmap32);
+var
+  SelPoint: TPoint;
+  I: Integer;
+begin
+  if (SelectedPos.Map = Map) and (SelectedPos.Z = Floor) then
+  begin
+    SelPoint := Point(SelectedPos.X, SelectedPos.Y);
+
+    // Draw the selection rectangle
+    for I := -1 to 1 do
+      with SelPoint do
+        Buffer.FrameRectS((X+1) * SquareSize - I, (Y+1) * SquareSize - I,
+          (X+2) * SquareSize + I, (Y+2) * SquareSize + I, clYellow32);
+  end;
+end;
+
+{*
   Déclenche l'événement OnAfterPaintMap
   @param Buffer   Buffer à transmettre au gestionnaire d'événement
 *}
@@ -271,6 +299,19 @@ begin
   if (Map <> nil) and (Value <> FFloor) then
   begin
     FFloor := MinMax(Value, 0, Map.Dimensions.Z-1);
+    InvalidateMap;
+  end;
+end;
+
+{*
+  Modifie la position sélectionnée
+  @param Value   Nouvelle position sélectionnée
+*}
+procedure TFrameMapImage.SetSelectedPos(const Value: TQualifiedPos);
+begin
+  if not SameQPos(Value, FSelectedPos) then
+  begin
+    FSelectedPos := Value;
     InvalidateMap;
   end;
 end;
@@ -312,6 +353,7 @@ begin
 
       DoPaintMap(Buffer);
       DoDrawZoneLimits(Buffer);
+      DoDrawSelectedPos(Buffer);
       DoAfterPaintMap(Buffer);
     end;
   finally
