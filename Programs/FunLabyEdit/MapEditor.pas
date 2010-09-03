@@ -7,7 +7,8 @@ uses
   Forms, Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
   StrUtils, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils, FilesUtils,
   FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters,
-  BaseMapViewer, MapTools, GR32, ObjectInspector, FunLabyEditTypes, EditMap;
+  BaseMapViewer, MapTools, GR32, ObjectInspector, FunLabyEditTypes, EditMap,
+  ActnList, Menus;
 
 type
   {*
@@ -23,12 +24,20 @@ type
     MapViewer: TFrameBaseMapViewer;
     PanelRight: TPanel;
     FrameInspector: TFrameInspector;
+    ComponentPopupMenu: TPopupMenu;
+    ComponentActionList: TActionList;
+    ActionCopyComponent: TAction;
+    MenuCopyComponent: TMenuItem;
     procedure SquaresContainerDrawIcon(Sender: TObject;
       const Button: TButtonItem; Canvas: TCanvas; Rect: TRect;
       State: TButtonDrawState; var TextOffset: Integer);
     procedure SquaresContainerButtonClicked(Sender: TObject;
       const Button: TButtonItem);
+    procedure SquaresContainerMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure MapViewerClickSquare(Sender: TObject; const QPos: TQualifiedPos);
+    procedure ComponentPopupMenuPopup(Sender: TObject);
+    procedure ActionCopyComponentExecute(Sender: TObject);
   private
     MasterFile: TMasterFile; /// Fichier maître
     Master: TMaster;         /// Maître FunLabyrinthe
@@ -42,11 +51,13 @@ type
     procedure InspectorMarkModified;
 
     function AddComponentButton(Component: TFunLabyComponent): TButtonItem;
+    function FindComponentButton(Component: TFunLabyComponent): TButtonItem;
     procedure UpdateComponentButton(Button: TButtonItem); overload;
     procedure UpdateComponentButton(Component: TFunLabyComponent); overload;
     procedure RegisterComponent(Component: TFunLabyComponent);
 
-    function CreateNewComponent(Creator: TComponentCreator): TFunLabyComponent;
+    function CreateNewComponent(const BaseID: TComponentID;
+      ComponentClass: TFunLabyComponentClass): TFunLabyComponent;
 
     procedure ClearSquareComponent(const QPos: TQualifiedPos;
       ComponentIndex: Integer);
@@ -153,6 +164,33 @@ begin
 end;
 
 {*
+  Trouve le bouton de sélection d'un composant
+  @param Component   Composant dont trouver le bouton
+  @return Le bouton correspondant au composant spécifié
+*}
+function TFrameMapEditor.FindComponentButton(
+  Component: TFunLabyComponent): TButtonItem;
+var
+  CatIndex, ButtonIndex: Integer;
+  Category: TButtonCategory;
+begin
+  for CatIndex := 0 to SquaresContainer.Categories.Count-1 do
+  begin
+    Category := SquaresContainer.Categories[CatIndex];
+
+    for ButtonIndex := 0 to Category.Items.Count-1 do
+    begin
+      Result := Category.Items[ButtonIndex];
+
+      if Result.Data = Component then
+        Exit;
+    end;
+  end;
+
+  Result := nil;
+end;
+
+{*
   Met à jour le bouton représentant un composant
   @param Button   Bouton à mettre à jour
 *}
@@ -168,22 +206,11 @@ end;
 *}
 procedure TFrameMapEditor.UpdateComponentButton(Component: TFunLabyComponent);
 var
-  CatIndex, ButtonIndex: Integer;
-  Category: TButtonCategory;
+  ButtonItem: TButtonItem;
 begin
-  for CatIndex := 0 to SquaresContainer.Categories.Count-1 do
-  begin
-    Category := SquaresContainer.Categories[CatIndex];
-
-    for ButtonIndex := 0 to Category.Items.Count-1 do
-    begin
-      if Category.Items[ButtonIndex].Data = Component then
-      begin
-        UpdateComponentButton(Category.Items[ButtonIndex]);
-        Exit;
-      end;
-    end;
-  end;
+  ButtonItem := FindComponentButton(Component);
+  if ButtonItem <> nil then
+    UpdateComponentButton(ButtonItem);
 end;
 
 {*
@@ -196,21 +223,21 @@ begin
 end;
 
 {*
-  Crée un nouveau composant avec un créateur de composants
-  @param Creator   Créateur de composants
+  Crée un nouveau composant
+  @param ComponentClass   Classe du composant à créer
   @return Composant créé (peut être nil)
 *}
-function TFrameMapEditor.CreateNewComponent(
-  Creator: TComponentCreator): TFunLabyComponent;
+function TFrameMapEditor.CreateNewComponent(const BaseID: TComponentID;
+  ComponentClass: TFunLabyComponentClass): TFunLabyComponent;
 var
   I: Integer;
   NewID: string;
 begin
-  Result := Creator;
+  Result := nil;
 
-  NewID := Creator.ID;
+  NewID := BaseID;
   if AnsiEndsText('Creator', NewID) then
-    SetLength(NewID, Length(NewID) - 7);
+    SetLength(NewID, Length(NewID) - Length('Creator'));
 
   I := 1;
   while Master.ComponentExists(NewID + IntToStr(I)) do
@@ -229,7 +256,7 @@ begin
         dtError);
     end else
     begin
-      Result := Creator.CreateComponent(NewID);
+      Result := Master.CreateAdditionnalComponent(ComponentClass, NewID);
 
       if Result.IsDesignable then
         RegisterComponent(Result);
@@ -411,6 +438,8 @@ end;
 procedure TFrameMapEditor.SetComponent(Value: TFunLabyComponent);
 begin
   FComponent := Value;
+
+  SquaresContainer.SelectedItem := FindComponentButton(Value);
 
   if (Value <> nil) and (not (Value is TSquare)) then
     FrameInspector.InspectObject := Value;
@@ -632,7 +661,30 @@ begin
   Component := TFunLabyComponent(Button.Data);
 
   if Component is TComponentCreator then
-    Component := CreateNewComponent(TComponentCreator(Component));
+    Component := CreateNewComponent(Component.ID,
+      TComponentCreator(Component).ComponentClass);
+end;
+
+{*
+  Gestionnaire d'événement OnMouseDown de la palette des composants
+  @param Sender   Objet qui a déclenché l'événement
+  @param Button   Bouton cliqué
+  @param Shift    État des touches système
+  @param X        Abscisse du point de clic
+  @param Y        Ordonnée du point de clic
+*}
+procedure TFrameMapEditor.SquaresContainerMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Item: TButtonItem;
+begin
+  if Button = mbRight then
+  begin
+    Item := SquaresContainer.GetButtonAt(X, Y);
+
+    if Item <> nil then
+      Component := TFunLabyComponent(Item.Data);
+  end;
 end;
 
 {*
@@ -660,6 +712,33 @@ begin
   end;
 
   InvalidateMap;
+end;
+
+{*
+  Gestionnaire d'événement OnPopup du popup de composant
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameMapEditor.ComponentPopupMenuPopup(Sender: TObject);
+begin
+  ActionCopyComponent.Enabled := not ((Component = nil) or
+    (Component is TComponentCreator) or (Component is TPlayer));
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Copier un composant
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameMapEditor.ActionCopyComponentExecute(Sender: TObject);
+var
+  ComponentClass: TFunLabyComponentClass;
+begin
+  if (Component = nil) or (Component is TComponentCreator) or
+    (Component is TPlayer) then
+    Exit;
+
+  ComponentClass := TFunLabyComponentClass(Component.ClassType);
+
+  Component := CreateNewComponent(Component.ID, ComponentClass);
 end;
 
 end.

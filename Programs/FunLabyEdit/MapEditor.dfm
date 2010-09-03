@@ -72,12 +72,14 @@ object FrameMapEditor: TFrameMapEditor
         Items = <>
       end>
     Color = clWhite
+    PopupMenu = ComponentPopupMenu
     RegularButtonColor = 15660791
     SelectedButtonColor = 15711942
     ShowHint = True
     TabOrder = 0
     OnButtonClicked = SquaresContainerButtonClicked
     OnDrawIcon = SquaresContainerDrawIcon
+    OnMouseDown = SquaresContainerMouseDown
   end
   object PanelCenter: TPanel
     Left = 153
@@ -196,7 +198,7 @@ object FrameMapEditor: TFrameMapEditor
       end
       inherited CollectionImages: TImageList
         Bitmap = {
-          494C0101040009000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+          494C010104000900140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
           0000000000003600000028000000400000002000000001002000000000000020
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
@@ -469,7 +471,7 @@ object FrameMapEditor: TFrameMapEditor
       end
       inherited CollectionDisabledImages: TImageList
         Bitmap = {
-          494C0101040009000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+          494C010104000900140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
           0000000000003600000028000000400000002000000001002000000000000020
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
@@ -740,6 +742,24 @@ object FrameMapEditor: TFrameMapEditor
           807F3FFFE007E007C0FFFFFFF81FF81F00000000000000000000000000000000
           000000000000}
       end
+    end
+  end
+  object ComponentPopupMenu: TPopupMenu
+    OnPopup = ComponentPopupMenuPopup
+    Left = 48
+    Top = 192
+    object MenuCopyComponent: TMenuItem
+      Action = ActionCopyComponent
+    end
+  end
+  object ComponentActionList: TActionList
+    Left = 48
+    Top = 144
+    object ActionCopyComponent: TAction
+      Category = 'Component'
+      Caption = 'Copier'
+      Hint = 'Cr'#233'e un nouveau composant de la m'#234'me classe que celui-ci'
+      OnExecute = ActionCopyComponentExecute
     end
   end
 end
