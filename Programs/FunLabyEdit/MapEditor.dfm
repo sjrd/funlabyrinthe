@@ -198,7 +198,7 @@ object FrameMapEditor: TFrameMapEditor
       end
       inherited CollectionImages: TImageList
         Bitmap = {
-          494C010104000900140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+          494C0101040009001C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
           0000000000003600000028000000400000002000000001002000000000000020
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
@@ -471,7 +471,7 @@ object FrameMapEditor: TFrameMapEditor
       end
       inherited CollectionDisabledImages: TImageList
         Bitmap = {
-          494C010104000900140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+          494C0101040009001C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
           0000000000003600000028000000400000002000000001002000000000000020
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
@@ -751,6 +751,9 @@ object FrameMapEditor: TFrameMapEditor
     object MenuCopyComponent: TMenuItem
       Action = ActionCopyComponent
     end
+    object MenuDeleteComponent: TMenuItem
+      Action = ActionDeleteComponent
+    end
   end
   object ComponentActionList: TActionList
     Left = 48
@@ -760,6 +763,11 @@ object FrameMapEditor: TFrameMapEditor
       Caption = 'Copier'
       Hint = 'Cr'#233'e un nouveau composant de la m'#234'me classe que celui-ci'
       OnExecute = ActionCopyComponentExecute
+    end
+    object ActionDeleteComponent: TAction
+      Category = 'Component'
+      Caption = 'Supprimer'
+      OnExecute = ActionDeleteComponentExecute
     end
   end
 end

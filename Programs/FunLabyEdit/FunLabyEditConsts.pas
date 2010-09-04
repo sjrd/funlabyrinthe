@@ -88,6 +88,10 @@ resourcestring
   SResizeErrorTitle = 'Erreur de redimensionnement';
   SCantResizeToEmpty = 'Impossible de rétrécir plus la carte';
 
+  SConfirmDeleteComponentTitle = 'Supprimer le composant';
+  SConfirmDeleteComponent =
+    'Êtes-vous sûr-e de vouloir supprimer ce composant ?';
+
 implementation
 
 end.

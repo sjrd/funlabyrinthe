@@ -3,10 +3,10 @@ unit MapEditor;
 interface
 
 uses
-  Types, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons, Spin,
-  StrUtils, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils, FilesUtils,
-  FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters,
+  Types, Windows, Messages, SysUtils, Variants, Classes, TypInfo, Graphics,
+  Controls, Forms, Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons,
+  Spin, StrUtils, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
+  FilesUtils, FunLabyEditConsts, PlayerObjects, PlayerPlugins, EditParameters,
   BaseMapViewer, MapTools, GR32, ObjectInspector, FunLabyEditTypes, EditMap,
   ActnList, Menus;
 
@@ -28,6 +28,8 @@ type
     ComponentActionList: TActionList;
     ActionCopyComponent: TAction;
     MenuCopyComponent: TMenuItem;
+    ActionDeleteComponent: TAction;
+    MenuDeleteComponent: TMenuItem;
     procedure SquaresContainerDrawIcon(Sender: TObject;
       const Button: TButtonItem; Canvas: TCanvas; Rect: TRect;
       State: TButtonDrawState; var TextOffset: Integer);
@@ -38,6 +40,7 @@ type
     procedure MapViewerClickSquare(Sender: TObject; const QPos: TQualifiedPos);
     procedure ComponentPopupMenuPopup(Sender: TObject);
     procedure ActionCopyComponentExecute(Sender: TObject);
+    procedure ActionDeleteComponentExecute(Sender: TObject);
   private
     MasterFile: TMasterFile; /// Fichier maître
     Master: TMaster;         /// Maître FunLabyrinthe
@@ -55,9 +58,11 @@ type
     procedure UpdateComponentButton(Button: TButtonItem); overload;
     procedure UpdateComponentButton(Component: TFunLabyComponent); overload;
     procedure RegisterComponent(Component: TFunLabyComponent);
+    procedure UnregisterComponent(Component: TFunLabyComponent);
 
     function CreateNewComponent(const BaseID: TComponentID;
       ComponentClass: TFunLabyComponentClass): TFunLabyComponent;
+    procedure DeleteComponent(Component: TFunLabyComponent);
 
     procedure ClearSquareComponent(const QPos: TQualifiedPos;
       ComponentIndex: Integer);
@@ -89,6 +94,40 @@ type
 
     property MarkModified: TMarkModifiedProc
       read FMarkModified write FMarkModified;
+  end;
+
+  {*
+    Pseudo-filer servant à purger les références à un composant donné
+    @author sjrd
+    @version 5.0
+  *}
+  TFunLabyPurgeRefFiler = class(TFunLabyFiler)
+  private
+    FReference: TFunLabyComponent; /// Référence à supprimer
+
+    procedure HandleSubInstance(SubInstance: TFunLabyPersistent);
+  protected
+    procedure HandleProperty(PropInfo: PPropInfo; HasData: Boolean); override;
+
+    procedure HandlePersistent(const Name: string;
+      SubInstance: TFunLabyPersistent); override;
+
+    procedure HandleCollection(const Name: string;
+      Collection: TFunLabyCollection); override;
+
+    procedure HandleComponent(const Name: string;
+      Component: TFunLabyComponent); override;
+
+    procedure HandleStrings(const Name: string; Strings: TStrings;
+      ObjectType: PTypeInfo; HasData: Boolean); override;
+
+    procedure HandleBinaryProperty(const Name: string;
+      ReadProc, WriteProc: TStreamProc; HasData: Boolean); override;
+  public
+    constructor Create(AInstance: TFunLabyPersistent;
+      AReference: TFunLabyComponent; AOwner: TFunLabyFiler = nil);
+
+    property Reference: TFunLabyComponent read FReference;
   end;
 
 implementation
@@ -223,6 +262,15 @@ begin
 end;
 
 {*
+  Déregistre un composant
+  @param Component   Composant à déregistrer
+*}
+procedure TFrameMapEditor.UnregisterComponent(Component: TFunLabyComponent);
+begin
+  FindComponentButton(Component).Free;
+end;
+
+{*
   Crée un nouveau composant
   @param ComponentClass   Classe du composant à créer
   @return Composant créé (peut être nil)
@@ -247,6 +295,79 @@ begin
 
   if Result.IsDesignable then
     RegisterComponent(Result);
+
+  MarkModified;
+end;
+
+{*
+  Supprime un composant existant
+  @param Component   Composant à supprimer
+*}
+procedure TFrameMapEditor.DeleteComponent(Component: TFunLabyComponent);
+
+  function RemoveComp(Square: TSquare; Component: TSquareComponent): TSquare;
+  begin
+    if Component is TField then
+    begin
+      Assert(Master.Fields[0] <> Component);
+      Result := ChangeField(Square, Master.Fields[0]);
+    end else if Component is TEffect then
+      Result := RemoveEffect(Square)
+    else if Component is TTool then
+      Result := RemoveTool(Square)
+    else if Component is TObstacle then
+      Result := RemoveObstacle(Square)
+    else
+    begin
+      Assert(False);
+      Result := Square;
+    end;
+  end;
+
+  procedure PurgeMapsOf(Component: TSquareComponent);
+  var
+    I, J: Integer;
+    Map: TMap;
+  begin
+    for I := 0 to Master.MapCount-1 do
+    begin
+      Map := Master.Maps[I];
+
+      for J := 0 to Map.LinearMapCount-1 do
+      begin
+        if Map.LinearMap[J].Contains(Component) then
+          Map.LinearMap[J] := RemoveComp(Map.LinearMap[J], Component);
+      end;
+    end;
+  end;
+
+var
+  Filer: TFunLabyPurgeRefFiler;
+begin
+  Assert(Component.IsAdditionnal);
+  Assert(not (Component is TSquare));
+
+  // Unregister
+  if Component.IsDesignable then
+    UnregisterComponent(Component);
+
+  // Purge maps
+  if Component is TSquareComponent then
+    PurgeMapsOf(TSquareComponent(Component));
+
+  // Purge references to this component
+  Filer := TFunLabyPurgeRefFiler.Create(Master, Component);
+  try
+    Filer.EnumProperties;
+  finally
+    Filer.Free;
+  end;
+
+  // Destroy the component
+  Component.Free;
+
+  // Invalidate map
+  InvalidateMap;
 
   MarkModified;
 end;
@@ -426,7 +547,9 @@ begin
 
   SquaresContainer.SelectedItem := FindComponentButton(Value);
 
-  if (Value <> nil) and (not (Value is TSquare)) then
+  if Value is TSquare then
+    FrameInspector.InspectObject := nil
+  else
     FrameInspector.InspectObject := Value;
 
   InvalidateMap;
@@ -707,6 +830,9 @@ procedure TFrameMapEditor.ComponentPopupMenuPopup(Sender: TObject);
 begin
   ActionCopyComponent.Enabled := not ((Component = nil) or
     (Component is TComponentCreator) or (Component is TPlayer));
+
+  ActionDeleteComponent.Enabled := not ((Component = nil) or
+    (Component is TPlayer) or (not Component.IsAdditionnal));
 end;
 
 {*
@@ -717,13 +843,130 @@ procedure TFrameMapEditor.ActionCopyComponentExecute(Sender: TObject);
 var
   ComponentClass: TFunLabyComponentClass;
 begin
-  if (Component = nil) or (Component is TComponentCreator) or
-    (Component is TPlayer) then
-    Exit;
+  Assert(not ((Component = nil) or (Component is TComponentCreator) or
+    (Component is TPlayer)));
 
   ComponentClass := TFunLabyComponentClass(Component.ClassType);
-
   Component := CreateNewComponent(Component.ID, ComponentClass);
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Supprimer un composant
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameMapEditor.ActionDeleteComponentExecute(Sender: TObject);
+var
+  AComponent: TFunLabyComponent;
+begin
+  Assert(not ((Component = nil) or (Component is TPlayer) or
+    (not Component.IsAdditionnal)));
+
+  if ShowDialog(SConfirmDeleteComponentTitle, SConfirmDeleteComponent,
+    dtConfirmation, dbOKCancel, 2) <> drOK then
+    Exit;
+
+  AComponent := Component;
+  Component := nil;
+  DeleteComponent(AComponent);
+end;
+
+{-----------------------------}
+{ TFunLabyPurgeRefFiler class }
+{-----------------------------}
+
+{*
+  Crée le pseudo-filer
+  @param AInstance    Instance à traiter
+  @param AReference   Référence à supprimer
+  @param AOwner       Filer propriétaire
+*}
+constructor TFunLabyPurgeRefFiler.Create(AInstance: TFunLabyPersistent;
+  AReference: TFunLabyComponent; AOwner: TFunLabyFiler = nil);
+begin
+  inherited Create(AInstance, AOwner);
+
+  FReference := AReference;
+end;
+
+{*
+  Traite une sous-instance
+  @param SubInstance   Sous-instance à traiter
+*}
+procedure TFunLabyPurgeRefFiler.HandleSubInstance(
+  SubInstance: TFunLabyPersistent);
+var
+  SubFiler: TFunLabyPurgeRefFiler;
+begin
+  SubFiler := TFunLabyPurgeRefFiler.Create(SubInstance, Reference, Self);
+  try
+    SubFiler.EnumProperties;
+  finally
+    SubFiler.Free;
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyPurgeRefFiler.HandleProperty(PropInfo: PPropInfo;
+  HasData: Boolean);
+var
+  PropType: PTypeInfo;
+  PropValue: TFunLabyComponent;
+begin
+  PropType := PropInfo.PropType^;
+
+  if (PropType.Kind = tkClass) and
+    GetTypeData(PropType).ClassType.InheritsFrom(TFunLabyComponent) then
+  begin
+    PropValue := TFunLabyComponent(GetOrdProp(Instance, PropInfo));
+
+    if PropValue = Reference then
+      SetOrdProp(Instance, PropInfo, 0);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyPurgeRefFiler.HandlePersistent(const Name: string;
+  SubInstance: TFunLabyPersistent);
+begin
+  HandleSubInstance(SubInstance);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyPurgeRefFiler.HandleCollection(const Name: string;
+  Collection: TFunLabyCollection);
+begin
+  HandleSubInstance(Collection);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyPurgeRefFiler.HandleComponent(const Name: string;
+  Component: TFunLabyComponent);
+begin
+  HandleSubInstance(Component);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyPurgeRefFiler.HandleStrings(const Name: string;
+  Strings: TStrings; ObjectType: PTypeInfo; HasData: Boolean);
+begin
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFunLabyPurgeRefFiler.HandleBinaryProperty(const Name: string;
+  ReadProc, WriteProc: TStreamProc; HasData: Boolean);
+begin
 end;
 
 end.
