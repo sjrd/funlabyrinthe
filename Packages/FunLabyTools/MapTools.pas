@@ -281,7 +281,7 @@ begin
       SetSquarePartialID(ToolID, Square.Tool.SafeID, SDuplicateTool);
       SetSquarePartialID(ObstacleID, Square.Obstacle.SafeID,
         SDuplicateObstacle);
-    end else
+    end else if Component <> nil then
       Assert(False);
   end;
 
