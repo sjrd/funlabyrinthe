@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, TypInfo, JvExControls, JvInspector, ScDelphiLanguage, SdDialogs,
-  FunLabyUtils, FunLabyEditConsts, FunLabyEditTypes, SepiReflectionCore,
-  SepiSystemUnit, FilesUtils, StrUtils, StdCtrls, Buttons, ToolWin, ComCtrls,
-  ExtCtrls, ImgList, PainterEditor, GR32;
+  Dialogs, TypInfo, JvExControls, JvInspector, JvResources, ScDelphiLanguage,
+  SdDialogs, FunLabyUtils, FunLabyEditConsts, FunLabyEditTypes,
+  SepiReflectionCore, SepiSystemUnit, FilesUtils, StrUtils, StdCtrls, Buttons,
+  ToolWin, ComCtrls, ExtCtrls, ImgList, PainterEditor, GR32;
 
 type
   {$M+}
@@ -33,14 +33,59 @@ type
     @version 5.0
   *}
   TJvInspectorColor32Item = class(TJvCustomInspectorItem)
+  private
+    procedure CreateMembers;
+    procedure DeleteMembers;
   protected
     function GetDisplayValue: string; override;
     procedure SetDisplayValue(const Value: string); override;
+
+    procedure InvalidateMetaData; override;
 
     procedure Edit; override;
   public
     constructor Create(const AParent: TJvCustomInspectorItem;
       const AData: TJvCustomInspectorData); override;
+  end;
+
+  {*
+    Données représentant le canal Alpha d'un item TColor32
+    @author sjrd
+    @version 5.1
+  *}
+  TJvInspectorColor32AlphaData = class(TJvCustomInspectorData)
+  private
+    FDataParent: TJvCustomInspectorData; /// Données du TColor32
+  protected
+    function GetAsFloat: Extended; override;
+    function GetAsInt64: Int64; override;
+    function GetAsMethod: TMethod; override;
+    function GetAsOrdinal: Int64; override;
+    function GetAsString: string; override;
+
+    function IsEqualReference(
+      const Ref: TJvCustomInspectorData): Boolean; override;
+    procedure NotifyRemoveData(
+      const Instance: TJvCustomInspectorData); override;
+
+    procedure SetAsFloat(const Value: Extended); override;
+    procedure SetAsInt64(const Value: Int64); override;
+    procedure SetAsMethod(const Value: TMethod); override;
+    procedure SetAsOrdinal(const Value: Int64); override;
+    procedure SetAsString(const Value: string); override;
+  public
+    procedure GetAsSet(var Buf); override;
+    procedure SetAsSet(const Buf); override;
+
+    function HasValue: Boolean; override;
+    function IsAssigned: Boolean; override;
+    function IsInitialized: Boolean; override;
+
+    class function New(const AParent: TJvCustomInspectorItem;
+      const ADataParent: TJvCustomInspectorData): TJvCustomInspectorItem;
+      reintroduce; overload;
+
+    property DataParent: TJvCustomInspectorData read FDataParent;
   end;
 
   {*
@@ -259,6 +304,42 @@ begin
 end;
 
 {*
+  Crée les membres de cet item
+*}
+procedure TJvInspectorColor32Item.CreateMembers;
+begin
+  Inspector.BeginUpdate;
+  try
+    DeleteMembers;
+
+    TJvInspectorColor32AlphaData.New(Self, Data);
+  finally
+    Inspector.EndUpdate;
+  end;
+end;
+
+{*
+  Détruit les membres de cet item
+*}
+procedure TJvInspectorColor32Item.DeleteMembers;
+var
+  I: Integer;
+begin
+  Inspector.BeginUpdate;
+  try
+    I := Pred(Count);
+    while (I >= 0) do
+    begin
+      if Items[I].Data is TJvInspectorColor32AlphaData then
+        Delete(I);
+      Dec(I);
+    end;
+  finally
+    Inspector.EndUpdate;
+  end;
+end;
+
+{*
   [@inheritDoc]
 *}
 function TJvInspectorColor32Item.GetDisplayValue: string;
@@ -272,6 +353,15 @@ end;
 procedure TJvInspectorColor32Item.SetDisplayValue(const Value: string);
 begin
   Data.AsOrdinal := StrToInt64(Value);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32Item.InvalidateMetaData;
+begin
+  inherited;
+  CreateMembers;
 end;
 
 {*
@@ -296,6 +386,196 @@ begin
   end;
 
   Data.AsOrdinal := SetAlpha(Color32(AColor), AlphaComponent(FromColor));
+end;
+
+{------------------------------------}
+{ TJvInspectorColor32AlphaData class }
+{------------------------------------}
+
+{*
+  Crée une nouvelle donnée de canal Alpha
+  @param AParent       Item parent
+  @param ADataParent   Donnée de type TColor32
+  @return Donnée créée
+*}
+class function TJvInspectorColor32AlphaData.New(
+  const AParent: TJvCustomInspectorItem;
+  const ADataParent: TJvCustomInspectorData): TJvCustomInspectorItem;
+var
+  Data: TJvInspectorColor32AlphaData;
+begin
+  if ADataParent = nil then
+    raise EJvInspectorData.CreateRes(@RsEJvAssertDataParent);
+  if AParent = nil then
+    raise EJvInspectorData.CreateRes(@RsEJvAssertParent);
+
+  Data := CreatePrim('Alpha', System.TypeInfo(Byte));
+  Data.FDataParent := ADataParent;
+
+  Data := TJvInspectorColor32AlphaData(DataRegister.Add(Data));
+  if Data <> nil then
+    Result := Data.NewItem(AParent)
+  else
+    Result := nil;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32AlphaData.GetAsFloat: Extended;
+begin
+  CheckReadAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs,
+    [cJvInspectorFloat]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32AlphaData.GetAsInt64: Int64;
+begin
+  CheckReadAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs,
+    [cJvInspectorInt64]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32AlphaData.GetAsMethod: TMethod;
+begin
+  CheckReadAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs,
+    [cJvInspectorTMethod]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32AlphaData.GetAsOrdinal: Int64;
+begin
+  CheckReadAccess;
+  Result := AlphaComponent(TColor32(DataParent.AsOrdinal));
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32AlphaData.GetAsString: string;
+begin
+  CheckReadAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs,
+    [cJvInspectorString]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32AlphaData.IsEqualReference(
+  const Ref: TJvCustomInspectorData): Boolean;
+begin
+  Result := (Ref is TJvInspectorColor32AlphaData) and
+    (TJvInspectorColor32AlphaData(Ref).DataParent = DataParent);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32AlphaData.NotifyRemoveData(
+  const Instance: TJvCustomInspectorData);
+begin
+  if Instance = DataParent then
+    Free;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32AlphaData.SetAsFloat(const Value: Extended);
+begin
+  CheckWriteAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs,
+    [cJvInspectorFloat]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32AlphaData.SetAsInt64(const Value: Int64);
+begin
+  CheckWriteAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs,
+    [cJvInspectorInt64]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32AlphaData.SetAsMethod(const Value: TMethod);
+begin
+  CheckWriteAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs,
+    [cJvInspectorTMethod]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32AlphaData.SetAsOrdinal(const Value: Int64);
+begin
+  CheckWriteAccess;
+  DataParent.AsOrdinal := SetAlpha(DataParent.AsOrdinal, Value);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32AlphaData.SetAsString(const Value: string);
+begin
+  CheckWriteAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs, [cJvInspectorString]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32AlphaData.GetAsSet(var Buf);
+begin
+  CheckReadAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs, [cJvInspectorSet]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TJvInspectorColor32AlphaData.SetAsSet(const Buf);
+begin
+  CheckWriteAccess;
+  raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs, [cJvInspectorSet]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32AlphaData.HasValue: Boolean;
+begin
+  Result := IsInitialized;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32AlphaData.IsAssigned: Boolean;
+begin
+  Result := IsInitialized;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TJvInspectorColor32AlphaData.IsInitialized: Boolean;
+begin
+  Result := True;
 end;
 
 {-----------------------------------------}
