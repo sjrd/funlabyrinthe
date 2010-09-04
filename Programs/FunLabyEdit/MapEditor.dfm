@@ -64,12 +64,6 @@ object FrameMapEditor: TFrameMapEditor
         Color = 15252386
         Collapsed = False
         Items = <>
-      end
-      item
-        Caption = 'Composants suppl'#233'mentaires'
-        Color = 15252386
-        Collapsed = False
-        Items = <>
       end>
     Color = clWhite
     PopupMenu = ComponentPopupMenu

@@ -35,6 +35,7 @@ resourcestring
   SSunkenButton = 'Bouton enfoncé';           /// Nom du bouton enfoncé
 
 resourcestring
+  SCategoryTransporters = 'Téléporteurs';
   STransporterCreatorHint = 'Créer un nouveau téléporteur';
 
 const {don't localize}
@@ -67,6 +68,7 @@ const {don't localize}
   fCrossroads = 'Arrows/Crossroads'; /// Fichier du carrefour
 
   fTransporter = 'Miscellaneous/Transporter'; /// Fichier du téléporteur
+  fCreator = 'Creators/Creator';              /// Fichier des créateurs
   /// Fichier du téléporteur désactivé
   fDisabledTransporter = 'Miscellaneous/DisabledTransporter';
 
@@ -138,6 +140,8 @@ type
     FDisabledPainter: TPainter; /// Peintre désactivé
     FKind: TTransporterKind;    /// Type de téléporteur
   protected
+    function GetCategory: string; override;
+
     procedure DoDraw(Context: TDrawSquareContext); override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
@@ -174,6 +178,7 @@ type
   *}
   TTransporterCreator = class(TComponentCreator)
   protected
+    function GetCategory: string; override;
     function GetHint: string; override;
 
     function GetComponentClass: TFunLabyComponentClass; override;
@@ -364,6 +369,14 @@ end;
 {*
   [@inheritDoc]
 *}
+function TTransporter.GetCategory: string;
+begin
+  Result := SCategoryTransporters;
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TTransporter.DoDraw(Context: TDrawSquareContext);
 begin
   if Enabled then
@@ -446,6 +459,15 @@ begin
   inherited;
 
   IconPainter.AddImage(fTransporter);
+  IconPainter.AddImage(fCreator);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TTransporterCreator.GetCategory: string;
+begin
+  Result := SCategoryTransporters;
 end;
 
 {*

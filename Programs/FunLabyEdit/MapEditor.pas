@@ -134,6 +134,9 @@ implementation
 
 {$R *.dfm}
 
+const
+  InitCategoryCount = 6;
+
 {------------------------}
 { Classe TFrameMapEditor }
 {------------------------}
@@ -638,7 +641,7 @@ begin
   // Vider les composants d'édition
   with SquaresContainer do
   begin
-    for I := Categories.Count-1 downto 7 do
+    for I := Categories.Count-1 downto InitCategoryCount do
       Categories.Delete(I);
 
     for I := Categories.Count-1 downto 0 do

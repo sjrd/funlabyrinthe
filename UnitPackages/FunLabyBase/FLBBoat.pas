@@ -20,6 +20,9 @@ resourcestring
   sBoat = 'Barque'; /// Nom de la barque
 
 resourcestring
+  /// Catégorie des barques
+  sCategoryBoats = 'Barques';
+
   /// Hint du créateur de barques
   sBoatCreatorHint = 'Créer une nouvelle barque';
 
@@ -27,7 +30,8 @@ const {don't localize}
   idBoatCreator = 'BoatCreator'; /// ID du créateur de barques
 
 const {don't localize}
-  fBoat = 'Vehicles/Boat'; /// Fichier de la barque
+  fBoat = 'Vehicles/Boat';       /// Fichier de la barque
+  fCreator = 'Creators/Creator'; /// Fichier des créateurs
 
   fBoatByDir: array[TDirection] of string = (
     'Vehicles/Boat', 'Vehicles/BoatNorth', 'Vehicles/BoatEast',
@@ -44,6 +48,8 @@ type
   TBoat = class(TVehicle)
   private
     procedure PlankMessage(var Msg: TPlankMessage); message msgPlank;
+  protected
+    function GetCategory: string; override;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
 
@@ -64,6 +70,7 @@ type
   *}
   TBoatCreator = class(TComponentCreator)
   protected
+    function GetCategory: string; override;
     function GetHint: string; override;
 
     function GetComponentClass: TFunLabyComponentClass; override;
@@ -120,6 +127,14 @@ begin
         (Map[Src].Obstacle = nil) and (Map[Dest].Obstacle = nil);
     end;
   end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TBoat.GetCategory: string;
+begin
+  Result := SCategoryBoats;
 end;
 
 {*
@@ -188,6 +203,15 @@ begin
   inherited;
 
   IconPainter.AddImage(fBoat);
+  IconPainter.AddImage(fCreator);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TBoatCreator.GetCategory: string;
+begin
+  Result := SCategoryBoats;
 end;
 
 {*
