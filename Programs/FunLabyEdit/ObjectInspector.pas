@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, TypInfo, JvExControls, JvInspector, ScDelphiLanguage, FunLabyUtils,
-  FunLabyEditConsts, FunLabyEditTypes, SepiReflectionCore, SepiSystemUnit,
-  FilesUtils, StrUtils, StdCtrls, Buttons, ToolWin, ComCtrls, ExtCtrls, ImgList,
-  PainterEditor, GR32;
+  Dialogs, TypInfo, JvExControls, JvInspector, ScDelphiLanguage, SdDialogs,
+  FunLabyUtils, FunLabyEditConsts, FunLabyEditTypes, SepiReflectionCore,
+  SepiSystemUnit, FilesUtils, StrUtils, StdCtrls, Buttons, ToolWin, ComCtrls,
+  ExtCtrls, ImgList, PainterEditor, GR32;
 
 type
   {$M+}
@@ -137,6 +137,8 @@ type
     CollectionDisabledImages: TImageList;
     procedure InspectorDataValueChanged(Sender: TObject;
       Data: TJvCustomInspectorData);
+    procedure InspectorItemValueError(Sender: TObject;
+      Item: TJvCustomInspectorItem; ExceptObject: Exception);
     procedure ListBoxCollectionItemsClick(Sender: TObject);
     procedure ButtonCollectionAddClick(Sender: TObject);
     procedure ButtonCollectionRemoveClick(Sender: TObject);
@@ -818,6 +820,18 @@ procedure TFrameInspector.InspectorDataValueChanged(Sender: TObject;
   Data: TJvCustomInspectorData);
 begin
   MarkModified;
+end;
+
+{*
+  Gestionnaire d'événement OnItemValueError de l'inspecteur
+  @param Sender         Objet qui a déclenché l'événement
+  @param Item           Item qui a provoqué l'erreur
+  @param ExceptObject   Exception à traiter
+*}
+procedure TFrameInspector.InspectorItemValueError(Sender: TObject;
+  Item: TJvCustomInspectorItem; ExceptObject: Exception);
+begin
+  ShowDialog(SErrorTitle, ExceptObject.Message, dtError);
 end;
 
 {*
