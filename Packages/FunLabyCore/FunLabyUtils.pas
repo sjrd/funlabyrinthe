@@ -1350,6 +1350,9 @@ type
       default diNone;
   end;
 
+  /// Classe de TPosComponent
+  TPosComponentClass = class of TPosComponent;
+
   {*
     Modificateur de case
     TSquareModifier est une classe de base abstraite facilitant la création

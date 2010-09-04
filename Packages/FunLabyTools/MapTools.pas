@@ -64,6 +64,8 @@ procedure FindSquareAtRandom(Map: TMap; var Pos: T3DPoint;
 function IsAnyPosComponent(const QPos: TQualifiedPos;
   Predicate: TPosComponentPredicate): Boolean; overload;
 function IsAnyPosComponent(const QPos: TQualifiedPos): Boolean; overload;
+function IsAnyPosComponent(const QPos: TQualifiedPos;
+  ComponentClass: TPosComponentClass): Boolean; overload;
 function IsAnySquareModifier(const QPos: TQualifiedPos): Boolean;
 
 implementation
@@ -488,6 +490,42 @@ end;
 function IsAnyPosComponent(const QPos: TQualifiedPos): Boolean;
 begin
   Result := IsAnyPosComponent(QPos, PosComponentAlwaysTrue);
+end;
+
+{*
+  Teste s'il y a un composant à position d'une classe donnée à un endroit donné
+  @param QPos   Position où tester
+  @param ComponentClass   Classe de composant à position recherchée
+  @return True si au moins un composant de la classe a été trouvé, False sinon
+*}
+function IsAnyPosComponent(const QPos: TQualifiedPos;
+  ComponentClass: TPosComponentClass): Boolean;
+var
+  Master: TMaster;
+  I: Integer;
+  PosComponent: TPosComponent;
+begin
+  if QPos.IsNoQPos then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  Master := QPos.Map.Master;
+
+  for I := 0 to Master.PosComponentCount-1 do
+  begin
+    PosComponent := Master.PosComponents[I];
+
+    if SameQPos(PosComponent.QPos, QPos) and
+      (PosComponent is ComponentClass) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  Result := False;
 end;
 
 {*

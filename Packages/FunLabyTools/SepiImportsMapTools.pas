@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'MapTools';
   ResourceName = 'SepiImportsMapTools';
   TypeCount = 1;
-  MethodCount = 20;
+  MethodCount = 21;
   VariableCount = 1;
 
 var
@@ -96,6 +96,11 @@ end;
 function IsAnyPosComponent_1(const QPos: TQualifiedPos): Boolean;
 begin
   Result := IsAnyPosComponent(QPos);
+end;
+
+function IsAnyPosComponent_2(const QPos: TQualifiedPos; ComponentClass: TPosComponentClass): Boolean;
+begin
+  Result := IsAnyPosComponent(QPos, ComponentClass);
 end;
 
 {-------------}
@@ -183,7 +188,8 @@ begin
   MethodAddresses[16] := @FindSquareAtRandom;
   MethodAddresses[17] := @IsAnyPosComponent_0;
   MethodAddresses[18] := @IsAnyPosComponent_1;
-  MethodAddresses[19] := @IsAnySquareModifier;
+  MethodAddresses[19] := @IsAnyPosComponent_2;
+  MethodAddresses[20] := @IsAnySquareModifier;
 end;
 
 procedure InitVarAddresses;

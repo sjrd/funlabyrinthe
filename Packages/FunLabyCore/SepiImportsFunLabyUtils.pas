@@ -2120,6 +2120,16 @@ type
 {$IFEND}
 
 type
+  TCheckAlignmentForTPosComponentClass = record
+    Dummy: Byte;
+    Field: TPosComponentClass;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTPosComponentClass) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TPosComponentClass n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
   TCheckAlignmentForTSquareModifier = record
     Dummy: Byte;
     Field: TSquareModifier;
