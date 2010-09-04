@@ -233,10 +233,8 @@ var
   I: Integer;
   NewID: string;
 begin
-  Result := nil;
-
   NewID := BaseID;
-  if AnsiEndsText('Creator', NewID) then
+  if AnsiEndsText('Creator', NewID) and not AnsiSameText(NewID, 'Creator') then
     SetLength(NewID, Length(NewID) - Length('Creator'));
 
   I := 1;
@@ -245,25 +243,12 @@ begin
 
   NewID := NewID + IntToStr(I);
 
-  if InputQuery(SCreateCompChooseIDTitle, SCreateCompChooseID, NewID) then
-  begin
-    if not IsValidIdent(NewID) then
-    begin
-      ShowDialog(SInvalidComponentIDTitle, SBadComponentID, dtError);
-    end else if Master.ComponentExists(NewID) then
-    begin
-      ShowDialog(SInvalidComponentIDTitle, SComponentAlreadyExists,
-        dtError);
-    end else
-    begin
-      Result := Master.CreateAdditionnalComponent(ComponentClass, NewID);
+  Result := Master.CreateAdditionnalComponent(ComponentClass, NewID);
 
-      if Result.IsDesignable then
-        RegisterComponent(Result);
+  if Result.IsDesignable then
+    RegisterComponent(Result);
 
-      MarkModified;
-    end;
-  end;
+  MarkModified;
 end;
 
 {*
