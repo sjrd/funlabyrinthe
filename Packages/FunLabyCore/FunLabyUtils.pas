@@ -75,6 +75,12 @@ type
   /// Générée si un composant recherché n'est pas trouvé
   EComponentNotFound = class(EFunLabyException);
 
+  /// Déclenchée lorsqu'un ID est invalide
+  EInvalidID = class(EFunLabyException);
+
+  /// Générée si une commande invalide est exécutée
+  EInvalidCommand = class(EFunLabyException);
+
   /// Générée si une commande n'est pas supportée
   EUnsupportedCommand = class(EFunLabyException);
 
@@ -856,11 +862,15 @@ type
 
     FPlayerData: TBucketItemArray; /// Données par joueur
 
+    procedure SetID(const Value: TComponentID);
+
     function GetSafeID: TComponentID;
   protected
     FTransient: Boolean; /// Indique si ce composant est transitoire
   protected
     class function GetPlayerDataClass: TPlayerDataClass; virtual;
+
+    procedure ChangeID(const NewID: TComponentID); virtual;
 
     function HasPlayerData(Player: TPlayer): Boolean;
     function GetPlayerData(Player: TPlayer): TPlayerData;
@@ -892,7 +902,7 @@ type
     property Hint: string read GetHint;
     property IsDesignable: Boolean read GetIsDesignable;
   published
-    property ID: TComponentID read FID;
+    property ID: TComponentID read FID write SetID stored False;
     property Tag: Integer read FTag write FTag default 0;
   end;
 
@@ -1063,6 +1073,8 @@ type
     @version 5.0
   *}
   TSquareComponent = class(TVisualComponent)
+  protected
+    procedure ChangeID(const NewID: TComponentID); override;
   end;
 
   /// Classe de TSquareComponent
@@ -1167,6 +1179,8 @@ type
       HookComponent: TPosComponent);
     function HookEvent(Context: TMoveContext;
       EventKind: TSquareEventKind): Boolean;
+
+    procedure UpdateID;
 
     function GetComponentCount: Integer;
     function GetComponents(Index: Integer): TSquareComponent;
@@ -1908,6 +1922,7 @@ type
 
     procedure AddComponent(Component: TFunLabyComponent);
     procedure RemoveComponent(Component: TFunLabyComponent);
+    procedure ComponentIDChanged(Component: TFunLabyComponent);
 
     procedure Terminate;
   protected
@@ -1922,6 +1937,7 @@ type
     procedure StoreDefaults; override;
 
     function ComponentExists(const ID: TComponentID): Boolean;
+    procedure CheckComponentID(const ID: TComponentID);
 
     function SquareByComps(
       const Field, Effect, Tool, Obstacle: TComponentID): TSquare; overload;
@@ -4384,6 +4400,26 @@ begin
 end;
 
 {*
+  Modifie l'ID du composant
+  @param Value   Nouvel ID du composant
+*}
+procedure TFunLabyComponent.SetID(const Value: TComponentID);
+begin
+  if Value = FID then
+    Exit;
+
+  if not Master.Editing then
+    raise EInvalidCommand.Create(SEditingRequiredForSetID);
+
+  if not IsAdditionnal then
+    raise EInvalidCommand.Create(SAdditionnalRequiredForSetID);
+
+  Master.CheckComponentID(Value);
+
+  ChangeID(Value);
+end;
+
+{*
   ID du composant
   Accès moins rapide que ID mais qui renvoie un ID vide si le composant vaut
   nil.
@@ -4406,6 +4442,21 @@ end;
 class function TFunLabyComponent.GetPlayerDataClass: TPlayerDataClass;
 begin
   Result := TPlayerData;
+end;
+
+{*
+  Change l'ID de ce composant
+  N'appelez pas directement ChangeID, mais modifiez plutôt la propriété ID du
+  composant.
+  Surchargez cette méthode si vous devez effectuer un traitement spécial lorsque
+  l'ID du composant change.
+  @param NewID   Nouvel ID
+*}
+procedure TFunLabyComponent.ChangeID(const NewID: TComponentID);
+begin
+  Assert(Master.Editing);
+  FID := NewID;
+  Master.ComponentIDChanged(Self);
 end;
 
 {*
@@ -4981,6 +5032,24 @@ procedure TObjectDef.UseFor(Player: TPlayer; const Action: TPlayerAction;
 begin
 end;
 
+{-------------------------}
+{ Classe TSquareComponent }
+{-------------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TSquareComponent.ChangeID(const NewID: TComponentID);
+var
+  I: Integer;
+begin
+  inherited;
+
+  if not (Self is TSquare) then
+    for I := 0 to Master.SquareCount-1 do
+      Master.Squares[I].UpdateID;
+end;
+
 {---------------}
 { Classe TField }
 {---------------}
@@ -5252,6 +5321,25 @@ begin
   end;
 
   Result := False;
+end;
+
+{*
+  Met à jour l'ID de cette case
+*}
+procedure TSquare.UpdateID;
+var
+  NewID: TComponentID;
+begin
+  Assert(Master.Editing);
+
+  if ID = '' then
+    Exit;
+
+  NewID := Format(SquareIDFormat,
+    [Field.SafeID, Effect.SafeID, Tool.SafeID, Obstacle.SafeID]);
+
+  if NewID <> ID then
+    ChangeID(NewID);
 end;
 
 {*
@@ -8877,6 +8965,22 @@ begin
 end;
 
 {*
+  Notification que l'ID d'un composant a été modifié
+  @param Component   Le composant dont l'ID a été modifié
+*}
+procedure TMaster.ComponentIDChanged(Component: TFunLabyComponent);
+var
+  Index: Integer;
+begin
+  Index := FComponentsByID.IndexOfObject(Component);
+  if Index >= 0 then
+  begin
+    FComponentsByID.Delete(Index);
+    FComponentsByID.AddObject(Component.ID, Component);
+  end;
+end;
+
+{*
   Met fin à la partie
 *}
 procedure TMaster.Terminate;
@@ -8972,6 +9076,19 @@ end;
 function TMaster.ComponentExists(const ID: TComponentID): Boolean;
 begin
   Result := FComponentsByID.IndexOf(ID) >= 0;
+end;
+
+{*
+  Vérifie qu'un ID de composant est valide
+  @param ID   ID de composant à tester
+*}
+procedure TMaster.CheckComponentID(const ID: TComponentID);
+begin
+  if not IsValidIdent(ID) then
+    raise EInvalidID.CreateFmt(SInvalidID, [ID]);
+
+  if ComponentExists(ID) then
+    raise EInvalidID.CreateFmt(SDuplicateID, [ID]);
 end;
 
 {*

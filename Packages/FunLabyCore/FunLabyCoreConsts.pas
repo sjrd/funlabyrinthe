@@ -44,6 +44,13 @@ resourcestring
   SInvalidComponent = 'Le composant d''ID %s n''est pas valide';
   SRepareComponentError =
     'Voulez-vous ignorer cette erreur et tenter de continuer ?';
+  SEditingRequiredForSetID =
+    'Impossible de modifier l''ID d''un composant sauf en édition';
+  SAdditionnalRequiredForSetID =
+    'Impossible de modifier l''ID d''un composant créé automatiquement';
+  SInvalidID = '''%s'' n''est pas un ID de composant valide (seuls les '+
+    'lettres non accentuées, les chiffres et le _ sont autorisés)';
+  SDuplicateID = 'Il existe déjà un composant dont l''ID est %s';
   SUnsupportedCommand = 'La commande %s n''est pas supportée';
   STemporaryStatedMap =
     'La carte d''ID %s est dans un état temporaire qui ne peut être enregistré';
