@@ -1120,10 +1120,10 @@ begin
 
   TSquareComponentType := SepiRoot.FindClass(TSquareComponent);
 
-  if not TSepiConvertOperation.ConvertionExists(TSquareComponentType,
+  if not TSepiConvertOperation.ConversionExists(TSquareComponentType,
     LeftValue) then
     Exit;
-  if not TSepiConvertOperation.ConvertionExists(TSquareComponentType,
+  if not TSepiConvertOperation.ConversionExists(TSquareComponentType,
     RightValue) then
     Exit;
 

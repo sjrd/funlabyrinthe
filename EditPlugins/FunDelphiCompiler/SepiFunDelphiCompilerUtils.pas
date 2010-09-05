@@ -325,7 +325,7 @@ begin
 
   if not Component.ValueType.Equals(TSquareComponentType) then
   begin
-    if TSepiConvertOperation.ConvertionExists(TSquareComponentType,
+    if TSepiConvertOperation.ConversionExists(TSquareComponentType,
       Component) then
     begin
       Component := TSepiConvertOperation.ConvertValue(
@@ -663,7 +663,7 @@ begin
 
   if not Supports(BaseExpression, ISepiReadableValue, ReadableBase) then
     Exit;
-  if not TSepiConvertOperation.ConvertionExists(TPlayerType, ReadableBase) then
+  if not TSepiConvertOperation.ConversionExists(TPlayerType, ReadableBase) then
     Exit;
 
   ObjectExpr := TSepiExpression.Create(BaseExpression);
