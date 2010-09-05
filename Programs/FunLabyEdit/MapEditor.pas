@@ -247,18 +247,33 @@ end;
 function TFrameMapEditor.CreateNewComponent(const BaseID: TComponentID;
   ComponentClass: TFunLabyComponentClass): TFunLabyComponent;
 var
-  I: Integer;
+  NewLen, I: Integer;
   NewID: string;
 begin
-  NewID := BaseID;
-  if AnsiEndsText('Creator', NewID) and not AnsiSameText(NewID, 'Creator') then
-    SetLength(NewID, Length(NewID) - Length('Creator'));
+  // Get new base ID
+
+  NewLen := Length(BaseID);
+
+  while (NewLen > 0) and CharInSet(BaseID[NewLen], ['0'..'9']) do
+    Dec(NewLen);
+
+  if Copy(BaseID, NewLen - 6, 7) = 'Creator' then
+    Dec(NewLen, 7);
+
+  if NewLen <= 0 then
+    NewID := BaseID
+  else
+    NewID := Copy(BaseID, 1, NewLen);
+
+  // Compute NewID
 
   I := 1;
   while Master.ComponentExists(NewID + IntToStr(I)) do
     Inc(I);
 
   NewID := NewID + IntToStr(I);
+
+  // Create the component
 
   Result := Master.CreateAdditionnalComponent(ComponentClass, NewID);
 
@@ -803,13 +818,17 @@ end;
 *}
 procedure TFrameMapEditor.ActionCopyComponentExecute(Sender: TObject);
 var
+  SrcComponent: TFunLabyComponent;
   ComponentClass: TFunLabyComponentClass;
 begin
   Assert(not ((Component = nil) or (Component is TComponentCreator) or
     (Component is TPlayer)));
 
-  ComponentClass := TFunLabyComponentClass(Component.ClassType);
-  Component := CreateNewComponent(Component.ID, ComponentClass);
+  SrcComponent := Component;
+  ComponentClass := TFunLabyComponentClass(SrcComponent.ClassType);
+  Component := CreateNewComponent(SrcComponent.ID, ComponentClass);
+
+  TFunLabyAssignmentFiler.Assign(Component, SrcComponent);
 end;
 
 {*

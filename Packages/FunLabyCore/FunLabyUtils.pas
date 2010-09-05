@@ -4017,6 +4017,8 @@ begin
 
   if Instance is TMaster then
     FMaster := TMaster(Instance)
+  else if Instance is TFunLabyComponent then
+    FMaster := TFunLabyComponent(Instance).Master
   else if Owner <> nil then
     FMaster := Owner.Master;
 end;
