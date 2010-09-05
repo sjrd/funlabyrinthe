@@ -3,7 +3,7 @@ object FormFileProperties: TFormFileProperties
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Propri'#233't'#233's du fichier'
-  ClientHeight = 337
+  ClientHeight = 385
   ClientWidth = 329
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -32,17 +32,24 @@ object FormFileProperties: TFormFileProperties
   end
   object LabelDifficulty: TLabel
     Left = 16
-    Top = 200
+    Top = 248
     Width = 49
     Height = 13
     Caption = 'Difficult'#233' :'
   end
   object LabelAuthor: TLabel
     Left = 16
-    Top = 248
+    Top = 296
     Width = 40
     Height = 13
     Caption = 'Auteur :'
+  end
+  object LabelKind: TLabel
+    Left = 16
+    Top = 200
+    Width = 36
+    Height = 13
+    Caption = 'Genre :'
   end
   object EditTitle: TEdit
     Left = 16
@@ -61,36 +68,43 @@ object FormFileProperties: TFormFileProperties
   end
   object EditDifficulty: TEdit
     Left = 16
-    Top = 216
-    Width = 297
-    Height = 21
-    TabOrder = 2
-  end
-  object EditAuthor: TEdit
-    Left = 16
     Top = 264
     Width = 297
     Height = 21
     TabOrder = 3
   end
+  object EditAuthor: TEdit
+    Left = 16
+    Top = 312
+    Width = 297
+    Height = 21
+    TabOrder = 4
+  end
   object ButtonOK: TButton
     Left = 56
-    Top = 296
+    Top = 344
     Width = 97
     Height = 25
     Caption = 'OK'
     Default = True
-    TabOrder = 4
+    TabOrder = 5
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
     Left = 176
-    Top = 296
+    Top = 344
     Width = 97
     Height = 25
     Cancel = True
     Caption = 'Annuler'
     ModalResult = 2
-    TabOrder = 5
+    TabOrder = 6
+  end
+  object EditKind: TEdit
+    Left = 16
+    Top = 216
+    Width = 297
+    Height = 21
+    TabOrder = 2
   end
 end

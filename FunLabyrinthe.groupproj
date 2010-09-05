@@ -9,6 +9,9 @@
 			<Projects Include="Packages\FunLabyTools\FunLabyTools.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="Packages\FunLabyForms\FunLabyForms.dproj">
+				<Dependencies/>
+			</Projects>
 			<Projects Include="Programs\FunLaby\FunLaby.dproj">
 				<Dependencies/>
 			</Projects>
@@ -60,6 +63,15 @@
 		</Target>
 		<Target Name="FunLabyTools:Make">
 			<MSBuild Targets="Make" Projects="Packages\FunLabyTools\FunLabyTools.dproj"/>
+		</Target>
+		<Target Name="FunLabyForms">
+			<MSBuild Projects="Packages\FunLabyForms\FunLabyForms.dproj"/>
+		</Target>
+		<Target Name="FunLabyForms:Clean">
+			<MSBuild Targets="Clean" Projects="Packages\FunLabyForms\FunLabyForms.dproj"/>
+		</Target>
+		<Target Name="FunLabyForms:Make">
+			<MSBuild Targets="Make" Projects="Packages\FunLabyForms\FunLabyForms.dproj"/>
 		</Target>
 		<Target Name="FunLaby">
 			<MSBuild Projects="Programs\FunLaby\FunLaby.dproj"/>
@@ -134,13 +146,13 @@
 			<MSBuild Targets="Make" Projects="UnitPackages\Compatibility4x\Compatibility4x.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="FunLabyCore;FunLabyTools;FunLaby;FunLabyEditPlugin;FunLabyEditTools;FunLabyEdit;GeneLaby;FunLabyVersionCheck;FunLabyBase;Compatibility4x"/>
+			<CallTarget Targets="FunLabyCore;FunLabyTools;FunLabyForms;FunLaby;FunLabyEditPlugin;FunLabyEditTools;FunLabyEdit;GeneLaby;FunLabyVersionCheck;FunLabyBase;Compatibility4x"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="FunLabyCore:Clean;FunLabyTools:Clean;FunLaby:Clean;FunLabyEditPlugin:Clean;FunLabyEditTools:Clean;FunLabyEdit:Clean;GeneLaby:Clean;FunLabyVersionCheck:Clean;FunLabyBase:Clean;Compatibility4x:Clean"/>
+			<CallTarget Targets="FunLabyCore:Clean;FunLabyTools:Clean;FunLabyForms:Clean;FunLaby:Clean;FunLabyEditPlugin:Clean;FunLabyEditTools:Clean;FunLabyEdit:Clean;GeneLaby:Clean;FunLabyVersionCheck:Clean;FunLabyBase:Clean;Compatibility4x:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="FunLabyCore:Make;FunLabyTools:Make;FunLaby:Make;FunLabyEditPlugin:Make;FunLabyEditTools:Make;FunLabyEdit:Make;GeneLaby:Make;FunLabyVersionCheck:Make;FunLabyBase:Make;Compatibility4x:Make"/>
+			<CallTarget Targets="FunLabyCore:Make;FunLabyTools:Make;FunLabyForms:Make;FunLaby:Make;FunLabyEditPlugin:Make;FunLabyEditTools:Make;FunLabyEdit:Make;GeneLaby:Make;FunLabyVersionCheck:Make;FunLabyBase:Make;Compatibility4x:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

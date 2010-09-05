@@ -192,6 +192,7 @@ type
 
     FTitle: string;       /// Titre du labyrinthe
     FDescription: string; /// Description
+    FKind: string;        /// Genre
     FDifficulty: string;  /// Difficulté
     FAuthor: string;      /// Nom de l'auteur
 
@@ -261,6 +262,7 @@ type
   published
     property Title: string read FTitle write FTitle;
     property Description: string read FDescription write FDescription;
+    property Kind: string read FKind write FKind;
     property Difficulty: string read FDifficulty write FDifficulty;
     property Author: string read FAuthor write FAuthor;
   end;

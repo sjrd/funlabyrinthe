@@ -71,6 +71,7 @@ resourcestring
   SInvalidFileFormat = 'Le fichier n''est pas un document FunLabyrinthe valide';
   SVersionTooHigh = 'Le fichier a été enregistré avec une version ultérieure '+
     'de FunLabyrinthe (v%s). Il ne peut être ouvert.';
+  SFileNotFoundTitle = 'Fichier introuvable';
   SFileNotFound = 'Le fichier spécifié "%s" n''existe pas';
   SUnknownUnitType = 'Type d''unité ''%s'' inconnu';
   SThereMustBeOnePlayer = 'Il doit y avoir un et un seul joueur par fichier';

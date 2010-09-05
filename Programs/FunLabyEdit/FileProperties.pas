@@ -11,7 +11,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, SdDialogs, FilesUtils;
+  Dialogs, StdCtrls, SdDialogs, FilesUtils, StrUtils;
 
 resourcestring
   sUnfilledTitleTitle = 'Titre non complété';
@@ -34,6 +34,8 @@ type
     EditAuthor: TEdit;
     ButtonOK: TButton;
     ButtonCancel: TButton;
+    LabelKind: TLabel;
+    EditKind: TEdit;
     procedure ButtonOKClick(Sender: TObject);
   private
     { Déclarations privées }
@@ -57,7 +59,9 @@ begin
   with Create(Application) do
   try
     EditTitle.Text := MasterFile.Title;
-    EditDescription.Text := MasterFile.Description;
+    EditDescription.Text := AnsiReplaceStr(MasterFile.Description,
+      #10, sLineBreak);
+    EditKind.Text := MasterFile.Kind;
     EditDifficulty.Text := MasterFile.Difficulty;
     EditAuthor.Text := MasterFile.Author;
 
@@ -66,7 +70,9 @@ begin
     else
     begin
       MasterFile.Title := EditTitle.Text;
-      MasterFile.Description := EditDescription.Text;
+      MasterFile.Description := AnsiReplaceStr(EditDescription.Text,
+        sLineBreak, #10);
+      MasterFile.Kind := EditKind.Text;
       MasterFile.Difficulty := EditDifficulty.Text;
       MasterFile.Author := EditAuthor.Text;
 

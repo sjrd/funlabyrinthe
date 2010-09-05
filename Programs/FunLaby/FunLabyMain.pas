@@ -15,7 +15,7 @@ uses
   ScUtils, ScStrUtils, ScSyncObjs, SdDialogs,
   FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
   UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts,
-  GR32_Image;
+  GR32_Image, SelectProjectForm;
 
 resourcestring
   sFatalErrorTitle = 'Erreur fatale';
@@ -99,6 +99,9 @@ type
     Controller: TPlayerController; /// Contrôleur du joueur
     GameEnded: Boolean;            /// Indique si la partie est finie
     LastFileName: TFileName;       /// Dernier nom de fichier ouvert
+
+    /// Boîte de dialogue nouvelle partie
+    NewGameDialog2: TFormSelectProjectFile;
 
     procedure LoadBaseSepiRoot;
     procedure NeedBaseSepiRoot;
@@ -432,6 +435,8 @@ begin
   LoadGameDialog.InitialDir := fSaveguardsDir;
   SaveGameDialog.InitialDir := fSaveguardsDir;
 
+  NewGameDialog2 := TFormSelectProjectFile.Create(Self);
+
   BackgroundTasks := TScTaskQueue.Create(True, False);
 
   BaseSepiRoot := TSepiRoot.Create;
@@ -492,13 +497,13 @@ procedure TFormMain.MenuNewGameClick(Sender: TObject);
 begin
   if CloseGame then
   begin
-    if not NewGameDialog.Execute then
+    if not NewGameDialog2.Execute then
       Exit;
 
-    if ofExtensionDifferent in NewGameDialog.Options then
+    {if ofExtensionDifferent in NewGameDialog.Options then
       RunURL(NewGameDialog.FileName)
-    else
-      NewGame(NewGameDialog.FileName);
+    else}
+      NewGame(NewGameDialog2.FileName);
   end;
 end;
 

@@ -126,6 +126,7 @@ begin
     begin
       Title := 'Labyrinthe généré';
       Description := Title;
+      Kind := 'Labyrinthe';
       Difficulty := Format('%dx%dx%d', [DimX, DimY, DimZ]);
       Author := 'Générateur écrit par Jean-Paul Doeraene';
     end;
