@@ -21,7 +21,8 @@ uses
   ObjectInspector in 'ObjectInspector.pas' {FrameInspector: TFrame},
   FunLabyEditTypes in 'FunLabyEditTypes.pas',
   EditMap in 'EditMap.pas' {FormEditMap},
-  MapImage in 'MapImage.pas' {FrameMapImage: TFrame};
+  MapImage in 'MapImage.pas' {FrameMapImage: TFrame},
+  EditFilers in 'EditFilers.pas';
 
 {$R *.res}
 
