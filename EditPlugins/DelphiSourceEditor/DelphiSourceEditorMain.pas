@@ -10,7 +10,7 @@ uses
   SourceEditors, FunLabySourceSynEditEditorFrame;
 
 resourcestring
-  DelphiFilter = 'Unité Delphi (*.pas)|*.pas';
+  DelphiFilter = 'Source Delphi (*.pas)|*.pas';
 
 const {don't localize}
   DelphiExtension = 'pas';
@@ -45,7 +45,7 @@ const
     Title: 'Source Delphi';
     Description: 'Fichier source Delphi, le langage original de FunLabyrinthe';
     AskForFileName: True;
-    Filter: DelphiFilter
+    Extension: DelphiExtension
   );
 
 {*

@@ -142,14 +142,8 @@ const
     Title: 'Cases simples';
     Description: 'Éditeur visuel de cases simples. Idéal pour les débutants.';
     AskForFileName: True;
-    Filter: SimpleSquaresFilter
+    Extension: SimpleSquaresExtension
   );
-
-  /// Nombre magique SimpleSquares (équivaut à .ssq)
-  SimpleSquaresMagicNumber = $7173732E;
-
-  /// Version courante de SimpleSquares
-  SimpleSquaresVersion = 1;
 
 {*
   Crée un éditeur de cases simples

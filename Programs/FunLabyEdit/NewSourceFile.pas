@@ -78,7 +78,7 @@ end;
 function TFormCreateNewSourceFile.ValidateFileName(
   const FileName: TFileName): Boolean;
 var
-  UnitName, Extension, Filter, Temp, FilterMask, SubMask: string;
+  UnitName, Extension: string;
 begin
   // Parse file name
   Extension := ExtractFileExt(FileName);
@@ -94,28 +94,7 @@ begin
     Exit;
   end;
 
-  // Check extension
-  Filter := SaveSourceFileDialog.Filter;
-  while SplitToken(Filter, '|', FilterMask, Temp) do
-  begin
-    SplitToken(Temp, '|', FilterMask, Filter);
-
-    while FilterMask <> '' do
-    begin
-      SplitToken(FilterMask, ';', SubMask, Temp);
-      FilterMask := Temp;
-
-      if (SubMask = '*'+Extension) or (SubMask = '*.*') or (SubMask = '*') then
-      begin
-        Result := True;
-        Exit;
-      end;
-    end;
-  end;
-
-  ShowDialog(SInvalidFileNameTitle, Format(SInvalidExtension, [Extension]),
-    dtError);
-  Result := False;
+  Result := True;
 end;
 
 {*
@@ -125,6 +104,8 @@ end;
 *}
 class function TFormCreateNewSourceFile.NewSourceFile(
   out FileName: TFileName): Boolean;
+const
+  FilterFormat = '%s (*.%s)|*.%1:s';
 var
   Creator: PSourceFileCreator;
 begin
@@ -153,11 +134,15 @@ begin
     // Préparer le nom de fichier, si besoin
     if Creator.Info.AskForFileName then
     begin
-      SaveSourceFileDialog.Filter := Creator.Info.Filter;
+      SaveSourceFileDialog.Filter := Format(FilterFormat,
+        [Creator.Info.Title, Creator.Info.Extension]);
       SaveSourceFileDialog.InitialDir := fUnitsDir;
+
       if not SaveSourceFileDialog.Execute then
         Exit;
-      FileName := SaveSourceFileDialog.FileName;
+
+      FileName := ChangeFileExt(SaveSourceFileDialog.FileName,
+        '.'+Creator.Info.Extension);
     end else
       FileName := '';
 
@@ -201,14 +186,8 @@ end;
 *}
 procedure TFormCreateNewSourceFile.SaveSourceFileDialogCanClose(Sender: TObject;
   var CanClose: Boolean);
-var
-  I: Integer;
 begin
-  CanClose := False;
-  for I := 0 to SaveSourceFileDialog.Files.Count-1 do
-    if not ValidateFileName(SaveSourceFileDialog.Files[I]) then
-      Exit;
-  CanClose := True;
+  CanClose := ValidateFileName(SaveSourceFileDialog.FileName);
 end;
 
 end.

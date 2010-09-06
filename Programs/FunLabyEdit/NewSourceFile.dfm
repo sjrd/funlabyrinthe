@@ -54,22 +54,26 @@ object FormCreateNewSourceFile: TFormCreateNewSourceFile
     Top = 216
     Width = 89
     Height = 25
-    TabOrder = 2
+    DoubleBuffered = True
     Kind = bkOK
+    ParentDoubleBuffered = False
+    TabOrder = 2
   end
   object ButtonCancel: TBitBtn
     Left = 256
     Top = 216
     Width = 89
     Height = 25
-    TabOrder = 3
+    DoubleBuffered = True
     Kind = bkCancel
+    ParentDoubleBuffered = False
+    TabOrder = 3
   end
   object SaveSourceFileDialog: TSaveDialog
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing, ofDontAddToRecent]
     Title = 'Veuillez choisir un nom de fichier source'
     OnCanClose = SaveSourceFileDialogCanClose
-    Left = 16
+    Left = 64
     Top = 208
   end
 end

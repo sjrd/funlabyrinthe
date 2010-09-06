@@ -10,7 +10,7 @@ uses
   FunLabySourceSynEditEditorFrame, SynHighlighterFunDelphi;
 
 resourcestring
-  FunDelphiFilter = 'Unité FunDelphi (*.fnd)|*.fnd';
+  FunDelphiFilter = 'Source FunDelphi (*.fnd)|*.fnd';
 
 const {don't localize}
   FunDelphiExtension = 'fnd';
@@ -49,7 +49,7 @@ const
     Description: 'Fichier source FunDelphi, un langage de programmation '+
       'mais puissant adapté particulièrement à FunLabyrinthe';
     AskForFileName: True;
-    Filter: FunDelphiFilter
+    Extension: FunDelphiExtension
   );
 
 {*

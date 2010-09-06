@@ -222,7 +222,7 @@ type
     Title: string;           /// Titre du créateur
     Description: string;     /// Description longue
     AskForFileName: Boolean; /// Demander un nom de fichier
-    Filter: string;          /// Filtre de nom de fichier
+    Extension: string;       /// Extension des fichiers créés
   end;
 
   {*
