@@ -32,8 +32,7 @@ resourcestring
 
   sCantPauseTitle = 'Pause impossible';
   sCantPause =
-    'Impossible de mettre en pause maintenant, car le joueur n''est pas à '+
-    'l''arrêt';
+    'Impossible de mettre en pause maintenant, car le joueur est occupé';
 
   SAskForTutorialTitle = 'Didacticiel';
   SAskForTutorial =
