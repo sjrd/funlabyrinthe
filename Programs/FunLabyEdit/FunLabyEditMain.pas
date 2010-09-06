@@ -134,8 +134,8 @@ type
     function IsEditor(Index: Integer): Boolean; overload;
     function GetTabEditor(Tab: TJvTabBarItem): ISourceEditor50;
     function FindTab(const Editor: ISourceEditor50): TJvTabBarItem; overload;
-    function FindTab(SourceFile: TSourceFile): TJvTabBarItem; overload;
-    procedure OpenTab(SourceFile: TSourceFile);
+    function FindTab(const FileName: TFileName): TJvTabBarItem; overload;
+    procedure OpenTab(const FileName: TFileName);
     function CloseTab(Tab: TJvTabBarItem): Boolean;
 
     procedure NewFile;
@@ -401,13 +401,13 @@ end;
   @param SourceFile   Fichier source recherché
   @return Onglet correspondant, ou nil si n'existe pas
 *}
-function TFormMain.FindTab(SourceFile: TSourceFile): TJvTabBarItem;
+function TFormMain.FindTab(const FileName: TFileName): TJvTabBarItem;
 var
   I: Integer;
 begin
   for I := 0 to TabCount-1 do
   begin
-    if IsEditor(I) and (Editors[I].SourceFile = SourceFile) then
+    if IsEditor(I) and (Editors[I].FileName = FileName) then
     begin
       Result := Tabs[I];
       Exit;
@@ -421,7 +421,7 @@ end;
   Ajoute un éditeur de source à l'interface visuelle et l'affiche
   @param Editor   Éditeur à ajouter
 *}
-procedure TFormMain.OpenTab(SourceFile: TSourceFile);
+procedure TFormMain.OpenTab(const FileName: TFileName);
 var
   Editor: ISourceEditor50;
   EditorUsingOTA: ISourceEditorUsingOTA50;
@@ -430,14 +430,15 @@ var
 begin
   // Créer l'éditeur
   try
-    Editor := SourceFileEditors.CreateEditor(SourceFile);
+    Editor := SourceFileEditors.CreateEditor(FileName);
   except
     on Error: Exception do
     begin
       if ShowDialog(SErrorTitle, Format(SErrorWhileOpeningSourceFile,
         [Error.Message]), dtError, dbYesNo, 2) = drYes then
       begin
-        RemoveSourceFile(SourceFile);
+        { TODO 5 : Remove source file on error }
+        //RemoveSourceFile(SourceFile);
       end;
 
       Exit;
@@ -459,7 +460,7 @@ begin
 
   // Créer un nouvel onglet pour l'éditeur et l'afficher
   Tab := TJvTabBarItem(TabBarEditors.Tabs.Add);
-  Tab.Caption := ExtractFileName(Editor.SourceFile.FileName);
+  Tab.Caption := ExtractFileName(Editor.FileName);
   Tab.Data := TObject(Pointer(Editor));
   Tab.Tag := SourceEditorTag;
   Tab.Modified := Editor.Modified;
@@ -668,7 +669,7 @@ begin
     for I := 0 to TabCount-1 do
     begin
       if IsEditor(I) then
-        OpenSources.Add(Editors[I].SourceFile.FileName);
+        OpenSources.Add(Editors[I].FileName);
     end;
 
     // Actual reload
@@ -677,9 +678,8 @@ begin
     OpenFile(FileName);
 
     // Restore open tabs
-    for I := 0 to MasterFile.SourceFiles.Count-1 do
-      if OpenSources.IndexOf(MasterFile.SourceFiles[I].FileName) >= 0 then
-        OpenTab(MasterFile.SourceFiles[I]);
+    for I := 0 to OpenSources.Count-1 do
+      OpenTab(OpenSources[I]);
 
     { Usually we reload to have the component appear in the palette, so go to
       the tab that shows this palette. }
@@ -865,7 +865,7 @@ begin
     BigMenuSources.Items[BigMenuSources.Items.Count-1]);
 
   // Afficher le source
-  OpenTab(SourceFile);
+  OpenTab(SourceFile.FileName);
 
   MarkModified;
 end;
@@ -1259,14 +1259,19 @@ begin
   if not IsEditor(Tab) then
     Exit;
 
-  SourceFile := GetTabEditor(Tab).SourceFile;
+  SourceFile := MasterFile.FindSourceFile(GetTabEditor(Tab).FileName);
 
-  if ShowDialog(SRemoveSourceTitle, SRemoveSource, dtConfirmation,
-    dbYesNo, 2) <> drYes then
-    Exit;
+  if SourceFile = nil then
+    CloseTab(Tab)
+  else
+  begin
+    if ShowDialog(SRemoveSourceTitle, SRemoveSource, dtConfirmation,
+      dbYesNo, 2) <> drYes then
+      Exit;
 
-  if CloseTab(Tab) then
-    RemoveSourceFile(SourceFile);
+    if CloseTab(Tab) then
+      RemoveSourceFile(SourceFile);
+  end;
 end;
 
 {*
@@ -1294,11 +1299,11 @@ begin
 
   // Si un éditeur est déjà ouvert pour ce fichier, le mettre en avant-plan
   // Sinon, ouvrir un nouvel onglet
-  Tab := FindTab(SourceFile);
+  Tab := FindTab(SourceFile.FileName);
   if Tab <> nil then
     Tab.Selected := True
   else
-    OpenTab(SourceFile);
+    OpenTab(SourceFile.FileName);
 end;
 
 {*
@@ -1504,7 +1509,7 @@ begin
   Tab := nil;
   for I := 0 to TabCount-1 do
   begin
-    if IsEditor(I) and (Editors[I].SourceFile.FileName = Error.FileName) then
+    if IsEditor(I) and (Editors[I].FileName = Error.FileName) then
     begin
       Tab := Tabs[I];
       Break;

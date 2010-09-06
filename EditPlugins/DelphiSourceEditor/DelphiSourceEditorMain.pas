@@ -53,12 +53,12 @@ const
   @param SourceFile   Fichier source à éditer
   @return Interface vers l'éditeur créé
 *}
-function CreateDelphiSourceEditor(SourceFile: TSourceFile): ISourceEditor50;
+function CreateDelphiSourceEditor(const FileName: TFileName): ISourceEditor50;
 var
   Editor: TFrameDelphiSourceEditor;
 begin
   Editor := TFrameDelphiSourceEditor.Create(nil);
-  Editor.LoadFile(SourceFile);
+  Editor.LoadFile(FileName);
   Result := Editor as ISourceEditor50;
 end;
 
@@ -107,12 +107,11 @@ end;
 function TFrameDelphiSourceEditor.CompileFile(SepiRoot: TSepiRoot;
   Errors: TSepiCompilerErrorList): TSepiUnit;
 var
-  SrcFileName, DestFileName: TFileName;
+  DestFileName: TFileName;
 begin
-  SrcFileName := SourceFile.FileName;
-  DestFileName := ChangeFileExt(SrcFileName, '.'+SepiExtension);
+  DestFileName := ChangeFileExt(FileName, '.'+SepiExtension);
 
-  Errors.CurrentFileName := SrcFileName;
+  Errors.CurrentFileName := FileName;
   Result := CompileDelphiSource(SepiRoot, Errors,
     EditSource.Lines, DestFileName);
 end;

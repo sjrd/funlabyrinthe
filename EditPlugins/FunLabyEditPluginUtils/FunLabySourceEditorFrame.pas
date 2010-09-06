@@ -19,12 +19,12 @@ type
   *}
   TFrameFunLabySourceEditor = class(TFrame, ISourceEditor50)
   private
-    FSourceFile: TSourceFile; /// Fichier source
-    FModified: Boolean;       /// Indique si le source a été modifié
+    FFileName: TFileName; /// Nom du fichier source
+    FModified: Boolean;   /// Indique si le source a été modifié
 
     FOnStateChange: TSourceEditorNotifyEvent; /// Événement OnStateChange
   protected // for support of additionnal interfaces
-    function GetSourceFile: TSourceFile;
+    function GetFileName: TFileName;
     function GetControl: TControl;
     function GetModified: Boolean;
 
@@ -39,11 +39,11 @@ type
 
     function GetUnitName: string; virtual;
 
-    procedure LoadFile(ASourceFile: TSourceFile); virtual;
+    procedure LoadFile(const AFileName: TFileName); virtual;
     function SaveFile: Boolean; virtual;
     function CanClose: Boolean; virtual;
 
-    property SourceFile: TSourceFile read FSourceFile;
+    property FileName: TFileName read FFileName;
     property Modified: Boolean read FModified write SetModified;
 
     property OnStateChange: TSourceEditorNotifyEvent
@@ -61,9 +61,9 @@ implementation
 {*
   [@inheritDoc]
 *}
-function TFrameFunLabySourceEditor.GetSourceFile: TSourceFile;
+function TFrameFunLabySourceEditor.GetFileName: TFileName;
 begin
-  Result := FSourceFile;
+  Result := FFileName;
 end;
 
 {*
@@ -129,16 +129,16 @@ end;
 *}
 function TFrameFunLabySourceEditor.GetUnitName: string;
 begin
-  Result := ChangeFileExt(ExtractFileName(SourceFile.FileName), '');
+  Result := ChangeFileExt(ExtractFileName(FileName), '');
 end;
 
 {*
   Charge un fichier source
-  @param ASourceFile   Fichier source à charger
+  @param AFileName   Nom du fichier à charger
 *}
-procedure TFrameFunLabySourceEditor.LoadFile(ASourceFile: TSourceFile);
+procedure TFrameFunLabySourceEditor.LoadFile(const AFileName: TFileName);
 begin
-  FSourceFile := ASourceFile;
+  FFileName := AFileName;
 
   FModified := False;
 end;

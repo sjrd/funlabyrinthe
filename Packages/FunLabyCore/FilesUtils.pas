@@ -236,6 +236,7 @@ type
 
     function AddSourceFile(const HRef: string): TSourceFile;
     procedure RemoveSourceFile(SourceFile: TSourceFile);
+    function FindSourceFile(const FileName: TFileName): TSourceFile;
 
     procedure GameStarted;
     procedure GameEnded;
@@ -1001,6 +1002,26 @@ end;
 procedure TMasterFile.RemoveSourceFile(SourceFile: TSourceFile);
 begin
   FSourceFiles.Remove(SourceFile);
+end;
+
+{*
+  Trouve un fichier source à partir de son nom
+  @param FileName   Nom de fichier
+  @return Fichier source correspondant, ou nil si inexistant
+*}
+function TMasterFile.FindSourceFile(const FileName: TFileName): TSourceFile;
+var
+  I: Integer;
+begin
+  for I := 0 to SourceFiles.Count-1 do
+  begin
+    Result := SourceFiles[I];
+
+    if AnsiSameText(Result.FileName, FileName) then
+      Exit;
+  end;
+
+  Result := nil;
 end;
 
 {*

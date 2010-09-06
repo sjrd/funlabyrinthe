@@ -102,7 +102,7 @@ type
     FileContents: TSimpleSquaresFileContents; /// Contenu du fichier
     SimpleSquares: TSimpleSquareList;         /// Liste des composants
   protected
-    procedure LoadFile(ASourceFile: TSourceFile); override;
+    procedure LoadFile(const AFileName: TFileName); override;
     function SaveFile: Boolean; override;
 
     function CompileFile(SepiRoot: TSepiRoot;
@@ -150,12 +150,12 @@ const
   @param SourceFile   Fichier source à éditer
   @return Interface vers l'éditeur créé
 *}
-function CreateSimpleSquaresEditor(SourceFile: TSourceFile): ISourceEditor50;
+function CreateSimpleSquaresEditor(const FileName: TFileName): ISourceEditor50;
 var
   Editor: TFrameSimpleSquaresEditor;
 begin
   Editor := TFrameSimpleSquaresEditor.Create(nil);
-  Editor.LoadFile(SourceFile);
+  Editor.LoadFile(FileName);
   Result := Editor as ISourceEditor50;
 end;
 
@@ -323,14 +323,14 @@ end;
   Charge un fichier source
   @param ASourceFile   Fichier source à charger
 *}
-procedure TFrameSimpleSquaresEditor.LoadFile(ASourceFile: TSourceFile);
+procedure TFrameSimpleSquaresEditor.LoadFile(const AFileName: TFileName);
 var
   Document: IXMLDOMDocument;
   I: Integer;
 begin
   inherited;
 
-  Document := LoadXMLDocumentFromFile(SourceFile.FileName);
+  Document := LoadXMLDocumentFromFile(FileName);
 
   SimpleSquares.Clear;
   TFunLabyXMLReader.ReadPersistent(FileContents, Document.documentElement);
@@ -359,7 +359,7 @@ begin
 
   Document.documentElement := FileContentsNode;
 
-  SaveXMLDocumentToFile(Document, SourceFile.FileName);
+  SaveXMLDocumentToFile(Document, FileName);
 
   Result := inherited SaveFile;
 end;
@@ -370,17 +370,16 @@ end;
 function TFrameSimpleSquaresEditor.CompileFile(SepiRoot: TSepiRoot;
   Errors: TSepiCompilerErrorList): TSepiUnit;
 var
-  SrcFileName, DestFileName: TFileName;
+  DestFileName: TFileName;
   SourceFile: TStrings;
 begin
-  SrcFileName := Self.SourceFile.FileName;
-  DestFileName := ChangeFileExt(SrcFileName, '.'+SepiExtension);
+  DestFileName := ChangeFileExt(FileName, '.'+SepiExtension);
 
   SourceFile := TStringList.Create;
   try
     ProduceFunDelphiCode(SourceFile);
 
-    Errors.CurrentFileName := SrcFileName;
+    Errors.CurrentFileName := FileName;
     Result := CompileFunDelphiSource(SepiRoot, Errors, SourceFile,
       DestFileName);
   finally

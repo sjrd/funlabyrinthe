@@ -34,10 +34,10 @@ type
     ['{301FC63B-E81A-4861-A1EA-90AFD1FA038F}']
 
     {*
-      Fichier source ouvert dans l'éditeur
-      @return Fichier source ouvert
+      Nom du fichier ouvert dans l'éditeur
+      @return Nom du fichier ouvert
     *}
-    function GetSourceFile: TSourceFile;
+    function GetFileName: TFileName;
 
     {*
       Contrôle d'édition à placer dans la fiche principale de FunLabyEdit
@@ -80,7 +80,7 @@ type
     *}
     procedure Release;
 
-    property SourceFile: TSourceFile read GetSourceFile;
+    property FileName: TFileName read GetFileName;
     property Control: TControl read GetControl;
     property Modified: Boolean read GetModified;
 
@@ -147,10 +147,11 @@ type
 
   {*
     Type de routine de call-back qui crée un éditeur de fichier source
-    @param SourceFile   Fichier source à éditer
+    @param FileName   Fichier source à éditer
     @return Interface vers l'éditeur créé
   *}
-  TCreateSourceEditorProc = function(SourceFile: TSourceFile): ISourceEditor50;
+  TCreateSourceEditorProc = function(
+    const FileName: TFileName): ISourceEditor50;
 
   {*
     Classe de base pour des tables associatives avec une clef de type string
@@ -187,10 +188,10 @@ type
     procedure AddFilter(const Filter: string);
     procedure RemoveFilter(const Filter: string);
 
-    class function SourceFileKey(SourceFile: TSourceFile): string;
+    class function SourceFileKey(const FileName: TFileName): string;
 
-    function ExistsEditor(SourceFile: TSourceFile): Boolean;
-    function CreateEditor(SourceFile: TSourceFile): ISourceEditor50;
+    function ExistsEditor(const FileName: TFileName): Boolean;
+    function CreateEditor(const FileName: TFileName): ISourceEditor50;
 
     property FilterCount: Integer read GetFilterCount;
     property Filters[Index: Integer]: string read GetFilters;
@@ -447,37 +448,38 @@ end;
 {*
   Obtient la clef d'indexation pour un fichier source donné
   Actuellement, il s'agit de l'extension du nom fichier, sans le point.
-  @param SourceFile   Fichier source
+  @param FileName   Nom du fichier
   @return Clef d'indexation pour ce fichier source
 *}
-class function TSourceEditorList.SourceFileKey(SourceFile: TSourceFile): string;
+class function TSourceEditorList.SourceFileKey(
+  const FileName: TFileName): string;
 begin
-  Result := Copy(ExtractFileExt(SourceFile.FileName), 2, MaxInt);
+  Result := Copy(ExtractFileExt(FileName), 2, MaxInt);
 end;
 
 {*
   Teste s'il existe un éditeur pour un fichier source donné
-  @param SourceFile   Fichier source
+  @param FileName   Nom du fichier à éditer
   @return True s'il existe un éditeur pour ce fichier source, False sinon
 *}
-function TSourceEditorList.ExistsEditor(SourceFile: TSourceFile): Boolean;
+function TSourceEditorList.ExistsEditor(const FileName: TFileName): Boolean;
 begin
-  Result := Exists(SourceFileKey(SourceFile));
+  Result := Exists(SourceFileKey(FileName));
 end;
 
 {*
   Crée un éditeur pour un fichier source donné
-  @param SourceFile   Fichier source
-  @return Un nouvel éditeur pour le fichier SourceFile
+  @param FileName   Nom du fichier à éditer
+  @return Un nouvel éditeur pour le fichier FileName
   @throws EFileError Type de fichier inconnu
 *}
 function TSourceEditorList.CreateEditor(
-  SourceFile: TSourceFile): ISourceEditor50;
+  const FileName: TFileName): ISourceEditor50;
 var
   CreateProc: TCreateSourceEditorProc;
 begin
-  CreateProc := Find(SourceFileKey(SourceFile));
-  Result := CreateProc(SourceFile);
+  CreateProc := Find(SourceFileKey(FileName));
+  Result := CreateProc(FileName);
 end;
 
 {-------------------------------}

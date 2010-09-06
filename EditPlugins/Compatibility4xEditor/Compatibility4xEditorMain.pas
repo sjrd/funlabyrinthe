@@ -37,12 +37,13 @@ implementation
   @param SourceFile   Fichier source à éditer
   @return Interface vers l'éditeur créé
 *}
-function CreateCompatibility4xEditor(SourceFile: TSourceFile): ISourceEditor50;
+function CreateCompatibility4xEditor(
+  const FileName: TFileName): ISourceEditor50;
 var
   Editor: TFrameCompatibility4xEditor;
 begin
   Editor := TFrameCompatibility4xEditor.Create(nil);
-  Editor.LoadFile(SourceFile);
+  Editor.LoadFile(FileName);
   Result := Editor as ISourceEditor50;
 end;
 

@@ -32,7 +32,7 @@ type
     procedure SetupEditSource; dynamic;
     procedure ShowError(Error: TSepiCompilerError); virtual;
 
-    procedure LoadFile(ASourceFile: TSourceFile); override;
+    procedure LoadFile(const AFileName: TFileName); override;
     function SaveFile: Boolean; override;
 
     property EditSource: TFunLabySynEdit read FEditSource;
@@ -137,11 +137,11 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TFrameFunLabySynEditSourceEditor.LoadFile(ASourceFile: TSourceFile);
+procedure TFrameFunLabySynEditSourceEditor.LoadFile(const AFileName: TFileName);
 begin
   inherited;
 
-  EditSource.Lines.LoadFromFile(SourceFile.FileName, GetEncoding);
+  EditSource.Lines.LoadFromFile(FileName, GetEncoding);
   EditSource.Modified := False;
 end;
 
@@ -150,7 +150,7 @@ end;
 *}
 function TFrameFunLabySynEditSourceEditor.SaveFile: Boolean;
 begin
-  EditSource.Lines.SaveToFile(SourceFile.FileName, GetEncoding);
+  EditSource.Lines.SaveToFile(FileName, GetEncoding);
   EditSource.Modified := False;
 
   Result := inherited SaveFile;
