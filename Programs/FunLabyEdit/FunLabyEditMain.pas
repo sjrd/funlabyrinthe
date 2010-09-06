@@ -15,7 +15,8 @@ uses
   FilesUtils, UnitFiles, EditPluginManager, SourceEditors, FileProperties,
   FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile, ExtCtrls, ScSyncObjs,
   CompilerMessages, MapViewer, SepiCompilerErrors, EditMap,
-  SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA;
+  SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA, JvComponentBase,
+  JvDragDrop;
 
 type
   {*
@@ -58,6 +59,7 @@ type
     ActionCompileAndReload: TAction;
     ActionEditMap: TAction;
     ActionVersionCheck: TAction;
+    DropTarget: TJvDropTarget;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -85,6 +87,7 @@ type
     procedure ActionCompileAllExecute(Sender: TObject);
     procedure ActionCompileAndReloadExecute(Sender: TObject);
     procedure ActionHelpTopicsExecute(Sender: TObject);
+    procedure ActionVersionCheckExecute(Sender: TObject);
     procedure ActionAboutExecute(Sender: TObject);
     procedure TabBarEditorsTabSelecting(Sender: TObject; Item: TJvTabBarItem;
       var AllowSelect: Boolean);
@@ -94,7 +97,9 @@ type
     procedure TabBarEditorsTabClosed(Sender: TObject; Item: TJvTabBarItem);
     procedure EditorStateChange(const Sender: ISourceEditor50);
     procedure MessagesShowError(Sender: TObject; Error: TSepiCompilerError);
-    procedure ActionVersionCheckExecute(Sender: TObject);
+    procedure DropTargetDragAccept(Sender: TJvDropTarget; var Accept: Boolean);
+    procedure DropTargetDragDrop(Sender: TJvDropTarget;
+      var Effect: TJvDropEffect; Shift: TShiftState; X, Y: Integer);
   private
     BackgroundTasks: TScTaskQueue; /// Tâches d'arrière-plan
 
@@ -1514,6 +1519,57 @@ begin
 
     if Supports(GetTabEditor(Tab), ISourceCompiler50, SourceCompiler) then
       SourceCompiler.ShowError(Error);
+  end;
+end;
+
+{*
+  Gestionnaire d'événement OnDragAccept du DropTarget
+  @param Sender   Objet qui a déclenché l'événeement
+  @param Accept   En sortie : True pour accepter le fichier
+*}
+procedure TFormMain.DropTargetDragAccept(Sender: TJvDropTarget;
+  var Accept: Boolean);
+var
+  FileNames: TStrings;
+begin
+  Accept := False;
+
+  FileNames := TStringList.Create;
+  try
+    if Sender.GetFilenames(FileNames) <> 1 then
+      Exit;
+
+    if not AnsiSameText(ExtractFileExt(FileNames[0]), FunLabyProjectExt) then
+      Exit;
+
+    Accept := True;
+  finally
+    FileNames.Free;
+  end;
+end;
+
+{*
+  Gestionnaire d'événement OnDragDrop du DropTarget
+  @param Sender   Objet qui a déclenché l'événeement
+  @param Effect   Effet du drop
+*}
+procedure TFormMain.DropTargetDragDrop(Sender: TJvDropTarget;
+  var Effect: TJvDropEffect; Shift: TShiftState; X, Y: Integer);
+var
+  FileNames: TStrings;
+begin
+  FileNames := TStringList.Create;
+  try
+    if Sender.GetFilenames(FileNames) <> 1 then
+      Exit;
+
+    if not AnsiSameText(ExtractFileExt(FileNames[0]), FunLabyProjectExt) then
+      Exit;
+
+    if CloseFile then
+      OpenFile(FileNames[0]);
+  finally
+    FileNames.Free;
   end;
 end;
 

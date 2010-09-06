@@ -295,6 +295,8 @@ procedure EditVersionCheckOptions;
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
 
+  FunLabyProjectExt = '.flp'; /// Extension d'un fichier projet
+
   FunLabyBaseHRef = 'FunLabyBase.bpl'; /// HRef de l'unité FunLabyBase
 
 var

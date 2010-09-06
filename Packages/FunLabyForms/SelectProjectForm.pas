@@ -219,7 +219,10 @@ begin
   if SortColumnIndex = Column.Index then
     SortReverse := not SortReverse
   else
+  begin
     SortColumnIndex := Column.Index;
+    SortReverse := False;
+  end;
 
   ListViewFiles.AlphaSort;
 end;
