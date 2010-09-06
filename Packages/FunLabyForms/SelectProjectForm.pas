@@ -35,13 +35,14 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
-    procedure ListViewFilesClick(Sender: TObject);
-    procedure ListViewFilesDblClick(Sender: TObject);
-    procedure ButtonOKClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
     procedure ListViewFilesColumnClick(Sender: TObject; Column: TListColumn);
     procedure ListViewFilesCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
+    procedure ListViewFilesSelectItem(Sender: TObject; Item: TListItem;
+      Selected: Boolean);
+    procedure ListViewFilesDblClick(Sender: TObject);
+    procedure ButtonOKClick(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
   private
     FFileName: TFileName; /// Nom de fichier sélectionné
 
@@ -256,18 +257,18 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnClick de la liste de fichiers
-  @param Sender    Objet qui a déclenché l'événement
+  Gestionnaire d'événement OnSelectItem de la liste de fichiers
+  @param Sender     Objet qui a déclenché l'événement
+  @param Item       Élément modifié
+  @param Selected   True si l'élément est sélectionné
 *}
-procedure TFormSelectProjectFile.ListViewFilesClick(Sender: TObject);
+procedure TFormSelectProjectFile.ListViewFilesSelectItem(Sender: TObject;
+  Item: TListItem; Selected: Boolean);
 begin
-  if ListViewFiles.Selected <> nil then
+  if Selected then
   begin
-    with ListViewFiles.Selected do
-    begin
-      EditFileName.Text := SubItems[IndexFileName];
-      EditDescription.Text := SubItems[IndexDescription];
-    end;
+      EditFileName.Text := Item.SubItems[IndexFileName];
+      EditDescription.Text := Item.SubItems[IndexDescription];
   end;
 end;
 

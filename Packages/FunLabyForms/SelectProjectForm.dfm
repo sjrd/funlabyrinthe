@@ -75,10 +75,10 @@ object FormSelectProjectFile: TFormSelectProjectFile
     SortType = stData
     TabOrder = 0
     ViewStyle = vsReport
-    OnClick = ListViewFilesClick
     OnColumnClick = ListViewFilesColumnClick
     OnCompare = ListViewFilesCompare
     OnDblClick = ListViewFilesDblClick
+    OnSelectItem = ListViewFilesSelectItem
   end
   object PanelBottom: TPanel
     Left = 0
