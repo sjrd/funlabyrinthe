@@ -267,17 +267,17 @@ begin
     Exit;
   end;
 
+  WasPaused := Master.Paused;
+  if (not WasPaused) and (not TryPause) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
   if DontSave or Master.Terminated then
     Result := True
   else
   begin
-    WasPaused := Master.Paused;
-    if (not WasPaused) and (not TryPause) then
-    begin
-      Result := False;
-      Exit;
-    end;
-
     try
       case ShowDialog(sExitConfirmTitle, sExitConfirm,
           dtConfirmation, dbYesNoCancel) of
@@ -584,8 +584,8 @@ end;
 *}
 procedure TFormMain.MenuReloadGameClick(Sender: TObject);
 begin
-  CloseGame(True);
-  NewGame(LastFileName);
+  if CloseGame(True) then
+    NewGame(LastFileName);
 end;
 
 {*
