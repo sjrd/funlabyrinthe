@@ -424,6 +424,7 @@ end;
 procedure TFormMain.OpenTab(const FileName: TFileName);
 var
   Editor: ISourceEditor50;
+  SourceFile: TSourceFile;
   EditorUsingOTA: ISourceEditorUsingOTA50;
   EditorControl: TControl;
   Tab: TJvTabBarItem;
@@ -434,11 +435,18 @@ begin
   except
     on Error: Exception do
     begin
-      if ShowDialog(SErrorTitle, Format(SErrorWhileOpeningSourceFile,
-        [Error.Message]), dtError, dbYesNo, 2) = drYes then
+      SourceFile := MasterFile.FindSourceFile(FileName);
+
+      if SourceFile = nil then
       begin
-        { TODO 5 : Remove source file on error }
-        //RemoveSourceFile(SourceFile);
+        ShowDialog(SErrorTitle, Error.Message, dtError);
+      end else
+      begin
+        if ShowDialog(SErrorTitle, Format(SErrorWhileOpeningSourceFile,
+          [Error.Message]), dtError, dbYesNo, 2) = drYes then
+        begin
+          RemoveSourceFile(SourceFile);
+        end;
       end;
 
       Exit;
@@ -529,16 +537,29 @@ procedure TFormMain.OpenFile(const FileName: TFileName);
 begin
   NeedBaseSepiRoot;
 
-  // Try not to look for trouble more than necessary
-  while not BackgroundTasks.Ready do
-    Sleep(50);
+  if HasExtension(FileName, FunLabyProjectExt) then
+  begin
+    // Load a new project
 
-  MasterFile := TMasterFile.Create(BaseSepiRoot, FileName, fmEdit);
-  try
-    LoadFile;
-  except
-    BackgroundDiscard(MasterFile);
-    raise;
+    if not CloseFile then
+      Exit;
+
+    // Try not to look for trouble more than necessary
+    while not BackgroundTasks.Ready do
+      Sleep(50);
+
+    MasterFile := TMasterFile.Create(BaseSepiRoot, FileName, fmEdit);
+    try
+      LoadFile;
+    except
+      BackgroundDiscard(MasterFile);
+      raise;
+    end;
+  end else
+  begin
+    // Just open an editor
+
+    OpenTab(FileName);
   end;
 end;
 
@@ -673,8 +694,6 @@ begin
     end;
 
     // Actual reload
-    if not CloseFile then
-      Exit;
     OpenFile(FileName);
 
     // Restore open tabs
@@ -841,17 +860,14 @@ end;
 procedure TFormMain.AddSourceFile(const FileName: TFileName);
 var
   SourceFile: TSourceFile;
-  I: Integer;
   Action: TAction;
 begin
   // Vérifier que ce fichier source n'est pas déjà attaché au projet
-  for I := 0 to MasterFile.SourceFiles.Count-1 do
+  SourceFile := MasterFile.FindSourceFile(FileName);
+  if SourceFile <> nil then
   begin
-    if SameFileName(MasterFile.SourceFiles[I].FileName, FileName) then
-    begin
-      ShowDialog(SDuplicateSourceTitle, SDuplicateSource, dtError);
-      Exit;
-    end;
+    OpenTab(FileName);
+    Exit;
   end;
 
   // Créer le fichier source
@@ -1078,9 +1094,6 @@ end;
 *}
 procedure TFormMain.ActionOpenFileExecute(Sender: TObject);
 begin
-  if not CloseFile then
-    Exit;
-
   if OpenDialog.Execute then
   begin
     SaveDialog.FileName := OpenDialog.FileName;
@@ -1536,18 +1549,32 @@ procedure TFormMain.DropTargetDragAccept(Sender: TJvDropTarget;
   var Accept: Boolean);
 var
   FileNames: TStrings;
+  I: Integer;
 begin
-  Accept := False;
-
   FileNames := TStringList.Create;
   try
-    if Sender.GetFilenames(FileNames) <> 1 then
-      Exit;
+    Sender.GetFilenames(FileNames);
 
-    if not AnsiSameText(ExtractFileExt(FileNames[0]), FunLabyProjectExt) then
-      Exit;
-
-    Accept := True;
+    if (FileNames.Count = 1) and
+      HasExtension(FileNames[0], FunLabyProjectExt) then
+    begin
+      // Project file, OK
+    end else if MasterFile = nil then
+    begin
+      // No project file open, not OK
+      Accept := False;
+    end else
+    begin
+      // Editor files
+      for I := 0 to FileNames.Count-1 do
+      begin
+        if not SourceFileEditors.ExistsEditor(FileNames[I]) then
+        begin
+          Accept := False;
+          Exit;
+        end;
+      end;
+    end;
   finally
     FileNames.Free;
   end;
@@ -1562,17 +1589,14 @@ procedure TFormMain.DropTargetDragDrop(Sender: TJvDropTarget;
   var Effect: TJvDropEffect; Shift: TShiftState; X, Y: Integer);
 var
   FileNames: TStrings;
+  I: Integer;
 begin
   FileNames := TStringList.Create;
   try
-    if Sender.GetFilenames(FileNames) <> 1 then
-      Exit;
+    Sender.GetFilenames(FileNames);
 
-    if not AnsiSameText(ExtractFileExt(FileNames[0]), FunLabyProjectExt) then
-      Exit;
-
-    if CloseFile then
-      OpenFile(FileNames[0]);
+    for I := 0 to FileNames.Count-1 do
+      OpenFile(FileNames[I]);
   finally
     FileNames.Free;
   end;

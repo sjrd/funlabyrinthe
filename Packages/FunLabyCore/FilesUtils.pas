@@ -285,6 +285,9 @@ type
     function Find(const Extension: string): TUnitFileClass;
   end;
 
+function HasExtension(const FileName: TFileName;
+  const Extension: string): Boolean;
+
 function HRefToFileName(const HRef: string;
   const BaseDirs: array of TFileName): TFileName;
 function FileNameToHRef(const FileName: TFileName;
@@ -296,7 +299,7 @@ procedure EditVersionCheckOptions;
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
 
-  FunLabyProjectExt = '.flp'; /// Extension d'un fichier projet
+  FunLabyProjectExt = 'flp'; /// Extension d'un fichier projet
 
   FunLabyBaseHRef = 'FunLabyBase.bpl'; /// HRef de l'unité FunLabyBase
 
@@ -308,6 +311,18 @@ implementation
 
 uses
   StrUtils, ScStrUtils, IniFiles, Variants, MSXML, ActiveX;
+
+{*
+  Teste si un nom de fichier donné a une extension donnée
+  @param FileName   Nom de fichier
+  @param Extension   Extension
+  @return True si FileName a Extension comme extension
+*}
+function HasExtension(const FileName: TFileName;
+  const Extension: string): Boolean;
+begin
+  Result := AnsiSameText(ExtractFileExt(FileName), '.'+Extension);
+end;
 
 {*
   Convertit un HRef en nom de fichier
