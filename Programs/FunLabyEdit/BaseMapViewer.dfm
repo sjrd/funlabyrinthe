@@ -77,6 +77,14 @@ object FrameBaseMapViewer: TFrameBaseMapViewer
       Height = 13
       Caption = 'Outil :'
     end
+    object LabelScale: TLabel
+      Left = 237
+      Top = 40
+      Width = 33
+      Height = 13
+      Anchors = [akRight, akBottom]
+      Caption = 'Zoom :'
+    end
     object StaticPosition: TStaticText
       Left = 64
       Top = 8
@@ -136,6 +144,17 @@ object FrameBaseMapViewer: TFrameBaseMapViewer
       Value = 0
       OnChange = EditFloorChange
     end
+    object TrackBarScale: TTrackBar
+      Left = 230
+      Top = 55
+      Width = 123
+      Height = 34
+      Anchors = [akRight, akBottom]
+      Min = 1
+      Position = 10
+      TabOrder = 6
+      OnChange = TrackBarScaleChange
+    end
   end
   inline MapView: TFrameMapImage
     Left = 0
@@ -144,17 +163,16 @@ object FrameBaseMapViewer: TFrameBaseMapViewer
     Height = 294
     Align = alClient
     TabOrder = 2
-    ExplicitLeft = 48
-    ExplicitTop = 80
-    ExplicitWidth = 257
-    ExplicitHeight = 193
+    ExplicitTop = 21
+    ExplicitWidth = 364
+    ExplicitHeight = 294
     inherited MapView: TImgView32
       Width = 364
       Height = 294
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 321
-      ExplicitHeight = 241
+      ExplicitWidth = 364
+      ExplicitHeight = 294
     end
   end
 end

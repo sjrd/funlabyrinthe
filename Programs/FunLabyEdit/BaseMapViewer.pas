@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, StdCtrls, Spin, ExtCtrls, Tabs, ScUtils, FunLabyUtils, FilesUtils,
-  GR32, GR32_Image, MapImage;
+  GR32, GR32_Image, MapImage, ComCtrls;
 
 type
   {*
@@ -29,11 +29,14 @@ type
     StaticObstacle: TStaticText;
     EditFloor: TSpinEdit;
     MapView: TFrameMapImage;
+    TrackBarScale: TTrackBar;
+    LabelScale: TLabel;
     procedure MapTabSetChange(Sender: TObject; NewTab: Integer;
       var AllowChange: Boolean);
     procedure MapViewClickSquare(Sender: TObject; const QPos: TQualifiedPos);
     procedure MapViewHoverSquare(Sender: TObject; const QPos: TQualifiedPos);
     procedure EditFloorChange(Sender: TObject);
+    procedure TrackBarScaleChange(Sender: TObject);
   private
     FMaster: TMaster; /// Maître FunLabyrinthe
 
@@ -337,6 +340,15 @@ end;
 procedure TFrameBaseMapViewer.EditFloorChange(Sender: TObject);
 begin
   MapView.Floor := EditFloor.Value;
+end;
+
+{*
+  Gestionnaire d'événement OnChange de la trackbar de zoom
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFrameBaseMapViewer.TrackBarScaleChange(Sender: TObject);
+begin
+  MapView.Scale := TrackBarScale.Position * 0.1;
 end;
 
 end.
