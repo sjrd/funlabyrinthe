@@ -10,7 +10,7 @@ unit FLBPlank;
 interface
 
 uses
-  SysUtils, Classes, Graphics, StrUtils, ScUtils, ScDelphiLanguage,
+  SysUtils, Classes, Graphics, StrUtils, ScUtils, ScTypInfo,
   FunLabyUtils, Generics, FLBCommon, GR32;
 
 const {don't localize}

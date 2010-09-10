@@ -9,7 +9,7 @@ interface
 
 uses
   Windows, SysUtils, Forms, Classes, Controls, Graphics, Dialogs, StdCtrls,
-  StrUtils, Math, TypInfo, ScUtils, ScLists, ScDelphiLanguage, SdDialogs,
+  StrUtils, Math, TypInfo, ScUtils, ScLists, SdDialogs,
   FunLabyUtils, FunLabyCoreConsts, GR32;
 
 type

@@ -11,7 +11,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Grids, ValEdit, ScDelphiLanguage, FunLabyUtils, FilesUtils;
+  Dialogs, StdCtrls, Grids, ValEdit, FunLabyUtils, FilesUtils;
 
 resourcestring
   sUnitParamsCaption = 'Paramètres de l''unité';
@@ -145,7 +145,7 @@ end;
 procedure TFormParameters.ValueListParamsValidate(Sender: TObject;
   ACol, ARow: Integer; const KeyName, KeyValue: string);
 begin
-  if not CorrectIdentifier(KeyName) then
+  if not IsValidIdent(KeyName) then
     raise EConvertError.Create(sWrongKeyFormat);
 
   if (DataType = dtInteger) and (KeyValue <> '') then

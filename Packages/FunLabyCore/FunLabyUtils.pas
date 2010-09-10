@@ -2079,7 +2079,7 @@ function FunLabyFindClass(const ClassName: string): TFunLabyPersistentClass;
 implementation
 
 uses
-  IniFiles, StrUtils, Forms, Math, ScStrUtils, ScDelphiLanguage,
+  IniFiles, StrUtils, Forms, Math, ScStrUtils,
   ScCompilerMagic, ScTypInfo, GraphicEx;
 
 type

@@ -9,7 +9,7 @@ interface
 
 uses
   Windows, Types, SysUtils, Classes, StrUtils, TypInfo, Contnrs, SysConst,
-  ScUtils, ScStrUtils, ScDelphiLanguage, FunLabyUtils,
+  ScUtils, ScStrUtils, FunLabyUtils,
   SepiCore,
   SepiReflectionCore, SepiMembers, SepiOrdTypes, SepiStrTypes, SepiArrayTypes,
   SepiOpCodes,

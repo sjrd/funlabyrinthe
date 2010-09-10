@@ -3,7 +3,7 @@ unit SimpleSquaresUtils;
 interface
 
 uses
-  SysUtils, Classes, Graphics, Contnrs, ScUtils, ScDelphiLanguage, FunLabyUtils,
+  SysUtils, Classes, Graphics, Contnrs, ScUtils, ScTypInfo, FunLabyUtils,
   FunLabyEditOTA, GR32;
 
 resourcestring

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, TypInfo, JvExControls, JvInspector, JvResources, ScDelphiLanguage,
+  Dialogs, TypInfo, JvExControls, JvInspector, JvResources, ScUtils,
   SdDialogs, FunLabyUtils, FunLabyEditConsts, FunLabyEditTypes,
   SepiReflectionCore, SepiSystemUnit, FilesUtils, StrUtils, StdCtrls, Buttons,
   ToolWin, ComCtrls, ExtCtrls, ImgList, PainterEditor, GR32;

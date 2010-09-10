@@ -3,7 +3,7 @@ unit SimpleSquaresActions;
 interface
 
 uses
-  SysUtils, Classes, Graphics, TypInfo, ScUtils, ScDelphiLanguage, SdDialogs,
+  SysUtils, Classes, Graphics, TypInfo, ScUtils, ScTypInfo, SdDialogs,
   FunLabyUtils, SimpleSquaresUtils, FunLabyCoreConsts, GR32;
 
 resourcestring
