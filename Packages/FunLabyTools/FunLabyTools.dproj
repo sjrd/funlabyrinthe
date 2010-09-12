@@ -9,6 +9,52 @@
 			<ProjectVersion>12.0</ProjectVersion>
 			<Config Condition="'$(Config)'==''">Debug</Config>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\6.0\Bpl\FunLabyTools.bpl</DCC_DependencyCheckOutputName>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_Description>FunLabyrinthe tools</DCC_Description>
+			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+			<DesignOnlyPackage>false</DesignOnlyPackage>
+			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+			<GenDll>true</GenDll>
+			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
+			<GenPackage>true</GenPackage>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<Version>7.0</Version>
+			<DCC_DebugInformation>False</DCC_DebugInformation>
+			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SYMBOL_PLATFORM>False</DCC_SYMBOL_PLATFORM>
+			<DCC_UNIT_PLATFORM>False</DCC_UNIT_PLATFORM>
+			<DCC_COMPARING_SIGNED_UNSIGNED>False</DCC_COMPARING_SIGNED_UNSIGNED>
+			<DCC_COMBINING_SIGNED_UNSIGNED>False</DCC_COMBINING_SIGNED_UNSIGNED>
+			<DCC_DUPLICATE_CTOR_DTOR>False</DCC_DUPLICATE_CTOR_DTOR>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_DependencyCheckOutputName>..\..\FunLabyTools.bpl</DCC_DependencyCheckOutputName>
+			<Version>7.0</Version>
+			<DCC_SYMBOL_PLATFORM>False</DCC_SYMBOL_PLATFORM>
+			<DCC_UNIT_PLATFORM>False</DCC_UNIT_PLATFORM>
+			<DCC_COMPARING_SIGNED_UNSIGNED>False</DCC_COMPARING_SIGNED_UNSIGNED>
+			<DCC_COMBINING_SIGNED_UNSIGNED>False</DCC_COMBINING_SIGNED_UNSIGNED>
+			<DCC_DUPLICATE_CTOR_DTOR>False</DCC_DUPLICATE_CTOR_DTOR>
+			<DCC_BplOutput>.\..\..\</DCC_BplOutput>
+		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
 			<Borland.ProjectType>Package</Borland.ProjectType>
@@ -60,12 +106,6 @@
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>
-		<PropertyGroup/>
-		<PropertyGroup/>
-		<PropertyGroup/>
-		<PropertyGroup/>
-		<PropertyGroup/>
-		<PropertyGroup/>
 		<ItemGroup>
 			<DelphiCompile Include="FunLabyTools.dpk">
 				<MainSource>MainSource</MainSource>
@@ -100,52 +140,6 @@
 		</ItemGroup>
 		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
 		<PropertyGroup>
-			<PreBuildEvent>$(PROJECTDIR)\SepiImportFunLabyTools.bat -v6.0</PreBuildEvent>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
-			<Base>true</Base>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
-			<Cfg_1>true</Cfg_1>
-			<CfgParent>Base</CfgParent>
-			<Base>true</Base>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
-			<Cfg_2>true</Cfg_2>
-			<CfgParent>Base</CfgParent>
-			<Base>true</Base>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\6.0\Bpl\FunLabyTools.bpl</DCC_DependencyCheckOutputName>
-			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_Description>FunLabyrinthe tools</DCC_Description>
-			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
-			<DesignOnlyPackage>false</DesignOnlyPackage>
-			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-			<GenDll>true</GenDll>
-			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
-			<GenPackage>true</GenPackage>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<Version>7.0</Version>
-			<DCC_DebugInformation>False</DCC_DebugInformation>
-			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
-			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-			<DCC_SYMBOL_PLATFORM>False</DCC_SYMBOL_PLATFORM>
-			<DCC_UNIT_PLATFORM>False</DCC_UNIT_PLATFORM>
-			<DCC_COMPARING_SIGNED_UNSIGNED>False</DCC_COMPARING_SIGNED_UNSIGNED>
-			<DCC_COMBINING_SIGNED_UNSIGNED>False</DCC_COMBINING_SIGNED_UNSIGNED>
-			<DCC_DUPLICATE_CTOR_DTOR>False</DCC_DUPLICATE_CTOR_DTOR>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\FunLabyTools.bpl</DCC_DependencyCheckOutputName>
-			<Version>7.0</Version>
-			<DCC_SYMBOL_PLATFORM>False</DCC_SYMBOL_PLATFORM>
-			<DCC_UNIT_PLATFORM>False</DCC_UNIT_PLATFORM>
-			<DCC_COMPARING_SIGNED_UNSIGNED>False</DCC_COMPARING_SIGNED_UNSIGNED>
-			<DCC_COMBINING_SIGNED_UNSIGNED>False</DCC_COMBINING_SIGNED_UNSIGNED>
-			<DCC_DUPLICATE_CTOR_DTOR>False</DCC_DUPLICATE_CTOR_DTOR>
-			<DCC_BplOutput>.\..\..\</DCC_BplOutput>
+			<PreBuildEvent><![CDATA[$(PROJECTDIR)\SepiImportFunLabyTools.bat]]></PreBuildEvent>
 		</PropertyGroup>
 	</Project>

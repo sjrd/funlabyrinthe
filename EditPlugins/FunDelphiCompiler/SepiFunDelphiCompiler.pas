@@ -1016,7 +1016,7 @@ begin
   for I := 0 to UnitCompiler.MethodCount-1 do
     UnitCompiler.Methods[I].Complete;
 
-  SepiUnit.Complete;
+  UnitCompiler.CompleteUnit;
 
   inherited;
 end;

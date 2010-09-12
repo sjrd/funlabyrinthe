@@ -106,7 +106,7 @@ type
   *}
   TSepiFunDelphiLanguageRules = class(TSepiDelphiLanguageRules)
   protected
-    function AddClassIntfMemberToExpression(const Expression: ISepiExpression;
+    function AddMemberToExpression(const Expression: ISepiExpression;
       Context: TSepiComponent; const BaseValue: ISepiReadableValue;
       Member: TSepiMember): Boolean; override;
 
@@ -510,7 +510,7 @@ end;
 {*
   [@inheritDoc]
 *}
-function TSepiFunDelphiLanguageRules.AddClassIntfMemberToExpression(
+function TSepiFunDelphiLanguageRules.AddMemberToExpression(
   const Expression: ISepiExpression; Context: TSepiComponent;
   const BaseValue: ISepiReadableValue; Member: TSepiMember): Boolean;
 begin
@@ -525,7 +525,7 @@ begin
     Exit;
   end;
 
-  Result := inherited AddClassIntfMemberToExpression(Expression, Context,
+  Result := inherited AddMemberToExpression(Expression, Context,
     BaseValue, Member);
 end;
 

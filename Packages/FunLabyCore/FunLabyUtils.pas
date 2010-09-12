@@ -113,10 +113,9 @@ type
     @version 5.0
   *}
   TQualifiedPos = record
+  public
     Map: TMap;          /// Carte, ou nil pour une position nulle
     Position: T3DPoint; /// Position sur la carte, si Map <> nil
-
-  {$IFNDEF SEPIPARSER}
   private
     function GetIsNoQPos: Boolean; inline;
     function GetIsInside: Boolean; inline;
@@ -155,7 +154,6 @@ type
     property ComponentCount: Integer read GetComponentCount;
     property Components[Index: Integer]: TSquareComponent
       read GetComponents write SetComponents;
-  {$ENDIF}
   end;
 
   {*
