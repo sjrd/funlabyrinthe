@@ -168,8 +168,7 @@ type
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
-  if (AClass.InstanceSize - SepiInstSize) =
-    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+  if AClass.InstanceSize = SepiInstSize then
     Exit;
 
   WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBSimpleObjects;%s;%s',
@@ -180,10 +179,10 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TBuoyPlugin, 48, 48);
-  CheckInstanceSize(TBuoys, 60, 60);
-  CheckInstanceSize(TSilverKeys, 60, 60);
-  CheckInstanceSize(TGoldenKeys, 60, 60);
+  CheckInstanceSize(TBuoyPlugin, 52, 52);
+  CheckInstanceSize(TBuoys, 64, 64);
+  CheckInstanceSize(TSilverKeys, 64, 64);
+  CheckInstanceSize(TGoldenKeys, 64, 64);
   {$ASSERTIONS OFF}
 end;
 

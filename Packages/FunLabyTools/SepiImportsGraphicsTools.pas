@@ -153,8 +153,7 @@ type
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
-  if (AClass.InstanceSize - SepiInstSize) =
-    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+  if AClass.InstanceSize = SepiInstSize then
     Exit;
 
   WriteLn(ErrOutput, Format('InstanceSize;%d;%d;GraphicsTools;%s;%s',
@@ -165,7 +164,7 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TAvoidInfiniteRecursionBitmap32, 268, 268);
+  CheckInstanceSize(TAvoidInfiniteRecursionBitmap32, 276, 276);
   {$ASSERTIONS OFF}
 end;
 

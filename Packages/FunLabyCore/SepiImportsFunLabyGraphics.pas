@@ -290,8 +290,7 @@ type
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
-  if (AClass.InstanceSize - SepiInstSize) =
-    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+  if AClass.InstanceSize = SepiInstSize then
     Exit;
 
   WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FunLabyGraphics;%s;%s',
@@ -302,8 +301,8 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TBitmap32Frame, 276, 268);
-  CheckInstanceSize(TAnimatedBitmap32, 292, 276);
+  CheckInstanceSize(TBitmap32Frame, 284, 276);
+  CheckInstanceSize(TAnimatedBitmap32, 300, 284);
   {$ASSERTIONS OFF}
 end;
 

@@ -88,7 +88,7 @@ begin
   Result := ChangeComp(Square, NewComp);
 end;
 
-function IsAnyPosComponent_0(const QPos: TQualifiedPos; Predicate: TPosComponentPredicate): Boolean;
+function IsAnyPosComponent_0(const QPos: TQualifiedPos; const Predicate: TPosComponentPredicate): Boolean;
 begin
   Result := IsAnyPosComponent(QPos, Predicate);
 end;
@@ -165,6 +165,7 @@ end;
 
 procedure InitTypeInfoArray;
 begin
+  TypeInfoArray[0] := TypeInfo(TPosComponentPredicate);
 end;
 
 procedure InitMethodAddresses;
@@ -223,8 +224,7 @@ type
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
-  if (AClass.InstanceSize - SepiInstSize) =
-    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+  if AClass.InstanceSize = SepiInstSize then
     Exit;
 
   WriteLn(ErrOutput, Format('InstanceSize;%d;%d;MapTools;%s;%s',

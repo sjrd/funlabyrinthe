@@ -2368,8 +2368,7 @@ type
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
-  if (AClass.InstanceSize - SepiInstSize) =
-    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+  if AClass.InstanceSize = SepiInstSize then
     Exit;
 
   WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FunLabyUtils;%s;%s',
@@ -2380,51 +2379,51 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(EFunLabyException, 24, 24);
-  CheckInstanceSize(EComponentNotFound, 24, 24);
-  CheckInstanceSize(EInvalidID, 24, 24);
-  CheckInstanceSize(EInvalidCommand, 24, 24);
-  CheckInstanceSize(EUnsupportedCommand, 24, 24);
-  CheckInstanceSize(EBadSquareDefException, 24, 24);
-  CheckInstanceSize(TDrawSquareContext, 64, 4);
-  CheckInstanceSize(TDrawViewContext, 72, 4);
-  CheckInstanceSize(TKeyEventContext, 12, 4);
-  CheckInstanceSize(TMoveContext, 68, 4);
-  CheckInstanceSize(TFunLabyPersistent, 8, 4);
-  CheckInstanceSize(TInterfacedFunLabyPersistent, 16, 8);
-  CheckInstanceSize(TFunLabyCollection, 12, 8);
-  CheckInstanceSize(TFunLabyFiler, 16, 4);
-  CheckInstanceSize(TFunLabyReader, 16, 16);
-  CheckInstanceSize(TFunLabyWriter, 16, 16);
-  CheckInstanceSize(TFunLabyStoredDefaultsFiler, 16, 16);
-  CheckInstanceSize(TImagesMaster, 16, 4);
-  CheckInstanceSize(TPainter, 40, 8);
-  CheckInstanceSize(TPlayerData, 16, 8);
-  CheckInstanceSize(TFunLabyComponent, 36, 8);
-  CheckInstanceSize(TVisualComponent, 56, 36);
-  CheckInstanceSize(TComponentCreator, 36, 36);
-  CheckInstanceSize(TPlugin, 48, 36);
-  CheckInstanceSize(TObjectDefPlayerData, 20, 16);
-  CheckInstanceSize(TObjectDef, 60, 56);
-  CheckInstanceSize(TSquareComponent, 56, 56);
-  CheckInstanceSize(TField, 56, 56);
-  CheckInstanceSize(TEffect, 60, 56);
-  CheckInstanceSize(TTool, 56, 56);
-  CheckInstanceSize(TObstacle, 56, 56);
-  CheckInstanceSize(TSquare, 76, 56);
-  CheckInstanceSize(TMap, 64, 36);
-  CheckInstanceSize(TPosComponent, 76, 56);
-  CheckInstanceSize(TSquareModifier, 128, 76);
-  CheckInstanceSize(TVehiclePlugin, 52, 48);
-  CheckInstanceSize(TVehicle, 156, 128);
-  CheckInstanceSize(TMobileComponent, 92, 76);
-  CheckInstanceSize(TPlayerMode, 28, 16);
-  CheckInstanceSize(TLabyrinthPlayerMode, 28, 28);
-  CheckInstanceSize(TPlayer, 164, 92);
-  CheckInstanceSize(TTimerEntry, 12, 8);
-  CheckInstanceSize(TNotificationMsgTimerEntry, 20, 12);
-  CheckInstanceSize(TTimerCollection, 32, 12);
-  CheckInstanceSize(TMaster, 88, 8);
+  CheckInstanceSize(EFunLabyException, 28, 28);
+  CheckInstanceSize(EComponentNotFound, 28, 28);
+  CheckInstanceSize(EInvalidID, 28, 28);
+  CheckInstanceSize(EInvalidCommand, 28, 28);
+  CheckInstanceSize(EUnsupportedCommand, 28, 28);
+  CheckInstanceSize(EBadSquareDefException, 28, 28);
+  CheckInstanceSize(TDrawSquareContext, 68, 8);
+  CheckInstanceSize(TDrawViewContext, 76, 8);
+  CheckInstanceSize(TKeyEventContext, 16, 8);
+  CheckInstanceSize(TMoveContext, 72, 8);
+  CheckInstanceSize(TFunLabyPersistent, 12, 8);
+  CheckInstanceSize(TInterfacedFunLabyPersistent, 20, 12);
+  CheckInstanceSize(TFunLabyCollection, 16, 12);
+  CheckInstanceSize(TFunLabyFiler, 20, 8);
+  CheckInstanceSize(TFunLabyReader, 20, 20);
+  CheckInstanceSize(TFunLabyWriter, 20, 20);
+  CheckInstanceSize(TFunLabyStoredDefaultsFiler, 20, 20);
+  CheckInstanceSize(TImagesMaster, 20, 8);
+  CheckInstanceSize(TPainter, 44, 12);
+  CheckInstanceSize(TPlayerData, 20, 12);
+  CheckInstanceSize(TFunLabyComponent, 40, 12);
+  CheckInstanceSize(TVisualComponent, 60, 40);
+  CheckInstanceSize(TComponentCreator, 40, 40);
+  CheckInstanceSize(TPlugin, 52, 40);
+  CheckInstanceSize(TObjectDefPlayerData, 24, 20);
+  CheckInstanceSize(TObjectDef, 64, 60);
+  CheckInstanceSize(TSquareComponent, 60, 60);
+  CheckInstanceSize(TField, 60, 60);
+  CheckInstanceSize(TEffect, 64, 60);
+  CheckInstanceSize(TTool, 60, 60);
+  CheckInstanceSize(TObstacle, 60, 60);
+  CheckInstanceSize(TSquare, 80, 60);
+  CheckInstanceSize(TMap, 68, 40);
+  CheckInstanceSize(TPosComponent, 80, 60);
+  CheckInstanceSize(TSquareModifier, 132, 80);
+  CheckInstanceSize(TVehiclePlugin, 56, 52);
+  CheckInstanceSize(TVehicle, 164, 132);
+  CheckInstanceSize(TMobileComponent, 96, 80);
+  CheckInstanceSize(TPlayerMode, 32, 20);
+  CheckInstanceSize(TLabyrinthPlayerMode, 32, 32);
+  CheckInstanceSize(TPlayer, 168, 96);
+  CheckInstanceSize(TTimerEntry, 16, 12);
+  CheckInstanceSize(TNotificationMsgTimerEntry, 24, 16);
+  CheckInstanceSize(TTimerCollection, 36, 16);
+  CheckInstanceSize(TMaster, 92, 12);
   {$ASSERTIONS OFF}
 end;
 

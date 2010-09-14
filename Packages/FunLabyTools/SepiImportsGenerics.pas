@@ -349,8 +349,7 @@ type
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
-  if (AClass.InstanceSize - SepiInstSize) =
-    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+  if AClass.InstanceSize = SepiInstSize then
     Exit;
 
   WriteLn(ErrOutput, Format('InstanceSize;%d;%d;Generics;%s;%s',
@@ -361,15 +360,15 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TGround, 56, 56);
-  CheckInstanceSize(TDecorativeEffect, 60, 60);
-  CheckInstanceSize(TCounterEffectPlayerData, 20, 16);
-  CheckInstanceSize(TCounterEffect, 64, 60);
-  CheckInstanceSize(TPushButton, 68, 64);
-  CheckInstanceSize(TSwitch, 76, 64);
-  CheckInstanceSize(TDecorativeObstacle, 56, 56);
-  CheckInstanceSize(TObjectTool, 72, 56);
-  CheckInstanceSize(TOverriddenSquare, 96, 76);
+  CheckInstanceSize(TGround, 60, 60);
+  CheckInstanceSize(TDecorativeEffect, 64, 64);
+  CheckInstanceSize(TCounterEffectPlayerData, 24, 20);
+  CheckInstanceSize(TCounterEffect, 68, 64);
+  CheckInstanceSize(TPushButton, 72, 68);
+  CheckInstanceSize(TSwitch, 80, 68);
+  CheckInstanceSize(TDecorativeObstacle, 60, 60);
+  CheckInstanceSize(TObjectTool, 76, 60);
+  CheckInstanceSize(TOverriddenSquare, 100, 80);
   {$ASSERTIONS OFF}
 end;
 

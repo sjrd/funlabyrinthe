@@ -169,8 +169,7 @@ type
 procedure CheckInstanceSize(AClass: TClass;
   SepiInstSize, ParentSepiInstSize: Longint);
 begin
-  if (AClass.InstanceSize - SepiInstSize) =
-    (AClass.ClassParent.InstanceSize - ParentSepiInstSize) then
+  if AClass.InstanceSize = SepiInstSize then
     Exit;
 
   WriteLn(ErrOutput, Format('InstanceSize;%d;%d;FLBShowMessage;%s;%s',
@@ -181,9 +180,9 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TCustomShowMessagePlugin, 48, 48);
-  CheckInstanceSize(TDefaultShowMessagePluginPlayerData, 100, 16);
-  CheckInstanceSize(TDefaultShowMessagePlugin, 48, 48);
+  CheckInstanceSize(TCustomShowMessagePlugin, 52, 52);
+  CheckInstanceSize(TDefaultShowMessagePluginPlayerData, 104, 20);
+  CheckInstanceSize(TDefaultShowMessagePlugin, 52, 52);
   {$ASSERTIONS OFF}
 end;
 
