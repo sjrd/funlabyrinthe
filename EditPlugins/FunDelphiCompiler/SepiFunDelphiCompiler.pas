@@ -948,7 +948,7 @@ var
 begin
   SepiContext.CurrentVisibility := mvPrivate;
 
-  SepiMethod := TSepiMethod.Create(SepiContext, 'InitializeUnit', nil,
+  SepiMethod := TSepiMethod.Create(SepiContext, 'InitializeUnit',
     'static procedure(Master: FunLabyUtils.TMaster; Params: Classes.TStrings)');
   UnitCompiler.FindMethodCompiler(SepiMethod, True);
 
@@ -2037,7 +2037,7 @@ var
   ResultValue: ISepiWritableValue;
   RightValue: ISepiReadableValue;
 begin
-  SepiMethod := TSepiMethod.Create(SepiContext, 'GetComponentClass', nil,
+  SepiMethod := TSepiMethod.Create(SepiContext, 'GetComponentClass',
     FInheritedMethod.Signature, mlkOverride);
 
   Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
@@ -2237,7 +2237,7 @@ begin
 
   Assert(Previous.LinkKind = mlkVirtual);
 
-  Result := TSepiMethod.Create(SepiContext, CreateName, nil,
+  Result := TSepiMethod.Create(SepiContext, CreateName,
     Previous.Signature, mlkOverride);
   Compiler := UnitCompiler.FindMethodCompiler(Result, True);
 
@@ -2319,7 +2319,7 @@ var
   Compiler: TSepiMethodCompiler;
   ResultValue: ISepiWritableValue;
 begin
-  SepiMethod := TSepiMethod.Create(SepiContext, GetMethodName, nil,
+  SepiMethod := TSepiMethod.Create(SepiContext, GetMethodName,
     FInheritedMethod.Signature, mlkOverride);
 
   Compiler := UnitCompiler.FindMethodCompiler(SepiMethod, True);
@@ -2516,7 +2516,7 @@ begin
     Signature.ReturnType := SystemUnit.Boolean;
     Signature.Complete;
 
-    SepiMethod := SepiClass.AddMethod(IsStoredMethodName, nil, Signature);
+    SepiMethod := SepiClass.AddMethod(IsStoredMethodName, Signature);
   finally
     Signature.Free;
   end;
@@ -2560,7 +2560,7 @@ begin
       CopySignature(Signature, SepiMethod.Signature);
       Signature.Complete;
 
-      SepiMethod := SepiClass.AddMethod('StoreDefaults', nil,
+      SepiMethod := SepiClass.AddMethod('StoreDefaults',
         Signature, mlkOverride);
     finally
       Signature.Free;
@@ -2953,7 +2953,7 @@ begin
 
   if AbleToMethod.Owner <> SepiClass then
   begin
-    AbleToMethod := TSepiMethod.Create(SepiClass, AbleToName, nil,
+    AbleToMethod := TSepiMethod.Create(SepiClass, AbleToName,
       AbleToMethod.Signature, mlkOverride);
   end;
 
@@ -3056,7 +3056,7 @@ begin
 
     if UseForMethod.Owner <> SepiClass then
     begin
-      UseForMethod := TSepiMethod.Create(SepiClass, UseForName, nil,
+      UseForMethod := TSepiMethod.Create(SepiClass, UseForName,
         UseForMethod.Signature, mlkOverride);
     end;
 

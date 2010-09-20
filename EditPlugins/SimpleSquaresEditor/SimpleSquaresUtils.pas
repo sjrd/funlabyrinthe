@@ -229,10 +229,12 @@ type
     FConditionKind: TObstacleConditionKind; /// Type de condition
     FPlayerAction: TPlayerAction;           /// Action que doit faire le joueur
 
-    FFailMessage: string; /// Message à afficher si raté
+    FMessageText: string; /// Texte du message associé
 
     function IsPlayerActionStored: Boolean;
   protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+
     function GetComponentType: string; override;
 
     procedure ProduceInnerClass(Code: TStrings); override;
@@ -246,7 +248,7 @@ type
     property PlayerAction: TPlayerAction read FPlayerAction write FPlayerAction
       stored IsPlayerActionStored;
 
-    property FailMessage: string read FFailMessage write FFailMessage;
+    property MessageText: string read FMessageText write FMessageText;
   end;
 
 const {don't localize}
@@ -837,6 +839,21 @@ end;
 {*
   [@inheritDoc]
 *}
+procedure TSimpleObstacle.DefineProperties(Filer: TFunLabyFiler);
+begin
+  inherited;
+
+  // Backward compatibility
+  if psReading in PersistentState then
+  begin
+    Filer.DefineFieldProperty('FailMessage', TypeInfo(string),
+      @FMessageText, False);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
 function TSimpleObstacle.GetComponentType: string;
 begin
   Result := 'obstacle'; {don't localize}
@@ -849,7 +866,7 @@ procedure TSimpleObstacle.ProduceInnerClass(Code: TStrings);
 begin
   inherited;
 
-  if (ConditionKind = ockNever) and (FailMessage = '') then
+  if (ConditionKind = ockNever) and (MessageText = '') then
     Exit;
 
   Code.Add('  on Pushing do');
@@ -863,26 +880,29 @@ begin
   case ConditionKind of
     ockAlways:
     begin
+      if MessageText <> '' then
+        Code.Add(Format('    Player.ShowMessage(%s);',
+          [StrToStrRepres(MessageText)]));
       Code.Add('    Square.Obstacle := nil;');
     end;
 
     ockNever:
     begin
-      Assert(FailMessage <> '');
+      Assert(MessageText <> '');
       Code.Add(Format('    Player.ShowMessage(%s);',
-        [StrToStrRepres(FailMessage)]));
+        [StrToStrRepres(MessageText)]));
     end;
 
     ockPlayerAction:
     begin
       Code.Add(Format('    if Player can %s then', [PlayerAction]));
-      Code.Add('      Square.Obstacle := nil' + IIF(FailMessage = '', ';', ''));
+      Code.Add('      Square.Obstacle := nil' + IIF(MessageText = '', ';', ''));
 
-      if FailMessage <> '' then
+      if MessageText <> '' then
       begin
         Code.Add('    else');
         Code.Add(Format('      Player.ShowMessage(%s);',
-          [StrToStrRepres(FailMessage)]));
+          [StrToStrRepres(MessageText)]));
       end;
     end;
   end;

@@ -1,10 +1,12 @@
 inherited FrameObstacleEditor: TFrameObstacleEditor
   Width = 441
   Height = 217
+  ExplicitWidth = 441
+  ExplicitHeight = 217
   DesignSize = (
     441
     217)
-  object LabelFailMessage: TLabel
+  object LabelMessageText: TLabel
     Left = 16
     Top = 120
     Width = 297
@@ -50,14 +52,14 @@ inherited FrameObstacleEditor: TFrameObstacleEditor
     TabOrder = 3
     Text = 'EditPlayerAction'
   end
-  object EditFailMessage: TMemo
+  object EditMessageText: TMemo
     Left = 16
     Top = 136
     Width = 409
     Height = 65
     Anchors = [akLeft, akTop, akRight, akBottom]
     Lines.Strings = (
-      'EditFailMessage')
+      'EditMessageText')
     TabOrder = 4
   end
 end

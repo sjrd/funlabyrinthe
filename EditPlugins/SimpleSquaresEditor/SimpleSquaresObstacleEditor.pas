@@ -7,6 +7,15 @@ uses
   Dialogs, StdCtrls, FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils,
   SimpleSquaresEditorPart;
 
+resourcestring
+  SLabelMessageTextCaptionIfAlways =
+    'Message à afficher lorsque le joueur a détruit l''obstacle :';
+  SLabelMessageTextCaptionIfNever =
+    'Message à afficher lorsque le joueur pousse sur l''obstacle :';
+  SLabelMessageTextCaptionIfAction =
+    'Message à afficher lorsque le joueur tente, sans succès, de détruire '+
+    'l''obstacle :';
+
 type
   {*
     Cadre d'édition d'un obstacle
@@ -18,13 +27,15 @@ type
     ButtonNever: TRadioButton;
     ButtonPlayerAction: TRadioButton;
     EditPlayerAction: TEdit;
-    LabelFailMessage: TLabel;
-    EditFailMessage: TMemo;
+    LabelMessageText: TLabel;
+    EditMessageText: TMemo;
     procedure ButtonConditionKindClick(Sender: TObject);
     procedure EditPlayerActionChange(Sender: TObject);
-    procedure EditFailMessageChange(Sender: TObject);
+    procedure EditMessageTextChange(Sender: TObject);
   private
     FCurrentObstacle: TSimpleObstacle; /// Obstacle en cours d'édition
+
+    procedure UpdateLabelMessageTextCaption;
 
     procedure SetCurrentObstacle(Value: TSimpleObstacle);
   public
@@ -39,6 +50,21 @@ implementation
 {----------------------------}
 { TFrameObstacleEditor class }
 {----------------------------}
+
+{*
+  Met à jour le caption du label introduisant le message
+*}
+procedure TFrameObstacleEditor.UpdateLabelMessageTextCaption;
+begin
+  case CurrentObstacle.ConditionKind of
+    ockAlways:
+      LabelMessageText.Caption := SLabelMessageTextCaptionIfAlways;
+    ockNever:
+      LabelMessageText.Caption := SLabelMessageTextCaptionIfNever;
+    ockPlayerAction:
+      LabelMessageText.Caption := SLabelMessageTextCaptionIfAction;
+  end;
+end;
 
 {*
   Modifie l'obstacle à éditer
@@ -58,7 +84,7 @@ begin
     ButtonNever.OnClick := nil;
     ButtonPlayerAction.OnClick := nil;
     EditPlayerAction.OnChange := nil;
-    EditFailMessage.OnChange := nil;
+    EditMessageText.OnChange := nil;
   end;
 
   FCurrentObstacle := Value;
@@ -74,13 +100,15 @@ begin
 
     EditPlayerAction.Enabled := CurrentObstacle.ConditionKind = ockPlayerAction;
     EditPlayerAction.Text := CurrentObstacle.PlayerAction;
-    EditFailMessage.Text := CurrentObstacle.FailMessage;
+    EditMessageText.Text := CurrentObstacle.MessageText;
 
     ButtonAlways.OnClick := ButtonConditionKindClick;
     ButtonNever.OnClick := ButtonConditionKindClick;
     ButtonPlayerAction.OnClick := ButtonConditionKindClick;
     EditPlayerAction.OnChange := EditPlayerActionChange;
-    EditFailMessage.OnChange := EditFailMessageChange;
+    EditMessageText.OnChange := EditMessageTextChange;
+
+    UpdateLabelMessageTextCaption;
 
     Visible := True;
   end;
@@ -95,6 +123,7 @@ begin
   CurrentObstacle.ConditionKind :=
     TObstacleConditionKind(TComponent(Sender).Tag);
   EditPlayerAction.Enabled := CurrentObstacle.ConditionKind = ockPlayerAction;
+  UpdateLabelMessageTextCaption;
   MarkModified;
 end;
 
@@ -112,9 +141,9 @@ end;
   Gestionnaire d'événement OnChange de l'éditeur FailMessage
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFrameObstacleEditor.EditFailMessageChange(Sender: TObject);
+procedure TFrameObstacleEditor.EditMessageTextChange(Sender: TObject);
 begin
-  CurrentObstacle.FailMessage := EditFailMessage.Text;
+  CurrentObstacle.MessageText := EditMessageText.Text;
   MarkModified;
 end;
 
