@@ -1645,6 +1645,10 @@ type
 
     procedure FoundObject(ObjectDef: TObjectDef);
 
+    function ResolveSoundHRef(const HRef: string): TFileName;
+    procedure InternalPlaySound(const Sound: string; Flags: LongWord;
+      Module: HModule = 0);
+
     function GetVisible: Boolean;
 
     procedure SetColor(Value: TColor32);
@@ -1721,6 +1725,8 @@ type
 
     function ShowSelectNumberMsg(const Prompt: string;
       Default, Min, Max: Integer): Integer;
+
+    procedure PlaySound(const HRef: string);
 
     procedure Win;
     procedure Lose;
@@ -2077,7 +2083,7 @@ function FunLabyFindClass(const ClassName: string): TFunLabyPersistentClass;
 implementation
 
 uses
-  IniFiles, StrUtils, Forms, Math, ScStrUtils,
+  IniFiles, StrUtils, Forms, Math, MMSystem, ScStrUtils,
   ScCompilerMagic, ScTypInfo, GraphicEx;
 
 type
@@ -7067,6 +7073,35 @@ begin
 end;
 
 {*
+  Résoud un nom de fichier son
+  @param HRef   HRef du fichier son
+  @return Nom du fichier son, ou '' si non trouvé
+*}
+function TPlayer.ResolveSoundHRef(const HRef: string): TFileName;
+begin
+  Result := fSoundsDir + AnsiReplaceStr(HRef, '/', '\');
+
+  if not FileExists(Result) then
+    Result := '';
+end;
+
+{*
+  Joue un son dans le contexte de ce joueur
+  @param Sound    Identifiant du son
+  @param Flags    Flags
+  @param Module   Handle du module contenant la ressource (optionnel)
+*}
+procedure TPlayer.InternalPlaySound(const Sound: string; Flags: LongWord;
+  Module: HModule = 0);
+begin
+  TThread.Synchronize(TThread.CurrentThread,
+    procedure
+    begin
+      MMSystem.PlaySound(PChar(Sound), Module, Flags);
+    end);
+end;
+
+{*
   Indique si le joueur est visible
   @return True s'il est visible, False sinon
 *}
@@ -7873,6 +7908,15 @@ begin
     Answers[Max-I] := IntToStr(I);
 
   Result := Max - ShowSelectionMsg(Prompt, Answers, Max-Default, True);
+end;
+
+{*
+  Joue un son pour le joueur
+  @param HRef   HRef du fichier son à jouer
+*}
+procedure TPlayer.PlaySound(const HRef: string);
+begin
+  InternalPlaySound(ResolveSoundHRef(HRef), SND_FILENAME or SND_ASYNC);
 end;
 
 {*
