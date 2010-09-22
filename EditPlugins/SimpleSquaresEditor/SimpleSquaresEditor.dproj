@@ -95,6 +95,10 @@
 			<DCCReference Include="SimpleSquaresPlayerColorActionEditor.pas"/>
 			<DCCReference Include="SimpleSquaresReplaceSquareActionEditor.pas"/>
 			<DCCReference Include="SimpleSquaresSimpleMethodActionEditor.pas"/>
+			<DCCReference Include="SimpleSquaresSoundActionEditor.pas">
+				<Form>FrameSoundActionEditor</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

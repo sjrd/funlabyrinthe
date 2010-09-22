@@ -13,6 +13,7 @@ resourcestring
   SEnableEffectActionTitle = 'Activer l''effet %s';
   SDisableEffectActionTitle = 'Désactiver l''effet %s';
   SMessageActionTitle = 'Afficher %s';
+  SPlaySoundTitle = 'Jouer le son %s';
   SPlayerColorActionTitle = 'Changer la couleur du pion en %s';
   SPlayerShowTitle = 'Montrer le joueur';
   SPlayerHideTitle = 'Cacher le joueur';
@@ -193,6 +194,23 @@ type
     property Text: string read FText write FText;
     property OnlyFirstTime: Boolean read FOnlyFirstTime write FOnlyFirstTime
       default False;
+  end;
+
+  {*
+    Action qui joue un son
+    @author sjrd
+    @version 5.1
+  *}
+  TSoundAction = class(TSimpleAction)
+  private
+    FSound: string; /// Son à jouer
+  protected
+    function GetTitle: string; override;
+  public
+    procedure ProduceFunDelphiCode(Code: TStrings;
+      const Indent: string); override;
+  published
+    property Sound: string read FSound write FSound;
   end;
 
   {*
@@ -743,6 +761,27 @@ begin
     [StrToStrRepres(Text)]));
 end;
 
+{--------------------}
+{ TSoundAction class }
+{--------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TSoundAction.GetTitle: string;
+begin
+  Result := Format(SPlaySoundTitle, [Sound]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSoundAction.ProduceFunDelphiCode(Code: TStrings;
+  const Indent: string);
+begin
+  Code.Add(Indent + Format('Player.PlaySound(%s);', [StrToStrRepres(Sound)]));
+end;
+
 {--------------------------}
 { TPlayerColorAction class }
 {--------------------------}
@@ -825,12 +864,12 @@ end;
 initialization
   FunLabyRegisterClasses([
     TReplaceSquareAction, TChangeEffectEnabledAction, TMessageAction,
-    TPlayerColorAction, TSimpleMethodAction
+    TSoundAction, TPlayerColorAction, TSimpleMethodAction
   ]);
 finalization
   FunLabyUnRegisterClasses([
     TReplaceSquareAction, TChangeEffectEnabledAction, TMessageAction,
-    TPlayerColorAction, TSimpleMethodAction
+    TSoundAction, TPlayerColorAction, TSimpleMethodAction
   ]);
 end.
 

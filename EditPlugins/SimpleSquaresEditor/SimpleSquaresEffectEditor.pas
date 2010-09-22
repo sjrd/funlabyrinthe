@@ -7,6 +7,7 @@ uses
   Dialogs, Contnrs, StdCtrls, ExtCtrls, Buttons, FunLabyUtils, FunLabyEditOTA,
   SimpleSquaresUtils, SimpleSquaresEditorPart, SimpleSquaresActions,
   SimpleSquaresReplaceSquareActionEditor, SimpleSquaresMessageActionEditor,
+  SimpleSquaresSoundActionEditor,
   SimpleSquaresChangeEffectEnabledActionEditor,
   SimpleSquaresPlayerColorActionEditor, SimpleSquaresActionEditor,
   SimpleSquaresSimpleMethodActionEditor;
@@ -92,6 +93,7 @@ begin
   AddActionEditor(TFrameReplaceSquareActionEditor.Create(Self));
   AddActionEditor(TFrameChangeEffectEnabledActionEditor.Create(Self));
   AddActionEditor(TFrameMessageActionEditor.Create(Self));
+  AddActionEditor(TFrameSoundActionEditor.Create(Self));
   AddActionEditor(TFramePlayerColorActionEditor.Create(Self));
   AddActionEditor(TFrameSimpleMethodActionEditor.Create(Self));
 end;
@@ -248,6 +250,7 @@ begin
     AddObject('Activer/désactiver un effet',
       TObject(TChangeEffectEnabledAction));
     AddObject('Afficher un message', TObject(TMessageAction));
+    AddObject('Jouer un son', TObject(TSoundAction));
     AddObject('Changer la couleur du pion', TObject(TPlayerColorAction));
     AddObject('Action simple', TObject(TSimpleMethodAction));
   end;

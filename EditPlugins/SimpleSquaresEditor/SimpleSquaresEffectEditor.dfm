@@ -18,8 +18,6 @@ inherited FrameEffectEditor: TFrameEffectEditor
     Height = 271
     Align = alLeft
     TabOrder = 0
-    ExplicitTop = 0
-    ExplicitHeight = 304
     DesignSize = (
       241
       271)
@@ -225,7 +223,6 @@ inherited FrameEffectEditor: TFrameEffectEditor
       TabOrder = 0
       OnClick = ListBoxActionsClick
       OnData = ListBoxActionsData
-      ExplicitHeight = 217
     end
     object ComboBoxNewAction: TComboBox
       Left = 16
@@ -241,7 +238,6 @@ inherited FrameEffectEditor: TFrameEffectEditor
       OnChange = ComboBoxNewActionChange
       Items.Strings = (
         '(Ajouter une action...)')
-      ExplicitTop = 259
     end
   end
   object PanelEvent: TPanel
@@ -251,9 +247,6 @@ inherited FrameEffectEditor: TFrameEffectEditor
     Height = 33
     Align = alTop
     TabOrder = 1
-    ExplicitLeft = 264
-    ExplicitTop = 72
-    ExplicitWidth = 65
     object LabelEvent: TLabel
       Left = 16
       Top = 10

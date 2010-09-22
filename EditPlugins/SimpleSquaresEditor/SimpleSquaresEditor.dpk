@@ -60,7 +60,8 @@ contains
   SimpleSquaresObstacleEditor in 'SimpleSquaresObstacleEditor.pas',
   SimpleSquaresPlayerColorActionEditor in 'SimpleSquaresPlayerColorActionEditor.pas',
   SimpleSquaresReplaceSquareActionEditor in 'SimpleSquaresReplaceSquareActionEditor.pas',
-  SimpleSquaresSimpleMethodActionEditor in 'SimpleSquaresSimpleMethodActionEditor.pas';
+  SimpleSquaresSimpleMethodActionEditor in 'SimpleSquaresSimpleMethodActionEditor.pas',
+  SimpleSquaresSoundActionEditor in 'SimpleSquaresSoundActionEditor.pas' {FrameSoundActionEditor: TFrame};
 
 end.
 
