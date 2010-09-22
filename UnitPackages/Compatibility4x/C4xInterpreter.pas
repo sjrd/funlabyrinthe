@@ -140,6 +140,9 @@ implementation
 
 { Don't localize any of the strings in this implementation! }
 
+uses
+  MMSystem;
+
 const
   cBegin       = 0;  /// Début des commandes
   cReplace     = 0;  /// Commande Remplacer
@@ -1368,13 +1371,22 @@ begin
   else if Sound = 'Erreur' then
     Sound := 'SystemHand';
 
-  try
-    if not ExecuteSound(Sound, stSysSound) then
-      ExecuteSound(Infos.MasterFile.ResolveHRef(Sound, fSoundsDir));
-  except
-    on Error: EInOutError do
-      raise EBadParam.Create(Error.Message);
-  end;
+  Sleep(100); // Make sure the GUI has refreshed the main display
+
+  TThread.Synchronize(TThread.CurrentThread,
+    procedure
+    begin
+      try
+        if not ExecuteSound(Sound, stSysSound, True, 0, SND_NODEFAULT) then
+        begin
+          ExecuteSound(Infos.MasterFile.ResolveHRef(Sound, fSoundsDir),
+            stFileName, True);
+        end;
+      except
+        on Error: EInOutError do
+          raise EBadParam.Create(Error.Message);
+      end;
+    end);
 end;
 
 {*
