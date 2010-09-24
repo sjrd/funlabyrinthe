@@ -11,7 +11,7 @@ interface
 
 uses
   Types, Windows, SysUtils, Classes, Graphics, StrUtils, SyncObjs, ScUtils,
-  ScStrUtils, FunLabyUtils, GR32, GR32_Polygons;
+  ScStrUtils, FunLabyUtils, GR32, GR32_Polygons, GraphicsTools;
 
 const {don't localize}
   /// ID du plug-in d'affichage de message par défaut
@@ -753,6 +753,7 @@ var
 begin
   PlayerData := TDefaultShowMessagePluginPlayerData(
     GetPlayerData(Context.Player));
+
   if not PlayerData.Activated then
     Exit;
 
@@ -763,6 +764,8 @@ begin
     DrawAnswers(Context, PlayerData)
   else
     DrawContinueSymbol(Context, PlayerData);
+
+  CleanRectAlpha(Context.Bitmap, PlayerData.MessageRect);
 end;
 
 end.

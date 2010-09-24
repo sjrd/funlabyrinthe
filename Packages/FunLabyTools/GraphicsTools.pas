@@ -14,7 +14,7 @@ uses
   Types, SysUtils, Graphics, FunLabyUtils, GR32;
 
 type
-  TFieldPredicate = function(Field: TField): Boolean;
+  TFieldPredicate = reference to function(Field: TField): Boolean;
 
   {*
     Bitmap 32 spécialisé permettant d'éviter des récursions infinies
@@ -40,6 +40,9 @@ procedure DissipateNeighbors(Context: TDrawSquareContext;
   const Predicate: TFieldPredicate); overload;
 procedure DissipateNeighbors(Context: TDrawSquareContext); overload;
 procedure DissipateGroundNeighbors(Context: TDrawSquareContext);
+
+procedure CleanRectAlpha(Bitmap: TBitmap32; const Rect: TRect;
+  Alpha: Integer = $FF);
 
 implementation
 
@@ -261,6 +264,36 @@ end;
 procedure DissipateGroundNeighbors(Context: TDrawSquareContext);
 begin
   DissipateNeighbors(Context, FieldIsGround);
+end;
+
+{*
+  Nettoie le canal alpha d'un bitmap dans un rectangle donné
+  Après cette opération, la valeur du canal alpha sur tout le rectangle Rect
+  vaut Alpha.
+  Cette fonction doit généralement être appelée après l'usage du canvas d'un
+  bitmap 32. En effet, les canvas "cassent" le canal alpha de l'image sur
+  laquelle ils travaillent.
+  @param Bitmap   Bitmap à traiter
+  @param Rect     Rectangle à traiter dans le bitmap
+  @param Alpha    Valeur du canal alpha
+*}
+procedure CleanRectAlpha(Bitmap: TBitmap32; const Rect: TRect;
+  Alpha: Integer = $FF);
+var
+  UsefulRect: TRect;
+  X, Y: Integer;
+  Line: PColor32Array;
+begin
+  if not IntersectRect(UsefulRect, Rect, Bitmap.ClipRect) then
+    Exit;
+
+  for Y := UsefulRect.Top to UsefulRect.Bottom-1 do
+  begin
+    Line := Bitmap.ScanLine[Y];
+
+    for X := UsefulRect.Left to UsefulRect.Right-1 do
+      Line^[X] := SetAlpha(Line^[X], Alpha);
+  end;
 end;
 
 end.

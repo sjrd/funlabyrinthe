@@ -25,8 +25,8 @@ implementation
 const // don't localize
   UnitName = 'GraphicsTools';
   ResourceName = 'SepiImportsGraphicsTools';
-  TypeCount = 1;
-  MethodCount = 5;
+  TypeCount = 2;
+  MethodCount = 6;
   VariableCount = 1;
 
 var
@@ -110,7 +110,8 @@ end;
 
 procedure InitTypeInfoArray;
 begin
-  TypeInfoArray[0] := TypeInfo(TAvoidInfiniteRecursionBitmap32);
+  TypeInfoArray[0] := TypeInfo(TFieldPredicate);
+  TypeInfoArray[1] := TypeInfo(TAvoidInfiniteRecursionBitmap32);
 end;
 
 procedure InitMethodAddresses;
@@ -120,6 +121,7 @@ begin
   MethodAddresses[2] := @DissipateNeighbors_0;
   MethodAddresses[3] := @DissipateNeighbors_1;
   MethodAddresses[4] := @DissipateGroundNeighbors;
+  MethodAddresses[5] := @CleanRectAlpha;
 end;
 
 procedure InitVarAddresses;
