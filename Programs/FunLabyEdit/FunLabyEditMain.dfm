@@ -568,7 +568,7 @@ object FormMain: TFormMain
             Action = ActionCloseFile
             Caption = '&Fermer'
             ImageIndex = 3
-            ShortCut = 16454
+            ShortCut = 16471
           end
           item
             Caption = '-'
@@ -655,7 +655,7 @@ object FormMain: TFormMain
                 Action = ActionCloseFile
                 Caption = '&Fermer'
                 ImageIndex = 3
-                ShortCut = 16454
+                ShortCut = 16471
               end
               item
                 Caption = '-'
@@ -840,7 +840,7 @@ object FormMain: TFormMain
       Enabled = False
       Hint = 'Fermer le fichier|Fermer le fichier courant'
       ImageIndex = 3
-      ShortCut = 16454
+      ShortCut = 16471
       OnExecute = ActionCloseFileExecute
     end
     object ActionFileProperties: TAction
