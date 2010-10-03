@@ -60,6 +60,7 @@ type
     ActionEditMap: TAction;
     ActionVersionCheck: TAction;
     DropTarget: TJvDropTarget;
+    ActionOpenSourceFile: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -76,6 +77,7 @@ type
     procedure ActionAddMapExecute(Sender: TObject);
     procedure ActionRemoveMapExecute(Sender: TObject);
     procedure ActionEditMapExecute(Sender: TObject);
+    procedure ActionOpenSourceFileExecute(Sender: TObject);
     procedure ActionAddExistingSourceExecute(Sender: TObject);
     procedure ActionAddNewSourceExecute(Sender: TObject);
     procedure ActionRemoveSourceExecute(Sender: TObject);
@@ -279,6 +281,7 @@ begin
 
   // Menu des sources
   BigMenuSources.Visible := True;
+  ActionOpenSourceFile.Enabled := SourceFileEditors.FilterCount > 0;
   ActionAddExistingSource.Enabled := SourceFileEditors.FilterCount > 0;
   ActionAddNewSource.Enabled := not SourceFileCreators.IsEmpty;
   ActionViewAllSources.Enabled := True;
@@ -289,6 +292,11 @@ begin
   ActionTest.Enabled := True;
   ActionCompileAll.Enabled := True;
   ActionCompileAndReload.Enabled := True;
+
+  // Divers
+  ToolBarFile.ActionClient.Items[1].Action := ActionOpenSourceFile;
+  ActionOpenSourceFile.ShortCut := ActionOpenFile.ShortCut;
+  ActionOpenFile.ShortCut := 0;
 
   // Chargement des cartes
   FrameMapEditor.LoadFile(MasterFile);
@@ -322,6 +330,7 @@ begin
 
   // Menu des sources
   BigMenuSources.Visible := False;
+  ActionOpenSourceFile.Enabled := False;
   ActionAddExistingSource.Enabled := False;
   ActionAddNewSource.Enabled := False;
   ActionViewAllSources.Enabled := False;
@@ -332,6 +341,11 @@ begin
   ActionTest.Enabled := False;
   ActionCompileAll.Enabled := False;
   ActionCompileAndReload.Enabled := False;
+
+  // Divers
+  ToolBarFile.ActionClient.Items[1].Action := ActionOpenFile;
+  ActionOpenFile.ShortCut := ActionOpenSourceFile.ShortCut;
+  ActionOpenSourceFile.ShortCut := 0;
 
   // Autres variables
   SepiRoot := nil;
@@ -1229,6 +1243,21 @@ begin
   begin
     FrameMapEditor.InvalidateMap;
     MarkModified;
+  end;
+end;
+
+{*
+  Gestionnaire d'événement Ouvrir un source existant
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionOpenSourceFileExecute(Sender: TObject);
+var
+  I: Integer;
+begin
+  if OpenSourceFileDialog.Execute then
+  begin
+    for I := 0 to OpenSourceFileDialog.Files.Count-1 do
+      OpenFile(OpenSourceFileDialog.Files[I]);
   end;
 end;
 

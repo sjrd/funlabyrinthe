@@ -104,7 +104,7 @@ object FormMain: TFormMain
     Left = 32
     Top = 88
     Bitmap = {
-      494C01010B000E00240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E00300010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -519,6 +519,34 @@ object FormMain: TFormMain
             ShortCut = 16462
           end
           item
+            Items = <
+              item
+                Action = ActionOpenFile
+                Caption = '&Projet'
+                CommandStyle = csMenu
+                ImageIndex = 1
+                ShortCut = 16463
+                CommandProperties.Width = -1
+                CommandProperties.Font.Charset = DEFAULT_CHARSET
+                CommandProperties.Font.Color = clWindowText
+                CommandProperties.Font.Height = -11
+                CommandProperties.Font.Name = 'Tahoma'
+                CommandProperties.Font.Style = []
+                CommandProperties.Height = 0
+              end
+              item
+                Action = ActionOpenSourceFile
+                Caption = '&Fichier source'
+                CommandStyle = csMenu
+                ImageIndex = 1
+                CommandProperties.Width = -1
+                CommandProperties.Font.Charset = DEFAULT_CHARSET
+                CommandProperties.Font.Color = clWindowText
+                CommandProperties.Font.Height = -11
+                CommandProperties.Font.Name = 'Tahoma'
+                CommandProperties.Font.Style = []
+                CommandProperties.Height = 0
+              end>
             Action = ActionOpenFile
             Caption = '&Ouvrir...'
             ImageIndex = 1
@@ -672,6 +700,11 @@ object FormMain: TFormMain
           end
           item
             Items = <
+              item
+                Action = ActionOpenSourceFile
+                Caption = '&Ouvrir...'
+                ImageIndex = 1
+              end
               item
                 Action = ActionAddExistingSource
                 Caption = '&Ajouter...'
@@ -884,6 +917,14 @@ object FormMain: TFormMain
       Caption = #192' propos...'
       Hint = #192' propos de FunLabyrinthe'
       OnExecute = ActionAboutExecute
+    end
+    object ActionOpenSourceFile: TAction
+      Category = 'Sources'
+      Caption = 'Ouvrir...'
+      Enabled = False
+      Hint = 'Ouvrir un fichier source|Ouvrir un fichier source existant'
+      ImageIndex = 1
+      OnExecute = ActionOpenSourceFileExecute
     end
     object ActionAddExistingSource: TAction
       Category = 'Sources'
