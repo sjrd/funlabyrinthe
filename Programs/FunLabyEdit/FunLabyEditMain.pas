@@ -9,12 +9,13 @@ unit FunLabyEditMain;
 interface
 
 uses
-  Windows, SysUtils, Forms, Dialogs, Classes, ActnList, XPStyleActnCtrls,
-  ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus, ToolWin,
-  ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
-  FilesUtils, UnitFiles, EditPluginManager, SourceEditors, FileProperties,
-  FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile, ExtCtrls, ScSyncObjs,
-  CompilerMessages, MapViewer, SepiCompilerErrors, EditMap,
+  Windows, SysUtils, StrUtils, Forms, Dialogs, Classes, ActnList,
+  XPStyleActnCtrls, ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus,
+  ToolWin, ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore,
+  FunLabyUtils, FilesUtils, UnitFiles, EditPluginManager, SourceEditors,
+  FileProperties, FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile,
+  ExtCtrls, ScSyncObjs, CompilerMessages, MapViewer, SepiCompilerErrors,
+  EditMap,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA, JvComponentBase,
   JvDragDrop;
 
@@ -132,6 +133,13 @@ type
     procedure LoadFile;
     procedure UnloadFile;
 
+    function DoAutoCompile: Boolean;
+    procedure MakeBPLUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
+    procedure CreateAutoCompileMasterFile(const UnitFileDescs: TUnitFileDescs);
+    procedure AddAllSourceFiles(const BaseDir: TFileName);
+    procedure AddSourceFileFor(const BinaryFileName: TFileName);
+    function FindSourceFileFor(const BinaryFileName: TFileName): TFileName;
+
     function IsEditor(Tab: TJvTabBarItem): Boolean; overload;
     function IsEditor(Index: Integer): Boolean; overload;
     function GetTabEditor(Tab: TJvTabBarItem): ISourceEditor50;
@@ -176,6 +184,8 @@ type
     property TabCount: Integer read GetTabCount;
     property Tabs[Index: Integer]: TJvTabBarItem read GetTabs;
     property Editors[Index: Integer]: ISourceEditor50 read GetEditors;
+  public
+    function AutoCompile: Boolean;
   end;
 
 const {don't localize}
@@ -353,6 +363,154 @@ begin
 
   // Ne pas laisser la croix de fermeture indiquer une modification
   Modified := False;
+end;
+
+{*
+  Lance l'auto-compilation de tous les fichiers compilés trouvés
+  @return True en cas de succès, False s'il y a eu des erreurs
+*}
+function TFormMain.DoAutoCompile: Boolean;
+var
+  UnitFileDescs: TUnitFileDescs;
+begin
+  MakeBPLUnitFileDescs(UnitFileDescs);
+  CreateAutoCompileMasterFile(UnitFileDescs);
+  AddAllSourceFiles(fUnitsDir);
+  Result := CompileAll;
+end;
+
+{*
+  Crée les descripteurs d'unités pour tous les BPL trouvés
+  @param UnitFileDescs   En sortie : descripteurs des unités BPL
+*}
+procedure TFormMain.MakeBPLUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
+const
+  ExcludedBPLFiles: array[0..0] of string = ('Compatibility4x.bpl');
+var
+  FileNames: TStrings;
+  SearchRec: TSearchRec;
+  I: Integer;
+begin
+  FileNames := TStringList.Create;
+  try
+    // Search for *.bpl files
+    if FindFirst(fUnitsDir+'*.bpl', faAnyFile, SearchRec) = 0 then
+    try
+      repeat
+        if not AnsiMatchText(SearchRec.Name, ExcludedBPLFiles) then
+          FileNames.Add(SearchRec.Name);
+      until FindNext(SearchRec) <> 0;
+    finally
+      FindClose(SearchRec);
+    end;
+
+    // Make result
+    SetLength(UnitFileDescs, FileNames.Count);
+    for I := 0 to FileNames.Count-1 do
+      UnitFileDescs[I].HRef := FileNames[I];
+  finally
+    FileNames.Free;
+  end;
+end;
+
+{*
+  Crée le fichier maître pour une auto-compilation
+  @param UnitFileDescs   Descripteurs de fichiers unités
+*}
+procedure TFormMain.CreateAutoCompileMasterFile(
+  const UnitFileDescs: TUnitFileDescs);
+begin
+  NeedBaseSepiRoot;
+
+  MasterFile := TMasterFile.CreateNew(BaseSepiRoot, UnitFileDescs);
+  try
+    LoadFile;
+  except
+    BackgroundDiscard(MasterFile);
+    raise;
+  end;
+
+  Modified := False;
+end;
+
+{*
+  Ajoute tous les fichiers sources qu'on peut trouver au projet
+  @param BaseDir   Dossier de base
+*}
+procedure TFormMain.AddAllSourceFiles(const BaseDir: TFileName);
+var
+  SearchRec: TSearchRec;
+begin
+  // Add .scu files in this directory
+  if FindFirst(BaseDir+'*.scu', faAnyFile, SearchRec) = 0 then
+  try
+    repeat
+      AddSourceFileFor(BaseDir+SearchRec.Name);
+    until FindNext(SearchRec) <> 0;
+  finally
+    FindClose(SearchRec);
+  end;
+
+  // Recurse into subdirectories
+  if FindFirst(BaseDir+'*', faAnyFile, SearchRec) = 0 then
+  try
+    repeat
+      if SearchRec.Attr and faDirectory <> 0 then
+      begin
+        if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+          AddAllSourceFiles(BaseDir + SearchRec.Name + '\');
+      end;
+    until FindNext(SearchRec) <> 0;
+  finally
+    FindClose(SearchRec);
+  end;
+end;
+
+{*
+  Ajoute le fichier source correspondant à un binaire existant
+  @param BinaryFileName   Nom du fichier binaire .scu
+*}
+procedure TFormMain.AddSourceFileFor(const BinaryFileName: TFileName);
+var
+  SourceFileName: string;
+begin
+  SourceFileName := FindSourceFileFor(BinaryFileName);
+  if SourceFileName <> '' then
+    OpenFile(SourceFileName);
+end;
+
+{*
+  Trouve le fichier source pour un fichier binaire
+  @param BinaryFileName   Nom du fichier binaire .scu
+  @return Nom du fichier source correspondant, ou '' si non trouvé
+*}
+function TFormMain.FindSourceFileFor(
+  const BinaryFileName: TFileName): TFileName;
+var
+  ResultFileName: TFileName;
+  ResultDateTime: TDateTime;
+begin
+  ResultFileName := '';
+
+  SourceFileEditors.ForEach(
+    procedure(const Key, Value; var Continue: Boolean)
+    var
+      FileName: TFileName;
+      FileDateTime: TDateTime;
+    begin
+      FileName := ChangeFileExt(BinaryFileName, '.' + string(Key));
+
+      if not FileAge(FileName, FileDateTime) then
+        Exit;
+
+      if (ResultFileName = '') or (FileDateTime > ResultDateTime) then
+      begin
+        ResultFileName := FileName;
+        ResultDateTime := FileDateTime;
+      end;
+    end);
+
+  Result := ResultFileName;
 end;
 
 {*
@@ -1000,6 +1158,15 @@ begin
 end;
 
 {*
+  Lance l'auto-compilation de tous les fichiers compilés trouvés
+  @return True en cas de succès, False s'il y a eu des erreurs
+*}
+function TFormMain.AutoCompile: Boolean;
+begin
+  Result := DoAutoCompile;
+end;
+
+{*
   Gestionnaire d'événement OnCreate
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -1041,7 +1208,7 @@ begin
 
   FormMapViewer := TFormMapViewer.Create(Self);
 
-  if ParamCount > 0 then
+  if (ParamCount > 0) and FileExists(ParamStr(1)) then
     OpenFile(ParamStr(1));
 end;
 

@@ -2,6 +2,7 @@ program FunLabyEdit;
 
 uses
   XPMan,
+  SysUtils,
   Forms,
   ScUtils,
   FunLabyUtils,
@@ -34,6 +35,18 @@ begin
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.HelpFile := Dir+'FunLabyrinthe.chm';
   Application.CreateForm(TFormMain, FormMain);
-  Application.Run;
+
+  if FindCmdLineSwitch('autocompile') then
+  begin
+    // Auto-compile run
+    if not FormMain.AutoCompile then
+      Application.Run
+    else
+      Application.Free;
+  end else
+  begin
+    // Normal run
+    Application.Run;
+  end;
 end.
 
