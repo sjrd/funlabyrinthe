@@ -10,17 +10,17 @@ AppPublisher=SJRDoeraene
 AppPublisherURL=http://www.funlabyrinthe.com/
 AppSupportURL=http://www.funlabyrinthe.com/
 AppUpdatesURL=http://www.funlabyrinthe.com/
-AppVersion=5.0
+AppVersion=5.1
 
-VersionInfoDescription=Setup of FunLabyrinthe 5.0.1
-VersionInfoTextVersion=FunLabyrinthe v5.0.1, copyright 2000-2010 SJRDoeraene
-VersionInfoVersion=5.0.1
+VersionInfoDescription=Setup of FunLabyrinthe 5.1
+VersionInfoTextVersion=FunLabyrinthe v5.1, copyright 2000-2010 SJRDoeraene
+VersionInfoVersion=5.1
 
 DefaultDirName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,InstallLocation|{pf}\SJRDoeraene\{cm:AppName}}
 DefaultGroupName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,Inno Setup: Icon Group|{cm:AppName}}
 
 OutputDir=.\
-OutputBaseFilename=funlabyrinthe_5_0_1
+OutputBaseFilename=funlabyrinthe_5_1
 
 Compression=lzma
 SolidCompression=yes
@@ -30,7 +30,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 
 [CustomMessages]
 fr.AppName=FunLabyrinthe
-fr.AppVerName=FunLabyrinthe 5.0.1
+fr.AppVerName=FunLabyrinthe 5.1
 fr.Description=Jeu de labyrinthe très fun avec toutes sortes de gadgets
 
 ; Types d'installation
@@ -121,21 +121,25 @@ fr.PageImportingOldDescription=L'assistant importe maintenant les anciens labyri
 
 fr.ImportingOld=Import des anciens labyrinthes...
 
+; Recompilation des unités
+
+fr.RecompilingSources=Mise à jour des unités... (entre quelques secondes et une minute)
+
 [Types]
 Name: "full"    ; Description: {cm:FullInstall}
-Name: "playonly"; Description: {cm:PlayOnlyInstall}
-Name: "custom"  ; Description: {cm:CustomInstall}  ; Flags: iscustom
+;Name: "playonly"; Description: {cm:PlayOnlyInstall}
+;Name: "custom"  ; Description: {cm:CustomInstall}  ; Flags: iscustom
 
 [Components]
-Name: "programs"            ; Description: {cm:CompPrograms}   ; Types: full playonly custom
-Name: "programs\runtime"    ; Description: {cm:CompRuntime}    ; Types: full playonly custom; Flags: fixed
-Name: "programs\funlaby"    ; Description: {cm:CompFunLaby}    ; Types: full playonly custom; Flags: fixed
-Name: "programs\genelaby"   ; Description: {cm:CompGeneLaby}   ; Types: full playonly custom
-Name: "programs\funlabyedit"; Description: {cm:CompFunLabyEdit}; Types: full custom
+Name: "programs"            ; Description: {cm:CompPrograms}   ; Types: full
+Name: "programs\runtime"    ; Description: {cm:CompRuntime}    ; Types: full; Flags: fixed
+Name: "programs\funlaby"    ; Description: {cm:CompFunLaby}    ; Types: full; Flags: fixed
+Name: "programs\genelaby"   ; Description: {cm:CompGeneLaby}   ; Types: full
+Name: "programs\funlabyedit"; Description: {cm:CompFunLabyEdit}; Types: full
 
-Name: "help"; Description: {cm:CompHelp}; Types: full playonly custom; Flags: fixed
+Name: "help"; Description: {cm:CompHelp}; Types: full; Flags: fixed
 
-Name: "appdata"; Description: {cm:CompAppData}; Types: full playonly custom; Flags: fixed
+Name: "appdata"; Description: {cm:CompAppData}; Types: full; Flags: fixed
 
 [Tasks]
 Name: "desktopicon"            ; Description: "{cm:CreateDesktopIcon}"                                ; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -197,6 +201,7 @@ Name: "{commondesktop}\{cm:IconGeneLaby}"   ; Filename: "{app}\GeneLaby.exe"   ;
 Name: "{commondesktop}\{cm:IconFunLabyEdit}"; Filename: "{app}\FunLabyEdit.exe"; Tasks: desktopicon\funlabyedit
 
 [Run]
+Filename: "{app}\FunLabyEdit.exe"; Parameters: "-autocompile"; WorkingDir: "{app}"; StatusMsg: "{cm:RecompilingSources}"; Flags: runasoriginaluser waituntilidle
 Filename: "{app}\FunLaby.exe"; Description: "{cm:LaunchProgram,FunLabyrinthe}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
@@ -819,5 +824,6 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
+
 
 
