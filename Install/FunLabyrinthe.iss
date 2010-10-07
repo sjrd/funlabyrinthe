@@ -7,11 +7,13 @@ AppVerName={cm:AppVerName}
 AppComments={cm:Description}
 AppContact=sjrd@redaction-developpez.com
 AppPublisher=SJRDoeraene
+AppCopyright=Copyright (C) 2000-2010 Sébastien Doeraene
 AppPublisherURL=http://www.funlabyrinthe.com/
-AppSupportURL=http://www.funlabyrinthe.com/
-AppUpdatesURL=http://www.funlabyrinthe.com/
+AppSupportURL=http://www.funlabyrinthe.com/forum/
+AppUpdatesURL=http://www.funlabyrinthe.com/download/
 AppVersion=5.1
 
+VersionInfoProductName=FunLabyrinthe 5.1
 VersionInfoDescription=Setup of FunLabyrinthe 5.1
 VersionInfoTextVersion=FunLabyrinthe v5.1, copyright 2000-2010 SJRDoeraene
 VersionInfoVersion=5.1
@@ -149,6 +151,10 @@ Name: "desktopicon\funlabyedit"; Description: "{cm:IconFunLabyEdit}"; Components
 
 Name: "regext"    ; Description: "{cm:RegExtensions}"; GroupDescription: {cm:AdditionalTasks}
 Name: "regext\flp"; Description: "{cm:RegFLP}"       ; GroupDescription: {cm:AdditionalTasks}
+
+[InstallDelete]
+; Delete old units that were installed with previous versions
+Type: files; Name: "{code:AppData}\Units\LevelledGrounds.*"
 
 [Files]
 Source: "..\FunLabyCore.bpl";         DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
@@ -590,7 +596,7 @@ end;
 function CanImportLab(const AFileName: string;
   DoNotImportLabs: TStrings): Boolean;
 var
-  FileName, Exclude: string;
+  FileName: string;
   I: Integer;
 begin
   FileName := AnsiLowercase(Trim(ChangeFileExt(AFileName, '')));
@@ -824,6 +830,7 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
+
 
 
 
