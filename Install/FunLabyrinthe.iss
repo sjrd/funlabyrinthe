@@ -27,6 +27,8 @@ OutputBaseFilename=funlabyrinthe_5_1
 Compression=lzma
 SolidCompression=yes
 
+ChangesAssociations=yes
+
 [Languages]
 Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 
@@ -788,7 +790,9 @@ end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
-  if PageID = PageImportOld.ID then
+  if PageID = wpSelectComponents then
+    Result := True
+  else if PageID = PageImportOld.ID then
     Result := IsReinstall
   else if PageID = PageSelectImports.ID then
     Result := ImportDir = ''
@@ -830,6 +834,7 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
+
 
 
 
