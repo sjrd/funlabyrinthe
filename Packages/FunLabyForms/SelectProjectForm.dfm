@@ -68,6 +68,15 @@ object FormSelectProjectFile: TFormSelectProjectFile
         FooterAlign = taLeftJustify
         TitleImage = -1
         ExtendedImage = -1
+      end
+      item
+        Header = 'Fichiers invalides'
+        GroupID = 3
+        State = [lgsNormal]
+        HeaderAlign = taLeftJustify
+        FooterAlign = taLeftJustify
+        TitleImage = -1
+        ExtendedImage = -1
       end>
     GroupView = True
     ReadOnly = True

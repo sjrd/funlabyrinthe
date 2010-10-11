@@ -13,6 +13,11 @@ uses
   JvComponentBase, JvChangeNotify, ScUtils, ScXML, SdDialogs,
   FunLabyUtils, FunLabyCoreConsts;
 
+resourcestring
+  SCorruptedFileDescription =
+    'Il y a eu une erreur au chargement de ce fichier pour la preview. Il est '+
+    'probablement inutilisable.';
+
 type
   {*
     Boîte de dialogue de sélection d'un fichier projet
@@ -50,6 +55,7 @@ type
     SortReverse: Boolean;     /// True pour renverser le tri
 
     procedure FillFileItem(Item: TListItem; const FileName: TFileName);
+    procedure FillCorruptedFileItem(Item: TListItem; const FileName: TFileName);
     procedure FillFileList;
   public
     function Execute: Boolean;
@@ -74,6 +80,7 @@ const
   GroupNewLabyrinths = 0;
   GroupOldLabyrinths = 1;
   GroupNotForPlaying = 2;
+  GroupCorrupted = 3;
 
 {------------------------------}
 { TFormSelectProjectFile class }
@@ -108,22 +115,48 @@ const
   IsOldLabyrinthQuery =
     'collection[@name="UnitFiles"]//item[property="Compatibility4x.bpl"]';
 begin
-  Document := LoadXMLDocumentFromFile(FileName);
-  RootElement := Document.documentElement;
+  try
+    Document := LoadXMLDocumentFromFile(FileName);
+    RootElement := Document.documentElement;
 
-  Item.Caption := ReadProperty('Title');
-  Item.SubItems.Add(ReadProperty('Kind'));
-  Item.SubItems.Add(ReadProperty('Difficulty'));
-  Item.SubItems.Add(ReadProperty('Author'));
-  Item.SubItems.Add(ExtractFileName(FileName));
-  Item.SubItems.Add(ReadProperty('Description'));
+    Item.Caption := ReadProperty('Title');
+    Item.SubItems.Add(ReadProperty('Kind'));
+    Item.SubItems.Add(ReadProperty('Difficulty'));
+    Item.SubItems.Add(ReadProperty('Author'));
+    Item.SubItems.Add(ExtractFileName(FileName));
+    Item.SubItems.Add(ReadProperty('Description'));
 
-  if Item.SubItems[IndexKind] = StrNotForPlaying then
-    Item.GroupID := GroupNotForPlaying
-  else if RootElement.selectSingleNode(IsOldLabyrinthQuery) <> nil then
-    Item.GroupID := GroupOldLabyrinths
-  else
-    Item.GroupID := GroupNewLabyrinths;
+    if Item.SubItems[IndexKind] = StrNotForPlaying then
+      Item.GroupID := GroupNotForPlaying
+    else if RootElement.selectSingleNode(IsOldLabyrinthQuery) <> nil then
+      Item.GroupID := GroupOldLabyrinths
+    else
+      Item.GroupID := GroupNewLabyrinths;
+  except
+    on Error: Exception do
+    begin
+      FillCorruptedFileItem(Item, FileName);
+    end;
+  end;
+end;
+
+{*
+  Remplit un élément de la liste des fichiers pour un fichier corrompu
+  @param Item       Élément de la liste
+  @param FileName   Nom du fichier
+*}
+procedure TFormSelectProjectFile.FillCorruptedFileItem(Item: TListItem;
+  const FileName: TFileName);
+var
+  I: Integer;
+begin
+  Item.Caption := ExtractFileName(FileName);
+  for I := 0 to 2 do
+    Item.SubItems.Add('');
+  Item.SubItems.Add(Item.Caption);
+  Item.SubItems.Add(SCorruptedFileDescription);
+
+  Item.GroupID := GroupCorrupted;
 end;
 
 {*
