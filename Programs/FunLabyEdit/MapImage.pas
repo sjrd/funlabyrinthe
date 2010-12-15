@@ -42,6 +42,8 @@ type
 
     /// Déclenché lorsque l'utilisateur a cliqué sur une case
     FOnClickSquare: TSquarePosEvent;
+    /// Déclenché lorsque l'utilisateur a double-cliqué sur une case
+    FOnDblClickSquare: TSquarePosEvent;
     /// Déclenché lorsque la souris survole une case
     FOnHoverSquare: TSquarePosEvent;
     /// Déclenché lorsqu'un bouton de la souris est pressé sur une case
@@ -83,6 +85,8 @@ type
 
     property OnClickSquare: TSquarePosEvent
       read FOnClickSquare write FOnClickSquare;
+    property OnDblClickSquare: TSquarePosEvent
+      read FOnDblClickSquare write FOnDblClickSquare;
     property OnHoverSquare: TSquarePosEvent
       read FOnHoverSquare write FOnHoverSquare;
     property OnSquareMouseDown: TSquareMouseEvent
@@ -456,8 +460,18 @@ begin
   if Assigned(FOnSquareMouseDown) then
     FOnSquareMouseDown(Self, QPos, Button, Shift);
 
-  if (Button = mbLeft) and Assigned(FOnClickSquare) then
-    FOnClickSquare(Self, QPos);
+  if Button = mbLeft then
+  begin
+    if ssDouble in Shift then
+    begin
+      if Assigned(FOnDblClickSquare) then
+        FOnDblClickSquare(Self, QPos);
+    end else
+    begin
+      if Assigned(FOnClickSquare) then
+        FOnClickSquare(Self, QPos);
+    end;
+  end;
 end;
 
 {*

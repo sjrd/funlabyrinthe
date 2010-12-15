@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, SynEdit, SynEditHighlighter, SepiCompilerErrors, FilesUtils,
-  FunLabyUtils, FunLabySynEdit, FunLabySourceEditorFrame;
+  FunLabyUtils, FunLabySynEdit, FunLabySourceEditorFrame, FunLabyEditOTA;
 
 type
   {*
@@ -19,7 +19,8 @@ type
     @author sjrd
     @version 5.0
   *}
-  TFrameFunLabySynEditSourceEditor = class(TFrameFunLabySourceEditor)
+  TFrameFunLabySynEditSourceEditor = class(TFrameFunLabySourceEditor,
+    IOTAMapViewerEvents51)
   private
     FEditSource: TFunLabySynEdit; /// Éditeur du source
 
@@ -35,6 +36,9 @@ type
     procedure LoadFile(const AFileName: TFileName); override;
     function SaveFile: Boolean; override;
 
+    procedure ClickSquare(const QPos: TQualifiedPos); virtual;
+    procedure DblClickSquare(const QPos: TQualifiedPos); virtual;
+
     property EditSource: TFunLabySynEdit read FEditSource;
   public
     constructor Create(AOwner: TComponent); override;
@@ -48,6 +52,9 @@ const {don't localize}
 implementation
 
 {$R *.dfm}
+
+uses
+  Clipbrd;
 
 {----------------------------------------}
 { TFrameFunLabySynEditSourceEditor class }
@@ -154,6 +161,29 @@ begin
   EditSource.Modified := False;
 
   Result := inherited SaveFile;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFrameFunLabySynEditSourceEditor.ClickSquare(
+  const QPos: TQualifiedPos);
+begin
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TFrameFunLabySynEditSourceEditor.DblClickSquare(
+  const QPos: TQualifiedPos);
+const
+  CodeFormat = 'Point3D(%d, %d, %d)';
+var
+  Code: string;
+begin
+  Code := Format(CodeFormat, [QPos.X, QPos.Y, QPos.Z]);
+  Clipboard.SetTextBuf(PChar(Code));
+  EditSource.PasteFromClipboard;
 end;
 
 {*

@@ -1617,6 +1617,7 @@ begin
     SourceEditorTag:
     begin
       Editor := GetTabEditor(Item);
+      FormMapViewer.Events := nil;
       if Supports(Editor, IActivatingSourceEditor, ActivatingEditor) then
         ActivatingEditor.Deactivate;
       Editor.Control.Visible := False;
@@ -1634,6 +1635,7 @@ procedure TFormMain.TabBarEditorsTabSelected(Sender: TObject;
 var
   Editor: ISourceEditor50;
   ActivatingEditor: IActivatingSourceEditor;
+  Events: IOTAMapViewerEvents51;
 begin
   if (Item = nil) or (Item.Data = nil) then
     Exit;
@@ -1649,6 +1651,8 @@ begin
       Editor.Control.Visible := True;
       if Supports(Editor, IActivatingSourceEditor, ActivatingEditor) then
         ActivatingEditor.Activate;
+      if Supports(Editor, IOTAMapViewerEvents51, Events) then
+        FormMapViewer.Events := Events;
     end;
   end;
 end;

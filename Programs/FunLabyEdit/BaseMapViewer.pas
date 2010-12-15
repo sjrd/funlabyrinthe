@@ -3,7 +3,7 @@ unit BaseMapViewer;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Spin, ExtCtrls, Tabs, ScUtils, FunLabyUtils, FilesUtils,
   GR32, GR32_Image, MapImage, ComCtrls;
 
@@ -34,14 +34,16 @@ type
     procedure MapTabSetChange(Sender: TObject; NewTab: Integer;
       var AllowChange: Boolean);
     procedure MapViewClickSquare(Sender: TObject; const QPos: TQualifiedPos);
+    procedure MapViewDblClickSquare(Sender: TObject; const QPos: TQualifiedPos);
     procedure MapViewHoverSquare(Sender: TObject; const QPos: TQualifiedPos);
     procedure EditFloorChange(Sender: TObject);
     procedure TrackBarScaleChange(Sender: TObject);
   private
     FMaster: TMaster; /// Maître FunLabyrinthe
 
-    FOnClickSquare: TSquarePosEvent; /// Déclenché au clic sur une case
-    FOnHoverSquare: TSquarePosEvent; /// Déclenché au passage sur une case
+    FOnClickSquare: TSquarePosEvent;    /// Déclenché au clic sur une case
+    FOnDblClickSquare: TSquarePosEvent; /// Déclenché au double-clic d'une case
+    FOnHoverSquare: TSquarePosEvent;    /// Déclenché au passage sur une case
 
     procedure SetMaster(Value: TMaster);
 
@@ -77,6 +79,8 @@ type
 
     property OnClickSquare: TSquarePosEvent
       read FOnClickSquare write FOnClickSquare;
+    property OnDblClickSquare: TSquarePosEvent
+      read FOnDblClickSquare write FOnDblClickSquare;
     property OnHoverSquare: TSquarePosEvent
       read FOnHoverSquare write FOnHoverSquare;
   end;
@@ -203,6 +207,7 @@ begin
   inherited;
 
   MapView.OnClickSquare := MapViewClickSquare;
+  MapView.OnDblClickSquare := MapViewDblClickSquare;
   MapView.OnHoverSquare := MapViewHoverSquare;
 end;
 
@@ -297,6 +302,18 @@ procedure TFrameBaseMapViewer.MapViewClickSquare(Sender: TObject;
 begin
   if Assigned(FOnClickSquare) then
     FOnClickSquare(Self, QPos);
+end;
+
+{*
+  Gestionnaire d'événement OnDblClickSquare de la vue de la carte
+  @param Sender   Objet qui a déclenché l'événement
+  @param QPos     Position qualifiée de la case cliquée
+*}
+procedure TFrameBaseMapViewer.MapViewDblClickSquare(Sender: TObject;
+  const QPos: TQualifiedPos);
+begin
+  if Assigned(FOnDblClickSquare) then
+    FOnDblClickSquare(Self, QPos);
 end;
 
 {*

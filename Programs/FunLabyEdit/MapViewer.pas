@@ -15,7 +15,11 @@ type
   TFormMapViewer = class(TForm, IOTAMapViewer50)
     MapViewer: TFrameBaseMapViewer;
     procedure MapViewerClickSquare(Sender: TObject; const QPos: TQualifiedPos);
+    procedure MapViewerDblClickSquare(Sender: TObject;
+      const QPos: TQualifiedPos);
   private
+    FEvents: IOTAMapViewerEvents51; /// Événements OTA
+
     function GetMaster: TMaster;
     procedure SetMaster(Value: TMaster);
 
@@ -42,6 +46,8 @@ type
       read GetSelectedMap write SetSelectedMap;
     property SelectedPos: T3DPoint
       read GetSelectedPos write SetSelectedPos;
+
+    property Events: IOTAMapViewerEvents51 read FEvents write FEvents;
   end;
 
 implementation
@@ -60,6 +66,7 @@ begin
   inherited;
 
   MapViewer.OnClickSquare := MapViewerClickSquare;
+  MapViewer.OnDblClickSquare := MapViewerDblClickSquare;
 end;
 
 {*
@@ -173,6 +180,21 @@ procedure TFormMapViewer.MapViewerClickSquare(Sender: TObject;
   const QPos: TQualifiedPos);
 begin
   SelectedSquare := QPos;
+
+  if Assigned(FEvents) then
+    FEvents.ClickSquare(QPos);
+end;
+
+{*
+  Gestionnaire d'événement OnDblClickSquare de la carte
+  @param Sender   Objet qui a déclenché l'événement
+  @param QPos     Position qualifiée de la case cliquée
+*}
+procedure TFormMapViewer.MapViewerDblClickSquare(Sender: TObject;
+  const QPos: TQualifiedPos);
+begin
+  if Assigned(FEvents) then
+    FEvents.DblClickSquare(QPos);
 end;
 
 end.

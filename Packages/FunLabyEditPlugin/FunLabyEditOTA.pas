@@ -124,6 +124,27 @@ type
   end;
 
   {*
+    Événements du visualisateur de cartes
+    @author sjrd
+    @version 5.1
+  *}
+  IOTAMapViewerEvents51 = interface(IInterface)
+    ['{3E7A4DFE-E5AB-4716-BBF4-881F615A62A3}']
+
+    {*
+      Événement déclenché lorsque l'utilisateur clique sur une case
+      @param QPos   Position qualifiée de la case cliquée
+    *}
+    procedure ClickSquare(const QPos: TQualifiedPos);
+
+    {*
+      Événement déclenché lorsque l'utilisateur double-clique sur une case
+      @param QPos   Position qualifiée de la case double-cliquée
+    *}
+    procedure DblClickSquare(const QPos: TQualifiedPos);
+  end;
+
+  {*
     Fenêtre principale de l'éditeur
     @author sjrd
     @version 5.0
