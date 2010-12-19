@@ -104,7 +104,7 @@ object FormMain: TFormMain
     Left = 32
     Top = 88
     Bitmap = {
-      494C01010B000E00300010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E00480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -546,6 +546,19 @@ object FormMain: TFormMain
                 CommandProperties.Font.Name = 'Tahoma'
                 CommandProperties.Font.Style = []
                 CommandProperties.Height = 0
+              end
+              item
+                Caption = '-'
+                CommandStyle = csSeparator
+                CommandProperties.Width = -1
+                CommandProperties.Font.Charset = DEFAULT_CHARSET
+                CommandProperties.Font.Color = clWindowText
+                CommandProperties.Font.Height = -11
+                CommandProperties.Font.Name = 'Tahoma'
+                CommandProperties.Font.Style = []
+              end
+              item
+                Action = ActionOpenRecentNone
               end>
             Action = ActionOpenFile
             Caption = '&Ouvrir...'
@@ -635,6 +648,15 @@ object FormMain: TFormMain
                 Caption = '&Ouvrir...'
                 ImageIndex = 1
                 ShortCut = 16463
+              end
+              item
+                Items = <
+                  item
+                    Action = ActionOpenRecentNone
+                    Caption = '(&Aucun)'
+                  end>
+                Caption = 'Ouvrir r'#233'cent'
+                UsageCount = 1
               end
               item
                 Action = ActionSaveFile
@@ -784,6 +806,8 @@ object FormMain: TFormMain
             Caption = '&Aide'
           end>
         ActionBar = MainMenuBar
+      end
+      item
       end>
     Images = Images
     Left = 112
@@ -804,6 +828,12 @@ object FormMain: TFormMain
       ImageIndex = 1
       ShortCut = 16463
       OnExecute = ActionOpenFileExecute
+    end
+    object ActionOpenRecentNone: TAction
+      Category = 'OpenRecent'
+      Caption = '(Aucun)'
+      Enabled = False
+      Hint = 'Aucun fichier r'#233'cemment ouvert'
     end
     object ActionSaveFile: TAction
       Category = 'File'
@@ -1030,5 +1060,16 @@ object FormMain: TFormMain
     OnDragAccept = DropTargetDragAccept
     Left = 72
     Top = 272
+  end
+  object OptionsStorage: TJvAppXMLFileStorage
+    StorageOptions.BooleanStringTrueValues = 'true, yes, y'
+    StorageOptions.BooleanStringFalseValues = 'false, no, n'
+    StorageOptions.InvalidCharReplacement = '_'
+    FileName = 'FunLabyrinthe\FunLabyEdit.xml'
+    Location = flUserFolder
+    RootNodeName = 'configuration'
+    SubStorages = <>
+    Left = 192
+    Top = 88
   end
 end

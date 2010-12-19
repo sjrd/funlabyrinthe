@@ -9,7 +9,7 @@ unit FunLabyEditMain;
 interface
 
 uses
-  Windows, SysUtils, StrUtils, Forms, Dialogs, Classes, ActnList,
+  Windows, SysUtils, StrUtils, Forms, Dialogs, Classes, Contnrs, ActnList,
   XPStyleActnCtrls, ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus,
   ToolWin, ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore,
   FunLabyUtils, FilesUtils, UnitFiles, EditPluginManager, SourceEditors,
@@ -17,9 +17,12 @@ uses
   ExtCtrls, ScSyncObjs, CompilerMessages, MapViewer, SepiCompilerErrors,
   EditMap,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA, JvComponentBase,
-  JvDragDrop;
+  JvDragDrop, JvAppStorage, JvAppXMLStorage;
 
 type
+  TActionDynArray = array of TAction;
+  TActionClientItemDynArray = array of TActionClientItem;
+
   {*
     Fiche principale de FunLabyEdit.exe
     @author sjrd
@@ -62,12 +65,15 @@ type
     ActionVersionCheck: TAction;
     DropTarget: TJvDropTarget;
     ActionOpenSourceFile: TAction;
+    OptionsStorage: TJvAppXMLFileStorage;
+    ActionOpenRecentNone: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure ApplicationHint(Sender: TObject);
     procedure ActionNewFileExecute(Sender: TObject);
     procedure ActionOpenFileExecute(Sender: TObject);
+    procedure ActionOpenRecentFileExecute(Sender: TObject);
     procedure ActionSaveFileExecute(Sender: TObject);
     procedure ActionSaveFileAsExecute(Sender: TObject);
     procedure ActionSaveAllExecute(Sender: TObject);
@@ -116,7 +122,10 @@ type
     TabMapEditor: TJvTabBarItem;     /// Onglet d'édition des cartes
     FrameMapEditor: TFrameMapEditor; /// Cadre d'édition des cartes
 
-    SourceActions: array of TAction; /// Liste des actions du menu Sources liés
+    SourceActions: TActionDynArray; /// Liste des actions du menu Sources liés
+
+    FileHistory: TStrings; /// Historique des fichiers ouverts
+    FileHistoryActions: TActionDynArray; /// List des actions de l'historique
 
     FormCompilerMessages: TFormCompilerMessages; /// Messages du compilateur
     FormMapViewer: TFormMapViewer;               /// Visualisateur de cartes
@@ -126,9 +135,27 @@ type
     MasterFile: TMasterFile; /// Fichier maître
     Master: TMaster;         /// Maître FunLabyrinthe
 
+    FActionToFind: TAction;     /// Action à trouver
+    FFoundClients: TObjectList; /// Clients trouvés
+
     procedure LoadBaseSepiRoot;
     procedure NeedBaseSepiRoot;
     procedure BackgroundDiscard(var Obj);
+
+    procedure LoadConfiguration;
+    procedure SaveConfiguration;
+    procedure LoadFileHistory;
+    procedure SaveFileHistory;
+    procedure AddFileToHistory(const FileName: TFileName);
+    procedure UpdateFileHistory;
+
+    function MakeFileHistoryAction(const FileName: TFileName): TAction;
+    procedure MakeFileHistoryActions;
+    procedure DeleteFileHistoryActions;
+
+    function FindItemsByAction(Action: TAction): TActionClientItemDynArray;
+    procedure FindItemsByActionCallback(AClient: TActionClient);
+    procedure DeleteAllActions(var Actions: TActionDynArray);
 
     procedure LoadFile;
     procedure UnloadFile;
@@ -178,7 +205,6 @@ type
     function GetMasterFile: TMasterFile;
     function GetCompilerMessages: IOTACompilerMessages50;
     function GetMapViewer: IOTAMapViewer50;
-
     property Modified: Boolean read FModified write SetModified;
 
     property TabCount: Integer read GetTabCount;
@@ -202,6 +228,8 @@ const
   ClosedTabTag = -1;
   MapEditorTag = 0;
   SourceEditorTag = 1;
+
+  MaxFileHistory = 5;
 
 {------------------}
 { Classe TFormMain }
@@ -259,6 +287,176 @@ begin
     Exit;
   TObject(Obj) := nil;
   TScMethodTask.Create(BackgroundTasks, AObj.Free);
+end;
+
+{*
+  Charge la configuration
+*}
+procedure TFormMain.LoadConfiguration;
+begin
+  LoadFileHistory;
+end;
+
+{*
+  Sauvegarde la configuration
+*}
+procedure TFormMain.SaveConfiguration;
+begin
+  SaveFileHistory;
+end;
+
+{*
+  Charge l'historique des fichiers
+*}
+procedure TFormMain.LoadFileHistory;
+const {don't localize}
+  Path = 'FileHistory';
+  ItemName = 'File';
+begin
+  OptionsStorage.ReadStringList(Path, FileHistory, False, ItemName);
+  UpdateFileHistory;
+end;
+
+{*
+  Sauvegarde l'historique des fichiers
+*}
+procedure TFormMain.SaveFileHistory;
+const {don't localize}
+  Path = 'FileHistory';
+  ItemName = 'File';
+begin
+  OptionsStorage.WriteStringList(Path, FileHistory, ItemName);
+end;
+
+{*
+  Met à jour l'historique des fichiers avec un nouveau fichier
+  @param FileName   Nom du fichier à ajouter à l'historique
+*}
+procedure TFormMain.AddFileToHistory(const FileName: TFileName);
+var
+  Index: Integer;
+begin
+  Index := FileHistory.IndexOf(FileName);
+  if Index > 0 then
+    FileHistory.Move(Index, 0)
+  else
+  begin
+    while FileHistory.Count >= MaxFileHistory do
+      FileHistory.Delete(FileHistory.Count-1);
+
+    FileHistory.Insert(0, FileName);
+  end;
+
+  UpdateFileHistory;
+end;
+
+{*
+  Met à jour les menus pour l'historique des fichiers
+*}
+procedure TFormMain.UpdateFileHistory;
+begin
+  DeleteFileHistoryActions;
+  MakeFileHistoryActions;
+
+  ActionOpenRecentNone.Visible := FileHistory.Count = 0;
+end;
+
+{*
+  Crée une action Ouvrir un fichier récent
+  @param FileName   Nom du fichier à ouvrir
+  @return L'action créée
+*}
+function TFormMain.MakeFileHistoryAction(const FileName: TFileName): TAction;
+begin
+  Result := TAction.Create(Self);
+  with Result do
+  begin
+    ActionList := ActionManager;
+    Caption := ExtractFileName(FileName);
+    Result.Hint := FileName;
+    OnExecute := ActionOpenRecentFileExecute;
+  end;
+end;
+
+{*
+  Crée une entrée dans le menu des fichiers récents pour toute l'historique
+*}
+procedure TFormMain.MakeFileHistoryActions;
+var
+  I, J: Integer;
+  PreviousItems: TActionClientItemDynArray;
+  Action: TAction;
+  FileName: TFileName;
+begin
+  PreviousItems := FindItemsByAction(ActionOpenRecentNone);
+  SetLength(FileHistoryActions, FileHistory.Count);
+
+  for I := 0 to FileHistory.Count-1 do
+  begin
+    FileName := FileHistory[I];
+    Action := MakeFileHistoryAction(FileName);
+    FileHistoryActions[I] := Action;
+
+    for J := 0 to Length(PreviousItems)-1 do
+      PreviousItems[J] := ActionManager.AddAction(Action, PreviousItems[J]);
+  end;
+end;
+
+{*
+  Supprime toutes les actions Ouvrir un fichier récent et leurs menus associés
+*}
+procedure TFormMain.DeleteFileHistoryActions;
+begin
+  DeleteAllActions(FileHistoryActions);
+end;
+
+{*
+  Find all action item clients matching a given action
+  @param Action   Action to find
+  @return Array of all action item clients matching the given action
+*}
+function TFormMain.FindItemsByAction(
+  Action: TAction): TActionClientItemDynArray;
+var
+  I: Integer;
+begin
+  FActionToFind := Action;
+  FFoundClients.Clear;
+
+  ActionManager.ActionBars.IterateClients(ActionManager.ActionBars,
+    FindItemsByActionCallback);
+
+  SetLength(Result, FFoundClients.Count);
+  for I := 0 to FFoundClients.Count-1 do
+    Result[I] := TActionClientItem(FFoundClients[I]);
+end;
+
+{*
+  Callback for FindItemsByAction
+  @param AClient   Client
+*}
+procedure TFormMain.FindItemsByActionCallback(AClient: TActionClient);
+begin
+  if AClient is TActionClientItem then
+    with TActionClientItem(AClient) do
+      if Action = FActionToFind then
+        FFoundClients.Add(AClient);
+end;
+
+{*
+  Delete and free all actions in a given array
+  @param Actions   Actions to delete
+*}
+procedure TFormMain.DeleteAllActions(var Actions: TActionDynArray);
+var
+  I: Integer;
+begin
+  for I := 0 to Length(Actions)-1 do
+  begin
+    ActionManager.DeleteActionItems([Actions[I]]);
+    Actions[I].Free;
+  end;
+  SetLength(Actions, 0);
 end;
 
 {*
@@ -727,6 +925,8 @@ begin
       BackgroundDiscard(MasterFile);
       raise;
     end;
+
+    AddFileToHistory(FileName);
   end else
   begin
     // Just open an editor
@@ -1014,15 +1214,8 @@ end;
   Supprime toutes les actions Voir un fichier source et leurs menus associés
 *}
 procedure TFormMain.DeleteSourceActions;
-var
-  I: Integer;
 begin
-  for I := 0 to Length(SourceActions)-1 do
-  begin
-    ActionManager.DeleteActionItems([SourceActions[I]]);
-    SourceActions[I].Free;
-  end;
-  SetLength(SourceActions, 0);
+  DeleteAllActions(SourceActions);
 end;
 
 {*
@@ -1172,12 +1365,17 @@ end;
 *}
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
+  // Create the internal objects
   BackgroundTasks := TScTaskQueue.Create(True, False);
+  FileHistory := TStringList.Create;
+  FFoundClients := TObjectList.Create(False);
 
+  // Start the task of loading SepiRoot
   BaseSepiRoot := TSepiRoot.Create;
   BaseSepiRootLoadTask := TScMethodTask.Create(BackgroundTasks,
     LoadBaseSepiRoot, False);
 
+  // Setup some dynamic properties
   Application.OnHint := ApplicationHint;
 
   OpenDialog.InitialDir := fLabyrinthsDir;
@@ -1188,10 +1386,12 @@ begin
 
   MasterFile := nil;
 
+  // Setup references to specific menus
   BigMenuMaps := MainMenuBar.ActionClient.Items[1];
   BigMenuSources := MainMenuBar.ActionClient.Items[2];
   BigMenuExecute := MainMenuBar.ActionClient.Items[4];
 
+  // Create the MapEditor tab
   TabMapEditor := TabBarEditors.Tabs[0];
   FrameMapEditor := TFrameMapEditor.Create(Self);
   with FrameMapEditor do
@@ -1203,11 +1403,17 @@ begin
   TabMapEditor.Data := FrameMapEditor;
   TabMapEditor.Tag := MapEditorTag;
 
+  // Create the compiler messages form
   FormCompilerMessages := TFormCompilerMessages.Create(Self);
   FormCompilerMessages.OnShowError := MessagesShowError;
 
+  // Create the map viewer
   FormMapViewer := TFormMapViewer.Create(Self);
 
+  // Load configuration
+  LoadConfiguration;
+
+  // Open the file specified on the command-line
   if (ParamCount > 0) and FileExists(ParamStr(1)) then
     OpenFile(ParamStr(1));
 end;
@@ -1220,6 +1426,8 @@ procedure TFormMain.FormDestroy(Sender: TObject);
 var
   TriesLeft: Integer;
 begin
+  SaveConfiguration;
+
   Application.OnHint := nil;
 
   FrameMapEditor.Free;
@@ -1237,6 +1445,8 @@ begin
     if TriesLeft <= 0 then
       System.Halt(2);
   end;
+
+  FFoundClients.Free;
 
   BackgroundTasks.Free;
 end;
@@ -1280,6 +1490,18 @@ begin
     SaveDialog.FileName := OpenDialog.FileName;
     OpenFile(OpenDialog.FileName);
   end;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute d'une action Ouvrir un fichier récent
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionOpenRecentFileExecute(Sender: TObject);
+var
+  FileName: TFileName;
+begin
+  FileName := (Sender as TAction).Hint;
+  OpenFile(FileName);
 end;
 
 {*
