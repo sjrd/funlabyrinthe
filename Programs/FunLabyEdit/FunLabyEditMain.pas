@@ -313,7 +313,7 @@ const {don't localize}
   Path = 'FileHistory';
   ItemName = 'File';
 begin
-  OptionsStorage.ReadStringList(Path, FileHistory, False, ItemName);
+  OptionsStorage.ReadStringList(Path, FileHistory, True, ItemName);
   UpdateFileHistory;
 end;
 
