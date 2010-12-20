@@ -1,6 +1,11 @@
 program FunLabyVersionCheck;
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   SysUtils,
   Forms,
   FunLabyVersionCheckMain in 'FunLabyVersionCheckMain.pas' {FormMain};

@@ -1,6 +1,11 @@
 program GeneLaby;
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   Forms,
   ScUtils,
   LabyGene in 'LabyGene.pas' {FormPrincipale};

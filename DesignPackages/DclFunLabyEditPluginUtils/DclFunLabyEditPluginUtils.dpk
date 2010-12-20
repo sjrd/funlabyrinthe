@@ -25,6 +25,7 @@ package DclFunLabyEditPluginUtils;
 {$DESCRIPTION 'Design package for FunLabyEditPluginUtils'}
 {$DESIGNONLY}
 {$IMPLICITBUILD OFF}
+{$DEFINE DEBUG}
 
 requires
   rtl,

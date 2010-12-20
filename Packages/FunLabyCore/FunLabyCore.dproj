@@ -46,6 +46,7 @@
 			<DCC_DUPLICATE_CTOR_DTOR>False</DCC_DUPLICATE_CTOR_DTOR>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_DependencyCheckOutputName>..\..\FunLabyCore.bpl</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_SYMBOL_PLATFORM>False</DCC_SYMBOL_PLATFORM>

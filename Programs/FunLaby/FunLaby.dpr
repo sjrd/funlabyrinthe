@@ -1,6 +1,11 @@
 program FunLaby;
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   Forms,
   WinHelpViewer,
   ScUtils,

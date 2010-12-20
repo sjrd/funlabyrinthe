@@ -25,6 +25,7 @@ package FunLabyForms;
 {$DESCRIPTION 'Forms for FunLabyrinthe'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
+{$DEFINE DEBUG}
 
 requires
   rtl,

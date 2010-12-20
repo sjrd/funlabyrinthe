@@ -48,6 +48,7 @@
 			<DCC_BplOutput>.\..</DCC_BplOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_DependencyCheckOutputName>..\FunDelphiSourceEditor.bpl</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_SYMBOL_PLATFORM>False</DCC_SYMBOL_PLATFORM>

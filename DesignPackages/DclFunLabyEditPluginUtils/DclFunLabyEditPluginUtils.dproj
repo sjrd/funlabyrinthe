@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DesignOnlyPackage>true</DesignOnlyPackage>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
@@ -43,6 +44,7 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<ItemGroup>

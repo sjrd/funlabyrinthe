@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_Description>Forms for FunLabyrinthe</DCC_Description>
@@ -45,6 +46,7 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<ItemGroup>

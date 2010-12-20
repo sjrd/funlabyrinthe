@@ -1,6 +1,11 @@
 program FunLabyEdit;
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   XPMan,
   SysUtils,
   Forms,
