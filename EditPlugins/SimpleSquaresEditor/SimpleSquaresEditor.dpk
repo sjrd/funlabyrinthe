@@ -61,7 +61,8 @@ contains
   SimpleSquaresPlayerColorActionEditor in 'SimpleSquaresPlayerColorActionEditor.pas',
   SimpleSquaresReplaceSquareActionEditor in 'SimpleSquaresReplaceSquareActionEditor.pas',
   SimpleSquaresSimpleMethodActionEditor in 'SimpleSquaresSimpleMethodActionEditor.pas',
-  SimpleSquaresSoundActionEditor in 'SimpleSquaresSoundActionEditor.pas' {FrameSoundActionEditor: TFrame};
+  SimpleSquaresSoundActionEditor in 'SimpleSquaresSoundActionEditor.pas' {FrameSoundActionEditor: TFrame},
+  SimpleSquaresFieldEditor in 'SimpleSquaresFieldEditor.pas' {FrameFieldEditor: TFrame};
 
 end.
 

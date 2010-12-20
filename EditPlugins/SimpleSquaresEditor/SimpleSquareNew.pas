@@ -110,6 +110,8 @@ end;
 *}
 procedure TFormNewSimpleSquare.FormCreate(Sender: TObject);
 begin
+  AddSquareClass(TSimpleField);
+
   AddSquareClass(TSimpleEffect);
   AddSquareClass(TSimpleButton);
   AddSquareClass(TSimpleSwitch);

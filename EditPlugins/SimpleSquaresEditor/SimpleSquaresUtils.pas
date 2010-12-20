@@ -7,6 +7,7 @@ uses
   FunLabyEditOTA, GR32;
 
 resourcestring
+  SSimpleFieldTitle = 'Terrain simple';
   SSimpleEffectTitle = 'Effet simple';
   SSimpleObjectTitle = 'Objet simple';
   SSimpleObstacleTitle = 'Obstacle simple';
@@ -127,13 +128,41 @@ type
   end;
 
   {*
+    Type de condition pour un terrain
+    - fckAlways : le terrain accepte toujours le joueur
+    - fckNever : le terrain n'accepte jamais le joueur
+    - fckCondition : le terrain accepte le joueur s'il peut faire une action
+  *}
+  TFieldConditionKind = (fckAlways, fckNever, fckPlayerAction);
+
+  {*
     Définition d'un terrain simple
     @author sjrd
     @version 5.0
   *}
   TSimpleField = class(TSimpleSquare)
+  private
+    FConditionKind: TFieldConditionKind; /// Type de condition
+    FPlayerAction: TPlayerAction;        /// Action que doit faire le joueur
+
+    FMessageText: string; /// Texte du message associé
+
+    function IsPlayerActionStored: Boolean;
   protected
     function GetComponentType: string; override;
+
+    procedure ProduceInnerClass(Code: TStrings); override;
+  public
+    class function ClassTitle: string; override;
+
+    procedure RegisterActions(Actions: TStrings); override;
+ published
+    property ConditionKind: TFieldConditionKind
+      read FConditionKind write FConditionKind default fckAlways;
+    property PlayerAction: TPlayerAction read FPlayerAction write FPlayerAction
+      stored IsPlayerActionStored;
+
+    property MessageText: string read FMessageText write FMessageText;
   end;
 
   {*
@@ -540,11 +569,88 @@ end;
 {--------------------}
 
 {*
+  Teste si la propriété PlayerAction doit être stockée
+  @return True si la propriété PlayerAction doit être stockée, False sinon
+*}
+function TSimpleField.IsPlayerActionStored: Boolean;
+begin
+  Result := ConditionKind = fckPlayerAction;
+end;
+
+{*
   [@inheritDoc]
 *}
 function TSimpleField.GetComponentType: string;
 begin
   Result := 'field'; {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleField.ProduceInnerClass(Code: TStrings);
+begin
+  inherited;
+
+  if ConditionKind = fckAlways then
+    Exit;
+
+  Code.Add('  on Entering do');
+  Code.Add('  begin');
+  Code.Add('    inherited;');
+  Code.Add('');
+
+  case ConditionKind of
+    fckNever:
+    begin
+      Code.Add('    Cancel;');
+
+      if MessageText <> '' then
+      begin
+        Code.Add('');
+        Code.Add('    if KeyPressed then');
+        Code.Add(Format('      Player.ShowMessage(%s);',
+          [StrToStrRepres(MessageText)]));
+      end;
+    end;
+
+    fckPlayerAction:
+    begin
+      Code.Add(Format('    if Player cannot %s then', [PlayerAction]));
+      Code.Add('    begin');
+      Code.Add('      Cancel;');
+
+      if MessageText <> '' then
+      begin
+        Code.Add('');
+        Code.Add('      if KeyPressed then');
+        Code.Add(Format('        Player.ShowMessage(%s);',
+          [StrToStrRepres(MessageText)]));
+      end;
+
+      Code.Add('    end;');
+    end;
+  end;
+
+  Code.Add('  end;');
+  Code.Add('');
+end;
+
+{*
+  [@inheritDoc]
+*}
+class function TSimpleField.ClassTitle: string;
+begin
+  Result := SSimpleFieldTitle;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TSimpleField.RegisterActions(Actions: TStrings);
+begin
+  if ConditionKind = fckPlayerAction then
+    Actions.Add(PlayerAction);
 end;
 
 {---------------------}

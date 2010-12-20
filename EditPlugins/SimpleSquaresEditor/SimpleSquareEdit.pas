@@ -5,9 +5,9 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ExtCtrls, ExtDlgs, StrUtils, SdDialogs,
-  FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresEffectEditor,
-  SimpleSquaresObjectEditor, SimpleSquaresObstacleEditor, FunLabyCoreConsts,
-  GraphicEx, PainterEditor;
+  FunLabyUtils, FunLabyEditOTA, SimpleSquaresUtils, SimpleSquaresFieldEditor,
+  SimpleSquaresEffectEditor, SimpleSquaresObjectEditor,
+  SimpleSquaresObstacleEditor, FunLabyCoreConsts, GraphicEx, PainterEditor;
 
 type
   {*
@@ -35,6 +35,7 @@ type
     /// Déclenché lorsque le nom ou l'image du composant change
     FOnNameImageChange: TNotifyEvent;
 
+    FieldEditor: TFrameFieldEditor;       /// Éditeur de terrain
     EffectEditor: TFrameEffectEditor;     /// Éditeur d'effet
     ObjectEditor: TFrameObjectEditor;     /// Éditeur d'objet
     ObstacleEditor: TFrameObstacleEditor; /// Éditeur d'obstacle
@@ -66,6 +67,9 @@ implementation
 constructor TFrameEditSimpleSquare.Create(AOwner: TComponent);
 begin
   inherited;
+
+  FieldEditor := TFrameFieldEditor.Create(Self);
+  FieldEditor.Parent := Self;
 
   EffectEditor := TFrameEffectEditor.Create(Self);
   EffectEditor.Parent := Self;
@@ -103,6 +107,7 @@ end;
 *}
 procedure TFrameEditSimpleSquare.SetCurrentSquare(const Value: TSimpleSquare);
 begin
+  FieldEditor.CurrentField := nil;
   EffectEditor.CurrentEffect := nil;
   ObjectEditor.CurrentObject := nil;
   ObstacleEditor.CurrentObstacle := nil;
@@ -130,7 +135,9 @@ begin
 
     EditName.OnChange := EditNameChange;
 
-    if CurrentSquare is TSimpleEffect then
+    if CurrentSquare is TSimpleField then
+      FieldEditor.CurrentField := TSimpleField(CurrentSquare)
+    else if CurrentSquare is TSimpleEffect then
       EffectEditor.CurrentEffect := TSimpleEffect(CurrentSquare)
     else if CurrentSquare is TSimpleObject then
       ObjectEditor.CurrentObject := TSimpleObject(CurrentSquare)
