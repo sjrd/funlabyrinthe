@@ -1325,8 +1325,16 @@ type
 
     /// Indique si le composant désire attraper les messages de la case
     FWantMessages: Boolean;
+
+    FZIndex: Integer;        /// Z-index
+    FDefaultZIndex: Integer; /// Z-index par défaut
+
+    function IsZIndexStored: Boolean;
+
+    procedure SetZIndex(Value: Integer);
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
+    procedure StoreDefaults; override;
 
     procedure SetWantedSquareEvents(Value: TSquareEventKinds);
     procedure SetWantMessages(Value: Boolean);
@@ -1346,6 +1354,7 @@ type
   published
     property Direction: TDirection read FDirection write FDirection
       default diNone;
+    property ZIndex: Integer read FZIndex write SetZIndex stored IsZIndexStored;
   end;
 
   /// Classe de TPosComponent
@@ -1882,7 +1891,13 @@ type
     FPauseTickCount: Cardinal;    /// Tick count au moment de la pause
     FTerminated: Boolean;         /// Indique si la partie est terminée
 
+    FOrderedPosComponents: TObjectList;  /// PosComponents ordonnés par Z-index
+    FOrderedPosComponentsValid: Boolean; /// FOrderedPosComponents est valide
+
     FTimers: TTimerCollection;    /// Collection des timers
+
+    procedure InvalidateOrderedPosComponents;
+    procedure EnsureOrderedPosComponentsValid;
 
     function GetComponentAs(const ID: TComponentID;
       RequiredClass: TFunLabyComponentClass = nil): TFunLabyComponent;
@@ -1919,6 +1934,7 @@ type
     function GetMaps(Index: Integer): TMap;
     function GetPosComponentCount: Integer;
     function GetPosComponents(Index: Integer): TPosComponent;
+    function GetOrderedPosComponents(Index: Integer): TPosComponent;
     function GetMobileComponentCount: Integer;
     function GetMobileComponents(Index: Integer): TMobileComponent;
     function GetPlayerCount: Integer;
@@ -1995,6 +2011,8 @@ type
     property Maps[Index: Integer]: TMap read GetMaps;
     property PosComponentCount: Integer read GetPosComponentCount;
     property PosComponents[Index: Integer]: TPosComponent read GetPosComponents;
+    property OrderedPosComponents[Index: Integer]: TPosComponent
+      read GetOrderedPosComponents;
     property MobileComponentCount: Integer read GetMobileComponentCount;
     property MobileComponents[Index: Integer]: TMobileComponent
       read GetMobileComponents;
@@ -2085,6 +2103,10 @@ implementation
 uses
   IniFiles, StrUtils, Forms, Math, MMSystem, ScStrUtils,
   ScCompilerMagic, ScTypInfo, GraphicEx;
+
+const
+  /// Z-index par défaut pour les joueurs
+  DefaultPlayerZIndex = 1024;
 
 type
   TFunLabyEncoding = class(TUTF8Encoding)
@@ -5311,7 +5333,7 @@ var
 begin
   for I := Master.PosComponentCount-1 downto 0 do
   begin
-    PosComponent := Master.PosComponents[I];
+    PosComponent := Master.OrderedPosComponents[I];
 
     if (EventKind in PosComponent.WantedSquareEvents) and
       (PosComponent.Map = Context.Map) and
@@ -6120,27 +6142,19 @@ procedure TLabyrinthPlayerMode.DrawPosComponents(Context: TDrawViewContext);
 var
   I: Integer;
   PosComponent: TPosComponent;
-  Player: TPlayer;
 begin
-  // Draw non-player pos-components
   for I := 0 to Master.PosComponentCount-1 do
   begin
-    PosComponent := Master.PosComponents[I];
+    PosComponent := Master.OrderedPosComponents[I];
 
-    if not (PosComponent is TPlayer) then
-      DrawPosComponent(Context, PosComponent);
-  end;
-
-  // Draw players
-  for I := 0 to Master.PlayerCount-1 do
-  begin
-    Player := Master.Players[I];
-
-    Player.FLock.BeginRead;
+    // Read-lock players while drawing
+    if PosComponent is TPlayer then
+      TPlayer(PosComponent).FLock.BeginRead;
     try
-      DrawPosComponent(Context, Player);
+      DrawPosComponent(Context, PosComponent);
     finally
-      Player.Flock.EndRead;
+      if PosComponent is TPlayer then
+        TPlayer(PosComponent).FLock.EndRead;
     end;
   end;
 end;
@@ -6231,6 +6245,25 @@ end;
 {---------------------}
 
 {*
+  Teste si la propriété ZIndex doit être enregistrée
+  @return True ssi la propriété ZIndex doit être enregistrée
+*}
+function TPosComponent.IsZIndexStored: Boolean;
+begin
+  Result := FZIndex <> FDefaultZIndex;
+end;
+
+{*
+  Modifie le Z-index
+  @param Value   Nouveau Z-index
+*}
+procedure TPosComponent.SetZIndex(Value: Integer);
+begin
+  FZIndex := Value;
+  Master.InvalidateOrderedPosComponents;
+end;
+
+{*
   [@inheritDoc]
 *}
 procedure TPosComponent.DefineProperties(Filer: TFunLabyFiler);
@@ -6249,6 +6282,16 @@ begin
     @FQPos.Position.Y, HasData);
   Filer.DefineFieldProperty('Position.Z', TypeInfo(Integer),
     @FQPos.Position.Z, HasData);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TPosComponent.StoreDefaults;
+begin
+  inherited;
+
+  FDefaultZIndex := FZIndex;
 end;
 
 {*
@@ -6790,6 +6833,8 @@ begin
   FDefaultTemporization := FunLabyUtils.DefaultTemporization;
 
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
+
+  ZIndex := DefaultPlayerZIndex;
 
   Painter.AddImage(fPlayer);
 end;
@@ -8406,6 +8451,9 @@ begin
   FBeginTickCount := Windows.GetTickCount;
   FTerminated := False;
 
+  FOrderedPosComponents := TObjectList.Create(False);
+  FOrderedPosComponentsValid := True;
+
   FTimers := TTimerCollection.Create(Self);
 end;
 
@@ -8415,6 +8463,8 @@ end;
 destructor TMaster.Destroy;
 begin
   FTimers.Free;
+
+  FOrderedPosComponents.Free;
 
   FComponentsByID.Free;
 
@@ -8434,6 +8484,39 @@ begin
   FImagesMaster.Free;
 
   inherited;
+end;
+
+{*
+  Invalide la liste des PosComponents ordonnés par Z-index
+*}
+procedure TMaster.InvalidateOrderedPosComponents;
+begin
+  FOrderedPosComponentsValid := False;
+end;
+
+{*
+  Compare deux PosComponents par leurs ZIndex
+  @param Item1   Premier PosComponent
+  @param Item2   Second PosComponent
+  @return Relation d'ordre entre Item1 et Item2
+*}
+function ComparePosComponentsByZIndex(Item1, Item2: Pointer): Integer;
+begin
+  Result := TPosComponent(Item1).ZIndex - TPosComponent(Item2).ZIndex;
+end;
+
+{*
+  Assure que la liste des PosComponents ordonnés par Z-index est valide
+*}
+procedure TMaster.EnsureOrderedPosComponentsValid;
+begin
+  if FOrderedPosComponentsValid then
+    Exit;
+
+  FOrderedPosComponents.Assign(FPosComponents);
+  FOrderedPosComponents.Sort(ComparePosComponentsByZIndex);
+
+  FOrderedPosComponentsValid := True;
 end;
 
 {*
@@ -8892,6 +8975,17 @@ begin
 end;
 
 {*
+  Tableau zero-based des composants avec position ordonnés par ZIndex
+  @param Index   Index du composant
+  @return Le composant à la position spécifiée
+*}
+function TMaster.GetOrderedPosComponents(Index: Integer): TPosComponent;
+begin
+  EnsureOrderedPosComponentsValid;
+  Result := TPosComponent(FOrderedPosComponents[Index]);
+end;
+
+{*
   Nombre de composants mobiles (autonomes)
   @return Nombre de composants mobiles (autonomes)
 *}
@@ -8962,6 +9056,7 @@ begin
       FMobileComponents.Add(Component);
     if Component is TPlayer then
       FPlayers.Add(Component);
+    InvalidateOrderedPosComponents;
   end;
 
   if Component.ID <> '' then
@@ -9006,6 +9101,7 @@ begin
       FMobileComponents.Remove(Component);
     if Component is TPlayer then
       FPlayers.Remove(Component);
+    InvalidateOrderedPosComponents;
   end;
 
   FComponents.Extract(Component);

@@ -337,7 +337,7 @@ var
   Index: Integer;
 begin
   Index := FileHistory.IndexOf(FileName);
-  if Index > 0 then
+  if Index >= 0 then
     FileHistory.Move(Index, 0)
   else
   begin

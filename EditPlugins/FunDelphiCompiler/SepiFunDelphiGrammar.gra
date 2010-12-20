@@ -506,6 +506,7 @@ PosCompMember	Simplify
 	Name
 	Category
 	Image
+	ZIndex
 	Property
 	Event
 

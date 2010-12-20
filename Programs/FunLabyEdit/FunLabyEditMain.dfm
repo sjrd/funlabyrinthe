@@ -104,7 +104,7 @@ object FormMain: TFormMain
     Left = 32
     Top = 88
     Bitmap = {
-      494C01010B000E00480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E004C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -556,9 +556,11 @@ object FormMain: TFormMain
                 CommandProperties.Font.Height = -11
                 CommandProperties.Font.Name = 'Tahoma'
                 CommandProperties.Font.Style = []
+                CommandProperties.ParentFont = False
               end
               item
                 Action = ActionOpenRecentNone
+                Caption = '(&Aucun)'
               end>
             Action = ActionOpenFile
             Caption = '&Ouvrir...'
@@ -655,7 +657,7 @@ object FormMain: TFormMain
                     Action = ActionOpenRecentNone
                     Caption = '(&Aucun)'
                   end>
-                Caption = 'Ouvrir r'#233'cent'
+                Caption = 'O&uvrir r'#233'cent'
                 UsageCount = 1
               end
               item
@@ -690,7 +692,7 @@ object FormMain: TFormMain
               end
               item
                 Action = ActionEditUnits
-                Caption = '&Unit'#233's utilis'#233'es...'
+                Caption = 'Un&it'#233's utilis'#233'es...'
               end
               item
                 Caption = '-'

@@ -2401,6 +2401,11 @@ var
 begin
   ZIndexField := LanguageRules.ResolveIdentInMethod(Compiler,
     'FZIndex') as ISepiWritableValue;
+
+  if ZIndexField = nil then
+    ZIndexField := LanguageRules.ResolveIdentInMethod(Compiler,
+      'ZIndex') as ISepiWritableValue;
+
   (ZIndexField as ISepiExpression).SourcePos :=
     (ZIndexValue as ISepiExpression).SourcePos;
 
