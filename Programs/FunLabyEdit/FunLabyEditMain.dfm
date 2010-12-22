@@ -104,7 +104,7 @@ object FormMain: TFormMain
     Left = 32
     Top = 88
     Bitmap = {
-      494C01010B000E004C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E00500010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -698,6 +698,13 @@ object FormMain: TFormMain
                 Caption = '-'
               end
               item
+                Action = ActionAutoCompile
+                Caption = '&Tout recompiler'
+              end
+              item
+                Caption = '-'
+              end
+              item
                 Action = ActionExit
                 Caption = '&Quitter'
                 ImageIndex = 6
@@ -903,6 +910,14 @@ object FormMain: TFormMain
       ImageIndex = 5
       ShortCut = 120
       OnExecute = ActionTestExecute
+    end
+    object ActionAutoCompile: TAction
+      Category = 'File'
+      Caption = 'Tout recompiler'
+      Hint = 
+        'Recompiler toutes les unit'#233's|Recompiler automatiquement toutes l' +
+        'es unit'#233's existantes'
+      OnExecute = ActionAutoCompileExecute
     end
     object ActionExit: TAction
       Category = 'File'

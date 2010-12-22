@@ -27,6 +27,10 @@ resourcestring
   SCantSaveUnplacedPlayer =
     'Impossible d''enregistrer car le joueur d''ID %s n''a pas été placé';
 
+  SAutoCompileSuccessTitle = 'Succès';
+  SAutoCompileSuccess =
+    'La recompilation de toutes unités a été faite avec succès.';
+
   SCantCenterToPosition = 'Impossible de centrer le joueur';
   SCantCenterToUnplacedPlayer =
     'Impossible de centrer sur ce joueur car il n''a pas été placé';

@@ -67,6 +67,7 @@ type
     ActionOpenSourceFile: TAction;
     OptionsStorage: TJvAppXMLFileStorage;
     ActionOpenRecentNone: TAction;
+    ActionAutoCompile: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -80,6 +81,7 @@ type
     procedure ActionFilePropertiesExecute(Sender: TObject);
     procedure ActionEditUnitsExecute(Sender: TObject);
     procedure ActionCloseFileExecute(Sender: TObject);
+    procedure ActionAutoCompileExecute(Sender: TObject);
     procedure ActionExitExecute(Sender: TObject);
     procedure ActionAddMapExecute(Sender: TObject);
     procedure ActionRemoveMapExecute(Sender: TObject);
@@ -480,6 +482,7 @@ begin
   ActionCloseFile.Enabled := True;
   ActionFileProperties.Enabled := True;
   ActionEditUnits.Enabled := True;
+  ActionAutoCompile.Enabled := False;
 
   // Menu des cartes
   BigMenuMaps.Visible := True;
@@ -529,6 +532,7 @@ begin
   ActionCloseFile.Enabled := False;
   ActionFileProperties.Enabled := False;
   ActionEditUnits.Enabled := False;
+  ActionAutoCompile.Enabled := True;
 
   // Menu des cartes
   BigMenuMaps.Visible := False;
@@ -1575,6 +1579,16 @@ begin
     MapEditorTag: CloseFile;
     SourceEditorTag: CloseTab(Tab);
   end;
+end;
+
+{*
+  Gestionnaire d'événement Tout recompiler
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionAutoCompileExecute(Sender: TObject);
+begin
+  if AutoCompile then
+    ShowDialog(SAutoCompileSuccessTitle, SAutoCompileSuccess);
 end;
 
 {*
