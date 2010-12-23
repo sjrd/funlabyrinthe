@@ -1,0 +1,46 @@
+! suffix = '%d.bpl' % bds.numversion
+
+# Delphi core packages
+
+rtl
+dbrtl
+vcl
+vcldb
+vclimg
+vclsmp
+vclx
+
+# Other libs
+
+GIFImage
+GraphicEx
+
+# Libs with a 2009 version
+! suffix = '%s.bpl' % bds.strversion
+SynEdit_R
+GR32_BDS
+! suffix = '%d.bpl' % bds.numversion
+
+# Sepi packages
+
+SCL
+SVCL
+SDL
+SepiCore
+SepiReflection
+SepiInterpreter
+SepiCompiler
+SepiDelphiCompiler
+
+# Sepi imports
+
+SepiRTLSysImport
+SepiWinTypesImport
+SepiRTLCommonImport
+SepiVCLStdImport
+
+SepiSCLImport
+SepiSVCLImport
+SepiSDLImport
+
+SepiGraphics32Import

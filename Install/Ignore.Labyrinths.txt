@@ -1,0 +1,57 @@
+# Old labyrinths we don't want in the setup
+
+1.flp
+a-glagla-2.flp
+a-glagla-3.flp
+a-glagla-4.flp
+a-glagla.flp
+Aventure-Aquatique.flp
+Avion.flp
+Backup.zip
+Chance.flp
+Chasse au Trésor.flp
+Cherche-moi.flp
+Didacticiel (v3.2).flp
+gare sncf.flp
+Julie.flp
+Kévin 1.flp
+Kévin 10.flp
+Kévin 11.flp
+Kévin 2.flp
+Kévin 3.flp
+Kévin 4.flp
+Kévin 5.flp
+Kévin 6.flp
+Kévin 7.flp
+Kévin 8.flp
+Kévin 9.flp
+L'avion des animaux.flp
+L'immeuble des fous.flp
+La tour de l'espoir.flp
+LabyGene.flp
+Labyrinthe de l'aide.flp
+Le big village.flp
+Le château mystérieux.flp
+Le gratte-ciel.flp
+Le Rêve au 7 Casse-Tête.flp
+Le téléscope perdu.flp
+Les 3 mission.flp
+Les catacombes (v4.0).flp
+Les dés.flp
+Maison du sage.flp
+Mon labyrinthe (Kévin Bachelier).flp
+Murs et Murets (v4.3).flp
+Noir.flp
+Petit Grand Lab.flp
+Route.flp
+Sous-marin.flp
+TestErreur.flp
+Tourniquets.flp
+Téléscope géant.flp
+Village.flp
+Ça glisse (v4.2).flp
+
+# Unfinished labs
+
+Histoire à niveaux III.flp
+Test de Héros.flp

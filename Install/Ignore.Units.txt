@@ -1,0 +1,11 @@
+# Types of files to always ignore
+
+*.~*
+*.map
+.git*
+
+# Unfinished labs
+
+TestHeros
+HistoireNiveaux3
+LabyrintheAide
