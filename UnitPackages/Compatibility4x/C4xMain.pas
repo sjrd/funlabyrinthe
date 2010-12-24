@@ -182,7 +182,7 @@ begin
     ActionsFileName := '';
   end;
 
-  SquaresImgName := Params.Values[attrSquaresImgName];
+  SquaresImgName := RemoveDiacritics(Params.Values[attrSquaresImgName]);
   if Master.ImagesMaster.ResolveImgName(fCompatibility+SquaresImgName) = '' then
     SquaresImgName := DefaultSquaresImgName;
 
