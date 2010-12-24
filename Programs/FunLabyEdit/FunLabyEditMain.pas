@@ -640,14 +640,19 @@ end;
   @param BaseDir   Dossier de base
 *}
 procedure TFormMain.AddAllSourceFiles(const BaseDir: TFileName);
+const
+  Extensions: array[0..3] of string = ('.scu', '.ssq', '.fnd', '.pas');
 var
   SearchRec: TSearchRec;
+  Ext: string;
 begin
   // Add .scu files in this directory
-  if FindFirst(BaseDir+'*.scu', faAnyFile, SearchRec) = 0 then
+  if FindFirst(BaseDir+'*.*', faAnyFile, SearchRec) = 0 then
   try
     repeat
-      AddSourceFileFor(BaseDir+SearchRec.Name);
+      Ext := ExtractFileExt(SearchRec.Name);
+      if AnsiMatchText(Ext, Extensions) then
+        AddSourceFileFor(BaseDir+ChangeFileExt(SearchRec.Name, '.scu'));
     until FindNext(SearchRec) <> 0;
   finally
     FindClose(SearchRec);
