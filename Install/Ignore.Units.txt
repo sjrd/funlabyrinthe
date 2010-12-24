@@ -8,4 +8,7 @@
 
 TestHeros
 HistoireNiveaux3
+
+# Labs that are not designed to be distributed
+
 LabyrintheAide
