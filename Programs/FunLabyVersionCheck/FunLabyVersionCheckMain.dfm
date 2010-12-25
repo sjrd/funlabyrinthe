@@ -80,7 +80,7 @@ object FormMain: TFormMain
       Width = 209
       Height = 21
       TabOrder = 1
-      TextHint = 'Adresse votre serveur proxy'
+      TextHint = 'Adresse de votre serveur proxy'
     end
     object EditProxyPort: TEdit
       Left = 160
