@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<DCC_DependencyCheckOutputName>..\..\FunLabyRepo.bpl</DCC_DependencyCheckOutputName>
 			<DCC_BplOutput>.\..\..\</DCC_BplOutput>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>

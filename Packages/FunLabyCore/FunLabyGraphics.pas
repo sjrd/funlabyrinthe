@@ -20,6 +20,9 @@ const
   /// Couleur transparente
   clTransparent32 = TColor32($00000000);
 
+  /// Couleur magique qui force la valeur du canal Alpha
+  clMagicForceAlpha32 = TColor32($00123213);
+
 type
   TAnimatedBitmap32 = class;
 
@@ -125,10 +128,17 @@ procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
 procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
   Dst: TBitmap32; const DstRect, SrcRect: TRect); overload;
 
+function NeedsMagicBlend(Bitmap: TBitmap32): Boolean;
+procedure InstallMagicBlend(Bitmap: TBitmap32);
+procedure InstallMagicBlendIfNeeded(Bitmap: TBitmap32);
+
+var
+  FunLabyMagicBlend: TPixelCombineEvent;
+
 implementation
 
 uses
-  GraphicEx, GraphicStrings, GIFImage;
+  GraphicEx, GraphicStrings, GIFImage, GR32_Blend, ScUtils;
 
 {-----------------}
 { Global routines }
@@ -276,6 +286,8 @@ begin
 
     Result.DrawMode := dmBlend;
     Result.CombineMode := cmMerge;
+
+    InstallMagicBlendIfNeeded(Result);
   except
     Result.Free;
     raise;
@@ -496,6 +508,85 @@ begin
     Src.DrawTo(Dst, DstRect, SrcRect);
 end;
 
+{*
+  Teste si une couleur est une couleur magique pour forcer l'Alpha
+  @param C   Couleur à tester
+  @return True ssi C est une couleur magique pour forcer l'Alpha
+*}
+function IsMagicForceAlpha(C: TColor32): Boolean; inline;
+begin
+  Result := (C and $00FFFFFF) = clMagicForceAlpha32;
+end;
+
+{*
+  Fusionne deux couleurs en tenant compte des valeurs magiques de FunLabyrinthe
+  @param Self   Pas utilisé
+  @param F      Couleur source, d'avant-plan
+  @param B      Couleur destination, d'arrière-plan
+  @param M      Couleur maître
+*}
+procedure _FunLabyMagicBlend(Self: Pointer; F: TColor32; var B: TColor32;
+  M: TColor32);
+begin
+  if IsMagicForceAlpha(F) then
+    B := (B and $00FFFFFF) or (F and $FF000000)
+  else
+    BlendMem(F, B);
+end;
+
+{*
+  Teste si un bitmap a besoin du blend magique de FunLabyrinthe
+  @param Bitmap   Bitmap à tester
+  @return True ssi Bitmap a besoin du blend magique de FunLabyrinthe
+*}
+function NeedsMagicBlend(Bitmap: TBitmap32): Boolean;
+var
+  X, Y: Integer;
+  Line: PColor32Array;
+begin
+  for Y := 0 to Bitmap.Height-1 do
+  begin
+    Line := Bitmap.ScanLine[Y];
+
+    for X := 0 to Bitmap.Width-1 do
+    begin
+      if IsMagicForceAlpha(Line^[X]) then
+      begin
+        Result := True;
+        Exit;
+      end;
+    end;
+  end;
+
+  Result := False;
+end;
+
+{*
+  Installe le blend magique de FunLabyrinthe sur un bitmap
+  @param Bitmap   Bitmap à patcher
+*}
+procedure InstallMagicBlend(Bitmap: TBitmap32);
+begin
+  Bitmap.DrawMode := dmCustom;
+  Bitmap.OnPixelCombine := FunLabyMagicBlend;
+end;
+
+{*
+  Installe le blend magique de FunLabyrinthe sur un bitmap si nécessaire
+  @param Bitmap   Bitmap à patcher
+*}
+procedure InstallMagicBlendIfNeeded(Bitmap: TBitmap32);
+var
+  I: Integer;
+begin
+  if NeedsMagicBlend(Bitmap) then
+    InstallMagicBlend(Bitmap);
+
+  if Bitmap is TAnimatedBitmap32 then
+    for I := 1 to TAnimatedBitmap32(Bitmap).FrameCount-1 do
+      InstallMagicBlendIfNeeded(TAnimatedBitmap32(Bitmap).Frames[I]);
+end;
+
 {----------------------}
 { TBitmap32Frame class }
 {----------------------}
@@ -537,6 +628,9 @@ begin
     Delay := TBitmap32Frame(Source).Delay;
 end;
 
+{*
+  [@inheritDoc]
+*}
 procedure TBitmap32Frame.Changed;
 begin
   inherited;
@@ -647,6 +741,7 @@ begin
       SetSize(Self.Width, Self.Height);
       DrawMode := Self.DrawMode;
       CombineMode := Self.CombineMode;
+      OnPixelCombine := Self.OnPixelCombine;
     end;
   end;
 
@@ -831,6 +926,8 @@ begin
 end;
 
 initialization
+  FunLabyMagicBlend := TPixelCombineEvent(MakeMethod(@_FunLabyMagicBlend));
+
   FileFormatList.UnregisterFileFormat('gif', nil);
   FileFormatList.RegisterFileFormat('gif', gesCompuserve, '',
     [ftRaster, ftMultiImage, ftAnimation], False, True, TGIFImage);
