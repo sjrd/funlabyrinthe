@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, StrUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtDlgs, StdCtrls, ScStrUtils, SdDialogs, GR32, GR32_Image,
-  GR32_Layers, FunLabyUtils;
+  GR32_Layers, FunLabyUtils, FunLabyCoreConsts;
 
 resourcestring
   SInvalidImageFileNameTitle = 'Fichier d''image invalide';
@@ -179,9 +179,19 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormPainterEditor.FormCreate(Sender: TObject);
+var
+  Filter: string;
+  I: Integer;
 begin
-  OpenImageDialog.Filter := FileFormatList.GetGraphicFilter([], fstBoth,
+  Filter := FileFormatList.GetGraphicFilter([], fstBoth,
     [foCompact, foIncludeAll, foIncludeExtension], nil);
+
+  I := PosEx('|', Filter, Pos('|', Filter)+1);
+  Insert(';*.' + PainterExtension, Filter, I);
+
+  Filter := Filter + '|' + SPainterFilter;
+
+  OpenImageDialog.Filter := Filter;
   OpenImageDialog.InitialDir := fSquaresDir;
 end;
 

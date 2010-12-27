@@ -50,6 +50,9 @@ const {don't localize}
   /// Extension d'image préférée
   PreferredImageExtension = 'png';
 
+  /// Extension d'un peintre
+  PainterExtension = 'pnt';
+
 type
   /// Identificateur de composant FunLabyrinthe
   TComponentID = type string;
@@ -726,6 +729,8 @@ type
     FExtensions: TStrings; /// Extensions d'images reconnues
     FImgList: TObjectList; /// Liste d'images interne
     FImgNames: TStrings;   /// Liste des noms des images
+
+    function LoadBitmapFromPainterFile(const FileName: TFileName): TBitmap32;
 
     function LoadImage(const ImgName: string): TBitmap32;
     function Add(const ImgName: string): Integer;
@@ -2103,8 +2108,8 @@ function FunLabyFindClass(const ClassName: string): TFunLabyPersistentClass;
 implementation
 
 uses
-  IniFiles, StrUtils, Forms, Math, MMSystem, ScStrUtils,
-  ScCompilerMagic, ScTypInfo, GraphicEx;
+  IniFiles, StrUtils, Forms, Math, MMSystem, msxml, ScStrUtils, ScXML,
+  ScCompilerMagic, ScTypInfo, GraphicEx, FunLabyFilers;
 
 const
   /// Z-index par défaut pour les joueurs
@@ -2905,6 +2910,7 @@ begin
   FExtensions := TStringList.Create;
   FileFormatList.GetExtensionList(FExtensions);
   FExtensions.Move(FExtensions.IndexOf(PreferredImageExtension), 0);
+  FExtensions.Add(PainterExtension);
 
   FImgList := TObjectList.Create;
   FImgNames := THashedStringList.Create;
@@ -2934,20 +2940,73 @@ begin
 end;
 
 {*
+  Charge un bitmap depuis un fichier peintre
+  @param FileName   Nom du fichier peintre à charger
+  @return Le bitmap chargé
+*}
+function TImagesMaster.LoadBitmapFromPainterFile(
+  const FileName: TFileName): TBitmap32;
+var
+  Painter: TPainter;
+  Document: IXMLDOMDocument;
+  PainterBitmap: TBitmap32;
+begin
+  Result := nil;
+
+  Painter := TPainter.Create(Self);
+  try
+    try
+      Document := LoadXMLDocumentFromFile(FileName);
+      TFunLabyXMLReader.ReadPersistent(Painter, Document.documentElement);
+
+      PainterBitmap := Painter.GetBitmap;
+
+      if PainterBitmap <> nil then
+      begin
+        if PainterBitmap is TAnimatedBitmap32 then
+          Result := TAnimatedBitmap32.Create
+        else
+          Result := TBitmap32.Create;
+
+        Result.Assign(PainterBitmap);
+      end;
+    except
+      on Error: EInOutError do
+      begin
+        Result.Free;
+        Result := nil;
+      end;
+    end;
+  finally
+    Painter.Free;
+  end;
+end;
+
+{*
   Charge une image d'après son nom dans un bitmap
   @param ImgName   Nom de l'image
   @param Bitmap    Bitmap destination
-  @return True si l'image a été trouvée, False sinon
+  @return Le bitmap chargé, ou nil si non trouvé
 *}
 function TImagesMaster.LoadImage(const ImgName: string): TBitmap32;
 var
   FileName: TFileName;
 begin
   FileName := ResolveImgName(ImgName);
+
   if FileName = '' then
-    Result := nil
-  else
+  begin
+    // Not found
+    Result := nil;
+  end else if AnsiSameText(ExtractFileExt(FileName), '.'+PainterExtension) then
+  begin
+    // Painter file
+    Result := LoadBitmapFromPainterFile(FileName);
+  end else
+  begin
+    // Regular image file
     Result := LoadBitmapFromFile(FileName);
+  end;
 end;
 
 {*
