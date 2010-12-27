@@ -21,7 +21,7 @@
 			<Projects Include="Packages\FunLabyEditTools\FunLabyEditTools.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="Packages\FunLabyRepo\FunLabyRepository.dproj">
+			<Projects Include="Packages\FunLabyRepository\FunLabyRepository.dproj">
 				<Dependencies/>
 			</Projects>
 			<Projects Include="Programs\FunLabyEdit\FunLabyEdit.dproj">
@@ -104,13 +104,13 @@
 			<MSBuild Targets="Make" Projects="Packages\FunLabyEditTools\FunLabyEditTools.dproj"/>
 		</Target>
 		<Target Name="FunLabyRepository">
-			<MSBuild Projects="Packages\FunLabyRepo\FunLabyRepository.dproj"/>
+			<MSBuild Projects="Packages\FunLabyRepository\FunLabyRepository.dproj"/>
 		</Target>
 		<Target Name="FunLabyRepository:Clean">
-			<MSBuild Targets="Clean" Projects="Packages\FunLabyRepo\FunLabyRepository.dproj"/>
+			<MSBuild Targets="Clean" Projects="Packages\FunLabyRepository\FunLabyRepository.dproj"/>
 		</Target>
 		<Target Name="FunLabyRepository:Make">
-			<MSBuild Targets="Make" Projects="Packages\FunLabyRepo\FunLabyRepository.dproj"/>
+			<MSBuild Targets="Make" Projects="Packages\FunLabyRepository\FunLabyRepository.dproj"/>
 		</Target>
 		<Target Name="FunLabyEdit">
 			<MSBuild Projects="Programs\FunLabyEdit\FunLabyEdit.dproj"/>
