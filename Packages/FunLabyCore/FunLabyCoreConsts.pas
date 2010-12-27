@@ -81,6 +81,7 @@ resourcestring
     'Les fichiers source ne sont pas gérés en mode jeu';
   SNoFileName = 'Aucun nom de fichier spécifié';
   SCantLoadPackage = 'Impossible de charger le paquet "%s"';
+  SPainterFilter = 'Peintre FunLabyrinthe|*.pnt';
 
 implementation
 
