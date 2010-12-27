@@ -28,7 +28,32 @@ package FunLabyRepository;
 {$DEFINE DEBUG}
 
 requires
-  rtl;
+  rtl,
+  FunLabyCore,
+  GIFImage120,
+  vcl,
+  GraphicEx120,
+  vclimg,
+  GR32_BDS2009,
+  SepiGraphics32Import120,
+  SCL120,
+  SepiReflection120,
+  SepiCore120,
+  SDL120,
+  SVCL120,
+  vclx,
+  VclSmp,
+  SepiVCLStdImport120,
+  SepiSVCLImport120,
+  SepiSDLImport120,
+  SepiSCLImport120,
+  SepiRTLSysImport120,
+  SepiRTLCommonImport120,
+  SepiWinTypesImport120,
+  SepiInterpreter120;
+
+contains
+  FunLabyRepo in 'FunLabyRepo.pas';
 
 end.
 

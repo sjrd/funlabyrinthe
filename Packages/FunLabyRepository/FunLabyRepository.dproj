@@ -48,6 +48,29 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
+			<DCCReference Include="FunLabyCore.dcp"/>
+			<DCCReference Include="GIFImage120.dcp"/>
+			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="GraphicEx120.dcp"/>
+			<DCCReference Include="vclimg.dcp"/>
+			<DCCReference Include="GR32_BDS2009.dcp"/>
+			<DCCReference Include="SepiGraphics32Import120.dcp"/>
+			<DCCReference Include="SCL120.dcp"/>
+			<DCCReference Include="SepiReflection120.dcp"/>
+			<DCCReference Include="SepiCore120.dcp"/>
+			<DCCReference Include="SDL120.dcp"/>
+			<DCCReference Include="SVCL120.dcp"/>
+			<DCCReference Include="vclx.dcp"/>
+			<DCCReference Include="VclSmp.dcp"/>
+			<DCCReference Include="SepiVCLStdImport120.dcp"/>
+			<DCCReference Include="SepiSVCLImport120.dcp"/>
+			<DCCReference Include="SepiSDLImport120.dcp"/>
+			<DCCReference Include="SepiSCLImport120.dcp"/>
+			<DCCReference Include="SepiRTLSysImport120.dcp"/>
+			<DCCReference Include="SepiRTLCommonImport120.dcp"/>
+			<DCCReference Include="SepiWinTypesImport120.dcp"/>
+			<DCCReference Include="SepiInterpreter120.dcp"/>
+			<DCCReference Include="FunLabyRepo.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
