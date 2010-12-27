@@ -1,4 +1,4 @@
-package FunLabyRepo;
+package FunLabyRepository;
 
 {$R *.res}
 {$ALIGN 8}
