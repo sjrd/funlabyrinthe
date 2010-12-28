@@ -1,0 +1,15 @@
+*.ini
+*.pyc
+*.chm
+*.dcu
+*.drc
+*.map
+*.bpl
+*.exe
+*.sci
+*.res
+*.RES
+*.rc
+*.local
+*.identcache
+*.~*
