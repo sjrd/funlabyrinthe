@@ -16,6 +16,9 @@ def cleanRuntimeDir():
     """Clean the Runtime\ install dir."""
     print 'Clean Runtime\\'
 
+    if not os.path.exists(RUNTIME_DIR):
+        os.mkdir(RUNTIME_DIR)
+    
     files = os.listdir(RUNTIME_DIR)
     for file in files:
         filename = os.path.join(RUNTIME_DIR, file)

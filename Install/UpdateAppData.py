@@ -23,6 +23,9 @@ def cleanAppDataDir():
     """Clean the AppData\ install dir."""
     print u'Clean AppData\\'
     
+    if not os.path.exists(DST_APPDATA):
+        os.mkdir(DST_APPDATA)
+    
     for dir in MAIN_DIRS:
         path = os.path.join(DST_APPDATA, dir)
         if os.path.exists(path):
@@ -43,7 +46,7 @@ def getIgnorePatternsFor(dir):
 
 def fetchMainDir(dir):
     """Fetch a main dir."""
-    print u'Popupulate AppData\\'+dir+u'\\'
+    print u'Populate AppData\\'+dir+u'\\'
     
     patterns = getIgnorePatternsFor(dir)
     ignore = shutil.ignore_patterns(*patterns)
