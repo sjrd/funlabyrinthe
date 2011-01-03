@@ -346,6 +346,8 @@ constructor TTransporter.Create(AMaster: TMaster; const AID: TComponentID);
 begin
   inherited;
 
+  AutoEditVisualTag;
+
   FDisabledPainter := TPainter.Create(Master.ImagesMaster);
   FDisabledPainter.BeginUpdate;
 
