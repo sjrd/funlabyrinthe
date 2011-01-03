@@ -931,6 +931,8 @@ type
 
     function GetHint: string; override;
 
+    procedure AutoEditVisualTag;
+
     procedure DoDraw(Context: TDrawSquareContext); virtual;
     procedure DoDrawEditVisualTag(Context: TDrawSquareContext); virtual;
   public
@@ -4703,6 +4705,20 @@ end;
 function TVisualComponent.GetHint: string;
 begin
   Result := Name;
+end;
+
+{*
+  Donne une valuer à EditVisualTag basée sur l'ID de ce composant
+*}
+procedure TVisualComponent.AutoEditVisualTag;
+var
+  I: Integer;
+begin
+  I := Length(ID);
+  while (I > 0) and CharInSet(ID[I], ['0'..'9']) do
+    Dec(I);
+
+  EditVisualTag := Copy(ID, I+1, MaxInt);
 end;
 
 {*

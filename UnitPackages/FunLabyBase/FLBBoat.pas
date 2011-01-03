@@ -96,6 +96,8 @@ var
 begin
   inherited;
 
+  AutoEditVisualTag;
+
   Name := SBoat;
   SetWantMessages(True);
 
