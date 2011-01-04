@@ -68,6 +68,11 @@ type
     OptionsStorage: TJvAppXMLFileStorage;
     ActionOpenRecentNone: TAction;
     ActionAutoCompile: TAction;
+    ActionRepoCommit: TAction;
+    ActionRepoDiff: TAction;
+    ActionRepoLog: TAction;
+    ActionRepoPull: TAction;
+    ActionRepoPublish: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -97,6 +102,11 @@ type
     procedure ActionTestExecute(Sender: TObject);
     procedure ActionCompileAllExecute(Sender: TObject);
     procedure ActionCompileAndReloadExecute(Sender: TObject);
+    procedure ActionRepoCommitExecute(Sender: TObject);
+    procedure ActionRepoDiffExecute(Sender: TObject);
+    procedure ActionRepoLogExecute(Sender: TObject);
+    procedure ActionRepoPullExecute(Sender: TObject);
+    procedure ActionRepoPublishExecute(Sender: TObject);
     procedure ActionHelpTopicsExecute(Sender: TObject);
     procedure ActionVersionCheckExecute(Sender: TObject);
     procedure ActionAboutExecute(Sender: TObject);
@@ -1808,6 +1818,51 @@ procedure TFormMain.ActionCompileAndReloadExecute(Sender: TObject);
 begin
   if SaveAll and CompileAll then
     ReloadFile;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Repo - Commit
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionRepoCommitExecute(Sender: TObject);
+begin
+//
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Repo - Diff
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionRepoDiffExecute(Sender: TObject);
+begin
+//
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Repo - Voir le log
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionRepoLogExecute(Sender: TObject);
+begin
+//
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Repo - Mettre à jour
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionRepoPullExecute(Sender: TObject);
+begin
+//
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Repo - Publier
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionRepoPublishExecute(Sender: TObject);
+begin
+//
 end;
 
 {*
