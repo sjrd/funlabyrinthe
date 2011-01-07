@@ -15,7 +15,7 @@ uses
   FunLabyUtils, FilesUtils, UnitFiles, EditPluginManager, SourceEditors,
   FileProperties, FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile,
   ExtCtrls, ScSyncObjs, CompilerMessages, MapViewer, SepiCompilerErrors,
-  EditMap,
+  EditMap, FunLabyRepo,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA, JvComponentBase,
   JvDragDrop, JvAppStorage, JvAppXMLStorage;
 
@@ -126,6 +126,8 @@ type
 
     BaseSepiRoot: TSepiRoot;       /// Racine Sepi de base
     BaseSepiRootLoadTask: TScTask; /// Tâche de chargement de la racine de base
+
+    Repository: TFunLabyRepo; /// Repository FunLabyrinthe
 
     BigMenuMaps: TActionClient;    /// Menu des cartes
     BigMenuSources: TActionClient; /// Menu des unités
@@ -482,6 +484,7 @@ begin
   Modified := MasterFile.FileName = '';
 
   // Autres variables
+  Repository.MasterFile := MasterFile;
   SepiRoot := MasterFile.SepiRoot;
   Master := MasterFile.Master;
 
@@ -572,6 +575,7 @@ begin
   // Autres variables
   SepiRoot := nil;
   Master := nil;
+  Repository.MasterFile := nil;
 
   // Ne pas laisser la croix de fermeture indiquer une modification
   Modified := False;
@@ -1386,6 +1390,7 @@ procedure TFormMain.FormCreate(Sender: TObject);
 begin
   // Create the internal objects
   BackgroundTasks := TScTaskQueue.Create(True, False);
+  Repository := TFunLabyRepo.Create;
   FileHistory := TStringList.Create;
   FFoundClients := TObjectList.Create(False);
 
@@ -1450,6 +1455,8 @@ begin
   Application.OnHint := nil;
 
   FrameMapEditor.Free;
+
+  Repository.Free;
 
   NeedBaseSepiRoot;
 

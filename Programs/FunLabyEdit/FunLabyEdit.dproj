@@ -25,7 +25,7 @@
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<UsePackages>true</UsePackages>
 			<DCC_DependencyCheckOutputName>FunLabyEdit.exe</DCC_DependencyCheckOutputName>
-			<DCC_UsePackage>vcl;rtl;vclx;dbrtl;vcldb;VclSmp;GraphicEx120;GIFImage120;GR32_BDS2009;SCL120;SVCL120;SDL120;SepiCore120;SepiReflection120;SepiInterpreter120;SepiRTLCommonImport120;SepiRTLSysImport120;SepiSCLImport120;SepiSDLImport120;SepiSVCLImport120;SepiVCLStdImport120;SepiWinTypesImport120;FunLabyCore;FunLabyTools;SepiGraphics32Import120;FunLabyEditTools;FunLabyEditPlugin</DCC_UsePackage>
+			<DCC_UsePackage>vcl;rtl;vclx;dbrtl;vcldb;VclSmp;GraphicEx120;GIFImage120;GR32_BDS2009;SCL120;SVCL120;SDL120;SepiCore120;SepiReflection120;SepiInterpreter120;SepiRTLCommonImport120;SepiRTLSysImport120;SepiSCLImport120;SepiSDLImport120;SepiSVCLImport120;SepiVCLStdImport120;SepiWinTypesImport120;FunLabyCore;FunLabyTools;SepiGraphics32Import120;FunLabyEditTools;FunLabyEditPlugin;FunLabyRepository</DCC_UsePackage>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<DCC_DependencyCheckOutputName>..\..\FunLabyEdit.exe</DCC_DependencyCheckOutputName>

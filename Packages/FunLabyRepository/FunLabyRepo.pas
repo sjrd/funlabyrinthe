@@ -8,7 +8,15 @@ unit FunLabyRepo;
 interface
 
 uses
-  Windows, SysUtils, Classes, FunLabyUtils;
+  Windows, SysUtils, Classes, FunLabyUtils, FilesUtils;
+
+type
+  TFunLabyRepo = class(TObject)
+  private
+    FMasterFile: TMasterFile; /// Maître FunLabyrinthe (peut être nil)
+  public
+    property MasterFile: TMasterFile read FMasterFile write FMasterFile;
+  end;
 
 implementation
 
