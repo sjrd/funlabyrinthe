@@ -70,7 +70,7 @@ end;
 *}
 procedure TFunLabyRepo.Commit;
 begin
-  // TODO
+  TortoiseGIT.Commit;
 end;
 
 {*
@@ -94,7 +94,7 @@ end;
 *}
 procedure TFunLabyRepo.Pull;
 begin
-  // TODO
+  TortoiseGIT.Pull;
 end;
 
 {*
@@ -102,7 +102,7 @@ end;
 *}
 procedure TFunLabyRepo.Publish;
 begin
-  // TODO
+  TortoiseGIT.CreatePatch;
 end;
 
 end.

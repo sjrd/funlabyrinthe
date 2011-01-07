@@ -30,7 +30,10 @@ type
   public
     constructor Create(const APath: TFileName);
 
+    procedure Commit(const LogMsg: string = '');
     procedure ShowLog;
+    procedure Pull;
+    procedure CreatePatch;
 
     property Enabled: Boolean read FEnabled;
 
@@ -137,11 +140,39 @@ begin
 end;
 
 {*
+  Commit
+  @param LogMsg   Message de log prérempli
+*}
+procedure TTortoiseGIT.Commit(const LogMsg: string = '');
+begin
+  if LogMsg = '' then
+    ExecuteCommand('commit', [])
+  else
+    ExecuteCommand('commit', ['logmsg', LogMsg]);
+end;
+
+{*
   Affiche le log du repository
 *}
 procedure TTortoiseGIT.ShowLog;
 begin
   ExecuteCommand('log', []);
+end;
+
+{*
+  Pull depuis le remote repository
+*}
+procedure TTortoiseGIT.Pull;
+begin
+  ExecuteCommand('pull', []);
+end;
+
+{*
+  Crée un patch des modifications locales
+*}
+procedure TTortoiseGIT.CreatePatch;
+begin
+  ExecuteCommand('createpatch', []);
 end;
 
 end.
