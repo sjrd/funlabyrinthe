@@ -1851,7 +1851,7 @@ end;
 *}
 procedure TFormMain.ActionRepoLogExecute(Sender: TObject);
 begin
-//
+  Repository.ShowLog;
 end;
 
 {*

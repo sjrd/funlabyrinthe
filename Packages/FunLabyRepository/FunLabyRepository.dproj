@@ -71,6 +71,8 @@
 			<DCCReference Include="SepiWinTypesImport120.dcp"/>
 			<DCCReference Include="SepiInterpreter120.dcp"/>
 			<DCCReference Include="FunLabyRepo.pas"/>
+			<DCCReference Include="TortoiseGIT.pas"/>
+			<DCCReference Include="FunLabyRepoConsts.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -96,6 +98,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">C:\Projets\FunLabyrinthe\FunLabyEdit.exe</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

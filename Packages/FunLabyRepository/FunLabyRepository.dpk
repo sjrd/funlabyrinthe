@@ -53,7 +53,9 @@ requires
   SepiInterpreter120;
 
 contains
-  FunLabyRepo in 'FunLabyRepo.pas';
+  FunLabyRepo in 'FunLabyRepo.pas',
+  TortoiseGIT in 'TortoiseGIT.pas',
+  FunLabyRepoConsts in 'FunLabyRepoConsts.pas';
 
 end.
 
