@@ -1833,7 +1833,7 @@ end;
 *}
 procedure TFormMain.ActionRepoCommitExecute(Sender: TObject);
 begin
-//
+  Repository.Commit;
 end;
 
 {*
@@ -1842,7 +1842,7 @@ end;
 *}
 procedure TFormMain.ActionRepoDiffExecute(Sender: TObject);
 begin
-//
+  Repository.Diff;
 end;
 
 {*
@@ -1860,7 +1860,7 @@ end;
 *}
 procedure TFormMain.ActionRepoPullExecute(Sender: TObject);
 begin
-//
+  Repository.Pull;
 end;
 
 {*
@@ -1869,7 +1869,7 @@ end;
 *}
 procedure TFormMain.ActionRepoPublishExecute(Sender: TObject);
 begin
-//
+  Repository.Publish;
 end;
 
 {*

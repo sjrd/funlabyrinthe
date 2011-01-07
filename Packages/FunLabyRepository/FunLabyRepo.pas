@@ -28,7 +28,11 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure Commit;
+    procedure Diff;
     procedure ShowLog;
+    procedure Pull;
+    procedure Publish;
 
     property RepoPath: TFileName read FRepoPath;
     property MasterFile: TMasterFile read FMasterFile write FMasterFile;
@@ -62,11 +66,43 @@ begin
 end;
 
 {*
+  Commit
+*}
+procedure TFunLabyRepo.Commit;
+begin
+  // TODO
+end;
+
+{*
+  Affiche les différences entre la working copy et HEAD
+*}
+procedure TFunLabyRepo.Diff;
+begin
+  // TODO
+end;
+
+{*
   Affiche le log du repository
 *}
 procedure TFunLabyRepo.ShowLog;
 begin
   TortoiseGIT.ShowLog;
+end;
+
+{*
+  Met à jour la copie locale depuis Internet
+*}
+procedure TFunLabyRepo.Pull;
+begin
+  // TODO
+end;
+
+{*
+  Publie un patch des modifications locales
+*}
+procedure TFunLabyRepo.Publish;
+begin
+  // TODO
 end;
 
 end.
