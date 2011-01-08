@@ -34,6 +34,8 @@ type
     procedure ShowLog;
     procedure Pull;
     procedure CreatePatch;
+    procedure SendMail;
+    procedure Sync;
 
     property Enabled: Boolean read FEnabled;
 
@@ -173,6 +175,22 @@ end;
 procedure TTortoiseGIT.CreatePatch;
 begin
   ExecuteCommand('createpatch', []);
+end;
+
+{*
+  Envoie un mail avec les modifications locales
+*}
+procedure TTortoiseGIT.SendMail;
+begin
+  ExecuteCommand('sendmail', []);
+end;
+
+{*
+  Ouvre la boîte de dialogue Sync
+*}
+procedure TTortoiseGIT.Sync;
+begin
+  ExecuteCommand('sync', []);
 end;
 
 end.

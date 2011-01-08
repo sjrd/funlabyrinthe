@@ -102,7 +102,7 @@ end;
 *}
 procedure TFunLabyRepo.Publish;
 begin
-  TortoiseGIT.CreatePatch;
+  TortoiseGIT.Sync;
 end;
 
 end.
