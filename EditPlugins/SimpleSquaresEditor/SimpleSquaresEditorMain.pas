@@ -262,8 +262,16 @@ end;
   @return True si l'ID est déjà utilisé, False sinon
 *}
 function TSimpleSquareList.IDExists(const ID: TComponentID): Boolean;
+var
+  I: Integer;
 begin
-  Result := FindByID(ID) <> nil;
+  Result := True;
+
+  for I := 0 to Count-1 do
+    if Items[I].ProvidesID(ID) then
+      Exit;
+
+  Result := False;
 end;
 
 {----------------------------------}
@@ -489,7 +497,7 @@ begin
       SimpleSquares[I].RegisterComponentIDs(Strings);
     Strings.Delete(Strings.IndexOf(''));
     for I := Strings.Count-1 downto 0 do
-      if SimpleSquares.FindByID(Strings[I]) <> nil then
+      if SimpleSquares.IDExists(Strings[I]) then
         Strings.Delete(I);
 
     if Strings.Count > 0 then

@@ -66,6 +66,8 @@ type
 
     class function ClassTitle: string; virtual;
 
+    function ProvidesID(const AID: TComponentID): Boolean; virtual;
+
     procedure Draw(Canvas: TCanvas; BackgroundColor: TColor; X: Integer = 0;
       Y: Integer = 0); virtual;
 
@@ -226,6 +228,8 @@ type
     constructor Create(AImagesMaster: TImagesMaster); override;
 
     class function ClassTitle: string; override;
+
+    function ProvidesID(const AID: TComponentID): Boolean; override;
 
     procedure RegisterActions(Actions: TStrings); override;
     procedure ProduceComponents(Code: TStrings); override;
@@ -401,6 +405,16 @@ end;
 class function TSimpleSquare.ClassTitle: string;
 begin
   Result := '';
+end;
+
+{*
+  Teste si cette case simple fournit un ID de composant donné
+  @param AID   ID à tester
+  @return True ssi cette case simple fournit l'ID AID
+*}
+function TSimpleSquare.ProvidesID(const AID: TComponentID): Boolean;
+begin
+  Result := AnsiSameText(AID, ID);
 end;
 
 {*
@@ -905,6 +919,14 @@ end;
 class function TSimpleObject.ClassTitle: string;
 begin
   Result := SSimpleObjectTitle;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TSimpleObject.ProvidesID(const AID: TComponentID): Boolean;
+begin
+  Result := (inherited ProvidesID(AID)) or AnsiSameText(AID, ID+'Tool');
 end;
 
 {*
