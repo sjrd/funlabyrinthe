@@ -34,11 +34,16 @@ type
     procedure Pull;
     procedure Publish;
 
+    function EditConfiguration: Boolean;
+
     property RepoPath: TFileName read FRepoPath;
     property MasterFile: TMasterFile read FMasterFile write FMasterFile;
   end;
 
 implementation
+
+uses
+  FunLabyRepoConfig;
 
 {--------------------}
 { TFunLabyRepo class }
@@ -103,6 +108,15 @@ end;
 procedure TFunLabyRepo.Publish;
 begin
   TortoiseGIT.Sync;
+end;
+
+{*
+  Édite la configuration du repository
+  @return True si une recompilation des unités est nécessaire
+*}
+function TFunLabyRepo.EditConfiguration: Boolean;
+begin
+  Result := TFormRepoConfig.EditConfiguration;
 end;
 
 end.

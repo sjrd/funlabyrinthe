@@ -73,6 +73,7 @@ type
     ActionRepoLog: TAction;
     ActionRepoPull: TAction;
     ActionRepoPublish: TAction;
+    ActionRepoEditConfig: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -107,6 +108,7 @@ type
     procedure ActionRepoLogExecute(Sender: TObject);
     procedure ActionRepoPullExecute(Sender: TObject);
     procedure ActionRepoPublishExecute(Sender: TObject);
+    procedure ActionRepoEditConfigExecute(Sender: TObject);
     procedure ActionHelpTopicsExecute(Sender: TObject);
     procedure ActionVersionCheckExecute(Sender: TObject);
     procedure ActionAboutExecute(Sender: TObject);
@@ -1870,6 +1872,15 @@ end;
 procedure TFormMain.ActionRepoPublishExecute(Sender: TObject);
 begin
   Repository.Publish;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Repo - Configuration
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionRepoEditConfigExecute(Sender: TObject);
+begin
+  Repository.EditConfiguration;
 end;
 
 {*
