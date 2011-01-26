@@ -55,7 +55,8 @@ requires
 contains
   FunLabyRepo in 'FunLabyRepo.pas',
   TortoiseGIT in 'TortoiseGIT.pas',
-  FunLabyRepoConsts in 'FunLabyRepoConsts.pas';
+  FunLabyRepoConsts in 'FunLabyRepoConsts.pas',
+  FunLabyRepoConfig in 'FunLabyRepoConfig.pas' {FormRepoConfig};
 
 end.
 

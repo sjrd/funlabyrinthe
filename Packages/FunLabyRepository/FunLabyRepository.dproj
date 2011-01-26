@@ -73,6 +73,9 @@
 			<DCCReference Include="FunLabyRepo.pas"/>
 			<DCCReference Include="TortoiseGIT.pas"/>
 			<DCCReference Include="FunLabyRepoConsts.pas"/>
+			<DCCReference Include="FunLabyRepoConfig.pas">
+				<Form>FormRepoConfig</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
