@@ -2074,6 +2074,8 @@ var {don't localize}
   fLabyrinthsDir: string = 'Labyrinths\';
   /// Dossier des fichiers sauvegarde
   fSaveguardsDir: string = 'Saveguards\';
+  /// Dossier des screenshots
+  fScreenshotsDir: string = 'Screenshots\';
   /// Dossier des plug-in de l'éditeur
   fEditPluginDir: string = 'EditPlugins\';
 
@@ -9447,6 +9449,7 @@ initialization
     fUnitsDir := fFunLabyAppData + fUnitsDir;
     fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
     fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
+    fScreenshotsDir := fFunLabyAppData + fScreenshotsDir;
 
     fEditPluginDir := Dir + fEditPluginDir;
   finally

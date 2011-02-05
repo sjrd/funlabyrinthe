@@ -14,6 +14,7 @@ DST_APPDATA = unicode(os.path.join(os.getcwd(), 'AppData'))
 MAIN_DIRS = (
     u'Labyrinths',
     u'Saveguards',
+    u'Screenshots',
     u'Sounds',
     u'Squares',
     u'Units'
