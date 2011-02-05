@@ -6960,6 +6960,7 @@ end;
 procedure TPlayer.SetPluginListStr(const Value: string);
 var
   PluginID, Remaining, Temp: string;
+  Plugin: TPlugin;
 begin
   FLock.BeginWrite;
   try
@@ -6970,7 +6971,9 @@ begin
     begin
       SplitToken(Remaining, ' ', PluginID, Temp);
       Remaining := Temp;
-      FPlugins.Add(Master.Plugin[PluginID]);
+      Plugin := Master.Plugin[PluginID];
+      if Plugin <> nil then
+        FPlugins.Add(Plugin);
     end;
   finally
     FLock.EndWrite;
@@ -7486,6 +7489,8 @@ procedure TPlayer.AddPlugin(Plugin: TPlugin);
 var
   Index: Integer;
 begin
+  Assert(Plugin <> nil);
+
   FLock.BeginWrite;
   try
     if FPlugins.IndexOf(Plugin) >= 0 then
@@ -7508,6 +7513,8 @@ end;
 *}
 procedure TPlayer.RemovePlugin(Plugin: TPlugin);
 begin
+  Assert(Plugin <> nil);
+
   FLock.BeginWrite;
   try
     FPlugins.Remove(Plugin);
