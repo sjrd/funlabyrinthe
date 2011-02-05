@@ -199,6 +199,7 @@ procedure TCompatibility4xUnit.CreateComponents;
 var
   I: Integer;
   Buoys, Planks, SilverKeys, GoldenKeys: TObjectDef;
+  UpStairs, DownStairs: TStairs;
 begin
   // Plugins
 
@@ -244,9 +245,12 @@ begin
 
   TInactiveTransporter.Create(Master, idInactiveTransporter);
 
-  TStairs.CreateStairs(Master, idUpStairs, True);
-  TStairs.CreateStairs(Master, idDownStairs, False);
+  UpStairs := TUpStairs.Create(Master, idUpStairs);
+  DownStairs := TDownStairs.Create(Master, idDownStairs);
   TLift.Create(Master, idLift);
+
+  UpStairs.PairingStairs := DownStairs;
+  DownStairs.PairingStairs := UpStairs;
 
   for I := 1 to 20 do
     TOldStairs.Create(Master, Format(idOldStairs, [I]));

@@ -54,6 +54,7 @@ constructor TFunLabyBaseUnit.Create(AMasterFile: TMasterFile;
   Params: TStrings);
 var
   Buoys, Planks, SilverKeys, GoldenKeys: TObjectDef;
+  UpStairs, DownStairs: TStairs;
 begin
   inherited Create(AMasterFile);
 
@@ -88,9 +89,12 @@ begin
   TInactiveTransporter.Create(Master, idInactiveTransporter);
   TTransporterCreator.Create(Master, idTransporterCreator);
 
-  TStairs.CreateStairs(Master, idUpStairs, True);
-  TStairs.CreateStairs(Master, idDownStairs, False);
+  UpStairs := TUpStairs.Create(Master, idUpStairs);
+  DownStairs := TDownStairs.Create(Master, idDownStairs);
   TLift.Create(Master, idLift);
+
+  UpStairs.PairingStairs := DownStairs;
+  DownStairs.PairingStairs := UpStairs;
 
   TDirectTurnstile.Create(Master, idDirectTurnstile);
   TIndirectTurnstile.Create(Master, idIndirectTurnstile);

@@ -190,21 +190,57 @@ type
     Escaliers
     Les escaliers permettent de monter ou descendre d'un étage
     @author sjrd
-    @version 5.0
+    @version 5.1.2
   *}
   TStairs = class(TEffect)
   private
-    FUp: Boolean; /// Indique si l'escalier est montant
+    FPairingStairs: TStairs; /// Escaliers qui vont de paire avec ceux-ci
+
+    FDefaultPairingStairs: TStairs; /// Valeur par défaut de PairingStairs
 
     procedure EditSquareMap(var Msg: TEditMapSquareMessage);
       message msgEditMapSquare;
+
+    function IsPairingStairsStored: Boolean;
+  protected
+    procedure StoreDefaults; override;
+
+    function GetDestination(const Pos: T3DPoint): T3DPoint; virtual; abstract;
+
+    procedure ErrorDestIsOutsideMap; virtual; abstract;
   public
-    constructor CreateStairs(AMaster: TMaster; const AID: TComponentID;
-      AUp: Boolean);
-
     procedure Execute(Context: TMoveContext); override;
+  published
+    property PairingStairs: TStairs read FPairingStairs write FPairingStairs
+      stored IsPairingStairsStored;
+  end;
 
-    property Up: Boolean read FUp;
+  {*
+    Escalier montant
+    @author sjrd
+    @version 5.1.2
+  *}
+  TUpStairs = class(TStairs)
+  protected
+    function GetDestination(const Pos: T3DPoint): T3DPoint; override;
+
+    procedure ErrorDestIsOutsideMap; override;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
+  end;
+
+  {*
+    Escalier descendant
+    @author sjrd
+    @version 5.1.2
+  *}
+  TDownStairs = class(TStairs)
+  protected
+    function GetDestination(const Pos: T3DPoint): T3DPoint; override;
+
+    procedure ErrorDestIsOutsideMap; override;
+  public
+    constructor Create(AMaster: TMaster; const AID: TComponentID); override;
   end;
 
   {*
@@ -493,31 +529,6 @@ end;
 {----------------}
 
 {*
-  Crée une instance de TStairs
-  @param AMaster      Maître FunLabyrinthe
-  @param AID          ID de l'effet de case
-  @param AName        Nom de la case
-  @param AUp          Indique si l'escalier est montant
-*}
-constructor TStairs.CreateStairs(AMaster: TMaster; const AID: TComponentID;
-  AUp: Boolean);
-begin
-  Create(AMaster, AID);
-
-  FUp := AUp;
-
-  if Up then
-  begin
-    Name := SUpStairs;
-    Painter.AddImage(fUpStairs);
-  end else
-  begin
-    Name := SDownStairs;
-    Painter.AddImage(fDownStairs);
-  end;
-end;
-
-{*
   Déclenché en édition lorsqu'une case est modifiée avec un escalier
   @param Msg   Message
 *}
@@ -527,25 +538,16 @@ var
 begin
   with Msg, QPos do
   begin
-    Other := Position;
-    if Up then
-      Inc(Other.Z)
-    else
-      Dec(Other.Z);
+    Other := GetDestination(Position);
 
     if (Phase = espAdd) and (not Map.InMap(Other)) then
     begin
-      if Up then
-        ShowDialog(sPlaceStairsTitle, sCantPlaceUpStairsAtLastFloor, dtError)
-      else
-        ShowDialog(sPlaceStairsTitle, sCantPlaceDownStairsAtFirstFloor,
-          dtError);
-
+      ErrorDestIsOutsideMap;
       Include(Flags, esfCancel);
       Exit;
     end;
 
-    if not Map.InMap(Other) then
+    if (not Map.InMap(Other)) or (PairingStairs = nil) then
       Exit;
 
     if Phase = espRemove then
@@ -568,10 +570,7 @@ begin
       end;
 
       Map[Position] := ChangeEffect(Map[Position], Self);
-      if Up then
-        Map[Other] := ChangeEffect(Map[Other], idDownStairs)
-      else
-        Map[Other] := ChangeEffect(Map[Other], idUpStairs);
+      Map[Other] := ChangeEffect(Map[Other], PairingStairs);
 
       Include(Flags, esfHandled);
     end;
@@ -579,23 +578,98 @@ begin
 end;
 
 {*
+  Teste si la propriété PairingStairs doit être enregistrée
+  @return True si la propriété PairingStairs doit être enregistrée, False sinon
+*}
+function TStairs.IsPairingStairsStored: Boolean;
+begin
+  Result := FPairingStairs <> FDefaultPairingStairs;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TStairs.StoreDefaults;
+begin
+  inherited;
+
+  FDefaultPairingStairs := FPairingStairs;
+end;
+
+{*
   [@inheritDoc]
 *}
 procedure TStairs.Execute(Context: TMoveContext);
-var
-  Other: T3DPoint;
 begin
   with Context do
   begin
-    Other := Pos;
-    if Up then
-      Inc(Other.Z)
-    else
-      Dec(Other.Z);
-
     Temporize;
-    Player.MoveTo(Other);
+    Player.MoveTo(GetDestination(Pos));
   end;
+end;
+
+{-----------------}
+{ TUpStairs class }
+{-----------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TUpStairs.Create(AMaster: TMaster; const AID: TComponentID);
+begin
+  inherited;
+
+  Name := SUpStairs;
+  Painter.AddImage(fUpStairs);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TUpStairs.GetDestination(const Pos: T3DPoint): T3DPoint;
+begin
+  Result := Pos;
+  Inc(Result.Z);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TUpStairs.ErrorDestIsOutsideMap;
+begin
+  ShowDialog(sPlaceStairsTitle, sCantPlaceUpStairsAtLastFloor, dtError);
+end;
+
+{-------------------}
+{ TDownStairs class }
+{-------------------}
+
+{*
+  [@inheritDoc]
+*}
+constructor TDownStairs.Create(AMaster: TMaster; const AID: TComponentID);
+begin
+  inherited;
+
+  Name := SDownStairs;
+  Painter.AddImage(fDownStairs);
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TDownStairs.GetDestination(const Pos: T3DPoint): T3DPoint;
+begin
+  Result := Pos;
+  Dec(Result.Z);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TDownStairs.ErrorDestIsOutsideMap;
+begin
+  ShowDialog(sPlaceStairsTitle, sCantPlaceDownStairsAtFirstFloor, dtError);
 end;
 
 {-------------------------}
