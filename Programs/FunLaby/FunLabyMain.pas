@@ -296,6 +296,8 @@ begin
     Result := True
   else
   begin
+    Result := False;
+
     try
       case ShowDialog(sExitConfirmTitle, sExitConfirm,
           dtConfirmation, dbYesNoCancel) of
@@ -305,7 +307,7 @@ begin
         Result := True;
       end;
     finally
-      if not WasPaused then
+      if (not WasPaused) or Result then
         Resume;
     end;
 
