@@ -180,6 +180,7 @@ type
     ButtonCollectionMoveDown: TToolButton;
     CollectionImages: TImageList;
     CollectionDisabledImages: TImageList;
+    PanelClassName: TPanel;
     procedure InspectorDataValueChanged(Sender: TObject;
       Data: TJvCustomInspectorData);
     procedure InspectorItemValueError(Sender: TObject;
@@ -1046,7 +1047,13 @@ begin
     ClearInspector;
 
     if Value <> nil then
+    begin
       FillInspector;
+      PanelClassName.Caption := FInspectObject.ClassName;
+    end else
+    begin
+      PanelClassName.Caption := '';
+    end;
   end;
 end;
 
