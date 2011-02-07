@@ -22,9 +22,5 @@ object FrameMapImage: TFrameMapImage
     OnMouseDown = MapViewMouseDown
     OnMouseMove = MapViewMouseMove
     OnMouseUp = MapViewMouseUp
-    ExplicitLeft = 40
-    ExplicitTop = 64
-    ExplicitWidth = 121
-    ExplicitHeight = 105
   end
 end

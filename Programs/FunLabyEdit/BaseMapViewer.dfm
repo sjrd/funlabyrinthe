@@ -169,8 +169,6 @@ object FrameBaseMapViewer: TFrameBaseMapViewer
     inherited MapView: TImgView32
       Width = 364
       Height = 294
-      ExplicitLeft = 0
-      ExplicitTop = 0
       ExplicitWidth = 364
       ExplicitHeight = 294
     end
