@@ -1,4 +1,4 @@
-; Installation de FunLabyrinthe 5.1.1
+; Installation de FunLabyrinthe 5.1.2
 
 [Setup]
 AppID=FunLabyrinthe
@@ -7,22 +7,22 @@ AppVerName={cm:AppVerName}
 AppComments={cm:Description}
 AppContact=sjrd@redaction-developpez.com
 AppPublisher=SJRDoeraene
-AppCopyright=Copyright (C) 2000-2010 Sébastien Doeraene
+AppCopyright=Copyright (C) 2000-2011 Sébastien Doeraene
 AppPublisherURL=http://www.funlabyrinthe.com/
 AppSupportURL=http://www.funlabyrinthe.com/forum/
 AppUpdatesURL=http://www.funlabyrinthe.com/download/
-AppVersion=5.1.1
+AppVersion=5.1.2
 
-VersionInfoProductName=FunLabyrinthe 5.1.1
-VersionInfoDescription=Setup of FunLabyrinthe 5.1.1
-VersionInfoTextVersion=FunLabyrinthe v5.1.1, copyright 2000-2010 SJRDoeraene
-VersionInfoVersion=5.1.1
+VersionInfoProductName=FunLabyrinthe 5.1.2
+VersionInfoDescription=Setup of FunLabyrinthe 5.1.2
+VersionInfoTextVersion=FunLabyrinthe v5.1.2, copyright 2000-2011 Sébastien Doeraene
+VersionInfoVersion=5.1.2
 
 DefaultDirName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,InstallLocation|{pf}\SJRDoeraene\{cm:AppName}}
 DefaultGroupName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,Inno Setup: Icon Group|{cm:AppName}}
 
 OutputDir=.\
-OutputBaseFilename=funlabyrinthe_5_1_1
+OutputBaseFilename=funlabyrinthe_5_1_2
 
 Compression=lzma
 SolidCompression=yes
@@ -34,7 +34,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 
 [CustomMessages]
 fr.AppName=FunLabyrinthe
-fr.AppVerName=FunLabyrinthe 5.1.1
+fr.AppVerName=FunLabyrinthe 5.1.2
 fr.Description=Jeu de labyrinthe très fun avec toutes sortes de gadgets
 
 ; Types d'installation
@@ -834,6 +834,7 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
+
 
 
 
