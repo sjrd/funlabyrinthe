@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, GR32, GR32_Image, GR32_Layers, ScUtils, FunLabyUtils;
+  Dialogs, GR32, GR32_Image, GR32_Layers, ScUtils, FunLabyUtils,
+  FunLabyGraphics;
 
 type
   TPaintMapEvent = procedure(Sender: TObject; Bitmap: TBitmap32;
@@ -54,6 +55,7 @@ type
     function GetPosFromPoint(X, Y: Integer): T3DPoint;
     function GetQPosFromPoint(X, Y: Integer): TQualifiedPos;
 
+    procedure DoDrawBackground(Buffer: TBitmap32);
     procedure DoPaintMap(Buffer: TBitmap32);
     procedure DoDrawZoneLimits(Buffer: TBitmap32);
     procedure DoDrawSelectedPos(Buffer: TBitmap32);
@@ -145,6 +147,15 @@ begin
     Result.Map := nil
   else
     Result.Map := Map;
+end;
+
+{*
+  Dessine le fond opaque
+  @param Buffer   Buffer sur lequel dessiner le fond
+*}
+procedure TFrameMapImage.DoDrawBackground(Buffer: TBitmap32);
+begin
+  FillWithOpaqueBackground(Buffer);
 end;
 
 {*
@@ -355,6 +366,7 @@ begin
       with Map.Dimensions do
         Buffer.SetSize((X+2) * SquareSize, (Y+2) * SquareSize);
 
+      DoDrawBackground(Buffer);
       DoPaintMap(Buffer);
       DoDrawZoneLimits(Buffer);
       DoDrawSelectedPos(Buffer);
