@@ -185,7 +185,7 @@ begin
   // Dessin des composants avec position
   for I := 0 to Map.Master.PosComponentCount-1 do
   begin
-    with Map.Master.PosComponents[I] do
+    with Map.Master.OrderedPosComponents[I] do
     begin
       if (Map = Self.Map) and (Position.Z = Floor) then
       begin
