@@ -10,7 +10,7 @@ interface
 uses
   Windows, SysUtils, Forms, Classes, Controls, Graphics, Dialogs, StdCtrls,
   StrUtils, Math, TypInfo, ScUtils, ScLists, SdDialogs,
-  FunLabyUtils, FunLabyCoreConsts, GR32;
+  FunLabyUtils, FunLabyGraphics, FunLabyCoreConsts, GR32;
 
 type
   {*
@@ -146,6 +146,7 @@ end;
 *}
 procedure TPlayerController.DrawView(Bitmap: TBitmap32);
 begin
+  FillWithOpaqueBackground(Bitmap);
   Player.DrawView(Bitmap);
 end;
 

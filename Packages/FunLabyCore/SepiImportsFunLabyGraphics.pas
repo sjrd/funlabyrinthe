@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'FunLabyGraphics';
   ResourceName = 'SepiImportsFunLabyGraphics';
   TypeCount = 2;
-  MethodCount = 31;
+  MethodCount = 32;
   VariableCount = 1;
 
 var
@@ -252,14 +252,15 @@ begin
   MethodAddresses[20] := @AnimateBitmap_1;
   MethodAddresses[21] := @AnimateBitmap_2;
   MethodAddresses[22] := @DrawRepeat;
-  MethodAddresses[23] := @DrawBitmapAtTimeTo_0;
-  MethodAddresses[24] := @DrawBitmapAtTimeTo_1;
-  MethodAddresses[25] := @DrawBitmapAtTimeTo_2;
-  MethodAddresses[26] := @DrawBitmapAtTimeTo_3;
-  MethodAddresses[27] := @DrawBitmapAtTimeTo_4;
-  MethodAddresses[28] := @NeedsMagicBlend;
-  MethodAddresses[29] := @InstallMagicBlend;
-  MethodAddresses[30] := @InstallMagicBlendIfNeeded;
+  MethodAddresses[23] := @FillWithOpaqueBackground;
+  MethodAddresses[24] := @DrawBitmapAtTimeTo_0;
+  MethodAddresses[25] := @DrawBitmapAtTimeTo_1;
+  MethodAddresses[26] := @DrawBitmapAtTimeTo_2;
+  MethodAddresses[27] := @DrawBitmapAtTimeTo_3;
+  MethodAddresses[28] := @DrawBitmapAtTimeTo_4;
+  MethodAddresses[29] := @NeedsMagicBlend;
+  MethodAddresses[30] := @InstallMagicBlend;
+  MethodAddresses[31] := @InstallMagicBlendIfNeeded;
 end;
 
 procedure InitVarAddresses;

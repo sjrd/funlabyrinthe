@@ -117,6 +117,8 @@ function AnimateBitmap(Bitmap: TBitmap32;
 procedure DrawRepeat(Dest, Src: TBitmap32; const DestRect, SrcRect: TRect;
   TickCount: Cardinal = 0);
 
+procedure FillWithOpaqueBackground(Bitmap: TBitmap32);
+
 procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
   Dst: TBitmap32); overload;
 procedure DrawBitmapAtTimeTo(Src: TBitmap32; TickCount: Cardinal;
@@ -420,6 +422,37 @@ begin
     Dest.ClipRect := OldDestClip;
     Dest.EndUpdate;
     Dest.Changed(DestRect);
+  end;
+end;
+
+{*
+  Remplit un bitmap 32 avec un fond opaque
+  @param Bitmap   Bitmap à remplir
+*}
+procedure FillWithOpaqueBackground(Bitmap: TBitmap32);
+const
+  SmallSquareSize = 16;
+  clEven32 = clBlack32;
+  clOdd32 = clDimGray32;
+  OddToColor: array[Boolean] of TColor32 = (clEven32, clOdd32);
+var
+  Odd: Boolean;
+  I, J, Left, Top: Integer;
+begin
+  for I := 0 to (Bitmap.Width-1) div SmallSquareSize do
+  begin
+    Odd := I mod 2 <> 0;
+    Left := I * SmallSquareSize;
+
+    for J := 0 to (Bitmap.Height-1) div SmallSquareSize do
+    begin
+      Top := J * SmallSquareSize;
+
+      Bitmap.FillRectS(Left, Top, Left+SmallSquareSize, Top+SmallSquareSize,
+        OddToColor[Odd]);
+
+      Odd := not Odd;
+    end;
   end;
 end;
 

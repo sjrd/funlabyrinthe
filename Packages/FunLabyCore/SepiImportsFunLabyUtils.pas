@@ -27,7 +27,7 @@ const // don't localize
   ResourceName = 'SepiImportsFunLabyUtils';
   TypeCount = 64;
   MethodCount = 260;
-  VariableCount = 12;
+  VariableCount = 13;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -1538,7 +1538,8 @@ begin
   VarAddresses[8] := @fUnitsDir;
   VarAddresses[9] := @fLabyrinthsDir;
   VarAddresses[10] := @fSaveguardsDir;
-  VarAddresses[11] := @fEditPluginDir;
+  VarAddresses[11] := @fScreenshotsDir;
+  VarAddresses[12] := @fEditPluginDir;
 end;
 
 {------------------------------------}

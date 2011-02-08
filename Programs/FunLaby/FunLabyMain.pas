@@ -15,7 +15,7 @@ uses
   ScUtils, ScStrUtils, ScSyncObjs, SdDialogs,
   FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
   UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts,
-  GR32_Image, SelectProjectForm;
+  GR32, GR32_Image, SelectProjectForm;
 
 resourcestring
   sFatalErrorTitle = 'Erreur fatale';
@@ -42,6 +42,8 @@ resourcestring
     'vous redemande la prochaine fois.)';
 
 type
+  TSaveScreenshotProc = reference to procedure(Screenshot: TBitmap32);
+
   {*
     Classe de la fiche principale
     @author sjrd
@@ -71,6 +73,11 @@ type
     PaintBox: TPaintBox32;
     MenuVersionCheck: TMenuItem;
     OptionsStorage: TJvAppXMLFileStorage;
+    BigMenuScreenshot: TMenuItem;
+    MenuScreenshotToClipboard: TMenuItem;
+    MenuScreenshotToFile: TMenuItem;
+    SaveScreenshotDialog: TSaveDialog;
+    MenuScreenshotToFileAuto: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure UpdateImage(Sender: TObject);
@@ -86,7 +93,10 @@ type
     procedure MenuDescriptionClick(Sender: TObject);
     procedure MenuPlayerObjectsClick(Sender: TObject);
     procedure MenuReloadGameClick(Sender: TObject);
+    procedure MenuScreenshotToClipboardClick(Sender: TObject);
+    procedure MenuScreenshotToFileClick(Sender: TObject);
     procedure PaintBoxPaintBuffer(Sender: TObject);
+    procedure MenuScreenshotToFileAutoClick(Sender: TObject);
   private
     BackgroundTasks: TScTaskQueue; /// Tâches d'arrière-plan
 
@@ -116,6 +126,10 @@ type
     procedure AdaptSizeToView;
     procedure ShowStatus;
 
+    procedure MakeScreenshot(const SaveProc: TSaveScreenshotProc);
+    procedure SaveBitmap32ToPNGFile(Bitmap32: TBitmap32;
+      const FileName: TFileName);
+
     procedure AskForTutorialIfNeeded;
   end;
 
@@ -125,6 +139,9 @@ var
 implementation
 
 {$R *.DFM}
+
+uses
+  Clipbrd, pngimage;
 
 {------------------}
 { Classe TFormMain }
@@ -207,6 +224,7 @@ begin
   MenuSaveGame.Enabled := True;
   MenuDescription.Enabled := True;
   MenuPlayerObjects.Enabled := True;
+  BigMenuScreenshot.Visible := True;
   ShowStatus;
 
   AdaptSizeToView;
@@ -278,6 +296,8 @@ begin
     Result := True
   else
   begin
+    Result := False;
+
     try
       case ShowDialog(sExitConfirmTitle, sExitConfirm,
           dtConfirmation, dbYesNoCancel) of
@@ -287,7 +307,7 @@ begin
         Result := True;
       end;
     finally
-      if not WasPaused then
+      if (not WasPaused) or Result then
         Resume;
     end;
 
@@ -304,6 +324,7 @@ begin
   MenuSaveGame.Enabled := False;
   MenuDescription.Enabled := False;
   MenuPlayerObjects.Enabled := False;
+  BigMenuScreenshot.Visible := False;
 
   StatusBar.Panels.Clear;
 
@@ -393,6 +414,53 @@ begin
     end;
   finally
     FoundObjects.Free;
+  end;
+end;
+
+{*
+  Fait un screenshot du jeu
+  @param SaveProc   Méthode d'enregistrement du screenshot
+*}
+procedure TFormMain.MakeScreenshot(const SaveProc: TSaveScreenshotProc);
+var
+  Screenshot: TBitmap32;
+begin
+  if Controller = nil then
+    Exit;
+
+  Screenshot := TBitmap32.Create;
+  try
+    Screenshot.SetSize(Controller.ViewWidth, Controller.ViewHeight);
+    Controller.DrawView(Screenshot);
+    SaveProc(Screenshot);
+  finally
+    Screenshot.Free;
+  end;
+end;
+
+{*
+  Enregistre un bitmap 32 dans un fichier .png
+  @param Bitmap32   Bitmap32 à enregistrer
+  @param FileName   Nom du fichier .png
+*}
+procedure TFormMain.SaveBitmap32ToPNGFile(Bitmap32: TBitmap32;
+  const FileName: TFileName);
+var
+  Bitmap: TBitmap;
+  Image: TPngImage;
+begin
+  Bitmap := nil;
+  Image := nil;
+  try
+    Bitmap := TBitmap.Create;
+    Bitmap.Assign(Bitmap32);
+
+    Image := TPngImage.Create;
+    Image.Assign(Bitmap);
+    Image.SaveToFile(FileName);
+  finally
+    Bitmap.Free;
+    Image.Free;
   end;
 end;
 
@@ -589,6 +657,67 @@ begin
 end;
 
 {*
+  Gestionnaire d'événement OnClick du menu Screenshot vers presse-papier
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.MenuScreenshotToClipboardClick(Sender: TObject);
+begin
+  MakeScreenshot(
+    procedure(Screenshot: TBitmap32)
+    begin
+      Clipboard.Assign(Screenshot);
+    end);
+end;
+
+{*
+  Gestionnaire d'événement OnClick du menu Screenshot vers fichier
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.MenuScreenshotToFileClick(Sender: TObject);
+begin
+  MakeScreenshot(
+    procedure(Screenshot: TBitmap32)
+    begin
+      if SaveScreenshotDialog.Execute then
+        SaveBitmap32ToPNGFile(Screenshot, SaveScreenshotDialog.FileName);
+    end);
+end;
+
+{*
+  Gestionnaire d'événement OnClick du menu Screenshot rapide
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.MenuScreenshotToFileAutoClick(Sender: TObject);
+var
+  DirName, FileName: TFileName;
+  I: Integer;
+begin
+  if MasterFile = nil then
+    Exit;
+
+  DirName := ExtractFileName(MasterFile.FileName);
+  DirName := ChangeFileExt(DirName, '');
+  DirName := fScreenshotsDir + DirName + PathDelim;
+
+  ForceDirectories(DirName);
+
+  I := 1;
+  while True do
+  begin
+    FileName := Format('%sScreenshot%d.png', [DirName, I]);
+    if not FileExists(FileName) then
+      Break;
+    Inc(I);
+  end;
+
+  MakeScreenshot(
+    procedure(Screenshot: TBitmap32)
+    begin
+      SaveBitmap32ToPNGFile(Screenshot, FileName);
+    end);
+end;
+
+{*
   Gestionnaire d'événement OnCloseQuery
   @param Sender     Objet qui a déclenché l'événement
   @param CanClose   À position à False pour empêcher la fermeture
@@ -659,5 +788,7 @@ begin
     PaintBox.Buffer.Clear;
 end;
 
+initialization
+  TPicture.UnregisterGraphicClass(TPngImage);
 end.
 

@@ -25,8 +25,8 @@ implementation
 const // don't localize
   UnitName = 'FLBSimpleEffects';
   ResourceName = 'SepiImportsFLBSimpleEffects';
-  TypeCount = 9;
-  MethodCount = 2;
+  TypeCount = 11;
+  MethodCount = 1;
   VariableCount = 13;
 
 var
@@ -40,11 +40,6 @@ type
     class procedure InitMethodAddresses;
   end;
 
-  TSepiImportsTStairs = class(TStairs)
-  private
-    class procedure InitMethodAddresses;
-  end;
-
 {---------------}
 { TArrow import }
 {---------------}
@@ -52,15 +47,6 @@ type
 class procedure TSepiImportsTArrow.InitMethodAddresses;
 begin
   MethodAddresses[0] := @TSepiImportsTArrow.CreateArrow;
-end;
-
-{----------------}
-{ TStairs import }
-{----------------}
-
-class procedure TSepiImportsTStairs.InitMethodAddresses;
-begin
-  MethodAddresses[1] := @TSepiImportsTStairs.CreateStairs;
 end;
 
 {---------------------}
@@ -135,15 +121,16 @@ begin
   TypeInfoArray[3] := TypeInfo(TInactiveTransporter);
   TypeInfoArray[4] := TypeInfo(TTransporterCreator);
   TypeInfoArray[5] := TypeInfo(TStairs);
-  TypeInfoArray[6] := TypeInfo(TDirectTurnstile);
-  TypeInfoArray[7] := TypeInfo(TIndirectTurnstile);
-  TypeInfoArray[8] := TypeInfo(TTreasure);
+  TypeInfoArray[6] := TypeInfo(TUpStairs);
+  TypeInfoArray[7] := TypeInfo(TDownStairs);
+  TypeInfoArray[8] := TypeInfo(TDirectTurnstile);
+  TypeInfoArray[9] := TypeInfo(TIndirectTurnstile);
+  TypeInfoArray[10] := TypeInfo(TTreasure);
 end;
 
 procedure InitMethodAddresses;
 begin
   TSepiImportsTArrow.InitMethodAddresses;
-  TSepiImportsTStairs.InitMethodAddresses;
 end;
 
 procedure InitVarAddresses;
@@ -228,6 +215,26 @@ type
 {$IFEND}
 
 type
+  TCheckAlignmentForTUpStairs = record
+    Dummy: Byte;
+    Field: TUpStairs;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTUpStairs) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TUpStairs n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTDownStairs = record
+    Dummy: Byte;
+    Field: TDownStairs;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTDownStairs) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TDownStairs n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
   TCheckAlignmentForTDirectTurnstile = record
     Dummy: Byte;
     Field: TDirectTurnstile;
@@ -275,7 +282,9 @@ begin
   CheckInstanceSize(TTransporter, 72, 64);
   CheckInstanceSize(TInactiveTransporter, 72, 72);
   CheckInstanceSize(TTransporterCreator, 40, 40);
-  CheckInstanceSize(TStairs, 68, 64);
+  CheckInstanceSize(TStairs, 72, 64);
+  CheckInstanceSize(TUpStairs, 72, 72);
+  CheckInstanceSize(TDownStairs, 72, 72);
   CheckInstanceSize(TDirectTurnstile, 64, 64);
   CheckInstanceSize(TIndirectTurnstile, 64, 64);
   CheckInstanceSize(TTreasure, 64, 64);

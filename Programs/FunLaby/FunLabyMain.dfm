@@ -98,6 +98,25 @@ object FormMain: TFormMain
         OnClick = MenuExitClick
       end
     end
+    object BigMenuScreenshot: TMenuItem
+      Caption = '&Screenshot'
+      Visible = False
+      object MenuScreenshotToClipboard: TMenuItem
+        Caption = 'Vers presse-papier'
+        ShortCut = 16499
+        OnClick = MenuScreenshotToClipboardClick
+      end
+      object MenuScreenshotToFile: TMenuItem
+        Caption = 'Vers fichier...'
+        ShortCut = 8307
+        OnClick = MenuScreenshotToFileClick
+      end
+      object MenuScreenshotToFileAuto: TMenuItem
+        Caption = 'Screenshot rapide'
+        ShortCut = 115
+        OnClick = MenuScreenshotToFileAutoClick
+      end
+    end
     object BigMenuHelp: TMenuItem
       Caption = '&Aide'
       object MenuHelpTopics: TMenuItem
@@ -158,6 +177,14 @@ object FormMain: TFormMain
     RootNodeName = 'configuration'
     SubStorages = <>
     Left = 40
+    Top = 184
+  end
+  object SaveScreenshotDialog: TSaveDialog
+    DefaultExt = 'png'
+    Filter = 'Image Portable Network Graphic (*.png)|*.png'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    Title = 'Enregistrer le screenshot'
+    Left = 136
     Top = 184
   end
 end
