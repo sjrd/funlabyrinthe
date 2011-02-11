@@ -72,6 +72,13 @@ type
   /// Mode de dessin d'un joueur
   TPlayerDrawMode = (dmColoredPainter, dmPainter, dmDirPainter);
 
+  /// Type de ressource
+  TResourceKind = (rkImage, rkSound);
+
+  /// Type de callback pour trouver une ressource
+  TFindResourceCallback = reference to function(const HRef: string;
+    Kind: TResourceKind): TFileName;
+
   /// Classe de base des exceptions FunLabyrinthe
   EFunLabyException = class(Exception);
 
@@ -89,6 +96,9 @@ type
 
   /// Générée en cas de mauvaise définition d'une case
   EBadSquareDefException = class(EFunLabyException);
+
+  /// Générée si une ressource n'a pas pu être trouvée
+  EResourceNotFoundException = class(EInOutError);
 
   TDrawViewContext = class;
   TMoveContext = class;
@@ -1877,6 +1887,9 @@ type
   *}
   TMaster = class(TFunLabyPersistent)
   private
+    /// Callback pour trouver une ressource
+    FFindResourceCallback: TFindResourceCallback;
+
     FImagesMaster: TImagesMaster;   /// Maître d'images
     FComponents: TObjectList;       /// Liste de tous les composants
     FPlugins: TObjectList;          /// Liste des plug-in
@@ -1959,7 +1972,8 @@ type
     procedure DefineProperties(Filer: TFunLabyFiler); override;
     procedure EndState(State: TPersistentState); override;
   public
-    constructor Create(AEditing: Boolean);
+    constructor Create(AEditing: Boolean;
+      const AFindResourceCallback: TFindResourceCallback);
     destructor Destroy; override;
 
     procedure BeforeDestruction; override;
@@ -1968,6 +1982,8 @@ type
 
     function ComponentExists(const ID: TComponentID): Boolean;
     procedure CheckComponentID(const ID: TComponentID);
+
+    function FindResource(const HRef: string; Kind: TResourceKind): TFileName;
 
     function SquareByComps(
       const Field, Effect, Tool, Obstacle: TComponentID): TSquare; overload;
@@ -8504,9 +8520,12 @@ end;
 {*
   Crée une instance de TMaster
 *}
-constructor TMaster.Create(AEditing: Boolean);
+constructor TMaster.Create(AEditing: Boolean;
+  const AFindResourceCallback: TFindResourceCallback);
 begin
   inherited Create;
+
+  FFindResourceCallback := AFindResourceCallback;
 
   FImagesMaster := TImagesMaster.Create;
 
@@ -9316,6 +9335,19 @@ begin
 
   if ComponentExists(ID) then
     raise EInvalidID.CreateFmt(SDuplicateID, [ID]);
+end;
+
+{*
+  Cherche une ressource d'après son href et son type
+  @param HRef   HRef de la ressource
+  @param Kind   Type de ressource recherchée
+  @return Nom complet du fichier pour cette ressource
+  @throws EResourceNotFoundException La ressource n'a pas pu être trouvée
+*}
+function TMaster.FindResource(const HRef: string;
+  Kind: TResourceKind): TFileName;
+begin
+  Result := FFindResourceCallback(HRef, Kind);
 end;
 
 {*

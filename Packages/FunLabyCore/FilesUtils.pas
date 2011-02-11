@@ -234,6 +234,8 @@ type
     function MakeHRef(const FileName: TFileName;
       const DefaultDir: string): string;
 
+    function FindResource(const HRef: string; Kind: TResourceKind): TFileName;
+
     function AddSourceFile(const HRef: string): TSourceFile;
     procedure RemoveSourceFile(SourceFile: TSourceFile);
     function FindSourceFile(const FileName: TFileName): TSourceFile;
@@ -310,7 +312,7 @@ var
 implementation
 
 uses
-  StrUtils, ScStrUtils, IniFiles, Variants, MSXML, ActiveX;
+  StrUtils, ScStrUtils, IniFiles, Variants, TypInfo, MSXML, ActiveX;
 
 {*
   Teste si un nom de fichier donné a une extension donnée
@@ -687,7 +689,7 @@ begin
   FAllowEdit := True;
   FIsSaveguard := False;
 
-  FMaster := TMaster.Create(Mode = fmEdit);
+  FMaster := TMaster.Create(Mode = fmEdit, FindResource);
 
   FUnitFiles := TUnitFileList.Create(Self);
   FSourceFiles := TSourceFileList.Create(Self);
@@ -995,6 +997,28 @@ function TMasterFile.MakeHRef(const FileName: TFileName;
   const DefaultDir: string): string;
 begin
   Result := FileNameToHRef(FileName, [DefaultDir]);
+end;
+
+{*
+  Cherche une ressource d'après son href et son type
+  @param HRef   HRef de la ressource
+  @param Kind   Type de ressource recherchée
+  @return Nom complet du fichier pour cette ressource
+  @throws EResourceNotFoundException La ressource n'a pas pu être trouvée
+*}
+function TMasterFile.FindResource(const HRef: string;
+  Kind: TResourceKind): TFileName;
+begin
+  case Kind of
+    rkImage: Result := ResolveHRef(HRef, fSquaresDir);
+    rkSound: Result := ResolveHRef(HRef, fSoundsDir);
+  else
+    Assert(False);
+  end;
+
+  if Result = '' then
+    raise EResourceNotFoundException.CreateFmt(SResourceNotFound,
+      [HRef, GetEnumName(TypeInfo(TResourceKind), Ord(Kind))]);
 end;
 
 {*

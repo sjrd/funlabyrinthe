@@ -25,8 +25,8 @@ implementation
 const // don't localize
   UnitName = 'FunLabyUtils';
   ResourceName = 'SepiImportsFunLabyUtils';
-  TypeCount = 64;
-  MethodCount = 260;
+  TypeCount = 67;
+  MethodCount = 261;
   VariableCount = 13;
 
 var
@@ -1240,12 +1240,13 @@ begin
   MethodAddresses[233] := @TSepiImportsTMaster.Create;
   MethodAddresses[234] := @TSepiImportsTMaster.ComponentExists;
   MethodAddresses[235] := @TSepiImportsTMaster.CheckComponentID;
-  MethodAddresses[236] := @TSepiImportsTMaster.SquareByComps_0;
-  MethodAddresses[237] := @TSepiImportsTMaster.SquareByComps_1;
-  MethodAddresses[238] := @TSepiImportsTMaster.RegisterComponents;
-  MethodAddresses[239] := @TSepiImportsTMaster.CreateAdditionnalComponent;
-  MethodAddresses[240] := @TSepiImportsTMaster.TryPause;
-  MethodAddresses[241] := @TSepiImportsTMaster.Resume;
+  MethodAddresses[236] := @TSepiImportsTMaster.FindResource;
+  MethodAddresses[237] := @TSepiImportsTMaster.SquareByComps_0;
+  MethodAddresses[238] := @TSepiImportsTMaster.SquareByComps_1;
+  MethodAddresses[239] := @TSepiImportsTMaster.RegisterComponents;
+  MethodAddresses[240] := @TSepiImportsTMaster.CreateAdditionnalComponent;
+  MethodAddresses[241] := @TSepiImportsTMaster.TryPause;
+  MethodAddresses[242] := @TSepiImportsTMaster.Resume;
 end;
 
 {---------------------}
@@ -1400,64 +1401,67 @@ begin
   TypeInfoArray[3] := TypeInfo(TPlayerAction);
   TypeInfoArray[4] := TypeInfo(TPlayState);
   TypeInfoArray[5] := TypeInfo(TPlayerDrawMode);
-  TypeInfoArray[6] := TypeInfo(EFunLabyException);
-  TypeInfoArray[7] := TypeInfo(EComponentNotFound);
-  TypeInfoArray[8] := TypeInfo(EInvalidID);
-  TypeInfoArray[9] := TypeInfo(EInvalidCommand);
-  TypeInfoArray[10] := TypeInfo(EUnsupportedCommand);
-  TypeInfoArray[11] := TypeInfo(EBadSquareDefException);
-  TypeInfoArray[12] := TypeInfo(TPlayerShowMsgMessage);
-  TypeInfoArray[13] := TypeInfo(TSquareEventKind);
-  TypeInfoArray[14] := TypeInfo(TSquareEventKinds);
-  TypeInfoArray[15] := TypeInfo(TEditMapSquarePhase);
-  TypeInfoArray[16] := TypeInfo(TEditMapSquareFlag);
-  TypeInfoArray[17] := TypeInfo(TEditMapSquareFlags);
-  TypeInfoArray[18] := TypeInfo(TRegisterComponentProc);
-  TypeInfoArray[19] := TypeInfo(TDrawSquareContext);
-  TypeInfoArray[20] := TypeInfo(TDrawViewContext);
-  TypeInfoArray[21] := TypeInfo(TKeyEventContext);
-  TypeInfoArray[22] := TypeInfo(TMoveContext);
-  TypeInfoArray[23] := TypeInfo(TMoveContextMethod);
-  TypeInfoArray[24] := TypeInfo(TPersistentStateItem);
-  TypeInfoArray[25] := TypeInfo(TPersistentState);
-  TypeInfoArray[26] := TypeInfo(TFunLabyPersistent);
-  TypeInfoArray[27] := TypeInfo(TInterfacedFunLabyPersistent);
-  TypeInfoArray[28] := TypeInfo(TFunLabyCollection);
-  TypeInfoArray[29] := TypeInfo(TFunLabyFiler);
-  TypeInfoArray[30] := TypeInfo(TFunLabyReader);
-  TypeInfoArray[31] := TypeInfo(TFunLabyWriter);
-  TypeInfoArray[32] := TypeInfo(TFunLabyStoredDefaultsFiler);
-  TypeInfoArray[33] := TypeInfo(TImagesMaster);
-  TypeInfoArray[34] := TypeInfo(TPainter);
-  TypeInfoArray[35] := TypeInfo(TPlayerData);
-  TypeInfoArray[36] := TypeInfo(TFunLabyComponent);
-  TypeInfoArray[37] := TypeInfo(TVisualComponent);
-  TypeInfoArray[38] := TypeInfo(TComponentCreator);
-  TypeInfoArray[39] := TypeInfo(TPlugin);
-  TypeInfoArray[40] := TypeInfo(TPluginDynArray);
-  TypeInfoArray[41] := TypeInfo(TObjectDefPlayerData);
-  TypeInfoArray[42] := TypeInfo(TObjectDef);
-  TypeInfoArray[43] := TypeInfo(TSquareComponent);
-  TypeInfoArray[44] := TypeInfo(TField);
-  TypeInfoArray[45] := TypeInfo(TEffect);
-  TypeInfoArray[46] := TypeInfo(TTool);
-  TypeInfoArray[47] := TypeInfo(TObstacle);
-  TypeInfoArray[48] := TypeInfo(TSquare);
-  TypeInfoArray[49] := TypeInfo(TSquareDynArray);
-  TypeInfoArray[50] := TypeInfo(TMap);
-  TypeInfoArray[51] := TypeInfo(TPosComponent);
-  TypeInfoArray[52] := TypeInfo(TSquareModifier);
-  TypeInfoArray[53] := TypeInfo(TVehiclePlugin);
-  TypeInfoArray[54] := TypeInfo(TVehicle);
-  TypeInfoArray[55] := TypeInfo(TMobileComponent);
-  TypeInfoArray[56] := TypeInfo(IPlayerMode);
-  TypeInfoArray[57] := TypeInfo(TPlayerMode);
-  TypeInfoArray[58] := TypeInfo(TLabyrinthPlayerMode);
-  TypeInfoArray[59] := TypeInfo(TPlayer);
-  TypeInfoArray[60] := TypeInfo(TTimerEntry);
-  TypeInfoArray[61] := TypeInfo(TNotificationMsgTimerEntry);
-  TypeInfoArray[62] := TypeInfo(TTimerCollection);
-  TypeInfoArray[63] := TypeInfo(TMaster);
+  TypeInfoArray[6] := TypeInfo(TResourceKind);
+  TypeInfoArray[7] := TypeInfo(TFindResourceCallback);
+  TypeInfoArray[8] := TypeInfo(EFunLabyException);
+  TypeInfoArray[9] := TypeInfo(EComponentNotFound);
+  TypeInfoArray[10] := TypeInfo(EInvalidID);
+  TypeInfoArray[11] := TypeInfo(EInvalidCommand);
+  TypeInfoArray[12] := TypeInfo(EUnsupportedCommand);
+  TypeInfoArray[13] := TypeInfo(EBadSquareDefException);
+  TypeInfoArray[14] := TypeInfo(EResourceNotFoundException);
+  TypeInfoArray[15] := TypeInfo(TPlayerShowMsgMessage);
+  TypeInfoArray[16] := TypeInfo(TSquareEventKind);
+  TypeInfoArray[17] := TypeInfo(TSquareEventKinds);
+  TypeInfoArray[18] := TypeInfo(TEditMapSquarePhase);
+  TypeInfoArray[19] := TypeInfo(TEditMapSquareFlag);
+  TypeInfoArray[20] := TypeInfo(TEditMapSquareFlags);
+  TypeInfoArray[21] := TypeInfo(TRegisterComponentProc);
+  TypeInfoArray[22] := TypeInfo(TDrawSquareContext);
+  TypeInfoArray[23] := TypeInfo(TDrawViewContext);
+  TypeInfoArray[24] := TypeInfo(TKeyEventContext);
+  TypeInfoArray[25] := TypeInfo(TMoveContext);
+  TypeInfoArray[26] := TypeInfo(TMoveContextMethod);
+  TypeInfoArray[27] := TypeInfo(TPersistentStateItem);
+  TypeInfoArray[28] := TypeInfo(TPersistentState);
+  TypeInfoArray[29] := TypeInfo(TFunLabyPersistent);
+  TypeInfoArray[30] := TypeInfo(TInterfacedFunLabyPersistent);
+  TypeInfoArray[31] := TypeInfo(TFunLabyCollection);
+  TypeInfoArray[32] := TypeInfo(TFunLabyFiler);
+  TypeInfoArray[33] := TypeInfo(TFunLabyReader);
+  TypeInfoArray[34] := TypeInfo(TFunLabyWriter);
+  TypeInfoArray[35] := TypeInfo(TFunLabyStoredDefaultsFiler);
+  TypeInfoArray[36] := TypeInfo(TImagesMaster);
+  TypeInfoArray[37] := TypeInfo(TPainter);
+  TypeInfoArray[38] := TypeInfo(TPlayerData);
+  TypeInfoArray[39] := TypeInfo(TFunLabyComponent);
+  TypeInfoArray[40] := TypeInfo(TVisualComponent);
+  TypeInfoArray[41] := TypeInfo(TComponentCreator);
+  TypeInfoArray[42] := TypeInfo(TPlugin);
+  TypeInfoArray[43] := TypeInfo(TPluginDynArray);
+  TypeInfoArray[44] := TypeInfo(TObjectDefPlayerData);
+  TypeInfoArray[45] := TypeInfo(TObjectDef);
+  TypeInfoArray[46] := TypeInfo(TSquareComponent);
+  TypeInfoArray[47] := TypeInfo(TField);
+  TypeInfoArray[48] := TypeInfo(TEffect);
+  TypeInfoArray[49] := TypeInfo(TTool);
+  TypeInfoArray[50] := TypeInfo(TObstacle);
+  TypeInfoArray[51] := TypeInfo(TSquare);
+  TypeInfoArray[52] := TypeInfo(TSquareDynArray);
+  TypeInfoArray[53] := TypeInfo(TMap);
+  TypeInfoArray[54] := TypeInfo(TPosComponent);
+  TypeInfoArray[55] := TypeInfo(TSquareModifier);
+  TypeInfoArray[56] := TypeInfo(TVehiclePlugin);
+  TypeInfoArray[57] := TypeInfo(TVehicle);
+  TypeInfoArray[58] := TypeInfo(TMobileComponent);
+  TypeInfoArray[59] := TypeInfo(IPlayerMode);
+  TypeInfoArray[60] := TypeInfo(TPlayerMode);
+  TypeInfoArray[61] := TypeInfo(TLabyrinthPlayerMode);
+  TypeInfoArray[62] := TypeInfo(TPlayer);
+  TypeInfoArray[63] := TypeInfo(TTimerEntry);
+  TypeInfoArray[64] := TypeInfo(TNotificationMsgTimerEntry);
+  TypeInfoArray[65] := TypeInfo(TTimerCollection);
+  TypeInfoArray[66] := TypeInfo(TMaster);
 end;
 
 procedure InitMethodAddresses;
@@ -1505,24 +1509,24 @@ begin
   TSepiImportsTNotificationMsgTimerEntry.InitMethodAddresses;
   TSepiImportsTTimerCollection.InitMethodAddresses;
   TSepiImportsTMaster.InitMethodAddresses;
-  MethodAddresses[242] := @ShowFunLabyAbout;
-  MethodAddresses[243] := @FunLabyEncoding;
-  MethodAddresses[244] := @PointBehind;
-  MethodAddresses[245] := @PointBefore;
-  MethodAddresses[246] := @CreateEmptySquareBitmap;
-  MethodAddresses[247] := @SquareRect;
-  MethodAddresses[248] := @EmptyRect;
-  MethodAddresses[249] := @EmptySquareRect;
-  MethodAddresses[250] := @DrawBitmap32ToCanvas;
-  MethodAddresses[251] := @SameRect;
-  MethodAddresses[252] := @SameQPos;
-  MethodAddresses[253] := @IsNoQPos;
-  MethodAddresses[254] := @FunLabyRegisterClass;
-  MethodAddresses[255] := @FunLabyUnregisterClass;
-  MethodAddresses[256] := @FunLabyRegisterClasses;
-  MethodAddresses[257] := @FunLabyUnregisterClasses;
-  MethodAddresses[258] := @FunLabyGetClass;
-  MethodAddresses[259] := @FunLabyFindClass;
+  MethodAddresses[243] := @ShowFunLabyAbout;
+  MethodAddresses[244] := @FunLabyEncoding;
+  MethodAddresses[245] := @PointBehind;
+  MethodAddresses[246] := @PointBefore;
+  MethodAddresses[247] := @CreateEmptySquareBitmap;
+  MethodAddresses[248] := @SquareRect;
+  MethodAddresses[249] := @EmptyRect;
+  MethodAddresses[250] := @EmptySquareRect;
+  MethodAddresses[251] := @DrawBitmap32ToCanvas;
+  MethodAddresses[252] := @SameRect;
+  MethodAddresses[253] := @SameQPos;
+  MethodAddresses[254] := @IsNoQPos;
+  MethodAddresses[255] := @FunLabyRegisterClass;
+  MethodAddresses[256] := @FunLabyUnregisterClass;
+  MethodAddresses[257] := @FunLabyRegisterClasses;
+  MethodAddresses[258] := @FunLabyUnregisterClasses;
+  MethodAddresses[259] := @FunLabyGetClass;
+  MethodAddresses[260] := @FunLabyFindClass;
 end;
 
 procedure InitVarAddresses;
@@ -1613,6 +1617,26 @@ type
 {$IFEND}
 
 type
+  TCheckAlignmentForTResourceKind = record
+    Dummy: Byte;
+    Field: TResourceKind;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTResourceKind) <> (1 + 1)}
+  {$MESSAGE WARN 'Le type TResourceKind n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForTFindResourceCallback = record
+    Dummy: Byte;
+    Field: TFindResourceCallback;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTFindResourceCallback) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TFindResourceCallback n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
   TCheckAlignmentForEFunLabyException = record
     Dummy: Byte;
     Field: EFunLabyException;
@@ -1670,6 +1694,16 @@ type
 
 {$IF SizeOf(TCheckAlignmentForEBadSquareDefException) <> (4 + 4)}
   {$MESSAGE WARN 'Le type EBadSquareDefException n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForEResourceNotFoundException = record
+    Dummy: Byte;
+    Field: EResourceNotFoundException;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForEResourceNotFoundException) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type EResourceNotFoundException n''a pas l''alignement calculé par Sepi'}
 {$IFEND}
 
 {$IF SizeOf(TQualifiedPos) <> 16}
@@ -2402,6 +2436,7 @@ begin
   CheckInstanceSize(EInvalidCommand, 28, 28);
   CheckInstanceSize(EUnsupportedCommand, 28, 28);
   CheckInstanceSize(EBadSquareDefException, 28, 28);
+  CheckInstanceSize(EResourceNotFoundException, 32, 32);
   CheckInstanceSize(TDrawSquareContext, 68, 8);
   CheckInstanceSize(TDrawViewContext, 76, 8);
   CheckInstanceSize(TKeyEventContext, 16, 8);
@@ -2440,7 +2475,7 @@ begin
   CheckInstanceSize(TTimerEntry, 16, 12);
   CheckInstanceSize(TNotificationMsgTimerEntry, 24, 16);
   CheckInstanceSize(TTimerCollection, 36, 16);
-  CheckInstanceSize(TMaster, 100, 12);
+  CheckInstanceSize(TMaster, 104, 12);
   {$ASSERTIONS OFF}
 end;
 
