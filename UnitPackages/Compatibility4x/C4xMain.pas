@@ -177,7 +177,7 @@ begin
 
   try
     ActionsFileName := MasterFile.ResolveHRef(
-      Params.Values[attrFileName], fUnitsDir);
+      Params.Values[attrFileName], UnitsDir);
   except
     ActionsFileName := '';
   end;

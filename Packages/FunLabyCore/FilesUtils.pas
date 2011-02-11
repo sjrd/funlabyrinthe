@@ -40,6 +40,7 @@ type
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
 
+    function GetDir: TFileName; virtual;
     function ResolveHRef: TFileName; virtual;
   public
     constructor Create(AMasterFile: TMasterFile); virtual;
@@ -84,6 +85,8 @@ type
     procedure DefineProperties(Filer: TFunLabyFiler); override;
 
     procedure EndState(State: TPersistentState); override;
+
+    function GetDir: TFileName; override;
 
     procedure Load; virtual;
 
@@ -186,9 +189,10 @@ type
   private
     FSepiRoot: TSepiRoot; /// Racine Sepi
 
-    FFileName: TFileName; /// Nom du fichier
-    FMode: TFileMode;     /// Mode d'ouverture du fichier
-    FVersion: string;     /// Version lors de l'enregistrement
+    FFileName: TFileName;   /// Nom du fichier
+    FProjectDir: TFileName; /// Dossier du projet
+    FMode: TFileMode;       /// Mode d'ouverture du fichier
+    FVersion: string;       /// Version lors de l'enregistrement
 
     FTitle: string;       /// Titre du labyrinthe
     FDescription: string; /// Description
@@ -230,11 +234,13 @@ type
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
 
-    function ResolveHRef(const HRef, DefaultDir: string): TFileName;
+    function ResolveHRef(const HRef, Dir: string): TFileName;
     function MakeHRef(const FileName: TFileName;
-      const DefaultDir: string): string;
+      const Dir: string): string;
 
     function FindResource(const HRef: string; Kind: TResourceKind): TFileName;
+    function MakeResourceHRef(const FileName: TFileName;
+      Kind: TResourceKind): string;
 
     function AddSourceFile(const HRef: string): TSourceFile;
     procedure RemoveSourceFile(SourceFile: TSourceFile);
@@ -252,6 +258,7 @@ type
     property SepiRoot: TSepiRoot read FSepiRoot;
 
     property FileName: TFileName read FFileName;
+    property ProjectDir: TFileName read FProjectDir;
     property Mode: TFileMode read FMode;
     property Version: string read FVersion;
 
@@ -290,6 +297,9 @@ type
 function HasExtension(const FileName: TFileName;
   const Extension: string): Boolean;
 
+function JoinPath(const Parts: array of TFileName): TFileName;
+function JoinHRef(const Parts: array of string): string;
+
 function HRefToFileName(const HRef: string;
   const BaseDirs: array of TFileName): TFileName;
 function FileNameToHRef(const FileName: TFileName;
@@ -298,23 +308,30 @@ function FileNameToHRef(const FileName: TFileName;
 procedure RunAutoVersionCheck;
 procedure EditVersionCheckOptions;
 
+const {don't localize}
+  /// Nom du dossier des ressources
+  ResourcesDir = 'Resources';
+  /// Nom du dossier des sources
+  SourcesDir = 'Sources';
+  /// Nom du dossier des unités compilées
+  UnitsDir = 'Units';
+  /// Nom du dossier des projets
+  ProjectsDir = 'Projects';
+  /// Nom du dossier des sauvegardes
+  SaveguardsDir = 'Saveguards';
+  /// Nom du dossier des screenshots
+  ScreenshotsDir = 'Screenshots';
+  /// Nom du dossier des plugins de l'éditeur
+  EditPluginsDir = 'EditPlugins';
+
+  /// Application des types de ressources vers leurs noms de dossiers respectifs
+  ResourceKindToDir: array[TResourceKind] of string = (
+    'Images', 'Sounds'
+  );
+
 var {don't localize}
-  /// Dossier de FunLabyrinthe dans Application Data
-  fFunLabyAppData: string = '';
-  /// Dossier des fichiers image
-  fSquaresDir: string = 'Resources\Images\';
-  /// Dossier des fichiers son
-  fSoundsDir: string = 'Resources\Sounds\';
-  /// Dossier des unités
-  fUnitsDir: string = 'Units\';
-  /// Dossier des fichiers labyrinthe
-  fLabyrinthsDir: string = 'Labyrinths\';
-  /// Dossier des fichiers sauvegarde
-  fSaveguardsDir: string = 'Saveguards\';
-  /// Dossier des screenshots
-  fScreenshotsDir: string = 'Screenshots\';
-  /// Dossier des plug-in de l'éditeur
-  fEditPluginDir: string = 'EditPlugins\';
+  /// Dossier des documents de FunLabyrinthe
+  FunLabyAppDataDir: string = '';
 
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
@@ -345,6 +362,39 @@ begin
 end;
 
 {*
+  Joint plusieurs parties d'un nom de fichier
+  @param Parts   Parties à joindre
+  @return Parts[0] + PathDelim + Parts[1] + PathDelim + ... + Parts[N-1]
+*}
+function JoinPath(const Parts: array of TFileName): TFileName;
+var
+  I: Integer;
+begin
+  Result := Parts[0];
+  for I := 1 to High(Parts) do
+  begin
+    if (Result <> '') and (Result[Length(Result)] <> PathDelim) then
+      Result := Result + PathDelim + Parts[I]
+    else
+      Result := Result + Parts[I];
+  end;
+end;
+
+{*
+  Joint plusieurs parties d'un href
+  @param Parts   Parties à joindre
+  @return Parts[0] + HRefDelim + Parts[1] + HRefDelim + ... + Parts[N-1]
+*}
+function JoinHRef(const Parts: array of string): string;
+var
+  I: Integer;
+begin
+  Result := Parts[0];
+  for I := 1 to High(Parts) do
+    Result := Result + HRefDelim + Parts[I];
+end;
+
+{*
   Convertit un HRef en nom de fichier
   @param HRef       HRef à convertir
   @param BaseDirs   Liste de répertoires de base à tester avant l'absolu
@@ -365,11 +415,9 @@ begin
 
   for I := Low(BaseDirs) to High(BaseDirs) do
   begin
-    if FileExists(BaseDirs[I]+SubFile) then
-    begin
-      Result := BaseDirs[I]+SubFile;
+    Result := JoinPath([BaseDirs[I], SubFile]);
+    if FileExists(Result) then
       Exit;
-    end;
   end;
 
   if FileExists(SubFile) then
@@ -393,9 +441,9 @@ begin
 
   for I := Low(BaseDirs) to High(BaseDirs) do
   begin
-    if AnsiStartsText(BaseDirs[I], FileName) then
+    if AnsiStartsText(BaseDirs[I]+PathDelim, FileName) then
     begin
-      Result := Copy(FileName, Length(BaseDirs[I])+1, MaxInt);
+      Result := Copy(FileName, Length(BaseDirs[I])+(1+1), MaxInt);
       Break;
     end;
   end;
@@ -443,7 +491,7 @@ end;
 *}
 function TDependantFile.GetHRef: string;
 begin
-  Result := MasterFile.MakeHRef(FileName, fUnitsDir);
+  Result := MasterFile.MakeHRef(FileName, GetDir);
 end;
 
 {*
@@ -468,16 +516,22 @@ begin
 end;
 
 {*
+  Dossier pour ce type de fichier
+  @return Dossier pour ce type de fichier
+*}
+function TDependantFile.GetDir: TFileName;
+begin
+  Result := SourcesDir;
+end;
+
+{*
   Résoud le href en nom de fichier
   @return Nom de fichier correspondant à HRef
   @throws EInOutError Aucun fichier correspondant n'a été trouvé
 *}
 function TDependantFile.ResolveHRef: TFileName;
 begin
-  if FileExists(HRef) then
-    Result := HRef
-  else
-    Result := fUnitsDir + AnsiReplaceStr(HRef, HRefDelim, PathDelim);
+  Result := MasterFile.ResolveHRef(HRef, GetDir);
 end;
 
 {--------------------------}
@@ -562,9 +616,17 @@ begin
   if (psReading in State) and (not IsLoaded) and (HRef <> '') then
   begin
     if not FileExists(FileName) then
-      FFileName := MasterFile.ResolveHRef(HRef, fUnitsDir);
+      FFileName := MasterFile.ResolveHRef(HRef, UnitsDir);
     Load;
   end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TUnitFile.GetDir: TFileName;
+begin
+  Result := UnitsDir;
 end;
 
 {*
@@ -701,6 +763,7 @@ begin
     FSepiRoot := TSepiRootFork.Create(ABaseSepiRoot);
 
   FFileName := AFileName;
+  FProjectDir := ExtractFilePath(FFileName);
   FMode := AMode;
   FVersion := CurrentVersion;
 
@@ -839,7 +902,7 @@ var
   FileName: TFileName;
 begin
   SetLength(Dirs, UnitFiles.Count+1);
-  Dirs[0] := fUnitsDir;
+  Dirs[0] := UnitsDir;
 
   for I := 0 to UnitFiles.Count-1 do
     Dirs[I+1] := IncludeTrailingPathDelimiter(ExtractFilePath(
@@ -994,27 +1057,29 @@ end;
 
 {*
   Résoud l'adresse HRef en cherchant dans les dossiers correspondants
-  @param HRef         Adresse HRef du fichier
-  @param DefaultDir   Dossier par défaut du type de fichier attendu
+  @param HRef   Adresse HRef du fichier
+  @param Dir    Nom du dossier de recherche
   @return Nom du fichier qualifié de son chemin d'accès
   @throws EInOutError Le fichier n'existe pas
 *}
-function TMasterFile.ResolveHRef(const HRef, DefaultDir: string): TFileName;
+function TMasterFile.ResolveHRef(const HRef, Dir: string): TFileName;
 begin
-  Result := HRefToFileName(HRef, [DefaultDir]);
+  Result := HRefToFileName(HRef,
+    [JoinPath([ProjectDir, Dir]), JoinPath([FunLabyAppDataDir, Dir])]);
 end;
 
 {*
   Construit une adresse HRef pour un fichier
-  @param FileName     Nom du fichier
-  @param DefaultDir   Dossier par défaut du type du fichier
+  @param FileName   Nom du fichier
+  @param Dir        Nom du dossier de recherche
   @return Adresse HRef du fichier, relativement au contexte du fichier maître
   @throws EInOutError Le fichier n'existe pas
 *}
 function TMasterFile.MakeHRef(const FileName: TFileName;
-  const DefaultDir: string): string;
+  const Dir: string): string;
 begin
-  Result := FileNameToHRef(FileName, [DefaultDir]);
+  Result := FileNameToHRef(FileName,
+    [JoinPath([ProjectDir, Dir]), JoinPath([FunLabyAppDataDir, Dir])]);
 end;
 
 {*
@@ -1028,17 +1093,27 @@ function TMasterFile.FindResource(const HRef: string;
   Kind: TResourceKind): TFileName;
 begin
   try
-    case Kind of
-      rkImage: Result := ResolveHRef(HRef, fSquaresDir);
-      rkSound: Result := ResolveHRef(HRef, fSoundsDir);
-    else
-      Assert(False);
-    end;
+    Result := ResolveHRef(HRef,
+      JoinPath([ResourcesDir, ResourceKindToDir[Kind]]));
   except
     on EInOutError do
       raise EResourceNotFoundException.CreateFmt(SResourceNotFound,
         [HRef, GetEnumName(TypeInfo(TResourceKind), Ord(Kind))]);
   end;
+end;
+
+{*
+  Construit une adresse HRef pour un fichier ressource
+  @param FileName   Nom du fichier ressource
+  @param Kind       Type de ressource
+  @return HRef de la ressource, relativement au contexte du fichier maître
+  @throws EInOutError Le fichier n'existe pas
+*}
+function TMasterFile.MakeResourceHRef(const FileName: TFileName;
+  Kind: TResourceKind): string;
+begin
+  Result := MakeHRef(FileName,
+    JoinPath([ResourcesDir, ResourceKindToDir[Kind]]));
 end;
 
 {*
@@ -1297,17 +1372,8 @@ initialization
 
   with TMemIniFile.Create(Dir+fIniFileName) do
   try
-    fFunLabyAppData :=
+    FunLabyAppDataDir :=
       ReadString('Directories', 'AppData', Dir); {don't localize}
-
-    fSquaresDir := fFunLabyAppData + fSquaresDir;
-    fSoundsDir := fFunLabyAppData + fSoundsDir;
-    fUnitsDir := fFunLabyAppData + fUnitsDir;
-    fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
-    fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
-    fScreenshotsDir := fFunLabyAppData + fScreenshotsDir;
-
-    fEditPluginDir := Dir + fEditPluginDir;
   finally
     Free;
   end;

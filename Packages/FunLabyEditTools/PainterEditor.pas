@@ -192,7 +192,8 @@ begin
   Filter := Filter + '|' + SPainterFilter;
 
   OpenImageDialog.Filter := Filter;
-  OpenImageDialog.InitialDir := fSquaresDir;
+  OpenImageDialog.InitialDir := JoinPath([FunLabyAppDataDir,
+    ResourceKindToDir[rkImage]]);
 end;
 
 {*
@@ -233,25 +234,29 @@ end;
 *}
 procedure TFormPainterEditor.ButtonAddImageClick(Sender: TObject);
 var
+  ImagesDir: TFileName;
   I: Integer;
   FileName: TFileName;
 begin
   if OpenImageDialog.Execute then
   begin
+    ImagesDir := IncludeTrailingPathDelimiter(JoinPath([FunLabyAppDataDir,
+      ResourceKindToDir[rkImage]]));
+
     Painter.Description.BeginUpdate;
     try
       for I := 0 to OpenImageDialog.Files.Count-1 do
       begin
         FileName := OpenImageDialog.Files[I];
 
-        if not AnsiStartsText(fSquaresDir, FileName) then
+        if not AnsiStartsText(ImagesDir, FileName) then
         begin
           ShowDialog(SInvalidImageFileNameTitle, SInvalidImageFileName,
             dtError);
           Exit;
         end;
 
-        Delete(FileName, 1, Length(fSquaresDir));
+        Delete(FileName, 1, Length(ImagesDir));
         FileName := ChangeFileExt(FileName, '');
         FileName := AnsiReplaceStr(FileName, '\', '/');
 

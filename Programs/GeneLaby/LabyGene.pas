@@ -455,7 +455,8 @@ begin
 
   Labyrinthe.Delete(0);
   NomLabyrinthe := FormPrincipale.EditNomFichier.Text;
-  CreeSortie(Labyrinthe, fLabyrinthsDir+NomLabyrinthe+'.flp',
+  CreeSortie(Labyrinthe,
+    JoinPath([FunLabyAppDataDir, ProjectsDir, NomLabyrinthe+'.flp']),
     NColZ*7, NLigZ*7, NEtaZ);
   Labyrinthe.Free;
 end;
@@ -498,7 +499,7 @@ procedure TFormPrincipale.BQuitterClick(Sender: TObject);
 begin
   if FileExists(Dir+'FunLaby.exe') then
     WinExec(PAnsiChar(AnsiString('"'+Dir+'FunLaby.exe" "'+
-      fLabyrinthsDir+NomLabyrinthe+'.flp"')),
+      JoinPath([FunLabyAppDataDir, ProjectsDir, NomLabyrinthe+'.flp']) +'"')),
       SW_ShowNormal);
   Close;
 end;

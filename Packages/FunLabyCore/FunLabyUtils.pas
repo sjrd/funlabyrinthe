@@ -745,8 +745,6 @@ type
 
     function LoadImage(const ImgName: string): TBitmap32;
     function Add(const ImgName: string): Integer;
-  protected
-    property Master: TMaster read FMaster;
   public
     constructor Create(AMaster: TMaster);
     destructor Destroy; override;
@@ -766,6 +764,8 @@ type
 
     function GetInternalBitmap(Index: Integer): TBitmap32; overload;
     function GetInternalBitmap(const ImgName: string): TBitmap32; overload;
+
+    property Master: TMaster read FMaster;
   end;
 
   {*

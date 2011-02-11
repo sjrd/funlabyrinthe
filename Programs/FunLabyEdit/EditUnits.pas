@@ -96,7 +96,7 @@ procedure TFormEditUnits.AddUnitFile(const FileName: TFileName);
 var
   UnitFileDesc: TUnitFileDesc;
 begin
-  UnitFileDesc.HRef := MasterFile.MakeHRef(FileName, fUnitsDir);
+  UnitFileDesc.HRef := MasterFile.MakeHRef(FileName, UnitsDir);
 
   AddUnitFileDesc(UnitFileDesc);
 end;
@@ -164,7 +164,7 @@ begin
   Filters := TStringList.Create;
   UnitFilters.ForEach(AddUnitFilter);
 
-  OpenUnitDialog.InitialDir := fUnitsDir;
+  OpenUnitDialog.InitialDir := JoinPath([FunLabyAppDataDir, UnitsDir]);
 
   if Filters.Count = 0 then
     ButtonAdd.Enabled := False

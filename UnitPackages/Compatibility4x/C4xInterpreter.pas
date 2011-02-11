@@ -1379,7 +1379,7 @@ begin
       try
         if not ExecuteSound(Sound, stSysSound, True, 0, SND_NODEFAULT) then
         begin
-          ExecuteSound(Infos.MasterFile.ResolveHRef(Sound, fSoundsDir),
+          ExecuteSound(Infos.MasterFile.FindResource(Sound, rkSound),
             stFileName, True);
         end;
       except

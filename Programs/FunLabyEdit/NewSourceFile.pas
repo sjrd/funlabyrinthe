@@ -136,7 +136,8 @@ begin
     begin
       SaveSourceFileDialog.Filter := Format(FilterFormat,
         [Creator.Info.Title, Creator.Info.Extension]);
-      SaveSourceFileDialog.InitialDir := fUnitsDir;
+      SaveSourceFileDialog.InitialDir :=
+        JoinPath([FunLabyAppDataDir, SourcesDir]);
 
       if not SaveSourceFileDialog.Execute then
         Exit;

@@ -699,7 +699,7 @@ procedure TFrameSimpleSquaresEditor.ButtonSaveSourceClick(Sender: TObject);
 var
   Output: TStrings;
 begin
-  SaveSourceDialog.InitialDir := fUnitsDir;
+  SaveSourceDialog.InitialDir := JoinPath([FunLabyAppDataDir, SourcesDir]);
   SaveSourceDialog.FileName := GetUnitName + '.' + FunDelphiExtension;
 
   if SaveSourceDialog.Execute then

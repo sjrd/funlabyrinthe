@@ -577,7 +577,7 @@ var
 begin
   MakeBPLUnitFileDescs(UnitFileDescs);
   CreateAutoCompileMasterFile(UnitFileDescs);
-  AddAllSourceFiles(fUnitsDir);
+  AddAllSourceFiles(JoinPath([FunLabyAppDataDir, SourcesDir]));
   Result := CompileAll;
 end;
 
@@ -596,7 +596,8 @@ begin
   FileNames := TStringList.Create;
   try
     // Search for *.bpl files
-    if FindFirst(fUnitsDir+'*.bpl', faAnyFile, SearchRec) = 0 then
+    if FindFirst(JoinPath([FunLabyAppDataDir, UnitsDir, '*.bpl']),
+      faAnyFile, SearchRec) = 0 then
     try
       repeat
         if not AnsiMatchText(SearchRec.Name, ExcludedBPLFiles) then
@@ -1387,10 +1388,10 @@ begin
   // Setup some dynamic properties
   Application.OnHint := ApplicationHint;
 
-  OpenDialog.InitialDir := fLabyrinthsDir;
-  SaveDialog.InitialDir := fLabyrinthsDir;
+  OpenDialog.InitialDir := JoinPath([FunLabyAppDataDir, ProjectsDir]);
+  SaveDialog.InitialDir := OpenDialog.InitialDir;
 
-  OpenSourceFileDialog.InitialDir := fUnitsDir;
+  OpenSourceFileDialog.InitialDir := JoinPath([FunLabyAppDataDir, SourcesDir]);
   OpenSourceFileDialog.Filter := SourceFileEditors.FiltersAsText;
 
   MasterFile := nil;

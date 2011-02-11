@@ -164,6 +164,7 @@ end;
 *}
 procedure TFormSelectProjectFile.FillFileList;
 var
+  Dir: string;
   SearchRec: TSearchRec;
 begin
   ListViewFiles.Items.BeginUpdate;
@@ -172,10 +173,11 @@ begin
     ListViewFiles.Clear;
     EditFileName.Items.Clear;
 
-    if FindFirst(fLabyrinthsDir+'*.flp', faAnyFile, SearchRec) = 0 then
+    Dir := JoinPath([FunLabyAppDataDir, ProjectsDir]);
+    if FindFirst(JoinPath([Dir, '*.flp']), faAnyFile, SearchRec) = 0 then
     try
       repeat
-        FillFileItem(ListViewFiles.Items.Add, fLabyrinthsDir+SearchRec.Name);
+        FillFileItem(ListViewFiles.Items.Add, JoinPath([Dir, SearchRec.Name]));
         EditFileName.Items.Add(SearchRec.Name);
       until FindNext(SearchRec) <> 0;
     finally
@@ -199,8 +201,6 @@ begin
 
   FillFileList;
   Result := ShowModal = mrOK;
-
-  FileName := fLabyrinthsDir + EditFileName.Text;
 end;
 
 {*
@@ -209,7 +209,8 @@ end;
 *}
 procedure TFormSelectProjectFile.FormCreate(Sender: TObject);
 begin
-  ChangeNotifier.Notifications[0].Directory := fLabyrinthsDir;
+  ChangeNotifier.Notifications[0].Directory :=
+    JoinPath([FunLabyAppDataDir, ProjectsDir]);
 end;
 
 {*
@@ -323,7 +324,9 @@ begin
   if Pos('.', EditFileName.Text) = 0 then
     EditFileName.Text := EditFileName.Text + '.flp';
 
-  if not FileExists(fLabyrinthsDir + EditFileName.Text) then
+  FileName := JoinPath([FunLabyAppDataDir, ProjectsDir, EditFileName.Text]);
+
+  if not FileExists(FileName) then
   begin
     ShowDialog(SFileNotFoundTitle,
       Format(SFileNotFound, [EditFileName.Text]), dtError);

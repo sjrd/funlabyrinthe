@@ -43,8 +43,10 @@ object FormEditUnits: TFormEditUnits
     Width = 89
     Height = 25
     Anchors = [akRight, akBottom]
-    TabOrder = 1
+    DoubleBuffered = True
     Kind = bkOK
+    ParentDoubleBuffered = False
+    TabOrder = 1
   end
   object ButtonCancel: TBitBtn
     Left = 312
@@ -52,8 +54,10 @@ object FormEditUnits: TFormEditUnits
     Width = 89
     Height = 25
     Anchors = [akRight, akBottom]
-    TabOrder = 2
+    DoubleBuffered = True
     Kind = bkCancel
+    ParentDoubleBuffered = False
+    TabOrder = 2
   end
   object ButtonAdd: TButton
     Left = 240

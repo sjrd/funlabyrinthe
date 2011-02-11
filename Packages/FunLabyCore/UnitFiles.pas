@@ -191,7 +191,7 @@ begin
   SetLength(OldCurrentDir, GetCurrentDirectory(0, nil)-1);
   GetCurrentDirectory(Length(OldCurrentDir)+1, PChar(OldCurrentDir));
 
-  SetCurrentDirectory(PChar(fUnitsDir));
+  SetCurrentDirectory(PChar(JoinPath([FunLabyAppDataDir, UnitsDir])));
   try
     FHandle := LoadPackage(FileName);
     if FHandle = 0 then
