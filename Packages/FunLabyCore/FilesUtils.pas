@@ -298,6 +298,24 @@ function FileNameToHRef(const FileName: TFileName;
 procedure RunAutoVersionCheck;
 procedure EditVersionCheckOptions;
 
+var {don't localize}
+  /// Dossier de FunLabyrinthe dans Application Data
+  fFunLabyAppData: string = '';
+  /// Dossier des fichiers image
+  fSquaresDir: string = 'Resources\Images\';
+  /// Dossier des fichiers son
+  fSoundsDir: string = 'Resources\Sounds\';
+  /// Dossier des unités
+  fUnitsDir: string = 'Units\';
+  /// Dossier des fichiers labyrinthe
+  fLabyrinthsDir: string = 'Labyrinths\';
+  /// Dossier des fichiers sauvegarde
+  fSaveguardsDir: string = 'Saveguards\';
+  /// Dossier des screenshots
+  fScreenshotsDir: string = 'Screenshots\';
+  /// Dossier des plug-in de l'éditeur
+  fEditPluginDir: string = 'EditPlugins\';
+
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
 
@@ -1009,16 +1027,18 @@ end;
 function TMasterFile.FindResource(const HRef: string;
   Kind: TResourceKind): TFileName;
 begin
-  case Kind of
-    rkImage: Result := ResolveHRef(HRef, fSquaresDir);
-    rkSound: Result := ResolveHRef(HRef, fSoundsDir);
-  else
-    Assert(False);
+  try
+    case Kind of
+      rkImage: Result := ResolveHRef(HRef, fSquaresDir);
+      rkSound: Result := ResolveHRef(HRef, fSoundsDir);
+    else
+      Assert(False);
+    end;
+  except
+    on EInOutError do
+      raise EResourceNotFoundException.CreateFmt(SResourceNotFound,
+        [HRef, GetEnumName(TypeInfo(TResourceKind), Ord(Kind))]);
   end;
-
-  if Result = '' then
-    raise EResourceNotFoundException.CreateFmt(SResourceNotFound,
-      [HRef, GetEnumName(TypeInfo(TResourceKind), Ord(Kind))]);
 end;
 
 {*
@@ -1274,6 +1294,23 @@ initialization
   FunLabyRegisterClass(TSourceFile);
 
   UnitFileClasses := TUnitFileClassList.Create;
+
+  with TMemIniFile.Create(Dir+fIniFileName) do
+  try
+    fFunLabyAppData :=
+      ReadString('Directories', 'AppData', Dir); {don't localize}
+
+    fSquaresDir := fFunLabyAppData + fSquaresDir;
+    fSoundsDir := fFunLabyAppData + fSoundsDir;
+    fUnitsDir := fFunLabyAppData + fUnitsDir;
+    fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
+    fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
+    fScreenshotsDir := fFunLabyAppData + fScreenshotsDir;
+
+    fEditPluginDir := Dir + fEditPluginDir;
+  finally
+    Free;
+  end;
 finalization
   UnitFileClasses.Free;
   UnitFileClasses := nil;

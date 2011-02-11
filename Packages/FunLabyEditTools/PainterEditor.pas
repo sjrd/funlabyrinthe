@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, StrUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtDlgs, StdCtrls, ScStrUtils, SdDialogs, GR32, GR32_Image,
-  GR32_Layers, FunLabyUtils, FunLabyCoreConsts;
+  GR32_Layers, FunLabyUtils, FilesUtils, FunLabyCoreConsts;
 
 resourcestring
   SInvalidImageFileNameTitle = 'Fichier d''image invalide';

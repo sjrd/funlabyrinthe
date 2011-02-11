@@ -8,7 +8,7 @@ unit EditPluginManager;
 interface
 
 uses
-  Windows, SysUtils, FunLabyUtils;
+  Windows, SysUtils, FunLabyUtils, FilesUtils;
 
 var
   /// Handles de modules des plug-in de l'éditeur chargés

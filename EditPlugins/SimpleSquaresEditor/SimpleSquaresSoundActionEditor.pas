@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, SimpleSquaresActionEditor, ImgList, StdCtrls, ExtCtrls,
-  SimpleSquaresActions, FunLabyUtils, StrUtils;
+  SimpleSquaresActions, FunLabyUtils, FilesUtils, StrUtils;
 
 type
   {*

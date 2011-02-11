@@ -736,6 +736,7 @@ type
   *}
   TImagesMaster = class(TObject)
   private
+    FMaster: TMaster;      /// Maître FunLabyrinthe
     FExtensions: TStrings; /// Extensions d'images reconnues
     FImgList: TObjectList; /// Liste d'images interne
     FImgNames: TStrings;   /// Liste des noms des images
@@ -744,8 +745,10 @@ type
 
     function LoadImage(const ImgName: string): TBitmap32;
     function Add(const ImgName: string): Integer;
+  protected
+    property Master: TMaster read FMaster;
   public
-    constructor Create;
+    constructor Create(AMaster: TMaster);
     destructor Destroy; override;
 
     function ResolveImgName(const ImgName: string): TFileName;
@@ -2077,24 +2080,6 @@ const {don't localize}
     diNone, diWest, diNorth, diEast, diSouth
   );
 
-var {don't localize}
-  /// Dossier de FunLabyrinthe dans Application Data
-  fFunLabyAppData: string = '';
-  /// Dossier des fichiers image
-  fSquaresDir: string = 'Resources\Images\';
-  /// Dossier des fichiers son
-  fSoundsDir: string = 'Resources\Sounds\';
-  /// Dossier des unités
-  fUnitsDir: string = 'Units\';
-  /// Dossier des fichiers labyrinthe
-  fLabyrinthsDir: string = 'Labyrinths\';
-  /// Dossier des fichiers sauvegarde
-  fSaveguardsDir: string = 'Saveguards\';
-  /// Dossier des screenshots
-  fScreenshotsDir: string = 'Screenshots\';
-  /// Dossier des plug-in de l'éditeur
-  fEditPluginDir: string = 'EditPlugins\';
-
 procedure ShowFunLabyAbout;
 
 function FunLabyEncoding: TEncoding;
@@ -2919,11 +2904,13 @@ end;
 {*
   Crée une instance de TImagesMaster
 *}
-constructor TImagesMaster.Create;
+constructor TImagesMaster.Create(AMaster: TMaster);
 var
   EmptySquare: TBitmap32;
 begin
   inherited Create;
+
+  FMaster := AMaster;
 
   FExtensions := TStringList.Create;
   FileFormatList.GetExtensionList(FExtensions);
@@ -3067,16 +3054,13 @@ function TImagesMaster.ResolveImgName(const ImgName: string): TFileName;
 var
   I: Integer;
 begin
-  Result := fSquaresDir + AnsiReplaceStr(ImgName, '/', '\');
-  if FileExists(Result) then
-    Exit;
-
   for I := 0 to FExtensions.Count-1 do
   begin
-    if FileExists(Result+'.'+FExtensions[I]) then
-    begin
-      Result := Result+'.'+FExtensions[I];
+    try
+      Result := Master.FindResource(ImgName + '.' + FExtensions[I], rkImage);
       Exit;
+    except
+      on EResourceNotFoundException do;
     end;
   end;
 
@@ -7220,10 +7204,12 @@ end;
 *}
 function TPlayer.ResolveSoundHRef(const HRef: string): TFileName;
 begin
-  Result := fSoundsDir + AnsiReplaceStr(HRef, '/', '\');
-
-  if not FileExists(Result) then
-    Result := '';
+  try
+    Result := Master.FindResource(HRef, rkSound);
+  except
+    on EResourceNotFoundException do
+      Result := '';
+  end;
 end;
 
 {*
@@ -8527,7 +8513,7 @@ begin
 
   FFindResourceCallback := AFindResourceCallback;
 
-  FImagesMaster := TImagesMaster.Create;
+  FImagesMaster := TImagesMaster.Create(Self);
 
   FComponents       := TObjectList.Create(True);
   FPlugins          := TObjectList.Create(False);
@@ -9470,23 +9456,6 @@ initialization
 
   FunLabyRegisterClass(TLabyrinthPlayerMode);
   FunLabyRegisterClasses([TTimerEntry, TNotificationMsgTimerEntry]);
-
-  with TMemIniFile.Create(Dir+fIniFileName) do
-  try
-    fFunLabyAppData :=
-      ReadString('Directories', 'AppData', Dir); {don't localize}
-
-    fSquaresDir := fFunLabyAppData + fSquaresDir;
-    fSoundsDir := fFunLabyAppData + fSoundsDir;
-    fUnitsDir := fFunLabyAppData + fUnitsDir;
-    fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
-    fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
-    fScreenshotsDir := fFunLabyAppData + fScreenshotsDir;
-
-    fEditPluginDir := Dir + fEditPluginDir;
-  finally
-    Free;
-  end;
 finalization
   FreeAndNil(FunLabyRegisteredClasses);
 end.

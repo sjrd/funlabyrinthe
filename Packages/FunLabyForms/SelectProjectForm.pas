@@ -11,7 +11,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, StrUtils, msxml,
   JvComponentBase, JvChangeNotify, ScUtils, ScXML, SdDialogs,
-  FunLabyUtils, FunLabyCoreConsts;
+  FunLabyUtils, FilesUtils, FunLabyCoreConsts;
 
 resourcestring
   SCorruptedFileDescription =

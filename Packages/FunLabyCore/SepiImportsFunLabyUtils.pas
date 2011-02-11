@@ -27,7 +27,7 @@ const // don't localize
   ResourceName = 'SepiImportsFunLabyUtils';
   TypeCount = 67;
   MethodCount = 261;
-  VariableCount = 13;
+  VariableCount = 5;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -1536,14 +1536,6 @@ begin
   VarAddresses[2] := @NegDir;
   VarAddresses[3] := @RightDir;
   VarAddresses[4] := @LeftDir;
-  VarAddresses[5] := @fFunLabyAppData;
-  VarAddresses[6] := @fSquaresDir;
-  VarAddresses[7] := @fSoundsDir;
-  VarAddresses[8] := @fUnitsDir;
-  VarAddresses[9] := @fLabyrinthsDir;
-  VarAddresses[10] := @fSaveguardsDir;
-  VarAddresses[11] := @fScreenshotsDir;
-  VarAddresses[12] := @fEditPluginDir;
 end;
 
 {------------------------------------}
@@ -2448,7 +2440,7 @@ begin
   CheckInstanceSize(TFunLabyReader, 20, 20);
   CheckInstanceSize(TFunLabyWriter, 20, 20);
   CheckInstanceSize(TFunLabyStoredDefaultsFiler, 20, 20);
-  CheckInstanceSize(TImagesMaster, 20, 8);
+  CheckInstanceSize(TImagesMaster, 24, 8);
   CheckInstanceSize(TPainter, 44, 12);
   CheckInstanceSize(TPlayerData, 20, 12);
   CheckInstanceSize(TFunLabyComponent, 40, 12);

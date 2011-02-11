@@ -98,9 +98,12 @@ type
     /// Fiche principale de FunLabyEdit
     FFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
 
-    ImagesMaster: TImagesMaster;              /// Maître d'images
     FileContents: TSimpleSquaresFileContents; /// Contenu du fichier
     SimpleSquares: TSimpleSquareList;         /// Liste des composants
+
+    function GetImagesMaster: TImagesMaster;
+
+    property ImagesMaster: TImagesMaster read GetImagesMaster;
   protected
     procedure LoadFile(const AFileName: TFileName); override;
     function SaveFile: Boolean; override;
@@ -311,7 +314,6 @@ constructor TFrameSimpleSquaresEditor.Create(AOwner: TComponent);
 begin
   inherited;
 
-  ImagesMaster := TImagesMaster.Create;
   FileContents := TSimpleSquaresFileContents.Create(Self);
   SimpleSquares := FileContents.SimpleSquares;
 end;
@@ -322,9 +324,17 @@ end;
 destructor TFrameSimpleSquaresEditor.Destroy;
 begin
   FileContents.Free;
-  ImagesMaster.Free;
 
   inherited;
+end;
+
+{*
+  Maître d'images
+  @return Maître d'images
+*}
+function TFrameSimpleSquaresEditor.GetImagesMaster: TImagesMaster;
+begin
+  Result := FFunLabyEditMainForm.MasterFile.Master.ImagesMaster;
 end;
 
 {*
