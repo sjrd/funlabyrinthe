@@ -2081,9 +2081,9 @@ var {don't localize}
   /// Dossier de FunLabyrinthe dans Application Data
   fFunLabyAppData: string = '';
   /// Dossier des fichiers image
-  fSquaresDir: string = 'Squares\';
+  fSquaresDir: string = 'Resources\Images\';
   /// Dossier des fichiers son
-  fSoundsDir: string = 'Sounds\';
+  fSoundsDir: string = 'Resources\Sounds\';
   /// Dossier des unités
   fUnitsDir: string = 'Units\';
   /// Dossier des fichiers labyrinthe
