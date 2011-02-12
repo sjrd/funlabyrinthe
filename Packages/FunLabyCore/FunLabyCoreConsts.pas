@@ -73,7 +73,12 @@ resourcestring
     'de FunLabyrinthe (v%s). Il ne peut être ouvert.';
   SFileNotFoundTitle = 'Fichier introuvable';
   SFileNotFound = 'Le fichier spécifié "%s" n''existe pas';
+  SCannotMakeHRef = 'Impossible de construire un href pour le fichier ''%s'' '+
+    'car celui-ci n''est pas dans le chemin de recherche du projet';
   SResourceNotFound = 'La ressource spécifiée "%s" n''existe pas';
+  SCannotMakeResourceHRef = 'Impossible de construire un href pour la '+
+    'ressource ''%s'' car celle-ci n''est pas dans le chemin de recherche du '+
+    'projet';
   SUnknownUnitType = 'Type d''unité ''%s'' inconnu';
   SThereMustBeOnePlayer = 'Il doit y avoir un et un seul joueur par fichier';
   SEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';

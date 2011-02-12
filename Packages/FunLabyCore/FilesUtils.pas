@@ -322,10 +322,7 @@ begin
       Exit;
   end;
 
-  if FileExists(SubFile) then
-    Result := SubFile
-  else
-    raise EInOutError.CreateFmt(SFileNotFound, [HRef]);
+  raise EInOutError.CreateFmt(SFileNotFound, [HRef]);
 end;
 
 {*
@@ -346,13 +343,14 @@ begin
     if AnsiStartsText(BaseDirs[I]+PathDelim, FileName) then
     begin
       Result := Copy(FileName, Length(BaseDirs[I])+(1+1), MaxInt);
-      Break;
+      {$IF HRefDelim <> PathDelim}
+      Result := StringReplace(Result, PathDelim, HRefDelim, [rfReplaceAll]);
+      {$IFEND}
+      Exit;
     end;
   end;
 
-  {$IF HRefDelim <> PathDelim}
-  Result := StringReplace(Result, PathDelim, HRefDelim, [rfReplaceAll]);
-  {$IFEND}
+  raise EInOutError.CreateFmt(SCannotMakeHRef, [FileName]);
 end;
 
 {*
@@ -895,8 +893,14 @@ end;
 function TMasterFile.MakeResourceHRef(const FileName: TFileName;
   Kind: TResourceKind): string;
 begin
-  Result := MakeHRef(FileName,
-    JoinPath([ResourcesDir, ResourceKindToDir[Kind]]));
+  try
+    Result := MakeHRef(FileName,
+      JoinPath([ResourcesDir, ResourceKindToDir[Kind]]));
+  except
+    on EInOutError do
+      raise EResourceNotFoundException.CreateFmt(SCannotMakeResourceHRef,
+        [FileName, GetEnumName(TypeInfo(TResourceKind), Ord(Kind))]);
+  end;
 end;
 
 {*
