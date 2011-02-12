@@ -328,7 +328,7 @@ object FormPainterEditor: TFormPainterEditor
     TabOrder = 4
   end
   object OpenImageDialog: TOpenPictureDialog
-    Options = [ofHideReadOnly, ofNoChangeDir, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Title = 'S'#233'lectionnez les fichiers image '#224' ajouter'
     Left = 264
     Top = 40

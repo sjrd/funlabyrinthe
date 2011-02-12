@@ -54,17 +54,21 @@ type
       Layer: TCustomLayer);
     procedure FormCreate(Sender: TObject);
   private
+    MasterFile: TMasterFile; /// Fichier maître
+
     FPainter: TEditPainter; /// Peintre à éditer
 
     procedure UpdateListBoxImgNames;
     procedure UpdateSelectedImage(const ImgName: string);
     procedure UpdateControls;
 
-    function DoEditPainter(APainter: TPainter): Boolean;
+    function DoEditPainter(AMasterFile: TMasterFile;
+      APainter: TPainter): Boolean;
 
     property Painter: TEditPainter read FPainter;
   public
-    class function EditPainter(Painter: TPainter): Boolean;
+    class function EditPainter(MasterFile: TMasterFile;
+      Painter: TPainter): Boolean;
   end;
 
 var
@@ -138,11 +142,15 @@ end;
 
 {*
   Édite un peintre
-  @param APainter   Peintre à éditer
+  @param AMasterFile   Fichier maître
+  @param APainter      Peintre à éditer
   @return True si le peintre a été modifié, False sinon
 *}
-function TFormPainterEditor.DoEditPainter(APainter: TPainter): Boolean;
+function TFormPainterEditor.DoEditPainter(AMasterFile: TMasterFile;
+  APainter: TPainter): Boolean;
 begin
+  MasterFile := AMasterFile;
+
   FPainter := TEditPainter.Create(APainter.Master);
   try
     FPainter.Assign(APainter);
@@ -163,15 +171,17 @@ end;
 
 {*
   Édite un peintre
-  @param Painter   Peintre à éditer
+  @param MasterFile   Fichier maître
+  @param Painter      Peintre à éditer
   @return True si le peintre a été modifié, False sinon
 *}
-class function TFormPainterEditor.EditPainter(Painter: TPainter): Boolean;
+class function TFormPainterEditor.EditPainter(MasterFile: TMasterFile;
+  Painter: TPainter): Boolean;
 begin
   if FormPainterEditor = nil then
     Application.CreateForm(TFormPainterEditor, FormPainterEditor);
 
-  Result := FormPainterEditor.DoEditPainter(Painter);
+  Result := FormPainterEditor.DoEditPainter(MasterFile, Painter);
 end;
 
 {*
@@ -237,6 +247,7 @@ var
   ImagesDir: TFileName;
   I: Integer;
   FileName: TFileName;
+  HRef: string;
 begin
   if OpenImageDialog.Execute then
   begin
@@ -248,19 +259,9 @@ begin
       for I := 0 to OpenImageDialog.Files.Count-1 do
       begin
         FileName := OpenImageDialog.Files[I];
+        HRef := MasterFile.MakeResourceHRef(FileName, rkImage);
 
-        if not AnsiStartsText(ImagesDir, FileName) then
-        begin
-          ShowDialog(SInvalidImageFileNameTitle, SInvalidImageFileName,
-            dtError);
-          Exit;
-        end;
-
-        Delete(FileName, 1, Length(ImagesDir));
-        FileName := ChangeFileExt(FileName, '');
-        FileName := AnsiReplaceStr(FileName, '\', '/');
-
-        Painter.Description.Add(FileName);
+        Painter.Description.Add(ChangeFileExt(HRef, ''));
       end;
     finally
       Painter.Description.EndUpdate;

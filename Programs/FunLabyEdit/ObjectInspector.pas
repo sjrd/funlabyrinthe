@@ -118,8 +118,12 @@ type
     @version 5.0
   *}
   TJvInspectorPainterItem = class(TJvInspectorClassItem)
+  private
+    FMasterFile: TMasterFile; /// Fichier maître
   protected
     procedure Edit; override;
+
+    property MasterFile: TMasterFile read FMasterFile;
   public
     constructor Create(const AParent: TJvCustomInspectorItem;
       const AData: TJvCustomInspectorData); override;
@@ -643,6 +647,8 @@ begin
 
   inherited;
 
+  FMasterFile := (Inspector.Owner as TFrameInspector).MasterFile;
+
   Flags := Flags + [iifEditButton];
   ItemClassFlags := [icfShowClassName];
 end;
@@ -658,7 +664,7 @@ begin
 
   if Painter <> nil then
   begin
-    if TFormPainterEditor.EditPainter(Painter) then
+    if TFormPainterEditor.EditPainter(MasterFile, Painter) then
       TJvInspectorDataAccess(Data).InvalidateDataAndItems;
   end;
 end;
