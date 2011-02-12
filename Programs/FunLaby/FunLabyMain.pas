@@ -695,9 +695,7 @@ begin
   if MasterFile = nil then
     Exit;
 
-  DirName := ExtractFileName(MasterFile.FileName);
-  DirName := ChangeFileExt(DirName, '');
-  DirName := JoinPath([FunLabyAppDataDir, ScreenshotsDir]);
+  DirName := JoinPath([MasterFile.ProjectDir, ScreenshotsDir]);
 
   ForceDirectories(DirName);
 
