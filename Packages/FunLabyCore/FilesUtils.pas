@@ -72,57 +72,6 @@ type
   end;
 
   {*
-    Représente un fichier unité
-    TUnitFile est la classe de base pour les fichiers d'unité FunLabyrinthe.
-    @author sjrd
-    @version 5.0
-  *}
-  TUnitFile = class(TDependantFile)
-  private
-    FCreationParams: TStrings; /// Paramètres de création
-    FLoaded: Boolean;          /// Indique si l'unité a déjà été chargée
-  protected
-    procedure DefineProperties(Filer: TFunLabyFiler); override;
-
-    procedure EndState(State: TPersistentState); override;
-
-    function GetDir: TFileName; override;
-
-    procedure Load; virtual;
-
-    property CreationParams: TStrings read FCreationParams;
-    property IsLoaded: Boolean read FLoaded;
-  public
-    constructor Create(AMasterFile: TMasterFile); override;
-    destructor Destroy; override;
-
-    procedure Loaded; virtual;
-    procedure Unloading; virtual;
-
-    procedure GameStarted; virtual;
-    procedure GameEnded; virtual;
-
-    procedure GetParams(Params: TStrings); virtual;
-  end;
-
-  /// Classe de TUnitFile
-  TUnitFileClass = class of TUnitFile;
-
-  {*
-    Liste de fichiers unité
-    @author sjrd
-    @version 5.0
-  *}
-  TUnitFileList = class(TDependantFileList)
-  private
-    function AddUnitFile(const HRef: string): TUnitFile;
-
-    function GetItems(Index: Integer): TUnitFile;
-  public
-    property Items[Index: Integer]: TUnitFile read GetItems; default;
-  end;
-
-  {*
     Représente un fichier source
     @author sjrd
     @version 5.0
@@ -146,35 +95,6 @@ type
   public
     property Items[Index: Integer]: TSourceFile read GetItems; default;
   end;
-
-  {*
-    Paramètre d'un fichier unité
-    @author sjrd
-    @version 5.0
-  *}
-  TUnitFileParam = record
-    Name: string;  /// Nom
-    Value: string; /// Valeur
-  end;
-
-  /// Tableau des paramètres d'un fichier unité
-  TUnitFileParams = array of TUnitFileParam;
-
-  /// Pointeur vers TUnitFileDesc
-  PUnitFileDesc = ^TUnitFileDesc;
-
-  {*
-    Descripteur de fichier unité
-    @author sjrd
-    @version 5.0
-  *}
-  TUnitFileDesc = record
-    HRef: string;            /// Adresse HRef
-    Params: TUnitFileParams; /// Paramètres
-  end;
-
-  /// Tableau de descripteurs de fichiers unité
-  TUnitFileDescs = array of TUnitFileDesc;
 
   {*
     Représente un fichier maître FunLabyrinthe
@@ -205,10 +125,9 @@ type
 
     FMaster: TMaster; /// Maître FunLabyrinthe
 
-    FUnitFiles: TUnitFileList;     /// Liste des fichiers unité
-    FSourceFiles: TSourceFileList; /// Liste des fichiers source
+    FUsedUnits: TStrings; /// Liste des unités utilisées par ce projet
 
-    FWritingUnitFiles: TUnitFileList; /// Liste des fichiers unité à écrire
+    FSourceFiles: TSourceFileList; /// Liste des fichiers source
 
     constructor BaseCreate(ABaseSepiRoot: TSepiRoot;
       const AFileName: TFileName = ''; AMode: TFileMode = fmEdit);
@@ -219,7 +138,12 @@ type
     procedure InvalidFormat;
 
     procedure Load(const ADocument: IInterface);
+    procedure CompatibilityLoadUnits(const ADocument: IInterface);
     procedure TestOpeningValidity;
+    procedure LoadUsedUnits;
+
+    procedure CallUnitEventProcs(const Name: string);
+    procedure CallUnitEventProc(SepiUnit: TSepiUnit; const Name: string);
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
     procedure StoreDefaults; override;
@@ -227,12 +151,9 @@ type
     constructor Create(ABaseSepiRoot: TSepiRoot; const AFileName: TFileName;
       AMode: TFileMode);
     constructor CreateNew(ABaseSepiRoot: TSepiRoot;
-      const UnitFileDescs: TUnitFileDescs); overload;
+      AUsedUnits: TStrings); overload;
     constructor CreateNew(ABaseSepiRoot: TSepiRoot); overload;
     destructor Destroy; override;
-
-    procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
 
     function ResolveHRef(const HRef, Dir: string): TFileName;
     function MakeHRef(const FileName: TFileName;
@@ -249,9 +170,7 @@ type
     procedure GameStarted;
     procedure GameEnded;
 
-    procedure GetUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
-
-    procedure Save(const UnitFileDescs: TUnitFileDescs;
+    procedure Save(UsedUnits: TStrings;
       const AFileName: TFileName = ''); overload;
     procedure Save(const AFileName: TFileName = ''); overload;
 
@@ -264,7 +183,8 @@ type
 
     property Master: TMaster read FMaster;
 
-    property UnitFiles: TUnitFileList read FUnitFiles;
+    property UsedUnits: TStrings read FUsedUnits;
+
     property SourceFiles: TSourceFileList read FSourceFiles;
 
     property AllowEdit: Boolean read FAllowEdit;
@@ -275,23 +195,6 @@ type
     property Kind: string read FKind write FKind;
     property Difficulty: string read FDifficulty write FDifficulty;
     property Author: string read FAuthor write FAuthor;
-  end;
-
-  {*
-    Collection de classes de fichiers unité, référencées par leur GUID
-    @author sjrd
-    @version 5.0
-  *}
-  TUnitFileClassList = class(TCustomValueBucketList)
-  protected
-    function BucketFor(const Key): Cardinal; override;
-    function KeyEquals(const Key1, Key2): Boolean; override;
-  public
-    constructor Create;
-
-    procedure Add(const Extension: string; UnitFileClass: TUnitFileClass);
-    procedure Remove(const Extension: string);
-    function Find(const Extension: string): TUnitFileClass;
   end;
 
 function HasExtension(const FileName: TFileName;
@@ -321,6 +224,8 @@ const {don't localize}
   SaveguardsDir = 'Saveguards';
   /// Nom du dossier des screenshots
   ScreenshotsDir = 'Screenshots';
+  /// Nom du dossier des paquets définissant des unités
+  UnitPackagesDir = 'UnitPackages';
   /// Nom du dossier des plugins de l'éditeur
   EditPluginsDir = 'EditPlugins';
 
@@ -338,16 +243,13 @@ const {don't localize}
 
   FunLabyProjectExt = 'flp'; /// Extension d'un fichier projet
 
-  FunLabyBaseHRef = 'FunLabyBase.bpl'; /// HRef de l'unité FunLabyBase
-
-var
-  /// Gestionnaires d'unité : association extension <-> classe d'unité
-  UnitFileClasses: TUnitFileClassList = nil;
+  FunLabyBaseUnitName = 'FunLabyBase'; /// Nom de l'unité FunLabyBase
 
 implementation
 
 uses
-  StrUtils, ScStrUtils, IniFiles, Variants, TypInfo, MSXML, ActiveX;
+  StrUtils, ScStrUtils, IniFiles, Variants, TypInfo, MSXML, ActiveX,
+  PluginManager;
 
 {*
   Teste si un nom de fichier donné a une extension donnée
@@ -558,160 +460,6 @@ begin
   Result := TDependantFileClass(ItemClass).Create(MasterFile);
 end;
 
-{------------------}
-{ Classe TUnitFile }
-{------------------}
-
-{*
-  [@inheritDoc]
-*}
-constructor TUnitFile.Create(AMasterFile: TMasterFile);
-begin
-  inherited Create(AMasterFile);
-
-  FCreationParams := TStringList.Create;
-end;
-
-{*
-  [@inheritDoc]
-*}
-destructor TUnitFile.Destroy;
-begin
-  FCreationParams.Free;
-
-  inherited;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TUnitFile.DefineProperties(Filer: TFunLabyFiler);
-var
-  Params: TStrings;
-begin
-  inherited;
-
-  if (psWriting in PersistentState) and IsLoaded then
-  begin
-    Params := TStringList.Create;
-    try
-      GetParams(Params);
-      Filer.DefineStrings('Params', Params);
-    finally
-      Params.Free;
-    end;
-  end else
-  begin
-    Filer.DefineStrings('Params', FCreationParams);
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TUnitFile.EndState(State: TPersistentState);
-begin
-  inherited;
-
-  if (psReading in State) and (not IsLoaded) and (HRef <> '') then
-  begin
-    if not FileExists(FileName) then
-      FFileName := MasterFile.ResolveHRef(HRef, UnitsDir);
-    Load;
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TUnitFile.GetDir: TFileName;
-begin
-  Result := UnitsDir;
-end;
-
-{*
-  Charge le fichier
-*}
-procedure TUnitFile.Load;
-begin
-  FLoaded := True;
-end;
-
-{*
-  Exécuté lorsque le projet a été complètement chargé
-  Loaded est appelée une fois que le projet a été complètement chargé. À ce
-  moment, toutes les unités sont chargées, les cartes également, et tous les
-  joueurs de même, à leurs positions respectives, et avec leurs attributs et/ou
-  plug-in.
-  Loaded est appelée aussi bien en mode édition qu'en mode jeu.
-*}
-procedure TUnitFile.Loaded;
-begin
-end;
-
-{*
-  Exécuté lorsque le projet est sur le point d'être déchargé
-  Unloading est appelée lorsque le projet est sur le point d'être déchargé. À ce
-  moment, tous les objets sont encore accessibles, pour la dernière fois.
-  Unloading est appelée aussi bien en mode édition qu'en mode jeu.
-*}
-procedure TUnitFile.Unloading;
-begin
-end;
-
-{*
-  Exécuté lorsque la partie vient juste d'être commencée
-  GameStarted est appelée lorsque la partie vient juste d'être commencée (en
-  mode jeu, donc pas en mode édition).
-*}
-procedure TUnitFile.GameStarted;
-begin
-end;
-
-{*
-  Exécuté lorsque la partie vient juste de se terminer
-  GameEnded est appelée lorsque la partie vient juste d'être terminée (en mode
-  jeu, donc pas en mode édition), avant que le maître FunLabyrinthe ne soit
-  libéré.
-  Une partie est terminée lorsque plus aucun joueur n'est dans l'état psPlaying.
-*}
-procedure TUnitFile.GameEnded;
-begin
-end;
-
-{*
-  Dresse la liste des paramètres à enregistrer
-  Les descendants de TUnitFile peuvent surcharger cette méthode pour indiquer
-  au fichier maître les paramètres qu'il doit enregistrer.
-  @param Params   Liste des paramètres
-*}
-procedure TUnitFile.GetParams(Params: TStrings);
-begin
-  Params.Assign(FCreationParams);
-end;
-
-{---------------------}
-{ TUnitFileList class }
-{---------------------}
-
-{*
-  Ajoute un fichier unité
-  @param HRef   HRef du fichier unité (uniquement pour déterminer la classe)
-  @return Fichier unité créé
-*}
-function TUnitFileList.AddUnitFile(const HRef: string): TUnitFile;
-begin
-  Result := TUnitFile(Add(UnitFileClasses.Find(ExtractFileExt(HRef))));
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TUnitFileList.GetItems(Index: Integer): TUnitFile;
-begin
-  Result := TUnitFile(inherited Items[Index]);
-end;
-
 {-----------------------}
 { TSourceFileList class }
 {-----------------------}
@@ -772,7 +520,8 @@ begin
 
   FMaster := TMaster.Create(Mode = fmEdit, FindResource);
 
-  FUnitFiles := TUnitFileList.Create(Self);
+  FUsedUnits := TStringList.Create;
+
   FSourceFiles := TSourceFileList.Create(Self);
 
   FSepiRoot.OnLoadUnit := LoadSepiUnit;
@@ -798,37 +547,15 @@ end;
 {*
   Crée un nouveau fichier FunLabyrinthe en mode édition
   @param ABaseSepiRoot   Racine Sepi de base (peut être nil)
-  @param UnitFileDescs   Descripteurs des fichiers unité à utiliser
+  @param AUsedUnits      Unités utilisées
 *}
 constructor TMasterFile.CreateNew(ABaseSepiRoot: TSepiRoot;
-  const UnitFileDescs: TUnitFileDescs);
-var
-  I, J: Integer;
-  UnitFile: TUnitFile;
+  AUsedUnits: TStrings);
 begin
   BaseCreate(ABaseSepiRoot);
 
-  // Ajouter les unités décrites par UnitFileDescs
-  for I := 0 to Length(UnitFileDescs)-1 do
-  begin
-    with UnitFileDescs[I] do
-    begin
-      UnitFile := UnitFiles.AddUnitFile(HRef);
-
-      // Simulation of reading with a filer
-      UnitFile.BeginState([psReading]);
-      try
-        UnitFile.SetHRef(HRef);
-
-        UnitFile.FCreationParams.Clear;
-        for J := 0 to Length(Params)-1 do
-          with Params[J] do
-            UnitFile.FCreationParams.Values[Name] := Value;
-      finally
-        UnitFile.EndState([psReading]);
-      end;
-    end;
-  end;
+  FUsedUnits.Assign(AUsedUnits);
+  LoadUsedUnits;
 end;
 
 {*
@@ -836,13 +563,11 @@ end;
   @param ABaseSepiRoot   Racine Sepi de base (peut être nil)
 *}
 constructor TMasterFile.CreateNew(ABaseSepiRoot: TSepiRoot);
-var
-  UnitFileDescs: TUnitFileDescs;
 begin
-  SetLength(UnitFileDescs, 1);
-  UnitFileDescs[0].HRef := FunLabyBaseHRef;
+  BaseCreate(ABaseSepiRoot);
 
-  CreateNew(ABaseSepiRoot, UnitFileDescs);
+  FUsedUnits.Add(FunLabyBaseUnitName);
+  LoadUsedUnits;
 end;
 
 {*
@@ -852,41 +577,12 @@ destructor TMasterFile.Destroy;
 begin
   FMaster.Free;
   FSourceFiles.Free;
-  FUnitFiles.Free;
+
+  FUsedUnits.Free;
 
   FSepiRoot.Free;
 
   inherited;
-end;
-
-{*
-  Exécuté après la construction de l'objet
-  AfterConstruction est appelé après l'exécution du dernier constructeur.
-  N'appelez pas directement AfterConstruction.
-*}
-procedure TMasterFile.AfterConstruction;
-var
-  I: Integer;
-begin
-  inherited;
-
-  for I := 0 to UnitFiles.Count-1 do
-    UnitFiles[I].Loaded;
-end;
-
-{*
-  Exécuté avant la destruction de l'objet
-  BeforeDestruction est appelé avant l'exécution du premier destructeur.
-  N'appelez pas directement BeforeDestruction.
-*}
-procedure TMasterFile.BeforeDestruction;
-var
-  I: Integer;
-begin
-  inherited;
-
-  for I := UnitFiles.Count-1 downto 0 do
-    UnitFiles[I].Unloading;
 end;
 
 {*
@@ -897,22 +593,13 @@ end;
 function TMasterFile.LoadSepiUnit(Sender: TSepiRoot;
   const UnitName: string): TSepiUnit;
 var
-  Dirs: array of TFileName;
-  I: Integer;
   FileName: TFileName;
 begin
-  SetLength(Dirs, UnitFiles.Count+1);
-  Dirs[0] := UnitsDir;
-
-  for I := 0 to UnitFiles.Count-1 do
-    Dirs[I+1] := IncludeTrailingPathDelimiter(ExtractFilePath(
-      UnitFiles[I].FileName));
-
   try
-    FileName := HRefToFileName(UnitName+'.scu', Dirs);
+    FileName := ResolveHRef(UnitName+'.scu', UnitsDir);
     Result := TSepiRuntimeUnit.Create(Sender, FileName).SepiUnit;
   except
-    on Error: EInOutError do
+    on EInOutError do
       Result := nil;
   end;
 end;
@@ -948,7 +635,7 @@ begin
 
   Document := ADocument as IXMLDOMDocument;
 
-  with Document.documentElement as IXMLDOMElement do
+  with Document.documentElement do
   begin
     if nodeName <> 'funlabyrinthe' then
       InvalidFormat;
@@ -964,9 +651,41 @@ begin
     FAllowEdit := NullToEmptyStr(getAttribute('allowedit')) <> 'no';
     FIsSaveguard := NullToEmptyStr(getAttribute('issaveguard')) = 'yes';
 
+    // Compatibility with FunLabyrinthe < 5.2
+    CompatibilityLoadUnits(Document);
+
     // Chargement général
     TFunLabyXMLReader.ReadPersistent(Self,
-      Document.documentElement as IXMLDOMElement);
+      Document.documentElement);
+  end;
+end;
+
+{*
+  Charge la liste des unités (compatibilité < 5.2)
+  @param Document   Document XML DOM contenu du fichier
+*}
+procedure TMasterFile.CompatibilityLoadUnits(const ADocument: IInterface);
+const {don't localize}
+  Query = '/funlabyrinthe/collection[@name="UnitFiles"]/items/item'+
+    '/property[@name="HRef"]';
+var
+  Document: IXMLDOMDocument;
+  Nodes: IXMLDOMNodeList;
+  I: Integer;
+  HRef, UnitName: string;
+begin
+  { This method aims at loading so-called unit files from FunLabyrinthe < 5.2,
+    as plain units from FunLabyrinthe >= 5.2. }
+
+  Document := ADocument as IXMLDOMDocument;
+  Nodes := Document.documentElement.selectNodes(Query);
+
+  for I := 0 to Nodes.length-1 do
+  begin
+    HRef := Nodes.item[I].text;
+    Delete(HRef, 1, LastDelimiter(HRefDelim, HRef));
+    UnitName := ChangeFileExt(HRef, '');
+    FUsedUnits.Add(UnitName);
   end;
 end;
 
@@ -987,6 +706,68 @@ begin
 end;
 
 {*
+  Charge les unités utilisées
+*}
+procedure TMasterFile.LoadUsedUnits;
+var
+  I: Integer;
+begin
+  for I := 0 to UsedUnits.Count-1 do
+    SepiRoot.LoadUnit(UsedUnits[I]);
+
+  CallUnitEventProcs('InitializeUnit'); {don't localize}
+end;
+
+{*
+  Appelle les méthodes d'événement des unités
+  @param Name   Nom de la méthode d'événement
+*}
+procedure TMasterFile.CallUnitEventProcs(const Name: string);
+var
+  I: Integer;
+begin
+  for I := 0 to SepiRoot.UnitCount-1 do
+    CallUnitEventProc(SepiRoot.Units[I], Name);
+end;
+
+{*
+  Appelle une méthode d'événement d'une unité
+  @param SepiUnit   Unité Sepi dont appeler une méthode événement
+  @param Name       Nom de la méthode d'événement
+*}
+procedure TMasterFile.CallUnitEventProc(SepiUnit: TSepiUnit;
+  const Name: string);
+type
+  TUnitEventProc = procedure(Master: TMaster);
+var
+  Method: TSepiMethod;
+  Proc: TUnitEventProc;
+begin
+  // Get method
+  if not (SepiUnit.GetComponent(Name) is TSepiMethod) then
+    Exit;
+  Method := TSepiMethod(SepiUnit.GetComponent(Name));
+
+  // Check signature
+  with Method.Signature do
+  begin
+    if Kind <> skStaticProcedure then
+      Exit;
+    if ParamCount <> 1 then
+      Exit;
+    if (Params[0].Kind <> pkValue) or
+      (not Params[0].CompatibleWith(SepiRoot.FindClass(TMaster))) then
+      Exit;
+    if CallingConvention <> ccRegister then
+      Exit;
+  end;
+
+  // Call the procedure
+  @Proc := Method.Code;
+  Proc(Master);
+end;
+
+{*
   [@inheritDoc]
 *}
 procedure TMasterFile.DefineProperties(Filer: TFunLabyFiler);
@@ -1000,10 +781,9 @@ var
 begin
   inherited;
 
-  if (psWriting in PersistentState) and (FWritingUnitFiles <> nil) then
-    Filer.DefinePersistent('UnitFiles', FWritingUnitFiles)
-  else
-    Filer.DefinePersistent('UnitFiles', UnitFiles);
+  Filer.DefineStrings('UsedUnits', FUsedUnits);
+  if psReading in PersistentState then
+    LoadUsedUnits;
 
   if Mode <> fmPlay then
     Filer.DefinePersistent('SourceFiles', SourceFiles);
@@ -1165,8 +945,7 @@ procedure TMasterFile.GameStarted;
 var
   I: Integer;
 begin
-  for I := 0 to UnitFiles.Count-1 do
-    UnitFiles[I].GameStarted;
+  CallUnitEventProcs('GameStarted'); {don't localize}
 
   with Master do
   begin
@@ -1179,50 +958,8 @@ end;
   Termine la partie
 *}
 procedure TMasterFile.GameEnded;
-var
-  I: Integer;
 begin
-  for I := 0 to UnitFiles.Count-1 do
-    UnitFiles[I].GameEnded;
-end;
-
-{*
-  Fournit un tableau des descripteurs des fichiers unité
-  @param UnitFileDescs   Descripteurs des fichiers unité en sortie
-*}
-procedure TMasterFile.GetUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
-var
-  FileIdx, ParamIdx: Integer;
-  UnitFile: TUnitFile;
-  ParamList: TStrings;
-begin
-  ParamList := TStringList.Create;
-  try
-    SetLength(UnitFileDescs, UnitFiles.Count);
-    for FileIdx := 0 to UnitFiles.Count-1 do
-    begin
-      with UnitFileDescs[FileIdx] do
-      begin
-        UnitFile := UnitFiles[FileIdx];
-        HRef := UnitFile.HRef;
-
-        ParamList.Clear;
-        UnitFile.GetParams(ParamList);
-
-        SetLength(Params, ParamList.Count);
-        for ParamIdx := 0 to ParamList.Count-1 do
-        begin
-          with Params[ParamIdx] do
-          begin
-            Name := ParamList.Names[ParamIdx];
-            Value := ParamList.ValueFromIndex[ParamIdx];
-          end;
-        end;
-      end;
-    end;
-  finally
-    ParamList.Free;
-  end;
+  CallUnitEventProcs('GameEnded'); {don't localize}
 end;
 
 {*
@@ -1232,32 +969,17 @@ end;
   @param UnitFileDescs   Descripteurs de fichiers unité, pour les modifier
   @param AFileName       Nom du fichier à enregistrer (vide conserve l'existant)
 *}
-procedure TMasterFile.Save(const UnitFileDescs: TUnitFileDescs;
+procedure TMasterFile.Save(UsedUnits: TStrings;
   const AFileName: TFileName = '');
 var
-  I, J: Integer;
-  UnitFile: TUnitFile;
+  OldUsedUnits: TStrings;
 begin
-  FWritingUnitFiles := TUnitFileList.Create(Self);
+  OldUsedUnits := FUsedUnits;
   try
-    // Build writing unit file list - they will never be loaded
-    for I := 0 to Length(UnitFileDescs)-1 do
-    begin
-      with UnitFileDescs[I] do
-      begin
-        UnitFile := FWritingUnitFiles.AddUnitFile(HRef);
-        UnitFile.SetHRef(HRef);
-
-        for J := 0 to Length(Params)-1 do
-          with Params[J] do
-            UnitFile.CreationParams.Values[Name] := Value;
-      end;
-    end;
-
-    // Save with this overridden unit file list
+    FUsedUnits := UsedUnits;
     Save(AFileName);
   finally
-    FreeAndNil(FWritingUnitFiles);
+    FUsedUnits := OldUsedUnits;
   end;
 end;
 
@@ -1305,70 +1027,8 @@ begin
     FIsSaveguard := True;
 end;
 
-{---------------------------}
-{ Classe TUnitFileClassList }
-{---------------------------}
-
-{*
-  Crée une nouvelle instance de TUnitFileClassList
-*}
-constructor TUnitFileClassList.Create;
-begin
-  inherited Create(TypeInfo(string), SizeOf(TUnitFileClass));
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TUnitFileClassList.BucketFor(const Key): Cardinal;
-begin
-  Result := HashOfStr(string(Key)) mod Cardinal(BucketCount);
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TUnitFileClassList.KeyEquals(const Key1, Key2): Boolean;
-begin
-  Result := string(Key1) = string(Key2);
-end;
-
-{*
-  Référence un gestionnaire d'unité
-  @param Extension       Extension de fichier unité à recenser
-  @param UnitFileClass   Classe du gestionnaire
-*}
-procedure TUnitFileClassList.Add(const Extension: string;
-  UnitFileClass: TUnitFileClass);
-begin
-  AddData(Extension, UnitFileClass);
-end;
-
-{*
-  Supprime un gestionnaire d'unité
-  @param Extension   Extension de fichier unité à supprimer
-*}
-procedure TUnitFileClassList.Remove(const Extension: string);
-begin
-  RemoveData(Extension);
-end;
-
-{*
-  Trouve la classe d'un gestionnaire à partir de son extension
-  @param Extension   Extension du fichier unité
-  @return Classe du gestionnaire gérant les fichiers du type spécifié
-  @throws EInOutError Type de fichier inconnu
-*}
-function TUnitFileClassList.Find(const Extension: string): TUnitFileClass;
-begin
-  if not (inherited Find(Extension, Result)) then
-    raise EInOutError.CreateFmt(SUnknownUnitType, [Extension]);
-end;
-
 initialization
   FunLabyRegisterClass(TSourceFile);
-
-  UnitFileClasses := TUnitFileClassList.Create;
 
   with TMemIniFile.Create(Dir+fIniFileName) do
   try
@@ -1377,8 +1037,7 @@ initialization
   finally
     Free;
   end;
-finalization
-  UnitFileClasses.Free;
-  UnitFileClasses := nil;
+
+  LoadPlugins(JoinPath([Dir, UnitPackagesDir]));
 end.
 

@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, SynEditHighlighter, SynHighlighterPas, SynEdit, SdDialogs,
   SepiCompiler, SepiParseTrees, SepiCompilerErrors, SepiFunDelphiCompiler,
-  SepiReflectionCore, FilesUtils, UnitFiles, SourceEditors,
+  SepiReflectionCore, FilesUtils, SourceEditors,
   FunLabySourceSynEditEditorFrame, SynHighlighterFunDelphi;
 
 resourcestring

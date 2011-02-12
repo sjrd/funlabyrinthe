@@ -12,10 +12,10 @@ uses
   Windows, SysUtils, StrUtils, Forms, Dialogs, Classes, Contnrs, ActnList,
   XPStyleActnCtrls, ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus,
   ToolWin, ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore,
-  FunLabyUtils, FilesUtils, UnitFiles, EditPluginManager, SourceEditors,
+  FunLabyUtils, FilesUtils, PluginManager, SourceEditors,
   FileProperties, FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile,
   ExtCtrls, ScSyncObjs, CompilerMessages, MapViewer, SepiCompilerErrors,
-  EditMap,
+  EditMap, SepiImportsFunLaby,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA, JvComponentBase,
   JvDragDrop, JvAppStorage, JvAppXMLStorage;
 
@@ -163,8 +163,7 @@ type
     procedure UnloadFile;
 
     function DoAutoCompile: Boolean;
-    procedure MakeBPLUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
-    procedure CreateAutoCompileMasterFile(const UnitFileDescs: TUnitFileDescs);
+    procedure CreateAutoCompileMasterFile;
     procedure AddAllSourceFiles(const BaseDir: TFileName);
     procedure AddSourceFileFor(const BinaryFileName: TFileName);
     function FindSourceFileFor(const BinaryFileName: TFileName): TFileName;
@@ -572,60 +571,21 @@ end;
   @return True en cas de succès, False s'il y a eu des erreurs
 *}
 function TFormMain.DoAutoCompile: Boolean;
-var
-  UnitFileDescs: TUnitFileDescs;
 begin
-  MakeBPLUnitFileDescs(UnitFileDescs);
-  CreateAutoCompileMasterFile(UnitFileDescs);
+  CreateAutoCompileMasterFile;
   AddAllSourceFiles(JoinPath([FunLabyAppDataDir, SourcesDir]));
   Result := CompileAll;
-end;
-
-{*
-  Crée les descripteurs d'unités pour tous les BPL trouvés
-  @param UnitFileDescs   En sortie : descripteurs des unités BPL
-*}
-procedure TFormMain.MakeBPLUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
-const
-  ExcludedBPLFiles: array[0..0] of string = ('Compatibility4x.bpl');
-var
-  FileNames: TStrings;
-  SearchRec: TSearchRec;
-  I: Integer;
-begin
-  FileNames := TStringList.Create;
-  try
-    // Search for *.bpl files
-    if FindFirst(JoinPath([FunLabyAppDataDir, UnitsDir, '*.bpl']),
-      faAnyFile, SearchRec) = 0 then
-    try
-      repeat
-        if not AnsiMatchText(SearchRec.Name, ExcludedBPLFiles) then
-          FileNames.Add(SearchRec.Name);
-      until FindNext(SearchRec) <> 0;
-    finally
-      FindClose(SearchRec);
-    end;
-
-    // Make result
-    SetLength(UnitFileDescs, FileNames.Count);
-    for I := 0 to FileNames.Count-1 do
-      UnitFileDescs[I].HRef := FileNames[I];
-  finally
-    FileNames.Free;
-  end;
 end;
 
 {*
   Crée le fichier maître pour une auto-compilation
   @param UnitFileDescs   Descripteurs de fichiers unités
 *}
-procedure TFormMain.CreateAutoCompileMasterFile(
-  const UnitFileDescs: TUnitFileDescs);
+procedure TFormMain.CreateAutoCompileMasterFile;
 begin
   NeedBaseSepiRoot;
 
-  MasterFile := TMasterFile.CreateNew(BaseSepiRoot, UnitFileDescs);
+  MasterFile := TMasterFile.CreateNew(BaseSepiRoot);
   try
     LoadFile;
   except
@@ -2044,5 +2004,7 @@ begin
   end;
 end;
 
+initialization
+  LoadPlugins(JoinPath([Dir, EditPluginsDir]));
 end.
 

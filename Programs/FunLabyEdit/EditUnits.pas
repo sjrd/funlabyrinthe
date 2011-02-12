@@ -4,36 +4,32 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, ScLists, ScStrUtils, SdDialogs, FilesUtils,
-  FunLabyUtils, SourceEditors, FunLabyEditConsts, EditParameters;
+  Dialogs, StdCtrls, Buttons, ScUtils, ScLists, ScStrUtils, SdDialogs,
+  FilesUtils, FunLabyUtils, SourceEditors, FunLabyEditConsts;
 
 type
   TFormEditUnits = class(TForm)
-    LabelUnits: TLabel;
-    ListBoxUnits: TListBox;
-    ButtonOK: TBitBtn;
-    ButtonCancel: TBitBtn;
-    ButtonAdd: TButton;
-    ButtonRemove: TButton;
-    ButtonEditParams: TButton;
-    OpenUnitDialog: TOpenDialog;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure ButtonAddClick(Sender: TObject);
-    procedure ButtonRemoveClick(Sender: TObject);
-    procedure ButtonEditParamsClick(Sender: TObject);
+    LabelAvailableUnits: TLabel;
+    ButtonAddUnit: TSpeedButton;
+    ButtonRemoveUnit: TSpeedButton;
+    LabelUsedUnits: TLabel;
+    ButtonOK: TButton;
+    ButtonCancel: TButton;
+    ListBoxAvailableUnits: TListBox;
+    ListBoxUsedUnits: TListBox;
+    procedure ButtonAddUnitClick(Sender: TObject);
+    procedure ButtonRemoveUnitClick(Sender: TObject);
   private
-    { Déclarations privées }
     MasterFile: TMasterFile;
-    Filters: TStrings;
 
-    procedure AddUnitFilter(const Filter, Extension; var Continue: Boolean);
+    function InternalEditUnits(AMasterFile: TMasterFile): Boolean;
 
-    procedure AddUnitFileDesc(const UnitFileDesc: TUnitFileDesc);
-    procedure DeleteUnitFileDesc(Index: Integer);
-    procedure AddUnitFile(const FileName: TFileName);
+    procedure ListAvailableUnits;
+    procedure ListAvailableUnitsIn(AvailableUnits: TStrings;
+      const Filter: string);
+
+    procedure MoveSelected(List: TCustomListBox; Items: TStrings);
   public
-    { Déclarations publiques }
     class function EditUnits(AMasterFile: TMasterFile): Boolean;
   end;
 
@@ -42,63 +38,94 @@ implementation
 {$R *.dfm}
 
 {*
-  Ajoute un filtre d'unité à la liste des filtres
-  @param Filter      Filtre de fichier
-  @param Extension   Extension du type de fichier
-  @param Continue    Position à False pour interrompre l'énumération
+  Propose à l'utilisateur de modifier les unités d'un projet FunLabyrinthe
+  @param AMasterFile   Fichier maître dont modifier les unités
+  @return True si les unités ont été modifiées, False sinon
 *}
-procedure TFormEditUnits.AddUnitFilter(const Filter, Extension;
-  var Continue: Boolean);
+function TFormEditUnits.InternalEditUnits(AMasterFile: TMasterFile): Boolean;
 begin
-  Filters.Add(string(Filter));
-end;
+  Result := False;
+  MasterFile := AMasterFile;
 
-{*
-  Ajoute à la list box les informations d'un descripteur de fichier
-  @param UnitFileDesc   Descripteur de fichier à ajouter
-*}
-procedure TFormEditUnits.AddUnitFileDesc(const UnitFileDesc: TUnitFileDesc);
-var
-  DescPtr: PUnitFileDesc;
-begin
-  if ListBoxUnits.Items.IndexOf(UnitFileDesc.HRef) >= 0 then
-  begin
-    ShowDialog(SDuplicateUnitTitle,
-      Format(SDuplicateUnit, [UnitFileDesc.HRef]), dtError);
+  // Prepare
+  ListAvailableUnits;
+  ListBoxUsedUnits.Items.Assign(MasterFile.UsedUnits);
+
+  // Show dialog
+  if ShowModal <> mrOk then
     Exit;
+
+  // Save master file
+  MasterFile.Save(ListBoxUsedUnits.Items);
+  Result := True;
+end;
+
+{*
+  Liste toutes les unités disponibles
+  Remplit la liste ListBoxAvailableUnits avec toutes les unités disponibles pour
+  le projet.
+*}
+procedure TFormEditUnits.ListAvailableUnits;
+var
+  AvailableUnits: TStrings;
+begin
+  AvailableUnits := ListBoxAvailableUnits.Items;
+
+  AvailableUnits.BeginUpdate;
+  try
+    ListAvailableUnitsIn(AvailableUnits,
+      JoinPath([FunLabyAppDataDir, UnitsDir, '*.scu']));
+
+    ListAvailableUnitsIn(AvailableUnits,
+      JoinPath([MasterFile.ProjectDir, UnitsDir, '*.scu']));
+
+    ListAvailableUnitsIn(AvailableUnits,
+      JoinPath([Dir, UnitPackagesDir, '*.bpl']));
+  finally
+    AvailableUnits.EndUpdate;
   end;
-
-  New(DescPtr);
-  DescPtr^ := UnitFileDesc;
-
-  ListBoxUnits.Items.AddObject(UnitFileDesc.HRef, TObject(DescPtr));
 end;
 
 {*
-  Supprime un élément de la list box des fichiers unité
-  @param Index   Index de l'élément à supprimer
+  Liste toutes les unités disponibles dans un dossier donné
+  Remplit la liste ListBoxAvailableUnits avec toutes les unités disponibles pour
+  le projet.
+  @param Dir      Dossier dans lequel chercher les unités
+  @param Filter   Filtre de nom de fichier
 *}
-procedure TFormEditUnits.DeleteUnitFileDesc(Index: Integer);
+procedure TFormEditUnits.ListAvailableUnitsIn(AvailableUnits: TStrings;
+  const Filter: string);
 var
-  DescPtr: PUnitFileDesc;
+  SearchRec: TSearchRec;
+  UnitName: string;
 begin
-  DescPtr := PUnitFileDesc(ListBoxUnits.Items.Objects[Index]);
-  Dispose(DescPtr);
+  if FindFirst(Filter, faAnyFile, SearchRec) = 0 then
+  repeat
+    UnitName := ChangeFileExt(SearchRec.Name, '');
 
-  ListBoxUnits.Items.Delete(Index);
+    if (AvailableUnits.IndexOf(UnitName) < 0) and
+      (MasterFile.UsedUnits.IndexOf(UnitName) < 0) then
+      AvailableUnits.Add(UnitName);
+  until FindNext(SearchRec) <> 0;
 end;
 
 {*
-  Ajoute un fichier unité
-  @param FileName   Nom du fichier
+  Déplace l'élément sélectionné dans une autre liste
+  @param List    Boîte liste source
+  @param Items   Liste d'éléments destination
 *}
-procedure TFormEditUnits.AddUnitFile(const FileName: TFileName);
+procedure TFormEditUnits.MoveSelected(List: TCustomListBox; Items: TStrings);
 var
-  UnitFileDesc: TUnitFileDesc;
+  I: Integer;
 begin
-  UnitFileDesc.HRef := MasterFile.MakeHRef(FileName, UnitsDir);
-
-  AddUnitFileDesc(UnitFileDesc);
+  for I := List.Items.Count-1 downto 0 do
+  begin
+    if List.Selected[I] then
+    begin
+      Items.AddObject(List.Items[I], List.Items.Objects[I]);
+      List.Items.Delete(I);
+    end;
+  end;
 end;
 
 {*
@@ -108,139 +135,37 @@ end;
   nom de fichier est disponible.
   Lorsqu'EditUnits renvoie True, le maître doit être déchargé et rechargé
   ensuite.
-  @param MasterFile   Fichier maître dont modifier les unités
+  @param AMasterFile   Fichier maître dont modifier les unités
   @return True si les unités ont été modifiées, False sinon
 *}
 class function TFormEditUnits.EditUnits(AMasterFile: TMasterFile): Boolean;
-var
-  I: Integer;
-  UnitFileDescs: TUnitFileDescs;
 begin
-  // Initialisations et contrôles de validité d'appel
-  Result := False;
-  if AMasterFile.FileName = '' then
-    Exit;
+  Assert(AMasterFile.FileName <> '');
 
   with Create(Application) do
   try
-    // Lister les unités présentes dans le fichier maître
-    MasterFile := AMasterFile;
-    MasterFile.GetUnitFileDescs(UnitFileDescs);
-    for I := 0 to Length(UnitFileDescs)-1 do
-      AddUnitFileDesc(UnitFileDescs[I]);
-
-    ListBoxUnits.ItemIndex := 0;
-
-    // Affichage de la boîte de dialogue
-    if ShowModal <> mrOk then
-      Exit;
-
-    // Reformer le tableau des descripteurs
-    SetLength(UnitFileDescs, ListBoxUnits.Items.Count);
-    for I := 0 to Length(UnitFileDescs)-1 do
-    begin
-      UnitFileDescs[I] := PUnitFileDesc(ListBoxUnits.Items.Objects[0])^;
-      DeleteUnitFileDesc(0);
-    end;
-
-    // Enregistrer le fichier maître
-    MasterFile.Save(UnitFileDescs);
-    Result := True;
+    Result := InternalEditUnits(AMasterFile);
   finally
     Release;
   end;
 end;
 
 {*
-  Gestionnaire d'événement OnCreate de la fiche
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormEditUnits.FormCreate(Sender: TObject);
-var
-  I: Integer;
-  Filter, AllExtensions: string;
-begin
-  // Lister les filtres d'unité
-  Filters := TStringList.Create;
-  UnitFilters.ForEach(AddUnitFilter);
-
-  OpenUnitDialog.InitialDir := JoinPath([FunLabyAppDataDir, UnitsDir]);
-
-  if Filters.Count = 0 then
-    ButtonAdd.Enabled := False
-  else
-  begin
-    TStringList(Filters).Sorted := True;
-
-    Filter := '';
-    AllExtensions := '';
-
-    for I := 0 to Filters.Count-1 do
-    begin
-      Filter := Filter + '|' + Filters[I];
-      AllExtensions := AllExtensions + ';' + GetLastToken(Filters[I], '|');
-    end;
-
-    AllExtensions[1] := '|';
-    Filter := SAllUnitTypes + AllExtensions + Filter;
-
-    OpenUnitDialog.Filter := Filter;
-  end;
-end;
-
-{*
-  Gestionnaire d'événement OnDstroy de la fiche
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormEditUnits.FormDestroy(Sender: TObject);
-begin
-  Filters.Free;
-end;
-
-{*
   Gestionnaire d'événement pour ajouter une unité existante
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormEditUnits.ButtonAddClick(Sender: TObject);
+procedure TFormEditUnits.ButtonAddUnitClick(Sender: TObject);
 begin
-  with OpenUnitDialog do
-    if Execute then
-      AddUnitFile(FileName);
+  MoveSelected(ListBoxAvailableUnits, ListBoxUsedUnits.Items);
 end;
 
 {*
   Gestionnaire d'événement pour retirer une unité
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormEditUnits.ButtonRemoveClick(Sender: TObject);
+procedure TFormEditUnits.ButtonRemoveUnitClick(Sender: TObject);
 begin
-  with ListBoxUnits do
-  begin
-    if ItemIndex < 0 then
-      Exit;
-
-    // Garder toujours au moins une unité
-    if Items.Count = 1 then
-      ShowDialog(SRemoveUnitTitle, SCantRemoveLastUnit, dtError)
-    else
-    // Demander confirmation à l'utilisateur
-    if ShowDialog(SRemoveUnitTitle,
-      Format(SConfirmRemoveUnit, [Items[ItemIndex]]),
-      dtConfirmation, dbOKCancel) = drOK then
-      DeleteUnitFileDesc(ItemIndex);
-  end;
-end;
-
-{*
-  Gestionnaire d'événement pour modifier les paramètres d'une unité
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormEditUnits.ButtonEditParamsClick(Sender: TObject);
-begin
-  with ListBoxUnits do
-    if ItemIndex >= 0 then
-      TFormParameters.EditUnitParams(
-        PUnitFileDesc(Items.Objects[ItemIndex]).Params);
+  MoveSelected(ListBoxUsedUnits, ListBoxAvailableUnits.Items);
 end;
 
 end.

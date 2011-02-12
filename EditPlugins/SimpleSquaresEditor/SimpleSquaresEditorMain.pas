@@ -9,7 +9,7 @@ uses
   ScUtils, ScXML, SdDialogs,
   SepiReflectionCore, SepiCompiler, SepiCompilerErrors, SepiParseTrees,
   SepiFunDelphiCompiler,
-  FunLabyUtils, FilesUtils, UnitFiles, FunLabyFilers, FunLabyCoreConsts, GR32,
+  FunLabyUtils, FilesUtils, FunLabyFilers, FunLabyCoreConsts, GR32,
   SourceEditors, SimpleSquareEdit, SimpleSquaresUtils, SimpleSquareNew,
   FunLabyEditOTA, FunLabySourceEditorFrame;
 

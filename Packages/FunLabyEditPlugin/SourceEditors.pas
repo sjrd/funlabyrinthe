@@ -9,7 +9,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, ScUtils, ScLists, ScStrUtils, FilesUtils,
-  UnitFiles, SepiReflectionCore, SepiCompilerErrors, FunLabyCoreConsts;
+  SepiReflectionCore, SepiCompilerErrors, FunLabyCoreConsts;
 
 resourcestring
   SAllSourceTypes = 'Tous les types de source';
@@ -561,8 +561,7 @@ initialization
   SourceFileCreators := TSourceFileCreatorList.Create;
   UnitFilters := TUnitFilterList.Create;
 
-  UnitFilters.Add(BPLFilter, BPLUnitExtension);
-  UnitFilters.Add(SepiFilter, SepiUnitExtension);
+  UnitFilters.Add(SepiFilter, 'scu');
 finalization
   SourceFileEditors.Free;
   SourceFileEditors := nil;

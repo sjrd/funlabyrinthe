@@ -53,12 +53,12 @@ contains
   FunLabyUtils in 'FunLabyUtils.pas',
   SepiImportsFunLaby in 'SepiImportsFunLaby.pas',
   SepiImportsFunLabyUtils in 'SepiImportsFunLabyUtils.pas',
-  UnitFiles in 'UnitFiles.pas',
   FunLabyFilers in 'FunLabyFilers.pas',
   FunLabyCoreConsts in 'FunLabyCoreConsts.pas',
   SepiImportsFunLabyCoreConsts in 'SepiImportsFunLabyCoreConsts.pas',
   FunLabyGraphics in 'FunLabyGraphics.pas',
-  SepiImportsFunLabyGraphics in 'SepiImportsFunLabyGraphics.pas';
+  SepiImportsFunLabyGraphics in 'SepiImportsFunLabyGraphics.pas',
+  PluginManager in 'PluginManager.pas';
 
 end.
 

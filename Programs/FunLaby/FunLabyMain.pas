@@ -13,9 +13,9 @@ uses
   Dialogs, Menus, ComCtrls, ExtCtrls, ShellAPI,
   JvComponentBase, JvAppStorage, JvAppXMLStorage,
   ScUtils, ScStrUtils, ScSyncObjs, SdDialogs,
-  FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
-  UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts,
-  GR32, GR32_Image, SelectProjectForm;
+  FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects,
+  SepiReflectionCore, SepiImportsFunLaby, SepiImportsFunLabyTools,
+  FunLabyCoreConsts, GR32, GR32_Image, SelectProjectForm;
 
 resourcestring
   sFatalErrorTitle = 'Erreur fatale';

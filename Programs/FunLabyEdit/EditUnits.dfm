@@ -2,9 +2,9 @@ object FormEditUnits: TFormEditUnits
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Modifier les unit'#233's'
-  ClientHeight = 233
-  ClientWidth = 417
+  Caption = 'Unit'#233's utilis'#233'es'
+  ClientHeight = 265
+  ClientWidth = 345
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,85 +14,77 @@ object FormEditUnits: TFormEditUnits
   OldCreateOrder = False
   Position = poScreenCenter
   Scaled = False
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
-  DesignSize = (
-    417
-    233)
   PixelsPerInch = 96
   TextHeight = 13
-  object LabelUnits: TLabel
+  object LabelAvailableUnits: TLabel
     Left = 16
     Top = 16
-    Width = 74
+    Width = 92
     Height = 13
-    Caption = 'Liste des unit'#233's'
+    Caption = 'Unit'#233's disponibles :'
   end
-  object ListBoxUnits: TListBox
-    Left = 16
+  object ButtonAddUnit: TSpeedButton
+    Left = 160
     Top = 32
-    Width = 209
-    Height = 145
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    ItemHeight = 13
+    Width = 25
+    Height = 25
+    Caption = '>'
+    OnClick = ButtonAddUnitClick
+  end
+  object ButtonRemoveUnit: TSpeedButton
+    Left = 160
+    Top = 64
+    Width = 25
+    Height = 25
+    Caption = '<'
+    Enabled = False
+    OnClick = ButtonRemoveUnitClick
+  end
+  object LabelUsedUnits: TLabel
+    Left = 192
+    Top = 16
+    Width = 78
+    Height = 13
+    Caption = 'Unit'#233's utilis'#233'es :'
+  end
+  object ButtonOK: TButton
+    Left = 152
+    Top = 224
+    Width = 81
+    Height = 25
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
     TabOrder = 0
   end
-  object ButtonOK: TBitBtn
-    Left = 216
-    Top = 192
-    Width = 89
+  object ButtonCancel: TButton
+    Left = 248
+    Top = 224
+    Width = 81
     Height = 25
-    Anchors = [akRight, akBottom]
-    DoubleBuffered = True
-    Kind = bkOK
-    ParentDoubleBuffered = False
+    Cancel = True
+    Caption = 'Annuler'
+    ModalResult = 2
     TabOrder = 1
   end
-  object ButtonCancel: TBitBtn
-    Left = 312
-    Top = 192
-    Width = 89
-    Height = 25
-    Anchors = [akRight, akBottom]
-    DoubleBuffered = True
-    Kind = bkCancel
-    ParentDoubleBuffered = False
+  object ListBoxAvailableUnits: TListBox
+    Left = 16
+    Top = 32
+    Width = 137
+    Height = 177
+    ItemHeight = 13
+    MultiSelect = True
+    Sorted = True
     TabOrder = 2
   end
-  object ButtonAdd: TButton
-    Left = 240
+  object ListBoxUsedUnits: TListBox
+    Left = 192
     Top = 32
-    Width = 161
-    Height = 25
-    Anchors = [akTop, akRight]
-    Caption = 'Ajouter une unit'#233
+    Width = 137
+    Height = 177
+    ItemHeight = 13
+    MultiSelect = True
+    Sorted = True
     TabOrder = 3
-    OnClick = ButtonAddClick
-  end
-  object ButtonRemove: TButton
-    Left = 240
-    Top = 72
-    Width = 161
-    Height = 25
-    Anchors = [akTop, akRight]
-    Caption = 'Retirer cette unit'#233
-    TabOrder = 4
-    OnClick = ButtonRemoveClick
-  end
-  object ButtonEditParams: TButton
-    Left = 240
-    Top = 112
-    Width = 161
-    Height = 25
-    Anchors = [akTop, akRight]
-    Caption = 'Param'#232'tres de l'#39'unit'#233'...'
-    TabOrder = 5
-    OnClick = ButtonEditParamsClick
-  end
-  object OpenUnitDialog: TOpenDialog
-    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing, ofDontAddToRecent]
-    Title = 'Ajouter une unit'#233' existante'
-    Left = 16
-    Top = 192
   end
 end

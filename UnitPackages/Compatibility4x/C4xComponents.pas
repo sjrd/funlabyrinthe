@@ -11,8 +11,8 @@ interface
 
 uses
   Windows, SysUtils, Classes, Graphics, Contnrs, StrUtils, Consts, ScUtils,
-  ScLists, GR32, FunLabyUtils, FilesUtils, MapTools, FLBFields,
-  FLBSimpleEffects, FLBBoat, C4xCommon;
+  ScLists, GR32, FunLabyUtils, MapTools,
+  FLBFields, FLBSimpleEffects, FLBBoat, C4xCommon;
 
 resourcestring
   sStairs = 'Escalier';             /// Nom de l'escalier
@@ -237,7 +237,6 @@ type
   *}
   TC4xInfos = class(TFunLabyComponent)
   private
-    FMasterFile: TMasterFile;                /// Fichier maître
     FKnowShowTips: Boolean;                  /// Affichage des indices fixé
     FShowTips: Boolean;                      /// Affichage les indices
     FActionsCount: Integer;                  /// Nombres d'actions
@@ -254,10 +253,8 @@ type
     procedure DefineProperties(Filer: TFunLabyFiler); override;
     procedure StoreDefaults; override;
   public
-    constructor Create(AMasterFile: TMasterFile;
+    constructor Create(AMaster: TMaster;
       AActions: TObjectList); reintroduce;
-
-    property MasterFile: TMasterFile read FMasterFile;
 
     property KnowShowTips: Boolean read FKnowShowTips;
 
@@ -902,15 +899,14 @@ end;
 
 {*
   Crée une instance de TC4xInfos
-  @param AMasterFile   Fichier maître
-  @param AActions      Liste des actions
+  @param AMaster    Maître FunLabyrinthe
+  @param AActions   Liste des actions
 *}
-constructor TC4xInfos.Create(AMasterFile: TMasterFile;
+constructor TC4xInfos.Create(AMaster: TMaster;
   AActions: TObjectList);
 begin
-  inherited Create(AMasterFile.Master, idC4xInfos);
+  inherited Create(AMaster, idC4xInfos);
 
-  FMasterFile := AMasterFile;
   FKnowShowTips := False;
   FShowTips := False;
   FActionsCount := AActions.Count;
