@@ -26,6 +26,8 @@ resourcestring
   SCantSave = 'Impossible d''enregistrer';
   SCantSaveUnplacedPlayer =
     'Impossible d''enregistrer car le joueur d''ID %s n''a pas été placé';
+  SCantSaveBadProjectFileName = 'Vous devez sélectionner un fichier '+
+    '''<Mon Projet>.flp'' dans le dossier ''Projects\<Mon Projet>\';
 
   SAutoCompileSuccessTitle = 'Succès';
   SAutoCompileSuccess =

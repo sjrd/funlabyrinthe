@@ -11,8 +11,8 @@ interface
 uses
   Windows, SysUtils, StrUtils, Forms, Dialogs, Classes, Contnrs, ActnList,
   XPStyleActnCtrls, ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus,
-  ToolWin, ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore,
-  FunLabyUtils, FilesUtils, PluginManager, SourceEditors,
+  ToolWin, ActnCtrls, ShellAPI, ScUtils, ScStrUtils, SdDialogs,
+  SepiReflectionCore, FunLabyUtils, FilesUtils, PluginManager, SourceEditors,
   FileProperties, FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile,
   ExtCtrls, ScSyncObjs, CompilerMessages, MapViewer, SepiCompilerErrors,
   EditMap, SepiImportsFunLaby,
@@ -111,6 +111,7 @@ type
     procedure DropTargetDragAccept(Sender: TJvDropTarget; var Accept: Boolean);
     procedure DropTargetDragDrop(Sender: TJvDropTarget;
       var Effect: TJvDropEffect; Shift: TShiftState; X, Y: Integer);
+    procedure SaveDialogCanClose(Sender: TObject; var CanClose: Boolean);
   private
     BackgroundTasks: TScTaskQueue; /// Tâches d'arrière-plan
 
@@ -2001,6 +2002,43 @@ begin
       OpenFile(FileNames[I]);
   finally
     FileNames.Free;
+  end;
+end;
+
+{*
+  Gestionnaire d'événement OnCanClose de la boîte de sauvegarde
+  @param Sender     Objet qui a déclenché l'événeement
+  @param CanClose   Indique si le nom de fichier est validé
+*}
+procedure TFormMain.SaveDialogCanClose(Sender: TObject; var CanClose: Boolean);
+var
+  FileName, BaseDir: TFileName;
+  Folder, Name: string;
+begin
+  try
+    FileName := SaveDialog.FileName;
+    BaseDir := IncludeTrailingPathDelimiter(
+      JoinPath([FunLabyAppDataDir, ProjectsDir]));
+
+    // The file must be under Projects\
+    if not AnsiStartsText(BaseDir, FileName) then
+      Abort;
+
+    Delete(FileName, 1, Length(BaseDir));
+
+    // The file must be in a subfolder of Projects
+    if not SplitToken(FileName, PathDelim, Folder, Name) then
+      Abort;
+
+    // The file must look like <Name>\<Name>.flp
+    if not AnsiSameText(Folder+'.'+FunLabyProjectExt, Name) then
+      Abort;
+  except
+    on EAbort do
+    begin
+      CanClose := False;
+      ShowDialog(SCantSave, SCantSaveBadProjectFileName, dtError);
+    end;
   end;
 end;
 
