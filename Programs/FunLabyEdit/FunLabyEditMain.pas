@@ -913,7 +913,6 @@ end;
 *}
 function TFormMain.SaveFile(FileName: TFileName = ''): Boolean;
 var
-  DirName: TFileName;
   I: Integer;
 begin
   Result := False;
@@ -940,7 +939,6 @@ begin
     OpenDialog.FileName := SaveDialog.FileName;
     FileName := SaveDialog.FileName;
   end;
-  DirName := ExtractFilePath(FileName);
 
   // Enregistrer le projet
   MasterFile.Save(FileName);
