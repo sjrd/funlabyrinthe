@@ -781,6 +781,9 @@ var
 begin
   inherited;
 
+  if Mode = fmPlay then
+    Filer.DefineFieldProperty('ProjectDir', TypeInfo(TFileName), @FProjectDir);
+
   Filer.DefineStrings('UsedUnits', FUsedUnits);
   if psReading in PersistentState then
     LoadUsedUnits;
