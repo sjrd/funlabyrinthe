@@ -388,18 +388,16 @@ end;
 function TFrameSimpleSquaresEditor.CompileFile(SepiRoot: TSepiRoot;
   Errors: TSepiCompilerErrorList): TSepiUnit;
 var
-  DestFileName: TFileName;
   SourceFile: TStrings;
 begin
-  DestFileName := ChangeFileExt(FileName, '.'+SepiExtension);
-
   SourceFile := TStringList.Create;
   try
     ProduceFunDelphiCode(SourceFile);
 
     Errors.CurrentFileName := FileName;
+    ForceDirectories(ExtractFilePath(CompilerDestFileName));
     Result := CompileFunDelphiSource(SepiRoot, Errors, SourceFile,
-      DestFileName);
+      CompilerDestFileName);
   finally
     SourceFile.Free;
   end;

@@ -22,7 +22,11 @@ type
     FFileName: TFileName; /// Nom du fichier source
     FModified: Boolean;   /// Indique si le source a été modifié
 
+    FCompilerDestFileName: TFileName; /// Nom du fichier compilé
+
     FOnStateChange: TSourceEditorNotifyEvent; /// Événement OnStateChange
+
+    function GetCompilerDestFileName: TFileName;
   protected // for support of additionnal interfaces
     function GetFileName: TFileName;
     function GetControl: TControl;
@@ -44,6 +48,7 @@ type
     function CanClose: Boolean; virtual;
 
     property FileName: TFileName read FFileName;
+    property CompilerDestFileName: TFileName read GetCompilerDestFileName;
     property Modified: Boolean read FModified write SetModified;
 
     property OnStateChange: TSourceEditorNotifyEvent
@@ -54,9 +59,37 @@ implementation
 
 {$R *.dfm}
 
+uses
+  StrUtils;
+
 {----------------------------------}
 { Classe TFrameFunLabySourceEditor }
 {----------------------------------}
+
+{*
+  Nom de fichier de destination supposé pour la compilation
+*}
+function TFrameFunLabySourceEditor.GetCompilerDestFileName: TFileName;
+var
+  SourcesPartPos: Integer;
+begin
+  if FCompilerDestFileName = '' then
+  begin
+    FCompilerDestFileName := ChangeFileExt(FileName, '.scu');
+
+    SourcesPartPos := Pos(PathDelim + SourcesDir + PathDelim,
+      FCompilerDestFileName);
+
+    if SourcesPartPos > 0 then
+    begin
+      FCompilerDestFileName := JoinPath([
+        Copy(FCompilerDestFileName, 1, SourcesPartPos), UnitsDir,
+        ExtractFileName(FCompilerDestFileName)]);
+    end;
+  end;
+
+  Result := FCompilerDestFileName;
+end;
 
 {*
   [@inheritDoc]

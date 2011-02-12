@@ -106,14 +106,11 @@ end;
 *}
 function TFrameDelphiSourceEditor.CompileFile(SepiRoot: TSepiRoot;
   Errors: TSepiCompilerErrorList): TSepiUnit;
-var
-  DestFileName: TFileName;
 begin
-  DestFileName := ChangeFileExt(FileName, '.'+SepiExtension);
-
   Errors.CurrentFileName := FileName;
+  ForceDirectories(ExtractFilePath(CompilerDestFileName));
   Result := CompileDelphiSource(SepiRoot, Errors,
-    EditSource.Lines, DestFileName);
+    EditSource.Lines, CompilerDestFileName);
 end;
 
 initialization
