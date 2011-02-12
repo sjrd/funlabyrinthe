@@ -1193,6 +1193,7 @@ end;
 *}
 procedure TFormMain.AddSourceFile(const FileName: TFileName);
 var
+  HRef: string;
   SourceFile: TSourceFile;
   Action: TAction;
 begin
@@ -1205,7 +1206,8 @@ begin
   end;
 
   // Créer le fichier source
-  SourceFile := MasterFile.AddSourceFile(FileName);
+  HRef := MasterFile.MakeHRef(FileName, SourcesDir);
+  SourceFile := MasterFile.AddSourceFile(HRef);
 
   // Ajouter l'action Voir le source
   Action := MakeSourceAction(SourceFile);
