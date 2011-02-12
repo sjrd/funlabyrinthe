@@ -1652,7 +1652,7 @@ procedure TFormMain.ActionAddNewSourceExecute(Sender: TObject);
 var
   FileName: TFileName;
 begin
-  if TFormCreateNewSourceFile.NewSourceFile(FileName) then
+  if TFormCreateNewSourceFile.NewSourceFile(MasterFile, FileName) then
     AddSourceFile(FileName);
 end;
 
