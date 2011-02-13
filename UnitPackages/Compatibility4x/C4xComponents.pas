@@ -588,7 +588,7 @@ begin
   FActions := AActions;
 
   Name := Actions.FileName;
-  Painter.AddImage(fCompatibility + Name);
+  Painter.AddImage(fCompatibility + RemoveDiacritics(Actions.FileName));
 end;
 
 {*
@@ -648,7 +648,7 @@ begin
     akTreasure:
       Painter.AddImage(fTreasure);
     akCustom..akDirection:
-      Painter.AddImage(fCompatibility + Actions.FileName);
+      Painter.AddImage(fCompatibility + RemoveDiacritics(Actions.FileName));
   end;
 end;
 

@@ -1350,7 +1350,7 @@ procedure TActionsInterpreter.SoundCmd(var Params: string);
 var
   Sound: string;
 begin
-  Sound := GetStringParam(Params);
+  Sound := RemoveDiacritics(GetStringParam(Params));
   if Sound = 'Information' then
     Sound := 'SystemAsterisk'
   else if Sound = 'Question' then
