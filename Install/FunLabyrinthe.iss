@@ -168,7 +168,8 @@ Source: "..\GeneLaby.exe";            DestDir: "{app}"; Components: programs\gen
 Source: "..\FunLabyEdit.exe";         DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
 Source: "..\FunLabyVersionCheck.exe"; DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
 
-Source: "..\EditPlugins\*.bpl"; DestDir: "{app}\EditPlugins"; Components: programs\runtime; Flags: ignoreversion
+Source: "..\UnitPackages\*.bpl"; DestDir: "{app}\UnitPackages"; Components: programs\runtime; Flags: ignoreversion
+Source: "..\EditPlugins\*.bpl" ; DestDir: "{app}\EditPlugins" ; Components: programs\runtime; Flags: ignoreversion
 
 Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile replacesameversion
 
