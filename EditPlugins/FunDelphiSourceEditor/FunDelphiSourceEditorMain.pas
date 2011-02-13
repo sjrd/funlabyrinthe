@@ -59,12 +59,8 @@ const
 *}
 function CreateFunDelphiSourceEditor(
   const FileName: TFileName): ISourceEditor50;
-var
-  Editor: TFrameFunDelphiSourceEditor;
 begin
-  Editor := TFrameFunDelphiSourceEditor.Create(nil);
-  Editor.LoadFile(FileName);
-  Result := Editor as ISourceEditor50;
+  Result := TFrameFunDelphiSourceEditor.Create(nil) as ISourceEditor50;
 end;
 
 {*

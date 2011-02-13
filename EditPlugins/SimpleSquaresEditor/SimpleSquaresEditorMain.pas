@@ -154,12 +154,8 @@ const
   @return Interface vers l'éditeur créé
 *}
 function CreateSimpleSquaresEditor(const FileName: TFileName): ISourceEditor50;
-var
-  Editor: TFrameSimpleSquaresEditor;
 begin
-  Editor := TFrameSimpleSquaresEditor.Create(nil);
-  Editor.LoadFile(FileName);
-  Result := Editor as ISourceEditor50;
+  Result := TFrameSimpleSquaresEditor.Create(nil) as ISourceEditor50;
 end;
 
 {*

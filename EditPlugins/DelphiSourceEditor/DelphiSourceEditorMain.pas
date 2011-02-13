@@ -54,12 +54,8 @@ const
   @return Interface vers l'éditeur créé
 *}
 function CreateDelphiSourceEditor(const FileName: TFileName): ISourceEditor50;
-var
-  Editor: TFrameDelphiSourceEditor;
 begin
-  Editor := TFrameDelphiSourceEditor.Create(nil);
-  Editor.LoadFile(FileName);
-  Result := Editor as ISourceEditor50;
+  Result := TFrameDelphiSourceEditor.Create(nil) as ISourceEditor50;
 end;
 
 {*

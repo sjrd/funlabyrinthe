@@ -64,6 +64,12 @@ type
     procedure SetOnStateChange(Value: TSourceEditorNotifyEvent);
 
     {*
+      Charge le fichier source
+      @param FileName   Nom du fichier source à charger
+    *}
+    procedure LoadFile(const FileName: TFileName);
+
+    {*
       Enregistre le fichier source
       @return True si le fichier a bien été enregistré, False sinon
     *}

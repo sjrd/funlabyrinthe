@@ -808,6 +808,9 @@ begin
   if Supports(Editor, ISourceEditorUsingOTA50, EditorUsingOTA) then
     EditorUsingOTA.SetFunLabyEditMainForm(Self);
 
+  // Load source file into editor
+  Editor.LoadFile(FileName);
+
   // Configure the editor control
   EditorControl := Editor.Control;
   EditorControl.Align := alClient;
