@@ -85,6 +85,9 @@ type
       const AProjectDir: TFileName);
     destructor Destroy; override;
 
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
+
     function ResolveHRef(const HRef, Dir: string): TFileName;
     function MakeHRef(const FileName: TFileName;
       const Dir: string): string;
@@ -726,6 +729,26 @@ end;
 *}
 procedure TMasterFile.StoreDefaults;
 begin
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMasterFile.AfterConstruction;
+begin
+  inherited;
+
+  CallUnitEventProcs('Loaded'); {don't localize}
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMasterFile.BeforeDestruction;
+begin
+  inherited;
+
+  CallUnitEventProcs('Unloading'); {don't localize}
 end;
 
 {*
