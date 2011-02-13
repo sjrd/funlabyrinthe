@@ -375,14 +375,8 @@ var
   ActionsFileName: TFileName;
   SquaresImgName: string;
 begin
-  // TODO Fetch ActionsFileName
-  ActionsFileName := '';
-
-  // TODO Fetch SquaresImgName
-  SquaresImgName := '';
-
-  if Master.ImagesMaster.ResolveImgName(fCompatibility+SquaresImgName) = '' then
-    SquaresImgName := DefaultSquaresImgName;
+  ActionsFileName := Master.FindResource('../../Sources/Actions.c4x', rkImage);
+  SquaresImgName := DefaultSquaresImgName;
 
   CreateComponents(Master);
   LoadActions(Master, ActionsFileName);
