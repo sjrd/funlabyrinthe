@@ -83,8 +83,6 @@ resourcestring
   SThereMustBeOnePlayer = 'Il doit y avoir un et un seul joueur par fichier';
   SEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
   SCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
-  SSourcesNotHandledWhilePlaying =
-    'Les fichiers source ne sont pas gérés en mode jeu';
   SNoFileName = 'Aucun nom de fichier spécifié';
   SCantLoadPackage = 'Impossible de charger le paquet "%s"';
   SPainterFilter = 'Peintre FunLabyrinthe|*.pnt';

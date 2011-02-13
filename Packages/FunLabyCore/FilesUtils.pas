@@ -19,83 +19,6 @@ type
   /// Mode d'ouverture d'un fichier FunLabyrinthe
   TFileMode = (fmEdit, fmPlay);
 
-  TMasterFile = class;
-
-  {*
-    Représente un fichier dépendant d'un fichier maître FunLabyrinthe
-    TDependantFile est la classe de base pour les classes chargeant et
-    enregistrant des fichiers dépendant d'un fichier maître FunLabyrinthe.
-    @author sjrd
-    @version 5.0
-  *}
-  TDependantFile = class(TFunLabyPersistent)
-  private
-    FMasterFile: TMasterFile; /// Fichier maître
-    FMaster: TMaster;         /// Maître FunLabyrinthe
-    FHRef: string;            /// HRef
-    FFileName: TFileName;     /// Nom du fichier
-
-    function GetHRef: string;
-    procedure SetHRef(const Value: string);
-  protected
-    procedure DefineProperties(Filer: TFunLabyFiler); override;
-
-    function GetDir: TFileName; virtual;
-    function ResolveHRef: TFileName; virtual;
-  public
-    constructor Create(AMasterFile: TMasterFile); virtual;
-
-    property MasterFile: TMasterFile read FMasterFile;
-    property Master: TMaster read FMaster;
-    property HRef: string read FHRef;
-    property FileName: TFileName read FFileName;
-  end;
-
-  /// Classe de TDependantFile
-  TDependantFileClass = class of TDependantFile;
-
-  {*
-    Liste de fichiers dépendants
-    @author sjrd
-    @version 5.0
-  *}
-  TDependantFileList = class(TFunLabyCollection)
-  private
-    FMasterFile: TMasterFile;
-  protected
-    function CreateItem(ItemClass: TFunLabyPersistentClass):
-      TFunLabyPersistent; override;
-  public
-    constructor Create(AMasterFile: TMasterFile);
-
-    property MasterFile: TMasterFile read FMasterFile;
-  end;
-
-  {*
-    Représente un fichier source
-    @author sjrd
-    @version 5.0
-  *}
-  TSourceFile = class(TDependantFile)
-  end;
-
-  /// Classe de TSourceFile
-  TSourceFileClass = class of TSourceFile;
-
-  {*
-    Liste de fichiers source
-    @author sjrd
-    @version 5.0
-  *}
-  TSourceFileList = class(TDependantFileList)
-  private
-    function AddSourceFile(const HRef: string): TSourceFile;
-
-    function GetItems(Index: Integer): TSourceFile;
-  public
-    property Items[Index: Integer]: TSourceFile read GetItems; default;
-  end;
-
   {*
     Représente un fichier maître FunLabyrinthe
     TMasterFile représente un fichier maître FunLabyrinthe (extension .flp).
@@ -127,7 +50,7 @@ type
 
     FUsedUnits: TStrings; /// Liste des unités utilisées par ce projet
 
-    FSourceFiles: TSourceFileList; /// Liste des fichiers source
+    FSourceFiles: TStrings; /// Liste des fichiers source
 
     constructor BaseCreate(ABaseSepiRoot: TSepiRoot;
       const AFileName: TFileName = ''; AMode: TFileMode = fmEdit);
@@ -139,6 +62,7 @@ type
 
     procedure Load(const ADocument: IInterface);
     procedure CompatibilityLoadUnits(const ADocument: IInterface);
+    procedure CompatibilityLoadSources(const ADocument: IInterface);
     procedure TestOpeningValidity;
     procedure LoadUsedUnits;
 
@@ -163,10 +87,6 @@ type
     function MakeResourceHRef(const FileName: TFileName;
       Kind: TResourceKind): string;
 
-    function AddSourceFile(const HRef: string): TSourceFile;
-    procedure RemoveSourceFile(SourceFile: TSourceFile);
-    function FindSourceFile(const FileName: TFileName): TSourceFile;
-
     procedure GameStarted;
     procedure GameEnded;
 
@@ -185,7 +105,7 @@ type
 
     property UsedUnits: TStrings read FUsedUnits;
 
-    property SourceFiles: TSourceFileList read FSourceFiles;
+    property SourceFiles: TStrings read FSourceFiles;
 
     property AllowEdit: Boolean read FAllowEdit;
     property IsSaveguard: Boolean read FIsSaveguard;
@@ -369,125 +289,6 @@ begin
   RunURL(Dir + 'FunLabyVersionCheck.exe');
 end;
 
-{-----------------------}
-{ Classe TDependantFile }
-{-----------------------}
-
-{*
-  Crée une instance de TDependantFile
-  @param AMasterFile   Fichier maître
-*}
-constructor TDependantFile.Create(AMasterFile: TMasterFile);
-begin
-  inherited Create;
-
-  FMasterFile := AMasterFile;
-  FMaster := FMasterFile.Master;
-end;
-
-{*
-  HRef pour l'enregistrement
-  @return HRef pour l'enregistrement
-*}
-function TDependantFile.GetHRef: string;
-begin
-  Result := MasterFile.MakeHRef(FileName, GetDir);
-end;
-
-{*
-  Renseigne le href du fichier
-  @param Value   Valeur de href
-*}
-procedure TDependantFile.SetHRef(const Value: string);
-begin
-  FHRef := Value;
-  FFileName := ResolveHRef;
-end;
-
-{*
-  [@inheritDoc]
-*}
-procedure TDependantFile.DefineProperties(Filer: TFunLabyFiler);
-begin
-  Filer.DefineProcProperty('HRef', TypeInfo(string),
-    @TDependantFile.GetHRef, @TDependantFile.SetHRef);
-
-  inherited;
-end;
-
-{*
-  Dossier pour ce type de fichier
-  @return Dossier pour ce type de fichier
-*}
-function TDependantFile.GetDir: TFileName;
-begin
-  Result := SourcesDir;
-end;
-
-{*
-  Résoud le href en nom de fichier
-  @return Nom de fichier correspondant à HRef
-  @throws EInOutError Aucun fichier correspondant n'a été trouvé
-*}
-function TDependantFile.ResolveHRef: TFileName;
-begin
-  Result := MasterFile.ResolveHRef(HRef, GetDir);
-end;
-
-{--------------------------}
-{ TDependantFileList class }
-{--------------------------}
-
-{*
-  Crée une liste de fichiers dépendants
-  @param AMasterFile   Fichier maître
-*}
-constructor TDependantFileList.Create(AMasterFile: TMasterFile);
-begin
-  inherited Create;
-
-  FMasterFile := AMasterFile;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TDependantFileList.CreateItem(
-  ItemClass: TFunLabyPersistentClass): TFunLabyPersistent;
-begin
-  Result := TDependantFileClass(ItemClass).Create(MasterFile);
-end;
-
-{-----------------------}
-{ TSourceFileList class }
-{-----------------------}
-
-{*
-  Ajoute un nouveau fichier source
-  @param HRef   HRef du fichier source
-  @return Fichier source ajouté
-*}
-function TSourceFileList.AddSourceFile(const HRef: string): TSourceFile;
-begin
-  Result := TSourceFile.Create(MasterFile);
-
-  try
-    Result.SetHRef(HRef);
-    AddItem(Result);
-  except
-    Result.Free;
-    raise;
-  end;
-end;
-
-{*
-  [@inheritDoc]
-*}
-function TSourceFileList.GetItems(Index: Integer): TSourceFile;
-begin
-  Result := TSourceFile(inherited Items[Index]);
-end;
-
 {--------------------}
 { Classe TMasterFile }
 {--------------------}
@@ -520,7 +321,7 @@ begin
 
   FUsedUnits := TStringList.Create;
 
-  FSourceFiles := TSourceFileList.Create(Self);
+  FSourceFiles := TStringList.Create;
 
   FSepiRoot.OnLoadUnit := LoadSepiUnit;
   FSepiRoot.LoadUnit('FunLabyUtils');
@@ -655,6 +456,9 @@ begin
     // Chargement général
     TFunLabyXMLReader.ReadPersistent(Self,
       Document.documentElement);
+
+    // Compatibility with FunLabyrinthe < 5.2
+    CompatibilityLoadSources(Document);
   end;
 end;
 
@@ -685,6 +489,29 @@ begin
     UnitName := ChangeFileExt(HRef, '');
     FUsedUnits.Add(UnitName);
   end;
+end;
+
+{*
+  Charge la liste des sources (compatibilité < 5.2)
+  @param Document   Document XML DOM contenu du fichier
+*}
+procedure TMasterFile.CompatibilityLoadSources(const ADocument: IInterface);
+const {don't localize}
+  Query = '/funlabyrinthe/collection[@name="SourceFiles"]/items/item'+
+    '/property[@name="HRef"]';
+var
+  Document: IXMLDOMDocument;
+  Nodes: IXMLDOMNodeList;
+  I: Integer;
+begin
+  { This method aims at loading source files from FunLabyrinthe < 5.2,
+    as new source files from FunLabyrinthe >= 5.2. }
+
+  Document := ADocument as IXMLDOMDocument;
+  Nodes := Document.documentElement.selectNodes(Query);
+
+  for I := 0 to Nodes.length-1 do
+    FSourceFiles.Add(Nodes.item[I].text);
 end;
 
 {*
@@ -787,7 +614,7 @@ begin
     LoadUsedUnits;
 
   if Mode <> fmPlay then
-    Filer.DefinePersistent('SourceFiles', SourceFiles);
+    Filer.DefineStrings('SourceFiles', SourceFiles);
 
   // Create additionnal components
   Additionnal := TStringList.Create;
@@ -904,48 +731,6 @@ begin
 end;
 
 {*
-  Ajoute un fichier source
-  @param HRef   Adresse du fichier
-  @return Le fichier source créé
-*}
-function TMasterFile.AddSourceFile(const HRef: string): TSourceFile;
-begin
-  if Mode = fmPlay then
-    raise EInOutError.Create(SSourcesNotHandledWhilePlaying);
-
-  Result := SourceFiles.AddSourceFile(HRef);
-end;
-
-{*
-  Retire un fichier source
-  @param SourceFile   Fichier source à retirer
-*}
-procedure TMasterFile.RemoveSourceFile(SourceFile: TSourceFile);
-begin
-  FSourceFiles.Remove(SourceFile);
-end;
-
-{*
-  Trouve un fichier source à partir de son nom
-  @param FileName   Nom de fichier
-  @return Fichier source correspondant, ou nil si inexistant
-*}
-function TMasterFile.FindSourceFile(const FileName: TFileName): TSourceFile;
-var
-  I: Integer;
-begin
-  for I := 0 to SourceFiles.Count-1 do
-  begin
-    Result := SourceFiles[I];
-
-    if AnsiSameText(Result.FileName, FileName) then
-      Exit;
-  end;
-
-  Result := nil;
-end;
-
-{*
   Commence la partie
 *}
 procedure TMasterFile.GameStarted;
@@ -1035,8 +820,6 @@ begin
 end;
 
 initialization
-  FunLabyRegisterClass(TSourceFile);
-
   with TMemIniFile.Create(Dir+fIniFileName) do
   try
     FunLabyAppDataDir :=

@@ -190,12 +190,13 @@ type
 
     procedure MarkModified;
 
-    function MakeSourceAction(SourceFile: TSourceFile): TAction;
+    function MakeSourceAction(const SourceHRef: string): TAction;
     procedure MakeSourceActions;
     procedure DeleteSourceActions;
 
+    function FindSourceFile(const FileName: TFileName): string;
     procedure AddSourceFile(const FileName: TFileName);
-    procedure RemoveSourceFile(SourceFile: TSourceFile);
+    procedure RemoveSourceFile(const SourceHRef: string);
 
     procedure SetModified(Value: Boolean);
 
@@ -765,34 +766,20 @@ end;
 procedure TFormMain.OpenTab(const FileName: TFileName);
 var
   Editor: ISourceEditor50;
-  SourceFile: TSourceFile;
   EditorUsingOTA: ISourceEditorUsingOTA50;
   EditorControl: TControl;
   Tab: TJvTabBarItem;
 begin
-  // Créer l'éditeur
-  try
-    Editor := SourceFileEditors.CreateEditor(FileName);
-  except
-    on Error: Exception do
-    begin
-      SourceFile := MasterFile.FindSourceFile(FileName);
-
-      if SourceFile = nil then
-      begin
-        ShowDialog(SErrorTitle, Error.Message, dtError);
-      end else
-      begin
-        if ShowDialog(SErrorTitle, Format(SErrorWhileOpeningSourceFile,
-          [Error.Message]), dtError, dbYesNo, 2) = drYes then
-        begin
-          RemoveSourceFile(SourceFile);
-        end;
-      end;
-
-      Exit;
-    end;
+  // If a tab already exists for this file, simply select it
+  Tab := FindTab(FileName);
+  if Tab <> nil then
+  begin
+    Tab.Selected := True;
+    Exit;
   end;
+
+  // Create the editor
+  Editor := SourceFileEditors.CreateEditor(FileName);
 
   // Set OTA main form
   if Supports(Editor, ISourceEditorUsingOTA50, EditorUsingOTA) then
@@ -1144,17 +1131,17 @@ end;
 
 {*
   Crée une action Voir un source pour un fichier source donné
-  @param SourceFile   Fichier source à voir
+  @param SourceHRef   HRef du fichier source à voir
   @return L'action créée
 *}
-function TFormMain.MakeSourceAction(SourceFile: TSourceFile): TAction;
+function TFormMain.MakeSourceAction(const SourceHRef: string): TAction;
 begin
   Result := TAction.Create(Self);
   with Result do
   begin
     ActionList := ActionManager;
-    Caption := ExtractFileName(SourceFile.FileName);
-    Tag := Integer(SourceFile);
+    Caption := Copy(SourceHRef, LastDelimiter(HRefDelim, SourceHRef)+1, MaxInt);
+    Hint := SourceHRef;
     OnExecute := ActionViewSourceExecute;
   end;
 end;
@@ -1166,15 +1153,15 @@ procedure TFormMain.MakeSourceActions;
 var
   I: Integer;
   PreviousItem: TActionClientItem;
-  SourceFile: TSourceFile;
+  SourceHRef: string;
 begin
   PreviousItem := BigMenuSources.Items[BigMenuSources.Items.Count-1];
   SetLength(SourceActions, MasterFile.SourceFiles.Count);
 
   for I := 0 to MasterFile.SourceFiles.Count-1 do
   begin
-    SourceFile := MasterFile.SourceFiles[I];
-    SourceActions[I] := MakeSourceAction(SourceFile);
+    SourceHRef := MasterFile.SourceFiles[I];
+    SourceActions[I] := MakeSourceAction(SourceHRef);
     PreviousItem := ActionManager.AddAction(SourceActions[I], PreviousItem);
   end;
 end;
@@ -1188,45 +1175,62 @@ begin
 end;
 
 {*
+  Trouve le href d'un fichier source attaché au projet
+  @param FileName   Nom du fichier source
+  @return HRef du fichier attaché au projet, ou '' s'il n'est pas attaché
+*}
+function TFormMain.FindSourceFile(const FileName: TFileName): string;
+begin
+  try
+    Result := MasterFile.MakeHRef(FileName, SourcesDir);
+    if MasterFile.SourceFiles.IndexOf(Result) < 0 then
+      Result := '';
+  except
+    on EInOutError do
+      Result := '';
+  end;
+end;
+
+{*
   Ajoute un fichier source
   @param FileName   Nom du fichier source
 *}
 procedure TFormMain.AddSourceFile(const FileName: TFileName);
 var
-  HRef: string;
-  SourceFile: TSourceFile;
+  SourceHRef: string;
   Action: TAction;
 begin
-  // Vérifier que ce fichier source n'est pas déjà attaché au projet
-  SourceFile := MasterFile.FindSourceFile(FileName);
-  if SourceFile <> nil then
+  // Make an href for the file
+  SourceHRef := MasterFile.MakeHRef(FileName, SourcesDir);
+
+  // Test whether the file is already linked to the project
+  if MasterFile.SourceFiles.IndexOf(SourceHRef) >= 0 then
   begin
     OpenTab(FileName);
     Exit;
   end;
 
-  // Créer le fichier source
-  HRef := MasterFile.MakeHRef(FileName, SourcesDir);
-  SourceFile := MasterFile.AddSourceFile(HRef);
+  // Link the source file to the project
+  MasterFile.SourceFiles.Add(SourceHRef);
 
-  // Ajouter l'action Voir le source
-  Action := MakeSourceAction(SourceFile);
+  // Add the action that shows the source file
+  Action := MakeSourceAction(SourceHRef);
   SetLength(SourceActions, MasterFile.SourceFiles.Count);
   SourceActions[MasterFile.SourceFiles.Count-1] := Action;
   ActionManager.AddAction(Action,
     BigMenuSources.Items[BigMenuSources.Items.Count-1]);
 
-  // Afficher le source
-  OpenTab(SourceFile.FileName);
+  // Show the source file
+  OpenTab(FileName);
 
   MarkModified;
 end;
 
 {*
   Retire un fichier source
-  @param SourceFile   Fichier source à retirer
+  @param SourceHRef   HRef du fichier source à retirer
 *}
-procedure TFormMain.RemoveSourceFile(SourceFile: TSourceFile);
+procedure TFormMain.RemoveSourceFile(const SourceHRef: string);
 var
   Action: TAction;
   Index: Integer;
@@ -1235,7 +1239,7 @@ begin
   Action := nil;
   for Index := 0 to Length(SourceActions)-1 do
   begin
-    if TSourceFile(SourceActions[Index].Tag) = SourceFile then
+    if SourceActions[Index].Hint = SourceHRef then
     begin
       Action := SourceActions[Index];
       Move(SourceActions[Index+1], SourceActions[Index],
@@ -1252,8 +1256,8 @@ begin
     Action.Free;
   end;
 
-  // Delete the source file
-  MasterFile.RemoveSourceFile(SourceFile);
+  // Unlink the source file from the project
+  MasterFile.SourceFiles.Delete(MasterFile.SourceFiles.IndexOf(SourceHRef));
 
   MarkModified;
 end;
@@ -1665,15 +1669,15 @@ end;
 procedure TFormMain.ActionRemoveSourceExecute(Sender: TObject);
 var
   Tab: TJvTabBarItem;
-  SourceFile: TSourceFile;
+  SourceHRef: string;
 begin
   Tab := TabBarEditors.SelectedTab;
   if not IsEditor(Tab) then
     Exit;
 
-  SourceFile := MasterFile.FindSourceFile(GetTabEditor(Tab).FileName);
+  SourceHRef := FindSourceFile(GetTabEditor(Tab).FileName);
 
-  if SourceFile = nil then
+  if SourceHRef = '' then
     CloseTab(Tab)
   else
   begin
@@ -1682,7 +1686,7 @@ begin
       Exit;
 
     if CloseTab(Tab) then
-      RemoveSourceFile(SourceFile);
+      RemoveSourceFile(SourceHRef);
   end;
 end;
 
@@ -1704,18 +1708,22 @@ end;
 *}
 procedure TFormMain.ActionViewSourceExecute(Sender: TObject);
 var
-  SourceFile: TSourceFile;
-  Tab: TJvTabBarItem;
+  SourceHRef: string;
 begin
-  SourceFile := TSourceFile((Sender as TAction).Tag);
+  SourceHRef := (Sender as TAction).Hint;
 
-  // Si un éditeur est déjà ouvert pour ce fichier, le mettre en avant-plan
-  // Sinon, ouvrir un nouvel onglet
-  Tab := FindTab(SourceFile.FileName);
-  if Tab <> nil then
-    Tab.Selected := True
-  else
-    OpenTab(SourceFile.FileName);
+  try
+    OpenTab(MasterFile.ResolveHRef(SourceHRef, SourcesDir));
+  except
+    on Error: EInOutError do
+    begin
+      if ShowDialog(SErrorTitle, Format(SErrorWhileOpeningSourceFile,
+        [Error.Message]), dtError, dbYesNo, 2) = drYes then
+      begin
+        RemoveSourceFile(SourceHRef);
+      end;
+    end;
+  end;
 end;
 
 {*
