@@ -16,6 +16,10 @@ uses
   GraphicEx;
 
 type
+  /// Type de callback pour la recherche de fichiers
+  TSearchFileCallback = reference to procedure(const FileName: TFileName;
+    const SearchRec: TSearchRec);
+
   /// Mode d'ouverture d'un fichier FunLabyrinthe
   TFileMode = (fmEdit, fmPlay);
 
@@ -77,6 +81,8 @@ type
     constructor CreateNew(ABaseSepiRoot: TSepiRoot;
       AUsedUnits: TStrings); overload;
     constructor CreateNew(ABaseSepiRoot: TSepiRoot); overload;
+    constructor CreateAutoCompiler(ABaseSepiRoot: TSepiRoot;
+      const AProjectDir: TFileName);
     destructor Destroy; override;
 
     function ResolveHRef(const HRef, Dir: string): TFileName;
@@ -127,6 +133,11 @@ function HRefToFileName(const HRef: string;
   const BaseDirs: array of TFileName): TFileName;
 function FileNameToHRef(const FileName: TFileName;
   const BaseDirs: array of TFileName): string;
+
+procedure IterateDir(const Dir: TFileName; const Pattern: string;
+  const Callback: TSearchFileCallback; ExcludeDotAndDoubleDot: Boolean = True);
+
+procedure IterateProjects(const Callback: TSearchFileCallback);
 
 procedure RunAutoVersionCheck;
 procedure EditVersionCheckOptions;
@@ -274,6 +285,47 @@ begin
 end;
 
 {*
+  Itère sur tous les fichiers contenu dans un dossier
+  @param Dir        Dossier
+  @param Pattern    Pattern du nom de fichier
+  @param Callback   Callback à appeler pour chaque fichier
+*}
+procedure IterateDir(const Dir: TFileName; const Pattern: string;
+  const Callback: TSearchFileCallback; ExcludeDotAndDoubleDot: Boolean = True);
+var
+  SearchRec: TSearchRec;
+begin
+  if FindFirst(JoinPath([Dir, Pattern]), faAnyFile, SearchRec) = 0 then
+  try
+    repeat
+      if ExcludeDotAndDoubleDot and
+        ((SearchRec.Name = '.') or (SearchRec.Name = '..')) then
+        Continue;
+
+      Callback(JoinPath([Dir, SearchRec.Name]), SearchRec);
+    until FindNext(SearchRec) <> 0;
+  finally
+    FindClose(SearchRec);
+  end;
+end;
+
+{*
+  Itère sur tous les projets
+  @param Callback   Callback à appeler pour chaque fichier
+*}
+procedure IterateProjects(const Callback: TSearchFileCallback);
+begin
+  IterateDir(JoinPath([FunLabyAppDataDir, ProjectsDir]), '*',
+    procedure(const ProjectDir: TFileName; const SearchRec: TSearchRec)
+    begin
+      if SearchRec.Attr and faDirectory = 0 then
+        Exit;
+
+      IterateDir(ProjectDir, '*.flp', Callback);
+    end);
+end;
+
+{*
   Déclenche la vérification automatique d'une nouvelle version de FunLabyrinthe
 *}
 procedure RunAutoVersionCheck;
@@ -367,6 +419,19 @@ begin
 
   FUsedUnits.Add(FunLabyBaseUnitName);
   LoadUsedUnits;
+end;
+
+{*
+  Crée un nouveau fichier maître d'auto-compilation
+  @param ABaseSepiRoot   Racine Sepi de base (peut être nil)
+  @param AProjectDir     Dossier fictif du projet
+*}
+constructor TMasterFile.CreateAutoCompiler(ABaseSepiRoot: TSepiRoot;
+  const AProjectDir: TFileName);
+begin
+  BaseCreate(ABaseSepiRoot);
+
+  FProjectDir := IncludeTrailingPathDelimiter(AProjectDir);
 end;
 
 {*
