@@ -164,7 +164,7 @@ type
     procedure UnloadFile;
 
     function DoAutoCompile: Boolean;
-    procedure CreateAutoCompileMasterFile;
+    procedure CreateAutoCompileMasterFile(const ProjectDir: TFileName = '');
     procedure AddAllSourceFiles(const BaseDir: TFileName);
     procedure AddSourceFileFor(const BinaryFileName: TFileName);
     function FindSourceFileFor(const BinaryFileName: TFileName): TFileName;
@@ -174,7 +174,7 @@ type
     function GetTabEditor(Tab: TJvTabBarItem): ISourceEditor50;
     function FindTab(const Editor: ISourceEditor50): TJvTabBarItem; overload;
     function FindTab(const FileName: TFileName): TJvTabBarItem; overload;
-    procedure OpenTab(const FileName: TFileName);
+    procedure OpenTab(const FileName: TFileName; SelectTab: Boolean = True);
     function CloseTab(Tab: TJvTabBarItem): Boolean;
 
     procedure NewFile;
@@ -574,20 +574,47 @@ end;
 *}
 function TFormMain.DoAutoCompile: Boolean;
 begin
-  CreateAutoCompileMasterFile;
-  AddAllSourceFiles(JoinPath([FunLabyAppDataDir, SourcesDir]));
-  Result := CompileAll;
+  try
+    CreateAutoCompileMasterFile;
+    AddAllSourceFiles(JoinPath([FunLabyAppDataDir, SourcesDir]));
+
+    if not CompileAll then
+      Abort;
+
+    CloseFile;
+
+    IterateDir(JoinPath([FunLabyAppDataDir, ProjectsDir]), '*',
+      procedure(const ProjectDir: TFileName; const SearchRec: TSearchRec)
+      begin
+        if SearchRec.Attr and faDirectory = 0 then
+          Exit;
+
+        CreateAutoCompileMasterFile(ProjectDir);
+        AddAllSourceFiles(JoinPath([ProjectDir, SourcesDir]));
+
+        if not CompileAll then
+          Abort;
+
+        CloseFile;
+      end);
+
+    Result := True;
+  except
+    on EAbort do
+      Result := False;
+  end;
 end;
 
 {*
   Crée le fichier maître pour une auto-compilation
   @param UnitFileDescs   Descripteurs de fichiers unités
 *}
-procedure TFormMain.CreateAutoCompileMasterFile;
+procedure TFormMain.CreateAutoCompileMasterFile(
+  const ProjectDir: TFileName = '');
 begin
   NeedBaseSepiRoot;
 
-  MasterFile := TMasterFile.CreateNew(BaseSepiRoot);
+  MasterFile := TMasterFile.CreateAutoCompiler(BaseSepiRoot, ProjectDir);
   try
     LoadFile;
   except
@@ -604,31 +631,26 @@ end;
 *}
 procedure TFormMain.AddAllSourceFiles(const BaseDir: TFileName);
 const
-  Extensions: array[0..3] of string = ('.scu', '.ssq', '.fnd', '.pas');
+  Extensions: array[0..2] of string = ('.ssq', '.fnd', '.pas');
 var
   SearchRec: TSearchRec;
-  Ext: string;
+  FullPath: TFileName;
 begin
-  // Add .scu files in this directory
-  if FindFirst(BaseDir+'*.*', faAnyFile, SearchRec) = 0 then
+  if FindFirst(JoinPath([BaseDir, '*']), faAnyFile, SearchRec) = 0 then
   try
     repeat
-      Ext := ExtractFileExt(SearchRec.Name);
-      if AnsiMatchText(Ext, Extensions) then
-        AddSourceFileFor(BaseDir+ChangeFileExt(SearchRec.Name, '.scu'));
-    until FindNext(SearchRec) <> 0;
-  finally
-    FindClose(SearchRec);
-  end;
+      FullPath := JoinPath([BaseDir, SearchRec.Name]);
 
-  // Recurse into subdirectories
-  if FindFirst(BaseDir+'*', faAnyFile, SearchRec) = 0 then
-  try
-    repeat
-      if SearchRec.Attr and faDirectory <> 0 then
+      if SearchRec.Attr and faDirectory = 0 then
       begin
+        // Add the source file
+        if AnsiMatchText(ExtractFileExt(SearchRec.Name), Extensions) then
+          AddSourceFileFor(FullPath);
+      end else
+      begin
+        // Recurse into subdirectory
         if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
-          AddAllSourceFiles(BaseDir + SearchRec.Name + '\');
+          AddAllSourceFiles(FullPath);
       end;
     until FindNext(SearchRec) <> 0;
   finally
@@ -645,8 +667,8 @@ var
   SourceFileName: string;
 begin
   SourceFileName := FindSourceFileFor(BinaryFileName);
-  if SourceFileName <> '' then
-    OpenFile(SourceFileName);
+  Assert(SourceFileName <> '');
+  OpenTab(SourceFileName, False);
 end;
 
 {*
@@ -763,7 +785,8 @@ end;
   Ajoute un éditeur de source à l'interface visuelle et l'affiche
   @param Editor   Éditeur à ajouter
 *}
-procedure TFormMain.OpenTab(const FileName: TFileName);
+procedure TFormMain.OpenTab(const FileName: TFileName;
+  SelectTab: Boolean = True);
 var
   Editor: ISourceEditor50;
   EditorUsingOTA: ISourceEditorUsingOTA50;
@@ -785,22 +808,25 @@ begin
   if Supports(Editor, ISourceEditorUsingOTA50, EditorUsingOTA) then
     EditorUsingOTA.SetFunLabyEditMainForm(Self);
 
-  // Configurer le contrôle d'édition
+  // Configure the editor control
   EditorControl := Editor.Control;
   EditorControl.Align := alClient;
   EditorControl.Visible := False;
   EditorControl.Parent := PanelEditors;
 
-  // Enregistrer les événements de l'éditeur
+  // Set up editor events
   Editor.OnStateChange := EditorStateChange;
 
-  // Créer un nouvel onglet pour l'éditeur et l'afficher
+  // Create the tab
   Tab := TJvTabBarItem(TabBarEditors.Tabs.Add);
   Tab.Caption := ExtractFileName(Editor.FileName);
   Tab.Data := TObject(Pointer(Editor));
   Tab.Tag := SourceEditorTag;
   Tab.Modified := Editor.Modified;
-  Tab.Selected := True;
+
+  // Select the tab if required
+  if SelectTab then
+    Tab.Selected := True;
 end;
 
 {*
