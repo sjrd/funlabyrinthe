@@ -136,12 +136,12 @@
 			<DCCReference Include="FunLabyUtils.pas"/>
 			<DCCReference Include="SepiImportsFunLaby.pas"/>
 			<DCCReference Include="SepiImportsFunLabyUtils.pas"/>
-			<DCCReference Include="UnitFiles.pas"/>
 			<DCCReference Include="FunLabyFilers.pas"/>
 			<DCCReference Include="FunLabyCoreConsts.pas"/>
 			<DCCReference Include="SepiImportsFunLabyCoreConsts.pas"/>
 			<DCCReference Include="FunLabyGraphics.pas"/>
 			<DCCReference Include="SepiImportsFunLabyGraphics.pas"/>
+			<DCCReference Include="PluginManager.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -169,6 +169,7 @@ object FormSelectProjectFile: TFormSelectProjectFile
     Notifications = <
       item
         Actions = [caChangeFileName, caChangeDirName, caChangeLastWrite]
+        IncludeSubTrees = True
       end>
     OnChangeNotify = ChangeNotifierChangeNotify
     Left = 112

@@ -176,7 +176,8 @@ procedure TFrameEditSimpleSquare.ButtonEditImageClick(Sender: TObject);
 begin
   Assert(CurrentSquare.CanEditPainter);
 
-  if TFormPainterEditor.EditPainter(CurrentSquare.Painter) then
+  if TFormPainterEditor.EditPainter(GetFunLabyEditMainForm.MasterFile,
+    CurrentSquare.Painter) then
     ImageChanged;
 end;
 

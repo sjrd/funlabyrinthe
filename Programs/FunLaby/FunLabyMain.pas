@@ -13,9 +13,9 @@ uses
   Dialogs, Menus, ComCtrls, ExtCtrls, ShellAPI,
   JvComponentBase, JvAppStorage, JvAppXMLStorage,
   ScUtils, ScStrUtils, ScSyncObjs, SdDialogs,
-  FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects, SepiReflectionCore,
-  UnitFiles, SepiImportsFunLaby, SepiImportsFunLabyTools, FunLabyCoreConsts,
-  GR32, GR32_Image, SelectProjectForm;
+  FunLabyUtils, PlayUtils, FilesUtils, PlayerObjects,
+  SepiReflectionCore, SepiImportsFunLaby, SepiImportsFunLabyTools,
+  FunLabyCoreConsts, GR32, GR32_Image, SelectProjectForm;
 
 resourcestring
   sFatalErrorTitle = 'Erreur fatale';
@@ -488,7 +488,7 @@ begin
   OptionsStorage.WriteBoolean(Path, Answer <> drNo);
 
   if Answer = drYes then
-    NewGame(fLabyrinthsDir+TutorialFileName);
+    NewGame(JoinPath([FunLabyAppDataDir, ProjectsDir, TutorialFileName]));
 end;
 
 {*
@@ -498,9 +498,9 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   Menu := BigMenu;
-  NewGameDialog.InitialDir := fLabyrinthsDir;
-  LoadGameDialog.InitialDir := fSaveguardsDir;
-  SaveGameDialog.InitialDir := fSaveguardsDir;
+  NewGameDialog.InitialDir := JoinPath([FunLabyAppDataDir, ProjectsDir]);
+  LoadGameDialog.InitialDir := JoinPath([FunLabyAppDataDir, SaveguardsDir]);
+  SaveGameDialog.InitialDir := JoinPath([FunLabyAppDataDir, SaveguardsDir]);
 
   NewGameDialog2 := TFormSelectProjectFile.Create(Self);
 
@@ -695,16 +695,14 @@ begin
   if MasterFile = nil then
     Exit;
 
-  DirName := ExtractFileName(MasterFile.FileName);
-  DirName := ChangeFileExt(DirName, '');
-  DirName := fScreenshotsDir + DirName + PathDelim;
+  DirName := JoinPath([MasterFile.ProjectDir, ScreenshotsDir]);
 
   ForceDirectories(DirName);
 
   I := 1;
   while True do
   begin
-    FileName := Format('%sScreenshot%d.png', [DirName, I]);
+    FileName := Format('%s'+PathDelim+'Screenshot%d.png', [DirName, I]);
     if not FileExists(FileName) then
       Break;
     Inc(I);

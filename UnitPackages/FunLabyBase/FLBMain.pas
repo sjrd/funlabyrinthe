@@ -10,54 +10,28 @@ unit FLBMain;
 interface
 
 uses
-  SysUtils, Classes, ScUtils, FunLabyUtils, FilesUtils, UnitFiles, Generics,
+  SysUtils, Classes, ScUtils, FunLabyUtils, Generics,
   FLBCommon, FLBFields, FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBBoat,
-  FLBLift, FLBObstacles, FLBShowMessage, SepiReflectionCore;
-
-type
-  TFunLabyBaseUnit = class(TInterfacedUnitFile)
-  protected
-    procedure GameStarted; override;
-  public
-    constructor Create(AMasterFile: TMasterFile; Params: TStrings);
-  end;
-
-function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
-  Params: TStrings): IUnitFile50;
+  FLBLift, FLBObstacles, FLBShowMessage;
 
 implementation
 
-{*
-  Crée l'unité FunLabyBase
-  @param BPLHandler   Gestionnaire d'unité BPL prenant en charge ce paquet
-  @param Master       Maître FunLabyrinthe
-  @param Params       Paramètres passés à l'unité
-  @return Interface de l'unité FunLabyBase créée
-*}
-function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
-  Params: TStrings): IUnitFile50;
-begin
-  Result := TFunLabyBaseUnit.Create(BPLHandler.MasterFile, Params);
-end;
+uses
+  SepiReflectionCore, SepiMembers;
 
-{-------------------------}
-{ Classe TFunLabyBaseUnit }
-{-------------------------}
+{---------------------}
+{ FunLaby unit events }
+{---------------------}
 
 {*
-  Crée l'unité FunLabyBase et charge tous les composants
-  @param UnitFile   Fichier unité appelant
-  @param Master     Maître FunLabyrinthe dans lequel charger les composants
-  @param Params     Paramètres envoyés au fichier unité
+  Initialise l'unité FunLabyBase
+  @param Master   Maître FunLabyrinthe dans lequel charger les composants
 *}
-constructor TFunLabyBaseUnit.Create(AMasterFile: TMasterFile;
-  Params: TStrings);
+procedure InitializeUnit(Master: TMaster);
 var
   Buoys, Planks, SilverKeys, GoldenKeys: TObjectDef;
   UpStairs, DownStairs: TStairs;
 begin
-  inherited Create(AMasterFile);
-
   // Plug-in
   TBuoyPlugin.Create(Master, idBuoyPlugin);
   TPlankPlugin.Create(Master, idPlankPlugin);
@@ -125,7 +99,7 @@ end;
 {*
   [@inheritDoc]
 *}
-procedure TFunLabyBaseUnit.GameStarted;
+procedure GameStarted(Master: TMaster);
 var
   TestMsg: TPlayerShowMsgMessage;
   DefaultShowMessagePlugin: TPlugin;
@@ -162,13 +136,16 @@ begin
   Result := TSepiUnitAlias.Create(Root, 'FunLabyBase',
     ['FLBBoat', 'FLBCommon', 'FLBFields', 'FLBLift', 'FLBObstacles', 'FLBPlank',
     'FLBShowMessage', 'FLBSimpleEffects', 'FLBSimpleObjects']);
+
+  Result.CurrentVisibility := mvPrivate;
+
+  TSepiMethod.Create(Result, 'InitializeUnit',
+    'static procedure(Master: TMaster)').SetCode(@InitializeUnit);
+  TSepiMethod.Create(Result, 'GameStarted',
+    'static procedure(Master: TMaster)').SetCode(@GameStarted);
+
   Result.Complete;
 end;
-
-{$IFNDEF DCTD}
-exports
-  CreateUnitFile name 'CreateUnitFile';
-{$ENDIF}
 
 initialization
   SepiRegisterImportedUnit('FunLabyBase', ImportUnit);

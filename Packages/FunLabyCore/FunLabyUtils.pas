@@ -72,6 +72,13 @@ type
   /// Mode de dessin d'un joueur
   TPlayerDrawMode = (dmColoredPainter, dmPainter, dmDirPainter);
 
+  /// Type de ressource
+  TResourceKind = (rkImage, rkSound);
+
+  /// Type de callback pour trouver une ressource
+  TFindResourceCallback = reference to function(const HRef: string;
+    Kind: TResourceKind): TFileName;
+
   /// Classe de base des exceptions FunLabyrinthe
   EFunLabyException = class(Exception);
 
@@ -89,6 +96,9 @@ type
 
   /// Générée en cas de mauvaise définition d'une case
   EBadSquareDefException = class(EFunLabyException);
+
+  /// Générée si une ressource n'a pas pu être trouvée
+  EResourceNotFoundException = class(EInOutError);
 
   TDrawViewContext = class;
   TMoveContext = class;
@@ -726,6 +736,7 @@ type
   *}
   TImagesMaster = class(TObject)
   private
+    FMaster: TMaster;      /// Maître FunLabyrinthe
     FExtensions: TStrings; /// Extensions d'images reconnues
     FImgList: TObjectList; /// Liste d'images interne
     FImgNames: TStrings;   /// Liste des noms des images
@@ -735,7 +746,7 @@ type
     function LoadImage(const ImgName: string): TBitmap32;
     function Add(const ImgName: string): Integer;
   public
-    constructor Create;
+    constructor Create(AMaster: TMaster);
     destructor Destroy; override;
 
     function ResolveImgName(const ImgName: string): TFileName;
@@ -753,6 +764,8 @@ type
 
     function GetInternalBitmap(Index: Integer): TBitmap32; overload;
     function GetInternalBitmap(const ImgName: string): TBitmap32; overload;
+
+    property Master: TMaster read FMaster;
   end;
 
   {*
@@ -1877,6 +1890,9 @@ type
   *}
   TMaster = class(TFunLabyPersistent)
   private
+    /// Callback pour trouver une ressource
+    FFindResourceCallback: TFindResourceCallback;
+
     FImagesMaster: TImagesMaster;   /// Maître d'images
     FComponents: TObjectList;       /// Liste de tous les composants
     FPlugins: TObjectList;          /// Liste des plug-in
@@ -1959,7 +1975,8 @@ type
     procedure DefineProperties(Filer: TFunLabyFiler); override;
     procedure EndState(State: TPersistentState); override;
   public
-    constructor Create(AEditing: Boolean);
+    constructor Create(AEditing: Boolean;
+      const AFindResourceCallback: TFindResourceCallback);
     destructor Destroy; override;
 
     procedure BeforeDestruction; override;
@@ -1968,6 +1985,8 @@ type
 
     function ComponentExists(const ID: TComponentID): Boolean;
     procedure CheckComponentID(const ID: TComponentID);
+
+    function FindResource(const HRef: string; Kind: TResourceKind): TFileName;
 
     function SquareByComps(
       const Field, Effect, Tool, Obstacle: TComponentID): TSquare; overload;
@@ -2060,24 +2079,6 @@ const {don't localize}
   LeftDir: array[TDirection] of TDirection = (
     diNone, diWest, diNorth, diEast, diSouth
   );
-
-var {don't localize}
-  /// Dossier de FunLabyrinthe dans Application Data
-  fFunLabyAppData: string = '';
-  /// Dossier des fichiers image
-  fSquaresDir: string = 'Squares\';
-  /// Dossier des fichiers son
-  fSoundsDir: string = 'Sounds\';
-  /// Dossier des unités
-  fUnitsDir: string = 'Units\';
-  /// Dossier des fichiers labyrinthe
-  fLabyrinthsDir: string = 'Labyrinths\';
-  /// Dossier des fichiers sauvegarde
-  fSaveguardsDir: string = 'Saveguards\';
-  /// Dossier des screenshots
-  fScreenshotsDir: string = 'Screenshots\';
-  /// Dossier des plug-in de l'éditeur
-  fEditPluginDir: string = 'EditPlugins\';
 
 procedure ShowFunLabyAbout;
 
@@ -2903,11 +2904,13 @@ end;
 {*
   Crée une instance de TImagesMaster
 *}
-constructor TImagesMaster.Create;
+constructor TImagesMaster.Create(AMaster: TMaster);
 var
   EmptySquare: TBitmap32;
 begin
   inherited Create;
+
+  FMaster := AMaster;
 
   FExtensions := TStringList.Create;
   FileFormatList.GetExtensionList(FExtensions);
@@ -3051,16 +3054,13 @@ function TImagesMaster.ResolveImgName(const ImgName: string): TFileName;
 var
   I: Integer;
 begin
-  Result := fSquaresDir + AnsiReplaceStr(ImgName, '/', '\');
-  if FileExists(Result) then
-    Exit;
-
   for I := 0 to FExtensions.Count-1 do
   begin
-    if FileExists(Result+'.'+FExtensions[I]) then
-    begin
-      Result := Result+'.'+FExtensions[I];
+    try
+      Result := Master.FindResource(ImgName + '.' + FExtensions[I], rkImage);
       Exit;
+    except
+      on EResourceNotFoundException do;
     end;
   end;
 
@@ -7204,10 +7204,12 @@ end;
 *}
 function TPlayer.ResolveSoundHRef(const HRef: string): TFileName;
 begin
-  Result := fSoundsDir + AnsiReplaceStr(HRef, '/', '\');
-
-  if not FileExists(Result) then
-    Result := '';
+  try
+    Result := Master.FindResource(HRef, rkSound);
+  except
+    on EResourceNotFoundException do
+      Result := '';
+  end;
 end;
 
 {*
@@ -8504,11 +8506,14 @@ end;
 {*
   Crée une instance de TMaster
 *}
-constructor TMaster.Create(AEditing: Boolean);
+constructor TMaster.Create(AEditing: Boolean;
+  const AFindResourceCallback: TFindResourceCallback);
 begin
   inherited Create;
 
-  FImagesMaster := TImagesMaster.Create;
+  FFindResourceCallback := AFindResourceCallback;
+
+  FImagesMaster := TImagesMaster.Create(Self);
 
   FComponents       := TObjectList.Create(True);
   FPlugins          := TObjectList.Create(False);
@@ -9319,6 +9324,19 @@ begin
 end;
 
 {*
+  Cherche une ressource d'après son href et son type
+  @param HRef   HRef de la ressource
+  @param Kind   Type de ressource recherchée
+  @return Nom complet du fichier pour cette ressource
+  @throws EResourceNotFoundException La ressource n'a pas pu être trouvée
+*}
+function TMaster.FindResource(const HRef: string;
+  Kind: TResourceKind): TFileName;
+begin
+  Result := FFindResourceCallback(HRef, Kind);
+end;
+
+{*
   Obtient une case à partir des ID de ses composantes
   @param Field      ID du terrain
   @param Effect     ID de l'effet
@@ -9438,23 +9456,6 @@ initialization
 
   FunLabyRegisterClass(TLabyrinthPlayerMode);
   FunLabyRegisterClasses([TTimerEntry, TNotificationMsgTimerEntry]);
-
-  with TMemIniFile.Create(Dir+fIniFileName) do
-  try
-    fFunLabyAppData :=
-      ReadString('Directories', 'AppData', Dir); {don't localize}
-
-    fSquaresDir := fFunLabyAppData + fSquaresDir;
-    fSoundsDir := fFunLabyAppData + fSoundsDir;
-    fUnitsDir := fFunLabyAppData + fUnitsDir;
-    fLabyrinthsDir := fFunLabyAppData + fLabyrinthsDir;
-    fSaveguardsDir := fFunLabyAppData + fSaveguardsDir;
-    fScreenshotsDir := fFunLabyAppData + fScreenshotsDir;
-
-    fEditPluginDir := Dir + fEditPluginDir;
-  finally
-    Free;
-  end;
 finalization
   FreeAndNil(FunLabyRegisteredClasses);
 end.

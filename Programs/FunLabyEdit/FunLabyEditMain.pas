@@ -11,11 +11,11 @@ interface
 uses
   Windows, SysUtils, StrUtils, Forms, Dialogs, Classes, Contnrs, ActnList,
   XPStyleActnCtrls, ActnMan, ImgList, Controls, MapEditor, ComCtrls, ActnMenus,
-  ToolWin, ActnCtrls, ShellAPI, ScUtils, SdDialogs, SepiReflectionCore,
-  FunLabyUtils, FilesUtils, UnitFiles, EditPluginManager, SourceEditors,
+  ToolWin, ActnCtrls, ShellAPI, ScUtils, ScStrUtils, SdDialogs,
+  SepiReflectionCore, FunLabyUtils, FilesUtils, PluginManager, SourceEditors,
   FileProperties, FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile,
   ExtCtrls, ScSyncObjs, CompilerMessages, MapViewer, SepiCompilerErrors,
-  EditMap,
+  EditMap, SepiImportsFunLaby,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA, JvComponentBase,
   JvDragDrop, JvAppStorage, JvAppXMLStorage;
 
@@ -111,6 +111,7 @@ type
     procedure DropTargetDragAccept(Sender: TJvDropTarget; var Accept: Boolean);
     procedure DropTargetDragDrop(Sender: TJvDropTarget;
       var Effect: TJvDropEffect; Shift: TShiftState; X, Y: Integer);
+    procedure SaveDialogCanClose(Sender: TObject; var CanClose: Boolean);
   private
     BackgroundTasks: TScTaskQueue; /// Tâches d'arrière-plan
 
@@ -163,8 +164,7 @@ type
     procedure UnloadFile;
 
     function DoAutoCompile: Boolean;
-    procedure MakeBPLUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
-    procedure CreateAutoCompileMasterFile(const UnitFileDescs: TUnitFileDescs);
+    procedure CreateAutoCompileMasterFile(const ProjectDir: TFileName = '');
     procedure AddAllSourceFiles(const BaseDir: TFileName);
     procedure AddSourceFileFor(const BinaryFileName: TFileName);
     function FindSourceFileFor(const BinaryFileName: TFileName): TFileName;
@@ -174,7 +174,7 @@ type
     function GetTabEditor(Tab: TJvTabBarItem): ISourceEditor50;
     function FindTab(const Editor: ISourceEditor50): TJvTabBarItem; overload;
     function FindTab(const FileName: TFileName): TJvTabBarItem; overload;
-    procedure OpenTab(const FileName: TFileName);
+    procedure OpenTab(const FileName: TFileName; SelectTab: Boolean = True);
     function CloseTab(Tab: TJvTabBarItem): Boolean;
 
     procedure NewFile;
@@ -190,12 +190,13 @@ type
 
     procedure MarkModified;
 
-    function MakeSourceAction(SourceFile: TSourceFile): TAction;
+    function MakeSourceAction(const SourceHRef: string): TAction;
     procedure MakeSourceActions;
     procedure DeleteSourceActions;
 
+    function FindSourceFile(const FileName: TFileName): string;
     procedure AddSourceFile(const FileName: TFileName);
-    procedure RemoveSourceFile(SourceFile: TSourceFile);
+    procedure RemoveSourceFile(const SourceHRef: string);
 
     procedure SetModified(Value: Boolean);
 
@@ -572,46 +573,35 @@ end;
   @return True en cas de succès, False s'il y a eu des erreurs
 *}
 function TFormMain.DoAutoCompile: Boolean;
-var
-  UnitFileDescs: TUnitFileDescs;
 begin
-  MakeBPLUnitFileDescs(UnitFileDescs);
-  CreateAutoCompileMasterFile(UnitFileDescs);
-  AddAllSourceFiles(fUnitsDir);
-  Result := CompileAll;
-end;
-
-{*
-  Crée les descripteurs d'unités pour tous les BPL trouvés
-  @param UnitFileDescs   En sortie : descripteurs des unités BPL
-*}
-procedure TFormMain.MakeBPLUnitFileDescs(out UnitFileDescs: TUnitFileDescs);
-const
-  ExcludedBPLFiles: array[0..0] of string = ('Compatibility4x.bpl');
-var
-  FileNames: TStrings;
-  SearchRec: TSearchRec;
-  I: Integer;
-begin
-  FileNames := TStringList.Create;
   try
-    // Search for *.bpl files
-    if FindFirst(fUnitsDir+'*.bpl', faAnyFile, SearchRec) = 0 then
-    try
-      repeat
-        if not AnsiMatchText(SearchRec.Name, ExcludedBPLFiles) then
-          FileNames.Add(SearchRec.Name);
-      until FindNext(SearchRec) <> 0;
-    finally
-      FindClose(SearchRec);
-    end;
+    CreateAutoCompileMasterFile;
+    AddAllSourceFiles(JoinPath([FunLabyAppDataDir, SourcesDir]));
 
-    // Make result
-    SetLength(UnitFileDescs, FileNames.Count);
-    for I := 0 to FileNames.Count-1 do
-      UnitFileDescs[I].HRef := FileNames[I];
-  finally
-    FileNames.Free;
+    if not CompileAll then
+      Abort;
+
+    CloseFile;
+
+    IterateDir(JoinPath([FunLabyAppDataDir, ProjectsDir]), '*',
+      procedure(const ProjectDir: TFileName; const SearchRec: TSearchRec)
+      begin
+        if SearchRec.Attr and faDirectory = 0 then
+          Exit;
+
+        CreateAutoCompileMasterFile(ProjectDir);
+        AddAllSourceFiles(JoinPath([ProjectDir, SourcesDir]));
+
+        if not CompileAll then
+          Abort;
+
+        CloseFile;
+      end);
+
+    Result := True;
+  except
+    on EAbort do
+      Result := False;
   end;
 end;
 
@@ -620,11 +610,11 @@ end;
   @param UnitFileDescs   Descripteurs de fichiers unités
 *}
 procedure TFormMain.CreateAutoCompileMasterFile(
-  const UnitFileDescs: TUnitFileDescs);
+  const ProjectDir: TFileName = '');
 begin
   NeedBaseSepiRoot;
 
-  MasterFile := TMasterFile.CreateNew(BaseSepiRoot, UnitFileDescs);
+  MasterFile := TMasterFile.CreateAutoCompiler(BaseSepiRoot, ProjectDir);
   try
     LoadFile;
   except
@@ -641,31 +631,26 @@ end;
 *}
 procedure TFormMain.AddAllSourceFiles(const BaseDir: TFileName);
 const
-  Extensions: array[0..3] of string = ('.scu', '.ssq', '.fnd', '.pas');
+  Extensions: array[0..2] of string = ('.ssq', '.fnd', '.pas');
 var
   SearchRec: TSearchRec;
-  Ext: string;
+  FullPath: TFileName;
 begin
-  // Add .scu files in this directory
-  if FindFirst(BaseDir+'*.*', faAnyFile, SearchRec) = 0 then
+  if FindFirst(JoinPath([BaseDir, '*']), faAnyFile, SearchRec) = 0 then
   try
     repeat
-      Ext := ExtractFileExt(SearchRec.Name);
-      if AnsiMatchText(Ext, Extensions) then
-        AddSourceFileFor(BaseDir+ChangeFileExt(SearchRec.Name, '.scu'));
-    until FindNext(SearchRec) <> 0;
-  finally
-    FindClose(SearchRec);
-  end;
+      FullPath := JoinPath([BaseDir, SearchRec.Name]);
 
-  // Recurse into subdirectories
-  if FindFirst(BaseDir+'*', faAnyFile, SearchRec) = 0 then
-  try
-    repeat
-      if SearchRec.Attr and faDirectory <> 0 then
+      if SearchRec.Attr and faDirectory = 0 then
       begin
+        // Add the source file
+        if AnsiMatchText(ExtractFileExt(SearchRec.Name), Extensions) then
+          AddSourceFileFor(FullPath);
+      end else
+      begin
+        // Recurse into subdirectory
         if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
-          AddAllSourceFiles(BaseDir + SearchRec.Name + '\');
+          AddAllSourceFiles(FullPath);
       end;
     until FindNext(SearchRec) <> 0;
   finally
@@ -682,8 +667,8 @@ var
   SourceFileName: string;
 begin
   SourceFileName := FindSourceFileFor(BinaryFileName);
-  if SourceFileName <> '' then
-    OpenFile(SourceFileName);
+  Assert(SourceFileName <> '');
+  OpenTab(SourceFileName, False);
 end;
 
 {*
@@ -800,58 +785,51 @@ end;
   Ajoute un éditeur de source à l'interface visuelle et l'affiche
   @param Editor   Éditeur à ajouter
 *}
-procedure TFormMain.OpenTab(const FileName: TFileName);
+procedure TFormMain.OpenTab(const FileName: TFileName;
+  SelectTab: Boolean = True);
 var
   Editor: ISourceEditor50;
-  SourceFile: TSourceFile;
   EditorUsingOTA: ISourceEditorUsingOTA50;
   EditorControl: TControl;
   Tab: TJvTabBarItem;
 begin
-  // Créer l'éditeur
-  try
-    Editor := SourceFileEditors.CreateEditor(FileName);
-  except
-    on Error: Exception do
-    begin
-      SourceFile := MasterFile.FindSourceFile(FileName);
-
-      if SourceFile = nil then
-      begin
-        ShowDialog(SErrorTitle, Error.Message, dtError);
-      end else
-      begin
-        if ShowDialog(SErrorTitle, Format(SErrorWhileOpeningSourceFile,
-          [Error.Message]), dtError, dbYesNo, 2) = drYes then
-        begin
-          RemoveSourceFile(SourceFile);
-        end;
-      end;
-
-      Exit;
-    end;
+  // If a tab already exists for this file, simply select it
+  Tab := FindTab(FileName);
+  if Tab <> nil then
+  begin
+    Tab.Selected := True;
+    Exit;
   end;
+
+  // Create the editor
+  Editor := SourceFileEditors.CreateEditor(FileName);
 
   // Set OTA main form
   if Supports(Editor, ISourceEditorUsingOTA50, EditorUsingOTA) then
     EditorUsingOTA.SetFunLabyEditMainForm(Self);
 
-  // Configurer le contrôle d'édition
+  // Load source file into editor
+  Editor.LoadFile(FileName);
+
+  // Configure the editor control
   EditorControl := Editor.Control;
   EditorControl.Align := alClient;
   EditorControl.Visible := False;
   EditorControl.Parent := PanelEditors;
 
-  // Enregistrer les événements de l'éditeur
+  // Set up editor events
   Editor.OnStateChange := EditorStateChange;
 
-  // Créer un nouvel onglet pour l'éditeur et l'afficher
+  // Create the tab
   Tab := TJvTabBarItem(TabBarEditors.Tabs.Add);
   Tab.Caption := ExtractFileName(Editor.FileName);
   Tab.Data := TObject(Pointer(Editor));
   Tab.Tag := SourceEditorTag;
   Tab.Modified := Editor.Modified;
-  Tab.Selected := True;
+
+  // Select the tab if required
+  if SelectTab then
+    Tab.Selected := True;
 end;
 
 {*
@@ -951,7 +929,6 @@ end;
 *}
 function TFormMain.SaveFile(FileName: TFileName = ''): Boolean;
 var
-  DirName: TFileName;
   I: Integer;
 begin
   Result := False;
@@ -978,7 +955,6 @@ begin
     OpenDialog.FileName := SaveDialog.FileName;
     FileName := SaveDialog.FileName;
   end;
-  DirName := ExtractFilePath(FileName);
 
   // Enregistrer le projet
   MasterFile.Save(FileName);
@@ -1184,17 +1160,17 @@ end;
 
 {*
   Crée une action Voir un source pour un fichier source donné
-  @param SourceFile   Fichier source à voir
+  @param SourceHRef   HRef du fichier source à voir
   @return L'action créée
 *}
-function TFormMain.MakeSourceAction(SourceFile: TSourceFile): TAction;
+function TFormMain.MakeSourceAction(const SourceHRef: string): TAction;
 begin
   Result := TAction.Create(Self);
   with Result do
   begin
     ActionList := ActionManager;
-    Caption := ExtractFileName(SourceFile.FileName);
-    Tag := Integer(SourceFile);
+    Caption := Copy(SourceHRef, LastDelimiter(HRefDelim, SourceHRef)+1, MaxInt);
+    Hint := SourceHRef;
     OnExecute := ActionViewSourceExecute;
   end;
 end;
@@ -1206,15 +1182,15 @@ procedure TFormMain.MakeSourceActions;
 var
   I: Integer;
   PreviousItem: TActionClientItem;
-  SourceFile: TSourceFile;
+  SourceHRef: string;
 begin
   PreviousItem := BigMenuSources.Items[BigMenuSources.Items.Count-1];
   SetLength(SourceActions, MasterFile.SourceFiles.Count);
 
   for I := 0 to MasterFile.SourceFiles.Count-1 do
   begin
-    SourceFile := MasterFile.SourceFiles[I];
-    SourceActions[I] := MakeSourceAction(SourceFile);
+    SourceHRef := MasterFile.SourceFiles[I];
+    SourceActions[I] := MakeSourceAction(SourceHRef);
     PreviousItem := ActionManager.AddAction(SourceActions[I], PreviousItem);
   end;
 end;
@@ -1228,43 +1204,62 @@ begin
 end;
 
 {*
+  Trouve le href d'un fichier source attaché au projet
+  @param FileName   Nom du fichier source
+  @return HRef du fichier attaché au projet, ou '' s'il n'est pas attaché
+*}
+function TFormMain.FindSourceFile(const FileName: TFileName): string;
+begin
+  try
+    Result := MasterFile.MakeHRef(FileName, SourcesDir);
+    if MasterFile.SourceFiles.IndexOf(Result) < 0 then
+      Result := '';
+  except
+    on EInOutError do
+      Result := '';
+  end;
+end;
+
+{*
   Ajoute un fichier source
   @param FileName   Nom du fichier source
 *}
 procedure TFormMain.AddSourceFile(const FileName: TFileName);
 var
-  SourceFile: TSourceFile;
+  SourceHRef: string;
   Action: TAction;
 begin
-  // Vérifier que ce fichier source n'est pas déjà attaché au projet
-  SourceFile := MasterFile.FindSourceFile(FileName);
-  if SourceFile <> nil then
+  // Make an href for the file
+  SourceHRef := MasterFile.MakeHRef(FileName, SourcesDir);
+
+  // Test whether the file is already linked to the project
+  if MasterFile.SourceFiles.IndexOf(SourceHRef) >= 0 then
   begin
     OpenTab(FileName);
     Exit;
   end;
 
-  // Créer le fichier source
-  SourceFile := MasterFile.AddSourceFile(FileName);
+  // Link the source file to the project
+  MasterFile.SourceFiles.Add(SourceHRef);
 
-  // Ajouter l'action Voir le source
-  Action := MakeSourceAction(SourceFile);
+  // Add the action that shows the source file
+  Action := MakeSourceAction(SourceHRef);
   SetLength(SourceActions, MasterFile.SourceFiles.Count);
   SourceActions[MasterFile.SourceFiles.Count-1] := Action;
   ActionManager.AddAction(Action,
     BigMenuSources.Items[BigMenuSources.Items.Count-1]);
 
-  // Afficher le source
-  OpenTab(SourceFile.FileName);
+  // Show the source file
+  OpenTab(FileName);
 
   MarkModified;
 end;
 
 {*
   Retire un fichier source
-  @param SourceFile   Fichier source à retirer
+  @param SourceHRef   HRef du fichier source à retirer
 *}
-procedure TFormMain.RemoveSourceFile(SourceFile: TSourceFile);
+procedure TFormMain.RemoveSourceFile(const SourceHRef: string);
 var
   Action: TAction;
   Index: Integer;
@@ -1273,7 +1268,7 @@ begin
   Action := nil;
   for Index := 0 to Length(SourceActions)-1 do
   begin
-    if TSourceFile(SourceActions[Index].Tag) = SourceFile then
+    if SourceActions[Index].Hint = SourceHRef then
     begin
       Action := SourceActions[Index];
       Move(SourceActions[Index+1], SourceActions[Index],
@@ -1290,8 +1285,8 @@ begin
     Action.Free;
   end;
 
-  // Delete the source file
-  MasterFile.RemoveSourceFile(SourceFile);
+  // Unlink the source file from the project
+  MasterFile.SourceFiles.Delete(MasterFile.SourceFiles.IndexOf(SourceHRef));
 
   MarkModified;
 end;
@@ -1387,10 +1382,10 @@ begin
   // Setup some dynamic properties
   Application.OnHint := ApplicationHint;
 
-  OpenDialog.InitialDir := fLabyrinthsDir;
-  SaveDialog.InitialDir := fLabyrinthsDir;
+  OpenDialog.InitialDir := JoinPath([FunLabyAppDataDir, ProjectsDir]);
+  SaveDialog.InitialDir := OpenDialog.InitialDir;
 
-  OpenSourceFileDialog.InitialDir := fUnitsDir;
+  OpenSourceFileDialog.InitialDir := JoinPath([FunLabyAppDataDir, SourcesDir]);
   OpenSourceFileDialog.Filter := SourceFileEditors.FiltersAsText;
 
   MasterFile := nil;
@@ -1692,7 +1687,7 @@ procedure TFormMain.ActionAddNewSourceExecute(Sender: TObject);
 var
   FileName: TFileName;
 begin
-  if TFormCreateNewSourceFile.NewSourceFile(FileName) then
+  if TFormCreateNewSourceFile.NewSourceFile(MasterFile, FileName) then
     AddSourceFile(FileName);
 end;
 
@@ -1703,15 +1698,15 @@ end;
 procedure TFormMain.ActionRemoveSourceExecute(Sender: TObject);
 var
   Tab: TJvTabBarItem;
-  SourceFile: TSourceFile;
+  SourceHRef: string;
 begin
   Tab := TabBarEditors.SelectedTab;
   if not IsEditor(Tab) then
     Exit;
 
-  SourceFile := MasterFile.FindSourceFile(GetTabEditor(Tab).FileName);
+  SourceHRef := FindSourceFile(GetTabEditor(Tab).FileName);
 
-  if SourceFile = nil then
+  if SourceHRef = '' then
     CloseTab(Tab)
   else
   begin
@@ -1720,7 +1715,7 @@ begin
       Exit;
 
     if CloseTab(Tab) then
-      RemoveSourceFile(SourceFile);
+      RemoveSourceFile(SourceHRef);
   end;
 end;
 
@@ -1742,18 +1737,22 @@ end;
 *}
 procedure TFormMain.ActionViewSourceExecute(Sender: TObject);
 var
-  SourceFile: TSourceFile;
-  Tab: TJvTabBarItem;
+  SourceHRef: string;
 begin
-  SourceFile := TSourceFile((Sender as TAction).Tag);
+  SourceHRef := (Sender as TAction).Hint;
 
-  // Si un éditeur est déjà ouvert pour ce fichier, le mettre en avant-plan
-  // Sinon, ouvrir un nouvel onglet
-  Tab := FindTab(SourceFile.FileName);
-  if Tab <> nil then
-    Tab.Selected := True
-  else
-    OpenTab(SourceFile.FileName);
+  try
+    OpenTab(MasterFile.ResolveHRef(SourceHRef, SourcesDir));
+  except
+    on Error: EInOutError do
+    begin
+      if ShowDialog(SErrorTitle, Format(SErrorWhileOpeningSourceFile,
+        [Error.Message]), dtError, dbYesNo, 2) = drYes then
+      begin
+        RemoveSourceFile(SourceHRef);
+      end;
+    end;
+  end;
 end;
 
 {*
@@ -2043,5 +2042,44 @@ begin
   end;
 end;
 
+{*
+  Gestionnaire d'événement OnCanClose de la boîte de sauvegarde
+  @param Sender     Objet qui a déclenché l'événeement
+  @param CanClose   Indique si le nom de fichier est validé
+*}
+procedure TFormMain.SaveDialogCanClose(Sender: TObject; var CanClose: Boolean);
+var
+  FileName, BaseDir: TFileName;
+  Folder, Name: string;
+begin
+  try
+    FileName := SaveDialog.FileName;
+    BaseDir := IncludeTrailingPathDelimiter(
+      JoinPath([FunLabyAppDataDir, ProjectsDir]));
+
+    // The file must be under Projects\
+    if not AnsiStartsText(BaseDir, FileName) then
+      Abort;
+
+    Delete(FileName, 1, Length(BaseDir));
+
+    // The file must be in a subfolder of Projects
+    if not SplitToken(FileName, PathDelim, Folder, Name) then
+      Abort;
+
+    // The file must look like <Name>\<Name>.flp
+    if not AnsiSameText(Folder+'.'+FunLabyProjectExt, Name) then
+      Abort;
+  except
+    on EAbort do
+    begin
+      CanClose := False;
+      ShowDialog(SCantSave, SCantSaveBadProjectFileName, dtError);
+    end;
+  end;
+end;
+
+initialization
+  LoadPlugins(JoinPath([Dir, EditPluginsDir]));
 end.
 

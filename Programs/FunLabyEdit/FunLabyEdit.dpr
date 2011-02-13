@@ -14,11 +14,9 @@ uses
   FilesUtils,
   FunLabyEditMain in 'FunLabyEditMain.pas' {FormMain},
   PlayerPlugins in 'PlayerPlugins.pas' {FormPlugins},
-  EditParameters in 'EditParameters.pas' {FormParameters},
   FileProperties in 'FileProperties.pas' {FormFileProperties},
   MapEditor in 'MapEditor.pas' {FrameMapEditor: TFrame},
   FunLabyEditConsts in 'FunLabyEditConsts.pas',
-  EditPluginManager in 'EditPluginManager.pas',
   NewSourceFile in 'NewSourceFile.pas' {FormCreateNewSourceFile},
   EditUnits in 'EditUnits.pas' {FormEditUnits},
   CompilerMessages in 'CompilerMessages.pas' {FormCompilerMessages},
@@ -40,7 +38,6 @@ begin
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.HelpFile := Dir+'FunLabyrinthe.chm';
   Application.CreateForm(TFormMain, FormMain);
-
   if FindCmdLineSwitch('autocompile') then
   begin
     // Auto-compile run

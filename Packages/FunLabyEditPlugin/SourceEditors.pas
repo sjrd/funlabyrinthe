@@ -9,7 +9,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, ScUtils, ScLists, ScStrUtils, FilesUtils,
-  UnitFiles, SepiReflectionCore, SepiCompilerErrors, FunLabyCoreConsts;
+  SepiReflectionCore, SepiCompilerErrors, FunLabyCoreConsts;
 
 resourcestring
   SAllSourceTypes = 'Tous les types de source';
@@ -62,6 +62,12 @@ type
       @param Value   Nouvel événement OnStateChange
     *}
     procedure SetOnStateChange(Value: TSourceEditorNotifyEvent);
+
+    {*
+      Charge le fichier source
+      @param FileName   Nom du fichier source à charger
+    *}
+    procedure LoadFile(const FileName: TFileName);
 
     {*
       Enregistre le fichier source
@@ -561,8 +567,7 @@ initialization
   SourceFileCreators := TSourceFileCreatorList.Create;
   UnitFilters := TUnitFilterList.Create;
 
-  UnitFilters.Add(BPLFilter, BPLUnitExtension);
-  UnitFilters.Add(SepiFilter, SepiUnitExtension);
+  UnitFilters.Add(SepiFilter, 'scu');
 finalization
   SourceFileEditors.Free;
   SourceFileEditors := nil;
