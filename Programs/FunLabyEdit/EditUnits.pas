@@ -19,8 +19,15 @@ type
     ListBoxUsedUnits: TListBox;
     procedure ButtonAddUnitClick(Sender: TObject);
     procedure ButtonRemoveUnitClick(Sender: TObject);
+    procedure ListBoxUsedUnitsMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure ListBoxUsedUnitsDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure ListBoxUsedUnitsDragDrop(Sender, Source: TObject; X, Y: Integer);
   private
     MasterFile: TMasterFile;
+
+    StartingPoint: TPoint;
 
     function InternalEditUnits(AMasterFile: TMasterFile): Boolean;
 
@@ -165,6 +172,47 @@ end;
 procedure TFormEditUnits.ButtonRemoveUnitClick(Sender: TObject);
 begin
   MoveSelected(ListBoxUsedUnits, ListBoxAvailableUnits.Items);
+end;
+
+{*
+  Gestionnaire d'événement OnMouseDown de la liste des unités
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormEditUnits.ListBoxUsedUnitsMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  StartingPoint := Point(X, Y);
+end;
+
+{*
+  Gestionnaire d'événement OnDragOver de la liste des unités
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormEditUnits.ListBoxUsedUnitsDragOver(Sender, Source: TObject;
+  X, Y: Integer; State: TDragState; var Accept: Boolean);
+begin
+  Accept := Source = Sender;
+end;
+
+{*
+  Gestionnaire d'événement OnDragDrop de la liste des unités
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormEditUnits.ListBoxUsedUnitsDragDrop(Sender, Source: TObject;
+  X, Y: Integer);
+var
+  DropPosition, StartPosition: Integer;
+  DropPoint: TPoint;
+begin
+  DropPoint := Point(X, Y);
+
+  with Source as TListBox do
+  begin
+    StartPosition := ItemAtPos(StartingPoint, True);
+    DropPosition := ItemAtPos(DropPoint, True);
+
+    Items.Move(StartPosition, DropPosition);
+  end;
 end;
 
 end.

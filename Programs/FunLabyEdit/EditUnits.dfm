@@ -81,9 +81,12 @@ object FormEditUnits: TFormEditUnits
     Top = 32
     Width = 137
     Height = 177
+    DragMode = dmAutomatic
     ItemHeight = 13
     MultiSelect = True
-    Sorted = True
     TabOrder = 3
+    OnDragDrop = ListBoxUsedUnitsDragDrop
+    OnDragOver = ListBoxUsedUnitsDragOver
+    OnMouseDown = ListBoxUsedUnitsMouseDown
   end
 end
