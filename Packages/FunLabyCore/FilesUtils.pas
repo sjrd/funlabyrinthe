@@ -32,7 +32,7 @@ type
     @author sjrd
     @version 5.0
   *}
-  TMasterFile = class(TFunLabyPersistent)
+  TMasterFile = class(TFunLabyPersistent, IMasterMetaData)
   private
     FSepiRoot: TSepiRoot; /// Racine Sepi
 
@@ -74,6 +74,12 @@ type
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
     procedure StoreDefaults; override;
+
+    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
+
+    function IsEditing: Boolean;
   public
     constructor Create(ABaseSepiRoot: TSepiRoot; const AFileName: TFileName;
       AMode: TFileMode);
@@ -87,11 +93,14 @@ type
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
 
-    function ResolveHRef(const HRef, Dir: string): TFileName;
+    function ResolveHRef(const HRef, Dir: string): TFileName; overload;
+    function ResolveHRef(const HRef, Dir: string;
+      const Extensions: array of string): TFileName; overload;
     function MakeHRef(const FileName: TFileName;
       const Dir: string): string;
 
-    function FindResource(const HRef: string; Kind: TResourceKind): TFileName;
+    function FindResource(const HRef: string; Kind: TResourceKind;
+      const Extensions: array of string): TFileName;
     function MakeResourceHRef(const FileName: TFileName;
       Kind: TResourceKind): string;
 
@@ -130,8 +139,8 @@ function HasExtension(const FileName: TFileName;
 function JoinPath(const Parts: array of TFileName): TFileName;
 function JoinHRef(const Parts: array of string): string;
 
-function HRefToFileName(const HRef: string;
-  const BaseDirs: array of TFileName): TFileName;
+function HRefToFileName(const HRef: string; const BaseDirs: array of TFileName;
+  const Extensions: array of string): TFileName;
 function FileNameToHRef(const FileName: TFileName;
   const BaseDirs: array of TFileName): string;
 
@@ -241,15 +250,16 @@ end;
 
 {*
   Convertit un HRef en nom de fichier
-  @param HRef       HRef à convertir
-  @param BaseDirs   Liste de répertoires de base à tester avant l'absolu
+  @param HRef         HRef à convertir
+  @param BaseDirs     Liste de répertoires de base à tester avant l'absolu
+  @param Extensions   Extensions possibles
   @return Nom du fichier sur lequel pointe HRef
   @throws EFileError Le fichier n'existe pas
 *}
-function HRefToFileName(const HRef: string;
-  const BaseDirs: array of TFileName): TFileName;
+function HRefToFileName(const HRef: string; const BaseDirs: array of TFileName;
+  const Extensions: array of string): TFileName;
 var
-  I: Integer;
+  I, J: Integer;
   SubFile: TFileName;
 begin
   {$IF HRefDelim <> PathDelim}
@@ -260,9 +270,12 @@ begin
 
   for I := Low(BaseDirs) to High(BaseDirs) do
   begin
-    Result := JoinPath([BaseDirs[I], SubFile]);
-    if FileExists(Result) then
-      Exit;
+    for J := Low(Extensions) to High(Extensions) do
+    begin
+      Result := JoinPath([BaseDirs[I], SubFile + Extensions[J]]);
+      if FileExists(Result) then
+        Exit;
+    end;
   end;
 
   raise EInOutError.CreateFmt(SFileNotFound, [HRef]);
@@ -380,7 +393,7 @@ begin
 
   FIsSaveguard := False;
 
-  FMaster := TMaster.Create(Mode = fmEdit, FindResource);
+  FMaster := TMaster.Create(Self);
 
   FUsedUnits := TStringList.Create;
 
@@ -738,6 +751,41 @@ end;
 {*
   [@inheritDoc]
 *}
+function TMasterFile.QueryInterface(const IID: TGUID; out Obj): HResult;
+begin
+  if GetInterface(IID, Obj) then
+    Result := 0
+  else
+    Result := E_NOINTERFACE;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TMasterFile._AddRef: Integer;
+begin
+  Result := -1;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TMasterFile._Release: Integer;
+begin
+  Result := -1;
+end;
+
+{*
+  [@inheritDoc]
+*}
+function TMasterFile.IsEditing: Boolean;
+begin
+  Result := Mode = fmEdit;
+end;
+
+{*
+  [@inheritDoc]
+*}
 procedure TMasterFile.AfterConstruction;
 begin
   inherited;
@@ -764,8 +812,22 @@ end;
 *}
 function TMasterFile.ResolveHRef(const HRef, Dir: string): TFileName;
 begin
+  Result := ResolveHRef(HRef, Dir, ['']);
+end;
+
+{*
+  Résoud l'adresse HRef en cherchant dans les dossiers correspondants
+  @param HRef         Adresse HRef du fichier
+  @param Dir          Nom du dossier de recherche
+  @param Extensions   Extensions possibles
+  @return Nom du fichier qualifié de son chemin d'accès
+  @throws EInOutError Le fichier n'existe pas
+*}
+function TMasterFile.ResolveHRef(const HRef, Dir: string;
+  const Extensions: array of string): TFileName;
+begin
   Result := HRefToFileName(HRef,
-    [JoinPath([ProjectDir, Dir]), JoinPath([LibraryPath, Dir])]);
+    [JoinPath([ProjectDir, Dir]), JoinPath([LibraryPath, Dir])], Extensions);
 end;
 
 {*
@@ -784,17 +846,18 @@ end;
 
 {*
   Cherche une ressource d'après son href et son type
-  @param HRef   HRef de la ressource
-  @param Kind   Type de ressource recherchée
+  @param HRef         HRef de la ressource
+  @param Kind         Type de ressource recherchée
+  @param Extensions   Extensions possibles
   @return Nom complet du fichier pour cette ressource
   @throws EResourceNotFoundException La ressource n'a pas pu être trouvée
 *}
 function TMasterFile.FindResource(const HRef: string;
-  Kind: TResourceKind): TFileName;
+  Kind: TResourceKind; const Extensions: array of string): TFileName;
 begin
   try
     Result := ResolveHRef(HRef,
-      JoinPath([ResourcesDir, ResourceKindToDir[Kind]]));
+      JoinPath([ResourcesDir, ResourceKindToDir[Kind]]), Extensions);
   except
     on EInOutError do
       raise EResourceNotFoundException.CreateFmt(SResourceNotFound,

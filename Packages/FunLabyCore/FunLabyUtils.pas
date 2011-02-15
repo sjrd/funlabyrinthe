@@ -47,11 +47,13 @@ const {don't localize}
   /// Taille de bordure de vue par défaut
   DefaultViewBorderSize = 1;
 
-  /// Extension d'image préférée
-  PreferredImageExtension = 'png';
-
   /// Extension d'un peintre
   PainterExtension = 'pnt';
+
+  /// Extensions d'images préférées
+  PreferredImageExtensions: array[0..2] of string = (
+    'png', 'gif', 'pnt'
+  );
 
 type
   /// Identificateur de composant FunLabyrinthe
@@ -74,10 +76,6 @@ type
 
   /// Type de ressource
   TResourceKind = (rkImage, rkSound);
-
-  /// Type de callback pour trouver une ressource
-  TFindResourceCallback = reference to function(const HRef: string;
-    Kind: TResourceKind): TFileName;
 
   /// Classe de base des exceptions FunLabyrinthe
   EFunLabyException = class(Exception);
@@ -119,6 +117,28 @@ type
   TPlayerMode = class;
   TPlayer = class;
   TMaster = class;
+
+  {*
+    Metadonnées sur un maître FunLabyrinthe
+  *}
+  IMasterMetaData = interface(IInterface)
+    {*
+      Teste si le maître est en mode édition
+      @return True ssi le maître est en mode édition
+    *}
+    function IsEditing: Boolean;
+
+    {*
+      Cherche une ressource d'après son href et son type
+      @param HRef         HRef de la ressource
+      @param Kind         Type de ressource recherchée
+      @param Extensions   Extensions possibles
+      @return Nom complet du fichier pour cette ressource
+      @throws EResourceNotFoundException La ressource n'a pas pu être trouvée
+    *}
+    function FindResource(const HRef: string; Kind: TResourceKind;
+      const Extensions: array of string): TFileName;
+  end;
 
   {*
     Position qualifiée, composée d'une carte et d'une position sur la carte
@@ -736,10 +756,10 @@ type
   *}
   TImagesMaster = class(TObject)
   private
-    FMaster: TMaster;      /// Maître FunLabyrinthe
-    FExtensions: TStrings; /// Extensions d'images reconnues
-    FImgList: TObjectList; /// Liste d'images interne
-    FImgNames: TStrings;   /// Liste des noms des images
+    FMaster: TMaster;             /// Maître FunLabyrinthe
+    FExtensions: TStringDynArray; /// Extensions d'images reconnues
+    FImgList: TObjectList;        /// Liste d'images interne
+    FImgNames: TStrings;          /// Liste des noms des images
 
     function LoadBitmapFromPainterFile(const FileName: TFileName): TBitmap32;
 
@@ -1890,8 +1910,8 @@ type
   *}
   TMaster = class(TFunLabyPersistent)
   private
-    /// Callback pour trouver une ressource
-    FFindResourceCallback: TFindResourceCallback;
+    /// Metadonnées
+    FMetaData: IMasterMetaData;
 
     FImagesMaster: TImagesMaster;   /// Maître d'images
     FComponents: TObjectList;       /// Liste de tous les composants
@@ -1975,8 +1995,7 @@ type
     procedure DefineProperties(Filer: TFunLabyFiler); override;
     procedure EndState(State: TPersistentState); override;
   public
-    constructor Create(AEditing: Boolean;
-      const AFindResourceCallback: TFindResourceCallback);
+    constructor Create(const AMetaData: IMasterMetaData);
     destructor Destroy; override;
 
     procedure BeforeDestruction; override;
@@ -1986,7 +2005,10 @@ type
     function ComponentExists(const ID: TComponentID): Boolean;
     procedure CheckComponentID(const ID: TComponentID);
 
-    function FindResource(const HRef: string; Kind: TResourceKind): TFileName;
+    function FindResource(const HRef: string;
+      Kind: TResourceKind): TFileName; overload;
+    function FindResource(const HRef: string; Kind: TResourceKind;
+      const Extensions: array of string): TFileName; overload;
 
     function SquareByComps(
       const Field, Effect, Tool, Obstacle: TComponentID): TSquare; overload;
@@ -2906,16 +2928,31 @@ end;
 *}
 constructor TImagesMaster.Create(AMaster: TMaster);
 var
+  ExtList: TStrings;
+  I: Integer;
   EmptySquare: TBitmap32;
 begin
   inherited Create;
 
   FMaster := AMaster;
 
-  FExtensions := TStringList.Create;
-  FileFormatList.GetExtensionList(FExtensions);
-  FExtensions.Move(FExtensions.IndexOf(PreferredImageExtension), 0);
-  FExtensions.Add(PainterExtension);
+  ExtList := TStringList.Create;
+  try
+    // Load complete list
+    FileFormatList.GetExtensionList(ExtList);
+    ExtList.Add(PainterExtension);
+
+    // Brind preferred image extensions to front
+    for I := Low(PreferredImageExtensions) to High(PreferredImageExtensions) do
+      ExtList.Move(ExtList.IndexOf(PreferredImageExtensions[I]), I);
+
+    // Set up the extensions array
+    SetLength(FExtensions, ExtList.Count);
+    for I := 0 to ExtList.Count-1 do
+      FExtensions[I] := '.' + ExtList[I];
+  finally
+    ExtList.Free;
+  end;
 
   FImgList := TObjectList.Create;
   FImgNames := THashedStringList.Create;
@@ -2938,8 +2975,6 @@ destructor TImagesMaster.Destroy;
 begin
   FImgNames.Free;
   FImgList.Free;
-
-  FExtensions.Free;
 
   inherited;
 end;
@@ -3051,20 +3086,13 @@ end;
   @return Nom de fichier pour cette image, ou '' si non trouvé
 *}
 function TImagesMaster.ResolveImgName(const ImgName: string): TFileName;
-var
-  I: Integer;
 begin
-  for I := 0 to FExtensions.Count-1 do
-  begin
-    try
-      Result := Master.FindResource(ImgName + '.' + FExtensions[I], rkImage);
-      Exit;
-    except
-      on EResourceNotFoundException do;
-    end;
+  try
+    Result := Master.FindResource(ImgName, rkImage, FExtensions);
+  except
+    on EResourceNotFoundException do
+      Result := '';
   end;
-
-  Result := '';
 end;
 
 {*
@@ -8504,14 +8532,13 @@ end;
 {----------------}
 
 {*
-  Crée une instance de TMaster
+  Crée un maître FunLabyrinthe
 *}
-constructor TMaster.Create(AEditing: Boolean;
-  const AFindResourceCallback: TFindResourceCallback);
+constructor TMaster.Create(const AMetaData: IMasterMetaData);
 begin
   inherited Create;
 
-  FFindResourceCallback := AFindResourceCallback;
+  FMetaData := AMetaData;
 
   FImagesMaster := TImagesMaster.Create(Self);
 
@@ -8536,7 +8563,7 @@ begin
     Duplicates := dupError;
   end;
 
-  FEditing := AEditing;
+  FEditing := FMetaData.IsEditing;
   FBeginTickCount := Windows.GetTickCount;
   FTerminated := False;
 
@@ -8547,7 +8574,7 @@ begin
 end;
 
 {*
-  Détruit l'instance
+  [@inheritDoc]
 *}
 destructor TMaster.Destroy;
 begin
@@ -9333,7 +9360,21 @@ end;
 function TMaster.FindResource(const HRef: string;
   Kind: TResourceKind): TFileName;
 begin
-  Result := FFindResourceCallback(HRef, Kind);
+  Result := FMetaData.FindResource(HRef, Kind, ['']);
+end;
+
+{*
+  Cherche une ressource d'après son href et son type
+  @param HRef         HRef de la ressource
+  @param Kind         Type de ressource recherchée
+  @param Extensions   Extensions possibles de la ressource
+  @return Nom complet du fichier pour cette ressource
+  @throws EResourceNotFoundException La ressource n'a pas pu être trouvée
+*}
+function TMaster.FindResource(const HRef: string;
+  Kind: TResourceKind; const Extensions: array of string): TFileName;
+begin
+  Result := FMetaData.FindResource(HRef, Kind, Extensions);
 end;
 
 {*

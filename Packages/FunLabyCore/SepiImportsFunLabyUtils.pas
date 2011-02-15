@@ -8,7 +8,7 @@ unit SepiImportsFunLabyUtils;
 interface
 
 uses
-  Windows, SysUtils, SepiReflectionCore, SepiMembers, Classes, TypInfo, 
+  Windows, SepiReflectionCore, SepiMembers, SysUtils, Classes, TypInfo, 
   ScUtils, GR32, FunLabyUtils;
 
 var
@@ -26,8 +26,8 @@ const // don't localize
   UnitName = 'FunLabyUtils';
   ResourceName = 'SepiImportsFunLabyUtils';
   TypeCount = 67;
-  MethodCount = 261;
-  VariableCount = 5;
+  MethodCount = 262;
+  VariableCount = 6;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -271,6 +271,8 @@ type
     function GetPlayerCount: Integer;
     function GetPlayers(Index: Integer): TPlayer;
     function GetTickCount: Cardinal;
+    function FindResource_0(const HRef: string; Kind: TResourceKind): TFileName;
+    function FindResource_1(const HRef: string; Kind: TResourceKind; const Extensions: array of string): TFileName;
     function SquareByComps_0(const Field: TComponentID; const Effect: TComponentID; const Tool: TComponentID; const Obstacle: TComponentID): TSquare;
     function SquareByComps_1(Field: TField; Effect: TEffect; Tool: TTool; Obstacle: TObstacle): TSquare;
     class procedure InitMethodAddresses;
@@ -1188,6 +1190,16 @@ begin
   Result := TickCount;
 end;
 
+function TSepiImportsTMaster.FindResource_0(const HRef: string; Kind: TResourceKind): TFileName;
+begin
+  Result := FindResource(HRef, Kind);
+end;
+
+function TSepiImportsTMaster.FindResource_1(const HRef: string; Kind: TResourceKind; const Extensions: array of string): TFileName;
+begin
+  Result := FindResource(HRef, Kind, Extensions);
+end;
+
 function TSepiImportsTMaster.SquareByComps_0(const Field: TComponentID; const Effect: TComponentID; const Tool: TComponentID; const Obstacle: TComponentID): TSquare;
 begin
   Result := SquareByComps(Field, Effect, Tool, Obstacle);
@@ -1240,13 +1252,14 @@ begin
   MethodAddresses[233] := @TSepiImportsTMaster.Create;
   MethodAddresses[234] := @TSepiImportsTMaster.ComponentExists;
   MethodAddresses[235] := @TSepiImportsTMaster.CheckComponentID;
-  MethodAddresses[236] := @TSepiImportsTMaster.FindResource;
-  MethodAddresses[237] := @TSepiImportsTMaster.SquareByComps_0;
-  MethodAddresses[238] := @TSepiImportsTMaster.SquareByComps_1;
-  MethodAddresses[239] := @TSepiImportsTMaster.RegisterComponents;
-  MethodAddresses[240] := @TSepiImportsTMaster.CreateAdditionnalComponent;
-  MethodAddresses[241] := @TSepiImportsTMaster.TryPause;
-  MethodAddresses[242] := @TSepiImportsTMaster.Resume;
+  MethodAddresses[236] := @TSepiImportsTMaster.FindResource_0;
+  MethodAddresses[237] := @TSepiImportsTMaster.FindResource_1;
+  MethodAddresses[238] := @TSepiImportsTMaster.SquareByComps_0;
+  MethodAddresses[239] := @TSepiImportsTMaster.SquareByComps_1;
+  MethodAddresses[240] := @TSepiImportsTMaster.RegisterComponents;
+  MethodAddresses[241] := @TSepiImportsTMaster.CreateAdditionnalComponent;
+  MethodAddresses[242] := @TSepiImportsTMaster.TryPause;
+  MethodAddresses[243] := @TSepiImportsTMaster.Resume;
 end;
 
 {---------------------}
@@ -1402,14 +1415,14 @@ begin
   TypeInfoArray[4] := TypeInfo(TPlayState);
   TypeInfoArray[5] := TypeInfo(TPlayerDrawMode);
   TypeInfoArray[6] := TypeInfo(TResourceKind);
-  TypeInfoArray[7] := TypeInfo(TFindResourceCallback);
-  TypeInfoArray[8] := TypeInfo(EFunLabyException);
-  TypeInfoArray[9] := TypeInfo(EComponentNotFound);
-  TypeInfoArray[10] := TypeInfo(EInvalidID);
-  TypeInfoArray[11] := TypeInfo(EInvalidCommand);
-  TypeInfoArray[12] := TypeInfo(EUnsupportedCommand);
-  TypeInfoArray[13] := TypeInfo(EBadSquareDefException);
-  TypeInfoArray[14] := TypeInfo(EResourceNotFoundException);
+  TypeInfoArray[7] := TypeInfo(EFunLabyException);
+  TypeInfoArray[8] := TypeInfo(EComponentNotFound);
+  TypeInfoArray[9] := TypeInfo(EInvalidID);
+  TypeInfoArray[10] := TypeInfo(EInvalidCommand);
+  TypeInfoArray[11] := TypeInfo(EUnsupportedCommand);
+  TypeInfoArray[12] := TypeInfo(EBadSquareDefException);
+  TypeInfoArray[13] := TypeInfo(EResourceNotFoundException);
+  TypeInfoArray[14] := TypeInfo(IMasterMetaData);
   TypeInfoArray[15] := TypeInfo(TPlayerShowMsgMessage);
   TypeInfoArray[16] := TypeInfo(TSquareEventKind);
   TypeInfoArray[17] := TypeInfo(TSquareEventKinds);
@@ -1509,33 +1522,34 @@ begin
   TSepiImportsTNotificationMsgTimerEntry.InitMethodAddresses;
   TSepiImportsTTimerCollection.InitMethodAddresses;
   TSepiImportsTMaster.InitMethodAddresses;
-  MethodAddresses[243] := @ShowFunLabyAbout;
-  MethodAddresses[244] := @FunLabyEncoding;
-  MethodAddresses[245] := @PointBehind;
-  MethodAddresses[246] := @PointBefore;
-  MethodAddresses[247] := @CreateEmptySquareBitmap;
-  MethodAddresses[248] := @SquareRect;
-  MethodAddresses[249] := @EmptyRect;
-  MethodAddresses[250] := @EmptySquareRect;
-  MethodAddresses[251] := @DrawBitmap32ToCanvas;
-  MethodAddresses[252] := @SameRect;
-  MethodAddresses[253] := @SameQPos;
-  MethodAddresses[254] := @IsNoQPos;
-  MethodAddresses[255] := @FunLabyRegisterClass;
-  MethodAddresses[256] := @FunLabyUnregisterClass;
-  MethodAddresses[257] := @FunLabyRegisterClasses;
-  MethodAddresses[258] := @FunLabyUnregisterClasses;
-  MethodAddresses[259] := @FunLabyGetClass;
-  MethodAddresses[260] := @FunLabyFindClass;
+  MethodAddresses[244] := @ShowFunLabyAbout;
+  MethodAddresses[245] := @FunLabyEncoding;
+  MethodAddresses[246] := @PointBehind;
+  MethodAddresses[247] := @PointBefore;
+  MethodAddresses[248] := @CreateEmptySquareBitmap;
+  MethodAddresses[249] := @SquareRect;
+  MethodAddresses[250] := @EmptyRect;
+  MethodAddresses[251] := @EmptySquareRect;
+  MethodAddresses[252] := @DrawBitmap32ToCanvas;
+  MethodAddresses[253] := @SameRect;
+  MethodAddresses[254] := @SameQPos;
+  MethodAddresses[255] := @IsNoQPos;
+  MethodAddresses[256] := @FunLabyRegisterClass;
+  MethodAddresses[257] := @FunLabyUnregisterClass;
+  MethodAddresses[258] := @FunLabyRegisterClasses;
+  MethodAddresses[259] := @FunLabyUnregisterClasses;
+  MethodAddresses[260] := @FunLabyGetClass;
+  MethodAddresses[261] := @FunLabyFindClass;
 end;
 
 procedure InitVarAddresses;
 begin
-  VarAddresses[0] := @NoQPos;
-  VarAddresses[1] := @BaseSquareRect;
-  VarAddresses[2] := @NegDir;
-  VarAddresses[3] := @RightDir;
-  VarAddresses[4] := @LeftDir;
+  VarAddresses[0] := @PreferredImageExtensions;
+  VarAddresses[1] := @NoQPos;
+  VarAddresses[2] := @BaseSquareRect;
+  VarAddresses[3] := @NegDir;
+  VarAddresses[4] := @RightDir;
+  VarAddresses[5] := @LeftDir;
 end;
 
 {------------------------------------}
@@ -1619,16 +1633,6 @@ type
 {$IFEND}
 
 type
-  TCheckAlignmentForTFindResourceCallback = record
-    Dummy: Byte;
-    Field: TFindResourceCallback;
-  end;
-
-{$IF SizeOf(TCheckAlignmentForTFindResourceCallback) <> (4 + 4)}
-  {$MESSAGE WARN 'Le type TFindResourceCallback n''a pas l''alignement calculé par Sepi'}
-{$IFEND}
-
-type
   TCheckAlignmentForEFunLabyException = record
     Dummy: Byte;
     Field: EFunLabyException;
@@ -1696,6 +1700,16 @@ type
 
 {$IF SizeOf(TCheckAlignmentForEResourceNotFoundException) <> (4 + 4)}
   {$MESSAGE WARN 'Le type EResourceNotFoundException n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+type
+  TCheckAlignmentForIMasterMetaData = record
+    Dummy: Byte;
+    Field: IMasterMetaData;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForIMasterMetaData) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type IMasterMetaData n''a pas l''alignement calculé par Sepi'}
 {$IFEND}
 
 {$IF SizeOf(TQualifiedPos) <> 16}
