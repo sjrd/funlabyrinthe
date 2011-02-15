@@ -170,9 +170,6 @@ end;
 *}
 procedure TFormSelectProjectFile.FillFileList;
 var
-  ProjectDir: TFileName;
-  ProjectsSearchRec, SearchRec: TSearchRec;
-  ProjectsPattern, ProjectPattern: string;
   ProjectSubFile: string;
 begin
   ListViewFiles.Items.BeginUpdate;
@@ -181,32 +178,17 @@ begin
     ListViewFiles.Clear;
     EditFileName.Items.Clear;
 
-    ProjectsPattern := JoinPath([ProjectsPath, '*']);
+    IterateProjects(
+      procedure(const FileName: TFileName; const SearchRec: TSearchRec)
+      begin
+        ProjectSubFile := FileName;
+        Delete(ProjectSubFile, 1, Length(ProjectsPath));
+        if (ProjectSubFile <> '') and (ProjectSubFile[1] = PathDelim) then
+          Delete(ProjectSubFile, 1, 1);
 
-    if FindFirst(ProjectsPattern, faAnyFile, ProjectsSearchRec) = 0 then
-    try
-      repeat
-        if ProjectsSearchRec.Attr and faDirectory = 0 then
-          Continue;
-
-        ProjectDir := ProjectsSearchRec.Name;
-        ProjectPattern := JoinPath([ProjectsPath, ProjectDir, '*.flp']);
-
-        if FindFirst(ProjectPattern, faAnyFile, SearchRec) = 0 then
-        try
-          repeat
-            ProjectSubFile := JoinPath([ProjectDir, SearchRec.Name]);
-
-            FillFileItem(ListViewFiles.Items.Add, ProjectSubFile);
-            EditFileName.Items.Add(ProjectSubFile);
-          until FindNext(SearchRec) <> 0;
-        finally
-          FindClose(SearchRec);
-        end;
-      until FindNext(ProjectsSearchRec) <> 0;
-    finally
-      FindClose(ProjectsSearchRec);
-    end;
+        FillFileItem(ListViewFiles.Items.Add, ProjectSubFile);
+        EditFileName.Items.Add(ProjectSubFile);
+      end);
 
     ListViewFiles.AlphaSort;
   finally

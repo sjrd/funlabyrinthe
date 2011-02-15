@@ -30,33 +30,28 @@ const
   AllocBy = 16;
 var
   OldCurrentDir: string;
-  SearchRec: TSearchRec;
   Index: Integer;
 begin
-  Index := 0;
+  Index := Length(PluginModules);
 
   SetLength(OldCurrentDir, GetCurrentDirectory(0, nil)-1);
   GetCurrentDirectory(Length(OldCurrentDir)+1, PChar(OldCurrentDir));
 
   SetCurrentDirectory(PChar(PluginsDir));
   try
-    if FindFirst(JoinPath([PluginsDir, '*.bpl']), faAnyFile, SearchRec) = 0 then
-    try
-      repeat
+    IterateDir(PluginsDir, '*.bpl',
+      procedure(const PluginFileName: TFileName; const SearchRec: TSearchRec)
+      begin
         if Index >= Length(PluginModules) then
           SetLength(PluginModules, Index+AllocBy);
 
-        PluginModules[Index] := LoadPackage(
-          JoinPath([PluginsDir, SearchRec.Name]));
+        PluginModules[Index] := LoadPackage(PluginFileName);
         if PluginModules[Index] <> 0 then
           Inc(Index);
-      until FindNext(SearchRec) <> 0;
-    finally
-      FindClose(SearchRec);
-      SetLength(PluginModules, Index);
-    end;
+      end);
   finally
     SetCurrentDirectory(PChar(OldCurrentDir));
+    SetLength(PluginModules, Index);
   end;
 end;
 

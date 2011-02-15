@@ -26,7 +26,7 @@ type
 
     procedure ListAvailableUnits;
     procedure ListAvailableUnitsIn(AvailableUnits: TStrings;
-      const Filter: string);
+      const Dir: TFileName; const Pattern: string);
 
     procedure MoveSelected(List: TCustomListBox; Items: TStrings);
   public
@@ -74,13 +74,13 @@ begin
   AvailableUnits.BeginUpdate;
   try
     ListAvailableUnitsIn(AvailableUnits,
-      JoinPath([LibraryPath, UnitsDir, '*.scu']));
+      JoinPath([LibraryPath, UnitsDir]), '*.scu');
 
     ListAvailableUnitsIn(AvailableUnits,
-      JoinPath([MasterFile.ProjectDir, UnitsDir, '*.scu']));
+      JoinPath([MasterFile.ProjectDir, UnitsDir]), '*.scu');
 
     ListAvailableUnitsIn(AvailableUnits,
-      JoinPath([Dir, UnitPackagesDir, '*.bpl']));
+      JoinPath([Dir, UnitPackagesDir]), '*.bpl');
   finally
     AvailableUnits.EndUpdate;
   end;
@@ -88,25 +88,24 @@ end;
 
 {*
   Liste toutes les unités disponibles dans un dossier donné
-  Remplit la liste ListBoxAvailableUnits avec toutes les unités disponibles pour
-  le projet.
-  @param Dir      Dossier dans lequel chercher les unités
-  @param Filter   Filtre de nom de fichier
+  @param AvailableUnits   Liste dans laquelle lister les unités
+  @param Dir              Dossier dans lequel chercher les unités
+  @param Pattern          Pattern de nom de fichier
 *}
 procedure TFormEditUnits.ListAvailableUnitsIn(AvailableUnits: TStrings;
-  const Filter: string);
+  const Dir: TFileName; const Pattern: string);
 var
-  SearchRec: TSearchRec;
   UnitName: string;
 begin
-  if FindFirst(Filter, faAnyFile, SearchRec) = 0 then
-  repeat
-    UnitName := ChangeFileExt(SearchRec.Name, '');
+  IterateDir(Dir, Pattern,
+    procedure(const FileName: TFileName; const SearchRec: TSearchRec)
+    begin
+      UnitName := ChangeFileExt(SearchRec.Name, '');
 
-    if (AvailableUnits.IndexOf(UnitName) < 0) and
-      (MasterFile.UsedUnits.IndexOf(UnitName) < 0) then
-      AvailableUnits.Add(UnitName);
-  until FindNext(SearchRec) <> 0;
+      if (AvailableUnits.IndexOf(UnitName) < 0) and
+        (MasterFile.UsedUnits.IndexOf(UnitName) < 0) then
+        AvailableUnits.Add(UnitName);
+    end);
 end;
 
 {*

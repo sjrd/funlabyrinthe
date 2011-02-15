@@ -632,15 +632,10 @@ end;
 procedure TFormMain.AddAllSourceFiles(const BaseDir: TFileName);
 const
   Extensions: array[0..2] of string = ('.ssq', '.fnd', '.pas');
-var
-  SearchRec: TSearchRec;
-  FullPath: TFileName;
 begin
-  if FindFirst(JoinPath([BaseDir, '*']), faAnyFile, SearchRec) = 0 then
-  try
-    repeat
-      FullPath := JoinPath([BaseDir, SearchRec.Name]);
-
+  IterateDir(BaseDir, '*',
+    procedure(const FullPath: TFileName; const SearchRec: TSearchRec)
+    begin
       if SearchRec.Attr and faDirectory = 0 then
       begin
         // Add the source file
@@ -649,13 +644,9 @@ begin
       end else
       begin
         // Recurse into subdirectory
-        if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
-          AddAllSourceFiles(FullPath);
+        AddAllSourceFiles(FullPath);
       end;
-    until FindNext(SearchRec) <> 0;
-  finally
-    FindClose(SearchRec);
-  end;
+    end);
 end;
 
 {*
