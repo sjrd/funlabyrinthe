@@ -576,14 +576,14 @@ function TFormMain.DoAutoCompile: Boolean;
 begin
   try
     CreateAutoCompileMasterFile;
-    AddAllSourceFiles(JoinPath([FunLabyAppDataDir, SourcesDir]));
+    AddAllSourceFiles(JoinPath([LibraryPath, SourcesDir]));
 
     if not CompileAll then
       Abort;
 
     CloseFile;
 
-    IterateDir(JoinPath([FunLabyAppDataDir, ProjectsDir]), '*',
+    IterateDir(ProjectsPath, '*',
       procedure(const ProjectDir: TFileName; const SearchRec: TSearchRec)
       begin
         if SearchRec.Attr and faDirectory = 0 then
@@ -1382,10 +1382,10 @@ begin
   // Setup some dynamic properties
   Application.OnHint := ApplicationHint;
 
-  OpenDialog.InitialDir := JoinPath([FunLabyAppDataDir, ProjectsDir]);
-  SaveDialog.InitialDir := OpenDialog.InitialDir;
+  OpenDialog.InitialDir := ProjectsPath;
+  SaveDialog.InitialDir := ProjectsPath;
 
-  OpenSourceFileDialog.InitialDir := JoinPath([FunLabyAppDataDir, SourcesDir]);
+  OpenSourceFileDialog.InitialDir := JoinPath([LibraryPath, SourcesDir]);
   OpenSourceFileDialog.Filter := SourceFileEditors.FiltersAsText;
 
   MasterFile := nil;
@@ -2054,8 +2054,7 @@ var
 begin
   try
     FileName := SaveDialog.FileName;
-    BaseDir := IncludeTrailingPathDelimiter(
-      JoinPath([FunLabyAppDataDir, ProjectsDir]));
+    BaseDir := IncludeTrailingPathDelimiter(ProjectsPath);
 
     // The file must be under Projects\
     if not AnsiStartsText(BaseDir, FileName) then

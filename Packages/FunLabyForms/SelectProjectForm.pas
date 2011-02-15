@@ -71,9 +71,6 @@ implementation
 
 {$R *.dfm}
 
-var
-  ProjectsDir: TFileName;
-
 const
   IndexKind = 0;
   IndexDifficulty = 1;
@@ -123,7 +120,7 @@ const
 begin
   try
     Document := LoadXMLDocumentFromFile(
-      JoinPath([ProjectsDir, ProjectSubFile]));
+      JoinPath([ProjectsPath, ProjectSubFile]));
     RootElement := Document.documentElement;
 
     Item.Caption := ReadProperty('Title');
@@ -184,7 +181,7 @@ begin
     ListViewFiles.Clear;
     EditFileName.Items.Clear;
 
-    ProjectsPattern := JoinPath([ProjectsDir, '*']);
+    ProjectsPattern := JoinPath([ProjectsPath, '*']);
 
     if FindFirst(ProjectsPattern, faAnyFile, ProjectsSearchRec) = 0 then
     try
@@ -193,7 +190,7 @@ begin
           Continue;
 
         ProjectDir := ProjectsSearchRec.Name;
-        ProjectPattern := JoinPath([ProjectsDir, ProjectDir, '*.flp']);
+        ProjectPattern := JoinPath([ProjectsPath, ProjectDir, '*.flp']);
 
         if FindFirst(ProjectPattern, faAnyFile, SearchRec) = 0 then
         try
@@ -236,7 +233,7 @@ end;
 *}
 procedure TFormSelectProjectFile.FormCreate(Sender: TObject);
 begin
-  ChangeNotifier.Notifications[0].Directory := ProjectsDir;
+  ChangeNotifier.Notifications[0].Directory := ProjectsPath;
 end;
 
 {*
@@ -350,7 +347,7 @@ begin
   if Pos('.', EditFileName.Text) = 0 then
     EditFileName.Text := EditFileName.Text + '.flp';
 
-  FileName := JoinPath([ProjectsDir, EditFileName.Text]);
+  FileName := JoinPath([ProjectsPath, EditFileName.Text]);
 
   if not FileExists(FileName) then
   begin
@@ -371,7 +368,5 @@ begin
   ModalResult := mrCancel;
 end;
 
-initialization
-  ProjectsDir := JoinPath([FunLabyAppDataDir, FilesUtils.ProjectsDir]);
 end.
 

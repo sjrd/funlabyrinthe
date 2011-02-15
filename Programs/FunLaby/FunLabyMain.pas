@@ -470,6 +470,7 @@ end;
 procedure TFormMain.AskForTutorialIfNeeded;
 const {don't localize}
   Path = 'game/tutorialdone';
+  TutorialDir = 'Didacticiel';
   TutorialFileName = 'Didacticiel.flp';
 var
   AlreadyDone: Boolean;
@@ -488,7 +489,7 @@ begin
   OptionsStorage.WriteBoolean(Path, Answer <> drNo);
 
   if Answer = drYes then
-    NewGame(JoinPath([FunLabyAppDataDir, ProjectsDir, TutorialFileName]));
+    NewGame(JoinPath([ProjectsPath, TutorialDir, TutorialFileName]));
 end;
 
 {*
@@ -498,9 +499,9 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   Menu := BigMenu;
-  NewGameDialog.InitialDir := JoinPath([FunLabyAppDataDir, ProjectsDir]);
-  LoadGameDialog.InitialDir := JoinPath([FunLabyAppDataDir, SaveguardsDir]);
-  SaveGameDialog.InitialDir := JoinPath([FunLabyAppDataDir, SaveguardsDir]);
+  NewGameDialog.InitialDir := ProjectsPath;
+  LoadGameDialog.InitialDir := SaveguardsPath;
+  SaveGameDialog.InitialDir := SaveguardsPath;
 
   NewGameDialog2 := TFormSelectProjectFile.Create(Self);
 

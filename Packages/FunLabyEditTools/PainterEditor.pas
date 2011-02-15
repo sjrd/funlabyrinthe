@@ -202,7 +202,7 @@ begin
   Filter := Filter + '|' + SPainterFilter;
 
   OpenImageDialog.Filter := Filter;
-  OpenImageDialog.InitialDir := JoinPath([FunLabyAppDataDir,
+  OpenImageDialog.InitialDir := JoinPath([LibraryPath, ResourcesDir,
     ResourceKindToDir[rkImage]]);
 end;
 
@@ -244,16 +244,12 @@ end;
 *}
 procedure TFormPainterEditor.ButtonAddImageClick(Sender: TObject);
 var
-  ImagesDir: TFileName;
   I: Integer;
   FileName: TFileName;
   HRef: string;
 begin
   if OpenImageDialog.Execute then
   begin
-    ImagesDir := IncludeTrailingPathDelimiter(JoinPath([FunLabyAppDataDir,
-      ResourceKindToDir[rkImage]]));
-
     Painter.Description.BeginUpdate;
     try
       for I := 0 to OpenImageDialog.Files.Count-1 do

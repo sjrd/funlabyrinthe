@@ -146,18 +146,22 @@ procedure RunAutoVersionCheck;
 procedure EditVersionCheckOptions;
 
 const {don't localize}
+  /// Nom du dossier de la bibliothèque
+  LibraryDir = 'Library';
+  /// Nom du dossier des projets
+  ProjectsDir = 'Projects';
+  /// Nom du dossier des sauvegardes
+  SaveguardsDir = 'Saveguards';
+
   /// Nom du dossier des ressources
   ResourcesDir = 'Resources';
   /// Nom du dossier des sources
   SourcesDir = 'Sources';
   /// Nom du dossier des unités compilées
   UnitsDir = 'Units';
-  /// Nom du dossier des projets
-  ProjectsDir = 'Projects';
-  /// Nom du dossier des sauvegardes
-  SaveguardsDir = 'Saveguards';
   /// Nom du dossier des screenshots
   ScreenshotsDir = 'Screenshots';
+
   /// Nom du dossier des paquets définissant des unités
   UnitPackagesDir = 'UnitPackages';
   /// Nom du dossier des plugins de l'éditeur
@@ -169,8 +173,15 @@ const {don't localize}
   );
 
 var {don't localize}
-  /// Dossier des documents de FunLabyrinthe
-  FunLabyAppDataDir: string = '';
+  /// Chemin complet du dossier contenant tous les documents FunLabyrinthe
+  FunLabyAppDataPath: string;
+
+  /// Chemin complet de la bibliothèque
+  LibraryPath: string;
+  /// Chemin complet du dossier des projets
+  ProjectsPath: string;
+  /// Chemin complet du dossier des sauvegardes
+  SaveguardsPath: string;
 
 const {don't localize}
   HRefDelim = '/'; /// Délimiteur dans les href
@@ -318,7 +329,7 @@ end;
 *}
 procedure IterateProjects(const Callback: TSearchFileCallback);
 begin
-  IterateDir(JoinPath([FunLabyAppDataDir, ProjectsDir]), '*',
+  IterateDir(ProjectsPath, '*',
     procedure(const ProjectDir: TFileName; const SearchRec: TSearchRec)
     begin
       if SearchRec.Attr and faDirectory = 0 then
@@ -761,7 +772,7 @@ end;
 function TMasterFile.ResolveHRef(const HRef, Dir: string): TFileName;
 begin
   Result := HRefToFileName(HRef,
-    [JoinPath([ProjectDir, Dir]), JoinPath([FunLabyAppDataDir, Dir])]);
+    [JoinPath([ProjectDir, Dir]), JoinPath([LibraryPath, Dir])]);
 end;
 
 {*
@@ -775,7 +786,7 @@ function TMasterFile.MakeHRef(const FileName: TFileName;
   const Dir: string): string;
 begin
   Result := FileNameToHRef(FileName,
-    [JoinPath([ProjectDir, Dir]), JoinPath([FunLabyAppDataDir, Dir])]);
+    [JoinPath([ProjectDir, Dir]), JoinPath([LibraryPath, Dir])]);
 end;
 
 {*
@@ -910,8 +921,12 @@ end;
 initialization
   with TMemIniFile.Create(Dir+fIniFileName) do
   try
-    FunLabyAppDataDir :=
+    FunLabyAppDataPath :=
       ReadString('Directories', 'AppData', Dir); {don't localize}
+
+    LibraryPath := JoinPath([FunLabyAppDataPath, LibraryDir]);
+    ProjectsPath := JoinPath([FunLabyAppDataPath, ProjectsDir]);
+    SaveguardsPath := JoinPath([FunLabyAppDataPath, SaveguardsDir]);
   finally
     Free;
   end;

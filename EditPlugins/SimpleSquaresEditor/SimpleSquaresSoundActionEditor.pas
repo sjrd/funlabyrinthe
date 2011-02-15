@@ -66,7 +66,7 @@ begin
   inherited;
 
   OpenSoundDialog.InitialDir :=
-    JoinPath([FunLabyAppDataDir, ResourcesDir, ResourceKindToDir[rkSound]]);
+    JoinPath([LibraryPath, ResourcesDir, ResourceKindToDir[rkSound]]);
 end;
 
 {*
@@ -94,7 +94,7 @@ begin
     Sound := OpenSoundDialog.FileName;
 
     Dir := IncludeTrailingPathDelimiter(
-      JoinPath([FunLabyAppDataDir, ResourcesDir, ResourceKindToDir[rkSound]]));
+      JoinPath([LibraryPath, ResourcesDir, ResourceKindToDir[rkSound]]));
 
     if AnsiStartsText(Dir, Sound) then
       Delete(Sound, 1, Length(Dir));

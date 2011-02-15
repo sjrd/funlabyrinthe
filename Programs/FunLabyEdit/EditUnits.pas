@@ -74,7 +74,7 @@ begin
   AvailableUnits.BeginUpdate;
   try
     ListAvailableUnitsIn(AvailableUnits,
-      JoinPath([FunLabyAppDataDir, UnitsDir, '*.scu']));
+      JoinPath([LibraryPath, UnitsDir, '*.scu']));
 
     ListAvailableUnitsIn(AvailableUnits,
       JoinPath([MasterFile.ProjectDir, UnitsDir, '*.scu']));
