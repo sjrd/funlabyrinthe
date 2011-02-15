@@ -47,7 +47,6 @@ type
     FDifficulty: string;  /// Difficulté
     FAuthor: string;      /// Nom de l'auteur
 
-    FAllowEdit: Boolean;   /// Indique si le fichier peut être édité
     FIsSaveguard: Boolean; /// Indique si le fichier était une sauvegarde
 
     FMaster: TMaster; /// Maître FunLabyrinthe
@@ -116,7 +115,6 @@ type
 
     property SourceFiles: TStrings read FSourceFiles;
 
-    property AllowEdit: Boolean read FAllowEdit;
     property IsSaveguard: Boolean read FIsSaveguard;
   published
     property Title: string read FTitle write FTitle;
@@ -380,7 +378,6 @@ begin
   FMode := AMode;
   FVersion := CurrentVersion;
 
-  FAllowEdit := True;
   FIsSaveguard := False;
 
   FMaster := TMaster.Create(Mode = fmEdit, FindResource);
@@ -526,7 +523,6 @@ begin
       raise EInOutError.CreateFmt(SVersionTooHigh, [FVersion]);
 
     // Attributs du fichier
-    FAllowEdit := NullToEmptyStr(getAttribute('allowedit')) <> 'no';
     FIsSaveguard := NullToEmptyStr(getAttribute('issaveguard')) = 'yes';
 
     // Compatibility with FunLabyrinthe < 5.2
@@ -596,17 +592,14 @@ end;
 {*
   Teste la validité de l'ouverture d'un fichier
   TestOpeningValidity vérifie que le fichier ouvert ne l'a pas été
-  « illégalement ». Deux cas d'illégalité sont à tester :
-  - Le fichier est une sauvegarde et est ouvert autrement que pour y jouer ;
-  - Le fichier a été interdit d'édition, et ouvert dans ce mode.
+  « illégalement ». Un cas d'illégalité existe actuellement :
+  - Le fichier est une sauvegarde et est ouvert autrement que pour y jouer.
   @throws EInOutError : Le fichier a été ouvert illégalement
 *}
 procedure TMasterFile.TestOpeningValidity;
 begin
   if IsSaveguard and (Mode <> fmPlay) then
     raise EInOutError.Create(SCantEditSaveguard);
-  if (not AllowEdit) and (Mode = fmEdit) then
-    raise EInOutError.Create(SEditingNotAllowed);
 end;
 
 {*
@@ -901,8 +894,6 @@ begin
     FunLabyrinthe := Document.createElement('funlabyrinthe');
 
     FunLabyrinthe.setAttribute('version', CurrentVersion);
-    if not AllowEdit then
-      FunLabyrinthe.setAttribute('allowedit', 'no');
     if Mode = fmPlay then
       FunLabyrinthe.setAttribute('issaveguard', 'yes');
 
