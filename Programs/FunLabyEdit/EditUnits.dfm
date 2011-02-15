@@ -37,7 +37,6 @@ object FormEditUnits: TFormEditUnits
     Width = 25
     Height = 25
     Caption = '<'
-    Enabled = False
     OnClick = ButtonRemoveUnitClick
   end
   object LabelUsedUnits: TLabel
