@@ -13,7 +13,6 @@ uses
   FunLabyUtils,
   FilesUtils,
   FunLabyEditMain in 'FunLabyEditMain.pas' {FormMain},
-  PlayerPlugins in 'PlayerPlugins.pas' {FormPlugins},
   FileProperties in 'FileProperties.pas' {FormFileProperties},
   MapEditor in 'MapEditor.pas' {FrameMapEditor: TFrame},
   FunLabyEditConsts in 'FunLabyEditConsts.pas',

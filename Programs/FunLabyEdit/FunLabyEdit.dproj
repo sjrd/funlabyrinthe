@@ -64,9 +64,6 @@
 			<DCCReference Include="FunLabyEditMain.pas">
 				<Form>FormMain</Form>
 			</DCCReference>
-			<DCCReference Include="PlayerPlugins.pas">
-				<Form>FormPlugins</Form>
-			</DCCReference>
 			<DCCReference Include="FileProperties.pas">
 				<Form>FormFileProperties</Form>
 			</DCCReference>
