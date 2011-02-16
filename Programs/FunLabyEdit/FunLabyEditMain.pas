@@ -15,7 +15,7 @@ uses
   SepiReflectionCore, FunLabyUtils, FilesUtils, PluginManager, SourceEditors,
   FileProperties, FunLabyEditConsts, JvTabBar, EditUnits, NewSourceFile,
   ExtCtrls, ScSyncObjs, CompilerMessages, MapViewer, SepiCompilerErrors,
-  EditMap, SepiImportsFunLaby,
+  EditMap, SepiImportsFunLaby, NewProject,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA, JvComponentBase,
   JvDragDrop, JvAppStorage, JvAppXMLStorage;
 
@@ -856,25 +856,17 @@ end;
   Crée un nouveau fichier et le charge
 *}
 procedure TFormMain.NewFile;
+var
+  FileName: TFileName;
 begin
-  NeedBaseSepiRoot;
+  FileName := TFormNewProject.NewProject;
+  if FileName = '' then
+    Exit;
 
-  MasterFile := TMasterFile.CreateNew(BaseSepiRoot);
-  try
-    if TFormFileProperties.ManageProperties(MasterFile) then
-    begin
-      MasterFile.Master.CreateAdditionnalComponent(TPlayer, idPlayer);
-      LoadFile;
-    end else
-    begin
-      BackgroundDiscard(MasterFile);
-    end;
-  except
-    BackgroundDiscard(MasterFile);
-    raise;
-  end;
+  OpenFile(FileName);
 
-  ActionAddMap.Execute;
+  if Master.MapCount = 0 then
+    ActionAddMap.Execute;
 end;
 
 {*

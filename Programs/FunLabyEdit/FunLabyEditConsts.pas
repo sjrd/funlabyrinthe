@@ -23,6 +23,8 @@ resourcestring
   SConfirmExitTitle = 'Enregistrer le fichier';
   SConfirmExit = 'Le fichier a été modifié. Voulez-vous l''enregistrer ?';
 
+  SProjectAlreadyExists = 'Un projet avec ce nom de fichier existe déjà.';
+
   SCantSave = 'Impossible d''enregistrer';
   SCantSaveUnplacedPlayer =
     'Impossible d''enregistrer car le joueur d''ID %s n''a pas été placé';

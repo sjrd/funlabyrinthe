@@ -25,7 +25,8 @@ uses
   FunLabyEditTypes in 'FunLabyEditTypes.pas',
   EditMap in 'EditMap.pas' {FormEditMap},
   MapImage in 'MapImage.pas' {FrameMapImage: TFrame},
-  EditFilers in 'EditFilers.pas';
+  EditFilers in 'EditFilers.pas',
+  NewProject in 'NewProject.pas' {FormNewProject};
 
 {$R *.res}
 
@@ -37,6 +38,7 @@ begin
   Application.Title := 'Éditeur FunLabyrinthe';
   Application.HelpFile := Dir+'FunLabyrinthe.chm';
   Application.CreateForm(TFormMain, FormMain);
+  Application.CreateForm(TFormNewProject, FormNewProject);
   if FindCmdLineSwitch('autocompile') then
   begin
     // Auto-compile run

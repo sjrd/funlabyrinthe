@@ -101,6 +101,9 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="EditFilers.pas"/>
+			<DCCReference Include="NewProject.pas">
+				<Form>FormNewProject</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
