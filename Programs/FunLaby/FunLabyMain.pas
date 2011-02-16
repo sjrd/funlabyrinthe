@@ -18,11 +18,17 @@ uses
   FunLabyCoreConsts, GR32, GR32_Image, SelectProjectForm;
 
 resourcestring
+  SErrorTitle = 'Erreur';
   sFatalErrorTitle = 'Erreur fatale';
 
   sBaseSepiRootLoadError =
     'Erreur au chargement des fonctionnalités coeur de FunLabyrinthe avec le '+
     'message "%s". FunLabyrinthe ne peut continuer et doit fermer.';
+
+  SCantPlayNeedOnePlayer = 'Impossible de jouer à ce labyrinthe car il ne '+
+    'contient pas exactement un joueur.';
+  SCantPlayPlayerIsNowhere = 'Impossible de jouer à ce labyrinthe car le '+
+    'joueur n''a pas été placé sur une carte.';
 
   sViewSize = 'Taille de la vue';
   sViewSizePrompt = 'Taille de la vue :';
@@ -120,6 +126,8 @@ type
     function SaveGame: Boolean;
     function CloseGame(DontSave: Boolean = False): Boolean;
 
+    function CheckValidMasterFile: Boolean;
+
     function TryPause: Boolean;
     procedure Resume;
 
@@ -215,6 +223,14 @@ begin
 
   MasterFile := TMasterFile.Create(BaseSepiRoot, FileName, fmPlay);
   Master := MasterFile.Master;
+
+  if not CheckValidMasterFile then
+  begin
+    Master := nil;
+    BackgroundDiscard(MasterFile);
+    Exit;
+  end;
+
   Controller := TPlayerController.Create(Master.Players[0]);
   GameEnded := False;
   LastFileName := FileName;
@@ -339,6 +355,31 @@ begin
   end;
 
   PaintBox.Invalidate;
+end;
+
+{*
+  Teste si le fichier maître est valide pour jouer
+  @return True ssi le fichier est valide
+*}
+function TFormMain.CheckValidMasterFile: Boolean;
+begin
+  Result := False;
+
+  // Need exactly one player
+  if Master.PlayerCount <> 1 then
+  begin
+    ShowDialog(SErrorTitle, SCantPlayNeedOnePlayer, dtError);
+    Exit;
+  end;
+
+  // Need the player to be placed on a valid position
+  if Master.Players[0].Map = nil then
+  begin
+    ShowDialog(SErrorTitle, SCantPlayPlayerIsNowhere, dtError);
+    Exit;
+  end;
+
+  Result := True;
 end;
 
 {*

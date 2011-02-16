@@ -919,24 +919,8 @@ end;
   @return True si l'enregistrement a bien été effectué, False sinon
 *}
 function TFormMain.SaveFile(FileName: TFileName = ''): Boolean;
-var
-  I: Integer;
 begin
   Result := False;
-
-  // Vérifier que tous les joueurs sont placés
-  for I := 0 to Master.PlayerCount-1 do
-  begin
-    with Master.Players[I] do
-    begin
-      if Map = nil then
-      begin
-        SdDialogs.ShowDialog(SCantSave,
-          Format(SCantSaveUnplacedPlayer, [ID]), dtError);
-        Exit;
-      end;
-    end;
-  end;
 
   // Choisir un nom de fichier pour l'enregistrement
   if FileName = '' then
