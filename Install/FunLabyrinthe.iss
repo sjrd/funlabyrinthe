@@ -87,7 +87,7 @@ fr.AppDataSelectDirPrompt=Choisissez le répertoire où enregistrer les labyrinthe
 
 fr.PageCompatibility4xCaption=Information importante
 fr.PageCompatibility4xDescription=Veuillez lire attentivement les informations suivantes avant de poursuivre.
-fr.PageCompatibility4xMsg=Une ancienne version de {cm:AppName} est installée sur votre ordinateur (v{code:OldVersionInfo|version}). Depuis {cm:AppName} 5.2, la transition automatique depuis {cm:AppName} {code:OldVersionInfo|version} n'est plus assurée ! Si vous aviez créé des labyrinthes avec cette version, il est plus que recommandé d'installer d'abord {cm:AppName} 5.1.2, qui est la dernière version à assurer la transition. Dans tous les cas, il est également plus que recommandé de désinstaller {cm:AppName} {code:OldVersionInfo|version} avant de poursuivre l'installation de {cm:AppVerName}. Vous pouvez néanmoins poursuivre l'installation si vous le désirez, à vos propres risques.
+fr.PageCompatibility4xMsg=Une ancienne version de {cm:AppName} est installée sur votre ordinateur (v{code:OldVersionInfo|version}).%n%nDepuis {cm:AppName} 5.2, la transition automatique depuis {cm:AppName} {code:OldVersionInfo|version} n'est plus assurée ! Si vous aviez créé des labyrinthes avec cette version, il est plus que recommandé d'installer d'abord {cm:AppName} 5.1.2, qui est la dernière version à assurer la transition.%n%nDans tous les cas, il est également plus que recommandé de désinstaller {cm:AppName} {code:OldVersionInfo|version} avant de poursuivre l'installation de {cm:AppVerName}. Vous pouvez néanmoins poursuivre l'installation si vous le désirez, à vos propres risques.
 
 ; Recompilation des unités
 
@@ -130,6 +130,8 @@ Source: "..\UnitPackages\*.bpl"; DestDir: "{app}\UnitPackages"; Components: prog
 Source: "..\EditPlugins\*.bpl" ; DestDir: "{app}\EditPlugins" ; Components: programs\runtime; Flags: ignoreversion
 
 Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile replacesameversion
+
+Source: "..\Templates\*"; DestDir: "{app}\Templates"; Components: programs\funlabyedit; Flags: ignoreversion recursesubdirs createallsubdirs
 
 Source: "..\FunLabyrinthe.chm"; DestDir: "{app}"; Components: help; Flags: ignoreversion
 
