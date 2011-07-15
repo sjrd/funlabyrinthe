@@ -23,7 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\6.0\Bpl\FunLabyEditTools.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\..\..\..\..\Public\Documents\RAD Studio\6.0\Bpl\FunLabyEditTools.bpl</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_Description>FunLabyrinthe editor tools</DCC_Description>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
@@ -53,9 +53,9 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
-			<DCCReference Include="GR32_BDS2009.dcp"/>
 			<DCCReference Include="FunLabyCore.dcp"/>
 			<DCCReference Include="GraphicEx120.dcp"/>
+			<DCCReference Include="GR32_RS2009.dcp"/>
 			<DCCReference Include="PainterEditor.pas">
 				<Form>FormPainterEditor</Form>
 			</DCCReference>
