@@ -28,9 +28,9 @@ package FunLabyEditTools;
 
 requires
   rtl,
-  GR32_BDS2009,
   FunLabyCore,
-  GraphicEx120;
+  GraphicEx120,
+  GR32_RS2009;
 
 contains
   PainterEditor in 'PainterEditor.pas' {FormPainterEditor};

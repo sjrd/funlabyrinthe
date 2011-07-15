@@ -23,7 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\6.0\Bpl\FunLabyCore.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\..\..\..\..\Public\Documents\RAD Studio\6.0\Bpl\FunLabyCore.bpl</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_Description>FunLabyrinthe core features</DCC_Description>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
@@ -65,7 +65,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="HostApplication">C:\Projets\FunLabyrinthe\FunLabyEdit.exe</Parameters>
+						<Parameters Name="HostApplication">C:\Users\Sepi\Documents\Projets\FunLabyrinthe\FunLaby.exe</Parameters>
 						<Parameters Name="DebugSourceDirs">C:\Projets\Sepi\source\run\SepiReflection\;C:\Projets\Sepi\source\run\SepiInterpreter\</Parameters>
 					</Parameters>
 					<VersionInfo>
@@ -129,9 +129,8 @@
 			<DCCReference Include="SepiSVCLImport120.dcp"/>
 			<DCCReference Include="SepiVCLStdImport120.dcp"/>
 			<DCCReference Include="SepiGraphics32Import120.dcp"/>
-			<DCCReference Include="GR32_BDS2009.dcp"/>
 			<DCCReference Include="GraphicEx120.dcp"/>
-			<DCCReference Include="GIFImage120.dcp"/>
+			<DCCReference Include="GR32_RS2009.dcp"/>
 			<DCCReference Include="FilesUtils.pas"/>
 			<DCCReference Include="FunLabyUtils.pas"/>
 			<DCCReference Include="SepiImportsFunLaby.pas"/>

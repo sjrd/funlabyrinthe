@@ -44,9 +44,8 @@ requires
   SepiSVCLImport120,
   SepiVCLStdImport120,
   SepiGraphics32Import120,
-  GR32_BDS2009,
   GraphicEx120,
-  GIFImage120;
+  GR32_RS2009;
 
 contains
   FilesUtils in 'FilesUtils.pas',

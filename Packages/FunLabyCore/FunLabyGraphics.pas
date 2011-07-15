@@ -140,7 +140,7 @@ var
 implementation
 
 uses
-  GraphicEx, GraphicStrings, GIFImage, GR32_Blend, ScUtils;
+  GraphicEx, GraphicStrings, GIFImg, GR32_Blend, ScUtils;
 
 {-----------------}
 { Global routines }
@@ -227,7 +227,7 @@ end;
   @param Dest     Bitmap 32 destination
   @param Source   Frame GIF source
 *}
-procedure AssignGIFSubImageToBitmap32(Dest: TBitmap32; Source: TGIFSubImage);
+procedure AssignGIFFrameToBitmap32(Dest: TBitmap32; Source: TGIFFrame);
 begin
   Dest.SetSize(Source.Width, Source.Height);
 
@@ -265,7 +265,7 @@ begin
         if TGIFImage(Picture.Graphic).Images.Count = 1 then
         begin
           Result := TBitmap32.Create;
-          AssignGIFSubImageToBitmap32(Result,
+          AssignGIFFrameToBitmap32(Result,
             TGIFImage(Picture.Graphic).Images[0]);
         end else
         begin
@@ -849,7 +849,7 @@ begin
     FrameCount := Source.Images.Count;
 
     for I := 0 to FrameCount-1 do
-      AssignGIFSubImageToBitmap32(Frames[I], Source.Images[I]);
+      AssignGIFFrameToBitmap32(Frames[I], Source.Images[I]);
   finally
     EndUpdate;
     Changed;
