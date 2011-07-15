@@ -22,12 +22,15 @@ type
       var CanClose: Boolean);
   private
     { Déclarations privées }
+    MasterFile: TMasterFile; /// Maître FunLabyrinthe
+
     procedure AddCreator(const CreateProc, Info; var Continue: Boolean);
 
     function ValidateFileName(const FileName: TFileName): Boolean;
   public
     { Déclarations publiques }
-    class function NewSourceFile(out FileName: TFileName): Boolean;
+    class function NewSourceFile(AMasterFile: TMasterFile;
+      out FileName: TFileName): Boolean;
   end;
 
 implementation
@@ -102,7 +105,7 @@ end;
   @param FileName   En sortie : nom du fichier unité créé
   @return Éditeur de l'unité
 *}
-class function TFormCreateNewSourceFile.NewSourceFile(
+class function TFormCreateNewSourceFile.NewSourceFile(AMasterFile: TMasterFile;
   out FileName: TFileName): Boolean;
 const
   FilterFormat = '%s (*.%s)|*.%1:s';
@@ -118,6 +121,8 @@ begin
 
   with Create(Application) do
   try
+    MasterFile := AMasterFile;
+
     // Lister les créateurs
     SourceFileCreators.ForEach(AddCreator);
     ListBoxSourceFileType.Sorted := True;
@@ -136,7 +141,10 @@ begin
     begin
       SaveSourceFileDialog.Filter := Format(FilterFormat,
         [Creator.Info.Title, Creator.Info.Extension]);
-      SaveSourceFileDialog.InitialDir := fUnitsDir;
+      SaveSourceFileDialog.InitialDir :=
+        JoinPath([MasterFile.ProjectDir, SourcesDir]);
+
+      ForceDirectories(SaveSourceFileDialog.InitialDir);
 
       if not SaveSourceFileDialog.Execute then
         Exit;

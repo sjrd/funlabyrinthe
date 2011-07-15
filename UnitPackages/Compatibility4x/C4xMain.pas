@@ -12,45 +12,15 @@ interface
 
 uses
   Classes, SysUtils, StrUtils, Math, Contnrs, TypInfo, ScUtils, ScLists,
-  ScStrUtils, SdDialogs, FunLabyUtils, FilesUtils, UnitFiles, Generics,
+  ScStrUtils, SdDialogs, FunLabyUtils, Generics,
   FLBFields, FLBSimpleEffects, FLBSimpleObjects, FLBPlank, FLBLift,
   FLBObstacles, FLBShowMessage,
   C4xCommon, C4xComponents, C4xFields, C4xBoat, C4xSquaresTable;
 
-type
-  TCompatibility4xUnit = class(TInterfacedUnitFile)
-  private
-    FInfos: TC4xInfos; /// Informations générales
-
-    procedure CreateComponents;
-    procedure LoadActions(const FileName: TFileName);
-    procedure UpdatePainters(const SquaresImgName: string);
-    procedure UpdateSquareCategories;
-  protected
-    procedure GameStarted; override;
-  public
-    constructor Create(AMasterFile: TMasterFile; Params: TStrings);
-
-    property Infos: TC4xInfos read FInfos;
-  end;
-
-function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
-  Params: TStrings): IUnitFile50;
-
 implementation
 
-{*
-  Crée l'unité Compatibility4x
-  @param BPLHandler   Gestionnaire d'unité BPL prenant en charge ce paquet
-  @param Master       Maître FunLabyrinthe
-  @param Params       Paramètres passés à l'unité
-  @return Interface de l'unité Compatibility4x créée
-*}
-function CreateUnitFile(BPLHandler: TBPLUnitFile; Master: TMaster;
-  Params: TStrings): IUnitFile50;
-begin
-  Result := TCompatibility4xUnit.Create(BPLHandler.MasterFile, Params);
-end;
+uses
+  SepiReflectionCore, SepiMembers;
 
 {-----------------------}
 { TPainterAdapter class }
@@ -154,48 +124,14 @@ begin
   end;
 end;
 
-{-----------------------------}
-{ Classe TCompatibility4xUnit }
-{-----------------------------}
-
-const {don't localize}
-  attrFileName = 'FileName';             /// Attribut pour le nom de fichier
-  attrSquaresImgName = 'SquaresImgName'; /// Nom de l'image du fichier Cases
-
-{*
-  Charge tous les composants de compatibilité 4.x de FunLabyrinthe
-  @param AMasterFile   Fichier maître
-  @param Params        Paramètres envoyés au fichier unité
-*}
-constructor TCompatibility4xUnit.Create(AMasterFile: TMasterFile;
-  Params: TStrings);
-var
-  ActionsFileName: TFileName;
-  SquaresImgName: string;
-begin
-  inherited Create(AMasterFile);
-
-  try
-    ActionsFileName := MasterFile.ResolveHRef(
-      Params.Values[attrFileName], fUnitsDir);
-  except
-    ActionsFileName := '';
-  end;
-
-  SquaresImgName := RemoveDiacritics(Params.Values[attrSquaresImgName]);
-  if Master.ImagesMaster.ResolveImgName(fCompatibility+SquaresImgName) = '' then
-    SquaresImgName := DefaultSquaresImgName;
-
-  CreateComponents;
-  LoadActions(ActionsFileName);
-  UpdatePainters(SquaresImgName);
-  UpdateSquareCategories;
-end;
+{-----------------}
+{ Helper routines }
+{-----------------}
 
 {*
   Crée les composants de cette unité
 *}
-procedure TCompatibility4xUnit.CreateComponents;
+procedure CreateComponents(Master: TMaster);
 var
   I: Integer;
   Buoys, Planks, SilverKeys, GoldenKeys: TObjectDef;
@@ -281,7 +217,7 @@ end;
   Charge les actions depuis le fichier d'actions
   @param FileName   Nom du fichier d'actions
 *}
-procedure TCompatibility4xUnit.LoadActions(const FileName: TFileName);
+procedure LoadActions(Master: TMaster; const FileName: TFileName);
 const {don't localize}
   KindStrings: array[0..14] of string = (
     'GameStarted', 'PushButton', 'Switch', 'InfoStone', 'Hidden',
@@ -384,7 +320,7 @@ begin
       Inc(Number);
     end;
 
-    FInfos := TC4xInfos.Create(MasterFile, ActionsList);
+    TC4xInfos.Create(Master, ActionsList);
   finally
     ActionsList.Free;
     SubContents.Free;
@@ -396,7 +332,7 @@ end;
   Met à jour les peintres des composants standard
   @param SquaresImgName   Nom de l'image du fichier Cases
 *}
-procedure TCompatibility4xUnit.UpdatePainters(const SquaresImgName: string);
+procedure UpdatePainters(Master: TMaster; const SquaresImgName: string);
 var
   PainterAdapter: TPainterAdapter;
   I: Integer;
@@ -415,19 +351,43 @@ end;
 {*
   Met à jour les catégories des cases
 *}
-procedure TCompatibility4xUnit.UpdateSquareCategories;
+procedure UpdateSquareCategories(Master: TMaster);
 var
+  Infos: TC4xInfos;
   I: Integer;
 begin
+  Infos := Master.Component[idC4xInfos] as TC4xInfos;
+
   for I := 0 to Infos.ActionsCount-1 do
     if Infos.Actions[I].Kind in RegisteredActionsKind then
       Master.Square[Format(idActionsSquare, [I])].Category := SCategoryButtons;
 end;
 
+{---------------------}
+{ FunLaby unit events }
+{---------------------}
+
 {*
-  [@inheritDoc]
+  Initialize unit
 *}
-procedure TCompatibility4xUnit.GameStarted;
+procedure InitializeUnit(Master: TMaster);
+var
+  ActionsFileName: TFileName;
+  SquaresImgName: string;
+begin
+  ActionsFileName := Master.FindResource('../../Sources/Actions.c4x', rkImage);
+  SquaresImgName := DefaultSquaresImgName;
+
+  CreateComponents(Master);
+  LoadActions(Master, ActionsFileName);
+  UpdatePainters(Master, SquaresImgName);
+  UpdateSquareCategories(Master);
+end;
+
+{*
+  Game started
+*}
+procedure GameStarted(Master: TMaster);
 var
   Player: TPlayer;
   Infos: TC4xInfos;
@@ -461,10 +421,32 @@ begin
   end;
 end;
 
-{$IFNDEF DCTD}
-exports
-  CreateUnitFile name 'CreateUnitFile';
-{$ENDIF}
+{---------------------}
+{ ImportUnit function }
+{---------------------}
 
+{*
+  Importe l'alias d'unité FunLabyBase
+  @param Root   Racine Sepi
+  @return Alias d'unité créé
+*}
+function ImportUnit(Root: TSepiRoot): TSepiUnit;
+begin
+  Result := TSepiUnit.Create(Root, 'Compatibility4x', ['FunLabyUtils']);
+
+  Result.CurrentVisibility := mvPrivate;
+
+  TSepiMethod.Create(Result, 'InitializeUnit',
+    'static procedure(Master: TMaster)').SetCode(@InitializeUnit);
+  TSepiMethod.Create(Result, 'GameStarted',
+    'static procedure(Master: TMaster)').SetCode(@GameStarted);
+
+  Result.Complete;
+end;
+
+initialization
+  SepiRegisterImportedUnit('Compatibility4x', ImportUnit);
+finalization
+  SepiUnregisterImportedUnit('Compatibility4x');
 end.
 

@@ -1326,19 +1326,8 @@ end;
   @param Params   Paramètres de la commande
 *}
 procedure TActionsInterpreter.DescriptionCmd(var Params: string);
-var
-  Text: string;
 begin
-  with Infos.MasterFile do
-  begin
-    Text := Description+#11;
-    if Difficulty <> '' then
-      Text := Text + 'Difficulté : ' + Difficulty + #10;
-    if Author <> '' then
-      Text := Text + 'Auteur : ' + Author + #10;
-
-    Player.ShowMessage(Text);
-  end;
+  // TODO TActionsInterpreter.DescriptionCmd
 end;
 
 {*
@@ -1379,8 +1368,7 @@ begin
       try
         if not ExecuteSound(Sound, stSysSound, True, 0, SND_NODEFAULT) then
         begin
-          ExecuteSound(Infos.MasterFile.ResolveHRef(Sound, fSoundsDir),
-            stFileName, True);
+          ExecuteSound(Master.FindResource(Sound, rkSound), stFileName, True);
         end;
       except
         on Error: EInOutError do

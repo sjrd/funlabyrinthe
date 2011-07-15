@@ -56,7 +56,7 @@ constructor TFunLabyRepo.Create;
 begin
   inherited Create;
 
-  FRepoPath := fFunLabyAppData;
+  FRepoPath := LibraryPath;
   FTortoiseGIT := TTortoiseGIT.Create(FRepoPath);
 end;
 

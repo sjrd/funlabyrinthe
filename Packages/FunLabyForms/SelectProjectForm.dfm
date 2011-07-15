@@ -113,7 +113,7 @@ object FormSelectProjectFile: TFormSelectProjectFile
       Width = 305
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 13
+      ItemHeight = 0
       Sorted = True
       TabOrder = 0
     end
@@ -169,6 +169,7 @@ object FormSelectProjectFile: TFormSelectProjectFile
     Notifications = <
       item
         Actions = [caChangeFileName, caChangeDirName, caChangeLastWrite]
+        IncludeSubTrees = True
       end>
     OnChangeNotify = ChangeNotifierChangeNotify
     Left = 112

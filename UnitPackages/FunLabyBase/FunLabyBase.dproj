@@ -23,7 +23,8 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\6.0\Bpl\FunLabyBase.bpl</DCC_DependencyCheckOutputName>
+			<DCC_BplOutput>.\..\</DCC_BplOutput>
+			<DCC_DependencyCheckOutputName>..\FunLabyBase.bpl</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_Description>FunLabyrinthe base components</DCC_Description>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
@@ -47,14 +48,12 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_MapFile>3</DCC_MapFile>
-			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\FunLabyrinthe\Units\FunLabyBase.bpl</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_SYMBOL_PLATFORM>False</DCC_SYMBOL_PLATFORM>
 			<DCC_UNIT_PLATFORM>False</DCC_UNIT_PLATFORM>
 			<DCC_COMPARING_SIGNED_UNSIGNED>False</DCC_COMPARING_SIGNED_UNSIGNED>
 			<DCC_COMBINING_SIGNED_UNSIGNED>False</DCC_COMBINING_SIGNED_UNSIGNED>
 			<DCC_DUPLICATE_CTOR_DTOR>False</DCC_DUPLICATE_CTOR_DTOR>
-			<DCC_BplOutput>C:\Documents and Settings\All Users\Documents\FunLabyrinthe\Units</DCC_BplOutput>
 		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>

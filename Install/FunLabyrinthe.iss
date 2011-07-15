@@ -1,4 +1,4 @@
-; Installation de FunLabyrinthe 5.1.2
+; Installation de FunLabyrinthe 5.2
 
 [Setup]
 AppID=FunLabyrinthe
@@ -11,18 +11,18 @@ AppCopyright=Copyright (C) 2000-2011 Sébastien Doeraene
 AppPublisherURL=http://www.funlabyrinthe.com/
 AppSupportURL=http://www.funlabyrinthe.com/forum/
 AppUpdatesURL=http://www.funlabyrinthe.com/download/
-AppVersion=5.1.2
+AppVersion=5.2
 
-VersionInfoProductName=FunLabyrinthe 5.1.2
-VersionInfoDescription=Setup of FunLabyrinthe 5.1.2
-VersionInfoTextVersion=FunLabyrinthe v5.1.2, copyright 2000-2011 Sébastien Doeraene
-VersionInfoVersion=5.1.2
+VersionInfoProductName=FunLabyrinthe 5.2
+VersionInfoDescription=Setup of FunLabyrinthe 5.2
+VersionInfoTextVersion=FunLabyrinthe v5.2, copyright 2000-2011 Sébastien Doeraene
+VersionInfoVersion=5.2
 
-DefaultDirName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,InstallLocation|{pf}\SJRDoeraene\{cm:AppName}}
-DefaultGroupName={reg:HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall\FunLabyOld_is1\,Inno Setup: Icon Group|{cm:AppName}}
+DefaultDirName={pf}\SJRDoeraene\{cm:AppName}
+DefaultGroupName={cm:AppName}
 
 OutputDir=.\
-OutputBaseFilename=funlabyrinthe_5_1_2
+OutputBaseFilename=funlabyrinthe_5_2
 
 Compression=lzma
 SolidCompression=yes
@@ -34,7 +34,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 
 [CustomMessages]
 fr.AppName=FunLabyrinthe
-fr.AppVerName=FunLabyrinthe 5.1.2
+fr.AppVerName=FunLabyrinthe 5.2
 fr.Description=Jeu de labyrinthe très fun avec toutes sortes de gadgets
 
 ; Types d'installation
@@ -83,47 +83,11 @@ fr.PleaseSelectDir=Veuillez sélectionner un répertoire
 fr.AppDataDirPrompt=Les labyrinthes, graphismes, sons, etc. seront enregistrés dans le dossier suivant :
 fr.AppDataSelectDirPrompt=Choisissez le répertoire où enregistrer les labyrinthes
 
-; Pages d'import d'anciens labyrinthes
+; Pages d'informations sur les versions < 5.0
 
-fr.PageImportOldTitle=Importer les labyrinthes depuis une ancienne version
-fr.PageImportOldDescription=Vous pouvez importer les labyrinthes que vous aviez créés avec une ancienne version de {cm:AppName}.
-
-fr.OldVersionInstalled=Une ancienne version de {cm:AppName} est installée sur votre ordinateur (v{code:OldVersionInfo|version}), dans le dossier suivant :
-fr.OldVersionWillBeUninstalled=Celle-ci sera automatiquement désinstallée avant d'installer {cm:AppVerName}.%nCependant, vous pouvez demander à {cm:AppVerName} d'importer automatiquement les labyrinthes que vous aviez créés avec cette ancienne version.
-
-fr.ImportOldLabyrinthsPrompt=Si vous aviez installé précédemment une ancienne version de {cm:AppName}, puis désinstallée, vous avez peut-être conservé les labyrinthes que vous aviez créés. Si c'est le cas, il vous est maintenant possible d'importer ces anciens labyrinthes dans {cm:AppVerName}.
-
-fr.ImportOldLabyrinths=Importer automatiquement mes anciens labyrinthes
-
-fr.OldVersionInstallDirPrompt=Veuillez sélectionner l'ancien répertoire d'installation de {cm:AppName}, celui qui contient le dossier nommé "Labyrinthes", entre autres :
-fr.SelectOldVersionInstallDirPrompt=Ancien répertoire d'installation de {cm:AppName}
-
-fr.ImportInfos=Les labyrinthes pré-installés ne peuvent pas être importés : ils sont déjà inclus dans cette nouvelle installation, avec, pour la plupart, des améliorations. De même, les labyrinthes disponibles sur le site Web de {cm:AppName} ont tous déjà été importés : vous pouvez les retélécharger. L'importation sert uniquement pour les labyrinthes que VOUS avez créés.
-
-fr.InvalidOldInstallDirWhenInstalled=Dossier invalide
-fr.InvalidOldInstallDirWhenNotInstalled=Dossier invalide
-
-; Page de sélection des labyrinthes à importer
-
-fr.PageSelectImportsTitle=Sélection des labyrinthes à importer
-fr.PageSelectImportsDescription=Veuillez sélectionner parmi les labyrinthes disponibles ci-dessous ceux que vous souhaitez importer.
-fr.PageSelectImportsPrompt=Veuillez sélectionner les labyrinthes à importer
-
-; Désinstallation de l'ancienne version
-
-fr.PageUninstallOldVersionTitle=Désinstallation de {cm:AppName} {code:OldVersionInfo|version} en cours
-fr.PageUninstallOldVersionDescription=Veuillez patienter pendant que l'assistant désinstalle votre ancienne version de {cm:AppName}.
-
-fr.UninstallingOldVersion=Désinstallation de {cm:AppName} {code:OldVersionInfo|version}...
-
-fr.CouldntUninstallOldVersion=L'ancienne version n'a pas pu être désinstallée correctement. Il vous est possible néanmoins de continuer l'installation, mais c'est déconseillé. Essayez d'abord de désinstaller {cm:AppName} {code:OldVersionInfo|version} depuis le panneau de configuration.%nVoulez-vous tout de même poursuivre l'installation ?
-
-; Import des anciens labyrinthes
-
-fr.PageImportingOldTitle=Import des anciens labyrinthes en cours
-fr.PageImportingOldDescription=L'assistant importe maintenant les anciens labyrinthes que vous avez sélectionnés.
-
-fr.ImportingOld=Import des anciens labyrinthes...
+fr.PageCompatibility4xCaption=Information importante
+fr.PageCompatibility4xDescription=Veuillez lire attentivement les informations suivantes avant de poursuivre.
+fr.PageCompatibility4xMsg=Une ancienne version de {cm:AppName} est installée sur votre ordinateur (v{code:OldVersionInfo|version}).%n%nDepuis {cm:AppName} 5.2, la transition automatique depuis {cm:AppName} {code:OldVersionInfo|version} n'est plus assurée ! Si vous aviez créé des labyrinthes avec cette version, il est plus que recommandé d'installer d'abord {cm:AppName} 5.1.2, qui est la dernière version à assurer la transition.%n%nDans tous les cas, il est également plus que recommandé de désinstaller {cm:AppName} {code:OldVersionInfo|version} avant de poursuivre l'installation de {cm:AppVerName}. Vous pouvez néanmoins poursuivre l'installation si vous le désirez, à vos propres risques.
 
 ; Recompilation des unités
 
@@ -131,8 +95,6 @@ fr.RecompilingSources=Mise à jour des unités... (entre quelques secondes et une 
 
 [Types]
 Name: "full"    ; Description: {cm:FullInstall}
-;Name: "playonly"; Description: {cm:PlayOnlyInstall}
-;Name: "custom"  ; Description: {cm:CustomInstall}  ; Flags: iscustom
 
 [Components]
 Name: "programs"            ; Description: {cm:CompPrograms}   ; Types: full
@@ -154,10 +116,6 @@ Name: "desktopicon\funlabyedit"; Description: "{cm:IconFunLabyEdit}"; Components
 Name: "regext"    ; Description: "{cm:RegExtensions}"; GroupDescription: {cm:AdditionalTasks}
 Name: "regext\flp"; Description: "{cm:RegFLP}"       ; GroupDescription: {cm:AdditionalTasks}
 
-[InstallDelete]
-; Delete old units that were installed with previous versions
-Type: files; Name: "{code:AppData}\Units\LevelledGrounds.*"
-
 [Files]
 Source: "..\FunLabyCore.bpl";         DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
 Source: "..\FunLabyTools.bpl";        DestDir: "{app}"; Components: programs\runtime    ; Flags: ignoreversion
@@ -168,22 +126,20 @@ Source: "..\GeneLaby.exe";            DestDir: "{app}"; Components: programs\gen
 Source: "..\FunLabyEdit.exe";         DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
 Source: "..\FunLabyVersionCheck.exe"; DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
 
-Source: "..\EditPlugins\*.bpl"; DestDir: "{app}\EditPlugins"; Components: programs\runtime; Flags: ignoreversion
+Source: "..\UnitPackages\*.bpl"; DestDir: "{app}\UnitPackages"; Components: programs\runtime; Flags: ignoreversion
+Source: "..\EditPlugins\*.bpl" ; DestDir: "{app}\EditPlugins" ; Components: programs\runtime; Flags: ignoreversion
 
 Source: "Runtime\*"; DestDir: "{sys}"; Attribs: system; Components: programs\runtime; Flags: sharedfile replacesameversion
+
+Source: "..\Templates\*"; DestDir: "{app}\Templates"; Components: programs\funlabyedit; Flags: ignoreversion recursesubdirs createallsubdirs
 
 Source: "..\FunLabyrinthe.chm"; DestDir: "{app}"; Components: help; Flags: ignoreversion
 
 Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 
-Source: "{code:OldVersionInfo|installdir}\Sons\*";  DestDir: "{code:AppData}\Sounds";                  Check: MustCopyOldSoundsAndImages; Flags: external skipifsourcedoesntexist onlyifdoesntexist recursesubdirs createallsubdirs uninsneveruninstall
-Source: "{code:OldVersionInfo|installdir}\Cases\*"; DestDir: "{code:AppData}\Squares\Compatibility4x"; Check: MustCopyOldSoundsAndImages; Flags: external skipifsourcedoesntexist onlyifdoesntexist recursesubdirs createallsubdirs uninsneveruninstall
-
 ; Fichiers temporaires pour l'installation
 
 Source: "Images\*"; Flags: dontcopy
-Source: "Import4x.dll"; Flags: dontcopy
-Source: "DoNotImportLabs.txt"; Flags: dontcopy
 
 [INI]
 Filename: "{app}\FunLabyrinthe.ini"; Section: "Directories"; Key: "AppData"; String: "{code:AppData}"
@@ -225,8 +181,6 @@ const
 
   InfoBitmapFileName = 'Info.bmp';
 
-  DoNotImportLabsFile = 'DoNotImportLabs.txt';
-
 var
   InfoBitmap: TBitmap;
 
@@ -240,20 +194,10 @@ var
   PageWidth: Integer;
   DirEdits: TStrings;
 
+  PageCompatibility4xInfo: TWizardPage;
+
   SelectDirPage: TNewNotebookPage;
   EditFunLabyAppData: TEdit;
-
-  PageImportOld: TWizardPage;
-  CheckBoxImportOld: TCheckBox;
-  EditOldInstallDir: TEdit;
-  ImportDir: string;
-
-  PageSelectImports: TWizardPage;
-  CheckListBoxImports: TNewCheckListBox;
-  LabyrinthsToImport: TStrings;
-
-  PageUninstallOldVersion: TOutputProgressWizardPage;
-  PageImportingOld: TOutputProgressWizardPage;
 
 function FunLabyAppData: string;
 begin
@@ -277,11 +221,6 @@ begin
     Result := OldVersionUninstallString
   else
     Result := '';
-end;
-
-function MustCopyOldSoundsAndImages: Boolean;
-begin
-  Result := ImportDir <> '';
 end;
 
 function CheckValidAppData: Boolean;
@@ -481,270 +420,14 @@ begin
     ExpandConstants('{cm:AppDataSelectDirPrompt}'));
 end;
 
-procedure CheckBoxImportOldClick(Sender: TObject);
+procedure AddCompatibility4xInfoPage;
 begin
-  SetEditReadOnly(EditOldInstallDir, not CheckBoxImportOld.Checked);
-end;
+  // Ajouter la page d'information sur FunLabyrinthe 4.x
 
-procedure AddImportOldPage;
-var
-  Surface: TNewNotebookPage;
-  Bottom: Integer;
-  Checked: Boolean;
-begin
-  // Ajouter la page d'import d'anciens labyrinthes
-
-  PageImportOld := CreateCustomPage(wpSelectDir,
-    ExpandConstants('{cm:PageImportOldTitle}'),
-    ExpandConstants('{cm:PageImportOldDescription}'));
-  Surface := PageImportOld.Surface;
-  Bottom := -8;
-
-  if HasOldVersion then
-  begin
-    AddLabel(Surface, Bottom,
-      ExpandConstants('{cm:OldVersionInstalled}'));
-
-    EditOldInstallDir := AddEdit(Surface, Bottom,
-      OldVersionInstallDir);
-    SetEditReadOnly(EditOldInstallDir, True);
-
-    AddLabel(Surface, Bottom,
-      ExpandConstants('{cm:OldVersionWillBeUninstalled}'));
-  end else
-  begin
-    AddLabel(Surface, Bottom,
-      ExpandConstants('{cm:ImportOldLabyrinthsPrompt}'));
-  end;
-
-  Checked := HasOldVersion and (not IsReinstall);
-  CheckBoxImportOld := AddCheckBox(Surface, Bottom,
-    ExpandConstants('{cm:ImportOldLabyrinths}'),
-    Checked);
-  if not HasOldVersion then
-    CheckBoxImportOld.OnClick := @CheckBoxImportOldClick;
-
-  if not HasOldVersion then
-  begin
-    AddLabel(Surface, Bottom,
-      ExpandConstants('{cm:OldVersionInstallDirPrompt}'));
-
-    EditOldInstallDir := AddDirEdit(Surface, Bottom,
-      ExpandConstant('{pf}\SJRDoeraene\FunLabyrinthe\'),
-      ExpandConstants('{cm:SelectOldVersionInstallDirPrompt}'));
-    SetEditReadOnly(EditOldInstallDir, True);
-  end;
-
-  AddImgText(Surface, Bottom, InfoBitmap,
-    ExpandConstants('{cm:ImportInfos}'));
-end;
-
-function CheckValidImportDir: Boolean;
-var
-  OldImportDir: string;
-begin
-  OldImportDir := ImportDir;
-
-  if not CheckBoxImportOld.Checked then
-  begin
-    ImportDir := '';
-    Result := True;
-  end else
-  begin
-    ImportDir := EditOldInstallDir.Text;
-    if (ImportDir <> '') and (ImportDir[Length(ImportDir)] <> '\') then
-      ImportDir := ImportDir + '\';
-    Result := DirExists(ImportDir + 'Labyrinthes');
-    if not Result then
-    begin
-      if HasOldVersion then
-      begin
-        MsgBox(ExpandConstants(
-          '{cm:InvalidOldInstallDirWhenInstalled}'), mbError, MB_OK);
-      end else
-      begin
-        MsgBox(ExpandConstants(
-          '{cm:InvalidOldInstallDirWhenNotInstalled}'), mbError, MB_OK);
-      end;
-    end;
-  end;
-end;
-
-procedure AddSelectImportsPage;
-var
-  Surface: TNewNotebookPage;
-  Bottom: Integer;
-begin
-  PageSelectImports := CreateCustomPage(PageImportOld.ID,
-    ExpandConstants('{cm:PageSelectImportsTitle}'),
-    ExpandConstants('{cm:PageSelectImportsDescription}'));
-  Surface := PageSelectImports.Surface;
-  Bottom := -8;
-
-  AddLabel(Surface, Bottom,
-    ExpandConstants('{cm:PageSelectImportsPrompt}'));
-
-  CheckListBoxImports := TNewCheckListBox.Create(Surface);
-  with CheckListBoxImports do
-  begin
-    Width := PageWidth;
-    Top := Bottom + 8;
-    Bottom := PageSelectImports.SurfaceHeight - 8;
-    Height := Bottom - Top;
-    Parent := Surface;
-  end;
-end;
-
-function CanImportLab(const AFileName: string;
-  DoNotImportLabs: TStrings): Boolean;
-var
-  FileName: string;
-  I: Integer;
-begin
-  FileName := AnsiLowercase(Trim(ChangeFileExt(AFileName, '')));
-  
-  I := Pos('(', FileName);
-  if I > 0 then
-    FileName := Trim(Copy(FileName, 1, I-1));
-    
-  Result := False;
-
-  for I := 0 to DoNotImportLabs.Count-1 do
-    if FileName = AnsiLowercase(DoNotImportLabs[I]) then
-      Exit;
-      
-  Result := True;
-end;
-
-procedure PageSelectImportsShow;
-var
-  DoNotImportLabs, OldUnchecked: TStrings;
-  I: Integer;
-  FindRec: TFindRec;
-  FileName: string;
-begin
-  DoNotImportLabs := nil;
-  OldUnchecked := TStringList.Create;
-  try
-    DoNotImportLabs := TStringList.Create;
-    ExtractTemporaryFile(DoNotImportLabsFile);
-    DoNotImportLabs.LoadFromFile(ExpandConstant('{tmp}\'+DoNotImportLabsFile));
-  
-    with CheckListBoxImports do
-      for I := 0 to Items.Count-1 do
-        if not Checked[I] then
-          OldUnchecked.Add(Items[I]);
-
-    CheckListBoxImports.Items.Clear;
-    if FindFirst(ImportDir + 'Labyrinthes\*.lab', FindRec) then
-    begin
-      try
-        repeat
-          FileName := FindRec.Name;
-          if CanImportLab(FileName, DoNotImportLabs) then
-            CheckListBoxImports.AddCheckBox(FileName, '', 0,
-              OldUnchecked.IndexOf(FileName) < 0, True, False, False, nil);
-        until not FindNext(FindRec);
-      finally
-        FindClose(FindRec);
-      end;
-    end;
-  finally
-    OldUnchecked.Free;
-  end;
-
-  if LabyrinthsToImport <> nil then
-  begin
-    LabyrinthsToImport.Free;
-    LabyrinthsToImport := nil;
-  end;
-end;
-
-function PageSelectImportsValidate: Boolean;
-var
-  I: Integer;
-begin
-  LabyrinthsToImport := TStringList.Create;
-  with CheckListBoxImports do
-    for I := 0 to Items.Count-1 do
-      if Checked[I] then
-        LabyrinthsToImport.Add(Items[I]);
-  Result := True;
-end;
-
-procedure AddUninstallOldVersionPage;
-begin
-  PageUninstallOldVersion := CreateOutputProgressPage(
-    ExpandConstants('{cm:PageUninstallOldVersionTitle}'),
-    ExpandConstants('{cm:PageUninstallOldVersionDescription}'));
-end;
-
-procedure UninstallOldVersion;
-var
-  FileName, Params: string;
-  I: Integer;
-  ResultCode: Integer;
-begin
-  PageUninstallOldVersion.Show;
-
-  PageUninstallOldVersion.SetText(
-    ExpandConstants('{cm:UninstallingOldVersion}'), '');
-
-  FileName := OldVersionUninstallString;
-  if FileName[1] = '"' then
-  begin
-    Delete(FileName, 1, 1);
-    I := Pos('"', FileName);
-    Params := Copy(FileName, I+2, MaxInt);
-    Delete(FileName, I, MaxInt);
-  end else
-  begin
-    I := Pos(' ', FileName);
-    Params := Copy(FileName, I+1, MaxInt);
-    Delete(FileName, I, MaxInt);
-  end;
-
-  if (not Exec(FileName, Params, '', SW_HIDE,
-    ewWaitUntilTerminated, ResultCode)) or (ResultCode <> 0) then
-  begin
-    if MsgBox(ExpandConstants('{cm:CouldntUninstallOldVersion}'),
-      mbError, MB_YESNO or MB_DEFBUTTON2) <> idYes then
-      Abort;
-  end;
-
-  PageUninstallOldVersion.Hide;
-end;
-
-procedure AddImportingOldPage;
-begin
-  PageImportingOld := CreateOutputProgressPage(
-    ExpandConstants('{cm:PageImportingOldTitle}'),
-    ExpandConstants('{cm:PageImportingOldDescription}'));
-end;
-
-function ImportLabyrinth(FileName, AppData: PAnsiChar): Boolean;
-  external 'ImportLabyrinth@files:Import4x.dll stdcall delayload setuponly';
-
-procedure ImportOld;
-var
-  I: Integer;
-  FileName: string;
-begin
-  PageImportingOld.Show;
-  try
-    for I := 0 to LabyrinthsToImport.Count-1 do
-    begin
-      FileName := LabyrinthsToImport[I];
-      PageImportingOld.SetText(
-        ExpandConstants('{cm:ImportingOld}'), FileName);
-      PageImportingOld.SetProgress(I, LabyrinthsToImport.Count);
-
-      ImportLabyrinth(PAnsiChar(AnsiString(ImportDir + 'Labyrinthes\' + FileName)),
-        PAnsiChar(AnsiString(FunLabyAppData)));
-    end;
-  finally
-    PageImportingOld.Hide;
-  end;
+  PageCompatibility4xInfo := CreateOutputMsgPage(wpWelcome,
+    ExpandConstants('{cm:PageCompatibility4xCaption}'),
+    ExpandConstants('{cm:PageCompatibility4xDescription}'),
+    ExpandConstants('{cm:PageCompatibility4xMsg}'));
 end;
 
 function CreateBitmap(const FileName: string): TBitmap;
@@ -759,9 +442,6 @@ begin
   InfoBitmap := CreateBitmap(InfoBitmapFileName);
   DirEdits := TStringList.Create;
 
-  ImportDir := '';
-  LabyrinthsToImport := nil;
-
   CheckOldVersion;
   CheckIsReinstall;
 
@@ -770,9 +450,6 @@ end;
 
 procedure DeinitializeSetup;
 begin
-  if LabyrinthsToImport <> nil then
-    LabyrinthsToImport.Free;
-
   DirEdits.Free;
   InfoBitmap.Free;
 end;
@@ -782,20 +459,15 @@ begin
   PageWidth := WizardForm.DiskSpaceLabel.Width;
 
   AddFunLabyAppDataField;
-  AddImportOldPage;
-  AddSelectImportsPage;
-  AddUninstallOldVersionPage;
-  AddImportingOldPage;
+  AddCompatibility4xInfoPage;
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
-  if PageID = wpSelectComponents then
+  if PageID = PageCompatibility4xInfo.ID then
+    Result := not HasOldVersion
+  else if PageID = wpSelectComponents then
     Result := True
-  else if PageID = PageImportOld.ID then
-    Result := IsReinstall
-  else if PageID = PageSelectImports.ID then
-    Result := ImportDir = ''
   else
     Result := False;
 end;
@@ -804,40 +476,13 @@ function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   if CurPageID = wpSelectDir then
     Result := CheckValidAppData
-  else if CurPageID = PageImportOld.ID then
-    Result := CheckValidImportDir
-  else if CurPageID = PageSelectImports.ID then
-    Result := PageSelectImportsValidate
   else
     Result := True;
-end;
-
-procedure CurPageChanged(CurPageID: Integer);
-begin
-  if CurPageID = PageSelectImports.ID then
-    PageSelectImportsShow;
-end;
-
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  case CurStep of
-    ssInstall:
-      if HasOldVersion then
-        UninstallOldVersion;
-    ssPostInstall:
-      if ImportDir <> '' then
-        ImportOld;
-  end;
 end;
 
 procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
-
-
-
-
-
 
 

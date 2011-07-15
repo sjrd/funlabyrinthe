@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, SynEditHighlighter, SynHighlighterPas, SynEdit, SdDialogs,
   SepiCompiler, SepiParseTrees, SepiCompilerErrors, SepiFunDelphiCompiler,
-  SepiReflectionCore, FilesUtils, UnitFiles, SourceEditors,
+  SepiReflectionCore, FilesUtils, SourceEditors,
   FunLabySourceSynEditEditorFrame, SynHighlighterFunDelphi;
 
 resourcestring
@@ -59,12 +59,8 @@ const
 *}
 function CreateFunDelphiSourceEditor(
   const FileName: TFileName): ISourceEditor50;
-var
-  Editor: TFrameFunDelphiSourceEditor;
 begin
-  Editor := TFrameFunDelphiSourceEditor.Create(nil);
-  Editor.LoadFile(FileName);
-  Result := Editor as ISourceEditor50;
+  Result := TFrameFunDelphiSourceEditor.Create(nil) as ISourceEditor50;
 end;
 
 {*
@@ -115,14 +111,11 @@ end;
 *}
 function TFrameFunDelphiSourceEditor.CompileFile(SepiRoot: TSepiRoot;
   Errors: TSepiCompilerErrorList): TSepiUnit;
-var
-  DestFileName: TFileName;
 begin
-  DestFileName := ChangeFileExt(FileName, '.'+SepiExtension);
-
   Errors.CurrentFileName := FileName;
+  ForceDirectories(ExtractFilePath(CompilerDestFileName));
   Result := CompileFunDelphiSource(SepiRoot, Errors,
-    EditSource.Lines, DestFileName);
+    EditSource.Lines, CompilerDestFileName);
 end;
 
 initialization

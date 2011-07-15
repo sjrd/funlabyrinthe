@@ -949,7 +949,7 @@ begin
   SepiContext.CurrentVisibility := mvPrivate;
 
   SepiMethod := TSepiMethod.Create(SepiContext, 'InitializeUnit',
-    'static procedure(Master: FunLabyUtils.TMaster; Params: Classes.TStrings)');
+    'static procedure(Master: FunLabyUtils.TMaster)');
   UnitCompiler.FindMethodCompiler(SepiMethod, True);
 
   SepiContext.CurrentVisibility := mvPublic;

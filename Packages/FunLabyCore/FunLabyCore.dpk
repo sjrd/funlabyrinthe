@@ -44,21 +44,20 @@ requires
   SepiSVCLImport120,
   SepiVCLStdImport120,
   SepiGraphics32Import120,
-  GR32_BDS2009,
   GraphicEx120,
-  GIFImage120;
+  GR32_RS2009;
 
 contains
   FilesUtils in 'FilesUtils.pas',
   FunLabyUtils in 'FunLabyUtils.pas',
   SepiImportsFunLaby in 'SepiImportsFunLaby.pas',
   SepiImportsFunLabyUtils in 'SepiImportsFunLabyUtils.pas',
-  UnitFiles in 'UnitFiles.pas',
   FunLabyFilers in 'FunLabyFilers.pas',
   FunLabyCoreConsts in 'FunLabyCoreConsts.pas',
   SepiImportsFunLabyCoreConsts in 'SepiImportsFunLabyCoreConsts.pas',
   FunLabyGraphics in 'FunLabyGraphics.pas',
-  SepiImportsFunLabyGraphics in 'SepiImportsFunLabyGraphics.pas';
+  SepiImportsFunLabyGraphics in 'SepiImportsFunLabyGraphics.pas',
+  PluginManager in 'PluginManager.pas';
 
 end.
 

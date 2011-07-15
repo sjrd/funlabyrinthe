@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, SimpleSquaresActionEditor, ImgList, StdCtrls, ExtCtrls,
-  SimpleSquaresActions, FunLabyUtils, StrUtils;
+  SimpleSquaresActions, FunLabyUtils, FilesUtils, StrUtils;
 
 type
   {*
@@ -65,7 +65,8 @@ procedure TFrameSoundActionEditor.AfterConstruction;
 begin
   inherited;
 
-  OpenSoundDialog.InitialDir := fSoundsDir;
+  OpenSoundDialog.InitialDir :=
+    JoinPath([LibraryPath, ResourcesDir, ResourceKindToDir[rkSound]]);
 end;
 
 {*
@@ -85,14 +86,18 @@ end;
 *}
 procedure TFrameSoundActionEditor.EditSoundLeftButtonClick(Sender: TObject);
 var
+  Dir: TFileName;
   Sound: string;
 begin
   if OpenSoundDialog.Execute then
   begin
     Sound := OpenSoundDialog.FileName;
 
-    if AnsiStartsText(fSoundsDir, Sound) then
-      Delete(Sound, 1, Length(fSoundsDir));
+    Dir := IncludeTrailingPathDelimiter(
+      JoinPath([LibraryPath, ResourcesDir, ResourceKindToDir[rkSound]]));
+
+    if AnsiStartsText(Dir, Sound) then
+      Delete(Sound, 1, Length(Dir));
 
     Sound := AnsiReplaceStr(Sound, '\', '/');
 

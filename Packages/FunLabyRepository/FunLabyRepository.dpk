@@ -30,11 +30,10 @@ package FunLabyRepository;
 requires
   rtl,
   FunLabyCore,
-  GIFImage120,
   vcl,
   GraphicEx120,
   vclimg,
-  GR32_BDS2009,
+  GR32_RS2009,
   SepiGraphics32Import120,
   SCL120,
   SepiReflection120,

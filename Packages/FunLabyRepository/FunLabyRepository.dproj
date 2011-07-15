@@ -49,11 +49,10 @@
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="FunLabyCore.dcp"/>
-			<DCCReference Include="GIFImage120.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="GraphicEx120.dcp"/>
 			<DCCReference Include="vclimg.dcp"/>
-			<DCCReference Include="GR32_BDS2009.dcp"/>
+			<DCCReference Include="GR32_RS2009.dcp"/>
 			<DCCReference Include="SepiGraphics32Import120.dcp"/>
 			<DCCReference Include="SCL120.dcp"/>
 			<DCCReference Include="SepiReflection120.dcp"/>

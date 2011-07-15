@@ -8,7 +8,7 @@ unit FunLabyCoreConsts;
 interface
 
 const {don't localize}
-  CurrentVersion = '5.2';  /// Version courante de FunLabyrinthe
+  CurrentVersion = '5.2~beta1'; /// Version courante de FunLabyrinthe
   CurrentMinorVersion = 1; /// Version mineure courante de FunLabyrinthe
   FunLabyAuthorName = 'Sébastien Jean Robert Doeraene'; /// Auteur
   FunLabyAuthorEMail = 'sjrd@redaction-developpez.com'; /// E-mail de l'auteur
@@ -73,12 +73,16 @@ resourcestring
     'de FunLabyrinthe (v%s). Il ne peut être ouvert.';
   SFileNotFoundTitle = 'Fichier introuvable';
   SFileNotFound = 'Le fichier spécifié "%s" n''existe pas';
+  SCannotMakeHRef = 'Impossible de construire un href pour le fichier ''%s'' '+
+    'car celui-ci n''est pas dans le chemin de recherche du projet';
+  SResourceNotFound = 'La ressource spécifiée "%s" n''existe pas';
+  SCannotMakeResourceHRef = 'Impossible de construire un href pour la '+
+    'ressource ''%s'' car celle-ci n''est pas dans le chemin de recherche du '+
+    'projet';
   SUnknownUnitType = 'Type d''unité ''%s'' inconnu';
   SThereMustBeOnePlayer = 'Il doit y avoir un et un seul joueur par fichier';
   SEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
   SCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
-  SSourcesNotHandledWhilePlaying =
-    'Les fichiers source ne sont pas gérés en mode jeu';
   SNoFileName = 'Aucun nom de fichier spécifié';
   SCantLoadPackage = 'Impossible de charger le paquet "%s"';
   SPainterFilter = 'Peintre FunLabyrinthe|*.pnt';

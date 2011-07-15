@@ -9,7 +9,7 @@ uses
   ScUtils, ScXML, SdDialogs,
   SepiReflectionCore, SepiCompiler, SepiCompilerErrors, SepiParseTrees,
   SepiFunDelphiCompiler,
-  FunLabyUtils, FilesUtils, UnitFiles, FunLabyFilers, FunLabyCoreConsts, GR32,
+  FunLabyUtils, FilesUtils, FunLabyFilers, FunLabyCoreConsts, GR32,
   SourceEditors, SimpleSquareEdit, SimpleSquaresUtils, SimpleSquareNew,
   FunLabyEditOTA, FunLabySourceEditorFrame;
 
@@ -98,9 +98,12 @@ type
     /// Fiche principale de FunLabyEdit
     FFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
 
-    ImagesMaster: TImagesMaster;              /// Maître d'images
     FileContents: TSimpleSquaresFileContents; /// Contenu du fichier
     SimpleSquares: TSimpleSquareList;         /// Liste des composants
+
+    function GetImagesMaster: TImagesMaster;
+
+    property ImagesMaster: TImagesMaster read GetImagesMaster;
   protected
     procedure LoadFile(const AFileName: TFileName); override;
     function SaveFile: Boolean; override;
@@ -151,12 +154,8 @@ const
   @return Interface vers l'éditeur créé
 *}
 function CreateSimpleSquaresEditor(const FileName: TFileName): ISourceEditor50;
-var
-  Editor: TFrameSimpleSquaresEditor;
 begin
-  Editor := TFrameSimpleSquaresEditor.Create(nil);
-  Editor.LoadFile(FileName);
-  Result := Editor as ISourceEditor50;
+  Result := TFrameSimpleSquaresEditor.Create(nil) as ISourceEditor50;
 end;
 
 {*
@@ -311,7 +310,6 @@ constructor TFrameSimpleSquaresEditor.Create(AOwner: TComponent);
 begin
   inherited;
 
-  ImagesMaster := TImagesMaster.Create;
   FileContents := TSimpleSquaresFileContents.Create(Self);
   SimpleSquares := FileContents.SimpleSquares;
 end;
@@ -322,9 +320,17 @@ end;
 destructor TFrameSimpleSquaresEditor.Destroy;
 begin
   FileContents.Free;
-  ImagesMaster.Free;
 
   inherited;
+end;
+
+{*
+  Maître d'images
+  @return Maître d'images
+*}
+function TFrameSimpleSquaresEditor.GetImagesMaster: TImagesMaster;
+begin
+  Result := FFunLabyEditMainForm.MasterFile.Master.ImagesMaster;
 end;
 
 {*
@@ -378,18 +384,16 @@ end;
 function TFrameSimpleSquaresEditor.CompileFile(SepiRoot: TSepiRoot;
   Errors: TSepiCompilerErrorList): TSepiUnit;
 var
-  DestFileName: TFileName;
   SourceFile: TStrings;
 begin
-  DestFileName := ChangeFileExt(FileName, '.'+SepiExtension);
-
   SourceFile := TStringList.Create;
   try
     ProduceFunDelphiCode(SourceFile);
 
     Errors.CurrentFileName := FileName;
+    ForceDirectories(ExtractFilePath(CompilerDestFileName));
     Result := CompileFunDelphiSource(SepiRoot, Errors, SourceFile,
-      DestFileName);
+      CompilerDestFileName);
   finally
     SourceFile.Free;
   end;
@@ -689,7 +693,7 @@ procedure TFrameSimpleSquaresEditor.ButtonSaveSourceClick(Sender: TObject);
 var
   Output: TStrings;
 begin
-  SaveSourceDialog.InitialDir := fUnitsDir;
+  SaveSourceDialog.InitialDir := ExtractFilePath(FileName);
   SaveSourceDialog.FileName := GetUnitName + '.' + FunDelphiExtension;
 
   if SaveSourceDialog.Execute then

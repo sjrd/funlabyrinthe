@@ -36,7 +36,8 @@ requires
   VclSmp,
   FunLabyBase,
   FunLabyCore,
-  FunLabyTools;
+  FunLabyTools,
+  SepiReflection120;
 
 contains
   C4xCommon in 'C4xCommon.pas',

@@ -11,7 +11,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, StrUtils, msxml,
   JvComponentBase, JvChangeNotify, ScUtils, ScXML, SdDialogs,
-  FunLabyUtils, FunLabyCoreConsts;
+  FunLabyUtils, FilesUtils, FunLabyCoreConsts;
 
 resourcestring
   SCorruptedFileDescription =
@@ -54,8 +54,9 @@ type
     SortColumnIndex: Integer; /// Index de la colonne de tri
     SortReverse: Boolean;     /// True pour renverser le tri
 
-    procedure FillFileItem(Item: TListItem; const FileName: TFileName);
-    procedure FillCorruptedFileItem(Item: TListItem; const FileName: TFileName);
+    procedure FillFileItem(Item: TListItem; const ProjectSubFile: TFileName);
+    procedure FillCorruptedFileItem(Item: TListItem;
+      const ProjectSubFile: TFileName);
     procedure FillFileList;
   public
     function Execute: Boolean;
@@ -92,7 +93,7 @@ const
   @param FileName   Nom du fichier
 *}
 procedure TFormSelectProjectFile.FillFileItem(Item: TListItem;
-  const FileName: TFileName);
+  const ProjectSubFile: TFileName);
 var
   Document: IXMLDOMDocument;
   RootElement: IXMLDOMElement;
@@ -112,23 +113,28 @@ var
 
 const
   StrNotForPlaying = 'Pas pour jouer'; {don't localize}
-  IsOldLabyrinthQuery =
+  IsOldLabyrinthQuery1 =
     'collection[@name="UnitFiles"]//item[property="Compatibility4x.bpl"]';
+  IsOldLabyrinthQuery2 =
+    'collection[@name="UsedUnits"]//item[property="Compatibility4x"]';
 begin
   try
-    Document := LoadXMLDocumentFromFile(FileName);
+    Document := LoadXMLDocumentFromFile(
+      JoinPath([ProjectsPath, ProjectSubFile]));
     RootElement := Document.documentElement;
 
     Item.Caption := ReadProperty('Title');
     Item.SubItems.Add(ReadProperty('Kind'));
     Item.SubItems.Add(ReadProperty('Difficulty'));
     Item.SubItems.Add(ReadProperty('Author'));
-    Item.SubItems.Add(ExtractFileName(FileName));
+    Item.SubItems.Add(ProjectSubFile);
     Item.SubItems.Add(ReadProperty('Description'));
 
     if Item.SubItems[IndexKind] = StrNotForPlaying then
       Item.GroupID := GroupNotForPlaying
-    else if RootElement.selectSingleNode(IsOldLabyrinthQuery) <> nil then
+    else if RootElement.selectSingleNode(IsOldLabyrinthQuery1) <> nil then
+      Item.GroupID := GroupOldLabyrinths
+    else if RootElement.selectSingleNode(IsOldLabyrinthQuery2) <> nil then
       Item.GroupID := GroupOldLabyrinths
     else
       Item.GroupID := GroupNewLabyrinths;
@@ -146,14 +152,14 @@ end;
   @param FileName   Nom du fichier
 *}
 procedure TFormSelectProjectFile.FillCorruptedFileItem(Item: TListItem;
-  const FileName: TFileName);
+  const ProjectSubFile: TFileName);
 var
   I: Integer;
 begin
-  Item.Caption := ExtractFileName(FileName);
+  Item.Caption := ProjectSubFile;
   for I := 0 to 2 do
     Item.SubItems.Add('');
-  Item.SubItems.Add(Item.Caption);
+  Item.SubItems.Add(ProjectSubFile);
   Item.SubItems.Add(SCorruptedFileDescription);
 
   Item.GroupID := GroupCorrupted;
@@ -164,7 +170,7 @@ end;
 *}
 procedure TFormSelectProjectFile.FillFileList;
 var
-  SearchRec: TSearchRec;
+  ProjectSubFile: string;
 begin
   ListViewFiles.Items.BeginUpdate;
   EditFileName.Items.BeginUpdate;
@@ -172,15 +178,17 @@ begin
     ListViewFiles.Clear;
     EditFileName.Items.Clear;
 
-    if FindFirst(fLabyrinthsDir+'*.flp', faAnyFile, SearchRec) = 0 then
-    try
-      repeat
-        FillFileItem(ListViewFiles.Items.Add, fLabyrinthsDir+SearchRec.Name);
-        EditFileName.Items.Add(SearchRec.Name);
-      until FindNext(SearchRec) <> 0;
-    finally
-      FindClose(SearchRec);
-    end;
+    IterateProjects(
+      procedure(const FileName: TFileName; const SearchRec: TSearchRec)
+      begin
+        ProjectSubFile := FileName;
+        Delete(ProjectSubFile, 1, Length(ProjectsPath));
+        if (ProjectSubFile <> '') and (ProjectSubFile[1] = PathDelim) then
+          Delete(ProjectSubFile, 1, 1);
+
+        FillFileItem(ListViewFiles.Items.Add, ProjectSubFile);
+        EditFileName.Items.Add(ProjectSubFile);
+      end);
 
     ListViewFiles.AlphaSort;
   finally
@@ -199,8 +207,6 @@ begin
 
   FillFileList;
   Result := ShowModal = mrOK;
-
-  FileName := fLabyrinthsDir + EditFileName.Text;
 end;
 
 {*
@@ -209,7 +215,7 @@ end;
 *}
 procedure TFormSelectProjectFile.FormCreate(Sender: TObject);
 begin
-  ChangeNotifier.Notifications[0].Directory := fLabyrinthsDir;
+  ChangeNotifier.Notifications[0].Directory := ProjectsPath;
 end;
 
 {*
@@ -300,8 +306,8 @@ procedure TFormSelectProjectFile.ListViewFilesSelectItem(Sender: TObject;
 begin
   if Selected then
   begin
-      EditFileName.Text := Item.SubItems[IndexFileName];
-      EditDescription.Text := Item.SubItems[IndexDescription];
+    EditFileName.Text := Item.SubItems[IndexFileName];
+    EditDescription.Text := Item.SubItems[IndexDescription];
   end;
 end;
 
@@ -323,7 +329,9 @@ begin
   if Pos('.', EditFileName.Text) = 0 then
     EditFileName.Text := EditFileName.Text + '.flp';
 
-  if not FileExists(fLabyrinthsDir + EditFileName.Text) then
+  FileName := JoinPath([ProjectsPath, EditFileName.Text]);
+
+  if not FileExists(FileName) then
   begin
     ShowDialog(SFileNotFoundTitle,
       Format(SFileNotFound, [EditFileName.Text]), dtError);
