@@ -1321,13 +1321,42 @@ begin
   end;
 end;
 
+type
+  TMasterPriv = class(TFunLabyPersistent)
+  private
+    FMetaData: IMasterMetaData;
+  end;
+
 {*
   Commande 'Description'
   @param Params   Paramètres de la commande
 *}
 procedure TActionsInterpreter.DescriptionCmd(var Params: string);
+var
+  MasterFile: TMasterFile;
+  MetaData: IMasterMetaData;
+  MetaDataOffset: Integer;
+  Text: string;
 begin
-  // TODO TActionsInterpreter.DescriptionCmd
+  MasterFile := TMasterFile(TMasterFile.NewInstance);
+  MetaData := MasterFile;
+  MetaDataOffset := Integer(MetaData) - Integer(MasterFile);
+  MetaData := nil;
+  MasterFile.FreeInstance;
+
+  MetaData := TMasterPriv(Master).FMetaData;
+  MasterFile := TMasterFile(Integer(MetaData) - MetaDataOffset);
+
+  with MasterFile do
+  begin
+    Text := Description+#11;
+    if Difficulty <> '' then
+      Text := Text + 'Difficulté : ' + Difficulty + #10;
+    if Author <> '' then
+      Text := Text + 'Auteur : ' + Author + #10;
+
+    Player.ShowMessage(Text);
+  end;
 end;
 
 {*
