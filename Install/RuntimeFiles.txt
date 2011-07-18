@@ -12,13 +12,12 @@ vclx
 
 # Other libs
 
-GIFImage
 GraphicEx
 
 # Libs with a 2009 version
 ! suffix = '%s.bpl' % bds.strversion
 SynEdit_R
-GR32_BDS
+GR32_RS
 ! suffix = '%d.bpl' % bds.numversion
 
 # Sepi packages
