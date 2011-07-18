@@ -89,6 +89,18 @@ fr.PageCompatibility4xCaption=Information importante
 fr.PageCompatibility4xDescription=Veuillez lire attentivement les informations suivantes avant de poursuivre.
 fr.PageCompatibility4xMsg=Une ancienne version de {cm:AppName} est installée sur votre ordinateur (v{code:OldVersionInfo|version}).%n%nDepuis {cm:AppName} 5.2, la transition automatique depuis {cm:AppName} {code:OldVersionInfo|version} n'est plus assurée ! Si vous aviez créé des labyrinthes avec cette version, il est plus que recommandé d'installer d'abord {cm:AppName} 5.1.2, qui est la dernière version à assurer la transition.%n%nDans tous les cas, il est également plus que recommandé de désinstaller {cm:AppName} {code:OldVersionInfo|version} avant de poursuivre l'installation de {cm:AppVerName}. Vous pouvez néanmoins poursuivre l'installation si vous le désirez, à vos propres risques.
 
+; Pages d'informations sur les versions < 5.2
+
+fr.PageBefore52Caption=Information importante
+fr.PageBefore52Description=Veuillez lire attentivement les informations suivantes avant de poursuivre.
+fr.PageBefore52Msg=Une ancienne version de {cm:AppName} est installée sur votre ordinateur (antérieure à la v5.2).%n%nDepuis {cm:AppName} 5.2, la structure des documents FunLabyrinthe (images, labyrinthes, etc.) a considablement changé, et n'est plus compatible avec celle que vous avez !%n%nVous devriez suivre les indications données sur la page Web http://www.funlabyrinthe.com/download/ afin de faire la transition avant de poursuivre l'installation de {cm:AppVerName}. Vous pouvez néanmoins poursuivre l'installation si vous le désirez, à vos propres risques.
+
+; Pages d'informations si le dossier AppData existe
+
+fr.PageAppDataExistsCaption=Information importante
+fr.PageAppDataExistsDescription=Veuillez lire attentivement les informations suivantes avant de poursuivre.
+fr.PageAppDataExistsMsg=Le dossier où vous avez choisi d'enregistrer les labyrinthes existe. Afin de préserver vos données, cette installation ne le modifiera pas. Vous pouvez télécharger de nouvelles versions de la bibliothèque et des labyrinthes sur le site de FunLabyrinthe (www.funlabyrinthe.com).
+
 ; Recompilation des unités
 
 fr.RecompilingSources=Mise à jour des unités... (entre quelques secondes et une minute)
@@ -135,7 +147,7 @@ Source: "..\Templates\*"; DestDir: "{app}\Templates"; Components: programs\funla
 
 Source: "..\FunLabyrinthe.chm"; DestDir: "{app}"; Components: help; Flags: ignoreversion
 
-Source: "AppData\*"; DestDir: "{code:AppData}"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
+Source: "AppData\*"; DestDir: "{code:AppData}"; Check: ShouldInstallAppData; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 
 ; Fichiers temporaires pour l'installation
 
@@ -190,11 +202,14 @@ var
   OldVersionUninstallString: string;
 
   IsReinstall: Boolean;
+  IsReinstallBefore52: Boolean;
 
   PageWidth: Integer;
   DirEdits: TStrings;
 
   PageCompatibility4xInfo: TWizardPage;
+  PageBefore52Info: TWizardPage;
+  PageAppDataExistsInfo: TWizardPage;
 
   SelectDirPage: TNewNotebookPage;
   EditFunLabyAppData: TEdit;
@@ -223,6 +238,11 @@ begin
     Result := '';
 end;
 
+function ShouldInstallAppData: Boolean;
+begin
+  Result := not DirExists(FunLabyAppData);
+end;
+
 function CheckValidAppData: Boolean;
 begin
   Result := True;
@@ -247,8 +267,18 @@ begin
 end;
 
 procedure CheckIsReinstall;
+var
+  OldVersion: string;
 begin
   IsReinstall := RegKeyExists(HKLM, ThisVersionRegKey);
+
+  if IsReinstall then
+  begin
+    RegQueryStringValue(HKLM, ThisVersionRegKey, 'DisplayVersion',
+      OldVersion);
+    IsReinstallBefore52 := (OldVersion = '5.0') or (OldVersion = '5.0.1') or
+      (OldVersion = '5.1') or (OldVersion = '5.1.1') or (OldVersion = '5.1.2');
+  end;
 end;
 
 function ExpandConstants(const Str: string): string;
@@ -430,6 +460,26 @@ begin
     ExpandConstants('{cm:PageCompatibility4xMsg}'));
 end;
 
+procedure AddBefore52InfoPage;
+begin
+  // Ajouter la page d'information sur FunLabyrinthe < 5.2
+
+  PageBefore52Info := CreateOutputMsgPage(wpWelcome,
+    ExpandConstants('{cm:PageBefore52Caption}'),
+    ExpandConstants('{cm:PageBefore52Description}'),
+    ExpandConstants('{cm:PageBefore52Msg}'));
+end;
+
+procedure AddAppDataExistsInfoPage;
+begin
+  // Ajouter la page d'information sur les AppData existant
+
+  PageAppDataExistsInfo := CreateOutputMsgPage(wpSelectDir,
+    ExpandConstants('{cm:PageAppDataExistsCaption}'),
+    ExpandConstants('{cm:PageAppDataExistsDescription}'),
+    ExpandConstants('{cm:PageAppDataExistsMsg}'));
+end;
+
 function CreateBitmap(const FileName: string): TBitmap;
 begin
   ExtractTemporaryFile(FileName);
@@ -460,12 +510,18 @@ begin
 
   AddFunLabyAppDataField;
   AddCompatibility4xInfoPage;
+  AddBefore52InfoPage;
+  AddAppDataExistsInfoPage;
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   if PageID = PageCompatibility4xInfo.ID then
     Result := not HasOldVersion
+  else if PageID = PageBefore52Info.ID then
+    Result := not IsReinstallBefore52
+  else if PageID = PageAppDataExistsInfo.ID then
+    Result := not DirExists(FunLabyAppData)
   else if PageID = wpSelectComponents then
     Result := True
   else
@@ -484,5 +540,3 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   SetPreviousData(PreviousDataKey, 'AppData', FunLabyAppData);
 end;
-
-
