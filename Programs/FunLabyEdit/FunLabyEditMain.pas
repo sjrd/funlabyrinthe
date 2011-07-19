@@ -592,8 +592,6 @@ end;
 *}
 procedure TFormMain.DoAutoCompile(const Path: TFileName);
 begin
-  ShowMessage(Path);
-
   CreateAutoCompileMasterFile;
   AddAllSourceFiles(Path);
 
