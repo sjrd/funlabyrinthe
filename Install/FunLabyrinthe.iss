@@ -148,7 +148,7 @@ Source: "..\Templates\*"; DestDir: "{app}\Templates"; Components: programs\funla
 
 Source: "..\FunLabyrinthe.chm"; DestDir: "{app}"; Components: help; Flags: ignoreversion
 
-Source: "AppData\*"; DestDir: "{code:AppData}"; Check: ShouldInstallAppData; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
+Source: "AppData\*"; DestDir: "{code:AppData}"; Check: GetShouldInstallAppData; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 
 ; Fichiers temporaires pour l'installation
 
@@ -205,6 +205,8 @@ var
   IsReinstall: Boolean;
   IsReinstallBefore52: Boolean;
 
+  ShouldInstallAppData: Boolean;
+
   PageWidth: Integer;
   DirEdits: TStrings;
 
@@ -239,14 +241,16 @@ begin
     Result := '';
 end;
 
-function ShouldInstallAppData: Boolean;
+function GetShouldInstallAppData: Boolean;
 begin
-  Result := not DirExists(FunLabyAppData);
+  Result := ShouldInstallAppData;
 end;
 
 function CheckValidAppData: Boolean;
 begin
   Result := True;
+
+  ShouldInstallAppData := not DirExists(FunLabyAppData);
 end;
 
 procedure CheckOldVersion;
