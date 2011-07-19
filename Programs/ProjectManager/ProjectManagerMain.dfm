@@ -171,11 +171,13 @@ object FormMain: TFormMain
             Items = <
               item
                 Action = ActionRefresh
+                Caption = '&Rafra'#238'chir'
                 ImageIndex = 0
                 ShortCut = 116
               end
               item
                 Action = ActionExit
+                Caption = '&Quitter'
                 ImageIndex = 1
               end>
             Caption = '&Fichier'
@@ -184,10 +186,12 @@ object FormMain: TFormMain
             Items = <
               item
                 Action = ActionInstall
+                Caption = '&Installer / Mettre '#224' jour'
                 ImageIndex = 2
               end
               item
                 Action = ActionExport
+                Caption = '&Exporter en zip'
                 ImageIndex = 3
               end
               item
@@ -272,7 +276,7 @@ object FormMain: TFormMain
     Left = 88
     Top = 192
     Bitmap = {
-      494C010104000800200010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800280010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -544,6 +548,7 @@ object FormMain: TFormMain
       000000000000}
   end
   object ListViewPopupActionBar: TPopupActionBar
+    Images = Images
     Left = 224
     Top = 208
     object MenuInstall: TMenuItem
