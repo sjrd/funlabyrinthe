@@ -13,6 +13,8 @@ type
   *}
   TAbstractProject = class(TFunLabyPersistent)
   private
+    FTouched: Boolean; /// Pour élimination des projets supprimés
+
     FTitle: string;       /// Titre du labyrinthe
     FDescription: string; /// Description
     FKind: string;        /// Genre
@@ -22,6 +24,10 @@ type
   protected
     function GetIsDefined: Boolean; virtual; abstract;
   public
+    procedure Undefine; virtual;
+
+    procedure Touch;
+
     property IsDefined: Boolean read GetIsDefined;
   published
     property Title: string read FTitle write FTitle;
@@ -41,17 +47,13 @@ type
   private
     FFileName: TFileName;   /// Nom du fichier
 
-    FLocalVersion: string;  /// Version installée localement
-    FRemoteVersion: string; /// Version disponible sur Internet
-
     FOwnProject: Boolean; /// True ssi considéré comme projet propre
   protected
     function GetIsDefined: Boolean; override;
+  public
+    procedure Undefine; override;
   published
     property FileName: TFileName read FFileName write FFileName;
-
-    property LocalVersion: string read FLocalVersion write FLocalVersion;
-    property RemoteVersion: string read FRemoteVersion write FRemoteVersion;
 
     property OwnProject: Boolean read FOwnProject write FOwnProject
       default False;
@@ -74,6 +76,8 @@ type
     FRatingAvg: Single;    /// Moyenne des votes effectués sur ce projet
   protected
     function GetIsDefined: Boolean; override;
+  public
+    procedure Undefine; override;
   published
     property ID: Integer read FID write FID;
     property AuthorID: Integer read FAuthorID write FAuthorID;
@@ -151,6 +155,9 @@ type
 
     function GetDefaultItemClass: TFunLabyPersistentClass; override;
   public
+    procedure BeginUpdate;
+    procedure EndUpdate;
+
     function AddProject: TProject;
 
     function GetProject(const Path: TFileName): TProject;
@@ -181,6 +188,31 @@ implementation
 uses
   msxml;
 
+{------------------------}
+{ TAbstractProject class }
+{------------------------}
+
+{*
+  Supprime toutes les informations sur ce projet
+*}
+procedure TAbstractProject.Undefine;
+begin
+  FTitle := '';
+  FDescription := '';
+  FKind := '';
+  FDifficulty := '';
+  FAuthor := '';
+  FVersion := '';
+end;
+
+{*
+  Marque ce projet
+*}
+procedure TAbstractProject.Touch;
+begin
+  FTouched := True;
+end;
+
 {---------------------}
 { TLocalProject class }
 {---------------------}
@@ -190,6 +222,17 @@ begin
   Result := FileName <> '';
 end;
 
+{*
+  [@inheritDoc]
+*}
+procedure TLocalProject.Undefine;
+begin
+  inherited;
+
+  FFileName := '';
+  FOwnProject := False;
+end;
+
 {----------------------}
 { TRemoteProject class }
 {----------------------}
@@ -197,6 +240,21 @@ end;
 function TRemoteProject.GetIsDefined: Boolean;
 begin
   Result := ID <> 0;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TRemoteProject.Undefine;
+begin
+  inherited;
+
+  FID := 0;
+  FAuthorID := 0;
+  FURL := '';
+  FArchive := '';
+  FRatingCount := 0;
+  FRatingAvg := 0.0;
 end;
 
 {----------------}
@@ -340,6 +398,36 @@ end;
 function TProjectList.GetDefaultItemClass: TFunLabyPersistentClass;
 begin
   Result := TProject;
+end;
+
+procedure TProjectList.BeginUpdate;
+var
+  I: Integer;
+begin
+  for I := 0 to Count-1 do
+  begin
+    Items[I].Local.FTouched := False;
+    Items[I].Remote.FTouched := False;
+  end;
+end;
+
+procedure TProjectList.EndUpdate;
+var
+  I: Integer;
+  Project: TProject;
+begin
+  for I := Count-1 downto 0 do
+  begin
+    Project := Items[I];
+
+    if not Project.Local.FTouched then
+      Project.Local.Undefine;
+    if not Project.Remote.FTouched then
+      Project.Remote.Undefine;
+
+    if not (Project.Local.IsDefined or Project.Remote.IsDefined) then
+      Delete(I);
+  end;
 end;
 
 {*

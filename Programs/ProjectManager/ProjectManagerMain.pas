@@ -179,8 +179,11 @@ end;
 *}
 procedure TFormMain.Refresh;
 begin
+  Projects.BeginUpdate;
   LoadInfoFromInternet;
   LoadInfoFromLocal;
+  Projects.EndUpdate;
+
   UpdateProjectList;
 end;
 
@@ -211,6 +214,7 @@ begin
 
     Project := Projects.GetProject(GetProperty('path'));
     Remote := Project.Remote;
+    Remote.Touch;
 
     Remote.ID := StrToInt(GetProperty('id'));
     Remote.AuthorID := StrToInt(GetProperty('authorid'));
@@ -315,6 +319,7 @@ begin
   Project := Projects.GetProject(
     ExcludeTrailingPathDelimiter(ExtractFilePath(ProjectSubFile)));
   Local := Project.Local;
+  Local.Touch;
 
   Local.FileName := ProjectSubFile;
 
