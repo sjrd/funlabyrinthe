@@ -7,7 +7,8 @@ uses
   madListProcesses,
   madListModules,
   Forms,
-  ProjectManagerMain in 'ProjectManagerMain.pas' {FormMain};
+  ProjectManagerMain in 'ProjectManagerMain.pas' {FormMain},
+  ProjectDatabase in 'ProjectDatabase.pas';
 
 {$R *.res}
 

@@ -50,6 +50,7 @@
 			<DCCReference Include="ProjectManagerMain.pas">
 				<Form>FormMain</Form>
 			</DCCReference>
+			<DCCReference Include="ProjectDatabase.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
