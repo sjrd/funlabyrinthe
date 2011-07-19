@@ -46,6 +46,9 @@ type
     AbZipper: TAbZipper;
     ExportDialog: TSaveDialog;
     AbUnZipper: TAbUnZipper;
+    ActionRun: TAction;
+    MenuSep1: TMenuItem;
+    MenuRun: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -54,6 +57,7 @@ type
     procedure ActionInstallExecute(Sender: TObject);
     procedure ActionExportExecute(Sender: TObject);
     procedure ActionOwnProjectExecute(Sender: TObject);
+    procedure ActionRunExecute(Sender: TObject);
     procedure ListViewProjectsSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
   private
@@ -467,6 +471,7 @@ begin
   ActionExport.Enabled := Some and Value.IsLocalDefined;
   ActionOwnProject.Enabled := Some and Value.IsLocalDefined;
   ActionOwnProject.Checked := Some and Value.OwnProject;
+  ActionRun.Enabled := Some and Value.IsLocalDefined;
 end;
 
 {*
@@ -571,6 +576,20 @@ begin
 
   AbZipper.Save;
   AbZipper.CloseArchive;
+end;
+
+procedure TFormMain.ActionRunExecute(Sender: TObject);
+var
+  Project: TProject;
+  FileName: TFileName;
+begin
+  Project := CurrentProject;
+  Assert(Project.IsLocalDefined);
+
+  FileName := JoinPath([ProjectsPath, Project.Local.FileName]);
+
+  ShellExecute(0, 'open', PChar(Dir+'FunLaby.exe'),
+    PChar('"'+FileName+'"'), nil, SW_SHOWNORMAL);
 end;
 
 procedure TFormMain.ActionOwnProjectExecute(Sender: TObject);
