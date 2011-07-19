@@ -136,6 +136,7 @@ Source: "..\FunLabyEditTools.bpl";    DestDir: "{app}"; Components: programs\fun
 Source: "..\FunLaby.exe";             DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
 Source: "..\GeneLaby.exe";            DestDir: "{app}"; Components: programs\genelaby   ; Flags: ignoreversion
 Source: "..\FunLabyEdit.exe";         DestDir: "{app}"; Components: programs\funlabyedit; Flags: ignoreversion
+Source: "..\ProjectManager.exe";      DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
 Source: "..\FunLabyVersionCheck.exe"; DestDir: "{app}"; Components: programs\funlaby    ; Flags: ignoreversion
 
 Source: "..\UnitPackages\*.bpl"; DestDir: "{app}\UnitPackages"; Components: programs\runtime; Flags: ignoreversion
