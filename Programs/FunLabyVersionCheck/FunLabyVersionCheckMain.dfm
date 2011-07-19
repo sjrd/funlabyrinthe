@@ -20,7 +20,7 @@ object FormMain: TFormMain
   DesignSize = (
     417
     369)
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 13
   object GroupFrequency: TRadioGroup
     Left = 16
@@ -153,8 +153,8 @@ object FormMain: TFormMain
     object LinkGoToDownloadPage: TLinkLabel
       Left = 16
       Top = 83
-      Width = 295
-      Height = 19
+      Width = 377
+      Height = 24
       Caption = 
         '<a href="http://funlabyrinthe.game-host.org/download/">Aller '#224' l' +
         'a page de t'#233'l'#233'chargement de la derni'#232're version</a>'

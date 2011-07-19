@@ -16,7 +16,7 @@ object FormSelectProjectFile: TFormSelectProjectFile
   OnCreate = FormCreate
   OnHide = FormHide
   OnShow = FormShow
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 13
   object ListViewFiles: TListView
     Left = 0
@@ -88,6 +88,8 @@ object FormSelectProjectFile: TFormSelectProjectFile
     OnCompare = ListViewFilesCompare
     OnDblClick = ListViewFilesDblClick
     OnSelectItem = ListViewFilesSelectItem
+    ExplicitLeft = -6
+    ExplicitTop = -6
   end
   object PanelBottom: TPanel
     Left = 0
@@ -113,7 +115,7 @@ object FormSelectProjectFile: TFormSelectProjectFile
       Width = 305
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 0
+      ItemHeight = 13
       Sorted = True
       TabOrder = 0
     end
