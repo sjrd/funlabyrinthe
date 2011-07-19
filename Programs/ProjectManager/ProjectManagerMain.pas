@@ -7,7 +7,7 @@ uses
   Dialogs, Menus, ActnPopup, ActnCtrls, ToolWin, ActnMan, ActnMenus, ActnList,
   ImgList, PlatformDefaultStyleActnCtrls, ComCtrls, IdBaseComponent,
   IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, ProjectDatabase,
-  FilesUtils, ScXML, msxml, StrUtils;
+  FilesUtils, ScXML, msxml, StrUtils, AbBase, AbBrowse, AbZBrows, AbZipper;
 
 type
   TFormMain = class(TForm)
@@ -27,6 +27,8 @@ type
     MenuOwnProject: TMenuItem;
     ProjectInfoGrabber: TIdHTTP;
     ProjectArchiveGrabber: TIdHTTP;
+    AbZipper: TAbZipper;
+    ExportDialog: TSaveDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -334,8 +336,35 @@ begin
 end;
 
 procedure TFormMain.ActionExportExecute(Sender: TObject);
+var
+  Project: TProject;
 begin
-  // TODO
+  Project := CurrentProject;
+  Assert(Project.IsLocalDefined);
+
+  ExportDialog.FileName := Project.Path + '.zip';
+  if not ExportDialog.Execute then
+    Exit;
+  if FileExists(ExportDialog.FileName) then
+    DeleteFile(ExportDialog.FileName);
+
+  AbZipper.BaseDirectory := JoinPath([ProjectsPath, Project.Path]);
+  AbZipper.FileName := ExportDialog.FileName;
+
+  IterateDir(AbZipper.BaseDirectory, '*',
+    procedure(const FileName: TFileName; const SearchRec: TSearchRec)
+    begin
+      if not AnsiMatchText(SearchRec.Name, ['.git', 'Units', 'Screenshots']) then
+      begin
+        if SearchRec.Attr and faDirectory = 0 then
+          AbZipper.AddFiles(SearchRec.Name, faAnyFile)
+        else
+          AbZipper.AddFiles(JoinPath([SearchRec.Name, '*']), faAnyFile);
+      end;
+    end);
+
+  AbZipper.Save;
+  AbZipper.CloseArchive;
 end;
 
 procedure TFormMain.ActionOwnProjectExecute(Sender: TObject);

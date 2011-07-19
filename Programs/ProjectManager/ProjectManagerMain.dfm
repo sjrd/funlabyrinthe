@@ -587,4 +587,19 @@ object FormMain: TFormMain
     Left = 304
     Top = 272
   end
+  object AbZipper: TAbZipper
+    AutoSave = False
+    DOSMode = False
+    StoreOptions = [soStripDrive, soRemoveDots, soRecurse]
+    Left = 88
+    Top = 288
+  end
+  object ExportDialog: TSaveDialog
+    DefaultExt = 'zip'
+    Filter = 'Archive zip (*.zip)|*.zip'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofNoReadOnlyReturn, ofEnableSizing, ofDontAddToRecent]
+    Title = 'Exporter le projet'
+    Left = 88
+    Top = 344
+  end
 end
