@@ -40,20 +40,15 @@ type
   TLocalProject = class(TAbstractProject)
   private
     FFileName: TFileName;   /// Nom du fichier
-    FProjectDir: TFileName; /// Dossier du projet
 
     FLocalVersion: string;  /// Version installée localement
     FRemoteVersion: string; /// Version disponible sur Internet
 
     FOwnProject: Boolean; /// True ssi considéré comme projet propre
-
-    procedure SetFileName(const AFileName: TFileName);
   protected
     function GetIsDefined: Boolean; override;
-  public
-    property ProjectDir: TFileName read FProjectDir;
   published
-    property FileName: TFileName read FFileName write SetFileName;
+    property FileName: TFileName read FFileName write FFileName;
 
     property LocalVersion: string read FLocalVersion write FLocalVersion;
     property RemoteVersion: string read FRemoteVersion write FRemoteVersion;
@@ -71,7 +66,6 @@ type
   private
     FID: Integer;       /// ID du projet
     FAuthorID: Integer; /// ID de l'auteur
-    FPath: TFileName;   /// Nom de fichier
 
     FURL: string;     /// URL de la page d'informations
     FArchive: string; /// URL de l'archive du projet
@@ -83,7 +77,6 @@ type
   published
     property ID: Integer read FID write FID;
     property AuthorID: Integer read FAuthorID write FAuthorID;
-    property Path: TFileName read FPath write FPath;
 
     property URL: string read FURL write FURL;
     property Archive: string read FArchive write FArchive;
@@ -100,13 +93,13 @@ type
   *}
   TProject = class(TFunLabyPersistent)
   private
+    FPath: TFileName;        /// Dossier du projet
     FLocal: TLocalProject;   /// Projet local
     FRemote: TRemoteProject; /// Projet disponible sur Internet
 
     function GetIsLocalDefined: Boolean;
     function GetIsRemoteDefined: Boolean;
 
-    function GetFileName: TFileName;
     function GetTitle: string;
     function GetDescription: string;
     function GetKind: string;
@@ -124,7 +117,6 @@ type
     property IsLocalDefined: Boolean read GetIsLocalDefined;
     property IsRemoteDefined: Boolean read GetIsRemoteDefined;
 
-    property FileName: TFileName read GetFileName;
     property Title: string read GetTitle;
     property Description: string read GetDescription;
     property Kind: string read GetKind;
@@ -136,6 +128,7 @@ type
 
     property OwnProject: Boolean read GetOwnProject;
   published
+    property Path: TFileName read FPath write FPath;
     property Local: TLocalProject read FLocal stored GetIsLocalDefined;
     property Remote: TRemoteProject read FRemote stored GetIsRemoteDefined;
   end;
@@ -149,6 +142,8 @@ type
   *}
   TProjectList = class(TFunLabyCollection)
   private
+    function InternalGetProject(const Predicate: TProjectPredicate): TProject;
+
     function GetItems(Index: Integer): TProject;
   protected
     function CreateItem(ItemClass: TFunLabyPersistentClass):
@@ -158,8 +153,7 @@ type
   public
     function AddProject: TProject;
 
-    function GetProject(const Predicate: TProjectPredicate): TProject;
-    function GetProjectByRemoteID(ID: Integer): TProject;
+    function GetProject(const Path: TFileName): TProject;
 
     property Items[Index: Integer]: TProject read GetItems; default;
   end;
@@ -194,12 +188,6 @@ uses
 function TLocalProject.GetIsDefined: Boolean;
 begin
   Result := FileName <> '';
-end;
-
-procedure TLocalProject.SetFileName(const AFileName: TFileName);
-begin
-  FFileName := AFileName;
-  FProjectDir := ExtractFilePath(AFileName);
 end;
 
 {----------------------}
@@ -245,14 +233,6 @@ end;
 function TProject.GetIsRemoteDefined: Boolean;
 begin
   Result := Remote.IsDefined;
-end;
-
-function TProject.GetFileName: TFileName;
-begin
-  if IsLocalDefined then
-    Result := Local.ProjectDir
-  else
-    Result := Remote.Path;
 end;
 
 function TProject.GetTitle: string;
@@ -315,6 +295,26 @@ end;
 {-------------------}
 
 {*
+  Trouve et renvoie un projet recherché par un prédicat quelconque
+  @param ID   ID distant
+  @return Projet correspondant, ou un nouveau projet sinon
+*}
+function TProjectList.InternalGetProject(
+  const Predicate: TProjectPredicate): TProject;
+var
+  I: Integer;
+begin
+  for I := 0 to Count-1 do
+  begin
+    Result := Items[I];
+    if Predicate(Result) then
+      Exit;
+  end;
+
+  Result := AddProject;
+end;
+
+{*
   Tableau zero-based des projets
   @param Index   Index compris entre 0 inclus et Count exclu
   @return Projet à l'index spécifié
@@ -352,38 +352,19 @@ begin
 end;
 
 {*
-  Trouve et renvoie un projet recherché par un prédicat quelconque
-  @param ID   ID distant
+  Trouve et renvoie un projet recherché par son nom de dossier
+  @param Path   Dossier du projet
   @return Projet correspondant, ou un nouveau projet sinon
 *}
-function TProjectList.GetProject(const Predicate: TProjectPredicate): TProject;
-var
-  I: Integer;
+function TProjectList.GetProject(const Path: TFileName): TProject;
 begin
-  for I := 0 to Count-1 do
-  begin
-    Result := Items[I];
-    if Predicate(Result) then
-      Exit;
-  end;
-
-  Result := AddProject;
-end;
-
-{*
-  Trouve et renvoie un projet recherché par son ID distant
-  @param ID   ID distant
-  @return Projet correspondant, ou un nouveau projet sinon
-*}
-function TProjectList.GetProjectByRemoteID(ID: Integer): TProject;
-begin
-  Result := GetProject(
+  Result := InternalGetProject(
     function(Project: TProject): Boolean
     begin
-      Result := Project.Remote.ID = ID;
+      Result := AnsiSameText(Project.Path, Path);
     end);
 
-  Result.Remote.ID := ID;
+  Result.Path := Path;
 end;
 
 {------------------------}

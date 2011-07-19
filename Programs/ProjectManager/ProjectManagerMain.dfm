@@ -49,6 +49,7 @@ object FormMain: TFormMain
     0000000000000000000000000000000000000000000080010000C0030000}
   OldCreateOrder = False
   Position = poScreenCenter
+  WindowState = wsMaximized
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
@@ -124,7 +125,7 @@ object FormMain: TFormMain
     SortType = stText
     TabOrder = 0
     ViewStyle = vsReport
-    OnClick = ListViewProjectsClick
+    OnSelectItem = ListViewProjectsSelectItem
   end
   object ActionMainMenuBar: TActionMainMenuBar
     Left = 0
@@ -246,19 +247,25 @@ object FormMain: TFormMain
     object ActionInstall: TAction
       Category = 'Project'
       Caption = 'Installer / Mettre '#224' jour'
+      Enabled = False
       Hint = 'Installer ou mettre '#224' jour le projet s'#233'lectionn'#233
       ImageIndex = 2
+      OnExecute = ActionInstallExecute
     end
     object ActionExport: TAction
       Category = 'Project'
       Caption = 'Exporter en zip'
+      Enabled = False
       Hint = 'Cr'#233'er un zip de ce projet, qui peut '#234'tre publi'#233' sur le site'
       ImageIndex = 3
+      OnExecute = ActionExportExecute
     end
     object ActionOwnProject: TAction
       Category = 'Project'
       Caption = 'Consid'#233'rer comme mon projet'
+      Enabled = False
       Hint = 'Consid'#233'rer ce projet comme mon projet'
+      OnExecute = ActionOwnProjectExecute
     end
   end
   object Images: TImageList

@@ -7,7 +7,7 @@ uses
   Dialogs, Menus, ActnPopup, ActnCtrls, ToolWin, ActnMan, ActnMenus, ActnList,
   ImgList, PlatformDefaultStyleActnCtrls, ComCtrls, IdBaseComponent,
   IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, ProjectDatabase,
-  FilesUtils, ScXML, msxml;
+  FilesUtils, ScXML, msxml, StrUtils;
 
 type
   TFormMain = class(TForm)
@@ -32,7 +32,11 @@ type
     procedure FormShow(Sender: TObject);
     procedure ActionRefreshExecute(Sender: TObject);
     procedure ActionExitExecute(Sender: TObject);
-    procedure ListViewProjectsClick(Sender: TObject);
+    procedure ActionInstallExecute(Sender: TObject);
+    procedure ActionExportExecute(Sender: TObject);
+    procedure ActionOwnProjectExecute(Sender: TObject);
+    procedure ListViewProjectsSelectItem(Sender: TObject; Item: TListItem;
+      Selected: Boolean);
   private
     { Déclarations privées }
     FDatabaseFileName: TFileName;
@@ -44,6 +48,7 @@ type
     procedure LoadInfoFromInternet;
     function LoadProjectInfoDocument: IXMLDOMDocument;
     procedure LoadInfoFromLocal;
+    procedure LoadLocalProject(const ProjectSubFile: TFileName);
     procedure UpdateProjectList;
 
     procedure SetCurrentProject(Value: TProject);
@@ -93,7 +98,7 @@ procedure TFormMain.LoadInfoFromInternet;
 var
   Document: IXMLDOMDocument;
   Nodes: IXMLDOMNodeList;
-  I, ID: Integer;
+  I: Integer;
   ProjectNode: IXMLDOMNode;
   Project: TProject;
   Remote: TRemoteProject;
@@ -110,13 +115,12 @@ begin
   for I := 0 to Nodes.length-1 do
   begin
     ProjectNode := Nodes.item[I];
-    ID := StrToInt(GetProperty('id'));
 
-    Project := Projects.GetProjectByRemoteID(ID);
+    Project := Projects.GetProject(GetProperty('path'));
     Remote := Project.Remote;
 
+    Remote.ID := StrToInt(GetProperty('id'));
     Remote.AuthorID := StrToInt(GetProperty('authorid'));
-    Remote.Path := GetProperty('path');
 
     Remote.Title := GetProperty('title');
     Remote.Description := GetProperty('description');
@@ -126,6 +130,7 @@ begin
 
     Remote.URL := GetProperty('url');
     Remote.Archive := GetProperty('archive');
+    Remote.Version := GetProperty('version');
 
     Remote.RatingCount := StrToInt(GetProperty('ratingcount'));
     Remote.RatingAvg := StrToFloat(GetProperty('ratingavg'));
@@ -154,8 +159,78 @@ end;
   Met à jour les informations locales à partir des projets installés localement
 *}
 procedure TFormMain.LoadInfoFromLocal;
+var
+  ProjectSubFile: TFileName;
 begin
+  IterateProjects(
+    procedure(const FileName: TFileName; const SearchRec: TSearchRec)
+    begin
+      ProjectSubFile := FileName;
+      Delete(ProjectSubFile, 1, Length(ProjectsPath));
+      if (ProjectSubFile <> '') and (ProjectSubFile[1] = PathDelim) then
+        Delete(ProjectSubFile, 1, 1);
 
+      LoadLocalProject(ProjectSubFile);
+    end);
+end;
+
+{*
+  Charge un projet installé localement
+  @param ProjectSubFile   Nom du fichier projet sous Projects\
+*}
+procedure TFormMain.LoadLocalProject(const ProjectSubFile: TFileName);
+var
+  Document: IXMLDOMDocument;
+  RootElement: IXMLDOMElement;
+
+  function ReadProperty(const PropName: string): string;
+  var
+    Node: IXMLDOMNode;
+  begin
+    Node := RootElement.selectSingleNode(
+      Format('property[@name="%s"]', [PropName]));
+
+    if Node = nil then
+      Result := ''
+    else
+      Result := AnsiReplaceStr(Node.text, #10, sLineBreak);
+  end;
+
+var
+  Title, Description, Kind, Difficulty, Author, Version: string;
+  Project: TProject;
+  Local: TLocalProject;
+begin
+  // Extract information from project file
+  try
+    Document := LoadXMLDocumentFromFile(
+      JoinPath([ProjectsPath, ProjectSubFile]));
+    RootElement := Document.documentElement;
+
+    Title := ReadProperty('Title');
+    Description := ReadProperty('Description');
+    Kind := ReadProperty('Kind');
+    Difficulty := ReadProperty('Difficulty');
+    Author := ReadProperty('Author');
+    Version := ReadProperty('Version');
+  except
+    on Error: Exception do
+      Exit;
+  end;
+
+  // Fill local project
+  Project := Projects.GetProject(
+    ExcludeTrailingPathDelimiter(ExtractFilePath(ProjectSubFile)));
+  Local := Project.Local;
+
+  Local.FileName := ProjectSubFile;
+
+  Local.Title := Title;
+  Local.Description := Description;
+  Local.Kind := Kind;
+  Local.Difficulty := Difficulty;
+  Local.Author := Author;
+  Local.Version := Version;
 end;
 
 {*
@@ -176,7 +251,7 @@ begin
     Item := ListViewProjects.Items.Add;
     Item.Data := Pointer(Project);
 
-    Item.Caption := Project.FileName;
+    Item.Caption := Project.Path;
     Item.SubItems.Add(Project.Title);
     Item.SubItems.Add(Project.LocalVersion);
     Item.SubItems.Add(Project.RemoteVersion);
@@ -203,9 +278,9 @@ begin
   FCurrentProject := Value;
   Some := Value <> nil;
 
-  ActionInstall.Enabled := Some;
-  ActionExport.Enabled := Some;
-  ActionOwnProject.Enabled := Some;
+  ActionInstall.Enabled := Some and Value.IsRemoteDefined;
+  ActionExport.Enabled := Some and Value.IsLocalDefined;
+  ActionOwnProject.Enabled := Some and Value.IsLocalDefined;
   ActionOwnProject.Checked := Some and Value.OwnProject;
 end;
 
@@ -253,20 +328,41 @@ begin
   Close;
 end;
 
-{*
-  Gestionnaire d'événement OnClick de la liste des projets
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFormMain.ListViewProjectsClick(Sender: TObject);
-var
-  Selected: TListItem;
+procedure TFormMain.ActionInstallExecute(Sender: TObject);
 begin
-  Selected := ListViewProjects.Selected;
+  // TODO
+end;
 
-  if Selected = nil then
-    CurrentProject := nil
+procedure TFormMain.ActionExportExecute(Sender: TObject);
+begin
+  // TODO
+end;
+
+procedure TFormMain.ActionOwnProjectExecute(Sender: TObject);
+var
+  Project: TProject;
+begin
+  Project := CurrentProject;
+  Assert(Project.IsLocalDefined);
+
+  Project.Local.OwnProject := not Project.Local.OwnProject;
+
+  UpdateProjectList;
+end;
+
+{*
+  Gestionnaire d'événement OnSelectItem de la liste des projets
+  @param Sender     Objet qui a déclenché l'événement
+  @param Item       Item qui a été sélectionné
+  @param Selected   False ssi l'item est désélectionné
+*}
+procedure TFormMain.ListViewProjectsSelectItem(Sender: TObject; Item: TListItem;
+  Selected: Boolean);
+begin
+  if Selected then
+    CurrentProject := TProject(Item.Data)
   else
-    CurrentProject := TProject(Selected.Data);
+    CurrentProject := nil;
 end;
 
 initialization
