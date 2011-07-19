@@ -163,7 +163,8 @@ type
     procedure LoadFile;
     procedure UnloadFile;
 
-    function DoAutoCompile: Boolean;
+    procedure DoAutoCompile; overload;
+    procedure DoAutoCompile(const Path: TFileName); overload;
     procedure CreateAutoCompileMasterFile(const ProjectDir: TFileName = '');
     procedure AddAllSourceFiles(const BaseDir: TFileName);
     procedure AddSourceFileFor(const BinaryFileName: TFileName);
@@ -570,39 +571,36 @@ end;
 
 {*
   Lance l'auto-compilation de tous les fichiers compilés trouvés
-  @return True en cas de succès, False s'il y a eu des erreurs
+  @throws EAbort s'il y a eu des erreurs
 *}
-function TFormMain.DoAutoCompile: Boolean;
+procedure TFormMain.DoAutoCompile;
 begin
-  try
-    CreateAutoCompileMasterFile;
-    AddAllSourceFiles(JoinPath([LibraryPath, SourcesDir]));
+  DoAutoCompile(JoinPath([LibraryPath, SourcesDir]));
 
-    if not CompileAll then
-      Abort;
+  IterateDir(ProjectsPath, '*',
+    procedure(const ProjectDir: TFileName; const SearchRec: TSearchRec)
+    begin
+      if SearchRec.Attr and faDirectory <> 0 then
+        DoAutoCompile(JoinPath([ProjectDir, SourcesDir]));
+    end);
+end;
 
-    CloseFile;
+{*
+  Lance l'auto-compilation de tous les fichiers compilés trouvés dans un dossier
+  @param Path   Dossier sous lequel effectuer l'auto-compilation
+  @throws EAbort s'il y a eu des erreurs
+*}
+procedure TFormMain.DoAutoCompile(const Path: TFileName);
+begin
+  ShowMessage(Path);
 
-    IterateDir(ProjectsPath, '*',
-      procedure(const ProjectDir: TFileName; const SearchRec: TSearchRec)
-      begin
-        if SearchRec.Attr and faDirectory = 0 then
-          Exit;
+  CreateAutoCompileMasterFile;
+  AddAllSourceFiles(Path);
 
-        CreateAutoCompileMasterFile(ProjectDir);
-        AddAllSourceFiles(JoinPath([ProjectDir, SourcesDir]));
+  if not CompileAll then
+    Abort;
 
-        if not CompileAll then
-          Abort;
-
-        CloseFile;
-      end);
-
-    Result := True;
-  except
-    on EAbort do
-      Result := False;
-  end;
+  CloseFile;
 end;
 
 {*
@@ -1326,8 +1324,31 @@ end;
   @return True en cas de succès, False s'il y a eu des erreurs
 *}
 function TFormMain.AutoCompile: Boolean;
+var
+  I: Integer;
+  Path: TFileName;
 begin
-  Result := DoAutoCompile;
+  try
+    Path := '';
+    for I := 1 to ParamCount do
+    begin
+      if ParamStr(I)[1] <> '-' then
+      begin
+        Path := ParamStr(I);
+        Break;
+      end;
+    end;
+
+    if Path = '' then
+      DoAutoCompile
+    else
+      DoAutoCompile(Path);
+
+    Result := True;
+  except
+    on EAbort do
+      Result := False;
+  end;
 end;
 
 {*
