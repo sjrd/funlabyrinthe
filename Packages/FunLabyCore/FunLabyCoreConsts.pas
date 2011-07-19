@@ -10,9 +10,10 @@ interface
 const {don't localize}
   CurrentVersion = '5.2~beta2'; /// Version courante de FunLabyrinthe
   CurrentMinorVersion = 1;      /// Version mineure courante de FunLabyrinthe
-  FunLabyAuthorName = 'Sébastien Jean Robert Doeraene'; /// Auteur
-  FunLabyAuthorEMail = 'sjrd@redaction-developpez.com'; /// E-mail de l'auteur
-  FunLabyWebSite = 'http://www.funlabyrinthe.com/';     /// Site Web
+
+  FunLabyAuthorName = 'Sébastien Doeraene';         /// Auteur
+  FunLabyAuthorEMail = 'info@funlabyrinthe.com';    /// Adresse de contact
+  FunLabyWebSite = 'http://www.funlabyrinthe.com/'; /// Site Web
 
 resourcestring
   // Noms de composants
