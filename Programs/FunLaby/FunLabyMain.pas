@@ -84,6 +84,8 @@ type
     MenuScreenshotToFile: TMenuItem;
     SaveScreenshotDialog: TSaveDialog;
     MenuScreenshotToFileAuto: TMenuItem;
+    Sep4: TMenuItem;
+    MenuOpenProjectManager: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure UpdateImage(Sender: TObject);
@@ -103,6 +105,7 @@ type
     procedure MenuScreenshotToFileClick(Sender: TObject);
     procedure PaintBoxPaintBuffer(Sender: TObject);
     procedure MenuScreenshotToFileAutoClick(Sender: TObject);
+    procedure MenuOpenProjectManagerClick(Sender: TObject);
   private
     BackgroundTasks: TScTaskQueue; /// Tâches d'arrière-plan
 
@@ -696,6 +699,16 @@ procedure TFormMain.MenuReloadGameClick(Sender: TObject);
 begin
   if CloseGame(True) then
     NewGame(LastFileName);
+end;
+
+{*
+  Gestionnaire d'événement OnClick du menu Gestionnaire de projets
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.MenuOpenProjectManagerClick(Sender: TObject);
+begin
+  ShellExecute(0, 'open', PChar(Dir+'ProjectManager.exe'),
+    nil, nil, SW_SHOWNORMAL);
 end;
 
 {*

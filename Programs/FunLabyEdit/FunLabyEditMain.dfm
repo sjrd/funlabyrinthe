@@ -130,7 +130,7 @@ object FormMain: TFormMain
     Left = 32
     Top = 88
     Bitmap = {
-      494C01010B000E006C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E00700010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -728,6 +728,9 @@ object FormMain: TFormMain
                 Caption = '&Tout recompiler'
               end
               item
+                Action = ActionOpenProjectManager
+              end
+              item
                 Caption = '-'
               end
               item
@@ -944,6 +947,12 @@ object FormMain: TFormMain
         'Recompiler toutes les unit'#233's|Recompiler automatiquement toutes l' +
         'es unit'#233's existantes'
       OnExecute = ActionAutoCompileExecute
+    end
+    object ActionOpenProjectManager: TAction
+      Category = 'File'
+      Caption = 'Gestionnaire de projets...'
+      Hint = 'Ouvrir le gestionnaire de projets'
+      OnExecute = ActionOpenProjectManagerExecute
     end
     object ActionExit: TAction
       Category = 'File'

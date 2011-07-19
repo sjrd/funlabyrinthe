@@ -118,6 +118,13 @@ object FormMain: TFormMain
       object Sep2: TMenuItem
         Caption = '-'
       end
+      object MenuOpenProjectManager: TMenuItem
+        Caption = 'Gestionnaire de projets...'
+        OnClick = MenuOpenProjectManagerClick
+      end
+      object Sep4: TMenuItem
+        Caption = '-'
+      end
       object MenuExit: TMenuItem
         Caption = 'Quitter'
         ShortCut = 16465

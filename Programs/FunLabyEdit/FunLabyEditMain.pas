@@ -68,6 +68,7 @@ type
     OptionsStorage: TJvAppXMLFileStorage;
     ActionOpenRecentNone: TAction;
     ActionAutoCompile: TAction;
+    ActionOpenProjectManager: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -82,6 +83,7 @@ type
     procedure ActionEditUnitsExecute(Sender: TObject);
     procedure ActionCloseFileExecute(Sender: TObject);
     procedure ActionAutoCompileExecute(Sender: TObject);
+    procedure ActionOpenProjectManagerExecute(Sender: TObject);
     procedure ActionExitExecute(Sender: TObject);
     procedure ActionAddMapExecute(Sender: TObject);
     procedure ActionRemoveMapExecute(Sender: TObject);
@@ -1575,6 +1577,16 @@ procedure TFormMain.ActionAutoCompileExecute(Sender: TObject);
 begin
   if AutoCompile then
     ShowDialog(SAutoCompileSuccessTitle, SAutoCompileSuccess);
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Gestionnaire de projets
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionOpenProjectManagerExecute(Sender: TObject);
+begin
+  ShellExecute(0, 'open', PChar(Dir+'ProjectManager.exe'),
+    nil, nil, SW_SHOWNORMAL);
 end;
 
 {*
