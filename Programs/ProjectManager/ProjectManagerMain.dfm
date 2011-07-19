@@ -602,4 +602,9 @@ object FormMain: TFormMain
     Left = 88
     Top = 344
   end
+  object AbUnZipper: TAbUnZipper
+    ExtractOptions = [eoCreateDirs, eoRestorePath]
+    Left = 160
+    Top = 288
+  end
 end

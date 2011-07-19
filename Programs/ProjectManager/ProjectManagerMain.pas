@@ -7,7 +7,23 @@ uses
   Dialogs, Menus, ActnPopup, ActnCtrls, ToolWin, ActnMan, ActnMenus, ActnList,
   ImgList, PlatformDefaultStyleActnCtrls, ComCtrls, IdBaseComponent,
   IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, ProjectDatabase,
-  FilesUtils, ScXML, msxml, StrUtils, AbBase, AbBrowse, AbZBrows, AbZipper;
+  FilesUtils, ScUtils, ScXML, msxml, StrUtils, AbBase, AbBrowse, AbZBrows,
+  AbZipper, SdDialogs, ShellAPI, AbUnzper;
+
+resourcestring
+  SInstallFailedTitle = 'Échec de l''installation';
+  SProjectHasNoArchive = 'Impossible d''installer ce projet car il n''y a pas '+
+    'd''archive renseignée sur Internet';
+  SCompilationFailed = 'Échec lors de la compilation des sources du projet';
+
+  SConfirmInstallTitle = 'Confirmer l''installation';
+  SConfirmInstallErase = 'Vous avez déjà une installation locale de ce '+
+    'projet. Cette installation locale sera mise à la corbeille avant de '+
+    'continuer. Voulez-vous vraiment mettre à jour ce projet ?';
+  SConfirmInstallNoErase = 'Voulez-vous vraiment installer ce projet ?';
+
+  SInstallDoneTitle = 'Installation terminée';
+  SInstallDone = 'L''installation a été faite avec succès';
 
 type
   TFormMain = class(TForm)
@@ -29,6 +45,7 @@ type
     ProjectArchiveGrabber: TIdHTTP;
     AbZipper: TAbZipper;
     ExportDialog: TSaveDialog;
+    AbUnZipper: TAbUnZipper;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -52,6 +69,9 @@ type
     procedure LoadInfoFromLocal;
     procedure LoadLocalProject(const ProjectSubFile: TFileName);
     procedure UpdateProjectList;
+
+    procedure InstallProject(Project: TProject);
+    function CompileProject(Project: TProject): Boolean;
 
     procedure SetCurrentProject(Value: TProject);
 
@@ -78,6 +98,77 @@ const
   GroupOwnProjects = 0;
   GroupLocalProjects = 1;
   GroupRemoteProjects = 2;
+
+{*
+  Create a temporary file name
+  @param BaseFileName      Path and file name wanted
+  @param Ext               Extension for the file
+  @param AlwaysUseNumber   Set to False if not using a number at all is OK
+  @author Toby Allen
+*}
+function CreateNewFileName(const BaseFileName, Ext: string;
+  AlwaysUseNumber: Boolean = True): string;
+var
+  DocIndex: Integer;
+begin
+  DocIndex := 1;
+
+  // if number not required and BaseFileName doesn't exist, use that
+  if not AlwaysUseNumber and not FileExists(BaseFilename + Ext) then
+  begin
+    Result := BaseFilename + Ext;
+    Exit;
+  end;
+
+  while True do
+  begin
+    Result := BaseFilename + IntToStr(DocIndex) + Ext;
+    if not FileExists(Result) then
+      Exit;
+
+    Inc(DocIndex)
+  end;
+end;
+
+{*
+  Retourne le dossier temporaire
+  @return Dossier temporaire
+*}
+function GetTempPath: TFileName;
+var
+  Buffer: array[0..MAX_PATH-1] of Char;
+begin
+  Windows.GetTempPath(MAX_PATH, Buffer);
+  Result := IncludeTrailingPathDelimiter(Buffer);
+end;
+
+{*
+  Recursively delete an entire directory
+  @param DirName   Directory to delete
+  @return True on success, False otherwise
+*}
+function DelTree(const DirName: string): Boolean;
+var
+  SHFileOpStruct: TSHFileOpStruct;
+  DirBuf: array[0..MAX_PATH-1] of Char;
+begin
+  FillChar(SHFileOpStruct, SizeOf(SHFileOpStruct), 0);
+  FillChar(DirBuf, SizeOf(DirBuf), 0);
+
+  StrPCopy(DirBuf, DirName);
+
+  with SHFileOpStruct do
+  begin
+    Wnd := 0;
+    pFrom := @DirBuf;
+    wFunc := FO_DELETE;
+    fFlags := FOF_ALLOWUNDO;
+    fFlags := fFlags or FOF_NOCONFIRMATION;
+    fFlags := fFlags or FOF_SILENT;
+  end;
+
+  Result := SHFileOperation(SHFileOpStruct) = 0;
+end;
 
 {-----------------}
 { TFormMain class }
@@ -270,6 +361,93 @@ begin
   end;
 end;
 
+{*
+  Installe un projet
+  @param Project   Projet à installer
+*}
+procedure TFormMain.InstallProject(Project: TProject);
+var
+  FileName: TFileName;
+  Contents: TFileStream;
+  Directory: TFileName;
+begin
+  FileName := CreateNewFileName(GetTempPath+Project.Path, '.zip', False);
+
+  // Download archive
+  Contents := TFileStream.Create(FileName, fmCreate);
+  try
+    ProjectArchiveGrabber.Get(Project.Remote.Archive, Contents);
+  finally
+    Contents.Free;
+  end;
+
+  // Remove any existing project
+  Directory := JoinPath([ProjectsPath, Project.Path]);
+  if DirectoryExists(Directory) then
+    DelTree(Directory);
+
+  // Install archive
+  ForceDirectories(Directory);
+  AbUnZipper.BaseDirectory := Directory;
+  AbUnZipper.FileName := FileName;
+  AbUnZipper.ExtractFiles('*');
+
+  // Delete the archive
+  DeleteFile(FileName);
+
+  // Compile sources in this project
+  if CompileProject(Project) then
+    ShowDialog(SInstallDoneTitle, SInstallDone);
+
+  Refresh;
+end;
+
+{*
+  Installe un projet
+  @param Project   Projet à installer
+*}
+function TFormMain.CompileProject(Project: TProject): Boolean;
+var
+  Directory: TFileName;
+  StartInfo: TStartupInfo;
+  ProcInfo: TProcessInformation;
+  ProgramName, CommandLine: string;
+  CreateOK: Boolean;
+begin
+  Result := False;
+
+  // Check that there is something to compile
+  Directory := JoinPath([ProjectsPath, Project.Path]);
+  if not DirectoryExists(JoinPath([Directory, SourcesDir])) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  // Spawn the compiler process
+  FillChar(StartInfo, SizeOf(TStartupInfo), 0);
+  FillChar(ProcInfo, SizeOf(TProcessInformation), 0);
+  StartInfo.cb := SizeOf(TStartupInfo);
+
+  ProgramName := Dir + 'FunLabyEdit.exe';
+  CommandLine := '"'+ProgramName+'" -autocompile "'+Directory+'"';
+
+  CreateOK := CreateProcess(PChar(ProgramName), PChar(CommandLine), nil, nil,
+    False, CREATE_NEW_PROCESS_GROUP or NORMAL_PRIORITY_CLASS,
+    nil, nil, StartInfo, ProcInfo);
+
+  if not CreateOK then
+  begin
+    ShowDialog(SInstallFailedTitle, SCompilationFailed, dtError);
+    Exit;
+  end;
+
+  // Wait for its termination
+  WaitForSingleObject(ProcInfo.hProcess, INFINITE);
+
+  Result := True;
+end;
+
 procedure TFormMain.SetCurrentProject(Value: TProject);
 var
   Some: Boolean;
@@ -331,8 +509,31 @@ begin
 end;
 
 procedure TFormMain.ActionInstallExecute(Sender: TObject);
+var
+  Project: TProject;
+  Msg: string;
 begin
-  // TODO
+  Project := CurrentProject;
+  Assert(Project.IsRemoteDefined);
+
+  if Project.Remote.Archive = '' then
+  begin
+    ShowDialog(SInstallFailedTitle, SProjectHasNoArchive, dtError);
+    Exit;
+  end;
+
+  // Confirm install
+  if DirectoryExists(JoinPath([ProjectsPath, Project.Path])) then
+    Msg := SConfirmInstallErase
+  else
+    Msg := SConfirmInstallNoErase;
+
+  if ShowDialog(SConfirmInstallTitle, Msg,
+    dtConfirmation, dbOKCancel) <> drOK then
+    Exit;
+
+  // Install the project
+  InstallProject(Project);
 end;
 
 procedure TFormMain.ActionExportExecute(Sender: TObject);
