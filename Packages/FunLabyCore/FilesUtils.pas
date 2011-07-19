@@ -36,16 +36,17 @@ type
   private
     FSepiRoot: TSepiRoot; /// Racine Sepi
 
-    FFileName: TFileName;   /// Nom du fichier
-    FProjectDir: TFileName; /// Dossier du projet
-    FMode: TFileMode;       /// Mode d'ouverture du fichier
-    FVersion: string;       /// Version lors de l'enregistrement
+    FFileName: TFileName;     /// Nom du fichier
+    FProjectDir: TFileName;   /// Dossier du projet
+    FMode: TFileMode;         /// Mode d'ouverture du fichier
+    FRequiredVersion: string; /// Version lors de l'enregistrement
 
     FTitle: string;       /// Titre du labyrinthe
     FDescription: string; /// Description
     FKind: string;        /// Genre
     FDifficulty: string;  /// Difficulté
     FAuthor: string;      /// Nom de l'auteur
+    FVersion: string;     /// Version du projet
 
     FIsSaveguard: Boolean; /// Indique si le fichier était une sauvegarde
 
@@ -116,7 +117,7 @@ type
     property FileName: TFileName read FFileName;
     property ProjectDir: TFileName read FProjectDir;
     property Mode: TFileMode read FMode;
-    property Version: string read FVersion;
+    property RequiredVersion: string read FRequiredVersion;
 
     property Master: TMaster read FMaster;
 
@@ -131,6 +132,7 @@ type
     property Kind: string read FKind write FKind;
     property Difficulty: string read FDifficulty write FDifficulty;
     property Author: string read FAuthor write FAuthor;
+    property Version: string read FVersion write FVersion;
   end;
 
 function HasExtension(const FileName: TFileName;
@@ -389,7 +391,7 @@ begin
   FFileName := AFileName;
   FProjectDir := ExtractFilePath(FFileName);
   FMode := AMode;
-  FVersion := CurrentVersion;
+  FRequiredVersion := CurrentVersion;
 
   FIsSaveguard := False;
 
@@ -529,11 +531,11 @@ begin
       InvalidFormat;
 
     // Test de version
-    FVersion := getAttribute('version');
-    if FVersion = '' then
+    FRequiredVersion := getAttribute('version');
+    if FRequiredVersion = '' then
       InvalidFormat;
-    if CompareVersion(FVersion, CurrentVersion) > 0 then
-      raise EInOutError.CreateFmt(SVersionTooHigh, [FVersion]);
+    if CompareVersion(FRequiredVersion, CurrentVersion) > 0 then
+      raise EInOutError.CreateFmt(SVersionTooHigh, [FRequiredVersion]);
 
     // Attributs du fichier
     FIsSaveguard := NullToEmptyStr(getAttribute('issaveguard')) = 'yes';

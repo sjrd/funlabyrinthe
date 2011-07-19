@@ -36,6 +36,8 @@ type
     ButtonCancel: TButton;
     LabelKind: TLabel;
     EditKind: TEdit;
+    LabelVersion: TLabel;
+    EditVersion: TEdit;
     procedure ButtonOKClick(Sender: TObject);
   private
     { Déclarations privées }
@@ -64,6 +66,7 @@ begin
     EditKind.Text := MasterFile.Kind;
     EditDifficulty.Text := MasterFile.Difficulty;
     EditAuthor.Text := MasterFile.Author;
+    EditVersion.Text := MasterFile.Version;
 
     if ShowModal <> mrOk then
       Result := False
@@ -75,6 +78,7 @@ begin
       MasterFile.Kind := EditKind.Text;
       MasterFile.Difficulty := EditDifficulty.Text;
       MasterFile.Author := EditAuthor.Text;
+      MasterFile.Version := EditVersion.Text;
 
       Result := True;
     end;
