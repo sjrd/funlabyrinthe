@@ -2774,6 +2774,14 @@ end;
   Dessine un bitmap de case dans ce contexte
 *}
 procedure TDrawSquareContext.DrawSquareBitmap(SquareBitmap: TBitmap32);
+
+  function TrueMod(Dividee, Divisor: Integer): Integer;
+  begin
+    Result := Dividee mod Divisor;
+    if Result < 0 then
+      Inc(Result, Divisor);
+  end;
+
 var
   SrcRect: TRect;
 begin
@@ -2784,8 +2792,8 @@ begin
       SrcRect := BaseSquareRect
     else
       SrcRect := FunLabyUtils.SquareRect(
-        Pos.X mod (SrcRect.Right div SquareSize) * SquareSize,
-        Pos.Y mod (SrcRect.Bottom div SquareSize) * SquareSize);
+        TrueMod(Pos.X, SrcRect.Right div SquareSize) * SquareSize,
+        TrueMod(Pos.Y, SrcRect.Bottom div SquareSize) * SquareSize);
   end;
 
   if SquareBitmap is TAnimatedBitmap32 then
