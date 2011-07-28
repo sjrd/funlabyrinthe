@@ -8,7 +8,9 @@ uses
   ImgList, PlatformDefaultStyleActnCtrls, ComCtrls, IdBaseComponent,
   IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, ProjectDatabase,
   FilesUtils, ScUtils, ScXML, msxml, StrUtils, AbBase, AbBrowse, AbZBrows,
-  AbZipper, SdDialogs, ShellAPI, AbUnzper;
+  AbZipper, SdDialogs, ShellAPI, AbUnzper, JvBaseDlg,
+  JvProgressDialog, IdAntiFreezeBase, IdAntiFreeze, LibraryDatabase,
+  FunLabyUtils, GitTools;
 
 resourcestring
   SInstallFailedTitle = 'Échec de l''installation';
@@ -25,9 +27,20 @@ resourcestring
   SInstallDoneTitle = 'Installation terminée';
   SInstallDone = 'L''installation a été faite avec succès';
 
+  SDownloadFile = 'Télécharger le fichier sans remplacer le fichier local';
+  SInstallFile = 'Installer le fichier';
+  SDeleteFile = 'Supprimer le fichier';
+  SBackupSuffix = ' (conserver une sauvegarde)';
+
 type
+  TLibraryFileAction = (faNone, faDownload, faInstall, faDelete);
+
+  TLibraryFileActionFull = record
+    Action: TLibraryFileAction;
+    Backup: Boolean;
+  end;
+
   TFormMain = class(TForm)
-    ListViewProjects: TListView;
     ActionManager: TActionManager;
     Images: TImageList;
     ActionRefresh: TAction;
@@ -41,14 +54,21 @@ type
     MenuInstall: TMenuItem;
     MenuExport: TMenuItem;
     MenuOwnProject: TMenuItem;
-    ProjectInfoGrabber: TIdHTTP;
-    ProjectArchiveGrabber: TIdHTTP;
+    Grabber: TIdHTTP;
     AbZipper: TAbZipper;
     ExportDialog: TSaveDialog;
     AbUnZipper: TAbUnZipper;
     ActionRun: TAction;
     MenuSep1: TMenuItem;
     MenuRun: TMenuItem;
+    PageControl: TPageControl;
+    TabProjects: TTabSheet;
+    ListViewProjects: TListView;
+    TabLibrary: TTabSheet;
+    ProgressDialog: TJvProgressDialog;
+    IdAntiFreeze: TIdAntiFreeze;
+    ListViewLibrary: TListView;
+    ActionApplyLibraryChanges: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -60,6 +80,13 @@ type
     procedure ActionRunExecute(Sender: TObject);
     procedure ListViewProjectsSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
+    procedure ActionApplyLibraryChangesExecute(Sender: TObject);
+    procedure ListViewLibraryItemChecked(Sender: TObject; Item: TListItem);
+    procedure GrabberWorkBegin(ASender: TObject; AWorkMode: TWorkMode;
+      AWorkCountMax: Int64);
+    procedure GrabberWork(ASender: TObject; AWorkMode: TWorkMode;
+      AWorkCount: Int64);
+    procedure GrabberWorkEnd(ASender: TObject; AWorkMode: TWorkMode);
   private
     { Déclarations privées }
     FDatabaseFileName: TFileName;
@@ -67,7 +94,11 @@ type
     FProjects: TProjectList;
     FCurrentProject: TProject;
 
+    FLibraryFiles: TLibraryFileList;
+
     procedure Refresh;
+
+    procedure RefreshProjects;
     procedure LoadInfoFromInternet;
     function LoadProjectInfoDocument: IXMLDOMDocument;
     procedure LoadInfoFromLocal;
@@ -79,11 +110,30 @@ type
 
     procedure SetCurrentProject(Value: TProject);
 
+    procedure RefreshLibrary;
+    procedure LoadLibraryInfoFromInternet;
+    procedure LoadLibraryInfoFromLocal;
+    procedure ScanLocalLibrary(const BaseDir: TFileName;
+      ParentPatterns: TGitIgnorePatterns);
+    procedure AddLocalLibraryFile(const FileName: TFileName);
+    procedure UpdateLibraryFileList;
+
+    function StatusAndCheckedToAction(Status: TLibraryFileStatus;
+      Checked: Boolean): TLibraryFileActionFull;
+    function ActionToStr(const Action: TLibraryFileActionFull): string;
+    procedure UpdateLibraryItemAction(Item: TListItem);
+
+    procedure DoLibraryUpdate;
+    procedure ApplyLibraryFileAction(LibraryFile: TLibraryFile;
+      const Action: TLibraryFileActionFull);
+
     property DatabaseFileName: TFileName read FDatabaseFileName;
     property Projects: TProjectList read FProjects;
 
     property CurrentProject: TProject
       read FCurrentProject write SetCurrentProject;
+
+    property LibraryFiles: TLibraryFileList read FLibraryFiles;
   public
     { Déclarations publiques }
   end;
@@ -102,6 +152,13 @@ const
   GroupOwnProjects = 0;
   GroupLocalProjects = 1;
   GroupRemoteProjects = 2;
+
+  LibraryURL = 'http://www.funlabyrinthe.com/media/library/';
+  LibraryInfoURL = LibraryURL + 'database.txt';
+
+  GroupModifiedLocally = 0;
+  GroupObsolete = 1;
+  GroupUpToDate = 2;
 
 {*
   Create a temporary file name
@@ -174,6 +231,32 @@ begin
   Result := SHFileOperation(SHFileOpStruct) = 0;
 end;
 
+{*
+  Execute a program and wait for its termination
+  @param ProgramName   Path to the program executable
+  @param Parameters    Parameters for the program
+  @return True on success, False otherwise
+*}
+function ExecProgram(const ProgramName, Parameters: string): Boolean;
+var
+  StartInfo: TStartupInfo;
+  ProcInfo: TProcessInformation;
+  CommandLine: string;
+begin
+  FillChar(StartInfo, SizeOf(TStartupInfo), 0);
+  FillChar(ProcInfo, SizeOf(TProcessInformation), 0);
+  StartInfo.cb := SizeOf(TStartupInfo);
+
+  CommandLine := '"'+ProgramName+'" '+Parameters;
+
+  Result := CreateProcess(PChar(ProgramName), PChar(CommandLine), nil, nil,
+    False, CREATE_NEW_PROCESS_GROUP or NORMAL_PRIORITY_CLASS,
+    nil, nil, StartInfo, ProcInfo);
+
+  if Result then
+    WaitForSingleObject(ProcInfo.hProcess, INFINITE);
+end;
+
 {-----------------}
 { TFormMain class }
 {-----------------}
@@ -182,6 +265,15 @@ end;
   Rafraîchit toutes les informations sur les projets
 *}
 procedure TFormMain.Refresh;
+begin
+  RefreshProjects;
+  RefreshLibrary;
+end;
+
+{*
+  Rafraîchit toutes les informations sur les projets
+*}
+procedure TFormMain.RefreshProjects;
 begin
   Projects.BeginUpdate;
   LoadInfoFromInternet;
@@ -248,7 +340,7 @@ var
 begin
   Stream := TMemoryStream.Create;
   try
-    ProjectInfoGrabber.Get(ProjectInfoURL, Stream);
+    Grabber.Get(ProjectInfoURL, Stream);
     Stream.Seek(0, soFromBeginning);
     Result := LoadXMLDocumentFromStream(Stream);
   finally
@@ -385,7 +477,7 @@ begin
   // Download archive
   Contents := TFileStream.Create(FileName, fmCreate);
   try
-    ProjectArchiveGrabber.Get(Project.Remote.Archive, Contents);
+    Grabber.Get(Project.Remote.Archive, Contents);
   finally
     Contents.Free;
   end;
@@ -418,10 +510,7 @@ end;
 function TFormMain.CompileProject(Project: TProject): Boolean;
 var
   Directory: TFileName;
-  StartInfo: TStartupInfo;
-  ProcInfo: TProcessInformation;
-  ProgramName, CommandLine: string;
-  CreateOK: Boolean;
+  ProgramName, Parameters: string;
 begin
   Result := False;
 
@@ -434,29 +523,22 @@ begin
   end;
 
   // Spawn the compiler process
-  FillChar(StartInfo, SizeOf(TStartupInfo), 0);
-  FillChar(ProcInfo, SizeOf(TProcessInformation), 0);
-  StartInfo.cb := SizeOf(TStartupInfo);
-
   ProgramName := Dir + 'FunLabyEdit.exe';
-  CommandLine := '"'+ProgramName+'" -autocompile "'+Directory+'"';
+  Parameters := '-autocompile "'+Directory+'"';
 
-  CreateOK := CreateProcess(PChar(ProgramName), PChar(CommandLine), nil, nil,
-    False, CREATE_NEW_PROCESS_GROUP or NORMAL_PRIORITY_CLASS,
-    nil, nil, StartInfo, ProcInfo);
-
-  if not CreateOK then
+  if not ExecProgram(ProgramName, Parameters) then
   begin
     ShowDialog(SInstallFailedTitle, SCompilationFailed, dtError);
     Exit;
   end;
 
-  // Wait for its termination
-  WaitForSingleObject(ProcInfo.hProcess, INFINITE);
-
   Result := True;
 end;
 
+{*
+  Change le projet courant
+  @param Value   Nouveau projet
+*}
 procedure TFormMain.SetCurrentProject(Value: TProject);
 var
   Some: Boolean;
@@ -475,6 +557,324 @@ begin
 end;
 
 {*
+  Met à jour les données sur la bibliothèque
+*}
+procedure TFormMain.RefreshLibrary;
+var
+  I: Integer;
+begin
+  LibraryFiles.Clear;
+  LoadLibraryInfoFromInternet;
+  LoadLibraryInfoFromLocal;
+
+  for I := LibraryFiles.Count-1 downto 0 do
+    if (LibraryFiles[I].LocalHash = '') and LibraryFiles[I].IsDeleted then
+      LibraryFiles.Delete(I);
+
+  UpdateLibraryFileList;
+end;
+
+{*
+  Met à jour les données sur la bibliothèque depuis Internet
+*}
+procedure TFormMain.LoadLibraryInfoFromInternet;
+var
+  Stream: TMemoryStream;
+  Lines: TStrings;
+  CurrentPath: TFileName;
+  CurrentFile: TLibraryFile;
+  I: Integer;
+  Line: string;
+begin
+  Lines := TStringList.Create;
+  try
+    // Load database file
+    Stream := TMemoryStream.Create;
+    try
+      Grabber.Get(LibraryInfoURL, Stream);
+      Stream.Seek(0, soFromBeginning);
+      Lines.LoadFromStream(Stream, FunLabyEncoding);
+    finally
+      Stream.Free;
+    end;
+
+    // Parse the file
+    CurrentPath := '';
+    CurrentFile := nil;
+    for I := 0 to Lines.Count-1 do
+    begin
+      Line := Lines[I];
+
+      if Line[1] = '-' then
+      begin
+        CurrentPath := Copy(Line, 2, MaxInt);
+        CurrentFile := LibraryFiles.GetFile(CurrentPath);
+      end else
+      begin
+        if CurrentFile.RemoteHash = '' then
+          CurrentFile.RemoteHash := Line
+        else
+          CurrentFile.OldHashes.Add(Line);
+      end;
+    end;
+  finally
+    Lines.Free;
+  end;
+end;
+
+{*
+  Met à jour les données sur la bibliothèque locale
+*}
+procedure TFormMain.LoadLibraryInfoFromLocal;
+begin
+  ScanLocalLibrary(LibraryPath, nil);
+end;
+
+{*
+  Scanne la bibliothèque locale
+  @param BaseDir          Dossier de base
+  @param ParentPatterns   Motifs de fichiers à ignorer
+*}
+procedure TFormMain.ScanLocalLibrary(const BaseDir: TFileName;
+  ParentPatterns: TGitIgnorePatterns);
+var
+  Patterns: TGitIgnorePatterns;
+begin
+  if ParentPatterns = nil then
+    Patterns := TGitIgnorePatterns.Create(BaseDir)
+  else
+    Patterns := TGitIgnorePatterns.Create(ParentPatterns,
+      ExtractFileName(BaseDir));
+  try
+    IterateDir(BaseDir, '*',
+      procedure(const FullPath: TFileName; const SearchRec: TSearchRec)
+      begin
+        if Patterns.IsIgnored(SearchRec.Name) then
+          Exit;
+
+        if SearchRec.Attr and faDirectory = 0 then
+        begin
+          // Add the file
+          AddLocalLibraryFile(FullPath);
+        end else
+        begin
+          // Recurse into subdirectory
+          if SearchRec.Name <> '.git' then
+            ScanLocalLibrary(FullPath, Patterns);
+        end;
+      end);
+  finally
+    Patterns.Free;
+  end;
+end;
+
+{*
+  Ajoute un fichier de la bibliothèque locale
+  @param FileName   Nom du fichier
+*}
+procedure TFormMain.AddLocalLibraryFile(const FileName: TFileName);
+var
+  Path: TFileName;
+  LibraryFile: TLibraryFile;
+begin
+  Path := Copy(FileName, Length(LibraryPath)+2, MaxInt);
+  Path := AnsiReplaceStr(Path, PathDelim, HRefDelim);
+
+  LibraryFile := LibraryFiles.GetFile(Path);
+  LibraryFile.LocalHash := GitHashBlob(FileName);
+end;
+
+{*
+  Met à jour la GUI à partir des informations locales sur la bibliothèque
+*}
+procedure TFormMain.UpdateLibraryFileList;
+const
+  StatusStr: array[TLibraryFileStatus] of string = (
+    'À jour', 'Modifié', 'Ajouté', 'Supprimé',
+    'Modifié locallement', 'Ajouté locallement'
+  );
+  StatusToGroupID: array[TLibraryFileStatus] of Integer = (
+    GroupUpToDate, GroupObsolete, GroupObsolete, GroupObsolete,
+    GroupModifiedLocally, GroupModifiedLocally
+  );
+var
+  I: Integer;
+  LibraryFile: TLibraryFile;
+  Item: TListItem;
+begin
+  ListViewLibrary.Items.BeginUpdate;
+  try
+    ListViewLibrary.Items.Clear;
+
+    for I := 0 to LibraryFiles.Count-1 do
+    begin
+      LibraryFile := LibraryFiles[I];
+      Item := ListViewLibrary.Items.Add;
+
+      with Item do
+      begin
+        Caption := LibraryFile.Path;
+        SubItems.Add(LibraryFile.LocalHash);
+        SubItems.Add(LibraryFile.RemoteHash);
+        SubItems.Add(StatusStr[LibraryFile.Status]);
+        SubItems.Add('');
+
+        Data := Pointer(LibraryFile);
+
+        GroupID := StatusToGroupID[LibraryFile.Status];
+        Checked := GroupID = GroupObsolete;
+      end;
+
+      UpdateLibraryItemAction(Item);
+    end;
+  finally
+    ListViewLibrary.Items.EndUpdate;
+  end;
+end;
+
+{*
+  Détermine l'action à effectuer pour un fichier de la bibliothèque
+  @param Status    Statut du fichier
+  @param Checked   Indique si la case correspondant à ce fichier est cochée
+  @return Action à entreprendre pour ce fichier
+*}
+function TFormMain.StatusAndCheckedToAction(Status: TLibraryFileStatus;
+  Checked: Boolean): TLibraryFileActionFull;
+begin
+  Result.Action := faNone;
+  Result.Backup := False;
+
+  if not Checked then
+  begin
+    if Status = fsLocalUpdated then
+      Result.Action := faDownload;
+  end else
+  begin
+    case Status of
+      fsRemoteUpdated, fsRemoteAdded: Result.Action := faInstall;
+      fsRemoteDeleted: Result.Action := faDelete;
+      fsLocalUpdated:
+      begin
+        Result.Action := faInstall;
+        Result.Backup := True;
+      end;
+      fsLocalAdded:
+      begin
+        Result.Action := faDelete;
+        Result.Backup := True;
+      end;
+    end;
+  end;
+end;
+
+{*
+  Convertit une action en chaîne de caractère
+  @param Action   Action à convertir
+  @return Chaîne de caractère décrivant l'action
+*}
+function TFormMain.ActionToStr(const Action: TLibraryFileActionFull): string;
+begin
+  case Action.Action of
+    faDownload: Result := SDownloadFile;
+    faInstall: Result := SInstallFile;
+    faDelete: Result := SDeleteFile;
+  end;
+
+  if Action.Backup then
+    Result := Result + SBackupSuffix;
+end;
+
+{*
+  Met à jour l'action d'un élément de la bibliothèque
+  @param Item   Élément à mettre à jour
+*}
+procedure TFormMain.UpdateLibraryItemAction(Item: TListItem);
+var
+  LibraryFile: TLibraryFile;
+begin
+  LibraryFile := TLibraryFile(Item.Data);
+  Item.SubItems[3] := ActionToStr(
+    StatusAndCheckedToAction(LibraryFile.Status, Item.Checked));
+end;
+
+{*
+  Applique les mises à jour de la bibliothèque
+*}
+procedure TFormMain.DoLibraryUpdate;
+var
+  DoneSomething: Boolean;
+  I: Integer;
+  Item: TListItem;
+  LibraryFile: TLibraryFile;
+  Action: TLibraryFileActionFull;
+begin
+  DoneSomething := False;
+
+  for I := 0 to ListViewLibrary.Items.Count-1 do
+  begin
+    Item := ListViewLibrary.Items[I];
+    LibraryFile := TLibraryFile(Item.Data);
+    Action := StatusAndCheckedToAction(LibraryFile.Status, Item.Checked);
+
+    if Action.Action <> faNone then
+    begin
+      ApplyLibraryFileAction(LibraryFile, Action);
+      DoneSomething := True;
+    end;
+  end;
+
+  if DoneSomething then
+  begin
+    Refresh;
+    ExecProgram(Dir+'FunLabyEdit.exe', '-autocompile');
+  end;
+end;
+
+{*
+  Applique la mise à jour d'un fichier de la bibliothèque
+  @param LibraryFile   Fichier de la bibliothèque à mettre à jour
+  @param Action        Action à entreprendre
+*}
+procedure TFormMain.ApplyLibraryFileAction(LibraryFile: TLibraryFile;
+  const Action: TLibraryFileActionFull);
+const
+  BackupExt = '~';
+var
+  FileName, BackupFileName: TFileName;
+  URL: string;
+  Stream: TStream;
+begin
+  if Action.Action = faNone then
+    Exit;
+
+  FileName := JoinPath([LibraryPath,
+    AnsiReplaceStr(LibraryFile.Path, HRefDelim, PathDelim)]);
+  BackupFileName := FileName + BackupExt;
+  URL := LibraryURL + LibraryFile.Path;
+
+  if Action.Backup and FileExists(FileName) then
+  begin
+    if FileExists(BackupFileName) then
+      DelTree(BackupFileName);
+    MoveFile(PChar(FileName), PChar(BackupFileName));
+  end;
+
+  if (Action.Action in [faInstall, faDelete]) and FileExists(FileName) then
+    DelTree(FileName);
+
+  if Action.Action in [faDownload, faInstall] then
+  begin
+    Stream := TFileStream.Create(
+      IIF(Action.Action = faDownload, BackupFileName, FileName), fmCreate);
+    try
+      Grabber.Get(URL, Stream);
+    finally
+      Stream.Free;
+    end;
+  end;
+end;
+
+{*
   Gestionnaire d'événement OnCreate de la fiche
   @param Sender   Objet qui a déclenché l'événement
 *}
@@ -483,6 +883,8 @@ begin
   FDatabaseFileName := JoinPath([ProjectsPath, 'Projects.xml']);
   FDatabase := TProjectDatabase.Create;
   FProjects := FDatabase.Projects;
+
+  FLibraryFiles := TLibraryFileList.Create;
 
   if FileExists(DatabaseFileName) then
     FDatabase.LoadFromFile(DatabaseFileName);
@@ -496,6 +898,7 @@ procedure TFormMain.FormDestroy(Sender: TObject);
 begin
   FDatabase.SaveToFile(DatabaseFileName);
 
+  FLibraryFiles.Free;
   FDatabase.Free;
 end;
 
@@ -617,6 +1020,37 @@ begin
     CurrentProject := TProject(Item.Data)
   else
     CurrentProject := nil;
+end;
+
+procedure TFormMain.ActionApplyLibraryChangesExecute(Sender: TObject);
+begin
+  DoLibraryUpdate;
+end;
+
+procedure TFormMain.ListViewLibraryItemChecked(Sender: TObject;
+  Item: TListItem);
+begin
+  if Item.Data <> nil then
+    UpdateLibraryItemAction(Item);
+end;
+
+procedure TFormMain.GrabberWorkBegin(ASender: TObject; AWorkMode: TWorkMode;
+  AWorkCountMax: Int64);
+begin
+  ProgressDialog.Max := AWorkCountMax;
+  ProgressDialog.Position := 0;
+  ProgressDialog.Show;
+end;
+
+procedure TFormMain.GrabberWork(ASender: TObject; AWorkMode: TWorkMode;
+  AWorkCount: Int64);
+begin
+  ProgressDialog.Position := AWorkCount;
+end;
+
+procedure TFormMain.GrabberWorkEnd(ASender: TObject; AWorkMode: TWorkMode);
+begin
+  ProgressDialog.Hide;
 end;
 
 initialization

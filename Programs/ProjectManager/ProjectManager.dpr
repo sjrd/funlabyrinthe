@@ -8,7 +8,9 @@ uses
   madListModules,
   Forms,
   ProjectManagerMain in 'ProjectManagerMain.pas' {FormMain},
-  ProjectDatabase in 'ProjectDatabase.pas';
+  ProjectDatabase in 'ProjectDatabase.pas',
+  LibraryDatabase in 'LibraryDatabase.pas',
+  GitTools in 'GitTools.pas';
 
 {$R *.res}
 

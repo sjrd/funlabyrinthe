@@ -51,6 +51,8 @@
 				<Form>FormMain</Form>
 			</DCCReference>
 			<DCCReference Include="ProjectDatabase.pas"/>
+			<DCCReference Include="LibraryDatabase.pas"/>
+			<DCCReference Include="GitTools.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
