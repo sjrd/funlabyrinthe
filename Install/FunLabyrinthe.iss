@@ -1,4 +1,14 @@
-; Installation de FunLabyrinthe 5.2
+; Setup of FunLabyrinthe
+
+; Configuration
+#define AppName    "FunLabyrinthe"
+#define AppVer     "5.2"
+#define AppAuthor  "Sébastien Doeraene"
+#define Update     False
+
+; Derived values
+#define CurrentYear       GetDateTimeString('yyyy', '', '')
+#define AppVerUnderscore  StringChange(AppVer, '.', '_')
 
 [Setup]
 AppID=FunLabyrinthe
@@ -6,23 +16,23 @@ AppName={cm:AppName}
 AppVerName={cm:AppVerName}
 AppComments={cm:Description}
 AppContact=info@funlabyrinthe.com
-AppPublisher=Sébastien Doeraene
-AppCopyright=Copyright (C) 2000-2011 Sébastien Doeraene
+AppPublisher={#AppAuthor}
+AppCopyright=Copyright (C) 2000-{#CurrentYear} {#AppAuthor}
 AppPublisherURL=http://www.funlabyrinthe.com/
 AppSupportURL=http://www.funlabyrinthe.com/forum/
 AppUpdatesURL=http://www.funlabyrinthe.com/download/
-AppVersion=5.2
+AppVersion={#AppVer}
 
-VersionInfoProductName=FunLabyrinthe 5.2
-VersionInfoDescription=Setup of FunLabyrinthe 5.2
-VersionInfoTextVersion=FunLabyrinthe v5.2, copyright 2000-2011 Sébastien Doeraene
-VersionInfoVersion=5.2
+VersionInfoProductName={#AppName} {#AppVer}
+VersionInfoDescription=Setup of {#AppName} {#AppVer}
+VersionInfoTextVersion={#AppName} v{#AppVer}, copyright 2000-{#CurrentYear} {#AppAuthor}
+VersionInfoVersion={#AppVer}
 
 DefaultDirName={pf}\SJRDoeraene\{cm:AppName}
 DefaultGroupName={cm:AppName}
 
 OutputDir=.\
-OutputBaseFilename=funlabyrinthe_5_2
+OutputBaseFilename=funlabyrinthe_{#AppVerUnderscore}{#Update ? "_update" : ""}
 
 Compression=lzma
 SolidCompression=yes
@@ -33,8 +43,8 @@ ChangesAssociations=yes
 Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 
 [CustomMessages]
-fr.AppName=FunLabyrinthe
-fr.AppVerName=FunLabyrinthe 5.2
+fr.AppName={#AppName}
+fr.AppVerName={#AppName} {#AppVer}
 fr.Description=Jeu de labyrinthe très fun avec toutes sortes de gadgets
 
 ; Types d'installation
@@ -64,12 +74,12 @@ fr.IconFunLabyEdit=Éditeur de labyrinthes
 ; Tâches
 
 fr.AdditionalTasks=Tâches supplémentaires
-fr.RegExtensions=Enregistrer les extensions de fichier liées à FunLabyrinthe
+fr.RegExtensions=Enregistrer les extensions de fichier liées à {#AppName}
 fr.RegFLP=Fichiers projet (.flp)
 
 ; Enregistrement des extensions
 
-fr.FunLabyProject=Projet FunLabyrinthe
+fr.FunLabyProject=Projet {#AppName}
 
 fr.Open=&Ouvrir
 fr.Edit=&Éditer
@@ -95,11 +105,23 @@ fr.PageBefore52Caption=Information importante
 fr.PageBefore52Description=Veuillez lire attentivement les informations suivantes avant de poursuivre.
 fr.PageBefore52Msg=Une ancienne version de {cm:AppName} est installée sur votre ordinateur (antérieure à la v5.2).%n%nDepuis {cm:AppName} 5.2, la structure des documents FunLabyrinthe (images, labyrinthes, etc.) a considablement changé, et n'est plus compatible avec celle que vous avez !%n%nVous devriez suivre les indications données sur la page Web http://www.funlabyrinthe.com/download/ afin de faire la transition avant de poursuivre l'installation de {cm:AppVerName}. Vous pouvez néanmoins poursuivre l'installation si vous le désirez, à vos propres risques.
 
-; Pages d'informations si le dossier AppData existe
+#if !Update
 
-fr.PageAppDataExistsCaption=Information importante
-fr.PageAppDataExistsDescription=Veuillez lire attentivement les informations suivantes avant de poursuivre.
-fr.PageAppDataExistsMsg=Le dossier où vous avez choisi d'enregistrer les labyrinthes existe. Afin de préserver vos données, cette installation ne le modifiera pas. Vous pouvez télécharger de nouvelles versions de la bibliothèque et des labyrinthes sur le site de FunLabyrinthe (www.funlabyrinthe.com).
+; Pages d'informations si le dossier Library existe
+
+fr.PageLibraryExistsCaption=Information importante
+fr.PageLibraryExistsDescription=Veuillez lire attentivement les informations suivantes avant de poursuivre.
+fr.PageLibraryExistsMsg=Le dossier où vous avez choisi d'enregistrer les données de {cm:AppName} existe. Afin de préserver vos données, cette installation ne le modifiera pas. Utilisez le Gestionnaire de projets pour installer de nouveaux projets et pour mettre à jour la bibliothèque.
+
+#else
+
+; Pages d'informations si le dossier Library existe
+
+fr.PageLibraryDoesNotExistsCaption=Information importante
+fr.PageLibraryDoesNotExistsDescription=Veuillez lire attentivement les informations suivantes avant de poursuivre.
+fr.PageLibraryDoesNotExistsMsg=Cet installateur est prévu pour faire une mise à jour de {cm:AppName}, et ne contient donc aucune donnée de base comme les labyrinthes. Vous pourrez télécharger tout le nécessaire plus tard grâce au Gestionnaire de projets, mais il est plus pratique d'utiliser l'installateur de base.
+
+#endif
 
 ; Recompilation des unités
 
@@ -148,11 +170,19 @@ Source: "..\Templates\*"; DestDir: "{app}\Templates"; Components: programs\funla
 
 Source: "..\FunLabyrinthe.chm"; DestDir: "{app}"; Components: help; Flags: ignoreversion
 
-Source: "AppData\*"; DestDir: "{code:AppData}"; Check: GetShouldInstallAppData; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
+#if !Update
+Source: "AppData\Library\*"; DestDir: "{code:AppData}\Library"; Check: GetShouldInstallLibrary; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
+#endif
+Source: "AppData\Projects\*"; DestDir: "{code:AppData}\Projects"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 
 ; Fichiers temporaires pour l'installation
 
 Source: "Images\*"; Flags: dontcopy
+
+[Dirs]
+Name: "{code:AppData}\Library"; Flags: uninsneveruninstall
+Name: "{code:AppData}\Projects"; Flags: uninsneveruninstall
+Name: "{code:AppData}\Saveguards"; Flags: uninsneveruninstall
 
 [INI]
 Filename: "{app}\FunLabyrinthe.ini"; Section: "Directories"; Key: "AppData"; String: "{code:AppData}"
@@ -205,14 +235,14 @@ var
   IsReinstall: Boolean;
   IsReinstallBefore52: Boolean;
 
-  ShouldInstallAppData: Boolean;
+  ShouldInstallLibrary: Boolean;
 
   PageWidth: Integer;
   DirEdits: TStrings;
 
   PageCompatibility4xInfo: TWizardPage;
   PageBefore52Info: TWizardPage;
-  PageAppDataExistsInfo: TWizardPage;
+  PageLibraryInfo: TWizardPage;
 
   SelectDirPage: TNewNotebookPage;
   EditFunLabyAppData: TEdit;
@@ -241,16 +271,16 @@ begin
     Result := '';
 end;
 
-function GetShouldInstallAppData: Boolean;
+function GetShouldInstallLibrary: Boolean;
 begin
-  Result := ShouldInstallAppData;
+  Result := ShouldInstallLibrary;
 end;
 
 function CheckValidAppData: Boolean;
 begin
   Result := True;
 
-  ShouldInstallAppData := not DirExists(FunLabyAppData);
+  ShouldInstallLibrary := not DirExists(FunLabyAppData+'Library\');
 end;
 
 procedure CheckOldVersion;
@@ -475,14 +505,21 @@ begin
     ExpandConstants('{cm:PageBefore52Msg}'));
 end;
 
-procedure AddAppDataExistsInfoPage;
+procedure AddLibraryInfoPage;
 begin
-  // Ajouter la page d'information sur les AppData existant
+  // Ajouter la page d'information sur la Library
 
-  PageAppDataExistsInfo := CreateOutputMsgPage(wpSelectDir,
-    ExpandConstants('{cm:PageAppDataExistsCaption}'),
-    ExpandConstants('{cm:PageAppDataExistsDescription}'),
-    ExpandConstants('{cm:PageAppDataExistsMsg}'));
+#if !Update
+  PageLibraryInfo := CreateOutputMsgPage(wpSelectDir,
+    ExpandConstants('{cm:PageLibraryExistsCaption}'),
+    ExpandConstants('{cm:PageLibraryExistsDescription}'),
+    ExpandConstants('{cm:PageLibraryExistsMsg}'));
+#else
+  PageLibraryInfo := CreateOutputMsgPage(wpSelectDir,
+    ExpandConstants('{cm:PageLibraryDoesNotExistsCaption}'),
+    ExpandConstants('{cm:PageLibraryDoesNotExistsDescription}'),
+    ExpandConstants('{cm:PageLibraryDoesNotExistsMsg}'));
+#endif
 end;
 
 function CreateBitmap(const FileName: string): TBitmap;
@@ -516,7 +553,7 @@ begin
   AddFunLabyAppDataField;
   AddCompatibility4xInfoPage;
   AddBefore52InfoPage;
-  AddAppDataExistsInfoPage;
+  AddLibraryInfoPage;
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
@@ -525,8 +562,12 @@ begin
     Result := not HasOldVersion
   else if PageID = PageBefore52Info.ID then
     Result := not IsReinstallBefore52
-  else if PageID = PageAppDataExistsInfo.ID then
-    Result := not DirExists(FunLabyAppData)
+  else if PageID = PageLibraryInfo.ID then
+#if !Update
+    Result := not DirExists(FunLabyAppData+'Library\')
+#else
+    Result := DirExists(FunLabyAppData+'Library\')
+#endif
   else if PageID = wpSelectComponents then
     Result := True
   else
