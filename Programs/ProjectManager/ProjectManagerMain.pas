@@ -499,7 +499,7 @@ begin
     if CompileProject(Project) then
       ShowDialog(SInstallDoneTitle, SInstallDone);
 
-    Refresh;
+    RefreshProjects;
   except
     on Error: EIdException do
       ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
@@ -883,7 +883,7 @@ begin
 
   if DoneSomething then
   begin
-    Refresh;
+    RefreshLibrary;
     CompileLibrary;
   end;
 end;
