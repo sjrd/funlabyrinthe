@@ -73,7 +73,7 @@ type
     ActionApplyLibraryChanges: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure FormShow(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
     procedure ActionRefreshExecute(Sender: TObject);
     procedure ActionExitExecute(Sender: TObject);
     procedure ActionInstallExecute(Sender: TObject);
@@ -108,6 +108,9 @@ type
     procedure UpdateProjectList;
 
     procedure InstallProject(Project: TProject);
+    procedure ExtractArchiveFromURL(const ArchiveURL: string;
+      const TempArchiveBaseFileName: TFileName; const DestDir: TFileName;
+      DeleteDirIfExists: Boolean = True);
     function CompileProject(Project: TProject): Boolean;
 
     procedure SetCurrentProject(Value: TProject);
@@ -128,6 +131,7 @@ type
     procedure DoLibraryUpdate;
     procedure ApplyLibraryFileAction(LibraryFile: TLibraryFile;
       const Action: TLibraryFileActionFull);
+    function CompileLibrary: Boolean;
 
     property DatabaseFileName: TFileName read FDatabaseFileName;
     property Projects: TProjectList read FProjects;
@@ -148,14 +152,15 @@ implementation
 {$R *.dfm}
 
 const
-  APIURL = 'http://www.funlabyrinthe.com/api/';
-  ProjectInfoURL = APIURL + 'projects.xml';
+  RootURL = 'http://www.funlabyrinthe.com/';
+
+  ProjectInfoURL = RootURL + 'api/projects.xml';
 
   GroupOwnProjects = 0;
   GroupLocalProjects = 1;
   GroupRemoteProjects = 2;
 
-  LibraryURL = 'http://www.funlabyrinthe.com/media/library/';
+  LibraryURL = RootURL + 'media/library/';
   LibraryInfoURL = LibraryURL + 'database.txt';
 
   GroupModifiedLocally = 0;
@@ -484,48 +489,60 @@ end;
   @param Project   Projet à installer
 *}
 procedure TFormMain.InstallProject(Project: TProject);
+begin
+  try
+    // Download and install archive
+    ExtractArchiveFromURL(Project.Remote.Archive, Project.Path,
+      JoinPath([ProjectsPath, Project.Path]));
+
+    // Compile sources in this project
+    if CompileProject(Project) then
+      ShowDialog(SInstallDoneTitle, SInstallDone);
+
+    Refresh;
+  except
+    on Error: EIdException do
+      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
+  end;
+end;
+
+{*
+  Télécharge et décompresse une archive sur Internet dans un dossier donné
+  @param ArchiveURL                URL de l'archive à télécharger
+  @param TempArchiveBaseFileName   Nom de base pour l'archive locale
+  @param DestDir                   Dossier de destination
+  @param DeleteDirIfExists         D'abord supprimer le dossier de destination
+*}
+procedure TFormMain.ExtractArchiveFromURL(const ArchiveURL: string;
+  const TempArchiveBaseFileName: TFileName; const DestDir: TFileName;
+  DeleteDirIfExists: Boolean = True);
 var
   FileName: TFileName;
   Contents: TFileStream;
-  Directory: TFileName;
 begin
-  FileName := CreateNewFileName(GetTempPath+Project.Path, '.zip', False);
+  FileName := CreateNewFileName(GetTempPath+TempArchiveBaseFileName,
+    ExtractFileExt(ArchiveURL), False);
 
   // Download archive
+  Contents := TFileStream.Create(FileName, fmCreate);
   try
-    Contents := TFileStream.Create(FileName, fmCreate);
-    try
-      Grabber.Get(Project.Remote.Archive, Contents);
-    finally
-      Contents.Free;
-    end;
-  except
-    on Error: EIdException do
-    begin
-      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
-      Exit;
-    end;
+    Grabber.Get(ArchiveURL, Contents);
+  finally
+    Contents.Free;
   end;
 
-  // Remove any existing project
-  Directory := JoinPath([ProjectsPath, Project.Path]);
-  if DirectoryExists(Directory) then
-    DelTree(Directory);
+  // Delete directory if required
+  if DeleteDirIfExists and DirectoryExists(DestDir) then
+    DelTree(DestDir);
 
   // Install archive
-  ForceDirectories(Directory);
-  AbUnZipper.BaseDirectory := Directory;
+  ForceDirectories(DestDir);
+  AbUnZipper.BaseDirectory := DestDir;
   AbUnZipper.FileName := FileName;
   AbUnZipper.ExtractFiles('*');
 
   // Delete the archive
   DeleteFile(FileName);
-
-  // Compile sources in this project
-  if CompileProject(Project) then
-    ShowDialog(SInstallDoneTitle, SInstallDone);
-
-  Refresh;
 end;
 
 {*
@@ -867,8 +884,17 @@ begin
   if DoneSomething then
   begin
     Refresh;
-    ExecProgram(Dir+'FunLabyEdit.exe', '-autocompile');
+    CompileLibrary;
   end;
+end;
+
+{*
+  Compile la bibliothèque
+  @return True en cas de succès, False sinon
+*}
+function TFormMain.CompileLibrary: Boolean;
+begin
+  Result := ExecProgram(Dir+'FunLabyEdit.exe', '-autocompile');
 end;
 
 {*
@@ -944,11 +970,13 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnShow de la fiche
+  Gestionnaire d'événement OnActivate de la fiche
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFormMain.FormShow(Sender: TObject);
+procedure TFormMain.FormActivate(Sender: TObject);
 begin
+  OnActivate := nil;
+
   Refresh;
 end;
 
