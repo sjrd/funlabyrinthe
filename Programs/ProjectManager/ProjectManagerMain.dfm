@@ -102,8 +102,6 @@ object FormMain: TFormMain
     TabOrder = 2
     object TabProjects: TTabSheet
       Caption = 'Projets'
-      ExplicitWidth = 281
-      ExplicitHeight = 162
       object ListViewProjects: TListView
         Left = 0
         Top = 0
@@ -175,14 +173,11 @@ object FormMain: TFormMain
         TabOrder = 0
         ViewStyle = vsReport
         OnSelectItem = ListViewProjectsSelectItem
-        ExplicitWidth = 281
-        ExplicitHeight = 162
       end
     end
     object TabLibrary: TTabSheet
       Caption = 'Biblioth'#232'que'
       ImageIndex = 1
-      ExplicitLeft = 8
       object ListViewLibrary: TListView
         Left = 0
         Top = 0
@@ -247,10 +242,6 @@ object FormMain: TFormMain
         TabOrder = 0
         ViewStyle = vsReport
         OnItemChecked = ListViewLibraryItemChecked
-        ExplicitLeft = 160
-        ExplicitTop = 48
-        ExplicitWidth = 250
-        ExplicitHeight = 150
       end
     end
   end
@@ -415,7 +406,7 @@ object FormMain: TFormMain
     Left = 88
     Top = 192
     Bitmap = {
-      494C01010600C800800010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010600C800840010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000006D332700853C130095440D0096450D00873D1200703425000000

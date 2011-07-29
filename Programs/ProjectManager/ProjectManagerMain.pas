@@ -8,11 +8,13 @@ uses
   ImgList, PlatformDefaultStyleActnCtrls, ComCtrls, IdBaseComponent,
   IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, ProjectDatabase,
   FilesUtils, ScUtils, ScXML, msxml, StrUtils, AbBase, AbBrowse, AbZBrows,
-  AbZipper, SdDialogs, ShellAPI, AbUnzper, JvBaseDlg,
+  AbZipper, SdDialogs, ShellAPI, AbUnzper, JvBaseDlg, IdException,
   JvProgressDialog, IdAntiFreezeBase, IdAntiFreeze, LibraryDatabase,
   FunLabyUtils, GitTools;
 
 resourcestring
+  SConnectionErrorTitle = 'Erreur de connexion';
+
   SInstallFailedTitle = 'Échec de l''installation';
   SProjectHasNoArchive = 'Impossible d''installer ce projet car il n''y a pas '+
     'd''archive renseignée sur Internet';
@@ -274,11 +276,26 @@ end;
   Rafraîchit toutes les informations sur les projets
 *}
 procedure TFormMain.RefreshProjects;
+var
+  Success: Boolean;
 begin
+  Success := True;
   Projects.BeginUpdate;
-  LoadInfoFromInternet;
+
+  try
+    LoadInfoFromInternet;
+  except
+    on Error: EIdException do
+    begin
+      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
+      Success := False;
+    end;
+  end;
+
   LoadInfoFromLocal;
-  Projects.EndUpdate;
+
+  if Success then
+    Projects.EndUpdate;
 
   UpdateProjectList;
 end;
@@ -475,11 +492,19 @@ begin
   FileName := CreateNewFileName(GetTempPath+Project.Path, '.zip', False);
 
   // Download archive
-  Contents := TFileStream.Create(FileName, fmCreate);
   try
-    Grabber.Get(Project.Remote.Archive, Contents);
-  finally
-    Contents.Free;
+    Contents := TFileStream.Create(FileName, fmCreate);
+    try
+      Grabber.Get(Project.Remote.Archive, Contents);
+    finally
+      Contents.Free;
+    end;
+  except
+    on Error: EIdException do
+    begin
+      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
+      Exit;
+    end;
   end;
 
   // Remove any existing project
@@ -564,7 +589,16 @@ var
   I: Integer;
 begin
   LibraryFiles.Clear;
-  LoadLibraryInfoFromInternet;
+
+  try
+    LoadLibraryInfoFromInternet;
+  except
+    on Error: EIdException do
+    begin
+      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
+    end;
+  end;
+
   LoadLibraryInfoFromLocal;
 
   for I := LibraryFiles.Count-1 downto 0 do
@@ -810,16 +844,23 @@ var
 begin
   DoneSomething := False;
 
-  for I := 0 to ListViewLibrary.Items.Count-1 do
-  begin
-    Item := ListViewLibrary.Items[I];
-    LibraryFile := TLibraryFile(Item.Data);
-    Action := StatusAndCheckedToAction(LibraryFile.Status, Item.Checked);
-
-    if Action.Action <> faNone then
+  try
+    for I := 0 to ListViewLibrary.Items.Count-1 do
     begin
-      ApplyLibraryFileAction(LibraryFile, Action);
-      DoneSomething := True;
+      Item := ListViewLibrary.Items[I];
+      LibraryFile := TLibraryFile(Item.Data);
+      Action := StatusAndCheckedToAction(LibraryFile.Status, Item.Checked);
+
+      if Action.Action <> faNone then
+      begin
+        ApplyLibraryFileAction(LibraryFile, Action);
+        DoneSomething := True;
+      end;
+    end;
+  except
+    on Error: EIdException do
+    begin
+      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
     end;
   end;
 
