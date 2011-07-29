@@ -10,7 +10,7 @@ uses
   FilesUtils, ScUtils, ScXML, msxml, StrUtils, AbBase, AbBrowse, AbZBrows,
   AbZipper, SdDialogs, ShellAPI, AbUnzper, JvBaseDlg, IdException,
   JvProgressDialog, IdAntiFreezeBase, IdAntiFreeze, LibraryDatabase,
-  FunLabyUtils, GitTools;
+  FunLabyUtils, GitTools, IdURI;
 
 resourcestring
   SConnectionErrorTitle = 'Erreur de connexion';
@@ -362,7 +362,7 @@ var
 begin
   Stream := TMemoryStream.Create;
   try
-    Grabber.Get(ProjectInfoURL, Stream);
+    Grabber.Get(TIdURI.URLEncode(ProjectInfoURL), Stream);
     Stream.Seek(0, soFromBeginning);
     Result := LoadXMLDocumentFromStream(Stream);
   finally
@@ -526,7 +526,7 @@ begin
   // Download archive
   Contents := TFileStream.Create(FileName, fmCreate);
   try
-    Grabber.Get(ArchiveURL, Contents);
+    Grabber.Get(TIdURI.URLEncode(ArchiveURL), Contents);
   finally
     Contents.Free;
   end;
@@ -642,7 +642,7 @@ begin
     // Load database file
     Stream := TMemoryStream.Create;
     try
-      Grabber.Get(LibraryInfoURL, Stream);
+      Grabber.Get(TIdURI.URLEncode(LibraryInfoURL), Stream);
       Stream.Seek(0, soFromBeginning);
       Lines.LoadFromStream(Stream, FunLabyEncoding);
     finally
@@ -931,10 +931,11 @@ begin
 
   if Action.Action in [faDownload, faInstall] then
   begin
+    ForceDirectories(ExtractFilePath(FileName));
     Stream := TFileStream.Create(
       IIF(Action.Action = faDownload, BackupFileName, FileName), fmCreate);
     try
-      Grabber.Get(URL, Stream);
+      Grabber.Get(TIdURI.URLEncode(URL), Stream);
     finally
       Stream.Free;
     end;
