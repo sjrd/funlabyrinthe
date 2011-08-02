@@ -1724,9 +1724,23 @@ end;
 procedure TFormMain.ActionViewAllSourcesExecute(Sender: TObject);
 var
   I: Integer;
+  Action: TAction;
 begin
+{ We want to write:
   for I := 0 to Length(SourceActions)-1 do
     SourceActions[I].Execute;
+
+  but this fails because Execute can result in the action being removed. }
+
+  I := 0;
+  while I < Length(SourceActions) do
+  begin
+    Action := SourceActions[I];
+    Action.Execute;
+
+    if (I < Length(SourceActions)) and (SourceActions[I] = Action) then
+      Inc(I);
+  end;
 end;
 
 {*
