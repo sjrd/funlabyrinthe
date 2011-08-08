@@ -53,6 +53,7 @@
 			<DCCReference Include="ProjectDatabase.pas"/>
 			<DCCReference Include="LibraryDatabase.pas"/>
 			<DCCReference Include="GitTools.pas"/>
+			<DCCReference Include="JvThreadProgressDialog.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

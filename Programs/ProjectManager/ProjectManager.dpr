@@ -10,7 +10,8 @@ uses
   ProjectManagerMain in 'ProjectManagerMain.pas' {FormMain},
   ProjectDatabase in 'ProjectDatabase.pas',
   LibraryDatabase in 'LibraryDatabase.pas',
-  GitTools in 'GitTools.pas';
+  GitTools in 'GitTools.pas',
+  JvThreadProgressDialog in 'JvThreadProgressDialog.pas';
 
 {$R *.res}
 
