@@ -6,6 +6,9 @@ uses
   SysUtils, Classes, ScXML, FunLabyUtils, FilesUtils, FunLabyFilers;
 
 type
+  /// Actions qui peuvent être entreprises sur un projet
+  TProjectAction = (paNone, paInstall);
+
   {*
     Classe de base pour TLocalProject et TRemoteProject
     @author sjrd
@@ -101,6 +104,8 @@ type
     FLocal: TLocalProject;   /// Projet local
     FRemote: TRemoteProject; /// Projet disponible sur Internet
 
+    FAction: TProjectAction; /// Action à entreprendre pour ce projet
+
     function GetIsLocalDefined: Boolean;
     function GetIsRemoteDefined: Boolean;
 
@@ -131,6 +136,8 @@ type
     property RemoteVersion: string read GetRemoteVersion;
 
     property OwnProject: Boolean read GetOwnProject;
+
+    property Action: TProjectAction read FAction write FAction;
   published
     property Path: TFileName read FPath write FPath;
     property Local: TLocalProject read FLocal stored GetIsLocalDefined;

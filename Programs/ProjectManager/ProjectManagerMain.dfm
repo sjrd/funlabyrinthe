@@ -1,6 +1,7 @@
 object FormMain: TFormMain
   Left = 0
   Top = 0
+  ActiveControl = ListViewProjects
   Caption = 'Gestionnaire de projets'
   ClientHeight = 482
   ClientWidth = 737
@@ -410,7 +411,7 @@ object FormMain: TFormMain
     Left = 88
     Top = 192
     Bitmap = {
-      494C01010600C8008C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010600C800A40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000006D332700853C130095440D0096450D00873D1200703425000000
@@ -746,5 +747,14 @@ object FormMain: TFormMain
   object IdAntiFreeze: TIdAntiFreeze
     Left = 408
     Top = 152
+  end
+  object ThreadUpdateLibrary: TJvThread
+    Exclusive = True
+    MaxCount = 0
+    RunOnCreate = True
+    FreeOnTerminate = True
+    OnExecute = ThreadUpdateLibraryExecute
+    Left = 456
+    Top = 312
   end
 end

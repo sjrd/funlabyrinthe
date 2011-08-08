@@ -9,6 +9,13 @@ type
   TLibraryFileStatus = (fsUpToDate, fsRemoteUpdated, fsRemoteAdded,
     fsRemoteDeleted, fsLocalUpdated, fsLocalAdded);
 
+  TLibraryFileAction = (faNone, faDownload, faInstall, faDelete);
+
+  TLibraryFileActionFull = record
+    Action: TLibraryFileAction;
+    Backup: Boolean;
+  end;
+
   {*
     Informations locales sur un fichier de la bibliothèque
     @author sjrd
@@ -21,6 +28,8 @@ type
     FRemoteHash: THash; /// Hash distant
 
     FOldHashes: TStrings; /// Anciens hashes distants
+
+    FAction: TLibraryFileActionFull; /// Action à entreprendre pour ce fichier
 
     function GetIsDeleted: Boolean;
     function GetStatus: TLibraryFileStatus;
@@ -36,6 +45,8 @@ type
 
     property IsDeleted: Boolean read GetIsDeleted;
     property Status: TLibraryFileStatus read GetStatus;
+
+    property Action: TLibraryFileActionFull read FAction write FAction;
   end;
 
   {*

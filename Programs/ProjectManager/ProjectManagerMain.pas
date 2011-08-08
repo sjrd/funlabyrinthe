@@ -10,7 +10,8 @@ uses
   FilesUtils, ScUtils, ScXML, msxml, StrUtils, AbBase, AbBrowse, AbZBrows,
   AbZipper, SdDialogs, ShellAPI, AbUnzper, JvBaseDlg, IdException,
   JvProgressDialog, IdAntiFreezeBase, IdAntiFreeze, LibraryDatabase,
-  FunLabyUtils, GitTools, IdURI;
+  FunLabyUtils, GitTools, IdURI, JvComponentBase, JvThread, JvThreadDialog,
+  JvMTComponents, JvThreadProgressDialog;
 
 resourcestring
   SConnectionErrorTitle = 'Erreur de connexion';
@@ -29,19 +30,17 @@ resourcestring
   SInstallDoneTitle = 'Installation terminée';
   SInstallDone = 'L''installation a été faite avec succès';
 
+  SUpdateLibraryTitle = 'Mise à jour de la bibliothèque';
+  SUpdateLibrary = 'Mise à jour de la bibliothèque';
+  SStatusDownloadingFile = 'Téléchargement du fichier %s';
+  SStatusCompilingLibrary = 'Compilation des sources de la bibliothèque';
+
   SDownloadFile = 'Télécharger le fichier sans remplacer le fichier local';
   SInstallFile = 'Installer le fichier';
   SDeleteFile = 'Supprimer le fichier';
   SBackupSuffix = ' (conserver une sauvegarde)';
 
 type
-  TLibraryFileAction = (faNone, faDownload, faInstall, faDelete);
-
-  TLibraryFileActionFull = record
-    Action: TLibraryFileAction;
-    Backup: Boolean;
-  end;
-
   TFormMain = class(TForm)
     ActionManager: TActionManager;
     Images: TImageList;
@@ -71,6 +70,7 @@ type
     IdAntiFreeze: TIdAntiFreeze;
     ListViewLibrary: TListView;
     ActionApplyLibraryChanges: TAction;
+    ThreadUpdateLibrary: TJvThread;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -89,8 +89,11 @@ type
     procedure GrabberWork(ASender: TObject; AWorkMode: TWorkMode;
       AWorkCount: Int64);
     procedure GrabberWorkEnd(ASender: TObject; AWorkMode: TWorkMode);
+    procedure ThreadUpdateLibraryExecute(Sender: TObject; Params: Pointer);
   private
     { Déclarations privées }
+    FThreadDialogOptions: TJvThreadProgressDialogOptions;
+
     FDatabaseFileName: TFileName;
     FDatabase: TProjectDatabase;
     FProjects: TProjectList;
@@ -132,6 +135,9 @@ type
     procedure ApplyLibraryFileAction(LibraryFile: TLibraryFile;
       const Action: TLibraryFileActionFull);
     function CompileLibrary: Boolean;
+
+    property ThreadDialogOptions: TJvThreadProgressDialogOptions
+      read FThreadDialogOptions;
 
     property DatabaseFileName: TFileName read FDatabaseFileName;
     property Projects: TProjectList read FProjects;
@@ -844,8 +850,9 @@ var
   LibraryFile: TLibraryFile;
 begin
   LibraryFile := TLibraryFile(Item.Data);
-  Item.SubItems[3] := ActionToStr(
-    StatusAndCheckedToAction(LibraryFile.Status, Item.Checked));
+  LibraryFile.Action := StatusAndCheckedToAction(
+    LibraryFile.Status, Item.Checked);
+  Item.SubItems[3] := ActionToStr(LibraryFile.Action);
 end;
 
 {*
@@ -854,23 +861,34 @@ end;
 procedure TFormMain.DoLibraryUpdate;
 var
   DoneSomething: Boolean;
-  I: Integer;
-  Item: TListItem;
+  I, Count: Integer;
   LibraryFile: TLibraryFile;
   Action: TLibraryFileActionFull;
 begin
   DoneSomething := False;
 
+  Count := 0;
+  for I := 0 to LibraryFiles.Count-1 do
+    if LibraryFiles[I].Action.Action <> faNone then
+      Inc(Count);
+
+  if Count = 0 then
+    Exit;
+
+  ThreadDialogOptions.MaxProgress := Count;
+  ThreadDialogOptions.ProgressPosition := 0;
+
   try
-    for I := 0 to ListViewLibrary.Items.Count-1 do
+    for I := 0 to LibraryFiles.Count-1 do
     begin
-      Item := ListViewLibrary.Items[I];
-      LibraryFile := TLibraryFile(Item.Data);
-      Action := StatusAndCheckedToAction(LibraryFile.Status, Item.Checked);
+      LibraryFile := LibraryFiles[I];
+      Action := LibraryFile.Action;
 
       if Action.Action <> faNone then
       begin
         ApplyLibraryFileAction(LibraryFile, Action);
+        ThreadDialogOptions.ProgressPosition :=
+          ThreadDialogOptions.ProgressPosition+1;
         DoneSomething := True;
       end;
     end;
@@ -883,6 +901,7 @@ begin
 
   if DoneSomething then
   begin
+    ThreadDialogOptions.InfoText := SStatusCompilingLibrary;
     RefreshLibrary;
     CompileLibrary;
   end;
@@ -913,6 +932,9 @@ var
 begin
   if Action.Action = faNone then
     Exit;
+
+  ThreadDialogOptions.InfoText := Format(
+    SStatusDownloadingFile, [LibraryFile.Path]);
 
   FileName := JoinPath([LibraryPath,
     AnsiReplaceStr(LibraryFile.Path, HRefDelim, PathDelim)]);
@@ -947,7 +969,17 @@ end;
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFormMain.FormCreate(Sender: TObject);
+var
+  ThreadDialog: TJvThreadProgressDialog;
 begin
+  ThreadDialog := TJvThreadProgressDialog.Create(Self);
+  FThreadDialogOptions := ThreadDialog.DialogOptions;
+  ThreadUpdateLibrary.ThreadDialog := ThreadDialog;
+
+  ThreadDialogOptions.CancelButtonCaption := 'Annuler';
+  ThreadDialogOptions.ShowDialog := True;
+  ThreadDialogOptions.ShowProgressBar := True;
+
   FDatabaseFileName := JoinPath([ProjectsPath, 'Projects.xml']);
   FDatabase := TProjectDatabase.Create;
   FProjects := FDatabase.Projects;
@@ -1094,7 +1126,9 @@ end;
 
 procedure TFormMain.ActionApplyLibraryChangesExecute(Sender: TObject);
 begin
-  DoLibraryUpdate;
+  ThreadDialogOptions.Caption := SUpdateLibraryTitle;
+  ThreadDialogOptions.InfoText := SUpdateLibrary;
+  ThreadUpdateLibrary.ExecuteWithDialog(nil);
 end;
 
 procedure TFormMain.ListViewLibraryItemChecked(Sender: TObject;
@@ -1107,6 +1141,9 @@ end;
 procedure TFormMain.GrabberWorkBegin(ASender: TObject; AWorkMode: TWorkMode;
   AWorkCountMax: Int64);
 begin
+  if ThreadUpdateLibrary.OneThreadIsRunning then
+    Exit;
+
   ProgressDialog.Max := AWorkCountMax;
   ProgressDialog.Position := 0;
   ProgressDialog.Show;
@@ -1115,12 +1152,24 @@ end;
 procedure TFormMain.GrabberWork(ASender: TObject; AWorkMode: TWorkMode;
   AWorkCount: Int64);
 begin
+  if ThreadUpdateLibrary.OneThreadIsRunning then
+    Exit;
+
   ProgressDialog.Position := AWorkCount;
 end;
 
 procedure TFormMain.GrabberWorkEnd(ASender: TObject; AWorkMode: TWorkMode);
 begin
+  if ThreadUpdateLibrary.OneThreadIsRunning then
+    Exit;
+
   ProgressDialog.Hide;
+end;
+
+procedure TFormMain.ThreadUpdateLibraryExecute(Sender: TObject;
+  Params: Pointer);
+begin
+  DoLibraryUpdate;
 end;
 
 initialization
