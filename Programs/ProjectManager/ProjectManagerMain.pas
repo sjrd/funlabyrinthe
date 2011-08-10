@@ -11,10 +11,14 @@ uses
   AbZipper, SdDialogs, ShellAPI, AbUnzper, JvBaseDlg, IdException,
   JvProgressDialog, IdAntiFreezeBase, IdAntiFreeze, LibraryDatabase,
   FunLabyUtils, GitTools, IdURI, JvComponentBase, JvThread, JvThreadDialog,
-  JvMTComponents, JvThreadProgressDialog;
+  JvMTComponents, JvThreadProgressDialog, JvChangeNotify;
 
 resourcestring
   SConnectionErrorTitle = 'Erreur de connexion';
+
+  SUpdateRemoteInfoCacheTitle = 'Mise à jour des informations';
+  SUpdateRemoteInfoCache = 'Mise à jour des informations sur les projets et '+
+    'la bibliothèque depuis Internet';
 
   SInstallFailedTitle = 'Échec de l''installation';
   SProjectHasNoArchive = 'Impossible d''installer ce projet car il n''y a pas '+
@@ -71,6 +75,8 @@ type
     ListViewLibrary: TListView;
     ActionApplyLibraryChanges: TAction;
     ThreadUpdateLibrary: TJvThread;
+    ThreadUpdateRemoteInfoCache: TJvThread;
+    LocalFilesMonitor: TJvChangeNotify;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -90,6 +96,10 @@ type
       AWorkCount: Int64);
     procedure GrabberWorkEnd(ASender: TObject; AWorkMode: TWorkMode);
     procedure ThreadUpdateLibraryExecute(Sender: TObject; Params: Pointer);
+    procedure ThreadUpdateRemoteInfoCacheExecute(Sender: TObject;
+      Params: Pointer);
+    procedure LocalFilesMonitorChangeNotify(Sender: TObject; Dir: string;
+      Actions: TJvChangeActions);
   private
     { Déclarations privées }
     FThreadDialogOptions: TJvThreadProgressDialogOptions;
@@ -100,6 +110,8 @@ type
     FCurrentProject: TProject;
 
     FLibraryFiles: TLibraryFileList;
+
+    FUseGrabberWorkForProgress: Boolean;
 
     procedure Refresh;
 
@@ -136,6 +148,11 @@ type
       const Action: TLibraryFileActionFull);
     function CompileLibrary: Boolean;
 
+    procedure DownloadFile(const URL: string; const DestFileName: TFileName;
+      UseGrabberWorkForProgress: Boolean = True);
+    procedure DownloadFileViaTempFile(const URL: string;
+      const DestFileName: TFileName; UseGrabberWorkForProgress: Boolean = True);
+
     property ThreadDialogOptions: TJvThreadProgressDialogOptions
       read FThreadDialogOptions;
 
@@ -169,9 +186,16 @@ const
   LibraryURL = RootURL + 'media/library/';
   LibraryInfoURL = LibraryURL + 'database.txt';
 
+  RemoteInfoCacheDir = 'TempData';
+
   GroupModifiedLocally = 0;
   GroupObsolete = 1;
   GroupUpToDate = 2;
+
+var
+  RemoteInfoCachePath: TFileName;
+  ProjectInfoCacheFileName: TFileName;
+  LibraryInfoCacheFileName: TFileName;
 
 {*
   Create a temporary file name
@@ -279,6 +303,8 @@ end;
 *}
 procedure TFormMain.Refresh;
 begin
+  ThreadUpdateRemoteInfoCache.ExecuteWithDialog(nil);
+
   RefreshProjects;
   RefreshLibrary;
 end;
@@ -287,26 +313,11 @@ end;
   Rafraîchit toutes les informations sur les projets
 *}
 procedure TFormMain.RefreshProjects;
-var
-  Success: Boolean;
 begin
-  Success := True;
   Projects.BeginUpdate;
-
-  try
-    LoadInfoFromInternet;
-  except
-    on Error: EIdException do
-    begin
-      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
-      Success := False;
-    end;
-  end;
-
+  LoadInfoFromInternet;
   LoadInfoFromLocal;
-
-  if Success then
-    Projects.EndUpdate;
+  Projects.EndUpdate;
 
   UpdateProjectList;
 end;
@@ -330,6 +341,8 @@ var
 
 begin
   Document := LoadProjectInfoDocument;
+  if Document = nil then
+    Exit;
   Nodes := Document.documentElement.childNodes;
 
   for I := 0 to Nodes.length-1 do
@@ -363,16 +376,12 @@ end;
   @return Un document XML contenant les informations
 *}
 function TFormMain.LoadProjectInfoDocument: IXMLDOMDocument;
-var
-  Stream: TMemoryStream;
 begin
-  Stream := TMemoryStream.Create;
   try
-    Grabber.Get(TIdURI.URLEncode(ProjectInfoURL), Stream);
-    Stream.Seek(0, soFromBeginning);
-    Result := LoadXMLDocumentFromStream(Stream);
-  finally
-    Stream.Free;
+    Result := LoadXMLDocumentFromFile(ProjectInfoCacheFileName);
+  except
+    on EInOutError do
+      Result := nil;
   end;
 end;
 
@@ -612,16 +621,7 @@ var
   I: Integer;
 begin
   LibraryFiles.Clear;
-
-  try
-    LoadLibraryInfoFromInternet;
-  except
-    on Error: EIdException do
-    begin
-      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
-    end;
-  end;
-
+  LoadLibraryInfoFromInternet;
   LoadLibraryInfoFromLocal;
 
   for I := LibraryFiles.Count-1 downto 0 do
@@ -636,7 +636,6 @@ end;
 *}
 procedure TFormMain.LoadLibraryInfoFromInternet;
 var
-  Stream: TMemoryStream;
   Lines: TStrings;
   CurrentPath: TFileName;
   CurrentFile: TLibraryFile;
@@ -646,14 +645,7 @@ begin
   Lines := TStringList.Create;
   try
     // Load database file
-    Stream := TMemoryStream.Create;
-    try
-      Grabber.Get(TIdURI.URLEncode(LibraryInfoURL), Stream);
-      Stream.Seek(0, soFromBeginning);
-      Lines.LoadFromStream(Stream, FunLabyEncoding);
-    finally
-      Stream.Free;
-    end;
+    Lines.LoadFromFile(LibraryInfoCacheFileName, FunLabyEncoding);
 
     // Parse the file
     CurrentPath := '';
@@ -902,7 +894,7 @@ begin
   if DoneSomething then
   begin
     ThreadDialogOptions.InfoText := SStatusCompilingLibrary;
-    RefreshLibrary;
+    ThreadUpdateLibrary.Synchronize(RefreshLibrary);
     CompileLibrary;
   end;
 end;
@@ -914,6 +906,41 @@ end;
 function TFormMain.CompileLibrary: Boolean;
 begin
   Result := ExecProgram(Dir+'FunLabyEdit.exe', '-autocompile');
+end;
+
+procedure TFormMain.DownloadFile(const URL: string;
+  const DestFileName: TFileName; UseGrabberWorkForProgress: Boolean = True);
+var
+  Stream: TStream;
+  OldUseGrabberWorkForProgress: Boolean;
+begin
+  OldUseGrabberWorkForProgress := FUseGrabberWorkForProgress;
+  Stream := TFileStream.Create(DestFileName, fmCreate);
+
+  if UseGrabberWorkForProgress then
+    FUseGrabberWorkForProgress := True;
+  try
+    Grabber.Get(TIdURI.URLEncode(URL), Stream);
+  finally
+    FUseGrabberWorkForProgress := OldUseGrabberWorkForProgress;
+    Stream.Free;
+  end;
+end;
+
+procedure TFormMain.DownloadFileViaTempFile(const URL: string;
+  const DestFileName: TFileName; UseGrabberWorkForProgress: Boolean = True);
+var
+  TempFileName: TFileName;
+begin
+  if not FileExists(DestFileName) then
+    DownloadFile(URL, DestFileName, UseGrabberWorkForProgress)
+  else
+  begin
+    TempFileName := DestFileName + '~';
+    DownloadFile(URL, TempFileName, UseGrabberWorkForProgress);
+    DeleteFile(DestFileName);
+    MoveFile(PChar(TempFileName), PChar(DestFileName));
+  end;
 end;
 
 {*
@@ -974,6 +1001,8 @@ var
 begin
   ThreadDialog := TJvThreadProgressDialog.Create(Self);
   FThreadDialogOptions := ThreadDialog.DialogOptions;
+
+  ThreadUpdateRemoteInfoCache.ThreadDialog := ThreadDialog;
   ThreadUpdateLibrary.ThreadDialog := ThreadDialog;
 
   ThreadDialogOptions.CancelButtonCaption := 'Annuler';
@@ -1011,6 +1040,10 @@ begin
   OnActivate := nil;
 
   Refresh;
+
+  LocalFilesMonitor.Notifications[0].Directory := ProjectsPath;
+  LocalFilesMonitor.Notifications[1].Directory := LibraryPath;
+  LocalFilesMonitor.Active := True;
 end;
 
 procedure TFormMain.ActionRefreshExecute(Sender: TObject);
@@ -1141,6 +1174,14 @@ end;
 procedure TFormMain.GrabberWorkBegin(ASender: TObject; AWorkMode: TWorkMode;
   AWorkCountMax: Int64);
 begin
+  if FUseGrabberWorkForProgress then
+  begin
+    ThreadDialogOptions.MinProgress := 0;
+    ThreadDialogOptions.MaxProgress := AWorkCountMax;
+    ThreadDialogOptions.ProgressPosition := 0;
+    Exit;
+  end;
+
   if ThreadUpdateLibrary.OneThreadIsRunning then
     Exit;
 
@@ -1152,6 +1193,12 @@ end;
 procedure TFormMain.GrabberWork(ASender: TObject; AWorkMode: TWorkMode;
   AWorkCount: Int64);
 begin
+  if FUseGrabberWorkForProgress then
+  begin
+    ThreadDialogOptions.ProgressPosition := AWorkCount;
+    Exit;
+  end;
+
   if ThreadUpdateLibrary.OneThreadIsRunning then
     Exit;
 
@@ -1160,6 +1207,12 @@ end;
 
 procedure TFormMain.GrabberWorkEnd(ASender: TObject; AWorkMode: TWorkMode);
 begin
+  if FUseGrabberWorkForProgress then
+  begin
+    ThreadDialogOptions.ProgressPosition := ThreadDialogOptions.MaxProgress;
+    Exit;
+  end;
+
   if ThreadUpdateLibrary.OneThreadIsRunning then
     Exit;
 
@@ -1172,7 +1225,34 @@ begin
   DoLibraryUpdate;
 end;
 
+procedure TFormMain.ThreadUpdateRemoteInfoCacheExecute(Sender: TObject;
+  Params: Pointer);
+begin
+  ThreadDialogOptions.Caption := SUpdateRemoteInfoCacheTitle;
+  ThreadDialogOptions.InfoText := SUpdateRemoteInfoCache;
+  ThreadDialogOptions.ProgressPosition := 0;
+
+  DownloadFileViaTempFile(ProjectInfoURL, ProjectInfoCacheFileName);
+  DownloadFileViaTempFile(LibraryInfoURL, LibraryInfoCacheFileName);
+end;
+
+procedure TFormMain.LocalFilesMonitorChangeNotify(Sender: TObject; Dir: string;
+  Actions: TJvChangeActions);
+begin
+  if ThreadUpdateLibrary.OneThreadIsRunning then
+    Exit;
+
+  if Dir = ProjectsPath then
+    RefreshProjects
+  else if Dir = LibraryPath then
+    RefreshLibrary;
+end;
+
 initialization
   DecimalSeparator := '.';
+
+  RemoteInfoCachePath := JoinPath([ScUtils.Dir, RemoteInfoCacheDir]);
+  ProjectInfoCacheFileName := JoinPath([RemoteInfoCachePath, 'Projects.xml']);
+  LibraryInfoCacheFileName := JoinPath([RemoteInfoCachePath, 'Library.txt']);
 end.
 

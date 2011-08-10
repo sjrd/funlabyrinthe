@@ -179,10 +179,6 @@ object FormMain: TFormMain
     object TabLibrary: TTabSheet
       Caption = 'Biblioth'#232'que'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object ListViewLibrary: TListView
         Left = 0
         Top = 0
@@ -411,7 +407,7 @@ object FormMain: TFormMain
     Left = 88
     Top = 192
     Bitmap = {
-      494C01010600C800A40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010600C800AC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000006D332700853C130095440D0096450D00873D1200703425000000
@@ -756,5 +752,28 @@ object FormMain: TFormMain
     OnExecute = ThreadUpdateLibraryExecute
     Left = 456
     Top = 312
+  end
+  object ThreadUpdateRemoteInfoCache: TJvThread
+    Exclusive = True
+    MaxCount = 0
+    RunOnCreate = True
+    FreeOnTerminate = True
+    OnExecute = ThreadUpdateRemoteInfoCacheExecute
+    Left = 296
+    Top = 312
+  end
+  object LocalFilesMonitor: TJvChangeNotify
+    Notifications = <
+      item
+        Actions = [caChangeFileName, caChangeDirName, caChangeSize, caChangeLastWrite]
+        IncludeSubTrees = True
+      end
+      item
+        Actions = [caChangeFileName, caChangeDirName, caChangeSize, caChangeLastWrite]
+        IncludeSubTrees = True
+      end>
+    OnChangeNotify = LocalFilesMonitorChangeNotify
+    Left = 296
+    Top = 376
   end
 end
