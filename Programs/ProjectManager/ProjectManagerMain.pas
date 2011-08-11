@@ -106,6 +106,7 @@ type
     procedure ThreadUpdateLibraryExecute(Sender: TObject; Params: Pointer);
     procedure ThreadUpdateRemoteInfoCacheExecute(Sender: TObject;
       Params: Pointer);
+    procedure ThreadDialogPressCancel(CurrentThread: TJvThread);
     procedure LocalFilesMonitorChangeNotify(Sender: TObject; Dir: string;
       Actions: TJvChangeActions);
   private
@@ -155,7 +156,7 @@ type
     procedure DoLibraryUpdate;
     procedure ApplyLibraryFileAction(LibraryFile: TLibraryFile;
       const Action: TLibraryFileActionFull);
-    function CompileLibrary: Boolean;
+    procedure CompileLibrary;
 
     procedure DownloadFile(const URL: string; const DestFileName: TFileName;
       UseGrabberWorkForProgress: Boolean = True);
@@ -895,28 +896,24 @@ begin
         DoneSomething := True;
       end;
     end;
-  except
-    on Error: EIdException do
-    begin
-      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
-    end;
-  end;
+  finally
+    ThreadDialogOptions.ProgressPosition := Count;
 
-  if DoneSomething then
-  begin
-    ThreadDialogOptions.InfoText := SStatusCompilingLibrary;
     ThreadUpdateLibrary.Synchronize(RefreshLibrary);
-    CompileLibrary;
+
+    if DoneSomething then
+      CompileLibrary;
   end;
 end;
 
 {*
   Compile la bibliothèque
-  @return True en cas de succès, False sinon
 *}
-function TFormMain.CompileLibrary: Boolean;
+procedure TFormMain.CompileLibrary;
 begin
-  Result := ExecProgram(Dir+'FunLabyEdit.exe', '-autocompile');
+  ThreadDialogOptions.InfoText := SStatusCompilingLibrary;
+
+  ExecProgram(Dir+'FunLabyEdit.exe', '-autocompile');
 end;
 
 procedure TFormMain.DownloadFile(const URL: string;
@@ -927,12 +924,14 @@ var
 begin
   OldUseGrabberWorkForProgress := FUseGrabberWorkForProgress;
   Stream := TFileStream.Create(DestFileName, fmCreate);
-
-  if UseGrabberWorkForProgress then
-    FUseGrabberWorkForProgress := True;
   try
+    if UseGrabberWorkForProgress then
+      FUseGrabberWorkForProgress := True;
+    ThreadDialogOptions.ShowCancelButton := True;
+
     Grabber.Get(TIdURI.URLEncode(URL), Stream);
   finally
+    ThreadDialogOptions.ShowCancelButton := False;
     FUseGrabberWorkForProgress := OldUseGrabberWorkForProgress;
     Stream.Free;
   end;
@@ -943,14 +942,14 @@ procedure TFormMain.DownloadFileViaTempFile(const URL: string;
 var
   TempFileName: TFileName;
 begin
-  if not FileExists(DestFileName) then
-    DownloadFile(URL, DestFileName, UseGrabberWorkForProgress)
-  else
-  begin
-    TempFileName := DestFileName + '~';
+  TempFileName := DestFileName + '.part';
+  try
     DownloadFile(URL, TempFileName, UseGrabberWorkForProgress);
     DeleteFile(DestFileName);
     MoveFile(PChar(TempFileName), PChar(DestFileName));
+  finally
+    if FileExists(TempFileName) then
+      DeleteFile(TempFileName);
   end;
 end;
 
@@ -966,7 +965,6 @@ const
 var
   FileName, BackupFileName: TFileName;
   URL: string;
-  Stream: TStream;
 begin
   if Action.Action = faNone then
     Exit;
@@ -992,13 +990,8 @@ begin
   if Action.Action in [faDownload, faInstall] then
   begin
     ForceDirectories(ExtractFilePath(FileName));
-    Stream := TFileStream.Create(
-      IIF(Action.Action = faDownload, BackupFileName, FileName), fmCreate);
-    try
-      Grabber.Get(TIdURI.URLEncode(URL), Stream);
-    finally
-      Stream.Free;
-    end;
+    DownloadFileViaTempFile(URL,
+      IIF(Action.Action = faDownload, BackupFileName, FileName), False);
   end;
 end;
 
@@ -1011,6 +1004,7 @@ var
   ThreadDialog: TJvThreadProgressDialog;
 begin
   ThreadDialog := TJvThreadProgressDialog.Create(Self);
+  ThreadDialog.OnPressCancel := ThreadDialogPressCancel;
   FThreadDialogOptions := ThreadDialog.DialogOptions;
 
   ThreadUpdateRemoteInfoCache.ThreadDialog := ThreadDialog;
@@ -1020,6 +1014,7 @@ begin
   ThreadDialogOptions.CancelButtonCaption := 'Annuler';
   ThreadDialogOptions.ShowDialog := True;
   ThreadDialogOptions.ShowProgressBar := True;
+  ThreadDialogOptions.ShowCancelButton := False;
 
   FDatabaseFileName := JoinPath([ProjectsPath, 'Projects.xml']);
   FDatabase := TProjectDatabase.Create;
@@ -1242,16 +1237,23 @@ begin
   DownloadFileViaTempFile(LibraryInfoURL, LibraryInfoCacheFileName);
 end;
 
+procedure TFormMain.ThreadDialogPressCancel(CurrentThread: TJvThread);
+begin
+  Grabber.Disconnect;
+end;
+
 procedure TFormMain.LocalFilesMonitorChangeNotify(Sender: TObject; Dir: string;
   Actions: TJvChangeActions);
 begin
-  if ThreadUpdateLibrary.OneThreadIsRunning then
-    Exit;
-
   if Dir = ProjectsPath then
-    RefreshProjects
-  else if Dir = LibraryPath then
-    RefreshLibrary;
+  begin
+    if not ThreadInstallProjects.OneThreadIsRunning then
+      RefreshProjects;
+  end else if Dir = LibraryPath then
+  begin
+    if not ThreadUpdateLibrary.OneThreadIsRunning then
+      RefreshLibrary;
+  end;
 end;
 
 initialization

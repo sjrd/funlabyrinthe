@@ -115,8 +115,10 @@ object FormMain: TFormMain
             Width = 200
           end
           item
+            AutoSize = True
             Caption = 'Titre'
-            Width = 200
+            WidthType = (
+              -25)
           end
           item
             Caption = 'Version install'#233'e'
@@ -179,6 +181,10 @@ object FormMain: TFormMain
     object TabLibrary: TTabSheet
       Caption = 'Biblioth'#232'que'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object ListViewLibrary: TListView
         Left = 0
         Top = 0
@@ -205,7 +211,7 @@ object FormMain: TFormMain
           end
           item
             Caption = 'Action'
-            Width = 150
+            Width = 250
           end>
         Groups = <
           item
@@ -407,7 +413,7 @@ object FormMain: TFormMain
     Left = 88
     Top = 192
     Bitmap = {
-      494C01010600C800B00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010600C800B40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000006D332700853C130095440D0096450D00873D1200703425000000
