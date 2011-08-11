@@ -80,8 +80,6 @@ type
   public
     constructor Create(AOwner: TComponent); override;
 
-    procedure CenterToPlayerPosition(Player: TPlayer);
-
     procedure LoadFile(AMasterFile: TMasterFile);
     procedure UnloadFile;
 
@@ -554,21 +552,6 @@ begin
 end;
 
 {*
-  Centre l'affichage sur le joueur
-  @param Player   Joueur  visionner
-*}
-procedure TFrameMapEditor.CenterToPlayerPosition(Player: TPlayer);
-begin
-  if Player.Map = nil then
-  begin
-    ShowDialog(sCantCenterToPosition, sCantCenterToUnplacedPlayer, dtError);
-    Exit;
-  end;
-
-  MapViewer.ShowPosition(Player.Map, Player.Position);
-end;
-
-{*
   Charge un fichier
   @param AMasterFile   Fichier maître
 *}
@@ -593,7 +576,7 @@ begin
   begin
     if Master.Players[I].Map <> nil then
     begin
-      CenterToPlayerPosition(Master.Players[I]);
+      MapViewer.ShowPosition(Master.Players[I].QPos);
       Break;
     end;
   end;

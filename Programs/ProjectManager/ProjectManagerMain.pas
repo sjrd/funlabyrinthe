@@ -14,8 +14,6 @@ uses
   JvMTComponents, JvThreadProgressDialog, JvChangeNotify;
 
 resourcestring
-  SConnectionErrorTitle = 'Erreur de connexion';
-
   SUpdateRemoteInfoCacheTitle = 'Mise à jour des informations';
   SUpdateRemoteInfoCache = 'Mise à jour des informations sur les projets et '+
     'la bibliothèque depuis Internet';
@@ -23,16 +21,14 @@ resourcestring
   SInstallFailedTitle = 'Échec de l''installation';
   SProjectHasNoArchive = 'Impossible d''installer ce projet car il n''y a pas '+
     'd''archive renseignée sur Internet';
-  SProjectCompilationFailed = 'Échec lors de la compilation des sources du projet';
+  SProjectCompilationFailed =
+    'Échec lors de la compilation des sources du projet';
 
   SConfirmInstallTitle = 'Confirmer l''installation';
   SConfirmInstallErase = 'Vous avez déjà une installation locale de ce '+
     'projet. Cette installation locale sera mise à la corbeille avant de '+
     'continuer. Voulez-vous vraiment mettre à jour ce projet ?';
   SConfirmInstallNoErase = 'Voulez-vous vraiment installer ce projet ?';
-
-  SInstallDoneTitle = 'Installation terminée';
-  SInstallDone = 'L''installation a été faite avec succès';
 
   SInstallProjectsTitle = 'Installation des projets';
   SInstallProjects = 'Installation des projets';

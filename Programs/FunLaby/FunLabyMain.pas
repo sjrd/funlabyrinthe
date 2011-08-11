@@ -19,7 +19,8 @@ uses
 
 resourcestring
   SErrorTitle = 'Erreur';
-  sFatalErrorTitle = 'Erreur fatale';
+  SFatalErrorTitle = 'Erreur fatale';
+  SDescriptionTitle = 'Description';
 
   sBaseSepiRootLoadError =
     'Erreur au chargement des fonctionnalités coeur de FunLabyrinthe avec le '+
@@ -29,9 +30,6 @@ resourcestring
     'contient pas exactement un joueur.';
   SCantPlayPlayerIsNowhere = 'Impossible de jouer à ce labyrinthe car le '+
     'joueur n''a pas été placé sur une carte.';
-
-  sViewSize = 'Taille de la vue';
-  sViewSizePrompt = 'Taille de la vue :';
 
   sExitConfirmTitle = 'Enregistrer la partie';
   sExitConfirm = 'Voulez-vous enregistrer la partie en cours ?';
@@ -679,7 +677,7 @@ end;
 *}
 procedure TFormMain.MenuDescriptionClick(Sender: TObject);
 begin
-  ShowDialog(SDescription, MasterFile.Description);
+  ShowDialog(SDescriptionTitle, MasterFile.Description);
 end;
 
 {*

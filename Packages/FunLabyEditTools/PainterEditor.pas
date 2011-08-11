@@ -7,12 +7,6 @@ uses
   Dialogs, Buttons, ExtDlgs, StdCtrls, ScStrUtils, SdDialogs, GR32, GR32_Image,
   GR32_Layers, FunLabyUtils, FilesUtils, FunLabyCoreConsts;
 
-resourcestring
-  SInvalidImageFileNameTitle = 'Fichier d''image invalide';
-  SInvalidImageFileName =
-    'Les images doivent être sélectionnée dans le dossier d''images de '+
-    'FunLabyrinthe';
-
 type
   {*
     Peintre en édition

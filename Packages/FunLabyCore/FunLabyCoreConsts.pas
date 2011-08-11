@@ -52,20 +52,8 @@ resourcestring
   SInvalidID = '''%s'' n''est pas un ID de composant valide (seuls les '+
     'lettres non accentuées, les chiffres et le _ sont autorisés)';
   SDuplicateID = 'Il existe déjà un composant dont l''ID est %s';
-  SUnsupportedCommand = 'La commande %s n''est pas supportée';
   STemporaryStatedMap =
     'La carte d''ID %s est dans un état temporaire qui ne peut être enregistré';
-
-  // Titres des messages
-  SDescription = 'Description';
-  SMessage = 'Message';
-  STip = 'Indice';
-  SChoice = 'Choix';
-  SError = 'Erreur';
-  SFailure = 'Échec';
-  SBlindAlley = 'Impasse';
-  SWon = 'Gagné !';
-  SLost = 'Perdu !';
 
   // Formats de fichier et traitement des fichiers
   SFullVersionNumber = '%s (build %d)';
@@ -80,12 +68,8 @@ resourcestring
   SCannotMakeResourceHRef = 'Impossible de construire un href pour la '+
     'ressource ''%s'' car celle-ci n''est pas dans le chemin de recherche du '+
     'projet';
-  SUnknownUnitType = 'Type d''unité ''%s'' inconnu';
-  SThereMustBeOnePlayer = 'Il doit y avoir un et un seul joueur par fichier';
-  SEditingNotAllowed = 'L''édition de ce fichier n''est pas permise';
   SCantEditSaveguard = 'L''édition d''une sauvegarde est impossible';
   SNoFileName = 'Aucun nom de fichier spécifié';
-  SCantLoadPackage = 'Impossible de charger le paquet "%s"';
   SPainterFilter = 'Peintre FunLabyrinthe|*.pnt';
 
 implementation

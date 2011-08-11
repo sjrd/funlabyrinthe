@@ -2085,7 +2085,7 @@ begin
     on EAbort do
     begin
       CanClose := False;
-      ShowDialog(SCantSave, SCantSaveBadProjectFileName, dtError);
+      ShowDialog(SCantSaveTitle, SCantSaveBadProjectFileName, dtError);
     end;
   end;
 end;

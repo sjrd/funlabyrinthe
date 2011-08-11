@@ -14,6 +14,8 @@ uses
 resourcestring
   SAllSourceTypes = 'Tous les types de source';
 
+  SUnknownSourceType = 'Type de fichier source inconnu';
+
 type
   ISourceEditor50 = interface;
 
@@ -414,7 +416,7 @@ function TSourceEditorList.Find(
   const Extension: string): TCreateSourceEditorProc;
 begin
   if not (inherited Find(Extension, Result)) then
-    raise EInOutError.CreateFmt(SUnknownUnitType, [Extension]);
+    raise EInOutError.CreateFmt(SUnknownSourceType, [Extension]);
 end;
 
 {*

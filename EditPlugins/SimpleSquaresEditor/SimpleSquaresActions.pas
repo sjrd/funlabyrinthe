@@ -12,7 +12,7 @@ resourcestring
   SReplaceSquareActionTitle = 'Modifier la case %s';
   SEnableEffectActionTitle = 'Activer l''effet %s';
   SDisableEffectActionTitle = 'Désactiver l''effet %s';
-  SMessageActionTitle = 'Afficher %s';
+  SMessageActionTitle = 'Message';
   SPlaySoundTitle = 'Jouer le son %s';
   SPlayerColorActionTitle = 'Changer la couleur du pion en %s';
   SPlayerShowTitle = 'Montrer le joueur';
@@ -739,7 +739,7 @@ end;
 *}
 function TMessageAction.GetTitle: string;
 begin
-  Result := SMessage;
+  Result := SMessageActionTitle;
 end;
 
 {*
