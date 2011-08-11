@@ -180,6 +180,8 @@ Source: "AppData\Projects\*"; DestDir: "{code:AppData}\Projects"; Flags: sortfil
 Source: "Images\*"; Flags: dontcopy
 
 [Dirs]
+Name: "{app}\TempData"; Permissions: everyone-modify
+
 Name: "{code:AppData}\Library"; Flags: uninsneveruninstall
 Name: "{code:AppData}\Projects"; Flags: uninsneveruninstall
 Name: "{code:AppData}\Saveguards"; Flags: uninsneveruninstall
@@ -213,6 +215,7 @@ Filename: "{app}\FunLaby.exe"; Description: "{cm:LaunchProgram,FunLabyrinthe}"; 
 
 [UninstallDelete]
 Type: files; Name: "{app}\FunLabyrinthe.ini"
+Type: files; Name: "{app}\TempData\*"
 
 [Code]
 const
