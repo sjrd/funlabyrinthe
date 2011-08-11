@@ -15,7 +15,7 @@ object FormPainterEditor: TFormPainterEditor
   Position = poScreenCenter
   Scaled = False
   OnCreate = FormCreate
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 13
   object LabelPreview: TLabel
     Left = 288

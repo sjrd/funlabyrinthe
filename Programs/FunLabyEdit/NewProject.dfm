@@ -15,7 +15,7 @@ object FormNewProject: TFormNewProject
   Position = poMainFormCenter
   Scaled = False
   OnCreate = FormCreate
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 13
   object Label1: TLabel
     Left = 16
