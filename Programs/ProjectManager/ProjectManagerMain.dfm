@@ -175,16 +175,13 @@ object FormMain: TFormMain
         SortType = stText
         TabOrder = 0
         ViewStyle = vsReport
+        OnDblClick = ListViewProjectsDblClick
         OnSelectItem = ListViewProjectsSelectItem
       end
     end
     object TabLibrary: TTabSheet
       Caption = 'Biblioth'#232'que'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object ListViewLibrary: TListView
         Left = 0
         Top = 0
@@ -413,7 +410,7 @@ object FormMain: TFormMain
     Left = 88
     Top = 192
     Bitmap = {
-      494C01010600C800B40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010600C800B80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000006D332700853C130095440D0096450D00873D1200703425000000
@@ -690,6 +687,7 @@ object FormMain: TFormMain
     Top = 208
     object MenuInstall: TMenuItem
       Action = ActionInstall
+      Default = True
     end
     object MenuExport: TMenuItem
       Action = ActionExport

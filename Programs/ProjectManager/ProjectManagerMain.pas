@@ -95,6 +95,7 @@ type
     procedure ActionRunExecute(Sender: TObject);
     procedure ListViewProjectsSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
+    procedure ListViewProjectsDblClick(Sender: TObject);
     procedure ActionApplyLibraryChangesExecute(Sender: TObject);
     procedure ListViewLibraryItemChecked(Sender: TObject; Item: TListItem);
     procedure GrabberWorkBegin(ASender: TObject; AWorkMode: TWorkMode;
@@ -1174,6 +1175,12 @@ begin
     CurrentProject := TProject(Item.Data)
   else
     CurrentProject := nil;
+end;
+
+procedure TFormMain.ListViewProjectsDblClick(Sender: TObject);
+begin
+  if CurrentProject <> nil then
+    ActionInstall.Execute;
 end;
 
 procedure TFormMain.ActionApplyLibraryChangesExecute(Sender: TObject);
