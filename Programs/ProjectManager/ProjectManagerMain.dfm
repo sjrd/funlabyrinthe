@@ -734,16 +734,6 @@ object FormMain: TFormMain
     Left = 160
     Top = 288
   end
-  object ProgressDialog: TJvProgressDialog
-    Caption = 'T'#233'l'#233'chargement des fichiers'
-    ShowCancel = False
-    Left = 432
-    Top = 224
-  end
-  object IdAntiFreeze: TIdAntiFreeze
-    Left = 408
-    Top = 152
-  end
   object ThreadUpdateLibrary: TJvThread
     Exclusive = True
     MaxCount = 0

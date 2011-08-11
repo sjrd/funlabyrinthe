@@ -9,7 +9,7 @@ uses
   IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, ProjectDatabase,
   FilesUtils, ScUtils, ScXML, msxml, StrUtils, AbBase, AbBrowse, AbZBrows,
   AbZipper, SdDialogs, ShellAPI, AbUnzper, JvBaseDlg, IdException,
-  JvProgressDialog, IdAntiFreezeBase, IdAntiFreeze, LibraryDatabase,
+  JvProgressDialog, LibraryDatabase,
   FunLabyUtils, GitTools, IdURI, JvComponentBase, JvThread, JvThreadDialog,
   JvMTComponents, JvThreadProgressDialog, JvChangeNotify;
 
@@ -78,8 +78,6 @@ type
     TabProjects: TTabSheet;
     ListViewProjects: TListView;
     TabLibrary: TTabSheet;
-    ProgressDialog: TJvProgressDialog;
-    IdAntiFreeze: TIdAntiFreeze;
     ListViewLibrary: TListView;
     ActionApplyLibraryChanges: TAction;
     ThreadInstallProjects: TJvThread;
@@ -1205,44 +1203,20 @@ begin
     ThreadDialogOptions.MinProgress := 0;
     ThreadDialogOptions.MaxProgress := AWorkCountMax;
     ThreadDialogOptions.ProgressPosition := 0;
-    Exit;
   end;
-
-  if ThreadUpdateLibrary.OneThreadIsRunning then
-    Exit;
-
-  ProgressDialog.Max := AWorkCountMax;
-  ProgressDialog.Position := 0;
-  ProgressDialog.Show;
 end;
 
 procedure TFormMain.GrabberWork(ASender: TObject; AWorkMode: TWorkMode;
   AWorkCount: Int64);
 begin
   if FUseGrabberWorkForProgress then
-  begin
     ThreadDialogOptions.ProgressPosition := AWorkCount;
-    Exit;
-  end;
-
-  if ThreadUpdateLibrary.OneThreadIsRunning then
-    Exit;
-
-  ProgressDialog.Position := AWorkCount;
 end;
 
 procedure TFormMain.GrabberWorkEnd(ASender: TObject; AWorkMode: TWorkMode);
 begin
   if FUseGrabberWorkForProgress then
-  begin
     ThreadDialogOptions.ProgressPosition := ThreadDialogOptions.MaxProgress;
-    Exit;
-  end;
-
-  if ThreadUpdateLibrary.OneThreadIsRunning then
-    Exit;
-
-  ProgressDialog.Hide;
 end;
 
 procedure TFormMain.ThreadInstallProjectsExecute(Sender: TObject;
