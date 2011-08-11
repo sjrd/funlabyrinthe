@@ -93,6 +93,7 @@ type
     procedure ActionExportExecute(Sender: TObject);
     procedure ActionOwnProjectExecute(Sender: TObject);
     procedure ActionRunExecute(Sender: TObject);
+    procedure PageControlChange(Sender: TObject);
     procedure ListViewProjectsSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure ListViewProjectsDblClick(Sender: TObject);
@@ -122,6 +123,8 @@ type
     FLibraryFiles: TLibraryFileList;
 
     FUseGrabberWorkForProgress: Boolean;
+
+    procedure UpdateActionsEnabled;
 
     procedure Refresh;
 
@@ -308,6 +311,31 @@ end;
 {-----------------}
 { TFormMain class }
 {-----------------}
+
+{*
+  Met à jour la propriété Enabled des diverses actions
+*}
+procedure TFormMain.UpdateActionsEnabled;
+var
+  ActivePage: TTabSheet;
+  Some: Boolean;
+begin
+  ActivePage := PageControl.ActivePage;
+
+  // Actions about projects
+
+  Some := (ActivePage = TabProjects) and (CurrentProject <> nil);
+
+  ActionInstall.Enabled := Some and CurrentProject.IsRemoteDefined;
+  ActionExport.Enabled := Some and CurrentProject.IsLocalDefined;
+  ActionOwnProject.Enabled := Some and CurrentProject.IsLocalDefined;
+  ActionOwnProject.Checked := Some and CurrentProject.OwnProject;
+  ActionRun.Enabled := Some and CurrentProject.IsLocalDefined;
+
+  // Actions about the library
+
+  Self.ActionApplyLibraryChanges.Enabled := ActivePage = TabLibrary;
+end;
 
 {*
   Rafraîchit toutes les informations sur les projets
@@ -610,20 +638,12 @@ end;
   @param Value   Nouveau projet
 *}
 procedure TFormMain.SetCurrentProject(Value: TProject);
-var
-  Some: Boolean;
 begin
-  if Value = FCurrentProject then
-    Exit;
-
-  FCurrentProject := Value;
-  Some := Value <> nil;
-
-  ActionInstall.Enabled := Some and Value.IsRemoteDefined;
-  ActionExport.Enabled := Some and Value.IsLocalDefined;
-  ActionOwnProject.Enabled := Some and Value.IsLocalDefined;
-  ActionOwnProject.Checked := Some and Value.OwnProject;
-  ActionRun.Enabled := Some and Value.IsLocalDefined;
+  if Value <> FCurrentProject then
+  begin
+    FCurrentProject := Value;
+    UpdateActionsEnabled;
+  end;
 end;
 
 {*
@@ -1148,6 +1168,11 @@ begin
 
   ShellExecute(0, 'open', PChar(Dir+'FunLaby.exe'),
     PChar('"'+FileName+'"'), nil, SW_SHOWNORMAL);
+end;
+
+procedure TFormMain.PageControlChange(Sender: TObject);
+begin
+  UpdateActionsEnabled;
 end;
 
 procedure TFormMain.ActionOwnProjectExecute(Sender: TObject);
