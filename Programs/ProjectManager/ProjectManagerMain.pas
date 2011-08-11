@@ -23,7 +23,7 @@ resourcestring
   SInstallFailedTitle = 'Échec de l''installation';
   SProjectHasNoArchive = 'Impossible d''installer ce projet car il n''y a pas '+
     'd''archive renseignée sur Internet';
-  SCompilationFailed = 'Échec lors de la compilation des sources du projet';
+  SProjectCompilationFailed = 'Échec lors de la compilation des sources du projet';
 
   SConfirmInstallTitle = 'Confirmer l''installation';
   SConfirmInstallErase = 'Vous avez déjà une installation locale de ce '+
@@ -33,6 +33,12 @@ resourcestring
 
   SInstallDoneTitle = 'Installation terminée';
   SInstallDone = 'L''installation a été faite avec succès';
+
+  SInstallProjectsTitle = 'Installation des projets';
+  SInstallProjects = 'Installation des projets';
+  SStatusDownloadingProjectArchive = 'Téléchargement du projet %s';
+  SStatusExtractingProjectArchive = 'Installation du projet %s';
+  SStatusCompilingProject = 'Compilation du projet %s';
 
   SUpdateLibraryTitle = 'Mise à jour de la bibliothèque';
   SUpdateLibrary = 'Mise à jour de la bibliothèque';
@@ -45,6 +51,8 @@ resourcestring
   SBackupSuffix = ' (conserver une sauvegarde)';
 
 type
+  ECompilationFailedException = class(Exception);
+
   TFormMain = class(TForm)
     ActionManager: TActionManager;
     Images: TImageList;
@@ -74,6 +82,7 @@ type
     IdAntiFreeze: TIdAntiFreeze;
     ListViewLibrary: TListView;
     ActionApplyLibraryChanges: TAction;
+    ThreadInstallProjects: TJvThread;
     ThreadUpdateLibrary: TJvThread;
     ThreadUpdateRemoteInfoCache: TJvThread;
     LocalFilesMonitor: TJvChangeNotify;
@@ -95,6 +104,7 @@ type
     procedure GrabberWork(ASender: TObject; AWorkMode: TWorkMode;
       AWorkCount: Int64);
     procedure GrabberWorkEnd(ASender: TObject; AWorkMode: TWorkMode);
+    procedure ThreadInstallProjectsExecute(Sender: TObject; Params: Pointer);
     procedure ThreadUpdateLibraryExecute(Sender: TObject; Params: Pointer);
     procedure ThreadUpdateRemoteInfoCacheExecute(Sender: TObject;
       Params: Pointer);
@@ -122,11 +132,12 @@ type
     procedure LoadLocalProject(const ProjectSubFile: TFileName);
     procedure UpdateProjectList;
 
+    procedure DoInstallProjects;
     procedure InstallProject(Project: TProject);
     procedure ExtractArchiveFromURL(const ArchiveURL: string;
       const TempArchiveBaseFileName: TFileName; const DestDir: TFileName;
       DeleteDirIfExists: Boolean = True);
-    function CompileProject(Project: TProject): Boolean;
+    procedure CompileProject(Project: TProject);
 
     procedure SetCurrentProject(Value: TProject);
 
@@ -500,25 +511,35 @@ begin
 end;
 
 {*
+  Installe les projets sélectionnés
+*}
+procedure TFormMain.DoInstallProjects;
+var
+  I: Integer;
+  Project: TProject;
+begin
+  for I := 0 to Projects.Count-1 do
+  begin
+    Project := Projects[I];
+    if Project.Action = paInstall then
+      InstallProject(Project);
+  end;
+
+  ThreadInstallProjects.Synchronize(RefreshProjects);
+end;
+
+{*
   Installe un projet
   @param Project   Projet à installer
 *}
 procedure TFormMain.InstallProject(Project: TProject);
 begin
-  try
-    // Download and install archive
-    ExtractArchiveFromURL(Project.Remote.Archive, Project.Path,
-      JoinPath([ProjectsPath, Project.Path]));
+  // Download and install archive
+  ExtractArchiveFromURL(Project.Remote.Archive, Project.Path,
+    JoinPath([ProjectsPath, Project.Path]));
 
-    // Compile sources in this project
-    if CompileProject(Project) then
-      ShowDialog(SInstallDoneTitle, SInstallDone);
-
-    RefreshProjects;
-  except
-    on Error: EIdException do
-      ShowDialog(SConnectionErrorTitle, Error.Message, dtError);
-  end;
+  // Compile sources in this project
+  CompileProject(Project);
 end;
 
 {*
@@ -533,24 +554,22 @@ procedure TFormMain.ExtractArchiveFromURL(const ArchiveURL: string;
   DeleteDirIfExists: Boolean = True);
 var
   FileName: TFileName;
-  Contents: TFileStream;
 begin
   FileName := CreateNewFileName(GetTempPath+TempArchiveBaseFileName,
     ExtractFileExt(ArchiveURL), False);
 
   // Download archive
-  Contents := TFileStream.Create(FileName, fmCreate);
-  try
-    Grabber.Get(TIdURI.URLEncode(ArchiveURL), Contents);
-  finally
-    Contents.Free;
-  end;
+  ThreadDialogOptions.InfoText := Format(SStatusDownloadingProjectArchive,
+    [TempArchiveBaseFileName]);
+  DownloadFile(ArchiveURL, FileName);
 
   // Delete directory if required
   if DeleteDirIfExists and DirectoryExists(DestDir) then
     DelTree(DestDir);
 
   // Install archive
+  ThreadDialogOptions.InfoText := Format(SStatusExtractingProjectArchive,
+    [TempArchiveBaseFileName]);
   ForceDirectories(DestDir);
   AbUnZipper.BaseDirectory := DestDir;
   AbUnZipper.FileName := FileName;
@@ -561,35 +580,29 @@ begin
 end;
 
 {*
-  Installe un projet
-  @param Project   Projet à installer
+  Compile un projet
+  @param Project   Projet à compiler
 *}
-function TFormMain.CompileProject(Project: TProject): Boolean;
+procedure TFormMain.CompileProject(Project: TProject);
 var
   Directory: TFileName;
   ProgramName, Parameters: string;
 begin
-  Result := False;
-
   // Check that there is something to compile
   Directory := JoinPath([ProjectsPath, Project.Path]);
   if not DirectoryExists(JoinPath([Directory, SourcesDir])) then
-  begin
-    Result := True;
     Exit;
-  end;
+
+  ThreadDialogOptions.InfoText := Format(SStatusCompilingProject,
+    [Project.Path]);
 
   // Spawn the compiler process
   ProgramName := Dir + 'FunLabyEdit.exe';
   Parameters := '-autocompile "'+Directory+'"';
 
   if not ExecProgram(ProgramName, Parameters) then
-  begin
-    ShowDialog(SInstallFailedTitle, SCompilationFailed, dtError);
-    Exit;
-  end;
-
-  Result := True;
+    raise ECompilationFailedException.CreateFmt(
+      SProjectCompilationFailed, [Project.Path]);
 end;
 
 {*
@@ -1003,6 +1016,7 @@ begin
   FThreadDialogOptions := ThreadDialog.DialogOptions;
 
   ThreadUpdateRemoteInfoCache.ThreadDialog := ThreadDialog;
+  ThreadInstallProjects.ThreadDialog := ThreadDialog;
   ThreadUpdateLibrary.ThreadDialog := ThreadDialog;
 
   ThreadDialogOptions.CancelButtonCaption := 'Annuler';
@@ -1060,6 +1074,7 @@ procedure TFormMain.ActionInstallExecute(Sender: TObject);
 var
   Project: TProject;
   Msg: string;
+  I: Integer;
 begin
   Project := CurrentProject;
   Assert(Project.IsRemoteDefined);
@@ -1080,8 +1095,19 @@ begin
     dtConfirmation, dbOKCancel) <> drOK then
     Exit;
 
+  // Prepare data for thread
+  for I := 0 to Projects.Count-1 do
+  begin
+    if Projects[I] = Project then
+      Projects[I].Action := paInstall
+    else
+      Projects[I].Action := paNone;
+  end;
+
   // Install the project
-  InstallProject(Project);
+  ThreadDialogOptions.Caption := SInstallProjectsTitle;
+  ThreadDialogOptions.InfoText := SInstallProjects;
+  ThreadInstallProjects.ExecuteWithDialog(nil);
 end;
 
 procedure TFormMain.ActionExportExecute(Sender: TObject);
@@ -1217,6 +1243,12 @@ begin
     Exit;
 
   ProgressDialog.Hide;
+end;
+
+procedure TFormMain.ThreadInstallProjectsExecute(Sender: TObject;
+  Params: Pointer);
+begin
+  DoInstallProjects;
 end;
 
 procedure TFormMain.ThreadUpdateLibraryExecute(Sender: TObject;

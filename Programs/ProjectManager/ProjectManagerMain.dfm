@@ -407,7 +407,7 @@ object FormMain: TFormMain
     Left = 88
     Top = 192
     Bitmap = {
-      494C01010600C800AC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010600C800B00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000006D332700853C130095440D0096450D00873D1200703425000000
@@ -774,6 +774,15 @@ object FormMain: TFormMain
       end>
     OnChangeNotify = LocalFilesMonitorChangeNotify
     Left = 296
+    Top = 376
+  end
+  object ThreadInstallProjects: TJvThread
+    Exclusive = True
+    MaxCount = 0
+    RunOnCreate = True
+    FreeOnTerminate = True
+    OnExecute = ThreadInstallProjectsExecute
+    Left = 456
     Top = 376
   end
 end
