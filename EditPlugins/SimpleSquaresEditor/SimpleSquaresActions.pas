@@ -335,9 +335,9 @@ begin
   Filer.DefineFieldProperty('Offset.X', TypeInfo(Integer),
     @FOffset.X, FOffset.X <> 0);
   Filer.DefineFieldProperty('Offset.Y', TypeInfo(Integer),
-    @FOffset.Y, FOffset.X <> 0);
+    @FOffset.Y, FOffset.Y <> 0);
   Filer.DefineFieldProperty('Offset.Z', TypeInfo(Integer),
-    @FOffset.Z, FOffset.X <> 0);
+    @FOffset.Z, FOffset.Z <> 0);
 end;
 
 {*
