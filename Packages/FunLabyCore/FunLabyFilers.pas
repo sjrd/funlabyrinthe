@@ -92,6 +92,11 @@ type
 
 implementation
 
+const
+  FloatFormatSettings: TFormatSettings = (
+    DecimalSeparator: '.';
+  );
+
 {--------------------}
 { TStringsItem class }
 {--------------------}
@@ -154,7 +159,7 @@ begin
     tkEnumeration:
       SetOrdProp(Instance, PropInfo, GetEnumValue(PropType, Text));
     tkFloat:
-      SetFloatProp(Instance, PropInfo, StrToFloat(Text));
+      SetFloatProp(Instance, PropInfo, StrToFloat(Text, FloatFormatSettings));
     tkString, tkLString, tkWString, tkUString:
       SetStrProp(Instance, PropInfo, Text);
     tkSet:
@@ -438,7 +443,7 @@ begin
     tkEnumeration:
       Text := GetEnumName(PropType, GetOrdProp(Instance, PropInfo));
     tkFloat:
-      Text := FloatToStr(GetFloatProp(Instance, PropInfo));
+      Text := FloatToStr(GetFloatProp(Instance, PropInfo), FloatFormatSettings);
     tkString, tkLString, tkWString, tkUString:
       Text := GetStrProp(Instance, PropInfo);
     tkSet:
