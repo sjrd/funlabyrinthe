@@ -164,7 +164,7 @@ inherited FrameSoundActionEditor: TFrameSoundActionEditor
       000000000000}
   end
   object OpenSoundDialog: TOpenDialog
-    Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Title = 'S'#233'lectionner un son '#224' jouer'
     Left = 200
     Top = 72

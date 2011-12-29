@@ -92,6 +92,7 @@ begin
   if OpenSoundDialog.Execute then
   begin
     Sound := OpenSoundDialog.FileName;
+    OpenSoundDialog.InitialDir := ExtractFilePath(Sound);
 
     Dir := IncludeTrailingPathDelimiter(
       JoinPath([LibraryPath, ResourcesDir, ResourceKindToDir[rkSound]]));

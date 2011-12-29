@@ -252,6 +252,8 @@ begin
         HRef := MasterFile.MakeResourceHRef(FileName, rkImage);
 
         Painter.Description.Add(ChangeFileExt(HRef, ''));
+
+        OpenImageDialog.InitialDir := ExtractFilePath(FileName);
       end;
     finally
       Painter.Description.EndUpdate;
