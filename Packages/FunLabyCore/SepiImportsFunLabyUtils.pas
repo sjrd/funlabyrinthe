@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'FunLabyUtils';
   ResourceName = 'SepiImportsFunLabyUtils';
   TypeCount = 67;
-  MethodCount = 262;
+  MethodCount = 264;
   VariableCount = 6;
 
 var
@@ -1346,6 +1346,16 @@ begin
   Self.Components[Index] := Value;
 end;
 
+function QualifiedPos_0(Map: TMap; Position: T3DPoint): TQualifiedPos;
+begin
+  Result := QualifiedPos(Map, Position);
+end;
+
+function QualifiedPos_1(Map: TMap; X: Integer; Y: Integer; Z: Integer): TQualifiedPos;
+begin
+  Result := QualifiedPos(Map, X, Y, Z);
+end;
+
 {-------------}
 { Unit import }
 {-------------}
@@ -1532,14 +1542,16 @@ begin
   MethodAddresses[251] := @EmptySquareRect;
   MethodAddresses[252] := @DrawBitmap32ToCanvas;
   MethodAddresses[253] := @SameRect;
-  MethodAddresses[254] := @SameQPos;
-  MethodAddresses[255] := @IsNoQPos;
-  MethodAddresses[256] := @FunLabyRegisterClass;
-  MethodAddresses[257] := @FunLabyUnregisterClass;
-  MethodAddresses[258] := @FunLabyRegisterClasses;
-  MethodAddresses[259] := @FunLabyUnregisterClasses;
-  MethodAddresses[260] := @FunLabyGetClass;
-  MethodAddresses[261] := @FunLabyFindClass;
+  MethodAddresses[254] := @QualifiedPos_0;
+  MethodAddresses[255] := @QualifiedPos_1;
+  MethodAddresses[256] := @SameQPos;
+  MethodAddresses[257] := @IsNoQPos;
+  MethodAddresses[258] := @FunLabyRegisterClass;
+  MethodAddresses[259] := @FunLabyUnregisterClass;
+  MethodAddresses[260] := @FunLabyRegisterClasses;
+  MethodAddresses[261] := @FunLabyUnregisterClasses;
+  MethodAddresses[262] := @FunLabyGetClass;
+  MethodAddresses[263] := @FunLabyFindClass;
 end;
 
 procedure InitVarAddresses;

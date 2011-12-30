@@ -2118,6 +2118,9 @@ procedure DrawBitmap32ToCanvas(Canvas: TCanvas; const DestRect: TRect;
 
 function SameRect(const Left, Right: TRect): Boolean;
 
+function QualifiedPos(Map: TMap; Position: T3DPoint): TQualifiedPos; overload;
+function QualifiedPos(Map: TMap; X, Y, Z: Integer): TQualifiedPos; overload;
+
 function SameQPos(const Left, Right: TQualifiedPos): Boolean;
 function IsNoQPos(const QPos: TQualifiedPos): Boolean;
 
@@ -2332,6 +2335,32 @@ function SameRect(const Left, Right: TRect): Boolean;
 begin
   Result := (Left.Left = Right.Left) and (Left.Top = Right.Top) and
     (Left.Right = Right.Right) and (Left.Bottom = Right.Bottom);
+end;
+
+{*
+  Construit un TQualifiedPos
+  @param Map        Carte de la position qualifiée
+  @param Position   Position sur la carte
+  @return La position qualifiée désignée par Map et Position
+*}
+function QualifiedPos(Map: TMap; Position: T3DPoint): TQualifiedPos;
+begin
+  Result.Map := Map;
+  Result.Position := Position;
+end;
+
+{*
+  Construit un TQualifiedPos
+  @param Map   Carte de la position qualifiée
+  @param X     Abscisse de la position
+  @param Y     Ordonnée de la position
+  @param Z     Étage de la position
+  @return La position qualifiée désignée par Map et X, Y, Z
+*}
+function QualifiedPos(Map: TMap; X, Y, Z: Integer): TQualifiedPos;
+begin
+  Result.Map := Map;
+  Result.Position := Point3D(X, Y, Z);
 end;
 
 {*
@@ -6454,13 +6483,8 @@ end;
   @param APosition   Nouvelle position
 *}
 procedure TPosComponent.ChangePosition(AMap: TMap; const APosition: T3DPoint);
-var
-  AQPos: TQualifiedPos;
 begin
-  AQPos.Map := AMap;
-  AQPos.Position := APosition;
-
-  ChangePosition(AQPos);
+  ChangePosition(QualifiedPos(AMap, APosition));
 end;
 
 {*
