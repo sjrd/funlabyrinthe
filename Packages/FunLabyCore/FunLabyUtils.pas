@@ -4531,6 +4531,9 @@ begin
     Assert(GetPlayerDataClass.InheritsFrom(
       TFunLabyComponentClass(ClassParent).GetPlayerDataClass));
 
+  if AMaster.ComponentExists(AID) then
+    raise EInvalidID.CreateFmt(SDuplicateIDInCreate, [AID]);
+
   inherited Create;
 
   FMaster := AMaster;
