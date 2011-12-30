@@ -86,23 +86,19 @@ end;
 *}
 procedure TFrameSoundActionEditor.EditSoundLeftButtonClick(Sender: TObject);
 var
-  Dir: TFileName;
-  Sound: string;
+  FileName: TFileName;
+  MasterFile: TMasterFile;
+  HRef: string;
 begin
   if OpenSoundDialog.Execute then
   begin
-    Sound := OpenSoundDialog.FileName;
-    OpenSoundDialog.InitialDir := ExtractFilePath(Sound);
+    FileName := OpenSoundDialog.FileName;
+    MasterFile := GetFunLabyEditMainForm.MasterFile;
+    HRef := MasterFile.MakeResourceHRef(FileName, rkSound);
 
-    Dir := IncludeTrailingPathDelimiter(
-      JoinPath([LibraryPath, ResourcesDir, ResourceKindToDir[rkSound]]));
+    EditSound.Text := HRef;
 
-    if AnsiStartsText(Dir, Sound) then
-      Delete(Sound, 1, Length(Dir));
-
-    Sound := AnsiReplaceStr(Sound, '\', '/');
-
-    EditSound.Text := Sound;
+    OpenSoundDialog.InitialDir := ExtractFilePath(FileName);
   end;
 end;
 
