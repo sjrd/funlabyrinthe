@@ -106,6 +106,8 @@ type
 
     FAction: TProjectAction; /// Action à entreprendre pour ce projet
 
+    FLocalArchive: TFileName; /// Archive locale (utilisé pour l'import)
+
     function GetIsLocalDefined: Boolean;
     function GetIsRemoteDefined: Boolean;
 
@@ -138,6 +140,8 @@ type
     property OwnProject: Boolean read GetOwnProject;
 
     property Action: TProjectAction read FAction write FAction;
+
+    property LocalArchive: TFileName read FLocalArchive write FLocalArchive;
   published
     property Path: TFileName read FPath write FPath;
     property Local: TLocalProject read FLocal stored GetIsLocalDefined;

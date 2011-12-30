@@ -30,6 +30,15 @@ resourcestring
     'continuer. Voulez-vous vraiment mettre à jour ce projet ?';
   SConfirmInstallNoErase = 'Voulez-vous vraiment installer ce projet ?';
 
+  SImportProjectTitle = 'Importer un projet';
+  SConfirmImportErase = 'Vous avez déjà un projet local dans le dossier "%s". '+
+    'Si vous continuez, celui-ci sera placé dans la corbeille. Voulez-vous '+
+    'importer ce projet dans le dossier "%0:s" malgré tout ?';
+  SConfirmImportNoErase = 'Voulez-vous installer le projet dans le dossier '+
+    '"%s" (recommandé) ?';
+  SNewProjectPathPrompt = 'Dossier dans lequel installer le projet';
+  SBadDestDirectory = 'Nom de dossier invalide';
+
   SInstallProjectsTitle = 'Installation des projets';
   SInstallProjects = 'Installation des projets';
   SStatusDownloadingProjectArchive = 'Téléchargement du projet %s';
@@ -80,6 +89,8 @@ type
     ThreadUpdateLibrary: TJvThread;
     ThreadUpdateRemoteInfoCache: TJvThread;
     LocalFilesMonitor: TJvChangeNotify;
+    ActionImport: TAction;
+    ImportDialog: TOpenDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -87,6 +98,7 @@ type
     procedure ActionExitExecute(Sender: TObject);
     procedure ActionInstallExecute(Sender: TObject);
     procedure ActionExportExecute(Sender: TObject);
+    procedure ActionImportExecute(Sender: TObject);
     procedure ActionOwnProjectExecute(Sender: TObject);
     procedure ActionRunExecute(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
@@ -131,11 +143,15 @@ type
     procedure LoadLocalProject(const ProjectSubFile: TFileName);
     procedure UpdateProjectList;
 
+    function SelectNewProjectPath(var ProjectPath: TFileName): Boolean;
+
     procedure DoInstallProjects;
     procedure InstallProject(Project: TProject);
     procedure ExtractArchiveFromURL(const ArchiveURL: string;
       const TempArchiveBaseFileName: TFileName; const DestDir: TFileName;
       DeleteDirIfExists: Boolean = True);
+    procedure ExtractArchive(const Archive: TFileName;
+      const DestDir: TFileName; DeleteDirIfExists: Boolean = True);
     procedure CompileProject(Project: TProject);
 
     procedure SetCurrentProject(Value: TProject);
@@ -324,6 +340,7 @@ begin
 
   ActionInstall.Enabled := Some and CurrentProject.IsRemoteDefined;
   ActionExport.Enabled := Some and CurrentProject.IsLocalDefined;
+  ActionImport.Enabled := ActivePage = TabProjects;
   ActionOwnProject.Enabled := Some and CurrentProject.IsLocalDefined;
   ActionOwnProject.Checked := Some and CurrentProject.OwnProject;
   ActionRun.Enabled := Some and CurrentProject.IsLocalDefined;
@@ -535,6 +552,62 @@ begin
 end;
 
 {*
+  Sélectionne un dossier pour un nouveau projet
+  @param ProjectPath   Path du projet (in-out)
+  @return True en cas de succès, False sinon
+*}
+function TFormMain.SelectNewProjectPath(var ProjectPath: TFileName): Boolean;
+var
+  DialogResult: TDialogResult;
+begin
+  // First suggest to the user a file name, if it is valid
+  if CorrectFileName(ProjectPath) then
+  begin
+    if DirectoryExists(JoinPath([ProjectsPath, ProjectPath])) then
+    begin
+      DialogResult := ShowDialog(SImportProjectTitle,
+        Format(SConfirmImportErase, [ProjectPath]),
+        dtConfirmation, dbYesNoCancel, 2);
+    end else
+    begin
+      DialogResult := ShowDialog(SImportProjectTitle,
+        Format(SConfirmImportNoErase, [ProjectPath]),
+        dtConfirmation, dbYesNoCancel, 1);
+    end;
+  end else
+  begin
+    DialogResult := drNo;
+  end;
+
+  // Then ask the user a directory, until it is OK or cancelled
+  while not (DialogResult in [drYes, drCancel]) do
+  begin
+    if InputQuery(SImportProjectTitle, SNewProjectPathPrompt,
+      string(ProjectPath)) then
+    begin
+      if not CorrectFileName(ProjectPath) then
+      begin
+        DialogResult := ShowDialog(SImportProjectTitle, SBadDestDirectory,
+          dtError, dbRetryCancel);
+      end else if DirectoryExists(JoinPath([ProjectsPath, ProjectPath])) then
+      begin
+        DialogResult := ShowDialog(SImportProjectTitle,
+          Format(SConfirmImportErase, [ProjectPath]),
+          dtConfirmation, dbYesNoCancel, 2);
+      end else
+      begin
+        DialogResult := drYes;
+      end;
+    end else
+    begin
+      DialogResult := drCancel;
+    end;
+  end;
+
+  Result := DialogResult = drYes;
+end;
+
+{*
   Installe les projets sélectionnés
 *}
 procedure TFormMain.DoInstallProjects;
@@ -557,10 +630,15 @@ end;
   @param Project   Projet à installer
 *}
 procedure TFormMain.InstallProject(Project: TProject);
+var
+  DestDir: TFileName;
 begin
   // Download and install archive
-  ExtractArchiveFromURL(Project.Remote.Archive, Project.Path,
-    JoinPath([ProjectsPath, Project.Path]));
+  DestDir := JoinPath([ProjectsPath, Project.Path]);
+  if Project.LocalArchive <> '' then
+    ExtractArchive(Project.LocalArchive, DestDir)
+  else
+    ExtractArchiveFromURL(Project.Remote.Archive, Project.Path, DestDir);
 
   // Compile sources in this project
   CompileProject(Project);
@@ -587,20 +665,33 @@ begin
     [TempArchiveBaseFileName]);
   DownloadFile(ArchiveURL, FileName);
 
+  // Extract archive
+  ExtractArchive(FileName, DestDir, DeleteDirIfExists);
+
+  // Delete the archive
+  DeleteFile(FileName);
+end;
+
+{*
+  Télécharge et décompresse une archive locale dans un dossier donné
+  @param Archive             Archive à décompresser
+  @param DestDir             Dossier de destination
+  @param DeleteDirIfExists   D'abord supprimer le dossier de destination
+*}
+procedure TFormMain.ExtractArchive(const Archive: TFileName;
+  const DestDir: TFileName; DeleteDirIfExists: Boolean = True);
+begin
   // Delete directory if required
   if DeleteDirIfExists and DirectoryExists(DestDir) then
     DelTree(DestDir);
 
   // Install archive
   ThreadDialogOptions.InfoText := Format(SStatusExtractingProjectArchive,
-    [TempArchiveBaseFileName]);
+    [ExtractFileName(Archive)]);
   ForceDirectories(DestDir);
   AbUnZipper.BaseDirectory := DestDir;
-  AbUnZipper.FileName := FileName;
+  AbUnZipper.FileName := Archive;
   AbUnZipper.ExtractFiles('*');
-
-  // Delete the archive
-  DeleteFile(FileName);
 end;
 
 {*
@@ -1150,6 +1241,40 @@ begin
 
   AbZipper.Save;
   AbZipper.CloseArchive;
+end;
+
+procedure TFormMain.ActionImportExecute(Sender: TObject);
+var
+  Archive, ProjectPath: TFileName;
+  Project: TProject;
+  I: Integer;
+begin
+  // Select archive file
+  if not ImportDialog.Execute then
+    Exit;
+  Archive := ImportDialog.FileName;
+
+  // Select destination dir
+  ProjectPath := ChangeFileExt(ExtractFileName(Archive), '');
+  if not SelectNewProjectPath(ProjectPath) then
+    Exit;
+
+  // Prepare data for thread
+  for I := 0 to Projects.Count-1 do
+    Projects[I].Action := paNone;
+
+  Project := Projects.GetProject(ProjectPath);
+  Project.Action := paInstall;
+  Project.LocalArchive := Archive;
+
+  // Install the project
+  ThreadDialogOptions.Caption := SInstallProjectsTitle;
+  ThreadDialogOptions.InfoText := SInstallProjects;
+  ThreadInstallProjects.ExecuteWithDialog(nil);
+
+  // Cleanup
+  if Projects.IndexOf(Project) >= 0 then // Refresh might have deleted it
+    Project.LocalArchive := '';
 end;
 
 procedure TFormMain.ActionRunExecute(Sender: TObject);
