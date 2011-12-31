@@ -1,60 +1,66 @@
 object FrameEditSimpleSquare: TFrameEditSimpleSquare
   Left = 0
   Top = 0
-  Width = 481
-  Height = 433
+  Width = 601
+  Height = 541
   Enabled = False
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -13
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  ParentFont = False
   TabOrder = 0
   TabStop = True
   object PanelCommon: TPanel
     Left = 0
     Top = 0
-    Width = 481
-    Height = 137
+    Width = 601
+    Height = 171
     Align = alTop
-    Constraints.MinHeight = 137
-    Constraints.MinWidth = 449
+    Constraints.MinHeight = 171
+    Constraints.MinWidth = 561
     TabOrder = 0
     object LabelID: TLabel
-      Left = 16
-      Top = 24
-      Width = 57
-      Height = 13
+      Left = 20
+      Top = 30
+      Width = 66
+      Height = 16
       Caption = 'Identifiant :'
     end
     object LabelName: TLabel
-      Left = 16
-      Top = 48
-      Width = 28
-      Height = 13
+      Left = 20
+      Top = 60
+      Width = 35
+      Height = 16
       Caption = 'Nom :'
     end
     object PaintBoxImage: TPaintBox
-      Left = 173
-      Top = 93
-      Width = 30
-      Height = 30
+      Left = 216
+      Top = 116
+      Width = 38
+      Height = 38
       OnPaint = PaintBoxImagePaint
     end
     object LabelParentClass: TLabel
-      Left = 16
-      Top = 72
-      Width = 51
-      Height = 13
+      Left = 20
+      Top = 90
+      Width = 61
+      Height = 16
       Caption = 'H'#233'rite de :'
     end
     object LabelImage: TLabel
-      Left = 16
-      Top = 104
-      Width = 37
-      Height = 13
+      Left = 20
+      Top = 130
+      Width = 45
+      Height = 16
       Caption = 'Image :'
     end
     object ButtonEditImage: TSpeedButton
-      Left = 208
-      Top = 96
-      Width = 25
-      Height = 25
+      Left = 260
+      Top = 120
+      Width = 31
+      Height = 31
       Enabled = False
       Glyph.Data = {
         36090000424D3609000000000000360000002800000030000000100000000100
@@ -135,25 +141,25 @@ object FrameEditSimpleSquare: TFrameEditSimpleSquare
       OnClick = ButtonEditImageClick
     end
     object EditID: TEdit
-      Left = 88
-      Top = 16
-      Width = 145
-      Height = 21
+      Left = 110
+      Top = 20
+      Width = 181
+      Height = 24
       ReadOnly = True
       TabOrder = 0
     end
     object EditName: TEdit
-      Left = 88
-      Top = 40
-      Width = 145
-      Height = 21
+      Left = 110
+      Top = 50
+      Width = 181
+      Height = 24
       TabOrder = 1
     end
     object EditParentClass: TEdit
-      Left = 88
-      Top = 64
-      Width = 145
-      Height = 21
+      Left = 110
+      Top = 80
+      Width = 181
+      Height = 24
       ReadOnly = True
       TabOrder = 2
     end

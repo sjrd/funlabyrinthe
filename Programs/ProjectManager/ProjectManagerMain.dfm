@@ -283,6 +283,7 @@ object FormMain: TFormMain
               end
               item
                 Action = ActionImport
+                Caption = 'I&mporter un zip'
                 ImageIndex = 4
               end
               item
@@ -339,6 +340,7 @@ object FormMain: TFormMain
           end
           item
             Action = ActionImport
+            Caption = 'Im&porter un zip'
             ImageIndex = 4
           end
           item
@@ -429,7 +431,7 @@ object FormMain: TFormMain
     Left = 88
     Top = 192
     Bitmap = {
-      494C01010700C800E40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700C800E80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       00000000000000000000000000000000000000000000078DBE00078DBE00078D
       BE00078DBE00078DBE00078DBE00078DBE00078DBE00078DBE00078DBE00078D

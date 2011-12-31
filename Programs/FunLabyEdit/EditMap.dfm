@@ -3,30 +3,29 @@ object FormEditMap: TFormEditMap
   Top = 0
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = #201'dition d'#39'une carte'
-  ClientHeight = 433
-  ClientWidth = 617
+  ClientHeight = 566
+  ClientWidth = 807
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
-  Scaled = False
   ShowHint = True
   OnCreate = FormCreate
   DesignSize = (
-    617
-    433)
-  PixelsPerInch = 96
-  TextHeight = 13
+    807
+    566)
+  PixelsPerInch = 120
+  TextHeight = 17
   object ButtonGrowTop: TSpeedButton
     Tag = 1
-    Left = 152
-    Top = 8
-    Width = 25
-    Height = 25
+    Left = 199
+    Top = 10
+    Width = 32
+    Height = 33
     Hint = 'Agrandir la carte vers le haut'
     Glyph.Data = {
       36090000424D3609000000000000360000002800000030000000100000000100
@@ -108,10 +107,10 @@ object FormEditMap: TFormEditMap
   end
   object ButtonShrinkTop: TSpeedButton
     Tag = -1
-    Left = 184
-    Top = 8
-    Width = 25
-    Height = 25
+    Left = 241
+    Top = 10
+    Width = 32
+    Height = 33
     Hint = 'R'#233'tr'#233'cif la carte dans le haut'
     Glyph.Data = {
       36090000424D3609000000000000360000002800000030000000100000000100
@@ -193,10 +192,10 @@ object FormEditMap: TFormEditMap
   end
   object ButtonGrowLeft: TSpeedButton
     Tag = 4
-    Left = 8
-    Top = 136
-    Width = 25
-    Height = 25
+    Left = 10
+    Top = 178
+    Width = 33
+    Height = 33
     Hint = 'Agrandir la carte vers la gauche'
     Glyph.Data = {
       36090000424D3609000000000000360000002800000030000000100000000100
@@ -278,10 +277,10 @@ object FormEditMap: TFormEditMap
   end
   object ButtonShrinkLeft: TSpeedButton
     Tag = -4
-    Left = 8
-    Top = 168
-    Width = 25
-    Height = 25
+    Left = 10
+    Top = 220
+    Width = 33
+    Height = 32
     Hint = 'R'#233'tr'#233'cir la carte '#224' gauche'
     Glyph.Data = {
       36090000424D3609000000000000360000002800000030000000100000000100
@@ -363,10 +362,10 @@ object FormEditMap: TFormEditMap
   end
   object ButtonGrowBottom: TSpeedButton
     Tag = 3
-    Left = 152
-    Top = 320
-    Width = 25
-    Height = 25
+    Left = 199
+    Top = 418
+    Width = 32
+    Height = 33
     Hint = 'Agrandir la carte vers le bas'
     Anchors = [akLeft, akBottom]
     Glyph.Data = {
@@ -449,10 +448,10 @@ object FormEditMap: TFormEditMap
   end
   object ButtonShrinkBottom: TSpeedButton
     Tag = -3
-    Left = 184
-    Top = 320
-    Width = 25
-    Height = 25
+    Left = 241
+    Top = 418
+    Width = 32
+    Height = 33
     Hint = 'R'#233'tr'#233'cir la carte dans le bas'
     Anchors = [akLeft, akBottom]
     Glyph.Data = {
@@ -535,10 +534,10 @@ object FormEditMap: TFormEditMap
   end
   object ButtonGrowRight: TSpeedButton
     Tag = 2
-    Left = 320
-    Top = 136
-    Width = 25
-    Height = 25
+    Left = 418
+    Top = 178
+    Width = 33
+    Height = 33
     Hint = 'Agrandir la carte vers la droite'
     Anchors = [akTop, akRight]
     Glyph.Data = {
@@ -621,10 +620,10 @@ object FormEditMap: TFormEditMap
   end
   object ButtonShrinkRight: TSpeedButton
     Tag = -2
-    Left = 320
-    Top = 168
-    Width = 25
-    Height = 25
+    Left = 418
+    Top = 220
+    Width = 33
+    Height = 32
     Hint = 'R'#233'tr'#233'cir la carte '#224' droite'
     Anchors = [akTop, akRight]
     Glyph.Data = {
@@ -706,55 +705,57 @@ object FormEditMap: TFormEditMap
     OnClick = ButtonResizeClick
   end
   object LabelMapID: TLabel
-    Left = 368
-    Top = 16
-    Width = 231
-    Height = 13
+    Left = 481
+    Top = 21
+    Width = 286
+    Height = 17
     Anchors = [akTop, akRight]
     Caption = 'ID de la carte (lettres sans accents et chiffres) :'
   end
   object LabelScale: TLabel
-    Left = 152
-    Top = 392
-    Width = 33
-    Height = 13
+    Left = 199
+    Top = 513
+    Width = 45
+    Height = 17
     Anchors = [akLeft, akBottom]
     Caption = 'Zoom :'
   end
   inline MapImage: TFrameMapImage
-    Left = 40
-    Top = 40
-    Width = 273
-    Height = 273
+    Left = 52
+    Top = 52
+    Width = 357
+    Height = 357
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 6
-    ExplicitLeft = 40
-    ExplicitTop = 40
-    ExplicitWidth = 273
-    ExplicitHeight = 273
+    ExplicitLeft = 52
+    ExplicitTop = 52
+    ExplicitWidth = 357
+    ExplicitHeight = 357
     inherited MapView: TImgView32
-      Width = 273
-      Height = 273
+      Width = 357
+      Height = 357
       ExplicitLeft = 0
       ExplicitTop = 0
       ExplicitWidth = 273
       ExplicitHeight = 273
+      ExplicitWidth = 357
+      ExplicitHeight = 357
     end
   end
   object EditMapID: TEdit
-    Left = 368
-    Top = 32
-    Width = 201
-    Height = 21
+    Left = 481
+    Top = 42
+    Width = 263
+    Height = 25
     Anchors = [akTop, akRight]
     TabOrder = 0
     Text = 'EditMapID'
   end
   object TrackBarScale: TTrackBar
-    Left = 192
-    Top = 384
-    Width = 129
-    Height = 33
+    Left = 251
+    Top = 502
+    Width = 169
+    Height = 43
     Anchors = [akLeft, akBottom]
     Min = 1
     Position = 4
@@ -762,112 +763,112 @@ object FormEditMap: TFormEditMap
     OnChange = TrackBarScaleChange
   end
   object GroupBoxFillZone: TGroupBox
-    Left = 368
-    Top = 152
-    Width = 233
-    Height = 137
+    Left = 481
+    Top = 199
+    Width = 305
+    Height = 179
     Anchors = [akTop, akRight]
     Caption = 'Remplir les zones s'#233'lectionn'#233'es'
     TabOrder = 2
     object LabelZoneField: TLabel
-      Left = 16
-      Top = 24
-      Width = 41
-      Height = 13
+      Left = 21
+      Top = 31
+      Width = 51
+      Height = 17
       Caption = 'Terrain :'
     end
     object LabelZoneGrid: TLabel
-      Left = 16
-      Top = 48
-      Width = 61
-      Height = 13
+      Left = 21
+      Top = 63
+      Width = 75
+      Height = 17
       Caption = 'Quadrillage :'
     end
     object LabelZoneBorder: TLabel
-      Left = 16
-      Top = 72
-      Width = 46
-      Height = 13
+      Left = 21
+      Top = 94
+      Width = 60
+      Height = 17
       Caption = 'Contour :'
     end
     object ComboBoxZoneField: TComboBox
-      Left = 80
-      Top = 16
-      Width = 137
-      Height = 21
+      Left = 105
+      Top = 21
+      Width = 179
+      Height = 25
       Style = csDropDownList
-      ItemHeight = 13
+      ItemHeight = 17
       TabOrder = 0
     end
     object ComboBoxZoneGrid: TComboBox
-      Left = 80
-      Top = 40
-      Width = 137
-      Height = 21
+      Left = 105
+      Top = 52
+      Width = 179
+      Height = 25
       Style = csDropDownList
-      ItemHeight = 13
+      ItemHeight = 17
       TabOrder = 1
       Items.Strings = (
         '(pas de quadrillage)')
     end
     object ComboBoxZoneBorder: TComboBox
-      Left = 80
-      Top = 64
-      Width = 137
-      Height = 21
+      Left = 105
+      Top = 84
+      Width = 179
+      Height = 25
       Style = csDropDownList
-      ItemHeight = 13
+      ItemHeight = 17
       TabOrder = 2
       Items.Strings = (
         '(pas de contour)')
     end
     object ButtonFillZone: TButton
-      Left = 16
-      Top = 96
-      Width = 201
-      Height = 25
+      Left = 21
+      Top = 126
+      Width = 263
+      Height = 32
       Caption = 'Remplir les zones s'#233'lectionn'#233'es'
       TabOrder = 3
       OnClick = ButtonFillZoneClick
     end
   end
   object GroupBoxZoneSize: TGroupBox
-    Left = 368
-    Top = 64
-    Width = 233
-    Height = 73
+    Left = 481
+    Top = 84
+    Width = 305
+    Height = 95
     Anchors = [akTop, akRight]
     Caption = 'Taille d'#39'une zone (quadrillage noir)'
     TabOrder = 1
     object LabelZoneWidth: TLabel
-      Left = 16
-      Top = 26
-      Width = 44
-      Height = 13
+      Left = 21
+      Top = 34
+      Width = 56
+      Height = 17
       Caption = 'Largeur :'
     end
     object LabelZoneHeight: TLabel
-      Left = 16
-      Top = 50
-      Width = 46
-      Height = 13
+      Left = 21
+      Top = 65
+      Width = 58
+      Height = 17
       Caption = 'Hauteur :'
     end
     object EditZoneWidth: TSpinEdit
-      Left = 112
-      Top = 19
-      Width = 81
-      Height = 22
+      Left = 146
+      Top = 25
+      Width = 106
+      Height = 27
       MaxValue = 2147483647
       MinValue = 1
       TabOrder = 0
       Value = 1
     end
     object EditZoneHeight: TSpinEdit
-      Left = 112
-      Top = 43
-      Width = 81
-      Height = 22
+      Left = 146
+      Top = 56
+      Width = 106
+      Height = 27
       MaxValue = 2147483647
       MinValue = 1
       TabOrder = 1
@@ -875,10 +876,10 @@ object FormEditMap: TFormEditMap
     end
   end
   object ButtonOK: TBitBtn
-    Left = 408
-    Top = 392
-    Width = 89
-    Height = 25
+    Left = 534
+    Top = 513
+    Width = 116
+    Height = 32
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
@@ -906,10 +907,10 @@ object FormEditMap: TFormEditMap
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TBitBtn
-    Left = 512
-    Top = 392
-    Width = 89
-    Height = 25
+    Left = 670
+    Top = 513
+    Width = 116
+    Height = 32
     Anchors = [akRight, akBottom]
     DoubleBuffered = True
     Kind = bkCancel
@@ -917,19 +918,19 @@ object FormEditMap: TFormEditMap
     TabOrder = 4
   end
   object GroupBoxFloors: TGroupBox
-    Left = 16
-    Top = 320
-    Width = 121
-    Height = 97
+    Left = 21
+    Top = 418
+    Width = 158
+    Height = 127
     Anchors = [akLeft, akBottom]
     Caption = #201'tages'
     TabOrder = 7
     object ButtonGrowUp: TSpeedButton
       Tag = 5
-      Left = 32
-      Top = 16
-      Width = 25
-      Height = 25
+      Left = 42
+      Top = 21
+      Width = 33
+      Height = 33
       Hint = 'Ajouter un '#233'tage en haut'
       Glyph.Data = {
         36090000424D3609000000000000360000002800000030000000100000000100
@@ -1011,10 +1012,10 @@ object FormEditMap: TFormEditMap
     end
     object ButtonShrinkUp: TSpeedButton
       Tag = -5
-      Left = 64
-      Top = 16
-      Width = 25
-      Height = 25
+      Left = 84
+      Top = 21
+      Width = 32
+      Height = 33
       Hint = 'Supprimer l'#39#233'tage tout en haut'
       Glyph.Data = {
         36090000424D3609000000000000360000002800000030000000100000000100
@@ -1096,10 +1097,10 @@ object FormEditMap: TFormEditMap
     end
     object ButtonShrinkDown: TSpeedButton
       Tag = -6
-      Left = 64
-      Top = 64
-      Width = 25
-      Height = 25
+      Left = 84
+      Top = 84
+      Width = 32
+      Height = 32
       Hint = 'Supprimer l'#39#233'tage tout en bas'
       Glyph.Data = {
         36090000424D3609000000000000360000002800000030000000100000000100
@@ -1181,10 +1182,10 @@ object FormEditMap: TFormEditMap
     end
     object ButtonGrowDown: TSpeedButton
       Tag = 6
-      Left = 32
-      Top = 64
-      Width = 25
-      Height = 25
+      Left = 42
+      Top = 84
+      Width = 33
+      Height = 32
       Hint = 'Ajouter un '#233'tage en bas'
       Glyph.Data = {
         36090000424D3609000000000000360000002800000030000000100000000100
@@ -1265,10 +1266,10 @@ object FormEditMap: TFormEditMap
       OnClick = ButtonResizeClick
     end
     object EditFloor: TSpinEdit
-      Left = 16
-      Top = 40
-      Width = 89
-      Height = 22
+      Left = 21
+      Top = 56
+      Width = 116
+      Height = 27
       MaxValue = 0
       MinValue = 0
       TabOrder = 0
@@ -1277,27 +1278,27 @@ object FormEditMap: TFormEditMap
     end
   end
   object GroupBoxOutside: TGroupBox
-    Left = 368
-    Top = 304
-    Width = 233
-    Height = 49
+    Left = 481
+    Top = 398
+    Width = 305
+    Height = 64
     Anchors = [akTop, akRight]
     Caption = 'Modifier l'#39'ext'#233'rieur du labyrinthe'
     TabOrder = 8
     object LabelOutside: TLabel
-      Left = 16
-      Top = 24
-      Width = 51
-      Height = 13
+      Left = 21
+      Top = 31
+      Width = 64
+      Height = 17
       Caption = 'Ext'#233'rieur :'
     end
     object ComboBoxOutside: TComboBox
-      Left = 80
-      Top = 16
-      Width = 137
-      Height = 21
+      Left = 105
+      Top = 21
+      Width = 179
+      Height = 25
       Style = csDropDownList
-      ItemHeight = 13
+      ItemHeight = 17
       TabOrder = 0
       OnChange = ComboBoxOutsideChange
     end

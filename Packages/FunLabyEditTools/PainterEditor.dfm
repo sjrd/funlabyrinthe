@@ -3,39 +3,38 @@ object FormPainterEditor: TFormPainterEditor
   Top = 0
   BorderStyle = bsDialog
   Caption = #201'diteur d'#39'image'
-  ClientHeight = 217
-  ClientWidth = 457
+  ClientHeight = 284
+  ClientWidth = 598
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
-  Scaled = False
   OnCreate = FormCreate
   PixelsPerInch = 120
-  TextHeight = 13
+  TextHeight = 17
   object LabelPreview: TLabel
-    Left = 288
-    Top = 144
-    Width = 41
-    Height = 13
+    Left = 377
+    Top = 188
+    Width = 52
+    Height = 17
     Caption = 'Aper'#231'u :'
   end
   object LabelImgNames: TLabel
-    Left = 16
-    Top = 16
-    Width = 78
-    Height = 13
+    Left = 21
+    Top = 21
+    Width = 98
+    Height = 17
     Caption = 'Liste des images'
   end
   object ButtonAddImage: TSpeedButton
-    Left = 304
-    Top = 32
-    Width = 25
-    Height = 25
+    Left = 398
+    Top = 42
+    Width = 32
+    Height = 33
     Glyph.Data = {
       36060000424D3606000000000000360400002800000020000000100000000100
       08000000000000020000130B0000130B00000001000000010000000801000210
@@ -91,10 +90,10 @@ object FormPainterEditor: TFormPainterEditor
     OnClick = ButtonAddImageClick
   end
   object ButtonRemoveImage: TSpeedButton
-    Left = 304
-    Top = 56
-    Width = 25
-    Height = 25
+    Left = 398
+    Top = 73
+    Width = 32
+    Height = 33
     Glyph.Data = {
       36060000424D3606000000000000360400002800000020000000100000000100
       08000000000000020000130B0000130B00000001000000010000000000000101
@@ -150,10 +149,10 @@ object FormPainterEditor: TFormPainterEditor
     OnClick = ButtonRemoveImageClick
   end
   object ButtonMoveImageUp: TSpeedButton
-    Left = 304
-    Top = 80
-    Width = 25
-    Height = 25
+    Left = 398
+    Top = 105
+    Width = 32
+    Height = 32
     Glyph.Data = {
       36060000424D3606000000000000360400002800000020000000100000000100
       08000000000000020000130B0000130B000000010000000100004A004A006200
@@ -209,10 +208,10 @@ object FormPainterEditor: TFormPainterEditor
     OnClick = ButtonMoveImageUpClick
   end
   object ButtonMoveImageDown: TSpeedButton
-    Left = 304
-    Top = 104
-    Width = 25
-    Height = 25
+    Left = 398
+    Top = 136
+    Width = 32
+    Height = 33
     Glyph.Data = {
       36060000424D3606000000000000360400002800000020000000100000000100
       08000000000000020000130B0000130B000000010000000100004A004A006200
@@ -268,34 +267,34 @@ object FormPainterEditor: TFormPainterEditor
     OnClick = ButtonMoveImageDownClick
   end
   object LabelSelectedImage: TLabel
-    Left = 344
-    Top = 16
-    Width = 100
-    Height = 13
+    Left = 450
+    Top = 21
+    Width = 125
+    Height = 17
     Caption = 'Image s'#233'lectionn'#233'e :'
   end
   object PaintBoxPreview: TPaintBox32
-    Left = 288
-    Top = 160
-    Width = 30
-    Height = 30
+    Left = 377
+    Top = 209
+    Width = 39
+    Height = 39
     TabOrder = 0
     OnPaintBuffer = PaintBoxPreviewPaintBuffer
   end
   object ListBoxImgNames: TListBox
-    Left = 16
-    Top = 32
-    Width = 281
-    Height = 97
-    ItemHeight = 13
+    Left = 21
+    Top = 42
+    Width = 367
+    Height = 127
+    ItemHeight = 17
     TabOrder = 1
     OnClick = ListBoxImgNamesClick
   end
   object ImgViewSelectedImage: TImgView32
-    Left = 344
-    Top = 32
-    Width = 97
-    Height = 97
+    Left = 450
+    Top = 42
+    Width = 127
+    Height = 127
     Bitmap.ResamplerClassName = 'TNearestResampler'
     BitmapAlign = baCustom
     Scale = 1.000000000000000000
@@ -308,20 +307,20 @@ object FormPainterEditor: TFormPainterEditor
     OnMouseDown = ImgViewSelectedImageMouseDown
   end
   object ButtonOK: TButton
-    Left = 344
-    Top = 144
-    Width = 97
-    Height = 25
+    Left = 450
+    Top = 188
+    Width = 127
+    Height = 33
     Caption = 'OK'
     Default = True
     ModalResult = 1
     TabOrder = 3
   end
   object ButtonCancel: TButton
-    Left = 344
-    Top = 176
-    Width = 97
-    Height = 25
+    Left = 450
+    Top = 230
+    Width = 127
+    Height = 33
     Cancel = True
     Caption = 'Annuler'
     ModalResult = 2

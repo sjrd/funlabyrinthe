@@ -2,12 +2,12 @@ object FormMain: TFormMain
   Left = 0
   Top = 0
   Caption = #201'diteur FunLabyrinthe'
-  ClientHeight = 508
-  ClientWidth = 728
+  ClientHeight = 664
+  ClientWidth = 952
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   Icon.Data = {
@@ -49,19 +49,18 @@ object FormMain: TFormMain
     0000000000000000000000000000000000000000000080010000C0030000}
   OldCreateOrder = False
   Position = poScreenCenter
-  Scaled = False
   ShowHint = True
   WindowState = wsMaximized
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 120
-  TextHeight = 13
+  TextHeight = 17
   object ToolBarFile: TActionToolBar
     Left = 0
-    Top = 23
-    Width = 728
-    Height = 26
+    Top = 28
+    Width = 952
+    Height = 28
     ActionManager = ActionManager
     Caption = 'File'
     ColorMap.HighlightColor = clWhite
@@ -69,7 +68,7 @@ object FormMain: TFormMain
     ColorMap.UnusedColor = clWhite
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -11
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
@@ -78,8 +77,8 @@ object FormMain: TFormMain
   object MainMenuBar: TActionMainMenuBar
     Left = 0
     Top = 0
-    Width = 728
-    Height = 23
+    Width = 952
+    Height = 28
     UseSystemFont = False
     ActionManager = ActionManager
     Caption = 'MainMenuBar'
@@ -88,15 +87,15 @@ object FormMain: TFormMain
     ColorMap.UnusedColor = clWhite
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -11
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = []
     Spacing = 0
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 489
-    Width = 728
+    Top = 645
+    Width = 952
     Height = 19
     Panels = <
       item
@@ -105,16 +104,17 @@ object FormMain: TFormMain
   end
   object PanelEditors: TPanel
     Left = 0
-    Top = 49
-    Width = 728
-    Height = 440
+    Top = 56
+    Width = 952
+    Height = 589
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 3
     object TabBarEditors: TJvTabBar
       Left = 0
       Top = 0
-      Width = 728
+      Width = 952
+      Height = 30
       Tabs = <
         item
           Caption = 'Cartes et joueurs'
@@ -130,7 +130,7 @@ object FormMain: TFormMain
     Left = 32
     Top = 88
     Bitmap = {
-      494C01010B000E00740010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E007C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743

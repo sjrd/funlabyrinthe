@@ -1,36 +1,36 @@
 inherited FrameMessageActionEditor: TFrameMessageActionEditor
-  Width = 249
-  Height = 321
-  Constraints.MinHeight = 321
-  Constraints.MinWidth = 249
-  ExplicitWidth = 249
-  ExplicitHeight = 321
+  Width = 311
+  Height = 401
+  Constraints.MinHeight = 401
+  Constraints.MinWidth = 311
+  ExplicitWidth = 311
+  ExplicitHeight = 401
   DesignSize = (
-    249
-    321)
+    311
+    401)
   object LabelText: TStaticText
-    Left = 16
-    Top = 40
-    Width = 99
-    Height = 17
+    Left = 20
+    Top = 50
+    Width = 118
+    Height = 20
     Caption = 'Texte du message :'
     TabOrder = 2
   end
   object EditText: TMemo
-    Left = 16
-    Top = 56
-    Width = 217
-    Height = 249
+    Left = 20
+    Top = 70
+    Width = 271
+    Height = 311
     Anchors = [akLeft, akTop, akRight, akBottom]
     Lines.Strings = (
       'EditText')
     TabOrder = 0
   end
   object CheckBoxOnlyFirstTime: TCheckBox
-    Left = 16
-    Top = 16
-    Width = 217
-    Height = 17
+    Left = 20
+    Top = 20
+    Width = 271
+    Height = 21
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Afficher seulement au premier passage'
     TabOrder = 1

@@ -1,14 +1,14 @@
 object FrameMapImage: TFrameMapImage
   Left = 0
   Top = 0
-  Width = 321
-  Height = 241
+  Width = 401
+  Height = 301
   TabOrder = 0
   object MapView: TImgView32
     Left = 0
     Top = 0
-    Width = 321
-    Height = 241
+    Width = 401
+    Height = 301
     Align = alClient
     Bitmap.ResamplerClassName = 'TNearestResampler'
     BitmapAlign = baCustom

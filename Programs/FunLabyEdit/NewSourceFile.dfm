@@ -3,67 +3,66 @@ object FormCreateNewSourceFile: TFormCreateNewSourceFile
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Cr'#233'er un nouveau fichier source'
-  ClientHeight = 257
-  ClientWidth = 361
+  ClientHeight = 336
+  ClientWidth = 472
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
-  Scaled = False
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object LabelSourceFileType: TLabel
-    Left = 16
-    Top = 16
-    Width = 113
-    Height = 13
+    Left = 21
+    Top = 21
+    Width = 143
+    Height = 17
     Caption = 'Type de fichier source :'
   end
   object LabelDescription: TLabel
-    Left = 192
-    Top = 16
-    Width = 60
-    Height = 13
+    Left = 251
+    Top = 21
+    Width = 77
+    Height = 17
     Caption = 'Description :'
   end
   object ListBoxSourceFileType: TListBox
-    Left = 16
-    Top = 32
-    Width = 153
-    Height = 169
-    ItemHeight = 13
+    Left = 21
+    Top = 42
+    Width = 200
+    Height = 221
+    ItemHeight = 17
     TabOrder = 0
     OnClick = ListBoxSourceFileTypeClick
   end
   object MemoDescription: TMemo
-    Left = 192
-    Top = 32
-    Width = 153
-    Height = 169
+    Left = 251
+    Top = 42
+    Width = 200
+    Height = 221
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 1
   end
   object ButtonOK: TBitBtn
-    Left = 160
-    Top = 216
-    Width = 89
-    Height = 25
+    Left = 209
+    Top = 282
+    Width = 117
+    Height = 33
     DoubleBuffered = True
     Kind = bkOK
     ParentDoubleBuffered = False
     TabOrder = 2
   end
   object ButtonCancel: TBitBtn
-    Left = 256
-    Top = 216
-    Width = 89
-    Height = 25
+    Left = 335
+    Top = 282
+    Width = 116
+    Height = 33
     DoubleBuffered = True
     Kind = bkCancel
     ParentDoubleBuffered = False

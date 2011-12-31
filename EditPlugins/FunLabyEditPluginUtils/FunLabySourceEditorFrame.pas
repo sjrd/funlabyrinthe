@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, SdDialogs, FilesUtils, SourceEditors;
+  Dialogs, SdDialogs, FilesUtils, FunLabyCoreConsts, SourceEditors;
 
 resourcestring
   sConfirmExitTitle = 'Enregistrer le fichier';
@@ -53,6 +53,8 @@ type
 
     property OnStateChange: TSourceEditorNotifyEvent
       read FOnStateChange write FOnStateChange;
+  public
+    procedure AfterConstruction; override;
   end;
 
 implementation
@@ -65,6 +67,16 @@ uses
 {----------------------------------}
 { Classe TFrameFunLabySourceEditor }
 {----------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+procedure TFrameFunLabySourceEditor.AfterConstruction;
+begin
+  inherited;
+
+  ScaleBy(Screen.PixelsPerInch, DesignTimePixelsPerInch);
+end;
 
 {*
   Nom de fichier de destination supposé pour la compilation

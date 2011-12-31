@@ -9,7 +9,7 @@ object FormMain: TFormMain
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   Icon.Data = {
@@ -52,7 +52,6 @@ object FormMain: TFormMain
   KeyPreview = True
   OldCreateOrder = True
   Position = poScreenCenter
-  Scaled = False
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy

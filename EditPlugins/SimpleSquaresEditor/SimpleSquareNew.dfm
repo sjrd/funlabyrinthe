@@ -3,73 +3,73 @@ object FormNewSimpleSquare: TFormNewSimpleSquare
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Nouveau composant'
-  ClientHeight = 321
-  ClientWidth = 329
+  ClientHeight = 420
+  ClientWidth = 430
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
   DesignSize = (
-    329
-    321)
-  PixelsPerInch = 96
-  TextHeight = 13
+    430
+    420)
+  PixelsPerInch = 120
+  TextHeight = 17
   object LabelComponentClass: TLabel
-    Left = 16
-    Top = 72
-    Width = 138
-    Height = 13
+    Left = 21
+    Top = 94
+    Width = 178
+    Height = 17
     Caption = 'Type de composant '#224' cr'#233'er :'
   end
   object LabelID: TLabel
-    Left = 16
-    Top = 24
-    Width = 57
-    Height = 13
+    Left = 21
+    Top = 31
+    Width = 69
+    Height = 17
     Caption = 'Identifiant :'
   end
   object LabelName: TLabel
-    Left = 16
-    Top = 48
-    Width = 28
-    Height = 13
+    Left = 21
+    Top = 63
+    Width = 38
+    Height = 17
     Caption = 'Nom :'
   end
   object EditID: TEdit
-    Left = 104
-    Top = 16
-    Width = 209
-    Height = 21
+    Left = 136
+    Top = 21
+    Width = 273
+    Height = 25
     TabOrder = 0
   end
   object EditName: TEdit
-    Left = 104
-    Top = 40
-    Width = 209
-    Height = 21
+    Left = 136
+    Top = 52
+    Width = 273
+    Height = 25
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
   end
   object ListBoxComponentClass: TListBox
-    Left = 16
-    Top = 88
-    Width = 297
-    Height = 185
+    Left = 21
+    Top = 115
+    Width = 388
+    Height = 242
     Anchors = [akLeft, akTop, akRight, akBottom]
-    ItemHeight = 13
+    ItemHeight = 17
     TabOrder = 2
     OnDblClick = ListBoxComponentClassDblClick
   end
   object ButtonOK: TButton
-    Left = 120
-    Top = 280
-    Width = 89
-    Height = 25
+    Left = 157
+    Top = 366
+    Width = 116
+    Height = 33
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
@@ -77,10 +77,10 @@ object FormNewSimpleSquare: TFormNewSimpleSquare
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
-    Left = 224
-    Top = 280
-    Width = 89
-    Height = 25
+    Left = 293
+    Top = 366
+    Width = 116
+    Height = 33
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Annuler'

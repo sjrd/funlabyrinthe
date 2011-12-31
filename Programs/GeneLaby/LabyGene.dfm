@@ -1,15 +1,15 @@
 object FormPrincipale: TFormPrincipale
   Left = 198
   Top = 118
-  BorderIcons = [biSystemMenu]
+  BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'G'#233'n'#233'rateur de Labyrinthes'
-  ClientHeight = 304
-  ClientWidth = 286
+  ClientHeight = 329
+  ClientWidth = 374
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   Icon.Data = {
@@ -51,20 +51,22 @@ object FormPrincipale: TFormPrincipale
     0000000000000000000000000000000000000000000080010000C0030000}
   OldCreateOrder = True
   Position = poScreenCenter
-  Scaled = False
   OnCreate = FormCreate
   PixelsPerInch = 120
   TextHeight = 16
   object PageControl1: TPageControl
     Left = 0
     Top = 0
-    Width = 286
-    Height = 263
+    Width = 374
+    Height = 277
     ActivePage = TabSheet1
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
       Caption = 'G'#233'n'#233'ral'
+      DesignSize = (
+        366
+        246)
       object Label1: TLabel
         Left = 24
         Top = 24
@@ -94,18 +96,20 @@ object FormPrincipale: TFormPrincipale
         Caption = 'Nombre d'#39#233'tages :'
       end
       object EditNomFichier: TEdit
-        Left = 128
-        Top = 128
+        Left = 224
+        Top = 133
         Width = 121
         Height = 24
+        Anchors = [akTop, akRight]
         TabOrder = 0
         Text = 'LabyGene'
       end
       object EditLignes: TSpinEdit
-        Left = 192
-        Top = 16
+        Left = 288
+        Top = 21
         Width = 57
         Height = 26
+        Anchors = [akTop, akRight]
         MaxValue = 10
         MinValue = 1
         TabOrder = 1
@@ -113,10 +117,11 @@ object FormPrincipale: TFormPrincipale
         OnChange = EditLignesChange
       end
       object EditColonnes: TSpinEdit
-        Left = 192
-        Top = 48
+        Left = 288
+        Top = 53
         Width = 57
         Height = 26
+        Anchors = [akTop, akRight]
         MaxValue = 10
         MinValue = 1
         TabOrder = 2
@@ -124,10 +129,11 @@ object FormPrincipale: TFormPrincipale
         OnChange = EditColonnesChange
       end
       object EditEtages: TSpinEdit
-        Left = 192
-        Top = 80
+        Left = 288
+        Top = 85
         Width = 57
         Height = 26
+        Anchors = [akTop, akRight]
         MaxValue = 10
         MinValue = 1
         TabOrder = 3
@@ -137,43 +143,43 @@ object FormPrincipale: TFormPrincipale
     end
     object TabSheet2: TTabSheet
       Caption = 'Avanc'#233
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      DesignSize = (
+        366
+        246)
       object Label4: TLabel
-        Left = 13
-        Top = 72
+        Left = 19
+        Top = 80
         Width = 227
         Height = 16
         Caption = 'Coefficient de blocage des directions :'
       end
       object Label7: TLabel
-        Left = 17
-        Top = 200
+        Left = 19
+        Top = 199
         Width = 209
         Height = 16
         Caption = 'Coefficient d'#39'interdiction de boucle :'
       end
       object Label8: TLabel
-        Left = 11
-        Top = 102
+        Left = 19
+        Top = 112
         Width = 213
         Height = 16
         Caption = 'P'#233'riode de blocage des directions :'
       end
       object Label6: TLabel
-        Left = 16
-        Top = 168
+        Left = 19
+        Top = 167
         Width = 208
         Height = 16
         Caption = 'Coefficient d'#39'interdiction d'#39'escalier :'
       end
       object EditBlocage: TSpinEdit
-        Left = 200
-        Top = 64
+        Left = 288
+        Top = 77
         Width = 57
-        Height = 22
+        Height = 26
+        Anchors = [akLeft, akTop, akRight]
         Increment = 5
         MaxValue = 100
         MinValue = 0
@@ -181,20 +187,22 @@ object FormPrincipale: TFormPrincipale
         Value = 60
       end
       object CBCarrefours: TCheckBox
-        Left = 16
-        Top = 132
-        Width = 129
+        Left = 19
+        Top = 141
+        Width = 326
         Height = 17
+        Anchors = [akLeft, akTop, akRight]
         Caption = 'Croisements autoris'#233's'
         Checked = True
         State = cbChecked
         TabOrder = 1
       end
       object EditBlocEscaliers: TSpinEdit
-        Left = 200
-        Top = 159
+        Left = 288
+        Top = 164
         Width = 57
-        Height = 22
+        Height = 26
+        Anchors = [akLeft, akTop, akRight]
         Increment = 5
         MaxValue = 100
         MinValue = 0
@@ -202,10 +210,11 @@ object FormPrincipale: TFormPrincipale
         Value = 80
       end
       object EditBlocBoucles: TSpinEdit
-        Left = 200
-        Top = 191
+        Left = 288
+        Top = 196
         Width = 57
-        Height = 22
+        Height = 26
+        Anchors = [akLeft, akTop, akRight]
         Increment = 20
         MaxValue = 100
         MinValue = 0
@@ -213,20 +222,22 @@ object FormPrincipale: TFormPrincipale
         Value = 80
       end
       object EditPeriode: TSpinEdit
-        Left = 200
-        Top = 96
+        Left = 288
+        Top = 109
         Width = 57
-        Height = 22
+        Height = 26
+        Anchors = [akLeft, akTop, akRight]
         MaxValue = 1000
         MinValue = 1
         TabOrder = 4
         Value = 7
       end
       object RGModulation: TRadioGroup
-        Left = 8
-        Top = 8
-        Width = 257
-        Height = 41
+        Left = 17
+        Top = 16
+        Width = 328
+        Height = 50
+        Anchors = [akLeft, akTop, akRight]
         Caption = 'Modulation du coefficient de blocage'
         Columns = 2
         ItemIndex = 0
@@ -240,35 +251,35 @@ object FormPrincipale: TFormPrincipale
   end
   object Panel1: TPanel
     Left = 0
-    Top = 263
-    Width = 286
-    Height = 41
+    Top = 277
+    Width = 374
+    Height = 52
     Align = alBottom
     TabOrder = 1
     object BExe: TButton
-      Left = 10
-      Top = 8
-      Width = 73
-      Height = 25
+      Left = 27
+      Top = 6
+      Width = 87
+      Height = 33
       Caption = 'Ex'#233'cuter'
       Default = True
       TabOrder = 0
       OnClick = BExeClick
     end
     object BAide: TButton
-      Left = 106
-      Top = 8
-      Width = 73
-      Height = 25
+      Left = 140
+      Top = 6
+      Width = 87
+      Height = 33
       Caption = 'Aide'
       TabOrder = 1
       OnClick = BAideClick
     end
     object BQuitter: TButton
-      Left = 202
-      Top = 8
-      Width = 75
-      Height = 25
+      Left = 253
+      Top = 6
+      Width = 95
+      Height = 33
       Cancel = True
       Caption = 'Quitter'
       Enabled = False

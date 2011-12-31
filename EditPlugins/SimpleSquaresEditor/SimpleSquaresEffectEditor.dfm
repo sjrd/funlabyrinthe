@@ -5,34 +5,34 @@ inherited FrameEffectEditor: TFrameEffectEditor
   ExplicitWidth = 451
   ExplicitHeight = 304
   object SplitterActionList: TSplitter
-    Left = 241
-    Top = 33
-    Height = 271
-    ExplicitTop = 0
-    ExplicitHeight = 304
+    Left = 301
+    Top = 41
+    Width = 4
+    Height = 263
+    ExplicitHeight = 339
   end
   object PanelActionList: TPanel
     Left = 0
-    Top = 33
-    Width = 241
-    Height = 271
+    Top = 41
+    Width = 301
+    Height = 263
     Align = alLeft
     TabOrder = 0
     DesignSize = (
-      241
-      271)
+      301
+      263)
     object LabelActionList: TLabel
-      Left = 16
-      Top = 16
-      Width = 99
-      Height = 13
+      Left = 20
+      Top = 20
+      Width = 116
+      Height = 16
       Caption = 'Actions '#224' effectuer :'
     end
     object ButtonDeleteAction: TSpeedButton
-      Left = 208
-      Top = 32
-      Width = 26
-      Height = 26
+      Left = 260
+      Top = 40
+      Width = 33
+      Height = 33
       Hint = 'Supprimer l'#39'action s'#233'lectionn'#233'e'
       Anchors = [akTop, akRight]
       Enabled = False
@@ -91,10 +91,10 @@ inherited FrameEffectEditor: TFrameEffectEditor
       OnClick = ButtonDeleteActionClick
     end
     object ButtonUpAction: TSpeedButton
-      Left = 208
-      Top = 64
-      Width = 26
-      Height = 26
+      Left = 260
+      Top = 80
+      Width = 33
+      Height = 33
       Anchors = [akTop, akRight]
       Enabled = False
       Glyph.Data = {
@@ -152,10 +152,10 @@ inherited FrameEffectEditor: TFrameEffectEditor
       OnClick = ButtonUpActionClick
     end
     object ButtonDownAction: TSpeedButton
-      Left = 208
-      Top = 96
-      Width = 26
-      Height = 26
+      Left = 260
+      Top = 120
+      Width = 33
+      Height = 33
       Anchors = [akTop, akRight]
       Enabled = False
       Glyph.Data = {
@@ -213,10 +213,10 @@ inherited FrameEffectEditor: TFrameEffectEditor
       OnClick = ButtonDownActionClick
     end
     object ListBoxActions: TListBox
-      Left = 16
-      Top = 32
-      Width = 185
-      Height = 184
+      Left = 20
+      Top = 40
+      Width = 231
+      Height = 154
       Style = lbVirtual
       Anchors = [akLeft, akTop, akRight, akBottom]
       ItemHeight = 16
@@ -225,13 +225,13 @@ inherited FrameEffectEditor: TFrameEffectEditor
       OnData = ListBoxActionsData
     end
     object ComboBoxNewAction: TComboBox
-      Left = 16
-      Top = 226
-      Width = 185
-      Height = 21
+      Left = 20
+      Top = 207
+      Width = 231
+      Height = 24
       Style = csDropDownList
       Anchors = [akLeft, akRight, akBottom]
-      ItemHeight = 13
+      ItemHeight = 16
       ItemIndex = 0
       TabOrder = 1
       Text = '(Ajouter une action...)'
@@ -244,23 +244,23 @@ inherited FrameEffectEditor: TFrameEffectEditor
     Left = 0
     Top = 0
     Width = 451
-    Height = 33
+    Height = 41
     Align = alTop
     TabOrder = 1
     object LabelEvent: TLabel
-      Left = 16
-      Top = 10
-      Width = 61
-      Height = 13
+      Left = 20
+      Top = 13
+      Width = 72
+      Height = 16
       Caption = #201'v'#233'nement :'
     end
     object ComboEvent: TComboBox
-      Left = 80
-      Top = 6
-      Width = 161
-      Height = 21
+      Left = 100
+      Top = 8
+      Width = 201
+      Height = 24
       Style = csDropDownList
-      ItemHeight = 13
+      ItemHeight = 16
       TabOrder = 0
       OnChange = ComboEventChange
     end

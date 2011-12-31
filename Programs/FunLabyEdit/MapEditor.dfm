@@ -1,28 +1,29 @@
 object FrameMapEditor: TFrameMapEditor
   Left = 0
   Top = 0
-  Width = 720
-  Height = 421
+  Width = 900
+  Height = 526
   TabOrder = 0
   TabStop = True
   object SplitterSquares: TSplitter
-    Left = 150
+    Left = 188
     Top = 0
-    Height = 421
+    Height = 526
     MinSize = 100
   end
   object SplitterPlayers: TSplitter
-    Left = 517
+    Left = 646
     Top = 0
-    Height = 421
+    Width = 4
+    Height = 526
     Align = alRight
     MinSize = 100
   end
   object SquaresContainer: TCategoryButtons
     Left = 0
     Top = 0
-    Width = 150
-    Height = 421
+    Width = 188
+    Height = 526
     Align = alLeft
     ButtonFlow = cbfVertical
     ButtonHeight = 36
@@ -76,10 +77,10 @@ object FrameMapEditor: TFrameMapEditor
     OnMouseDown = SquaresContainerMouseDown
   end
   object PanelCenter: TPanel
-    Left = 153
+    Left = 191
     Top = 0
-    Width = 364
-    Height = 421
+    Width = 455
+    Height = 526
     Align = alClient
     BevelKind = bkTile
     BevelOuter = bvNone
@@ -87,116 +88,109 @@ object FrameMapEditor: TFrameMapEditor
     inline MapViewer: TFrameBaseMapViewer
       Left = 0
       Top = 0
-      Width = 360
-      Height = 417
+      Width = 451
+      Height = 522
       Align = alClient
-      Constraints.MinHeight = 407
-      Constraints.MinWidth = 360
+      Constraints.MinHeight = 509
+      Constraints.MinWidth = 450
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 360
-      ExplicitHeight = 417
+      ExplicitWidth = 451
+      ExplicitHeight = 522
       inherited MapTabSet: TTabSet
-        Width = 360
-        ExplicitWidth = 360
+        Width = 451
+        ExplicitWidth = 451
       end
       inherited PanelMapInfos: TPanel
-        Top = 311
-        Width = 360
-        ExplicitTop = 311
-        ExplicitWidth = 360
+        Top = 390
+        Width = 451
+        ExplicitTop = 390
+        ExplicitWidth = 451
         inherited LabelFloor: TLabel
-          Left = 256
-          ExplicitLeft = 256
+          Left = 321
+          ExplicitLeft = 321
         end
-        inherited StaticPosition: TStaticText
-          Anchors = [akLeft, akTop, akRight]
-        end
-        inherited StaticField: TStaticText
-          Anchors = [akLeft, akTop, akRight]
-        end
-        inherited StaticEffect: TStaticText
-          Anchors = [akLeft, akTop, akRight]
-        end
-        inherited StaticTool: TStaticText
-          Anchors = [akLeft, akTop, akRight]
-        end
-        inherited StaticObstacle: TStaticText
-          Anchors = [akLeft, akTop, akRight]
+        inherited LabelScale: TLabel
+          Left = 292
+          ExplicitLeft = 292
         end
         inherited EditFloor: TSpinEdit
-          Left = 296
-          ExplicitLeft = 296
+          Left = 371
+          ExplicitLeft = 371
+        end
+        inherited TrackBarScale: TTrackBar
+          Left = 284
+          ExplicitLeft = 284
         end
       end
       inherited MapView: TFrameMapImage
-        Width = 360
-        Height = 290
-        ExplicitWidth = 360
-        ExplicitHeight = 290
+        Width = 451
+        Height = 364
+        ExplicitWidth = 451
+        ExplicitHeight = 364
         inherited MapView: TImgView32
-          Width = 360
-          Height = 290
-          ExplicitWidth = 360
-          ExplicitHeight = 290
+          Width = 451
+          Height = 364
+          ExplicitWidth = 451
+          ExplicitHeight = 364
         end
       end
     end
   end
   object PanelRight: TPanel
-    Left = 520
+    Left = 650
     Top = 0
-    Width = 200
-    Height = 421
+    Width = 250
+    Height = 526
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 2
     inline FrameInspector: TFrameInspector
       Left = 0
       Top = 0
-      Width = 200
-      Height = 421
+      Width = 250
+      Height = 526
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 200
-      ExplicitHeight = 421
+      ExplicitWidth = 250
+      ExplicitHeight = 526
       inherited Inspector: TJvInspector
-        Width = 200
-        Height = 242
-        ExplicitWidth = 200
-        ExplicitHeight = 267
+        Width = 250
+        Height = 303
+        ExplicitWidth = 250
+        ExplicitHeight = 303
       end
       inherited PanelCollectionEditor: TPanel
-        Top = 292
-        Width = 200
-        ExplicitTop = 292
-        ExplicitWidth = 200
+        Top = 365
+        Width = 250
+        ExplicitTop = 365
+        ExplicitWidth = 250
         inherited PanelCollectionEditorTitle: TPanel
-          Width = 200
-          ExplicitWidth = 200
+          Width = 250
+          ExplicitWidth = 250
         end
         inherited ToolBarCollectionEditor: TToolBar
-          Width = 200
-          ExplicitWidth = 200
+          Width = 250
+          ExplicitWidth = 250
         end
         inherited ListBoxCollectionItems: TListBox
-          Width = 200
-          ExplicitWidth = 200
+          Width = 250
+          ExplicitWidth = 250
         end
       end
       inherited PanelInspectorTitle: TPanel
-        Width = 200
-        ExplicitWidth = 200
+        Width = 250
+        ExplicitWidth = 250
       end
       inherited PanelClassName: TPanel
-        Top = 267
-        Width = 200
-        ExplicitTop = 267
-        ExplicitWidth = 200
+        Top = 334
+        Width = 250
+        ExplicitTop = 334
+        ExplicitWidth = 250
       end
       inherited CollectionImages: TImageList
         Bitmap = {
-          494C0101040009002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+          494C0101040009003C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
           0000000000003600000028000000400000002000000001002000000000000020
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
@@ -469,7 +463,7 @@ object FrameMapEditor: TFrameMapEditor
       end
       inherited CollectionDisabledImages: TImageList
         Bitmap = {
-          494C0101040009002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+          494C0101040009003C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
           0000000000003600000028000000400000002000000001002000000000000020
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000

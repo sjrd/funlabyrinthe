@@ -2,44 +2,43 @@ object FormSelectProjectFile: TFormSelectProjectFile
   Left = 0
   Top = 0
   Caption = 'S'#233'lectionner un labyrinthe'
-  ClientHeight = 451
-  ClientWidth = 782
+  ClientHeight = 590
+  ClientWidth = 1023
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
-  Scaled = False
   OnCreate = FormCreate
   OnHide = FormHide
   OnShow = FormShow
   PixelsPerInch = 120
-  TextHeight = 13
+  TextHeight = 17
   object ListViewFiles: TListView
     Left = 0
     Top = 0
-    Width = 579
-    Height = 400
+    Width = 757
+    Height = 523
     Align = alClient
     Columns = <
       item
         Caption = 'Titre'
-        Width = 200
+        Width = 262
       end
       item
         Caption = 'Genre'
-        Width = 100
+        Width = 131
       end
       item
         Caption = 'Difficult'#233
-        Width = 100
+        Width = 131
       end
       item
         Caption = 'Auteur'
-        Width = 150
+        Width = 196
       end>
     Groups = <
       item
@@ -88,42 +87,40 @@ object FormSelectProjectFile: TFormSelectProjectFile
     OnCompare = ListViewFilesCompare
     OnDblClick = ListViewFilesDblClick
     OnSelectItem = ListViewFilesSelectItem
-    ExplicitLeft = -6
-    ExplicitTop = -6
   end
   object PanelBottom: TPanel
     Left = 0
-    Top = 400
-    Width = 782
-    Height = 51
+    Top = 523
+    Width = 1023
+    Height = 67
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
     DesignSize = (
-      782
-      51)
+      1023
+      67)
     object LabelFileName: TLabel
-      Left = 16
-      Top = 17
-      Width = 75
-      Height = 13
+      Left = 21
+      Top = 22
+      Width = 97
+      Height = 17
       Caption = 'Nom du fichier :'
     end
     object EditFileName: TComboBox
-      Left = 136
-      Top = 14
-      Width = 305
-      Height = 21
+      Left = 178
+      Top = 18
+      Width = 399
+      Height = 25
       Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 13
+      ItemHeight = 17
       Sorted = True
       TabOrder = 0
     end
     object ButtonOK: TButton
-      Left = 496
-      Top = 14
-      Width = 121
-      Height = 25
+      Left = 649
+      Top = 18
+      Width = 158
+      Height = 33
       Anchors = [akTop, akRight]
       Caption = '&Ouvrir'
       Default = True
@@ -131,10 +128,10 @@ object FormSelectProjectFile: TFormSelectProjectFile
       OnClick = ButtonOKClick
     end
     object ButtonCancel: TButton
-      Left = 643
-      Top = 14
-      Width = 121
-      Height = 25
+      Left = 841
+      Top = 18
+      Width = 158
+      Height = 33
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Annuler'
@@ -144,25 +141,25 @@ object FormSelectProjectFile: TFormSelectProjectFile
     end
   end
   object PanelRight: TPanel
-    Left = 579
+    Left = 757
     Top = 0
-    Width = 203
-    Height = 400
+    Width = 266
+    Height = 523
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 2
     object LabelDescription: TLabel
-      Left = 16
-      Top = 16
-      Width = 60
-      Height = 13
+      Left = 21
+      Top = 21
+      Width = 77
+      Height = 17
       Caption = 'Description :'
     end
     object EditDescription: TMemo
-      Left = 16
-      Top = 35
-      Width = 169
-      Height = 350
+      Left = 21
+      Top = 46
+      Width = 221
+      Height = 457
       ReadOnly = True
       TabOrder = 0
     end

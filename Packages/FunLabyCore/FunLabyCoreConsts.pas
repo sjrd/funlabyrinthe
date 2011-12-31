@@ -74,6 +74,9 @@ resourcestring
   SNoFileName = 'Aucun nom de fichier spécifié';
   SPainterFilter = 'Peintre FunLabyrinthe|*.pnt';
 
+const
+  DesignTimePixelsPerInch = 120;
+
 implementation
 
 end.

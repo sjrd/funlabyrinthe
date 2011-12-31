@@ -1,14 +1,14 @@
 object FrameInspector: TFrameInspector
   Left = 0
   Top = 0
-  Width = 257
-  Height = 313
+  Width = 321
+  Height = 391
   TabOrder = 0
   object Inspector: TJvInspector
     Left = 0
-    Top = 25
-    Width = 257
-    Height = 134
+    Top = 31
+    Width = 321
+    Height = 168
     Style = isDotNet
     Align = alClient
     Divider = 95
@@ -20,9 +20,9 @@ object FrameInspector: TFrameInspector
   end
   object PanelCollectionEditor: TPanel
     Left = 0
-    Top = 184
-    Width = 257
-    Height = 129
+    Top = 230
+    Width = 321
+    Height = 161
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
@@ -30,14 +30,14 @@ object FrameInspector: TFrameInspector
     object PanelCollectionEditorTitle: TPanel
       Left = 0
       Top = 0
-      Width = 257
-      Height = 25
+      Width = 321
+      Height = 31
       Align = alTop
       Caption = #201'diteur de collection'
       Color = clInactiveCaption
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clInactiveCaptionText
-      Font.Height = -11
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = [fsBold]
       ParentBackground = False
@@ -46,13 +46,15 @@ object FrameInspector: TFrameInspector
     end
     object ToolBarCollectionEditor: TToolBar
       Left = 0
-      Top = 25
-      Width = 257
+      Top = 31
+      Width = 321
       Height = 24
       Caption = 'ToolBarCollectionEditor'
       DisabledImages = CollectionDisabledImages
       Images = CollectionImages
       TabOrder = 1
+      ExplicitTop = 25
+      ExplicitWidth = 257
       object ButtonCollectionAdd: TToolButton
         Left = 0
         Top = 0
@@ -91,26 +93,28 @@ object FrameInspector: TFrameInspector
     end
     object ListBoxCollectionItems: TListBox
       Left = 0
-      Top = 49
-      Width = 257
-      Height = 80
+      Top = 55
+      Width = 321
+      Height = 106
       Align = alClient
-      ItemHeight = 13
+      ItemHeight = 16
       TabOrder = 2
       OnClick = ListBoxCollectionItemsClick
+      ExplicitTop = 61
+      ExplicitHeight = 100
     end
   end
   object PanelInspectorTitle: TPanel
     Left = 0
     Top = 0
-    Width = 257
-    Height = 25
+    Width = 321
+    Height = 31
     Align = alTop
     Caption = 'Inspecteur d'#39'objets'
     Color = clInactiveCaption
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clInactiveCaptionText
-    Font.Height = -11
+    Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = [fsBold]
     ParentBackground = False
@@ -119,18 +123,18 @@ object FrameInspector: TFrameInspector
   end
   object PanelClassName: TPanel
     Left = 0
-    Top = 159
-    Width = 257
-    Height = 25
+    Top = 199
+    Width = 321
+    Height = 31
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
   end
   object CollectionImages: TImageList
-    Left = 64
-    Top = 248
+    Left = 48
+    Top = 304
     Bitmap = {
-      494C010104000900300010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000900340010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -402,10 +406,10 @@ object FrameInspector: TFrameInspector
       000000000000}
   end
   object CollectionDisabledImages: TImageList
-    Left = 96
-    Top = 248
+    Left = 184
+    Top = 304
     Bitmap = {
-      494C010104000900300010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000900340010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

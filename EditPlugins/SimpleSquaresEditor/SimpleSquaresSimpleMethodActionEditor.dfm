@@ -1,11 +1,13 @@
 inherited FrameSimpleMethodActionEditor: TFrameSimpleMethodActionEditor
-  Width = 337
-  Height = 217
+  Width = 421
+  Height = 271
+  ExplicitWidth = 421
+  ExplicitHeight = 271
   object RadioGroupKind: TRadioGroup
-    Left = 16
-    Top = 16
-    Width = 305
-    Height = 185
+    Left = 20
+    Top = 20
+    Width = 381
+    Height = 231
     Caption = 'Type d'#39'action '#224' effectuer'
     Items.Strings = (
       'Montrer le joueur'

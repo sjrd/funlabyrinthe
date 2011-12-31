@@ -3,47 +3,46 @@ object FormNewProject: TFormNewProject
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Cr'#233'er un nouveau projet'
-  ClientHeight = 153
-  ClientWidth = 449
+  ClientHeight = 200
+  ClientWidth = 587
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
-  Scaled = False
   OnCreate = FormCreate
   PixelsPerInch = 120
-  TextHeight = 13
+  TextHeight = 17
   object Label1: TLabel
-    Left = 16
-    Top = 16
-    Width = 76
-    Height = 13
+    Left = 21
+    Top = 21
+    Width = 97
+    Height = 17
     Caption = 'Titre du projet :'
   end
   object LabelFileName: TLabel
-    Left = 16
-    Top = 64
-    Width = 190
-    Height = 13
+    Left = 21
+    Top = 84
+    Width = 242
+    Height = 17
     Caption = 'Nom du fichier projet (sans extension) :'
   end
   object EditTitle: TEdit
-    Left = 16
-    Top = 32
-    Width = 417
-    Height = 21
+    Left = 21
+    Top = 42
+    Width = 545
+    Height = 25
     TabOrder = 0
     OnChange = EditTitleChange
   end
   object EditFileName: TJvValidateEdit
-    Left = 16
-    Top = 80
-    Width = 417
-    Height = 21
+    Left = 21
+    Top = 105
+    Width = 545
+    Height = 25
     Alignment = taLeftJustify
     CheckChars = '01234567890'
     CriticalPoints.MaxValueIncluded = False
@@ -53,10 +52,10 @@ object FormNewProject: TFormNewProject
     OnChange = EditFileNameChange
   end
   object ButtonOK: TButton
-    Left = 216
-    Top = 112
-    Width = 105
-    Height = 25
+    Left = 282
+    Top = 146
+    Width = 138
+    Height = 33
     Caption = 'OK'
     Default = True
     Enabled = False
@@ -64,10 +63,10 @@ object FormNewProject: TFormNewProject
     TabOrder = 2
   end
   object ButtonCancel: TButton
-    Left = 328
-    Top = 112
-    Width = 105
-    Height = 25
+    Left = 429
+    Top = 146
+    Width = 137
+    Height = 33
     Cancel = True
     Caption = 'Annuler'
     ModalResult = 2

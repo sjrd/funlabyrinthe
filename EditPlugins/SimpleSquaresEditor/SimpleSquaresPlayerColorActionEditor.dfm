@@ -1,20 +1,20 @@
 inherited FramePlayerColorActionEditor: TFramePlayerColorActionEditor
-  Width = 257
-  Height = 233
-  ExplicitWidth = 257
-  ExplicitHeight = 233
+  Width = 321
+  Height = 291
+  ExplicitWidth = 321
+  ExplicitHeight = 291
   object LabelColor: TStaticText
-    Left = 16
-    Top = 16
-    Width = 216
-    Height = 17
+    Left = 20
+    Top = 20
+    Width = 262
+    Height = 20
     Caption = 'Remplacer la couleur du pion du joueur par :'
     TabOrder = 0
   end
   object ListBoxColor: TColorBox
-    Left = 16
-    Top = 32
-    Width = 225
+    Left = 20
+    Top = 40
+    Width = 281
     Height = 22
     NoneColorColor = clWindow
     Selected = clBlue

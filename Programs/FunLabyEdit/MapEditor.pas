@@ -6,7 +6,7 @@ uses
   Types, Windows, Messages, SysUtils, Variants, Classes, TypInfo, Graphics,
   Controls, Forms, Dialogs, ImgList, ExtCtrls, StdCtrls, Tabs, CategoryButtons,
   Spin, StrUtils, ScUtils, SdDialogs, SepiReflectionCore, FunLabyUtils,
-  FilesUtils, FunLabyEditConsts, PlayerObjects,
+  FilesUtils, FunLabyCoreConsts, FunLabyEditConsts, PlayerObjects,
   BaseMapViewer, MapTools, GR32, ObjectInspector, FunLabyEditTypes, EditMap,
   ActnList, Menus, EditFilers;
 
@@ -111,6 +111,8 @@ const
 constructor TFrameMapEditor.Create(AOwner: TComponent);
 begin
   inherited;
+
+  ScaleBy(Screen.PixelsPerInch, DesignTimePixelsPerInch);
 
   LastCompIndex := 0;
   Component := nil;

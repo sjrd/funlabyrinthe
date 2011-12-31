@@ -1,16 +1,20 @@
 inherited FrameSoundActionEditor: TFrameSoundActionEditor
+  Width = 500
+  Height = 375
+  ExplicitWidth = 500
+  ExplicitHeight = 375
   object LabelSound: TLabel
-    Left = 16
-    Top = 16
-    Width = 95
-    Height = 13
+    Left = 20
+    Top = 20
+    Width = 116
+    Height = 16
     Caption = 'Fichier son '#224' jouer :'
   end
   object EditSound: TButtonedEdit
-    Left = 16
-    Top = 32
-    Width = 289
-    Height = 21
+    Left = 20
+    Top = 40
+    Width = 361
+    Height = 24
     Images = ButtonImages
     LeftButton.DisabledImageIndex = 1
     LeftButton.HotImageIndex = 2
@@ -24,7 +28,7 @@ inherited FrameSoundActionEditor: TFrameSoundActionEditor
     Left = 80
     Top = 72
     Bitmap = {
-      494C010103000800300010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800380010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       000000000000000000000000000000000000078DBE4D078DBEFF078DBEFF078D
       BEFF078DBEFF078DBEFF078DBEFF078DBEFF078DBEFF078DBEFF078DBEFF078D

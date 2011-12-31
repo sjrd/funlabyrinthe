@@ -1,19 +1,19 @@
 inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
-  Width = 649
-  Height = 457
-  ExplicitWidth = 649
-  ExplicitHeight = 457
+  Width = 811
+  Height = 571
+  ExplicitWidth = 811
+  ExplicitHeight = 571
   object SplitterSquares: TSplitter
-    Left = 150
+    Left = 188
     Top = 0
-    Height = 457
+    Height = 571
     MinSize = 100
   end
   object SquaresContainer: TCategoryButtons
     Left = 0
     Top = 0
-    Width = 150
-    Height = 457
+    Width = 188
+    Height = 571
     Align = alLeft
     ButtonFlow = cbfVertical
     ButtonHeight = 36
@@ -83,20 +83,26 @@ inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
     OnDrawIcon = SquaresContainerDrawIcon
   end
   inline SquareEditor: TFrameEditSimpleSquare
-    Left = 153
+    Left = 191
     Top = 0
-    Width = 496
-    Height = 457
+    Width = 620
+    Height = 571
     Align = alClient
     Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 1
     TabStop = True
-    ExplicitLeft = 153
-    ExplicitWidth = 496
-    ExplicitHeight = 457
+    ExplicitLeft = 191
+    ExplicitWidth = 620
+    ExplicitHeight = 571
     inherited PanelCommon: TPanel
-      Width = 496
-      ExplicitWidth = 496
+      Width = 620
+      ExplicitWidth = 620
     end
   end
   object SquaresImages: TImageList
@@ -105,7 +111,7 @@ inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
     Left = 88
     Top = 232
     Bitmap = {
-      494C01010300040008001E001E00FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010300040014001E001E00FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000780000001E00000001002000000000004038
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -583,6 +589,6 @@ inherited FrameSimpleSquaresEditor: TFrameSimpleSquaresEditor
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofNoReadOnlyReturn, ofEnableSizing]
     Title = 'Enregistrer le code source FunDelphi sous...'
     Left = 88
-    Top = 264
+    Top = 296
   end
 end
