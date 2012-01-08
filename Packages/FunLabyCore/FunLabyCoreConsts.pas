@@ -54,6 +54,9 @@ resourcestring
   SDuplicateID = 'Il existe déjà un composant dont l''ID est %s';
   SDuplicateIDInCreate = 'Échec du chargement de ce projet car les unités '+
     'utilisées tentent de créer deux composants différents avec l''ID %s';
+  SDuplicateAttribute = 'Échec du chargement de ce projet car les unités '+
+    'utilisées tentent de créer deux attributs différents avec le nom %s';
+  SAttributeNotExists = 'L''attribut du joueur %s n''existe pas';
   STemporaryStatedMap =
     'La carte d''ID %s est dans un état temporaire qui ne peut être enregistré';
 

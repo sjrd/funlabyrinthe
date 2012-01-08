@@ -1584,7 +1584,7 @@ begin
       Point3DToString(PointBehind(Position, Player.Direction));
 
     // Détermination du numéro de la barque
-    Boat := Player.Attribute[attrBoatNumber];
+    Boat := Integer(Player.Attributes[attrBoatNumber]^);
 
     // Construction du tableau des références
     SetLength(ReferencesStrings,

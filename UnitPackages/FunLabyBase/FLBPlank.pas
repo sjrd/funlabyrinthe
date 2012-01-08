@@ -112,10 +112,13 @@ var { FunDelphi codegen }
 const
   clPlank = $00004080; /// Couleur de la planche
 
-implementation
-
 const {don't localize}
   attrUsePlank = 'UsePlank'; /// Attribut indiquant l'usage de la planche
+
+var
+  attrtypeUsePlank: Boolean; /// Type de l'attribut UsePlank
+
+implementation
 
 {---------------------}
 { Classe TPlankPlugin }
@@ -136,7 +139,7 @@ begin
   Y := Context.Y;
   Player := Context.Player;
 
-  if Player.Attribute[attrUsePlank] = 0 then
+  if not Boolean(Player.Attributes[attrUsePlank]^) then
     Exit;
 
   // Détermination de l'endroit où dessiner réellement la planche
@@ -307,7 +310,7 @@ constructor TPlankSquare.Create(AMaster: TMaster; AMap: TMap;
 begin
   inherited Create(AMaster, '', AMap, APosition);
   FPlayer := APlayer;
-  FPlayer.Attribute[attrUsePlank] := 1;
+  Boolean(FPlayer.Attributes[attrUsePlank]^) := True;
 end;
 
 {*
@@ -324,7 +327,7 @@ end;
 *}
 procedure TPlankSquare.DoExited(Context: TMoveContext);
 begin
-  FPlayer.Attribute[attrUsePlank] := 0;
+  Boolean(FPlayer.Attributes[attrUsePlank]^) := False;
   Free;
 end;
 

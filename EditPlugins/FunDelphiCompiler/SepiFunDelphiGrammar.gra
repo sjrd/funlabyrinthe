@@ -408,7 +408,10 @@ ActionsSection
 	'actions'* CommaIdentDeclList ';'*
 
 AttributesSection
-	'attributes'* CommaIdentDeclList ';'*
+	'attributes'* (AttributeDecl)+
+
+AttributeDecl
+	CommaIdentDeclList (':'* TypeName)? ';'*
 
 MessagesSection
 	'messages'* (MessageDecl)+

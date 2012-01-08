@@ -27,7 +27,7 @@ const // don't localize
   ResourceName = 'SepiImportsFLBPlank';
   TypeCount = 4;
   MethodCount = 2;
-  VariableCount = 3;
+  VariableCount = 4;
 
 var
   TypeInfoArray: array[0..TypeCount-1] of PTypeInfo;
@@ -152,6 +152,7 @@ begin
   VarAddresses[0] := @compPlankPlugin;
   VarAddresses[1] := @compPlanks;
   VarAddresses[2] := @compPlank;
+  VarAddresses[3] := @attrtypeUsePlank;
 end;
 
 {------------------------------------}

@@ -12,8 +12,8 @@ interface
 
 uses
   SysUtils, Classes, Contnrs, ScUtils, ScLists, ScXML, SepiReflectionCore,
-  SepiMembers, SepiRuntime, FunLabyUtils, FunLabyFilers, FunLabyCoreConsts,
-  GraphicEx;
+  SepiMembers, SepiRuntime, SepiSystemUnit, FunLabyUtils, FunLabyFilers,
+  FunLabyCoreConsts, GraphicEx;
 
 type
   /// Type de callback pour la recherche de fichiers
@@ -81,6 +81,8 @@ type
     function _Release: Integer; stdcall;
 
     function IsEditing: Boolean;
+
+    procedure CreatePlayerAttributes(Attributes: TDynamicPropertySet);
   public
     constructor Create(ABaseSepiRoot: TSepiRoot; const AFileName: TFileName;
       AMode: TFileMode);
@@ -783,6 +785,51 @@ end;
 function TMasterFile.IsEditing: Boolean;
 begin
   Result := Mode = fmEdit;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMasterFile.CreatePlayerAttributes(Attributes: TDynamicPropertySet);
+var
+  I, J: Integer;
+  AttrConstType, DefaultAttrType: TSepiType;
+  SepiUnit: TSepiUnit;
+  Constant: TSepiConstant;
+  AttrName: string;
+  Component: TSepiComponent;
+  AttrType: TSepiType;
+begin
+  AttrConstType := TSepiSystemUnit(SepiRoot.SystemUnit).LongString;
+  DefaultAttrType := TSepiSystemUnit(SepiRoot.SystemUnit).Integer;
+
+  for I := 0 to SepiRoot.UnitCount-1 do
+  begin
+    SepiUnit := SepiRoot.Units[I];
+
+    for J := 0 to SepiUnit.ChildCount-1 do
+    begin
+      if not (SepiUnit.Children[J] is TSepiConstant) then
+        Continue;
+
+      Constant := TSepiConstant(SepiUnit.Children[J]);
+
+      if not AnsiStartsText('attr', Constant.Name) then
+        Continue;
+      if not Constant.ConstType.Equals(AttrConstType) then
+        Continue;
+
+      AttrName := string(Constant.ValuePtr^);
+
+      Component := SepiUnit.GetComponent('attrtype' + AttrName);
+      if Component is TSepiVariable then
+        AttrType := TSepiVariable(Component).VarType
+      else
+        AttrType := DefaultAttrType;
+
+      Attributes.AddProperty(AttrName, AttrType.TypeInfo, AttrType.Size);
+    end;
+  end;
 end;
 
 {*

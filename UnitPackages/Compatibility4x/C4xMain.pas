@@ -20,7 +20,7 @@ uses
 implementation
 
 uses
-  SepiReflectionCore, SepiMembers;
+  SepiReflectionCore, SepiMembers, SepiSystemUnit;
 
 {-----------------------}
 { TPainterAdapter class }
@@ -440,6 +440,10 @@ begin
     'static procedure(Master: TMaster)').SetCode(@InitializeUnit);
   TSepiMethod.Create(Result, 'GameStarted',
     'static procedure(Master: TMaster)').SetCode(@GameStarted);
+
+  TSepiConstant.Create(Result, 'attrBoatNumber', attrBoatNumber);
+  TSepiVariable.Create(Result, 'attrtypeBoatNumber',
+    TSepiSystemUnit(Root.SystemUnit).Integer);
 
   Result.Complete;
 end;

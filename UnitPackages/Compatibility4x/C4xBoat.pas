@@ -23,6 +23,9 @@ const
   /// Attribut numéro de la barque
   attrBoatNumber = 'BoatNumber';
 
+var
+  attrtypeBoatNumber: Integer; /// Type de l'attribut numéro de la barque
+
 type
   {*
     Plug-in barque
@@ -168,9 +171,9 @@ begin
     if not (DestSquare.Field is TWater) then
     begin
       SrcSquare := ChangeField(SrcSquare, Format(fmtidBoat,
-        [Player.Attribute[attrBoatNumber]]));
+        [Integer(Player.Attributes[attrBoatNumber]^)]));
 
-      Player.Attribute[attrBoatNumber] := 0;
+      Integer(Player.Attributes[attrBoatNumber]^) := 0;
       Player.RemovePlugin(Self);
     end;
   end;
@@ -224,7 +227,7 @@ procedure TOldBoat.Entered(Context: TMoveContext);
 begin
   with Context do
   begin
-    Player.Attribute[attrBoatNumber] := Number;
+    Integer(Player.Attributes[attrBoatNumber]^) := Number;
     Player.AddPlugin(Master.Plugin[idOldBoatPlugin]);
 
     Square := ChangeField(Square, idWater);

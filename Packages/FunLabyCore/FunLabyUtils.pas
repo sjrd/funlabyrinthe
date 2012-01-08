@@ -98,9 +98,16 @@ type
   /// Générée si une ressource n'a pas pu être trouvée
   EResourceNotFoundException = class(EInOutError);
 
+  /// Déclenchée si deux unités déclarent des attributs avec le même nom
+  EDuplicateAttributeException = class(EFunLabyException);
+
+  /// Déclenchée si on tente d'accéder à un attribut inexistant
+  EAttributeNotExistsException = class(EFunLabyException);
+
   TDrawViewContext = class;
   TMoveContext = class;
   TFunLabyFiler = class;
+  TDynamicPropertySet = class;
   TPlayerData = class;
   TFunLabyComponent = class;
   TSquareComponent = class;
@@ -138,6 +145,12 @@ type
     *}
     function FindResource(const HRef: string; Kind: TResourceKind;
       const Extensions: array of string): TFileName;
+
+    {*
+      Crée les attributs pour un joueur
+      @param Attributes   Attributs du joueur
+    *}
+    procedure CreatePlayerAttributes(Attributes: TDynamicPropertySet);
   end;
 
   {*
@@ -849,6 +862,66 @@ type
     property StaticDraw: Boolean read FStaticDraw;
     property Size: TPoint read FSize;
     property IsEmpty: Boolean read GetIsEmpty;
+  end;
+
+  {*
+    Propriété dynamique
+    Une propriété dynamique est nommée, et fortement typée
+    @author sjrd
+    @version 5.2.1
+  *}
+  TDynamicProperty = class(TObject)
+  private
+    FName: string;        /// Nom de la propriété
+    FTypeInfo: PTypeInfo; /// TypeInfo du type de cette propriété
+    FSize: Cardinal;      /// SizeOf du type de cette propriété
+    FValue: Pointer;      /// Pointeur sur la valeur réelle
+
+    FIsPublishable: Boolean; /// Indique si la propriété est publiable
+
+    procedure ReadBinaryValue(Stream: TStream);
+    procedure WriteBinaryValue(Stream: TStream);
+
+    function IsStored: Boolean;
+  public
+    constructor Create(const AName: string; ATypeInfo: PTypeInfo;
+      ASize: Cardinal);
+    destructor Destroy; override;
+
+    procedure DefineInFiler(Filer: TFunLabyFiler);
+
+    property Name: string read FName;
+    property TypeInfo: PTypeInfo read FTypeInfo;
+    property Size: Cardinal read FSize;
+    property Value: Pointer read FValue;
+
+    property IsPublishable: Boolean read FIsPublishable;
+  end;
+
+  {*
+    Ensemble de propriétés dynamiques
+    @version 5.2.1
+  *}
+  TDynamicPropertySet = class(TFunLabyPersistent)
+  private
+    FProperties: TStrings; /// Liste interne des attributs
+
+    function GetCount: Integer;
+    function GetProperties(Index: Integer): TDynamicProperty;
+    function GetValueByName(const Name: string): Pointer;
+  protected
+    procedure DefineProperties(Filer: TFunLabyFiler); override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure AddProperty(const Name: string; TypeInfo: PTypeInfo;
+      Size: Cardinal);
+
+    property Count: Integer read GetCount;
+    property Properties[Index: Integer]: TDynamicProperty read GetProperties;
+    property ValueByName[const Name: string]: Pointer
+      read GetValueByName; default;
   end;
 
   {*
@@ -1657,15 +1730,15 @@ type
   *}
   TPlayer = class(TMobileComponent)
   private
-    FMode: IPlayerMode;         /// Mode principal
-    FModeStack: IInterfaceList; /// Pile des modes sauvegardés
-    FShowCounter: Integer;      /// Compteur de visibilité
-    FColor: TColor32;           /// Couleur
-    FViewBorderSize: Integer;   /// Taille de la bordure de la vue
-    FPlugins: TObjectList;      /// Liste des plug-in
-    FAttributes: TStrings;      /// Liste des attributs
-    FPlayState: TPlayState;     /// État de victoire/défaite
-    FFoundObjects: TObjectList; /// Objets trouvés (dans l'ordre)
+    FMode: IPlayerMode;               /// Mode principal
+    FModeStack: IInterfaceList;       /// Pile des modes sauvegardés
+    FShowCounter: Integer;            /// Compteur de visibilité
+    FColor: TColor32;                 /// Couleur
+    FViewBorderSize: Integer;         /// Taille de la bordure de la vue
+    FPlugins: TObjectList;            /// Liste des plug-in
+    FAttributes: TDynamicPropertySet; /// Liste des attributs
+    FPlayState: TPlayState;           /// État de victoire/défaite
+    FFoundObjects: TObjectList;       /// Objets trouvés (dans l'ordre)
 
     FDrawMode: TPlayerDrawMode;                  /// Mode de dessin
     FColoredPainterCache: TBitmap32;             /// Cache du peintre coloré
@@ -1702,9 +1775,6 @@ type
 
     procedure SetColor(Value: TColor32);
 
-    function GetAttribute(const AttrName: string): Integer;
-    procedure SetAttribute(const AttrName: string; Value: Integer);
-
     function GetPainters(Dir: TDirection): TPainter;
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
@@ -1719,7 +1789,6 @@ type
     procedure Dispatch(var Msg); override;
     procedure DefaultHandler(var Msg); override;
 
-    procedure GetAttributes(Attributes: TStrings);
     procedure GetPluginIDs(PluginIDs: TStrings);
 
     procedure GetFoundObjects(ObjectDefs: TObjectList);
@@ -1788,8 +1857,7 @@ type
 
     property Mode: IPlayerMode read FMode;
     property Visible: Boolean read GetVisible;
-    property Attribute[const AttrName: string]: Integer
-      read GetAttribute write SetAttribute;
+    property Attributes: TDynamicPropertySet read FAttributes;
     property PlayState: TPlayState read FPlayState;
   published
     property Color: TColor32 read FColor write SetColor
@@ -2137,7 +2205,7 @@ implementation
 
 uses
   IniFiles, StrUtils, Forms, Math, MMSystem, msxml, ScStrUtils, ScXML,
-  ScCompilerMagic, ScTypInfo, GraphicEx, FunLabyFilers;
+  ScCompilerMagic, ScTypInfo, ScSerializer, GraphicEx, FunLabyFilers;
 
 const
   /// Z-index par défaut pour les joueurs
@@ -4496,6 +4564,213 @@ end;
 procedure TFunLabyStoredDefaultsFiler.HandleBinaryProperty(const Name: string;
   ReadProc, WriteProc: TStreamProc; HasData: Boolean);
 begin
+end;
+
+{------------------------}
+{ TDynamicProperty class }
+{------------------------}
+
+{*
+  Crée une propriété dynamique
+  @param AName       Nom de la propriété
+  @param ATypeInfo   TypeInfo du type de la propriété
+  @param ASize       SizeOf du type de la propriété
+*}
+constructor TDynamicProperty.Create(const AName: string; ATypeInfo: PTypeInfo;
+  ASize: Cardinal);
+const
+  PublishableKind = [
+    tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkClass, tkWChar,
+    tkLString, tkWString, tkVariant, tkInt64, tkUString
+  ];
+begin
+  inherited Create;
+
+  FName := AName;
+  FTypeInfo := ATypeInfo;
+  FSize := ASize;
+  FValue := AllocMem(FSize);
+
+  FIsPublishable := (TypeInfo <> nil) and (TypeInfo.Kind in PublishableKind);
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TDynamicProperty.Destroy;
+begin
+  if FValue <> nil then
+  begin
+    if IsTypeManaged(FTypeInfo) then
+      Finalize(FValue^, FTypeInfo);
+    FreeMem(FValue);
+  end;
+
+  inherited;
+end;
+
+{*
+  Lit la valeur depuis un flux binaire
+  @param Stream   Flux source
+*}
+procedure TDynamicProperty.ReadBinaryValue(Stream: TStream);
+begin
+  ReadDataFromStream(Stream, Value^, Size, TypeInfo);
+end;
+
+{*
+  Écrit la valeur dans un flux binaire
+*}
+procedure TDynamicProperty.WriteBinaryValue(Stream: TStream);
+begin
+  WriteDataToStream(Stream, Value^, Size, TypeInfo);
+end;
+
+{*
+  Teste si la valeur doit être enregistrée
+  @return True si la valeur doit être enregistrée, False sinon
+*}
+function TDynamicProperty.IsStored: Boolean;
+var
+  P: PByte;
+  I: Integer;
+begin
+  P := Value;
+
+  for I := 0 to Size-1 do
+  begin
+    if P[I] <> 0 then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  Result := False;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TDynamicProperty.DefineInFiler(Filer: TFunLabyFiler);
+var
+  SaveInstance: TFunLabyPersistent;
+begin
+  SaveInstance := Filer.FInstance;
+  Filer.FInstance := TFunLabyPersistent(Value);
+  try
+    if IsPublishable then
+      Filer.DefineFieldProperty(Name, TypeInfo, Value, IsStored)
+    else
+      Filer.DefineBinaryProperty(Name,
+        ReadBinaryValue, WriteBinaryValue, IsStored);
+  finally
+    Filer.FInstance := SaveInstance;
+  end;
+end;
+
+{---------------------------}
+{ TDynamicPropertySet class }
+{---------------------------}
+
+{*
+  Crée un ensemble de propriétés dynamiques
+*}
+constructor TDynamicPropertySet.Create;
+begin
+  inherited Create;
+
+  FProperties := THashedStringList.Create;
+  THashedStringList(FProperties).Sorted := True;
+  THashedStringList(FProperties).Duplicates := dupError;
+end;
+
+{*
+  [@inheritDoc]
+*}
+destructor TDynamicPropertySet.Destroy;
+var
+  I: Integer;
+begin
+  if FProperties <> nil then
+  begin
+    for I := 0 to FProperties.Count-1 do
+      FProperties.Objects[I].Free;
+    FProperties.Free;
+  end;
+
+  inherited;
+end;
+
+{*
+  Ajoute une propriété
+  @param Name       Nom de la propriété
+  @param TypeInfo   TypeInfo du type de la propriété
+  @param Size       Taille du type de la propriété
+*}
+procedure TDynamicPropertySet.AddProperty(const Name: string;
+  TypeInfo: PTypeInfo; Size: Cardinal);
+var
+  Index: Integer;
+  Prop: TDynamicProperty;
+begin
+  Index := FProperties.IndexOf(Name);
+
+  if Index < 0 then
+    FProperties.AddObject(Name, TDynamicProperty.Create(Name, TypeInfo, Size))
+  else
+  begin
+    Prop := Properties[Index];
+    if (Prop.TypeInfo <> TypeInfo) or (Prop.Size <> Size) then
+      raise EDuplicateAttributeException.CreateFmt(SDuplicateAttribute, [Name]);
+  end;
+end;
+
+{*
+  Nombre de propriétés
+*}
+function TDynamicPropertySet.GetCount: Integer;
+begin
+  Result := FProperties.Count;
+end;
+
+{*
+  Tableau zero-based des propriétés
+  @param Index   Index compris entre 0 inclus et Count exclu
+  @return Propriété à l'index spécifié
+*}
+function TDynamicPropertySet.GetProperties(Index: Integer): TDynamicProperty;
+begin
+  Result := TDynamicProperty(FProperties.Objects[Index]);
+end;
+
+{*
+  Tableau associatif des valeurs des propriétés
+  @param Name   Nom d'une propriété
+  @return Pointeur sur la valeur de la propriété spécifiée
+*}
+function TDynamicPropertySet.GetValueByName(const Name: string): Pointer;
+var
+  Index: Integer;
+begin
+  Index := FProperties.IndexOf(Name);
+  if Index >= 0 then
+    Result := Properties[Index].Value
+  else
+    raise EAttributeNotExistsException.CreateFmt(SAttributeNotExists, [Name]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TDynamicPropertySet.DefineProperties(Filer: TFunLabyFiler);
+var
+  I: Integer;
+begin
+  inherited;
+
+  for I := 0 to Count-1 do
+    Properties[I].DefineInFiler(Filer);
 end;
 
 {-------------------}
@@ -6961,8 +7236,7 @@ begin
   FColor := DefaultPlayerColor;
   FViewBorderSize := DefaultViewBorderSize;
   FPlugins := TObjectList.Create(False);
-  FAttributes := THashedStringList.Create;
-  TStringList(FAttributes).CaseSensitive := True;
+  FAttributes := TDynamicPropertySet.Create;
   FFoundObjects := TObjectList.Create(False);
 
   FColoredPainterCache := CreateEmptySquareBitmap;
@@ -6975,6 +7249,8 @@ begin
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
 
   ZIndex := DefaultPlayerZIndex;
+
+  Master.FMetaData.CreatePlayerAttributes(Attributes);
 
   Painter.AddImage(fPlayer);
 end;
@@ -7316,55 +7592,6 @@ begin
 end;
 
 {*
-  Tableau indexé par chaîne des attributs du joueur
-  @param AttrName   Nom de l'attribut à récupérer
-  @return Attribut dont le nom a été spécifié
-*}
-function TPlayer.GetAttribute(const AttrName: string): Integer;
-var
-  Index: Integer;
-begin
-  FLock.BeginRead;
-  try
-    Index := FAttributes.IndexOf(AttrName);
-    if Index < 0 then
-      Result := 0
-    else
-      Result := Integer(FAttributes.Objects[Index]);
-  finally
-    FLock.EndRead;
-  end;
-end;
-
-{*
-  Modifie le tableau indexé par chaîne des attributs du joueur
-  @param AttrName   Nom de l'attribut à modifier
-  @param Value      Nouvelle valeur de l'attribut
-*}
-procedure TPlayer.SetAttribute(const AttrName: string; Value: Integer);
-var
-  Index: Integer;
-begin
-  FLock.BeginWrite;
-  try
-    Index := FAttributes.IndexOf(AttrName);
-    if Index < 0 then
-    begin
-      if Value <> 0 then
-        FAttributes.AddObject(AttrName, TObject(Value));
-    end else
-    begin
-      if Value = 0 then
-        FAttributes.Delete(Index)
-      else
-        FAttributes.Objects[Index] := TObject(Value);
-    end;
-  finally
-    FLock.EndWrite;
-  end;
-end;
-
-{*
   Peintres de ce joueur par direction
   @param Dir   Direction
   @return Peintre de ce joueur pour la direction Dir
@@ -7378,6 +7605,10 @@ end;
   [@inheritDoc]
 *}
 procedure TPlayer.DefineProperties(Filer: TFunLabyFiler);
+var
+  LegacyAttributes: TStrings;
+  I, Index: Integer;
+  Attribute: TDynamicProperty;
 begin
   inherited;
 
@@ -7387,7 +7618,33 @@ begin
   Filer.DefineFieldProperty('PlayState', TypeInfo(TPlayState),
     @FPlayState, PlayState <> psPlaying);
 
-  Filer.DefineStrings('Attributes', FAttributes, TypeInfo(Integer));
+  // Legacy attributes (< 5.2.1)
+  if psReading in PersistentState then
+  begin
+    LegacyAttributes := TStringList.Create;
+    try
+      Filer.DefineStrings('Attributes', LegacyAttributes, TypeInfo(Integer));
+      if LegacyAttributes.Count > 0 then
+      begin
+        for I := 0 to Attributes.Count-1 do
+        begin
+          Attribute := Attributes.Properties[I];
+          if (Attribute.TypeInfo <> nil) and
+            (Attribute.TypeInfo.Kind = tkInteger) then
+          begin
+            Index := LegacyAttributes.IndexOf(Attribute.Name);
+            if Index >= 0 then
+              Integer(Attribute.Value^) :=
+                Integer(LegacyAttributes.Objects[Index]);
+          end;
+        end;
+      end;
+    finally
+      LegacyAttributes.Free;
+    end;
+  end;
+
+  Filer.DefinePersistent('Attributes', FAttributes);
 
   Filer.DefineProcProperty('Plugins', TypeInfo(string),
     @TPlayer.GetPluginListStr, @TPlayer.SetPluginListStr);
@@ -7452,20 +7709,6 @@ begin
       Exit;
       
     Plugins[I].Dispatch(Msg);
-  end;
-end;
-
-{*
-  Dresse la liste des attributs du joueur
-  @param Attributes   Liste de chaînes dans laquelle enregistrer les attributs
-*}
-procedure TPlayer.GetAttributes(Attributes: TStrings);
-begin
-  FLock.BeginRead;
-  try
-    Attributes.Assign(FAttributes);
-  finally
-    FLock.EndRead;
   end;
 end;
 

@@ -13,6 +13,9 @@ resourcestring
   SMethodNotFoundInBaseClass = 'Méthode non trouvée dans la classe de base';
   SSquareComponentValueRequired = 'Valeur de type TSquareComponent requise';
   SMessageTypeUnknown = 'Type du message %s inconnu';
+  SUntypedAttributeIsDeprecated =
+    'La déclaration d''attributs sans type est dépréciée, ajoutez ": Integer" '+
+    'avant le ;';
 
 implementation
 

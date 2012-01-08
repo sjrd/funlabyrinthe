@@ -145,6 +145,7 @@ const {don't localize}
   ComponentIDPrefix = 'id';
   ActionPrefix = 'act';
   AttributePrefix = 'attr';
+  AttributeTypePrefix = 'attrtype';
   ComponentTypePrefix = 'comp';
 
   MasterName = 'Master';
@@ -616,19 +617,39 @@ function TSepiFunDelphiLanguageRules.AttributeSelection(
   const AttrName: string): ISepiExpression;
 var
   Constant: TSepiConstant;
+  Component: TSepiComponent;
+  AttrType: TSepiType;
   Prop: ISepiProperty;
-  Expression: ISepiExpression;
+  AttributesExpr, Expression: ISepiExpression;
+  PointedValue: ISepiValue;
 begin
+  // Player.SomeAttribute
+  // -> TAttrType(Player.Attributes.Properties[attrSomeAttribute]^)
+
   Constant := LookForStringConstant(SepiContext, AttributePrefix+AttrName);
   if Constant = nil then
     Exit;
 
-  Expression := inherited FieldSelection(SepiContext, BaseExpression,
-    'Attribute');
+  Component := SepiContext.LookFor(AttributeTypePrefix+AttrName);
+  if Component is TSepiVariable then
+    AttrType := TSepiVariable(Component).VarType
+  else
+    AttrType := SystemUnit.Integer;
+
+  AttributesExpr := inherited FieldSelection(SepiContext, BaseExpression,
+    'Attributes');
+
+  if not Supports(AttributesExpr, ISepiProperty, Prop) then
+    Exit;
+  if not Prop.ParamsCompleted then
+    Exit;
+
+  Expression := inherited FieldSelection(SepiContext, AttributesExpr,
+    'ValueByName');
 
   if not Supports(Expression, ISepiProperty, Prop) then
     Exit;
-  if (Prop.ParamsCompleted) or (Prop.ParamCount <> 1) then
+  if Prop.ParamsCompleted or (Prop.ParamCount <> 1) then
     Exit;
 
   Expression := TSepiExpression.Create(Expression);
@@ -638,7 +659,11 @@ begin
   Prop.Params[0] := Expression;
   Prop.CompleteParams;
 
-  Result := Prop as ISepiExpression;
+  PointedValue := TSepiDereferenceValue.MakeDereference(
+    Prop as ISepiReadableValue);
+
+  Result := TSepiCastOperator.CastValue(AttrType,
+    PointedValue) as ISepiExpression;
 end;
 
 {*

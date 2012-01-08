@@ -168,13 +168,13 @@ type
   end;
 
   {*
-    Noeud déclarations d'attributs
+    Noeud déclaration d'attributs
     @author sjrd
     @version 5.0
   *}
-  TFunDelphiAttributesNode = class(TSepiNonTerminal)
-  protected
-    procedure ChildEndParsing(Child: TSepiParseTreeNode); override;
+  TFunDelphiAttributeDeclNode = class(TSepiNonTerminal)
+  public
+    procedure EndParsing; override;
   end;
 
   {*
@@ -805,7 +805,7 @@ begin
 
   NonTerminalClasses[ntConstDecl]           := TDelphiConstantDeclNode;
   NonTerminalClasses[ntActionsSection]      := TFunDelphiActionsNode;
-  NonTerminalClasses[ntAttributesSection]   := TFunDelphiAttributesNode;
+  NonTerminalClasses[ntAttributeDecl]       := TFunDelphiAttributeDeclNode;
   NonTerminalClasses[ntMessageDecl]         := TFunDelphiMessageDeclNode;
   NonTerminalClasses[ntComponent]           := TFunDelphiComponentDeclNode;
   NonTerminalClasses[ntComponentParameter]  := TFunDelphiComponentParamNode;
@@ -1534,26 +1534,39 @@ begin
   inherited;
 end;
 
-{--------------------------------}
-{ TFunDelphiAttributesNode class }
-{--------------------------------}
+{-----------------------------------}
+{ TFunDelphiAttributeDeclNode class }
+{-----------------------------------}
 
 {*
   [@inheritDoc]
 *}
-procedure TFunDelphiAttributesNode.ChildEndParsing(Child: TSepiParseTreeNode);
+procedure TFunDelphiAttributeDeclNode.EndParsing;
 var
   AttributeNames: TStringDynArray;
+  AttributeType: TSepiType;
   I: Integer;
   AttributeName: string;
 begin
-  (Child as TSepiIdentifierDeclListNode).GetIdentifierList(AttributeNames);
+  (Children[0] as TSepiIdentifierDeclListNode).GetIdentifierList(
+    AttributeNames);
+
+  if ChildCount >= 2 then
+  begin
+    AttributeType := (Children[1] as TSepiTypeNode).SepiType;
+  end else
+  begin
+    AttributeType := SystemUnit.Integer;
+    MakeError(SUntypedAttributeIsDeprecated, ekWarning);
+  end;
 
   for I := 0 to Length(AttributeNames)-1 do
   begin
     AttributeName := AttributeNames[I];
     TSepiConstant.Create(SepiContext, AttributePrefix+AttributeName,
       AttributeName);
+    TSepiVariable.Create(SepiContext, AttributeTypePrefix+AttributeName,
+      AttributeType);
   end;
 
   inherited;

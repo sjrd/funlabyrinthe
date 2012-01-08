@@ -214,11 +214,6 @@ type
 
     procedure UpdateCollectionEditor;
 
-    procedure GetPlayerAttributeAsOrdinal(Sender: TJvInspectorEventData;
-      var Value: Int64);
-    procedure SetPlayerAttributeAsOrdinal(Sender: TJvInspectorEventData;
-      var Value: Int64);
-
     procedure GetPlayerPluginAsOrdinal(Sender: TJvInspectorEventData;
       var Value: Int64);
     procedure SetPlayerPluginAsOrdinal(Sender: TJvInspectorEventData;
@@ -904,8 +899,10 @@ procedure TFrameInspector.FillInspector;
 var
   Component: TFunLabyComponent;
   Category: TJvCustomInspectorItem;
+  Attributes: TDynamicPropertySet;
+  Attribute: TDynamicProperty;
   I: Integer;
-  AttributeData, PluginData: TJvInspectorEventData;
+  PluginData: TJvInspectorEventData;
 begin
   Inspector.AddComponent(InspectObject, SComponentDataTitle);
 
@@ -929,15 +926,17 @@ begin
     begin
       // Attributs du joueur
 
+      Attributes := TPlayer(InspectObject).Attributes;
+
       Category := TJvInspectorCustomCategoryItem.Create(Inspector.Root, nil);
       Category.DisplayName := SPlayerAttributesTitle;
 
-      for I := 0 to FKnownAttributes.Count-1 do
+      for I := 0 to Attributes.Count-1 do
       begin
-        AttributeData := TJvInspectorEventData.New(Category,
-          FKnownAttributes[I], TypeInfo(Integer)).Data as TJvInspectorEventData;
-        AttributeData.OnGetAsOrdinal := GetPlayerAttributeAsOrdinal;
-        AttributeData.OnSetAsOrdinal := SetPlayerAttributeAsOrdinal;
+        Attribute := Attributes.Properties[I];
+        if Attribute.IsPublishable then
+          TJvInspectorVarData.New(Category,
+            Attribute.Name, Attribute.TypeInfo, Attribute.Value);
       end;
 
       // Plug-in attachés au joueur
@@ -977,32 +976,6 @@ begin
 
   ListBoxCollectionItems.ItemIndex :=
     InspectCollection.IndexOf(InspectObject);
-end;
-
-{*
-  Gestionnaire d'événement OnGetAsOrdinal des items d'attribut du joueur
-  @param Sender   Objet qui a déclenché l'événement
-  @param Value    En sortie : valeur ordinale de l'attribut
-*}
-procedure TFrameInspector.GetPlayerAttributeAsOrdinal(
-  Sender: TJvInspectorEventData; var Value: Int64);
-begin
-  if InspectObject is TPlayer then
-    Value := TPlayer(InspectObject).Attribute[Sender.Name]
-  else
-    Value := 0;
-end;
-
-{*
-  Gestionnaire d'événement OnSetAsOrdinal des items d'attribut du joueur
-  @param Sender   Objet qui a déclenché l'événement
-  @param Value    En entrée : valeur ordinale de l'attribut
-*}
-procedure TFrameInspector.SetPlayerAttributeAsOrdinal(
-  Sender: TJvInspectorEventData; var Value: Int64);
-begin
-  if InspectObject is TPlayer then
-    TPlayer(InspectObject).Attribute[Sender.Name] := Value;
 end;
 
 {*
