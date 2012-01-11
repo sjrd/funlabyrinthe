@@ -1800,6 +1800,7 @@ type
     procedure AddPlugin(Plugin: TPlugin);
     procedure RemovePlugin(Plugin: TPlugin);
     function HasPlugin(Plugin: TPlugin): Boolean;
+    procedure TogglePlugin(Plugin: TPlugin);
 
     function AbleTo(const Action: TPlayerAction; Param: Integer = 0): Boolean;
     function DoAction(const Action: TPlayerAction; Param: Integer = 0): Boolean;
@@ -7845,6 +7846,26 @@ begin
     Result := FPlugins.IndexOf(Plugin) >= 0;
   finally
     FLock.EndRead;
+  end;
+end;
+
+{*
+  Ajoute un plugin au joueur s'il ne l'a pas, le retire sinon
+  @param Plugin   Le plugin à ajouter ou retirer
+*}
+procedure TPlayer.TogglePlugin(Plugin: TPlugin);
+var
+  Index: Integer;
+begin
+  FLock.BeginWrite;
+  try
+    Index := FPlugins.IndexOf(Plugin);
+    if Index < 0 then
+      FPlugins.Add(Plugin)
+    else
+      FPlugins.Delete(Index);
+  finally
+    FLock.EndWrite;
   end;
 end;
 
