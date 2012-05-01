@@ -13,6 +13,7 @@ object FormObjects: TFormObjects
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnShow = FormShow
   DesignSize = (
     546
     362)
@@ -48,7 +49,7 @@ object FormObjects: TFormObjects
     ViewStyle = vsList
     OnCustomDrawItem = ListViewObjectsCustomDrawItem
   end
-  object ButtonOK: TButton
+  object ButtonClose: TButton
     Left = 429
     Top = 314
     Width = 106
@@ -58,10 +59,10 @@ object FormObjects: TFormObjects
     Margins.Right = 4
     Margins.Bottom = 4
     Anchors = [akRight, akBottom]
-    Caption = 'OK'
+    Caption = 'Fermer'
     Default = True
-    ModalResult = 1
     TabOrder = 1
+    OnClick = ButtonCloseClick
   end
   object ObjectsImages: TImageList
     Height = 30

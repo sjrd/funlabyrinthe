@@ -9,7 +9,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, TypInfo, SepiReflectionCore, SepiMembers, 
-  PlayerObjects;
+  FunLabyUtils, PlayerObjects;
 
 var
   SepiImportsPlayerObjectsLazyLoad: Boolean = False;
@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'PlayerObjects';
   ResourceName = 'SepiImportsPlayerObjects';
   TypeCount = 1;
-  MethodCount = 2;
+  MethodCount = 5;
   VariableCount = 1;
 
 var
@@ -37,6 +37,7 @@ var
 type
   TSepiImportsTFormObjects = class(TFormObjects)
   private
+    procedure SetPlayer(Value: TPlayer);
     class procedure InitMethodAddresses;
   end;
 
@@ -44,10 +45,18 @@ type
 { TFormObjects import }
 {---------------------}
 
+procedure TSepiImportsTFormObjects.SetPlayer(Value: TPlayer);
+begin
+  Player := Value;
+end;
+
 class procedure TSepiImportsTFormObjects.InitMethodAddresses;
 begin
-  MethodAddresses[0] := @TSepiImportsTFormObjects.ListViewObjectsCustomDrawItem;
-  MethodAddresses[1] := @TSepiImportsTFormObjects.ShowObjects;
+  MethodAddresses[0] := @TSepiImportsTFormObjects.FormShow;
+  MethodAddresses[1] := @TSepiImportsTFormObjects.ListViewObjectsCustomDrawItem;
+  MethodAddresses[2] := @TSepiImportsTFormObjects.ButtonCloseClick;
+  MethodAddresses[3] := @TSepiImportsTFormObjects.SetPlayer;
+  MethodAddresses[4] := @TSepiImportsTFormObjects.UpdateObjects;
 end;
 
 {---------------------}
@@ -156,7 +165,7 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TFormObjects, 908, 892);
+  CheckInstanceSize(TFormObjects, 916, 892);
   {$ASSERTIONS OFF}
 end;
 

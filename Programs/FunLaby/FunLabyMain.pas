@@ -119,6 +119,9 @@ type
     /// Boîte de dialogue nouvelle partie
     NewGameDialog2: TFormSelectProjectFile;
 
+    /// Fenêtre Vos objets
+    FormObjects: TFormObjects;
+
     procedure LoadBaseSepiRoot;
     procedure NeedBaseSepiRoot;
     procedure BackgroundDiscard(var Obj);
@@ -236,6 +239,8 @@ begin
   GameEnded := False;
   LastFileName := FileName;
 
+  FormObjects.Player := Controller.Player;
+
   Caption := MasterFile.Title;
   MenuReloadGame.Enabled := True;
   MenuSaveGame.Enabled := True;
@@ -344,6 +349,9 @@ begin
   BigMenuScreenshot.Visible := False;
 
   StatusBar.Panels.Clear;
+
+  FormObjects.Hide;
+  FormObjects.Player := nil;
 
   Master := nil;
   try
@@ -546,6 +554,7 @@ begin
   SaveGameDialog.InitialDir := SaveguardsPath;
 
   NewGameDialog2 := TFormSelectProjectFile.Create(Self);
+  FormObjects := TFormObjects.Create(Self);
 
   BackgroundTasks := TScTaskQueue.Create(True, False);
 
@@ -686,7 +695,7 @@ end;
 *}
 procedure TFormMain.MenuPlayerObjectsClick(Sender: TObject);
 begin
-  TFormObjects.ShowObjects(Controller.Player);
+  FormObjects.Show;
 end;
 
 {*
@@ -820,6 +829,7 @@ begin
 
   PaintBox.Invalidate;
   ShowStatus;
+  FormObjects.UpdateObjects;
 end;
 
 {*

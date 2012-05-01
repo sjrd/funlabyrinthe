@@ -22,21 +22,36 @@ type
   TFormObjects = class(TForm)
     LabelObjects: TLabel;
     ListViewObjects: TListView;
-    ButtonOK: TButton;
+    ButtonClose: TButton;
     ObjectsImages: TImageList;
+    procedure FormShow(Sender: TObject);
     procedure ListViewObjectsCustomDrawItem(Sender: TCustomListView;
       Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure ButtonCloseClick(Sender: TObject);
   private
-    { Déclarations prives }
+    FPlayer: TPlayer; /// Joueur dont afficher les objets
+
     procedure AdjustColumnWidth;
+    procedure DoUpdateObjects;
+
+    procedure SetPlayer(Value: TPlayer);
   public
-    { Déclarations publiques }
-    class procedure ShowObjects(Player: TPlayer);
+    procedure UpdateObjects;
+
+    property Player: TPlayer read FPlayer write SetPlayer;
   end;
 
 implementation
 
 {$R *.dfm}
+
+{*
+  Gestionnaire d'événement OnShow de la fiche
+*}
+procedure TFormObjects.FormShow(Sender: TObject);
+begin
+  DoUpdateObjects;
+end;
 
 {*
   Gestionnaire d'événement OnCustomDrawItem de la liste
@@ -49,6 +64,14 @@ begin
 
   // Seems to be needed for correct drawing of the text
   SetBkMode(Sender.Canvas.Handle, TRANSPARENT);
+end;
+
+{*
+  Gestionnaire d'événement OnClick du bouton Fermer
+*}
+procedure TFormObjects.ButtonCloseClick(Sender: TObject);
+begin
+  Close;
 end;
 
 {*
@@ -66,18 +89,23 @@ begin
 end;
 
 {*
-  Affiche les objets d'un joueur
-  @param Player   Joueur concerné
+  Met à jour les données affichées
 *}
-class procedure TFormObjects.ShowObjects(Player: TPlayer);
+
+procedure TFormObjects.DoUpdateObjects;
 var
   Master: TMaster;
   I: Integer;
   ObjectDef: TObjectDef;
   Infos: string;
 begin
-  with Create(Application) do
+  ListViewObjects.Items.BeginUpdate;
   try
+    ListViewObjects.Items.Clear;
+
+    if Player = nil then
+      Exit;
+
     Master := Player.Master;
 
     for I := 0 to Master.ObjectDefCount-1 do
@@ -94,12 +122,33 @@ begin
         end;
       end;
     end;
-
-    AdjustColumnWidth;
-    ShowModal;
   finally
-    Release;
+    ListViewObjects.Items.EndUpdate;
   end;
+
+  AdjustColumnWidth;
+end;
+
+{*
+  Modifie le joueur dont il faut afficher les données
+  @param Value   Nouveau joueur (peut être nil)
+*}
+procedure TFormObjects.SetPlayer(Value: TPlayer);
+begin
+  if Value <> FPlayer then
+  begin
+    FPlayer := Value;
+    UpdateObjects;
+  end;
+end;
+
+{*
+  Met à jour les données affichées
+*}
+procedure TFormObjects.UpdateObjects;
+begin
+  if Visible then
+    DoUpdateObjects;
 end;
 
 end.
