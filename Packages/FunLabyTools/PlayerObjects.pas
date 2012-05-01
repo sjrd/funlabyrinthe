@@ -68,9 +68,8 @@ begin
     for I := 0 to Master.ObjectDefCount-1 do
     begin
       ObjectDef := Master.ObjectDefs[I];
-      Infos := ObjectDef.ShownInfos[Player];
 
-      if ObjectDef.DisplayInObjectList and (Infos <> '') then
+      if ObjectDef.ShouldDisplayInObjectList(Player, Infos) then
       begin
         with ListViewObjects.Items.Add do
         begin

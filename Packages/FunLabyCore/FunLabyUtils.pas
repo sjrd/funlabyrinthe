@@ -1152,6 +1152,7 @@ type
   private
     FDisplayInObjectList: Boolean; /// Afficher dans la liste des objets
     FDisplayInStatusBar: Boolean;  /// Afficher dans la barre de statut
+    FHideUntilFound: Boolean;      /// Cacher jusqu'à ce que l'objet soit trouvé
   protected
     class function GetPlayerDataClass: TPlayerDataClass; override;
 
@@ -1169,6 +1170,9 @@ type
     procedure UseFor(Player: TPlayer; const Action: TPlayerAction;
       Param: Integer); virtual;
 
+    function ShouldDisplayInObjectList(Player: TPlayer;
+      out Infos: string): Boolean;
+
     property Count[Player: TPlayer]: Integer read GetCount write SetCount;
     property ShownInfos[Player: TPlayer]: string read GetShownInfos;
   published
@@ -1176,6 +1180,8 @@ type
       read FDisplayInObjectList write FDisplayInObjectList default True;
     property DisplayInStatusBar: Boolean
       read FDisplayInStatusBar write FDisplayInStatusBar default True;
+    property HideUntilFound: Boolean
+      read FHideUntilFound write FHideUntilFound default False;
   end;
 
   {*
@@ -1792,6 +1798,7 @@ type
     procedure GetPluginIDs(PluginIDs: TStrings);
 
     procedure GetFoundObjects(ObjectDefs: TObjectList);
+    function HasFoundObject(ObjectDef: TObjectDef): Boolean;
 
     procedure ChangeMode(ModeClass: TPlayerModeClass);
     procedure BeginTempMode(ModeClass: TPlayerModeClass);
@@ -5398,6 +5405,7 @@ begin
 
   FDisplayInObjectList := True;
   FDisplayInStatusBar := True;
+  FHideUntilFound := False;
 end;
 
 {*
@@ -5482,6 +5490,26 @@ end;
 procedure TObjectDef.UseFor(Player: TPlayer; const Action: TPlayerAction;
   Param: Integer);
 begin
+end;
+
+{*
+  Teste si cet objet doit être affiché dans la liste d'objets d'un joueur
+  @param Player   Joueur concerné
+  @param Infos    En sortie : les informations à afficher
+  @return True si l'objet doit être affiché, False sinon
+*}
+function TObjectDef.ShouldDisplayInObjectList(Player: TPlayer;
+  out Infos: string): Boolean;
+begin
+  Result := DisplayInObjectList and
+    (not HideUntilFound or Player.HasFoundObject(Self));
+
+  if Result then
+  begin
+    Infos := ShownInfos[Player];
+    if Infos = '' then
+      Result := False;
+  end;
 end;
 
 {-------------------------}
@@ -7737,6 +7765,21 @@ begin
   FLock.BeginRead;
   try
     ObjectDefs.Assign(FFoundObjects);
+  finally
+    FLock.EndRead;
+  end;
+end;
+
+{*
+  Teste si ce joueur a trouvé un objet donné
+  @param ObjectDef   Définition d'objet à tester
+  @return True ssi le joueur a trouvé un objet du type donné
+*}
+function TPlayer.HasFoundObject(ObjectDef: TObjectDef): Boolean;
+begin
+  FLock.BeginRead;
+  try
+    Result := FFoundObjects.IndexOf(ObjectDef) >= 0;
   finally
     FLock.EndRead;
   end;
