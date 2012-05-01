@@ -91,6 +91,9 @@ type
     LocalFilesMonitor: TJvChangeNotify;
     ActionImport: TAction;
     ImportDialog: TOpenDialog;
+    ActionCompileProject: TAction;
+    MenuSep2: TMenuItem;
+    MenuCompileProject: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -101,6 +104,7 @@ type
     procedure ActionImportExecute(Sender: TObject);
     procedure ActionOwnProjectExecute(Sender: TObject);
     procedure ActionRunExecute(Sender: TObject);
+    procedure ActionCompileProjectExecute(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
     procedure ListViewProjectsSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
@@ -344,6 +348,7 @@ begin
   ActionOwnProject.Enabled := Some and CurrentProject.IsLocalDefined;
   ActionOwnProject.Checked := Some and CurrentProject.OwnProject;
   ActionRun.Enabled := Some and CurrentProject.IsLocalDefined;
+  ActionCompileProject.Enabled := Some and CurrentProject.IsLocalDefined;
 
   // Actions about the library
 
@@ -618,8 +623,10 @@ begin
   for I := 0 to Projects.Count-1 do
   begin
     Project := Projects[I];
-    if Project.Action = paInstall then
-      InstallProject(Project);
+    case Project.Action of
+      paInstall: InstallProject(Project);
+      paCompile: CompileProject(Project);
+    end;
   end;
 
   ThreadInstallProjects.Synchronize(RefreshProjects);
@@ -1289,6 +1296,30 @@ begin
 
   ShellExecute(0, 'open', PChar(Dir+'FunLaby.exe'),
     PChar('"'+FileName+'"'), nil, SW_SHOWNORMAL);
+end;
+
+procedure TFormMain.ActionCompileProjectExecute(Sender: TObject);
+var
+  Project: TProject;
+  I: Integer;
+begin
+  Project := CurrentProject;
+  Assert(Project.IsLocalDefined);
+
+  // Prepare data for thread
+  for I := 0 to Projects.Count-1 do
+    Projects[I].Action := paNone;
+
+  Project.Action := paCompile;
+
+  // Run the job
+  ThreadDialogOptions.Caption := SInstallProjectsTitle;
+  ThreadDialogOptions.InfoText := SInstallProjects;
+  ThreadInstallProjects.ExecuteWithDialog(nil);
+
+  // Cleanup
+  if Projects.IndexOf(Project) >= 0 then // Refresh might have deleted it
+    Project.LocalArchive := '';
 end;
 
 procedure TFormMain.PageControlChange(Sender: TObject);

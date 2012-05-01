@@ -297,6 +297,13 @@ object FormMain: TFormMain
                 Action = ActionRun
                 Caption = '&Lancer le jeu'
                 ImageIndex = 4
+              end
+              item
+                Caption = '-'
+              end
+              item
+                Action = ActionCompileProject
+                Caption = '&Recompiler ce projet'
               end>
             Caption = '&Projet'
           end
@@ -426,12 +433,18 @@ object FormMain: TFormMain
       ImageIndex = 6
       OnExecute = ActionApplyLibraryChangesExecute
     end
+    object ActionCompileProject: TAction
+      Category = 'Project'
+      Caption = 'Recompiler ce projet'
+      Enabled = False
+      OnExecute = ActionCompileProjectExecute
+    end
   end
   object Images: TImageList
     Left = 88
     Top = 192
     Bitmap = {
-      494C01010700C800E80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010700C800EC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       00000000000000000000000000000000000000000000078DBE00078DBE00078D
       BE00078DBE00078DBE00078DBE00078DBE00078DBE00078DBE00078DBE00078D
@@ -721,6 +734,12 @@ object FormMain: TFormMain
     end
     object MenuRun: TMenuItem
       Action = ActionRun
+    end
+    object MenuSep2: TMenuItem
+      Caption = '-'
+    end
+    object MenuCompileProject: TMenuItem
+      Action = ActionCompileProject
     end
   end
   object Grabber: TIdHTTP

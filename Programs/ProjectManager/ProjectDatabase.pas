@@ -7,7 +7,7 @@ uses
 
 type
   /// Actions qui peuvent être entreprises sur un projet
-  TProjectAction = (paNone, paInstall);
+  TProjectAction = (paNone, paInstall, paCompile);
 
   {*
     Classe de base pour TLocalProject et TRemoteProject
