@@ -1404,6 +1404,9 @@ type
 
     function PlayersOn(const Position: T3DPoint): Integer;
 
+    function LinearIndexToPos(Index: Integer): T3DPoint;
+    function PosToLinearIndex(const Position: T3DPoint): Integer;
+
     property Dimensions: T3DPoint read FDimensions;
     property ZoneWidth: Integer read FZoneWidth write FZoneWidth;
     property ZoneHeight: Integer read FZoneHeight write FZoneHeight;
@@ -6311,19 +6314,10 @@ end;
   @return La case à la position spécifiée
 *}
 function TMap.GetMap(const Position: T3DPoint): TSquare;
-var
-  Index: Integer;
 begin
   if InMap(Position) then
-  begin
-    Index := Position.Z;
-    Index := Index * FDimensions.Y;
-    Inc(Index, Position.Y);
-    Index := Index * FDimensions.X;
-    Inc(Index, Position.X);
-
-    Result := FMap[Index];
-  end else
+    Result := LinearMap[PosToLinearIndex(Position)]
+  else
     Result := Outside[Position.Z];
 end;
 
@@ -6333,19 +6327,9 @@ end;
   @param Value      Nouvelle case
 *}
 procedure TMap.SetMap(const Position: T3DPoint; Value: TSquare);
-var
-  Index: Integer;
 begin
-  if not InMap(Position) then
-    Exit;
-
-  Index := Position.Z;
-  Index := Index * FDimensions.Y;
-  Inc(Index, Position.Y);
-  Index := Index * FDimensions.X;
-  Inc(Index, Position.X);
-
-  LinearMap[Index] := Value;
+  if InMap(Position) then
+    LinearMap[PosToLinearIndex(Position)] := Value;
 end;
 
 {*
@@ -6495,6 +6479,34 @@ begin
       Same3DPoint(Master.Players[I].Position, Position) then
       Inc(Result);
   end;
+end;
+
+{*
+  Convertit un index linéaire en position
+  @param Index   Index linéaire (dans LinearMap)
+  @return Position correspondante
+*}
+function TMap.LinearIndexToPos(Index: Integer): T3DPoint;
+begin
+  Result.X := Index mod FDimensions.X;
+  Index := Index div FDimensions.X;
+  Result.Y := Index mod FDimensions.Y;
+  Index := Index div FDimensions.Y;
+  Result.Z := Index;
+end;
+
+{*
+  Convertit une position en index linéaire
+  @param Position   Position à l'intérieur de la carte
+  @return Index linéaire correspondante (dans LinearMap)
+*}
+function TMap.PosToLinearIndex(const Position: T3DPoint): Integer;
+begin
+  Result := Position.Z;
+  Result := Result * FDimensions.Y;
+  Inc(Result, Position.Y);
+  Result := Result * FDimensions.X;
+  Inc(Result, Position.X);
 end;
 
 {-------------------}

@@ -130,7 +130,7 @@ object FormMain: TFormMain
     Left = 32
     Top = 88
     Bitmap = {
-      494C01010B000E007C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000E00800010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000097433F0097433F00C299
       9900C2999900C2999900C2999900C2999900C2999900C299990092302F009743
@@ -826,6 +826,13 @@ object FormMain: TFormMain
           item
             Items = <
               item
+                Action = ActionComponentListing
+              end>
+            Caption = '&Outils'
+          end
+          item
+            Items = <
+              item
                 Action = ActionHelpTopics
                 Caption = '&Rubriques d'#39'aide'
                 ImageIndex = 7
@@ -1084,6 +1091,12 @@ object FormMain: TFormMain
         'matiquement des zones'
       OnExecute = ActionEditMapExecute
     end
+    object ActionComponentListing: TAction
+      Category = 'Tools'
+      Caption = 'Listing des composants'
+      Enabled = False
+      OnExecute = ActionComponentListingExecute
+    end
   end
   object OpenDialog: TOpenDialog
     DefaultExt = 'flp'
@@ -1125,5 +1138,13 @@ object FormMain: TFormMain
     SubStorages = <>
     Left = 192
     Top = 88
+  end
+  object SaveTextFileDialog: TSaveTextFileDialog
+    DefaultExt = 'txt'
+    Filter = 'Fichier texte (*.txt)|*.txt|Tous (*)|*'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
+    Title = 'Enregistrer le rapport sous...'
+    Left = 216
+    Top = 144
   end
 end

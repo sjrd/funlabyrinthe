@@ -17,7 +17,7 @@ uses
   ExtCtrls, ScSyncObjs, CompilerMessages, MapViewer, SepiCompilerErrors,
   EditMap, SepiImportsFunLaby, NewProject,
   SepiImportsFunLabyTools, SourceEditorEvents, FunLabyEditOTA, JvComponentBase,
-  JvDragDrop, JvAppStorage, JvAppXMLStorage;
+  JvDragDrop, JvAppStorage, JvAppXMLStorage, ExtDlgs;
 
 type
   TActionDynArray = array of TAction;
@@ -69,6 +69,8 @@ type
     ActionOpenRecentNone: TAction;
     ActionAutoCompile: TAction;
     ActionOpenProjectManager: TAction;
+    ActionComponentListing: TAction;
+    SaveTextFileDialog: TSaveTextFileDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -99,6 +101,7 @@ type
     procedure ActionTestExecute(Sender: TObject);
     procedure ActionCompileAllExecute(Sender: TObject);
     procedure ActionCompileAndReloadExecute(Sender: TObject);
+    procedure ActionComponentListingExecute(Sender: TObject);
     procedure ActionHelpTopicsExecute(Sender: TObject);
     procedure ActionVersionCheckExecute(Sender: TObject);
     procedure ActionAboutExecute(Sender: TObject);
@@ -207,6 +210,8 @@ type
     function GetTabs(Index: Integer): TJvTabBarItem;
     function GetEditors(Index: Integer): ISourceEditor50;
 
+    procedure MakeComponentListing(Listing: TStrings);
+
     // IOTAFunLabyEditMainForm
     function GetMasterFile: TMasterFile;
     function GetCompilerMessages: IOTACompilerMessages50;
@@ -229,6 +234,9 @@ var
 implementation
 
 {$R *.dfm}
+
+uses
+  Generics.Collections;
 
 const
   ClosedTabTag = -1;
@@ -508,6 +516,9 @@ begin
   ActionCompileAll.Enabled := True;
   ActionCompileAndReload.Enabled := True;
 
+  // Menu des outils
+  ActionComponentListing.Enabled := True;
+
   // Divers
   ToolBarFile.ActionClient.Items[1].Action := ActionOpenSourceFile;
   ActionOpenSourceFile.ShortCut := ActionOpenFile.ShortCut;
@@ -557,6 +568,9 @@ begin
   ActionTest.Enabled := False;
   ActionCompileAll.Enabled := False;
   ActionCompileAndReload.Enabled := False;
+
+  // Menu des outils
+  ActionComponentListing.Enabled := False;
 
   // Divers
   ToolBarFile.ActionClient.Items[1].Action := ActionOpenFile;
@@ -1296,6 +1310,65 @@ begin
 end;
 
 {*
+  Construit un listing des composants
+  @param Listing   En sortie : listing des composants
+*}
+procedure TFormMain.MakeComponentListing(Listing: TStrings);
+var
+  CompToListOfPos: TDictionary<TSquareComponent, TStrings>;
+  ListOfPos: TStrings;
+  I, J, K: Integer;
+  Map: TMap;
+  Square: TSquare;
+  Pos: T3DPoint;
+  SquareComp: TSquareComponent;
+  Element: TPair<TSquareComponent, TStrings>;
+begin
+  CompToListOfPos := TDictionary<TSquareComponent, TStrings>.Create;
+  try
+    for I := 0 to Master.MapCount-1 do
+    begin
+      Map := Master.Maps[I];
+      for J := 0 to Map.LinearMapCount-1 do
+      begin
+        Square := Map.LinearMap[J];
+        Pos := Map.LinearIndexToPos(J);
+
+        for K := 1 to Square.ComponentCount-1 do
+        begin
+          SquareComp := Square.Components[K];
+          if SquareComp = nil then
+            Continue;
+          if not CompToListOfPos.TryGetValue(SquareComp, ListOfPos) then
+          begin
+            ListOfPos := TStringList.Create;
+            CompToListOfPos.Add(SquareComp, ListOfPos);
+            ListOfPos.AddObject('  ' + Map.ID, Map);
+          end else
+          begin
+            if ListOfPos.Objects[ListOfPos.Count-1] <> Map then
+              ListOfPos.AddObject('  ' + Map.ID, Map);
+          end;
+          ListOfPos.AddObject('    ' + Point3DToString(Pos, ', '), Map);
+        end;
+      end;
+    end;
+
+    for Element in CompToListOfPos do
+    begin
+      Listing.Add(Format('%s -- %s -- %d exemplaire-s',
+        [Element.Key.ID, Element.Key.Name, Element.Value.Count]));
+      Listing.AddStrings(Element.Value);
+      Listing.Add('');
+    end;
+  finally
+    for ListOfPos in CompToListOfPos.Values do
+      ListOfPos.Free;
+    CompToListOfPos.Free;
+  end;
+end;
+
+{*
   [@inheritDoc]
 *}
 function TFormMain.GetMasterFile: TMasterFile;
@@ -1375,6 +1448,10 @@ begin
 
   OpenSourceFileDialog.InitialDir := JoinPath([LibraryPath, SourcesDir]);
   OpenSourceFileDialog.Filter := SourceFileEditors.FiltersAsText;
+
+  SaveTextFileDialog.Encodings.Clear;
+  SaveTextFileDialog.Encodings.AddObject('UTF-8 (recommandé)', FunLabyEncoding);
+  SaveTextFileDialog.Encodings.AddObject('ASCII', TEncoding.ASCII);
 
   MasterFile := nil;
 
@@ -1819,6 +1896,30 @@ procedure TFormMain.ActionCompileAndReloadExecute(Sender: TObject);
 begin
   if SaveAll and CompileAll then
     ReloadFile;
+end;
+
+{*
+  Gestionnaire d'événement OnExecute de l'action Listings des composants
+  @param Sender   Objet qui a déclenché l'événement
+*}
+procedure TFormMain.ActionComponentListingExecute(Sender: TObject);
+var
+  Listing: TStrings;
+  Encoding: TEncoding;
+begin
+  if SaveTextFileDialog.Execute then
+  begin
+    Listing := TStringList.Create;
+    try
+      MakeComponentListing(Listing);
+
+      Encoding := TEncoding(
+        SaveTextFileDialog.Encodings.Objects[SaveTextFileDialog.EncodingIndex]);
+      Listing.SaveToFile(SaveTextFileDialog.FileName, Encoding);
+    finally
+      Listing.Free;
+    end;
+  end;
 end;
 
 {*
