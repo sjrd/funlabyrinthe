@@ -11,7 +11,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ImgList, StdCtrls, ComCtrls, FunLabyUtils, GR32;
+  Dialogs, ImgList, StdCtrls, ComCtrls, CommCtrl, FunLabyUtils, GR32;
 
 type
   {*
@@ -28,6 +28,7 @@ type
       Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
   private
     { Déclarations prives }
+    procedure AdjustColumnWidth;
   public
     { Déclarations publiques }
     class procedure ShowObjects(Player: TPlayer);
@@ -47,7 +48,21 @@ begin
     Item.DisplayRect(drIcon), TListView(Sender).Color);
 
   // Seems to be needed for correct drawing of the text
-  Sender.Canvas.Brush.Style := bsClear;
+  SetBkMode(Sender.Canvas.Handle, TRANSPARENT);
+end;
+
+{*
+  Ajuste la largeur de colonne de la liste d'objets
+  Le calcul automatique fait par Windows ne prend pas en compte le fait que
+  notre icône est plus grosse que prévue. Cette méthode corrige le tir.
+*}
+procedure TFormObjects.AdjustColumnWidth;
+var
+  ComputedWidth: Integer;
+begin
+  ListView_SetColumnWidth(ListViewObjects.Handle, 0, LVSCW_AUTOSIZE);
+  ComputedWidth := ListView_GetColumnWidth(ListViewObjects.Handle, 0);
+  ListView_SetColumnWidth(ListViewObjects.Handle, 0, ComputedWidth + 30);
 end;
 
 {*
@@ -80,6 +95,7 @@ begin
       end;
     end;
 
+    AdjustColumnWidth;
     ShowModal;
   finally
     Release;
