@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<funlabyrinthe version="5.2">
+<funlabyrinthe version="5.3">
 	<property name="Title" type="tkUString">New project template</property>
 	<collection name="UsedUnits">
 		<items>

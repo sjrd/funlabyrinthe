@@ -8,7 +8,7 @@ unit FunLabyCoreConsts;
 interface
 
 const {don't localize}
-  CurrentVersion = '5.2';  /// Version courante de FunLabyrinthe
+  CurrentVersion = '5.3';  /// Version courante de FunLabyrinthe
   CurrentMinorVersion = 1; /// Version mineure courante de FunLabyrinthe
 
   FunLabyAuthorName = 'Sébastien Doeraene';         /// Auteur

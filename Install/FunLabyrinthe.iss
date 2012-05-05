@@ -2,7 +2,7 @@
 
 ; Configuration
 #define AppName    "FunLabyrinthe"
-#define AppVer     "5.2"
+#define AppVer     "5.3"
 #define AppAuthor  "Sébastien Doeraene"
 #define Update     False
 

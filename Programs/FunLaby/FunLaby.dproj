@@ -88,7 +88,7 @@
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">5</VersionInfo>
-						<VersionInfo Name="MinorVer">2</VersionInfo>
+						<VersionInfo Name="MinorVer">3</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
@@ -100,15 +100,15 @@
 						<VersionInfo Name="CodePage">1252</VersionInfo>
 					</VersionInfo>
 					<VersionInfoKeys>
-						<VersionInfoKeys Name="CompanyName">SJRDoeraene</VersionInfoKeys>
-						<VersionInfoKeys Name="FileDescription">Jeu de labyrinthe</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">5.2.0.0</VersionInfoKeys>
-						<VersionInfoKeys Name="InternalName">Labyrinthe</VersionInfoKeys>
-						<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2010 (c) SJRDoeraene</VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName">Sébastien Doeraene</VersionInfoKeys>
+						<VersionInfoKeys Name="FileDescription">FunLabyrinthe launcher</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">5.3.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName">FunLaby</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">Copyright 2000-2012 (c) Sébastien Doereane</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
-						<VersionInfoKeys Name="OriginalFilename">Labyrinthe.exe</VersionInfoKeys>
+						<VersionInfoKeys Name="OriginalFilename">FunLaby.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">FunLabyrinthe</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">5.2</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">5.3</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>
