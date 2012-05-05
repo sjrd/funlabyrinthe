@@ -1045,7 +1045,6 @@ type
     procedure AutoEditVisualTag;
 
     procedure DoDraw(Context: TDrawSquareContext); virtual;
-    procedure DoDrawEditVisualTag(Context: TDrawSquareContext); virtual;
   public
     constructor Create(AMaster: TMaster; const AID: TComponentID); override;
     destructor Destroy; override;
@@ -2195,6 +2194,8 @@ procedure EmptySquareRect(Bitmap: TBitmap32; X: Integer = 0; Y: Integer = 0);
 procedure DrawBitmap32ToCanvas(Canvas: TCanvas; const DestRect: TRect;
   Bitmap: TBitmap32; BackgroundColor: TColor);
 
+procedure DrawEditVisualTag(Context: TDrawSquareContext; const Tag: string);
+
 function SameRect(const Left, Right: TRect): Boolean;
 
 function QualifiedPos(Map: TMap; Position: T3DPoint): TQualifiedPos; overload;
@@ -2401,6 +2402,41 @@ begin
     Canvas.CopyRect(DestRect, TempBitmap.Canvas, TempBitmap.BoundsRect);
   finally
     TempBitmap.Free;
+  end;
+end;
+
+{*
+  Dessine un tag visuel d'édition
+  Dessine ue tag visuel d'édition dans le contexte de dessin spécifié.
+  @param Context   Contexte de dessin de la case
+  @param Tag       Tag à dessiner
+*}
+procedure DrawEditVisualTag(Context: TDrawSquareContext; const Tag: string);
+const {don't localize}
+  FontName = 'Arial';
+  FontSize = 9;
+  FontColor = clBlack32;
+  BackColor = clWhite32;
+var
+  Extent: TSize;
+  TextX, TextY: Integer;
+begin
+  if Tag = '' then
+    Exit;
+
+  with Context do
+  begin
+    Bitmap.Font.Name := FontName;
+    Bitmap.Font.Size := FontSize;
+
+    Extent := Bitmap.TextExtent(Tag);
+    TextX := X + (SquareSize - Extent.cx) div 2;
+    TextY := Y + (SquareSize - Extent.cy) div 2;
+
+    Bitmap.FillRectTS(TextX-1, TextY+1, TextX+Extent.cx+1, TextY+Extent.cy-1,
+      BackColor);
+
+    Bitmap.RenderText(TextX, TextY, Tag, 0, FontColor);
   end;
 end;
 
@@ -5099,8 +5135,8 @@ procedure TVisualComponent.PrivDraw(Context: TDrawSquareContext);
 begin
   DoDraw(Context);
 
-  if Master.Editing and (EditVisualTag <> '') then
-    DoDrawEditVisualTag(Context);
+  if Master.Editing then
+    DrawEditVisualTag(Context, EditVisualTag);
 end;
 
 {*
@@ -5144,37 +5180,6 @@ end;
 procedure TVisualComponent.DoDraw(Context: TDrawSquareContext);
 begin
   FPainter.Draw(Context);
-end;
-
-{*
-  Dessine le tag visuel d'édition
-  DoDraw dessine le tag visuel d'édition dans le contexte de dessin spécifié.
-  @param Context   Contexte de dessin de la case
-*}
-procedure TVisualComponent.DoDrawEditVisualTag(Context: TDrawSquareContext);
-const {don't localize}
-  FontName = 'Arial';
-  FontSize = 9;
-  FontColor = clBlack32;
-  BackColor = clWhite32;
-var
-  Extent: TSize;
-  TextX, TextY: Integer;
-begin
-  with Context do
-  begin
-    Bitmap.Font.Name := FontName;
-    Bitmap.Font.Size := FontSize;
-
-    Extent := Bitmap.TextExtent(EditVisualTag);
-    TextX := X + (SquareSize - Extent.cx) div 2;
-    TextY := Y + (SquareSize - Extent.cy) div 2;
-
-    Bitmap.FillRectTS(TextX-1, TextY+1, TextX+Extent.cx+1, TextY+Extent.cy-1,
-      BackColor);
-
-    Bitmap.RenderText(TextX, TextY, EditVisualTag, 0, FontColor);
-  end;
 end;
 
 {*

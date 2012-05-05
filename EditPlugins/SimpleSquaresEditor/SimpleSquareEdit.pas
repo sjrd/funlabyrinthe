@@ -26,6 +26,8 @@ type
     EditParentClass: TEdit;
     LabelImage: TLabel;
     ButtonEditImage: TSpeedButton;
+    LabelEditVisualTag: TLabel;
+    EditEditVisualTag: TEdit;
     procedure EditNameChange(Sender: TObject);
     procedure PaintBoxImagePaint(Sender: TObject);
     procedure ButtonEditImageClick(Sender: TObject);
@@ -113,6 +115,7 @@ begin
   ObstacleEditor.CurrentObstacle := nil;
 
   EditName.OnChange := nil;
+  EditEditVisualTag.OnChange := nil;
 
   FCurrentSquare := Value;
 
@@ -124,6 +127,7 @@ begin
     EditName.Clear;
     EditParentClass.Clear;
     ButtonEditImage.Enabled := False;
+    EditEditVisualTag.Clear;
   end else
   begin
     Enabled := True;
@@ -132,8 +136,10 @@ begin
     EditName.Text := CurrentSquare.Name;
     EditParentClass.Text := CurrentSquare.ParentClassName;
     ButtonEditImage.Enabled := CurrentSquare.CanEditPainter;
+    EditEditVisualTag.Text := CurrentSquare.EditVisualTag;
 
     EditName.OnChange := EditNameChange;
+    EditEditVisualTag.OnChange := EditNameChange;
 
     if CurrentSquare is TSimpleField then
       FieldEditor.CurrentField := TSimpleField(CurrentSquare)
@@ -157,15 +163,19 @@ begin
 end;
 
 {*
-  Gestionnaire d'événement OnChange de l'edit du nom du composant
+  Gestionnaire d'événement OnChange de l'edit du nom ou EditVisualTag
   @param Sender   Objet qui a déclenché l'événement
 *}
 procedure TFrameEditSimpleSquare.EditNameChange(Sender: TObject);
 begin
   CurrentSquare.Name := EditName.Text;
+  CurrentSquare.EditVisualTag := EditEditVisualTag.Text;
+
   if Assigned(FOnNameImageChange) then
     FOnNameImageChange(Self);
   MarkModified;
+
+  PaintBoxImage.Invalidate;
 end;
 
 {*

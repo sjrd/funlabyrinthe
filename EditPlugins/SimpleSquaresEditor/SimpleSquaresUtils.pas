@@ -45,9 +45,10 @@ type
   *}
   TSimpleSquare = class(TFunLabyPersistent)
   private
-    FID: TComponentID;  /// ID du composant
-    FName: string;      /// Nom
-    FPainter: TPainter; /// Peintre
+    FID: TComponentID;      /// ID du composant
+    FName: string;          /// Nom
+    FPainter: TPainter;     /// Peintre
+    FEditVisualTag: string; /// Tag visuel
   protected
     procedure DefineProperties(Filer: TFunLabyFiler); override;
 
@@ -83,6 +84,7 @@ type
   published
     property Name: string read FName write FName;
     property Painter: TPainter read FPainter;
+    property EditVisualTag: string read FEditVisualTag write FEditVisualTag;
   end;
 
   /// Classe de TSimpleSquare
@@ -387,6 +389,17 @@ procedure TSimpleSquare.ProduceInnerClass(Code: TStrings);
 begin
   Code.Add(Format('  name %s;', [StrToStrRepres(Name)]));
   ProduceDefaultImgNames(Code);
+
+  if EditVisualTag <> '' then
+  begin
+    Code.Add('');
+    Code.Add('  on AfterConstruction do');
+    Code.Add('  begin');
+    Code.Add('    inherited;');
+    Code.Add(Format('    EditVisualTag := %s;',
+      [StrToStrRepres(EditVisualTag)]));
+    Code.Add('  end;');
+  end;
 end;
 
 {*
@@ -437,6 +450,8 @@ begin
 
     Context := TDrawSquareContext.Create(Bitmap32);
     FPainter.Draw(Context);
+
+    DrawEditVisualTag(Context, EditVisualTag);
 
     Canvas.CopyRect(SquareRect(X, Y), Bitmap32.Canvas, BaseSquareRect);
   finally

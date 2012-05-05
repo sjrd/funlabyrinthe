@@ -26,7 +26,7 @@ const // don't localize
   UnitName = 'FunLabyUtils';
   ResourceName = 'SepiImportsFunLabyUtils';
   TypeCount = 71;
-  MethodCount = 273;
+  MethodCount = 274;
   VariableCount = 6;
 
 var
@@ -1602,17 +1602,18 @@ begin
   MethodAddresses[259] := @EmptyRect;
   MethodAddresses[260] := @EmptySquareRect;
   MethodAddresses[261] := @DrawBitmap32ToCanvas;
-  MethodAddresses[262] := @SameRect;
-  MethodAddresses[263] := @QualifiedPos_0;
-  MethodAddresses[264] := @QualifiedPos_1;
-  MethodAddresses[265] := @SameQPos;
-  MethodAddresses[266] := @IsNoQPos;
-  MethodAddresses[267] := @FunLabyRegisterClass;
-  MethodAddresses[268] := @FunLabyUnregisterClass;
-  MethodAddresses[269] := @FunLabyRegisterClasses;
-  MethodAddresses[270] := @FunLabyUnregisterClasses;
-  MethodAddresses[271] := @FunLabyGetClass;
-  MethodAddresses[272] := @FunLabyFindClass;
+  MethodAddresses[262] := @DrawEditVisualTag;
+  MethodAddresses[263] := @SameRect;
+  MethodAddresses[264] := @QualifiedPos_0;
+  MethodAddresses[265] := @QualifiedPos_1;
+  MethodAddresses[266] := @SameQPos;
+  MethodAddresses[267] := @IsNoQPos;
+  MethodAddresses[268] := @FunLabyRegisterClass;
+  MethodAddresses[269] := @FunLabyUnregisterClass;
+  MethodAddresses[270] := @FunLabyRegisterClasses;
+  MethodAddresses[271] := @FunLabyUnregisterClasses;
+  MethodAddresses[272] := @FunLabyGetClass;
+  MethodAddresses[273] := @FunLabyFindClass;
 end;
 
 procedure InitVarAddresses;

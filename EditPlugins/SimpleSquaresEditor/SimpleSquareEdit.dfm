@@ -140,6 +140,13 @@ object FrameEditSimpleSquare: TFrameEditSimpleSquare
       NumGlyphs = 3
       OnClick = ButtonEditImageClick
     end
+    object LabelEditVisualTag: TLabel
+      Left = 320
+      Top = 20
+      Width = 158
+      Height = 16
+      Caption = 'Tag visuel (EditVisualTag) :'
+    end
     object EditID: TEdit
       Left = 110
       Top = 20
@@ -162,6 +169,13 @@ object FrameEditSimpleSquare: TFrameEditSimpleSquare
       Height = 24
       ReadOnly = True
       TabOrder = 2
+    end
+    object EditEditVisualTag: TEdit
+      Left = 320
+      Top = 42
+      Width = 181
+      Height = 24
+      TabOrder = 3
     end
   end
 end
