@@ -17,8 +17,8 @@ type
     EditText: TMemo;
     CheckBoxOnlyFirstTime: TCheckBox;
     LabelText: TStaticText;
-    procedure EditTextChange(Sender: TObject);
-    procedure CheckBoxOnlyFirstTimeClick(Sender: TObject);
+    CheckBoxFullScreen: TCheckBox;
+    procedure AnyPropertyChange(Sender: TObject);
   private
     FCurrentAction: TMessageAction; /// Action courante
   protected
@@ -44,9 +44,11 @@ procedure TFrameMessageActionEditor.ActivateAction;
 begin
   EditText.Text := CurrentAction.Text;
   CheckBoxOnlyFirstTime.Checked := CurrentAction.OnlyFirstTime;
+  CheckBoxFullScreen.Checked := CurrentAction.FullScreen;
 
-  EditText.OnChange := EditTextChange;
-  CheckBoxOnlyFirstTime.OnClick := CheckBoxOnlyFirstTimeClick;
+  EditText.OnChange := AnyPropertyChange;
+  CheckBoxOnlyFirstTime.OnClick := AnyPropertyChange;
+  CheckBoxFullScreen.OnClick := AnyPropertyChange;
 end;
 
 {*
@@ -56,26 +58,18 @@ procedure TFrameMessageActionEditor.DeactivateAction;
 begin
   EditText.OnChange := nil;
   CheckBoxOnlyFirstTime.OnClick := nil;
+  CheckBoxFullScreen.OnClick := nil;
 end;
 
 {*
-  Gestionnaire d'événement OnChange du texte du message
+  Gestionnaire d'événement OnChange des éléments d'UI
   @param Sender   Objet qui a déclenché l'événement
 *}
-procedure TFrameMessageActionEditor.EditTextChange(Sender: TObject);
+procedure TFrameMessageActionEditor.AnyPropertyChange(Sender: TObject);
 begin
   CurrentAction.Text := EditText.Text;
-
-  MarkModified;
-end;
-
-{*
-  Gestionnaire d'événement OnClick de la check-box Premier passage
-  @param Sender   Objet qui a déclenché l'événement
-*}
-procedure TFrameMessageActionEditor.CheckBoxOnlyFirstTimeClick(Sender: TObject);
-begin
   CurrentAction.OnlyFirstTime := CheckBoxOnlyFirstTime.Checked;
+  CurrentAction.FullScreen := CheckBoxFullScreen.Checked;
 
   MarkModified;
 end;

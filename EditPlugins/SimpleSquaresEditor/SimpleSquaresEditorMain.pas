@@ -453,6 +453,8 @@ var
 begin
   Code.Add(Format('unit %s;', [GetUnitName]));
   Code.Add('');
+  Code.Add('uses');
+  Code.Add('  FullScreenPlayerMessage;');
 
   if SimpleSquares.Count = 0 then
   begin

@@ -10,17 +10,17 @@ inherited FrameMessageActionEditor: TFrameMessageActionEditor
     401)
   object LabelText: TStaticText
     Left = 20
-    Top = 50
+    Top = 78
     Width = 118
     Height = 20
     Caption = 'Texte du message :'
-    TabOrder = 2
+    TabOrder = 3
   end
   object EditText: TMemo
     Left = 20
-    Top = 70
+    Top = 104
     Width = 271
-    Height = 311
+    Height = 277
     Anchors = [akLeft, akTop, akRight, akBottom]
     Lines.Strings = (
       'EditText')
@@ -34,5 +34,14 @@ inherited FrameMessageActionEditor: TFrameMessageActionEditor
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Afficher seulement au premier passage'
     TabOrder = 1
+  end
+  object CheckBoxFullScreen: TCheckBox
+    Left = 20
+    Top = 47
+    Width = 271
+    Height = 21
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'Afficher en plein '#233'cran'
+    TabOrder = 2
   end
 end

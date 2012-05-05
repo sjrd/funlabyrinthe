@@ -185,6 +185,7 @@ type
   private
     FText: string;           /// Texte du message
     FOnlyFirstTime: Boolean; /// True affiche seulement au premier passage
+    FFullScreen: Boolean;    /// True affiche en plein écran
   protected
     function GetTitle: string; override;
   public
@@ -193,6 +194,8 @@ type
   published
     property Text: string read FText write FText;
     property OnlyFirstTime: Boolean read FOnlyFirstTime write FOnlyFirstTime
+      default False;
+    property FullScreen: Boolean read FFullScreen write FFullScreen
       default False;
   end;
 
@@ -757,8 +760,15 @@ begin
   end else
     NewIndent := Indent;
 
-  Code.Add(NewIndent + Format('Player.ShowMessage(%s);',
-    [StrToStrRepres(Text)]));
+  if FullScreen then
+  begin
+    Code.Add(NewIndent + Format('ShowFullScreenMessage(Player, %s);',
+      [StrToStrRepres(Text)]));
+  end else
+  begin
+    Code.Add(NewIndent + Format('Player.ShowMessage(%s);',
+      [StrToStrRepres(Text)]));
+  end;
 end;
 
 {--------------------}
