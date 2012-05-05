@@ -15,6 +15,7 @@ resourcestring
   SMessageActionTitle = 'Message';
   SPlaySoundTitle = 'Jouer le son %s';
   SPlayerColorActionTitle = 'Changer la couleur du pion en %s';
+  SMovePlayerActionTitle = 'Déplacer le joueur vers %s';
   SPlayerShowTitle = 'Montrer le joueur';
   SPlayerHideTitle = 'Cacher le joueur';
   SPlayerWinTitle = 'Le joueur gagne';
@@ -50,6 +51,7 @@ type
 
     function GetText: string;
     function GetFunDelphiCode: string;
+    function GetFunDelphiQPosCode: string;
 
     property Offset: T3DPoint read FOffset write FOffset;
   published
@@ -236,6 +238,19 @@ type
   end;
 
   {*
+    Action qui déplace le joueur
+    @author sjrd
+    @version 5.3
+  *}
+  TMovePlayerAction = class(TSimpleActionWithSquare)
+  protected
+    function GetTitle: string; override;
+  public
+    procedure ProduceFunDelphiCode(Code: TStrings;
+      const Indent: string); override;
+  end;
+
+  {*
     Type de méthode simple
     - smPlayerShow : Player.Show;
     - smPlayerHide : Player.Hide;
@@ -404,8 +419,8 @@ begin
 end;
 
 {*
-  Code Delphi représentant la case à la position indiquée
-  @return Code Delphi représentant la case à la position indiquée
+  Code FunDelphi représentant la case à la position indiquée
+  @return Code FunDelphi représentant la case à la position indiquée
 *}
 function TSquarePos.GetFunDelphiCode: string;
 begin
@@ -429,6 +444,38 @@ begin
 
       Result := Result + Format('[%d, %d, %d]',
         [Offset.X, Offset.Y, Offset.Z]);
+    end;
+  else
+    Assert(False);
+  end;
+end;
+
+{*
+  Code FunDelphi représentant la position indiquée
+  @return Code FunDelphi représentant la position indiquée
+*}
+function TSquarePos.GetFunDelphiQPosCode: string;
+begin
+  // don't localize
+  case Origin of
+    poCurrent:
+    begin
+      if Same3DPoint(Offset, Point3D(0, 0, 0)) then
+        Result := 'QPos'
+      else
+        Result := Format('QualifiedPos(Map, Point3DAdd(Pos, %d, %d, %d))',
+          [Offset.X, Offset.Y, Offset.Z]);
+    end;
+
+    poAbsolute:
+    begin
+      if MapID = '' then
+        Result := 'Map'
+      else
+        Result := Format('Master.Map[''%s'']', [MapID]);
+
+      Result := Format('QualifiedPos(%s, %d, %d, %d)',
+        [Result, Offset.X, Offset.Y, Offset.Z]);
     end;
   else
     Assert(False);
@@ -823,6 +870,28 @@ begin
   Code.Add(Indent + Format('Player.Color := %s;', [Color32ToString(Color)]));
 end;
 
+{-------------------------}
+{ TMovePlayerAction class }
+{-------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TMovePlayerAction.GetTitle: string;
+begin
+  Result := Format(SMovePlayerActionTitle, [SquarePos.GetText]);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TMovePlayerAction.ProduceFunDelphiCode(Code: TStrings;
+  const Indent: string);
+begin
+  Code.Add(Indent + Format('Player.MoveTo(%s);',
+    [SquarePos.GetFunDelphiQPosCode]));
+end;
+
 {---------------------------}
 { TSimpleMethodAction class }
 {---------------------------}
@@ -874,12 +943,12 @@ end;
 initialization
   FunLabyRegisterClasses([
     TReplaceSquareAction, TChangeEffectEnabledAction, TMessageAction,
-    TSoundAction, TPlayerColorAction, TSimpleMethodAction
+    TSoundAction, TPlayerColorAction, TMovePlayerAction, TSimpleMethodAction
   ]);
 finalization
   FunLabyUnRegisterClasses([
     TReplaceSquareAction, TChangeEffectEnabledAction, TMessageAction,
-    TSoundAction, TPlayerColorAction, TSimpleMethodAction
+    TSoundAction, TPlayerColorAction, TMovePlayerAction, TSimpleMethodAction
   ]);
 end.
 

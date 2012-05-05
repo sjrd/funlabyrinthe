@@ -10,7 +10,7 @@ uses
   SimpleSquaresSoundActionEditor,
   SimpleSquaresChangeEffectEnabledActionEditor,
   SimpleSquaresPlayerColorActionEditor, SimpleSquaresActionEditor,
-  SimpleSquaresSimpleMethodActionEditor;
+  SimpleSquaresMovePlayerActionEditor, SimpleSquaresSimpleMethodActionEditor;
 
 type
   {*
@@ -95,6 +95,7 @@ begin
   AddActionEditor(TFrameMessageActionEditor.Create(Self));
   AddActionEditor(TFrameSoundActionEditor.Create(Self));
   AddActionEditor(TFramePlayerColorActionEditor.Create(Self));
+  AddActionEditor(TFrameMovePlayerActionEditor.Create(Self));
   AddActionEditor(TFrameSimpleMethodActionEditor.Create(Self));
 end;
 
@@ -252,6 +253,7 @@ begin
     AddObject('Afficher un message', TObject(TMessageAction));
     AddObject('Jouer un son', TObject(TSoundAction));
     AddObject('Changer la couleur du pion', TObject(TPlayerColorAction));
+    AddObject('Déplacer le joueur', TObject(TMovePlayerAction));
     AddObject('Action simple', TObject(TSimpleMethodAction));
   end;
 end;

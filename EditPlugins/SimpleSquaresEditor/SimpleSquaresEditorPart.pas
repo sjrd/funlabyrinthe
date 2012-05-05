@@ -14,6 +14,8 @@ type
   *}
   TFrameSimpleSquaresEditorPart = class(TFrame, ISimpleSquaresEditor)
   protected
+    CustomVisibility: Boolean;
+
     function GetFunLabyEditMainForm: IOTAFunLabyEditMainForm50;
   public
     constructor Create(AOwner: TComponent); override;
@@ -36,8 +38,11 @@ constructor TFrameSimpleSquaresEditorPart.Create(AOwner: TComponent);
 begin
   inherited;
 
-  Visible := False;
-  Align := alClient;
+  if not CustomVisibility then
+  begin
+    Visible := False;
+    Align := alClient;
+  end;
 end;
 
 {*
