@@ -172,6 +172,13 @@ Source: "..\FunLabyrinthe.chm"; DestDir: "{app}"; Components: help; Flags: ignor
 
 #if !Update
 Source: "AppData\Library\*"; DestDir: "{code:AppData}\Library"; Check: GetShouldInstallLibrary; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
+#else
+; Quelques unités qui *doivent* être mises à jour pour passer à la v5.3
+Source: "AppData\Library\Sources\PlayerMessages\FullScreenPlayerMessage.fnd"; DestDir: "{code:AppData}\Library\Sources\PlayerMessages"; Flags: ignoreversion uninsneveruninstall
+Source: "AppData\Library\Sources\GenericSquares\Elevator.fnd"               ; DestDir: "{code:AppData}\Library\Sources\GenericSquares"; Flags: ignoreversion uninsneveruninstall
+Source: "AppData\Library\Sources\GenericSquares\SimpleBridges.fnd"          ; DestDir: "{code:AppData}\Library\Sources\GenericSquares"; Flags: ignoreversion uninsneveruninstall
+Source: "AppData\Library\Sources\Railways\Railways.fnd"                     ; DestDir: "{code:AppData}\Library\Sources\Railways"      ; Flags: ignoreversion uninsneveruninstall
+Source: "AppData\Library\Sources\ViewTransforms\ViewRestriction.pas"        ; DestDir: "{code:AppData}\Library\Sources\ViewTransforms"; Flags: ignoreversion uninsneveruninstall
 #endif
 Source: "AppData\Projects\*"; DestDir: "{code:AppData}\Projects"; Flags: sortfilesbyextension ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
 
