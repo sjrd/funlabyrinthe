@@ -192,7 +192,7 @@ type
 
     function CompilerLoadUnit(Sender: TSepiRoot;
       const UnitName: string): TSepiUnit;
-    function CompileAll: Boolean;
+    function CompileAll(IgnoreWarnings: Boolean = False): Boolean;
 
     procedure MarkModified;
 
@@ -611,7 +611,7 @@ begin
   CreateAutoCompileMasterFile;
   AddAllSourceFiles(Path);
 
-  if not CompileAll then
+  if not CompileAll(True) then
     Abort;
 
   CloseFile;
@@ -1091,9 +1091,11 @@ end;
 
 {*
   Compile tous les sources ouverts
+  @param IgnoreWarnings   Si True, il faut une erreur pour que la fenêtre des
+                          erreurs soit affichée.
   @return True si les sources ont bien été compilés, False sinon
 *}
-function TFormMain.CompileAll: Boolean;
+function TFormMain.CompileAll(IgnoreWarnings: Boolean = False): Boolean;
 var
   CompilerRoot: TSepiRoot;
   I: Integer;
@@ -1121,9 +1123,16 @@ begin
         Result := False;
     end;
 
-    FormCompilerMessages.Visible := FormCompilerMessages.Errors.Count > 0;
-    if FormCompilerMessages.Visible then
-      FormCompilerMessages.ShowFirst;
+    with FormCompilerMessages do
+    begin
+      if IgnoreWarnings then
+        Visible := Errors.ErrorCount > 0
+      else
+        Visible := Errors.Count > 0;
+
+      if Visible then
+        ShowFirst;
+    end;
   finally
     CompilerRoot.Free;
   end;
@@ -1894,7 +1903,7 @@ end;
 *}
 procedure TFormMain.ActionCompileAndReloadExecute(Sender: TObject);
 begin
-  if SaveAll and CompileAll then
+  if SaveAll and CompileAll(True) then
     ReloadFile;
 end;
 
