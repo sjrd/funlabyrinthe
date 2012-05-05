@@ -64,7 +64,8 @@ contains
   SimpleSquaresSoundActionEditor in 'SimpleSquaresSoundActionEditor.pas' {FrameSoundActionEditor: TFrame},
   SimpleSquaresFieldEditor in 'SimpleSquaresFieldEditor.pas' {FrameFieldEditor: TFrame},
   SimpleSquaresMovePlayerActionEditor in 'SimpleSquaresMovePlayerActionEditor.pas' {FrameMovePlayerActionEditor: TFrame},
-  SimpleSquaresSquarePosEditor in 'SimpleSquaresSquarePosEditor.pas' {FrameSquarePosEditor: TFrame};
+  SimpleSquaresSquarePosEditor in 'SimpleSquaresSquarePosEditor.pas' {FrameSquarePosEditor: TFrame},
+  SimpleSquaresAddRemovePluginActionEditor in 'SimpleSquaresAddRemovePluginActionEditor.pas' {FrameAddRemovePluginActionEditor: TFrame};
 
 end.
 

@@ -112,6 +112,10 @@
 				<Form>FrameSquarePosEditor</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
+			<DCCReference Include="SimpleSquaresAddRemovePluginActionEditor.pas">
+				<Form>FrameAddRemovePluginActionEditor</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

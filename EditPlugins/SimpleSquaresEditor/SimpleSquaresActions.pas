@@ -21,6 +21,9 @@ resourcestring
   SPlayerWinTitle = 'Le joueur gagne';
   SPlayerLoseTitle = 'Le joueur perd';
   SPlayerTemporizeTitle = 'Temporisation standard';
+  SAddPluginActionTitle = 'Ajouter le plugin %s';
+  SRemovePluginActionTitle = 'Retirer le plugin %s';
+  STogglePluginActionTitle = 'Inverser le plugin %s';
   SGoOnMovingTitle = 'Continuer le déplacement';
 
 type
@@ -281,6 +284,30 @@ type
       const Indent: string); override;
   published
     property Kind: TSimpleMethodKind read FKind write FKind;
+  end;
+
+  /// Type d'action ajoutant ou retirant un plugin
+  TAddRemovePluginKind = (pkAdd, pkRemove, pkToggle);
+
+  {*
+    Action qui ajoute our retire un plugin
+    @author sjrd
+    @version 5.3
+  *}
+  TAddRemovePluginAction = class(TSimpleAction)
+  private
+    FPluginID: TComponentID;     /// ID du plugin
+    FKind: TAddRemovePluginKind; /// Activer/désactiver/inverser
+  protected
+    function GetTitle: string; override;
+
+    procedure RegisterComponentIDs(ComponentIDs: TStrings); override;
+  public
+    procedure ProduceFunDelphiCode(Code: TStrings;
+      const Indent: string); override;
+  published
+    property PluginID: TComponentID read FPluginID write FPluginID;
+    property Kind: TAddRemovePluginKind read FKind write FKind default pkAdd;
   end;
 
 function Color32ToString(Color: TColor32): string;
@@ -940,15 +967,64 @@ begin
   Code.Add(Indent + Statements[Kind]);
 end;
 
+{------------------------------}
+{ TAddRemovePluginAction class }
+{------------------------------}
+
+{*
+  [@inheritDoc]
+*}
+function TAddRemovePluginAction.GetTitle: string;
+begin
+  case Kind of
+    pkAdd: Result := Format(SAddPluginActionTitle, [PluginID]);
+    pkRemove: Result := Format(SRemovePluginActionTitle, [PluginID]);
+    pkToggle: Result := Format(STogglePluginActionTitle, [PluginID]);
+  end;
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TAddRemovePluginAction.RegisterComponentIDs(
+  ComponentIDs: TStrings);
+begin
+  inherited;
+
+  ComponentIDs.Add(PluginID);
+end;
+
+{*
+  [@inheritDoc]
+*}
+procedure TAddRemovePluginAction.ProduceFunDelphiCode(Code: TStrings;
+  const Indent: string);
+var
+  MethodName: string;
+begin
+  if PluginID = '' then
+    Exit;
+
+  case Kind of
+    pkAdd: MethodName := 'AddPlugin';
+    pkRemove: MethodName := 'RemovePlugin';
+    pkToggle: MethodName := 'TogglePlugin';
+  end;
+
+  Code.Add(Indent + Format('Player.%s(%s);', [MethodName, PluginID]));
+end;
+
 initialization
   FunLabyRegisterClasses([
     TReplaceSquareAction, TChangeEffectEnabledAction, TMessageAction,
-    TSoundAction, TPlayerColorAction, TMovePlayerAction, TSimpleMethodAction
+    TSoundAction, TPlayerColorAction, TMovePlayerAction, TSimpleMethodAction,
+    TAddRemovePluginAction
   ]);
 finalization
   FunLabyUnRegisterClasses([
     TReplaceSquareAction, TChangeEffectEnabledAction, TMessageAction,
-    TSoundAction, TPlayerColorAction, TMovePlayerAction, TSimpleMethodAction
+    TSoundAction, TPlayerColorAction, TMovePlayerAction, TSimpleMethodAction,
+    TAddRemovePluginAction
   ]);
 end.
 
