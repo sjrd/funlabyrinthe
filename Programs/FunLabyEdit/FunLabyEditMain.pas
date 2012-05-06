@@ -1323,6 +1323,17 @@ end;
   @param Listing   En sortie : listing des composants
 *}
 procedure TFormMain.MakeComponentListing(Listing: TStrings);
+
+  function GetCountIn(ListOfPos: TStrings): Integer;
+  var
+    Line: string;
+  begin
+    Result := 0;
+    for Line in ListOfPos do
+      if AnsiStartsStr('    ', Line) then
+        Inc(Result);
+  end;
+
 var
   CompToListOfPos: TDictionary<TSquareComponent, TStrings>;
   ListOfPos: TStrings;
@@ -1366,7 +1377,7 @@ begin
     for Element in CompToListOfPos do
     begin
       Listing.Add(Format('%s -- %s -- %d exemplaire-s',
-        [Element.Key.ID, Element.Key.Name, Element.Value.Count]));
+        [Element.Key.ID, Element.Key.Name, GetCountIn(Element.Value)]));
       Listing.AddStrings(Element.Value);
       Listing.Add('');
     end;
