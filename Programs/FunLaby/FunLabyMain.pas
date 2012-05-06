@@ -442,7 +442,8 @@ end;
 procedure TFormMain.ShowStatus;
 var
   FoundObjects: TObjectList;
-  I: Integer;
+  I, PanelIndex: Integer;
+  ObjectDef: TObjectDef;
 begin
   if MasterFile = nil then
     Exit;
@@ -451,16 +452,23 @@ begin
   try
     Controller.Player.GetFoundObjects(FoundObjects);
 
-    for I := StatusBar.Panels.Count to FoundObjects.Count-1 do
-      StatusBar.Panels.Add;
-
+    PanelIndex := 0;
     for I := 0 to FoundObjects.Count-1 do
     begin
-      with StatusBar.Panels[I] do
+      ObjectDef := TObjectDef(FoundObjects[I]);
+      if not ObjectDef.DisplayInStatusBar then
+        Continue;
+
+      if StatusBar.Panels.Count <= PanelIndex then
+        StatusBar.Panels.Add;
+
+      with StatusBar.Panels[PanelIndex] do
       begin
         Text := TObjectDef(FoundObjects[I]).ShownInfos[Controller.Player];
         Width := StatusBar.Canvas.TextWidth(Text) + 4;
       end;
+
+      Inc(PanelIndex);
     end;
   finally
     FoundObjects.Free;

@@ -7570,7 +7570,7 @@ end;
 *}
 procedure TPlayer.FoundObject(ObjectDef: TObjectDef);
 begin
-  if Master.Editing or (not ObjectDef.DisplayInStatusBar) then
+  if Master.Editing then
     Exit;
 
   FLock.BeginWrite;
