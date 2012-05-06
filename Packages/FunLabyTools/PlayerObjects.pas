@@ -14,6 +14,13 @@ uses
   Dialogs, ImgList, StdCtrls, ComCtrls, CommCtrl, FunLabyUtils, GR32;
 
 type
+  TObjectDefData = record
+    ObjectDef: TObjectDef;
+    Info: string;
+  end;
+
+  TObjectDefDataList = array of TObjectDefData;
+
   {*
     Boîte de dialogue affichant les objets possédés par un joueur
     @author sjrd
@@ -31,8 +38,15 @@ type
   private
     FPlayer: TPlayer; /// Joueur dont afficher les objets
 
+    DisplayedData: TObjectDefDataList;
+    ComputedData: TObjectDefDataList;
+
     procedure AdjustColumnWidth;
     procedure DoUpdateObjects;
+
+    procedure ComputeData(Player: TPlayer);
+    function IsDisplayedDataObsolete: Boolean;
+    procedure UpdateDisplay;
 
     procedure SetPlayer(Value: TPlayer);
   public
@@ -93,33 +107,91 @@ end;
 *}
 
 procedure TFormObjects.DoUpdateObjects;
+begin
+  ComputeData(Player);
+  if IsDisplayedDataObsolete then
+    UpdateDisplay;
+end;
+
+{*
+  Calcule ComputedData pour un joueur
+  @param Player   Joueur concerné
+*}
+procedure TFormObjects.ComputeData(Player: TPlayer);
 var
   Master: TMaster;
-  I: Integer;
+  I, Index: Integer;
   ObjectDef: TObjectDef;
   Infos: string;
 begin
+  ComputedData := nil;
+
+  if Player = nil then
+    Exit;
+
+  Master := Player.Master;
+  SetLength(ComputedData, Master.ObjectDefCount);
+
+  Index := 0;
+
+  for I := 0 to Master.ObjectDefCount-1 do
+  begin
+    ObjectDef := Master.ObjectDefs[I];
+
+    if ObjectDef.ShouldDisplayInObjectList(Player, Infos) then
+    begin
+      ComputedData[Index].ObjectDef := ObjectDef;
+      ComputedData[Index].Info := Infos;
+      Inc(Index);
+    end;
+  end;
+
+  SetLength(ComputedData, Index);
+end;
+
+{*
+  Détermine si les données affichées sont obsolètes
+  @return True si les données affichées doivent être rafraîchies
+*}
+function TFormObjects.IsDisplayedDataObsolete: Boolean;
+var
+  I: Integer;
+begin
+  Result := True;
+
+  if Length(DisplayedData) <> Length(ComputedData) then
+    Exit;
+
+  for I := 0 to Length(DisplayedData)-1 do
+  begin
+    if DisplayedData[I].ObjectDef <> ComputedData[I].ObjectDef then
+      Exit;
+    if DisplayedData[I].Info <> ComputedData[I].Info then
+      Exit;
+  end;
+
+  Result := False;
+end;
+
+{*
+  Rafraîchit les données affichées
+*}
+procedure TFormObjects.UpdateDisplay;
+var
+  I: Integer;
+begin
   ListViewObjects.Items.BeginUpdate;
   try
+    DisplayedData := ComputedData;
     ListViewObjects.Items.Clear;
 
-    if Player = nil then
-      Exit;
-
-    Master := Player.Master;
-
-    for I := 0 to Master.ObjectDefCount-1 do
+    for I := 0 to Length(DisplayedData)-1 do
     begin
-      ObjectDef := Master.ObjectDefs[I];
-
-      if ObjectDef.ShouldDisplayInObjectList(Player, Infos) then
+      with ListViewObjects.Items.Add, DisplayedData[I] do
       begin
-        with ListViewObjects.Items.Add do
-        begin
-          Caption := Infos;
-          ImageIndex := 0;
-          Data := Pointer(ObjectDef);
-        end;
+        Caption := Info;
+        ImageIndex := 0;
+        Data := Pointer(ObjectDef);
       end;
     end;
   finally

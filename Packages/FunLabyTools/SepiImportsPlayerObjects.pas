@@ -25,7 +25,7 @@ implementation
 const // don't localize
   UnitName = 'PlayerObjects';
   ResourceName = 'SepiImportsPlayerObjects';
-  TypeCount = 1;
+  TypeCount = 3;
   MethodCount = 5;
   VariableCount = 1;
 
@@ -125,7 +125,9 @@ end;
 
 procedure InitTypeInfoArray;
 begin
-  TypeInfoArray[0] := TypeInfo(TFormObjects);
+  TypeInfoArray[0] := TypeInfo(TObjectDefData);
+  TypeInfoArray[1] := TypeInfo(TObjectDefDataList);
+  TypeInfoArray[2] := TypeInfo(TFormObjects);
 end;
 
 procedure InitMethodAddresses;
@@ -140,6 +142,32 @@ end;
 {------------------------------------}
 { Delphi-Sepi consistency assertions }
 {------------------------------------}
+
+{$IF SizeOf(TObjectDefData) <> 8}
+  {$MESSAGE WARN 'Le type TObjectDefData n''a pas la taille calculée par Sepi'}
+{$ELSE}
+
+type
+  TCheckAlignmentForTObjectDefData = record
+    Dummy: Byte;
+    Field: TObjectDefData;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTObjectDefData) <> (4 + 8)}
+  {$MESSAGE WARN 'Le type TObjectDefData n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
+
+{$IFEND}
+
+type
+  TCheckAlignmentForTObjectDefDataList = record
+    Dummy: Byte;
+    Field: TObjectDefDataList;
+  end;
+
+{$IF SizeOf(TCheckAlignmentForTObjectDefDataList) <> (4 + 4)}
+  {$MESSAGE WARN 'Le type TObjectDefDataList n''a pas l''alignement calculé par Sepi'}
+{$IFEND}
 
 type
   TCheckAlignmentForTFormObjects = record
@@ -165,7 +193,7 @@ end;
 procedure DelphiSepiConsistencyAssertions;
 begin
   {$ASSERTIONS ON}
-  CheckInstanceSize(TFormObjects, 916, 892);
+  CheckInstanceSize(TFormObjects, 924, 892);
   {$ASSERTIONS OFF}
 end;
 
