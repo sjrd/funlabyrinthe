@@ -9,7 +9,7 @@ interface
 
 const {don't localize}
   CurrentVersion = '5.3';  /// Version courante de FunLabyrinthe
-  CurrentMinorVersion = 1; /// Version mineure courante de FunLabyrinthe
+  CurrentMinorVersion = 2; /// Version mineure courante de FunLabyrinthe
 
   FunLabyAuthorName = 'Sébastien Doeraene';         /// Auteur
   FunLabyAuthorEMail = 'info@funlabyrinthe.com';    /// Adresse de contact
